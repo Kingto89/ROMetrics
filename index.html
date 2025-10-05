@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PT Lab • 3D Goniometry Trainer</title>
+<title>PT Lab • 3D Goniometry Trainer (Drive Proxy)</title>
 <style>
   html,body{height:100%;margin:0;background:#0b1220;color:#e5e7eb;font-family:Inter,system-ui}
   .panel{position:absolute;left:0;top:0;bottom:0;width:320px;background:#0f172a;border-right:1px solid #1f2937;padding:14px;overflow:auto}
@@ -12,6 +12,11 @@
        border:1px solid #334155;border-radius:10px;padding:8px 12px;font-weight:700;backdrop-filter:blur(6px)}
   button{background:#1e293b;border:1px solid #334155;color:#e2e8f0;border-radius:8px;padding:8px 10px;margin:4px 0;cursor:pointer;width:100%}
   input[type=range]{width:100%}
+  .loader{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;
+          background:rgba(2,6,23,.85);z-index:10}
+  .bar{width:60%;height:10px;border-radius:999px;border:1px solid #334155;background:#0b1220;overflow:hidden;margin-top:8px}
+  .bar>div{height:100%;width:0%;background:#60a5fa}
+  .err{color:#fca5a5;margin-top:8px;font-size:13px;max-width:80%;text-align:center}
 </style>
 </head>
 <body>
@@ -21,11 +26,16 @@
   <button id="pickStationary">2️⃣ Stationary (AC Joint)</button>
   <button id="pickMoving">3️⃣ Moving (Base of Nares)</button>
   <label>Tolerance (cm)</label>
-  <input type="range" min="0.5" max="5" step="0.5" value="2" id="tolSlider"><span id="tolVal">2.0</span>
+  <input type="range" min="0.5" max="5" step="0.5" value="2" id="tolSlider"><span id="tolVal"> 2.0</span>
   <button id="resetAll">Reset</button>
   <pre id="log" style="background:#0b1220;border:1px solid #1f2937;height:150px;overflow:auto"></pre>
 </div>
 <div class="hud" id="hud">Angle: 0°</div>
+<div class="loader" id="loader">
+  <div>Loading model from Google Drive… <b id="pct">0%</b></div>
+  <div class="bar"><div id="fill"></div></div>
+  <div class="err" id="err"></div>
+</div>
 <canvas id="c"></canvas>
 
 <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
@@ -42,11 +52,12 @@ camera.position.set(0.8,1.6,2.5);
 const controls=new THREE.OrbitControls(camera,renderer.domElement);
 controls.enableDamping=true;
 
+// lights
 scene.add(new THREE.HemisphereLight(0xffffff,0x333344,1.2));
 const dir=new THREE.DirectionalLight(0xffffff,1);
 dir.position.set(3,4,2);scene.add(dir);
 
-// circular floor (360°)
+// floor ticks (simple ring)
 const radius=1.8, tickMat=new THREE.LineBasicMaterial({color:0x475569});
 for(let d=0;d<360;d+=10){
   const a=THREE.MathUtils.degToRad(d);
@@ -57,28 +68,40 @@ for(let d=0;d<360;d+=10){
 }
 scene.add(new THREE.GridHelper(10,20,0x1f2937,0x1f2937));
 
-// model loader with CORS proxy
+// loader overlay controls
+const loaderEl=document.getElementById('loader');
+const pctEl=document.getElementById('pct');
+const fillEl=document.getElementById('fill');
+const errEl=document.getElementById('err');
+
+// model loader via CORS proxy for Google Drive
 const loader=new THREE.GLTFLoader();
-const url="https://cors.isomorphic-gltf.workers.dev/?https://drive.google.com/uc?export=download&id=1ZIJMraZ7_GOCauwDAbGTJF2NunAigpTG";
-let model=null;
-loader.load(url,(gltf)=>{
-  model=gltf.scene;
-  scene.add(model);
+const DRIVE_URL="https://cors.isomorphic-gltf.workers.dev/?https://drive.google.com/uc?export=download&id=1ZIJMraZ7_GOCauwDAbGTJF2NunAigpTG";
+
+loader.load(DRIVE_URL,(gltf)=>{
+  const model=gltf.scene; scene.add(model);
   const box=new THREE.Box3().setFromObject(model);
   const c=new THREE.Vector3(); box.getCenter(c); model.position.sub(c);
-},undefined,(e)=>log("Load error "+e));
+  loaderEl.style.display='none';
+},(xhr)=>{
+  if(xhr.lengthComputable){
+    const p=Math.round((xhr.loaded/xhr.total)*100);
+    pctEl.textContent=p+'%'; fillEl.style.width=p+'%';
+  }
+},(e)=>{
+  errEl.textContent="Could not load from Google Drive. If you see 404, the link is expired or blocked.";
+  console.error(e);
+});
 
 // tolerance + placement
 const tolSlider=document.getElementById('tolSlider'); const tolVal=document.getElementById('tolVal');
-let tol=2.0; tolSlider.oninput=()=>{tol=parseFloat(tolSlider.value);tolVal.textContent=tol.toFixed(1)};
+let tol=2.0; tolSlider.oninput=()=>{tol=parseFloat(tolSlider.value);tolVal.textContent=' '+tol.toFixed(1)};
 const truth={fulcrum:new THREE.Vector3(0.08,1.65,0.02),
              stationary:new THREE.Vector3(0.12,1.55,0.15),
              moving:new THREE.Vector3(0.10,1.68,0.12)};
 const ray=new THREE.Raycaster(), mouse=new THREE.Vector2();
-const matG=new THREE.MeshBasicMaterial({color:0x22c55e});
-const matR=new THREE.MeshBasicMaterial({color:0xef4444});
-function sphere(){return new THREE.Mesh(new THREE.SphereGeometry(0.01,16,16),matR.clone());}
-const user={fulcrum:sphere(),stationary:sphere(),moving:sphere()};
+function sphere(col){return new THREE.Mesh(new THREE.SphereGeometry(0.01,16,16),new THREE.MeshBasicMaterial({color:col}));}
+const user={fulcrum:sphere(0xef4444),stationary:sphere(0xef4444),moving:sphere(0xef4444)};
 Object.values(user).forEach(m=>{m.visible=false;scene.add(m);});
 const line1=new THREE.Line(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0x60a5fa}));
 const line2=new THREE.Line(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0xf472b6}));
@@ -89,19 +112,20 @@ document.getElementById('pickFulcrum').onclick=()=>{target='fulcrum';log("Place 
 document.getElementById('pickStationary').onclick=()=>{target='stationary';log("Place Stationary");};
 document.getElementById('pickMoving').onclick=()=>{target='moving';log("Place Moving");};
 document.getElementById('resetAll').onclick=()=>{for(const k in user){user[k].visible=false;}line1.visible=line2.visible=false;setAngle(0);};
+
 canvas.addEventListener('pointerdown',e=>{
-  if(!target||!model)return;
+  if(!target)return;
   const r=canvas.getBoundingClientRect();
   mouse.x=((e.clientX-r.left)/r.width)*2-1; mouse.y=-((e.clientY-r.top)/r.height)*2+1;
   ray.setFromCamera(mouse,camera);
-  const hit=ray.intersectObject(model,true);
-  if(!hit.length)return;
-  const p=hit[0].point;
-  user[target].position.copy(p);user[target].visible=true;
+  const hit=ray.intersectObjects(scene.children,true).find(h=>h.object && !(h.object instanceof THREE.Line));
+  if(!hit)return;
+  const p=hit.point;
+  user[target].position.copy(p); user[target].visible=true;
   const dist=p.distanceTo(truth[target])*100;
   user[target].material.color.set(dist<=tol?0x22c55e:0xef4444);
   log(`${target}: ${dist.toFixed(1)} cm`);
-  target=null;updateLines();
+  target=null; updateLines();
 });
 
 function updateLines(){
@@ -119,7 +143,7 @@ function updateLines(){
 
 const hud=document.getElementById('hud');
 function setAngle(a){hud.textContent="Angle: "+a.toFixed(0)+"°";}
-function log(t){const l=document.getElementById('log');l.textContent+=(t+"\n");l.scrollTop=l.scrollHeight;}
+function log(t){const l=document.getElementById('log');l.textContent+=(t+"\\n");l.scrollTop=l.scrollHeight;}
 
 function animate(){renderer.setSize(innerWidth,innerHeight);controls.update();renderer.render(scene,camera);requestAnimationFrame(animate);}
 animate();
