@@ -3,85 +3,109 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>GLB Viewer (Classic)</title>
+<title>GLB Viewer — Robust</title>
 <style>
   html,body{margin:0;height:100%;background:#0b1220;overflow:hidden}
   canvas{width:100%;height:100%;display:block}
-  #msg{position:fixed;top:10px;left:10px;color:#e5e7eb;font-family:sans-serif;font-size:14px}
+  #msg{position:fixed;top:10px;left:10px;color:#e5e7eb;font:14px/1.2 system-ui,Segoe UI,Roboto}
 </style>
 </head>
 <body>
 <div id="msg">Loading model…</div>
 <canvas id="c"></canvas>
 
-<!-- ✅ Classic Three.js build (pre-module) -->
-<script src="https://unpkg.com/three@0.149.0/build/three.min.js"></script>
-<script src="https://unpkg.com/three@0.149.0/examples/js/loaders/GLTFLoader.js"></script>
-<script src="https://unpkg.com/three@0.149.0/examples/js/controls/OrbitControls.js"></script>
+<script type="module">
+  import * as THREE from "https://unpkg.com/three@0.160.0/build/three.module.js";
+  import { OrbitControls } from "https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js";
+  import { GLTFLoader } from "https://unpkg.com/three@0.160.0/examples/jsm/loaders/GLTFLoader.js";
+  import { DRACOLoader } from "https://unpkg.com/three@0.160.0/examples/jsm/loaders/DRACOLoader.js";
+  import { KTX2Loader } from "https://unpkg.com/three@0.160.0/examples/jsm/loaders/KTX2Loader.js";
+  import { MeshoptDecoder } from "https://unpkg.com/three@0.160.0/examples/jsm/libs/meshopt_decoder.module.js";
 
-<script>
-  const canvas=document.getElementById("c");
-  const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+  const msg = document.getElementById("msg");
+  const canvas = document.getElementById("c");
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias:true });
   renderer.setPixelRatio(window.devicePixelRatio);
-  renderer.setSize(window.innerWidth,window.innerHeight);
+  renderer.setSize(window.innerWidth, window.innerHeight);
 
-  const scene=new THREE.Scene();
-  scene.background=new THREE.Color(0x0b1220);
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0b1220);
 
-  const camera=new THREE.PerspectiveCamera(45,window.innerWidth/window.innerHeight,0.1,100);
-  camera.position.set(0,1.5,3);
+  const camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 100);
+  camera.position.set(0, 1.5, 3);
 
-  const controls=new THREE.OrbitControls(camera,renderer.domElement);
-  controls.enableDamping=true;
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
 
-  const hemi=new THREE.HemisphereLight(0xffffff,0x444444,1.2);
-  scene.add(hemi);
-  const dir=new THREE.DirectionalLight(0xffffff,1);
+  // lights
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 1.2));
+  const dir = new THREE.DirectionalLight(0xffffff, 1);
   dir.position.set(2,3,2);
   scene.add(dir);
 
-  const loader=new THREE.GLTFLoader();
-  const url="./Athletic_Grace_1006002620_texture.glb"; // same folder
+  // GLTF loader + decoders
+  const loader = new GLTFLoader();
 
-  loader.load(url,
-    function(gltf){
-      const model=gltf.scene;
+  // Meshopt
+  loader.setMeshoptDecoder(MeshoptDecoder);
+
+  // Draco (for KHR_draco_mesh_compression)
+  const draco = new DRACOLoader();
+  draco.setDecoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/draco/");
+  loader.setDRACOLoader(draco);
+
+  // KTX2 (for KHR_texture_basisu)
+  const ktx2 = new KTX2Loader();
+  ktx2.setTranscoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/basis/");
+  ktx2.detectSupport(renderer);
+  loader.setKTX2Loader(ktx2);
+
+  // same-folder model
+  const MODEL_URL = "./Athletic_Grace_1006002620_texture.glb";
+
+  // load
+  loader.load(MODEL_URL, (gltf)=>{
+      const model = gltf.scene;
       scene.add(model);
-      document.getElementById("msg").textContent="✅ Model loaded";
 
-      // center & scale
-      const box=new THREE.Box3().setFromObject(model);
-      const center=new THREE.Vector3();
-      box.getCenter(center);
+      // center and frame model
+      const box = new THREE.Box3().setFromObject(model);
+      const size = box.getSize(new THREE.Vector3()).length();
+      const center = box.getCenter(new THREE.Vector3());
       model.position.sub(center);
+      camera.position.set(0, size * 0.2, size * 1.5);
+      camera.lookAt(0,0,0);
 
-      const size=box.getSize(new THREE.Vector3()).length();
-      camera.position.set(0,size*0.2,size*1.5);
+      msg.textContent = "✅ Model loaded";
     },
-    function(xhr){
-      if(xhr.lengthComputable){
-        const pct=Math.round((xhr.loaded/xhr.total)*100);
-        document.getElementById("msg").textContent=`Loading ${pct}%`;
+    (xhr)=>{
+      if (xhr.lengthComputable) {
+        const p = Math.round((xhr.loaded / xhr.total) * 100);
+        msg.textContent = `Loading ${p}%`;
+      } else {
+        msg.textContent = "Loading…";
       }
     },
-    function(err){
-      document.getElementById("msg").textContent="❌ Failed to load GLB (see console)";
+    (err)=>{
       console.error(err);
+      msg.textContent = "❌ Failed to load model (see console). " +
+        "Common causes: filename mismatch/casing, not in same folder, or Pages cache (force refresh).";
     }
   );
 
-  window.addEventListener("resize",()=>{
-    camera.aspect=window.innerWidth/window.innerHeight;
+  // resize
+  addEventListener("resize", ()=>{
+    camera.aspect = innerWidth/innerHeight;
     camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth,window.innerHeight);
+    renderer.setSize(innerWidth,innerHeight);
   });
 
-  function animate(){
+  // render loop
+  (function animate(){
     controls.update();
-    renderer.render(scene,camera);
+    renderer.render(scene, camera);
     requestAnimationFrame(animate);
-  }
-  animate();
+  })();
 </script>
 </body>
 </html>
