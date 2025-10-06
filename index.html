@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>GLB Viewer — Full Fix</title>
+<title>PT Lab — Goniometry Trainer</title>
 
-<!-- Import map: lets us use bare specifiers like "three" on GitHub Pages -->
+<!-- Import map so we can use "three" bare specifiers on GitHub Pages -->
 <script type="importmap">
 {
   "imports": {
@@ -16,17 +16,76 @@
 </script>
 
 <style>
-  html,body{margin:0;height:100%;background:#0b1220;overflow:hidden}
+  html,body{margin:0;height:100%;background:#0b1220;color:#e5e7eb;overflow:hidden;font-family:system-ui, Segoe UI, Roboto}
   canvas{width:100%;height:100%;display:block}
-  #msg{
-    position:fixed;top:10px;left:10px;padding:6px 10px;
-    color:#e5e7eb;background:rgba(15,23,42,.7);border:1px solid #334155;border-radius:8px;
-    font:14px/1.2 system-ui,Segoe UI,Roboto
+  .panel{
+    position:fixed;left:0;top:0;bottom:0;width:320px;background:#0f172a;
+    border-right:1px solid #1f2937;padding:14px;overflow:auto
   }
+  h3{margin:8px 0 12px 0}
+  label{display:block;font-size:13px;margin-top:10px;color:#cbd5e1}
+  select,button,input[type=range]{
+    width:100%;margin:6px 0 8px 0;padding:8px 10px;border-radius:10px;
+    background:#1e293b;border:1px solid #334155;color:#e2e8f0
+  }
+  .row{display:flex;gap:8px}
+  .row>button{flex:1}
+  .hud{
+    position:fixed;top:10px;left:50%;transform:translateX(-50%);
+    background:rgba(15,23,42,.75);border:1px solid #334155;border-radius:10px;
+    padding:6px 10px;font-weight:700;backdrop-filter:blur(6px)
+  }
+  .toast{
+    position:fixed;bottom:10px;left:50%;transform:translateX(-50%);
+    background:rgba(2,6,23,.7);border:1px solid #334155;border-radius:10px;
+    padding:6px 10px;font-size:13px;display:none
+  }
+  #log{background:#0b1220;border:1px solid #1f2937;height:130px;overflow:auto;border-radius:8px;padding:8px}
+  #msg{position:fixed;top:10px;left:10px;color:#e5e7eb;background:rgba(15,23,42,.7);
+       border:1px solid #334155;border-radius:8px;padding:6px 10px;font-size:13px}
+  .legend{font-size:12px;color:#cbd5e1;margin-top:6px}
+  .chip{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid #334155;background:#0b1220;margin-right:6px}
 </style>
 </head>
 <body>
-<div id="msg">Loading…</div>
+<div class="panel">
+  <h3>Goniometry Trainer</h3>
+
+  <label>Measurement Preset</label>
+  <select id="preset">
+    <option value="cerv_flex">Cervical Flexion</option>
+    <option value="cerv_rot">Cervical Rotation</option>
+    <option value="cerv_lat">Cervical Lateral Bending</option>
+  </select>
+
+  <div class="row">
+    <button id="pickFulcrum">1️⃣ Fulcrum</button>
+    <button id="pickStationary">2️⃣ Stationary</button>
+    <button id="pickMoving">3️⃣ Moving</button>
+  </div>
+
+  <label>Tolerance (cm)</label>
+  <input type="range" min="0.5" max="5" step="0.5" value="2" id="tol">
+  <div class="legend">Green ≤ tolerance • Red > tolerance</div>
+
+  <label>Options</label>
+  <div class="row">
+    <button id="toggleGhost">👻 Ghost Landmarks</button>
+    <button id="resetAll">Reset</button>
+  </div>
+
+  <div class="legend">
+    <span class="chip" style="border-color:#60a5fa">Stationary arm</span>
+    <span class="chip" style="border-color:#f472b6">Moving arm</span>
+  </div>
+
+  <label>Event Log</label>
+  <pre id="log"></pre>
+</div>
+
+<div id="msg">Loading model…</div>
+<div class="hud" id="hud">Angle: 0°</div>
+<div class="toast" id="toast">Preset updated</div>
 <canvas id="c"></canvas>
 
 <script type="module">
@@ -37,90 +96,270 @@
   import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
   import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 
+  // ===== UI =====
   const msg = document.getElementById("msg");
+  const hud = document.getElementById("hud");
+  const logEl = document.getElementById("log");
+  const toast = document.getElementById("toast");
+  const tolEl = document.getElementById("tol");
+  let tol = parseFloat(tolEl.value);
+  tolEl.oninput = () => (tol = parseFloat(tolEl.value));
 
-  // Renderer / Scene / Camera
-  const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById("c"), antialias:true });
-  renderer.setPixelRatio(window.devicePixelRatio);
+  const canvas = document.getElementById("c");
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  renderer.setPixelRatio(devicePixelRatio);
   renderer.setSize(innerWidth, innerHeight);
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x0b1220);
 
   const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.1, 100);
-  camera.position.set(0, 1.5, 3);
+  camera.position.set(0.8, 1.6, 2.5);
 
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
 
-  // Lights
-  scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 1.2));
-  const key = new THREE.DirectionalLight(0xffffff, 1);
-  key.position.set(2,3,2);
-  scene.add(key);
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x333344, 1.2));
+  const dl = new THREE.DirectionalLight(0xffffff, 1);
+  dl.position.set(3, 4, 2);
+  scene.add(dl);
 
-  // GLTF loader + decoders (covers .glb with Draco/Meshopt/KTX2)
+  // ===== Floor 360° protractor with labels =====
+  // tick marks
+  const radius = 1.8;
+  const tickMat = new THREE.LineBasicMaterial({ color: 0x475569 });
+  for (let d = 0; d < 360; d += 10) {
+    const a = THREE.MathUtils.degToRad(d);
+    const r1 = radius * 0.95,
+          r2 = (d % 30 === 0) ? radius * 0.88 : radius * 0.93;
+    const pts = [
+      new THREE.Vector3(Math.cos(a) * r1, 0, Math.sin(a) * r1),
+      new THREE.Vector3(Math.cos(a) * r2, 0, Math.sin(a) * r2)
+    ];
+    scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), tickMat));
+  }
+  // degree labels every 30°
+  const makeLabel = (text, angleDeg) => {
+    const div = document.createElement('div');
+    div.textContent = text;
+    div.style.position = 'fixed';
+    div.style.color = '#94a3b8';
+    div.style.font = '12px system-ui';
+    div.style.pointerEvents = 'none';
+    document.body.appendChild(div);
+    return { el: div, angle: angleDeg };
+  };
+  const labels = [];
+  for (let d = 0; d < 360; d += 30) labels.push(makeLabel(`${d}°`, d));
+
+  // helper to position labels in screen space
+  const tmpV = new THREE.Vector3();
+  function layoutLabels() {
+    labels.forEach(({ el, angle }) => {
+      const a = THREE.MathUtils.degToRad(angle);
+      tmpV.set(Math.cos(a) * radius, 0, Math.sin(a) * radius);
+      tmpV.project(camera);
+      const x = (tmpV.x * 0.5 + 0.5) * innerWidth;
+      const y = (-tmpV.y * 0.5 + 0.5) * innerHeight;
+      el.style.left = `${x - 10}px`;
+      el.style.top = `${y - 8}px`;
+    });
+  }
+
+  // ===== Model loader (with decoders) =====
   const loader = new GLTFLoader();
-
-  // Meshopt (EXT_meshopt_compression)
   loader.setMeshoptDecoder(MeshoptDecoder);
-
-  // Draco (KHR_draco_mesh_compression)
   const draco = new DRACOLoader();
   draco.setDecoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/draco/");
   loader.setDRACOLoader(draco);
-
-  // KTX2 / BasisU (KHR_texture_basisu)
   const ktx2 = new KTX2Loader();
   ktx2.setTranscoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/basis/");
   ktx2.detectSupport(renderer);
   loader.setKTX2Loader(ktx2);
 
-  // IMPORTANT: file must be in the same folder, name & case must match exactly
   const MODEL_URL = "./Athletic_Grace_1006002620_texture.glb";
+  let model = null;
 
-  // Load model
-  loader.load(
-    MODEL_URL,
-    (gltf) => {
-      const model = gltf.scene;
-      scene.add(model);
+  loader.load(MODEL_URL, (gltf) => {
+    model = gltf.scene;
+    scene.add(model);
 
-      // Frame the model
-      const box = new THREE.Box3().setFromObject(model);
-      const size = box.getSize(new THREE.Vector3()).length();
-      const center = box.getCenter(new THREE.Vector3());
-      model.position.sub(center);
-      camera.position.set(0, size * 0.2, size * 1.5);
-      camera.lookAt(0, 0, 0);
+    // center the model
+    const box = new THREE.Box3().setFromObject(model);
+    const c = box.getCenter(new THREE.Vector3());
+    model.position.sub(c);
 
-      msg.textContent = "✅ Model loaded";
+    msg.textContent = "✅ Model loaded";
+  }, (xhr) => {
+    if (xhr.lengthComputable) {
+      const p = Math.round((xhr.loaded / xhr.total) * 100);
+      msg.textContent = `Loading ${p}%`;
+    } else msg.textContent = "Loading…";
+  }, (err) => {
+    console.error(err);
+    msg.textContent = "❌ Failed to load model (see console)";
+  });
+
+  // ===== Landmark logic =====
+  const matGood = new THREE.MeshBasicMaterial({ color: 0x22c55e });
+  const matBad  = new THREE.MeshBasicMaterial({ color: 0xef4444 });
+  const dot = () => new THREE.Mesh(new THREE.SphereGeometry(0.01, 16, 16), matBad.clone());
+
+  const user = { fulcrum: dot(), stationary: dot(), moving: dot() };
+  Object.values(user).forEach(m => { m.visible = false; scene.add(m); });
+
+  const ghost = { fulcrum: dot(), stationary: dot(), moving: dot() };
+  Object.values(ghost).forEach(m => { m.material = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
+                                      m.visible = false; scene.add(m); });
+
+  // preset ground-truth landmark positions (approximate demo values in meters)
+  const PRESETS = {
+    // EAM (ear) fulcrum; stationary ~ AC joint; moving ~ nares base
+    cerv_flex: {
+      fulcrum:   new THREE.Vector3(0.08, 1.65, 0.02),
+      stationary:new THREE.Vector3(0.12, 1.55, 0.15),
+      moving:    new THREE.Vector3(0.10, 1.68, 0.12)
     },
-    (xhr) => {
-      if (xhr.lengthComputable) {
-        const p = Math.round((xhr.loaded / xhr.total) * 100);
-        msg.textContent = `Loading ${p}%`;
-      } else {
-        msg.textContent = "Loading…";
-      }
+    // Rotation: fulcrum near cranial vertex; stationary ~ acromion; moving ~ nose tip
+    cerv_rot: {
+      fulcrum:   new THREE.Vector3(0.08, 1.80, 0.02),
+      stationary:new THREE.Vector3(0.18, 1.55, 0.15),
+      moving:    new THREE.Vector3(0.10, 1.70, 0.20)
     },
-    (err) => {
-      console.error(err);
-      msg.innerHTML = "❌ Failed to load model.<br/>Check: same folder, exact filename/casing, Pages redeployed. Open Console for details.";
+    // Lateral bending: fulcrum at C7 region; stationary along sternum; moving towards mastoid
+    cerv_lat: {
+      fulcrum:   new THREE.Vector3(0.05, 1.55, 0.02),
+      stationary:new THREE.Vector3(0.00, 1.45, 0.10),
+      moving:    new THREE.Vector3(0.10, 1.60, 0.02)
     }
-  );
+  };
+  let truth = { ...PRESETS.cerv_flex };
 
-  // Resize
+  // ghost toggle
+  let ghostOn = false;
+  function updateGhost() {
+    ghost.fulcrum.position.copy(truth.fulcrum);
+    ghost.stationary.position.copy(truth.stationary);
+    ghost.moving.position.copy(truth.moving);
+    Object.values(ghost).forEach(m => m.visible = ghostOn);
+  }
+
+  // selection flow
+  let target = null;
+  const ray = new THREE.Raycaster();
+  const mouse = new THREE.Vector2();
+
+  function placePoint(name, point) {
+    user[name].position.copy(point);
+    user[name].visible = true;
+    const cm = point.distanceTo(truth[name]) * 100.0;
+    user[name].material.color.set(cm <= tol ? 0x22c55e : 0xef4444);
+    log(`${name}: ${cm.toFixed(1)} cm`);
+    updateLines();
+  }
+
+  canvas.addEventListener("pointerdown", (e) => {
+    if (!target || !model) return;
+    const r = canvas.getBoundingClientRect();
+    mouse.x = ((e.clientX - r.left) / r.width) * 2 - 1;
+    mouse.y = -((e.clientY - r.top) / r.height) * 2 + 1;
+    ray.setFromCamera(mouse, camera);
+    // prefer meshes; ignore helper lines
+    const hits = ray.intersectObjects(scene.children, true)
+      .filter(h => !(h.object instanceof THREE.Line));
+    if (!hits.length) return;
+    placePoint(target, hits[0].point);
+    target = null;
+  });
+
+  // measurement lines + angle
+  const line1 = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: 0x60a5fa }));
+  const line2 = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: 0xf472b6 }));
+  scene.add(line1, line2);
+
+  function setAngle(a) { hud.textContent = `Angle: ${a.toFixed(0)}°`; }
+  function updateLines() {
+    const f = user.fulcrum.visible ? user.fulcrum.position : null;
+    const s = user.stationary.visible ? user.stationary.position : null;
+    const m = user.moving.visible ? user.moving.position : null;
+
+    if (f && s) {
+      line1.geometry.dispose();
+      line1.geometry = new THREE.BufferGeometry().setFromPoints([f, s]);
+      line1.visible = true;
+    } else line1.visible = false;
+
+    if (f && m) {
+      line2.geometry.dispose();
+      line2.geometry = new THREE.BufferGeometry().setFromPoints([f, m]);
+      line2.visible = true;
+    } else line2.visible = false;
+
+    if (f && s && m) {
+      const vs = s.clone().sub(f).normalize();
+      const vm = m.clone().sub(f).normalize();
+      const ang = THREE.MathUtils.radToDeg(Math.acos(THREE.MathUtils.clamp(vs.dot(vm), -1, 1)));
+      setAngle(ang);
+    } else setAngle(0);
+  }
+
+  // buttons
+  const pickFulcrum = document.getElementById("pickFulcrum");
+  const pickStationary = document.getElementById("pickStationary");
+  const pickMoving = document.getElementById("pickMoving");
+  const toggleGhostBtn = document.getElementById("toggleGhost");
+  const resetAll = document.getElementById("resetAll");
+  const presetSel = document.getElementById("preset");
+
+  pickFulcrum.onclick   = () => { target = "fulcrum";   log("Place Fulcrum"); };
+  pickStationary.onclick= () => { target = "stationary";log("Place Stationary"); };
+  pickMoving.onclick    = () => { target = "moving";    log("Place Moving"); };
+
+  toggleGhostBtn.onclick = () => {
+    ghostOn = !ghostOn; updateGhost();
+    toast.textContent = ghostOn ? "Ghost landmarks ON" : "Ghost landmarks OFF";
+    showToast();
+  };
+
+  resetAll.onclick = () => {
+    Object.values(user).forEach(m => m.visible = false);
+    line1.visible = line2.visible = false;
+    setAngle(0);
+    log("Reset");
+  };
+
+  presetSel.onchange = () => {
+    const p = presetSel.value;
+    truth = { ...PRESETS[p] };
+    updateGhost();
+    toast.textContent = `Preset: ${presetSel.options[presetSel.selectedIndex].text}`;
+    showToast();
+  };
+
+  function showToast() {
+    toast.style.display = 'block';
+    clearTimeout(showToast.tid);
+    showToast.tid = setTimeout(()=> toast.style.display='none', 1200);
+  }
+
+  // logging
+  function log(t) {
+    logEl.textContent += t + "\n";
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  // layout + render
   addEventListener("resize", () => {
     camera.aspect = innerWidth / innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(innerWidth, innerHeight);
+    layoutLabels();
   });
 
-  // Render loop
-  (function animate(){
+  (function animate() {
     controls.update();
     renderer.render(scene, camera);
+    layoutLabels();
     requestAnimationFrame(animate);
   })();
 </script>
