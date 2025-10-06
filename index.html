@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PT Lab • 3D Goniometry Trainer (Drive Proxy)</title>
+<title>PT Lab • 3D Goniometry Trainer (GitHub Model)</title>
 <style>
   html,body{height:100%;margin:0;background:#0b1220;color:#e5e7eb;font-family:Inter,system-ui}
   .panel{position:absolute;left:0;top:0;bottom:0;width:320px;background:#0f172a;border-right:1px solid #1f2937;padding:14px;overflow:auto}
@@ -32,7 +32,7 @@
 </div>
 <div class="hud" id="hud">Angle: 0°</div>
 <div class="loader" id="loader">
-  <div>Loading model from Google Drive… <b id="pct">0%</b></div>
+  <div>Loading model from GitHub… <b id="pct">0%</b></div>
   <div class="bar"><div id="fill"></div></div>
   <div class="err" id="err"></div>
 </div>
@@ -57,7 +57,7 @@ scene.add(new THREE.HemisphereLight(0xffffff,0x333344,1.2));
 const dir=new THREE.DirectionalLight(0xffffff,1);
 dir.position.set(3,4,2);scene.add(dir);
 
-// floor ticks (simple ring)
+// circular grid
 const radius=1.8, tickMat=new THREE.LineBasicMaterial({color:0x475569});
 for(let d=0;d<360;d+=10){
   const a=THREE.MathUtils.degToRad(d);
@@ -68,17 +68,17 @@ for(let d=0;d<360;d+=10){
 }
 scene.add(new THREE.GridHelper(10,20,0x1f2937,0x1f2937));
 
-// loader overlay controls
+// loader UI
 const loaderEl=document.getElementById('loader');
 const pctEl=document.getElementById('pct');
 const fillEl=document.getElementById('fill');
 const errEl=document.getElementById('err');
 
-// model loader via CORS proxy for Google Drive
+// GitHub model link
+const MODEL_URL="https://raw.githubusercontent.com/Kingto89/PTTESTPILOT/main/Athletic_Grace_1006002620_texture.glb";
 const loader=new THREE.GLTFLoader();
-const DRIVE_URL="https://cors.isomorphic-gltf.workers.dev/?https://drive.google.com/uc?export=download&id=1ZIJMraZ7_GOCauwDAbGTJF2NunAigpTG";
 
-loader.load(DRIVE_URL,(gltf)=>{
+loader.load(MODEL_URL,(gltf)=>{
   const model=gltf.scene; scene.add(model);
   const box=new THREE.Box3().setFromObject(model);
   const c=new THREE.Vector3(); box.getCenter(c); model.position.sub(c);
@@ -89,7 +89,7 @@ loader.load(DRIVE_URL,(gltf)=>{
     pctEl.textContent=p+'%'; fillEl.style.width=p+'%';
   }
 },(e)=>{
-  errEl.textContent="Could not load from Google Drive. If you see 404, the link is expired or blocked.";
+  errEl.textContent="Could not load model. Check that 'Raw' URL works in browser.";
   console.error(e);
 });
 
