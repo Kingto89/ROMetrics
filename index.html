@@ -2,171 +2,72 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PT Lab • 3D Goniometry Trainer (Module Stable)</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>GLB Viewer</title>
 <style>
-  html,body{height:100%;margin:0;background:#0b1220;color:#e5e7eb;font-family:Inter,system-ui}
-  .panel{position:absolute;left:0;top:0;bottom:0;width:320px;background:#0f172a;border-right:1px solid #1f2937;padding:14px;overflow:auto}
+  html,body{margin:0;height:100%;background:#0b1220;overflow:hidden}
   canvas{width:100%;height:100%;display:block}
-  .hud{position:absolute;top:10px;left:50%;transform:translateX(-50%);
-       background:rgba(15,23,42,.75);border:1px solid #334155;border-radius:10px;
-       padding:8px 12px;font-weight:700;backdrop-filter:blur(6px)}
-  button{background:#1e293b;border:1px solid #334155;color:#e2e8f0;
-         border-radius:8px;padding:8px 10px;margin:4px 0;cursor:pointer;width:100%}
-  input[type=range]{width:100%}
-  .loader{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;
-          background:rgba(2,6,23,.85);z-index:10}
-  .bar{width:60%;height:10px;border-radius:999px;border:1px solid #334155;background:#0b1220;overflow:hidden;margin-top:8px}
-  .bar>div{height:100%;width:0%;background:#60a5fa}
-  .err{color:#fca5a5;margin-top:8px;font-size:13px;max-width:80%;text-align:center}
+  #msg{position:fixed;top:10px;left:10px;color:#e5e7eb;font-family:sans-serif;font-size:14px}
 </style>
 </head>
 <body>
-<div class="panel">
-  <h3>Goniometry Trainer</h3>
-  <button id="pickFulcrum">1️⃣ Fulcrum (EAM)</button>
-  <button id="pickStationary">2️⃣ Stationary (AC Joint)</button>
-  <button id="pickMoving">3️⃣ Moving (Base of Nares)</button>
-  <label>Tolerance (cm)</label>
-  <input type="range" min="0.5" max="5" step="0.5" value="2" id="tolSlider"><span id="tolVal"> 2.0</span>
-  <button id="resetAll">Reset</button>
-  <pre id="log" style="background:#0b1220;border:1px solid #1f2937;height:150px;overflow:auto"></pre>
-</div>
-<div class="hud" id="hud">Angle: 0°</div>
-<div class="loader" id="loader">
-  <div>Loading model… <b id="pct">0%</b></div>
-  <div class="bar"><div id="fill"></div></div>
-  <div class="err" id="err"></div>
-</div>
+<div id="msg">Loading model...</div>
 <canvas id="c"></canvas>
 
-<!-- ES-module Three.js build -->
 <script type="module">
   import * as THREE from "https://unpkg.com/three@0.160.0/build/three.module.js";
   import { OrbitControls } from "https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js";
   import { GLTFLoader } from "https://unpkg.com/three@0.160.0/examples/jsm/loaders/GLTFLoader.js";
 
-  const canvas=document.getElementById('c');
-  const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+  const canvas = document.getElementById("c");
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias:true });
   renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setSize(window.innerWidth, window.innerHeight);
 
-  const scene=new THREE.Scene();
-  scene.background=new THREE.Color(0x0b1220);
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0b1220);
 
-  const camera=new THREE.PerspectiveCamera(45,2,0.1,100);
-  camera.position.set(0.8,1.6,2.5);
+  const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+  camera.position.set(0, 1.5, 3);
 
-  const controls=new OrbitControls(camera,renderer.domElement);
-  controls.enableDamping=true;
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
 
-  scene.add(new THREE.HemisphereLight(0xffffff,0x333344,1.2));
-  const dir=new THREE.DirectionalLight(0xffffff,1);
-  dir.position.set(3,4,2);
+  // lights
+  const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2);
+  scene.add(hemi);
+  const dir = new THREE.DirectionalLight(0xffffff, 1);
+  dir.position.set(2, 3, 2);
   scene.add(dir);
 
-  // circular degree grid
-  const radius=1.8;
-  const tickMat=new THREE.LineBasicMaterial({color:0x475569});
-  for(let d=0;d<360;d+=10){
-    const a=THREE.MathUtils.degToRad(d);
-    const r1=radius*0.95, r2=(d%30===0)?radius*0.9:radius*0.93;
-    const pts=[new THREE.Vector3(Math.cos(a)*r1,0,Math.sin(a)*r1),
-               new THREE.Vector3(Math.cos(a)*r2,0,Math.sin(a)*r2)];
-    scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),tickMat));
-  }
-  scene.add(new THREE.GridHelper(10,20,0x1f2937,0x1f2937));
+  // load model (same folder)
+  const loader = new GLTFLoader();
+  const url = "./Athletic_Grace_1006002620_texture.glb";
 
-  const loaderEl=document.getElementById('loader');
-  const pctEl=document.getElementById('pct');
-  const fillEl=document.getElementById('fill');
-  const errEl=document.getElementById('err');
-
-  const loader=new GLTFLoader();
-  const MODEL_URL="./Athletic_Grace_1006002620_texture.glb"; // same folder
-
-  loader.load(MODEL_URL,(gltf)=>{
-    const model=gltf.scene;
-    scene.add(model);
-    const box=new THREE.Box3().setFromObject(model);
-    const c=new THREE.Vector3();
-    box.getCenter(c);
-    model.position.sub(c);
-    loaderEl.style.display='none';
-  },(xhr)=>{
-    if(xhr.lengthComputable){
-      const p=Math.round((xhr.loaded/xhr.total)*100);
-      pctEl.textContent=p+'%';
-      fillEl.style.width=p+'%';
-    }
-  },(e)=>{
-    errEl.textContent="Model failed to load – verify GLB file is in same folder and GitHub Pages re-deployed.";
-    console.error(e);
+  loader.load(url, (gltf) => {
+      const model = gltf.scene;
+      scene.add(model);
+      document.getElementById("msg").textContent = "Model loaded ✅";
+      // center & scale
+      const box = new THREE.Box3().setFromObject(model);
+      const size = box.getSize(new THREE.Vector3()).length();
+      const center = box.getCenter(new THREE.Vector3());
+      model.position.sub(center);
+      camera.position.set(0, size * 0.2, size * 1.5);
+  }, undefined, (err) => {
+      document.getElementById("msg").textContent = "❌ Failed to load GLB";
+      console.error(err);
   });
 
-  // placement logic
-  const tolSlider=document.getElementById('tolSlider');
-  const tolVal=document.getElementById('tolVal');
-  let tol=2.0;
-  tolSlider.oninput=()=>{tol=parseFloat(tolSlider.value);tolVal.textContent=' '+tol.toFixed(1)};
-
-  const truth={fulcrum:new THREE.Vector3(0.08,1.65,0.02),
-               stationary:new THREE.Vector3(0.12,1.55,0.15),
-               moving:new THREE.Vector3(0.10,1.68,0.12)};
-
-  const ray=new THREE.Raycaster(), mouse=new THREE.Vector2();
-  const sphere=(col)=>new THREE.Mesh(new THREE.SphereGeometry(0.01,16,16),new THREE.MeshBasicMaterial({color:col}));
-  const user={fulcrum:sphere(0xef4444),stationary:sphere(0xef4444),moving:sphere(0xef4444)};
-  Object.values(user).forEach(m=>{m.visible=false;scene.add(m);});
-
-  const line1=new THREE.Line(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0x60a5fa}));
-  const line2=new THREE.Line(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0xf472b6}));
-  scene.add(line1,line2);
-
-  let target=null;
-  document.getElementById('pickFulcrum').onclick=()=>{target='fulcrum';log("Place Fulcrum");};
-  document.getElementById('pickStationary').onclick=()=>{target='stationary';log("Place Stationary");};
-  document.getElementById('pickMoving').onclick=()=>{target='moving';log("Place Moving");};
-  document.getElementById('resetAll').onclick=()=>{for(const k in user){user[k].visible=false;}line1.visible=line2.visible=false;setAngle(0);};
-
-  canvas.addEventListener('pointerdown',e=>{
-    if(!target)return;
-    const r=canvas.getBoundingClientRect();
-    mouse.x=((e.clientX-r.left)/r.width)*2-1;
-    mouse.y=-((e.clientY-r.top)/r.height)*2+1;
-    ray.setFromCamera(mouse,camera);
-    const hit=ray.intersectObjects(scene.children,true).find(h=>h.object && !(h.object instanceof THREE.Line));
-    if(!hit)return;
-    const p=hit.point;
-    user[target].position.copy(p);
-    user[target].visible=true;
-    const dist=p.distanceTo(truth[target])*100;
-    user[target].material.color.set(dist<=tol?0x22c55e:0xef4444);
-    log(`${target}: ${dist.toFixed(1)} cm`);
-    target=null;
-    updateLines();
+  window.addEventListener("resize", () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
   });
-
-  function updateLines(){
-    const f=user.fulcrum.visible?user.fulcrum.position:null;
-    const s=user.stationary.visible?user.stationary.position:null;
-    const m=user.moving.visible?user.moving.position:null;
-    if(f&&s){line1.geometry.dispose();line1.geometry=new THREE.BufferGeometry().setFromPoints([f,s]);line1.visible=true;}
-    if(f&&m){line2.geometry.dispose();line2.geometry=new THREE.BufferGeometry().setFromPoints([f,m]);line2.visible=true;}
-    if(f&&s&&m){
-      const vs=s.clone().sub(f).normalize(), vm=m.clone().sub(f).normalize();
-      const ang=THREE.MathUtils.radToDeg(Math.acos(THREE.MathUtils.clamp(vs.dot(vm),-1,1)));
-      setAngle(ang);
-    }
-  }
-
-  const hud=document.getElementById('hud');
-  function setAngle(a){hud.textContent="Angle: "+a.toFixed(0)+"°";}
-  function log(t){const l=document.getElementById('log');l.textContent+=(t+"\\n");l.scrollTop=l.scrollHeight;}
 
   function animate(){
-    renderer.setSize(innerWidth,innerHeight);
     controls.update();
-    renderer.render(scene,camera);
+    renderer.render(scene, camera);
     requestAnimationFrame(animate);
   }
   animate();
