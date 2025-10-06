@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>PT Lab — Goniometry Trainer</title>
+<title>PT Lab — Goniometry Trainer (Aligned + Overlay)</title>
 
 <!-- Import map so we can use "three" bare specifiers on GitHub Pages -->
 <script type="importmap">
@@ -124,12 +124,12 @@
   dl.position.set(3, 4, 2);
   scene.add(dl);
 
-  // ===== Floor 360° protractor with labels =====
-  // tick marks
+  // ===== Floor 360° protractor aligned to anatomy (0° at +Z) =====
+  const PROTRACTOR_ZERO_OFFSET = -90; // rotate so 0° is anterior (+Z)
   const radius = 1.8;
   const tickMat = new THREE.LineBasicMaterial({ color: 0x475569 });
   for (let d = 0; d < 360; d += 10) {
-    const a = THREE.MathUtils.degToRad(d);
+    const a = THREE.MathUtils.degToRad(d + PROTRACTOR_ZERO_OFFSET);
     const r1 = radius * 0.95,
           r2 = (d % 30 === 0) ? radius * 0.88 : radius * 0.93;
     const pts = [
@@ -151,12 +151,10 @@
   };
   const labels = [];
   for (let d = 0; d < 360; d += 30) labels.push(makeLabel(`${d}°`, d));
-
-  // helper to position labels in screen space
   const tmpV = new THREE.Vector3();
   function layoutLabels() {
     labels.forEach(({ el, angle }) => {
-      const a = THREE.MathUtils.degToRad(angle);
+      const a = THREE.MathUtils.degToRad(angle + PROTRACTOR_ZERO_OFFSET);
       tmpV.set(Math.cos(a) * radius, 0, Math.sin(a) * radius);
       tmpV.project(camera);
       const x = (tmpV.x * 0.5 + 0.5) * innerWidth;
@@ -184,7 +182,7 @@
     model = gltf.scene;
     scene.add(model);
 
-    // center the model
+    // center model
     const box = new THREE.Box3().setFromObject(model);
     const c = box.getCenter(new THREE.Vector3());
     model.position.sub(c);
@@ -212,30 +210,25 @@
   Object.values(ghost).forEach(m => { m.material = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
                                       m.visible = false; scene.add(m); });
 
-  // preset ground-truth landmark positions (approximate demo values in meters)
   const PRESETS = {
-    // EAM (ear) fulcrum; stationary ~ AC joint; moving ~ nares base
     cerv_flex: {
       fulcrum:   new THREE.Vector3(0.08, 1.65, 0.02),
       stationary:new THREE.Vector3(0.12, 1.55, 0.15),
       moving:    new THREE.Vector3(0.10, 1.68, 0.12)
     },
-    // Rotation: fulcrum near cranial vertex; stationary ~ acromion; moving ~ nose tip
     cerv_rot: {
       fulcrum:   new THREE.Vector3(0.08, 1.80, 0.02),
       stationary:new THREE.Vector3(0.18, 1.55, 0.15),
       moving:    new THREE.Vector3(0.10, 1.70, 0.20)
     },
-    // Lateral bending: fulcrum at C7 region; stationary along sternum; moving towards mastoid
     cerv_lat: {
       fulcrum:   new THREE.Vector3(0.05, 1.55, 0.02),
       stationary:new THREE.Vector3(0.00, 1.45, 0.10),
       moving:    new THREE.Vector3(0.10, 1.60, 0.02)
     }
   };
-  let truth = { ...PRESETS.cerv_flex };
+  let truth = { ...PRESETS.cerv_rot }; // default matches your screenshot
 
-  // ghost toggle
   let ghostOn = false;
   function updateGhost() {
     ghost.fulcrum.position.copy(truth.fulcrum);
@@ -244,7 +237,6 @@
     Object.values(ghost).forEach(m => m.visible = ghostOn);
   }
 
-  // selection flow
   let target = null;
   const ray = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
@@ -264,7 +256,6 @@
     mouse.x = ((e.clientX - r.left) / r.width) * 2 - 1;
     mouse.y = -((e.clientY - r.top) / r.height) * 2 + 1;
     ray.setFromCamera(mouse, camera);
-    // prefer meshes; ignore helper lines
     const hits = ray.intersectObjects(scene.children, true)
       .filter(h => !(h.object instanceof THREE.Line));
     if (!hits.length) return;
@@ -272,12 +263,67 @@
     target = null;
   });
 
-  // measurement lines + angle
+  // ===== Measurement lines + angle =====
   const line1 = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: 0x60a5fa }));
   const line2 = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: 0xf472b6 }));
   scene.add(line1, line2);
 
   function setAngle(a) { hud.textContent = `Angle: ${a.toFixed(0)}°`; }
+
+  // ===== Goniometer overlay (ring + two arms) =====
+  const gonio = new THREE.Group(); gonio.visible = false; scene.add(gonio);
+  const rInner = 0.095, rOuter = 0.105;
+  gonio.add(new THREE.Mesh(
+    new THREE.RingGeometry(rInner, rOuter, 96),
+    new THREE.MeshBasicMaterial({ color: 0x94a3b8, transparent:true, opacity:0.25, side:THREE.DoubleSide })
+  ));
+  const tickMat2 = new THREE.LineBasicMaterial({ color: 0xb0c4de });
+  for (let d = 0; d < 360; d += 10) {
+    const a = THREE.MathUtils.degToRad(d);
+    const inR = (d % 30 === 0) ? rInner * 0.8 : rInner * 0.9;
+    const x1 = Math.cos(a) * inR,  y1 = Math.sin(a) * inR;
+    const x2 = Math.cos(a) * rInner, y2 = Math.sin(a) * rInner;
+    const geo = new THREE.BufferGeometry().setFromPoints([ new THREE.Vector3(x1,0,y1), new THREE.Vector3(x2,0,y2) ]);
+    gonio.add(new THREE.Line(geo, tickMat2));
+  }
+  const armMatA = new THREE.LineBasicMaterial({ color: 0x60a5fa });
+  const armMatB = new THREE.LineBasicMaterial({ color: 0xf472b6 });
+  const armLen = 0.22;
+  const armA = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3(armLen,0,0)]), armMatA);
+  const armB = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3(armLen,0,0)]), armMatB);
+  gonio.add(armA, armB);
+
+  function updateGoniometer(f, s, m) {
+    if (!f || !s || !m) { gonio.visible = false; return; }
+
+    gonio.position.copy(f);
+
+    const vs = s.clone().sub(f).normalize();
+    const vm = m.clone().sub(f).normalize();
+    let n = vs.clone().cross(vm);
+    if (n.lengthSq() < 1e-6) n.set(0,1,0);
+    n.normalize();
+
+    // orient ring's +Z to plane normal
+    const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,0,1), n);
+    gonio.quaternion.copy(q);
+
+    // set arms towards stationary & moving
+    const endAWorld = f.clone().add( vs.clone().multiplyScalar(armLen) );
+    const endBWorld = f.clone().add( vm.clone().multiplyScalar(armLen) );
+
+    const toLocal = (wp) => gonio.worldToLocal(wp.clone());
+    armA.geometry.dispose();
+    armA.geometry = new THREE.BufferGeometry().setFromPoints([ new THREE.Vector3(0,0,0), toLocal(endAWorld) ]);
+    armB.geometry.dispose();
+    armB.geometry = new THREE.BufferGeometry().setFromPoints([ new THREE.Vector3(0,0,0), toLocal(endBWorld) ]);
+
+    // lift a touch along normal
+    gonio.position.add(n.clone().multiplyScalar(0.02));
+
+    gonio.visible = true;
+  }
+
   function updateLines() {
     const f = user.fulcrum.visible ? user.fulcrum.position : null;
     const s = user.stationary.visible ? user.stationary.position : null;
@@ -300,10 +346,14 @@
       const vm = m.clone().sub(f).normalize();
       const ang = THREE.MathUtils.radToDeg(Math.acos(THREE.MathUtils.clamp(vs.dot(vm), -1, 1)));
       setAngle(ang);
-    } else setAngle(0);
+      updateGoniometer(f, s, m);
+    } else {
+      setAngle(0);
+      updateGoniometer(null, null, null);
+    }
   }
 
-  // buttons
+  // ===== Buttons & presets =====
   const pickFulcrum = document.getElementById("pickFulcrum");
   const pickStationary = document.getElementById("pickStationary");
   const pickMoving = document.getElementById("pickMoving");
@@ -325,6 +375,7 @@
     Object.values(user).forEach(m => m.visible = false);
     line1.visible = line2.visible = false;
     setAngle(0);
+    updateGoniometer(null,null,null);
     log("Reset");
   };
 
@@ -342,7 +393,6 @@
     showToast.tid = setTimeout(()=> toast.style.display='none', 1200);
   }
 
-  // logging
   function log(t) {
     logEl.textContent += t + "\n";
     logEl.scrollTop = logEl.scrollHeight;
