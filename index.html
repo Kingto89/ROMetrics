@@ -3,14 +3,16 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PT Lab • 3D Goniometry Trainer (Module Version)</title>
+<title>PT Lab • 3D Goniometry Trainer (Module Stable)</title>
 <style>
   html,body{height:100%;margin:0;background:#0b1220;color:#e5e7eb;font-family:Inter,system-ui}
   .panel{position:absolute;left:0;top:0;bottom:0;width:320px;background:#0f172a;border-right:1px solid #1f2937;padding:14px;overflow:auto}
   canvas{width:100%;height:100%;display:block}
-  .hud{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(15,23,42,.75);
-       border:1px solid #334155;border-radius:10px;padding:8px 12px;font-weight:700;backdrop-filter:blur(6px)}
-  button{background:#1e293b;border:1px solid #334155;color:#e2e8f0;border-radius:8px;padding:8px 10px;margin:4px 0;cursor:pointer;width:100%}
+  .hud{position:absolute;top:10px;left:50%;transform:translateX(-50%);
+       background:rgba(15,23,42,.75);border:1px solid #334155;border-radius:10px;
+       padding:8px 12px;font-weight:700;backdrop-filter:blur(6px)}
+  button{background:#1e293b;border:1px solid #334155;color:#e2e8f0;
+         border-radius:8px;padding:8px 10px;margin:4px 0;cursor:pointer;width:100%}
   input[type=range]{width:100%}
   .loader{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;
           background:rgba(2,6,23,.85);z-index:10}
@@ -38,6 +40,7 @@
 </div>
 <canvas id="c"></canvas>
 
+<!-- ES-module Three.js build -->
 <script type="module">
   import * as THREE from "https://unpkg.com/three@0.160.0/build/three.module.js";
   import { OrbitControls } from "https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js";
@@ -46,20 +49,22 @@
   const canvas=document.getElementById('c');
   const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
   renderer.setPixelRatio(window.devicePixelRatio);
+
   const scene=new THREE.Scene();
   scene.background=new THREE.Color(0x0b1220);
+
   const camera=new THREE.PerspectiveCamera(45,2,0.1,100);
   camera.position.set(0.8,1.6,2.5);
+
   const controls=new OrbitControls(camera,renderer.domElement);
   controls.enableDamping=true;
 
-  // lighting
   scene.add(new THREE.HemisphereLight(0xffffff,0x333344,1.2));
   const dir=new THREE.DirectionalLight(0xffffff,1);
   dir.position.set(3,4,2);
   scene.add(dir);
 
-  // circular floor grid
+  // circular degree grid
   const radius=1.8;
   const tickMat=new THREE.LineBasicMaterial({color:0x475569});
   for(let d=0;d<360;d+=10){
@@ -71,14 +76,13 @@
   }
   scene.add(new THREE.GridHelper(10,20,0x1f2937,0x1f2937));
 
-  // loader UI
   const loaderEl=document.getElementById('loader');
   const pctEl=document.getElementById('pct');
   const fillEl=document.getElementById('fill');
   const errEl=document.getElementById('err');
 
   const loader=new GLTFLoader();
-  const MODEL_URL="./Athletic_Grace_1006002620_texture.glb";
+  const MODEL_URL="./Athletic_Grace_1006002620_texture.glb"; // same folder
 
   loader.load(MODEL_URL,(gltf)=>{
     const model=gltf.scene;
@@ -95,7 +99,7 @@
       fillEl.style.width=p+'%';
     }
   },(e)=>{
-    errEl.textContent="Model failed to load. Confirm .glb is in same folder & GitHub Pages deployed.";
+    errEl.textContent="Model failed to load – verify GLB file is in same folder and GitHub Pages re-deployed.";
     console.error(e);
   });
 
@@ -104,13 +108,16 @@
   const tolVal=document.getElementById('tolVal');
   let tol=2.0;
   tolSlider.oninput=()=>{tol=parseFloat(tolSlider.value);tolVal.textContent=' '+tol.toFixed(1)};
+
   const truth={fulcrum:new THREE.Vector3(0.08,1.65,0.02),
                stationary:new THREE.Vector3(0.12,1.55,0.15),
                moving:new THREE.Vector3(0.10,1.68,0.12)};
+
   const ray=new THREE.Raycaster(), mouse=new THREE.Vector2();
   const sphere=(col)=>new THREE.Mesh(new THREE.SphereGeometry(0.01,16,16),new THREE.MeshBasicMaterial({color:col}));
   const user={fulcrum:sphere(0xef4444),stationary:sphere(0xef4444),moving:sphere(0xef4444)};
   Object.values(user).forEach(m=>{m.visible=false;scene.add(m);});
+
   const line1=new THREE.Line(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0x60a5fa}));
   const line2=new THREE.Line(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0xf472b6}));
   scene.add(line1,line2);
