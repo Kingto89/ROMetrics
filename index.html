@@ -71,14 +71,17 @@
   </div>
 
   <div class="row">
-    <button id="measureToggle">🧭 Measure: OFF</button>
+    <button id="measureToggle">🧭 Measure: ON</button>
   </div>
 
   <label>Interaction Locks</label>
   <div class="row">
-    <button id="lock3D">🔓 3D: Unlocked</button>
+    <button id="lock3D" class="lockOn">🔒 3D: Locked</button>
     <button id="lockGonio">🔓 Gonio: Unlocked</button>
   </div>
+
+  <label>Gonio Size (50–200%)</label>
+  <input type="range" min="50" max="200" step="5" value="100" id="gonioSize">
 
   <div class="legend">
     <span class="chip" style="border-color:#60a5fa">Stationary arm</span>
@@ -109,7 +112,7 @@
 
             <!-- RED stationary arm -->
             <g id="armA_grp">
-              <rect class="armA" x="-10" y="120" width="20" height="260" rx="10" stroke-width="3"/>
+              <rect class="armA" x="-10" y="120" width="20" height="260" rx="10" stroke-width="3" />
               <line id="axisA" class="axisA" x1="0" y1="380" x2="0" y2="-116" stroke-linecap="round"/>
               <g id="armA_ruler"></g>
               <circle id="armA_knob" cx="0" cy="380" r="10" fill="#ef4444"/>
@@ -121,6 +124,9 @@
               <line id="axisB" class="axisB" x1="0" y1="-380" x2="0" y2="124" stroke-linecap="round"/>
               <g id="armB_ruler"></g>
               <circle id="armB_knob" cx="0" cy="-380" r="10" fill="#22c55e"/>
+              <!-- generous invisible drag handles -->
+              <circle id="armB_handleKnob" cx="0" cy="-380" r="38" fill="rgba(0,0,0,0)" style="pointer-events:all"/>
+              <rect   id="armB_handleShaft" x="-20" y="-380" width="40" height="500" fill="rgba(0,0,0,0)" style="pointer-events:all"/>
             </g>
           </g>
         </g>
@@ -146,13 +152,13 @@ import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
  *  CONFIG – sensitivity / clamp
  * ======================== */
 const S = {
-  MIN_ZOOM: 0.10, MAX_ZOOM: 10.0,
-  WHEEL_STEP: 1.22, WHEEL_ACCEL: 1/100,
+  MIN_ZOOM: 0.07, MAX_ZOOM: 10.0,              // allow smaller
+  WHEEL_STEP: 1.22, WHEEL_ACCEL: 1/120,
   PINCH_EXP: 1.25, ROT_GAIN: 1.25,
-  PAN_GAIN: 1.10,
+  PAN_GAIN: 1.00,
   PX_PER_CM: 37.7952755906,
   MARGIN_CM: 4,
-  INSTR_RADIUS_PX: 390
+  INSTR_BASE_RADIUS_PX: 140                    // head + ring (not full arms)
 };
 const MARGIN_PX = S.PX_PER_CM * S.MARGIN_CM;
 
@@ -164,6 +170,7 @@ const toast = document.getElementById("toast");
 const tolEl = document.getElementById("tol");
 const lock3DBtn = document.getElementById("lock3D");
 const lockGonioBtn = document.getElementById("lockGonio");
+const sizeEl = document.getElementById("gonioSize");
 let tol = parseFloat(tolEl.value);
 tolEl.oninput = () => (tol = parseFloat(tolEl.value));
 const log = (t)=>{ logEl.textContent += t + "\\n"; logEl.scrollTop = logEl.scrollHeight; };
@@ -308,7 +315,7 @@ const toggleGhostBtn = document.getElementById("toggleGhost");
 const resetAll = document.getElementById("resetAll");
 const presetSel = document.getElementById("preset");
 const measureToggle = document.getElementById("measureToggle");
-let followMeasure = false;
+let followMeasure = true;
 
 pickFulcrum.onclick   = () => { clicked.fulcrum=true;   target = "fulcrum";   log("Place Fulcrum");   maybeShowGonioOnClicks(); };
 pickStationary.onclick= () => { clicked.stationary=true;target = "stationary";log("Place Stationary"); maybeShowGonioOnClicks(); };
@@ -324,12 +331,14 @@ presetSel.onchange = () => { const p=presetSel.value; truth = { ...PRESETS[p] };
 measureToggle.onclick = () => { followMeasure = !followMeasure; measureToggle.textContent = followMeasure ? "🧭 Measure: ON" : "🧭 Measure: OFF"; };
 
 /* Locks */
-let lock3D = false, lockGonio = false;
+let lock3D = true, lockGonio = false;
 function set3DLock(v){ lock3D=v; controls.enabled=!lock3D; lock3DBtn.textContent=(lock3D? "🔒 3D: Locked":"🔓 3D: Unlocked"); lock3DBtn.classList.toggle('lockOn', lock3D); }
 function setGonioLock(v){ lockGonio=v; document.getElementById('instrument').style.pointerEvents = lockGonio ? 'none' : 'auto'; lockGonioBtn.textContent=(lockGonio? "🔒 Gonio: Locked":"🔓 Gonio: Unlocked"); lockGonioBtn.classList.toggle('lockOn', lockGonio); }
-set3DLock(false); setGonioLock(false);
+set3DLock(lock3D); setGonioLock(lockGonio);
 lock3DBtn.onclick = ()=> set3DLock(!lock3D);
 lockGonioBtn.onclick = ()=> setGonioLock(!lockGonio);
+
+sizeEl.oninput = ()=> Gonio.setScale(parseInt(sizeEl.value,10)/100);
 
 function showToast(){ toast.style.display='block'; clearTimeout(showToast.tid); showToast.tid=setTimeout(()=>toast.style.display='none',1200); }
 
@@ -339,7 +348,7 @@ const clock = new THREE.Clock();
 (function animate(){ clock.getDelta(); controls.update(); if (followMeasure) updateFromLocals(); renderer.render(scene, camera); layoutLabels(); requestAnimationFrame(animate); })();
 
 /* ==============================
-   SVG goniometer (with clamped pan)
+   SVG goniometer (clamped pan + size control)
    ============================== */
 const Gonio = (() => {
   const host  = document.getElementById('gonioHost');
@@ -356,6 +365,8 @@ const Gonio = (() => {
   const armB_grp = document.getElementById('armB_grp');
   const armA_ruler = document.getElementById('armA_ruler');
   const armB_ruler = document.getElementById('armB_ruler');
+  const armB_handleKnob = document.getElementById('armB_handleKnob');
+  const armB_handleShaft= document.getElementById('armB_handleShaft');
 
   const clamp = (v,a,b)=> Math.min(b, Math.max(a, v));
   const clamp360 = a => (a%360+360)%360;
@@ -415,7 +426,7 @@ const Gonio = (() => {
         if (long){ const t=text(group,18,y,Math.round(inch),'ruLbl',90); t.dataset.arm=which; t.dataset.x=18; t.dataset.y=y; }
       }
       const tcm=text(group,-26,tipY,'cm','ruLbl',-90); tcm.dataset.arm=which; tcm.dataset.x=-26; tcm.dataset.y=tipY;
-      const tin=text(group, 26,tipY,'in','ruLbl', 90); tin.dataset.arm=which; tin.dataset.x=26; tin.dataset.y=tipY;  /* <-- FIXED LINE */
+      const tin=text(group, 26,tipY,'in','ruLbl', 90); tin.dataset.arm=which; tin.dataset.x=26; tin.dataset.y=tipY;
     };
     buildTipRuler(armA_ruler,  380, +1, 'A');
     buildTipRuler(armB_ruler, -380, -1, 'B');
@@ -424,9 +435,11 @@ const Gonio = (() => {
   // --- Interaction state ---
   let mov=0, zoom=1, panX=innerWidth/2, panY=innerHeight/2;
   let baseRot=0, userRot=0;
+  let scale=1; // additional size factor (50–200% via slider)
+
   let draggingArm=false, draggingPan=false, lastPanPt=null;
 
-  function applyView(){ viewport.setAttribute('transform', `translate(${panX},${panY}) scale(${zoom})`); }
+  function applyView(){ viewport.setAttribute('transform', `translate(${panX},${panY}) scale(${zoom*scale})`); }
   function applyRot(){ rotWrap.setAttribute('transform', `rotate(${baseRot + userRot})`); }
   function applyLabelFix(){
     const t = -(baseRot+userRot);
@@ -436,12 +449,11 @@ const Gonio = (() => {
 
   // ---- CLAMP to visible area (4cm margin) ----
   function clampPanToViewport(){
-    const bound = S.INSTR_RADIUS_PX * zoom;
+    const bound = S.INSTR_BASE_RADIUS_PX * zoom * scale;
     const minX = MARGIN_PX + bound;
     const maxX = innerWidth  - MARGIN_PX - bound;
     const minY = MARGIN_PX + bound;
     const maxY = innerHeight - MARGIN_PX - bound;
-    const clamp = (v,a,b)=> Math.min(b, Math.max(a, v));
     if (minX <= maxX) panX = clamp(panX, minX, maxX); else panX = innerWidth/2;
     if (minY <= maxY) panY = clamp(panY, minY, maxY); else panY = innerHeight/2;
   }
@@ -482,8 +494,8 @@ const Gonio = (() => {
     if (lockGonio || touches.size!==2 || !lastG) return;
     const [a,b]=[...touches.values()];
     const c=ctr(a,b), d=dst(a,b), ag=ang(a,b);
-    const scale = Math.pow(d/lastG.d, S.PINCH_EXP);
-    zoom = Math.min(S.MAX_ZOOM, Math.max(S.MIN_ZOOM, lastG.zoom * scale));
+    const scaleFac = Math.pow(d/lastG.d, S.PINCH_EXP);
+    zoom = Math.min(S.MAX_ZOOM, Math.max(S.MIN_ZOOM, lastG.zoom * scaleFac));
     panX = lastG.panX + S.PAN_GAIN * (c.x - lastG.c.x)/zoom;
     panY = lastG.panY + S.PAN_GAIN * (c.y - lastG.c.y)/zoom;
     let da = ag - lastG.a; while(da>180) da-=360; while(da<-180) da+=360;
@@ -527,20 +539,22 @@ const Gonio = (() => {
     zoom = newZoom; clampPanToViewport(); applyView();
   }, {passive:false});
 
-  // Green arm drag
-  armB_grp.addEventListener('pointerdown', e=>{
-    if (lockGonio) return;
-    e.stopPropagation(); e.preventDefault();
-    draggingArm = true; draggingPan=false; armB_grp.setPointerCapture?.(e.pointerId);
-  });
-  armB_grp.addEventListener('pointermove', e=>{
+  // Green arm drag – attach to the big invisible handles
+  function startArmDrag(e){ if (lockGonio) return; e.stopPropagation(); e.preventDefault(); draggingArm = true; draggingPan=false; (e.target as any)?.setPointerCapture?.(e.pointerId); }
+  function moveArm(e){
     if(!draggingArm) return;
     e.stopPropagation(); e.preventDefault();
     const p = toLocal(rotWrap, e.clientX, e.clientY);
     mov = toDegUp(p.x, p.y); render();
+  }
+  function endArm(){ draggingArm=false; }
+
+  ;[armB_grp, armB_handleKnob, armB_handleShaft].forEach(el=>{
+    el.addEventListener('pointerdown', startArmDrag);
+    el.addEventListener('pointermove', moveArm);
+    el.addEventListener('pointerup', endArm);
+    el.addEventListener('pointercancel', endArm);
   });
-  armB_grp.addEventListener('pointerup',   ()=> draggingArm=false);
-  armB_grp.addEventListener('pointercancel', ()=> draggingArm=false);
 
   // Public API
   function show(){ host.classList.remove('hide'); host.setAttribute('aria-hidden','false'); clampPanToViewport(); applyView(); }
@@ -549,9 +563,10 @@ const Gonio = (() => {
     panX = cx; panY = cy; baseRot = baseDeg; mov  = clamp360(movDeg - baseDeg);
     clampPanToViewport(); applyView(); applyRot(); applyLabelFix(); render();
   }
+  function setScale(k){ scale = Math.min(2, Math.max(0.5, k || 1)); clampPanToViewport(); applyView(); }
   function degFromScreenVec(dx,dy){ return toDegUp(dx,dy); }
 
-  return { show, hide, setPose, degFromScreenVec, _clampNow: clampNow };
+  return { show, hide, setPose, setScale, degFromScreenVec, _clampNow: clampNow };
 })();
 window.Gonio = Gonio;
 
