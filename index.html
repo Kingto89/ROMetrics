@@ -331,8 +331,8 @@ presetSel.onchange = () => { const p=presetSel.value; truth = { ...PRESETS[p] };
 measureToggle.onclick = () => { followMeasure = !followMeasure; measureToggle.textContent = followMeasure ? "🧭 Measure: ON" : "🧭 Measure: OFF"; };
 
 /* Locks */
-let lock3D = true, lockGonio = false;
-function set3DLock(v){ lock3D=v; controls.enabled=!lock3D; lock3DBtn.textContent=(lock3D? "🔒 3D: Locked":"🔓 3D: Unlocked"); lock3DBtn.classList.toggle('lockOn', lock3D); }
+let lock3D = false, lockGonio = false;
+function set3DLock(v){ lock3D=v; controls.enabled=!lock3D; lock3DBtn.textContent=(lock3D? "🔒 3D: unLocked":"🔓 3D: Unlocked"); lock3DBtn.classList.toggle('lockOn', lock3D); }
 function setGonioLock(v){ lockGonio=v; document.getElementById('instrument').style.pointerEvents = lockGonio ? 'none' : 'auto'; lockGonioBtn.textContent=(lockGonio? "🔒 Gonio: Locked":"🔓 Gonio: Unlocked"); lockGonioBtn.classList.toggle('lockOn', lockGonio); }
 set3DLock(lock3D); setGonioLock(lockGonio);
 lock3DBtn.onclick = ()=> set3DLock(!lock3D);
