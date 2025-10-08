@@ -149,10 +149,10 @@ const S = {
   MIN_ZOOM: 0.10, MAX_ZOOM: 10.0,
   WHEEL_STEP: 1.22, WHEEL_ACCEL: 1/100,
   PINCH_EXP: 1.25, ROT_GAIN: 1.25,
-  PAN_GAIN: 1.10,                     // slightly calmer drag
-  PX_PER_CM: 37.7952755906,           // CSS px per cm
-  MARGIN_CM: 4,                       // keep ~4 cm from edges
-  INSTR_RADIUS_PX: 390                // worst-case visual radius (arms)
+  PAN_GAIN: 1.10,
+  PX_PER_CM: 37.7952755906,
+  MARGIN_CM: 4,
+  INSTR_RADIUS_PX: 390
 };
 const MARGIN_PX = S.PX_PER_CM * S.MARGIN_CM;
 
@@ -168,7 +168,7 @@ let tol = parseFloat(tolEl.value);
 tolEl.oninput = () => (tol = parseFloat(tolEl.value));
 const log = (t)=>{ logEl.textContent += t + "\\n"; logEl.scrollTop = logEl.scrollHeight; };
 
-/* ===== Three.js (unchanged) ===== */
+/* ===== Three.js ===== */
 const canvas = document.getElementById("c");
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setPixelRatio(devicePixelRatio);
@@ -230,7 +230,7 @@ loader.load(MODEL_URL, (gltf) => {
   msg.textContent = xhr.lengthComputable ? `Loading ${Math.round((xhr.loaded/xhr.total)*100)}%` : "Loading…";
 }, (err) => { console.error(err); msg.textContent = "❌ Failed to load model"; });
 
-/* Landmarks, picking, helpers (unchanged) */
+/* Landmarks / picking */
 const matGood = new THREE.MeshBasicMaterial({ color: 0x22c55e });
 const matBad  = new THREE.MeshBasicMaterial({ color: 0xef4444 });
 const dot = () => new THREE.Mesh(new THREE.SphereGeometry(0.01, 16, 16), matBad.clone());
@@ -415,7 +415,7 @@ const Gonio = (() => {
         if (long){ const t=text(group,18,y,Math.round(inch),'ruLbl',90); t.dataset.arm=which; t.dataset.x=18; t.dataset.y=y; }
       }
       const tcm=text(group,-26,tipY,'cm','ruLbl',-90); tcm.dataset.arm=which; tcm.dataset.x=-26; tcm.dataset.y=tipY;
-      const tin=text(group, 26,tipY,'in','ruLbl', 90); tin.dataset.arm=which; t.datasetx; tin.dataset.y=tipY;
+      const tin=text(group, 26,tipY,'in','ruLbl', 90); tin.dataset.arm=which; tin.dataset.x=26; tin.dataset.y=tipY;  /* <-- FIXED LINE */
     };
     buildTipRuler(armA_ruler,  380, +1, 'A');
     buildTipRuler(armB_ruler, -380, -1, 'B');
@@ -434,18 +434,17 @@ const Gonio = (() => {
     numsInWrap.setAttribute('transform', `rotate(${-t})`);
   }
 
-  // ---- CLAMP to visible area with 4cm margin ----
+  // ---- CLAMP to visible area (4cm margin) ----
   function clampPanToViewport(){
     const bound = S.INSTR_RADIUS_PX * zoom;
     const minX = MARGIN_PX + bound;
     const maxX = innerWidth  - MARGIN_PX - bound;
     const minY = MARGIN_PX + bound;
     const maxY = innerHeight - MARGIN_PX - bound;
-
+    const clamp = (v,a,b)=> Math.min(b, Math.max(a, v));
     if (minX <= maxX) panX = clamp(panX, minX, maxX); else panX = innerWidth/2;
     if (minY <= maxY) panY = clamp(panY, minY, maxY); else panY = innerHeight/2;
   }
-  // expose one-shot clamp for resize
   function clampNow(){ clampPanToViewport(); applyView(); }
 
   function render(){
@@ -457,7 +456,6 @@ const Gonio = (() => {
       t.setAttribute('transform', `rotate(${-base} ${x} ${y})`);
     });
   }
-  // initial draw
   clampPanToViewport(); applyView(); applyRot(); applyLabelFix(); render();
 
   // Utilities
@@ -553,7 +551,6 @@ const Gonio = (() => {
   }
   function degFromScreenVec(dx,dy){ return toDegUp(dx,dy); }
 
-  // expose a one-shot clamp for window resize
   return { show, hide, setPose, degFromScreenVec, _clampNow: clampNow };
 })();
 window.Gonio = Gonio;
