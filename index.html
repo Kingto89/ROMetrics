@@ -46,9 +46,12 @@
   .legend{font-size:12px;color:#cbd5e1;margin-top:6px}
   .chip{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid #334155;background:#0b1220;margin-right:6px}
 
-  /* ===== Passive SVG goniometer overlay ===== */
+  /* ===== SVG goniometer overlay ===== */
   #gonioHost{position:fixed;inset:0;z-index:12;pointer-events:none}
   #gonioHost svg{width:100vw;height:100vh;background:transparent;pointer-events:none}
+  /* Only the instrument is interactive; everything else passes through */
+  #instrument{pointer-events:auto; cursor:grab}
+  .handle{cursor:grab}
   .tick{stroke:#64748b;stroke-width:.9}
   .tickBig{stroke-width:1.6}
   .armA{stroke:#ef4444;fill:none}
@@ -59,7 +62,6 @@
   .labelOuter{fill:#e5e7eb;font-size:11px;text-anchor:middle;dominant-baseline:middle;paint-order:stroke;stroke:#0b1220;stroke-width:3px}
   .labelInner{fill:#fca5a5;font-size:8.2px;text-anchor:middle;dominant-baseline:middle;paint-order:stroke;stroke:#0b1220;stroke-width:3px}
   .ruLbl{fill:#cbd5e1;font-size:9.5px;dominant-baseline:middle;paint-order:stroke;stroke:#0b1220;stroke-width:3px}
-
   .hide{display:none}
 </style>
 </head>
@@ -129,8 +131,8 @@
                 <circle id="armA_knob" cx="0" cy="380" r="10" fill="#ef4444"/>
               </g>
 
-              <!-- GREEN moving arm -->
-              <g id="armB_grp">
+              <!-- GREEN moving arm (draggable) -->
+              <g id="armB_grp" class="handle">
                 <rect class="armB" x="-10" y="-380" width="20" height="500" rx="10" stroke-width="3"/>
                 <line id="axisB" class="axisB" x1="0" y1="-380" x2="0" y2="124" stroke-linecap="round"/>
                 <g id="armB_ruler"></g>
@@ -156,7 +158,7 @@
   import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
   import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 
-  /* ===== SVG goniometer (passive overlay) ===== */
+  /* ===== SVG goniometer (interactive on the instrument only) ===== */
   let Gonio = { show:()=>{}, hide:()=>{}, setPose:()=>{}, degFromScreenVec:()=>0 };
   try {
     Gonio = (() => {
@@ -169,6 +171,7 @@
       const numsOut = document.getElementById('numsOut');
       const numsInWrap = document.getElementById('numsInWrap');
       const numsIn = document.getElementById('numsIn');
+      const inst = document.getElementById('instrument');
       const armA_grp = document.getElementById('armA_grp');
       const armB_grp = document.getElementById('armB_grp');
       const armA_ruler = document.getElementById('armA_ruler');
@@ -198,7 +201,6 @@
           const a=(d-90)*Math.PI/180, big=d%30===0, len=big?12:6;
           line(ticks, Math.cos(a)*(R-len), Math.sin(a)*(R-len), Math.cos(a)*R, Math.sin(a)*R, big?'tick tickBig':'tick');
         }
-        // OUTER labels 0/20/40/60/80 near 90° & 270°
         const rWhite = R - 8;
         for (let d = 0; d < 360; d += 10) {
           const diff90  = Math.abs(((d - 90)  % 360 + 540) % 360 - 180);
@@ -209,7 +211,6 @@
             text(numsOut, x, y, String(val), 'labelOuter');
           }
         }
-        // INNER 0–180–0 each 10°, single centered 0 at the neck
         const rInnerText = Rin + 9;
         const valFromTheta = th => { const t=(th+180)%360; return t<=180? t : 360-t; };
         for(let th=0; th<360; th+=10){
@@ -244,36 +245,109 @@
           if (long){ const t=text(group,18,y,Math.round(inch),'ruLbl',90); t.dataset.arm=which; t.dataset.x=18; t.dataset.y=y; }
         }
         const tcm=text(group,-26,tipY,'cm','ruLbl',-90); tcm.dataset.arm=which; tcm.dataset.x=-26; tcm.dataset.y=tipY;
-        const tin=text(group, 26,tipY,'in','ruLbl', 90); tin.dataset.arm=which; tcm.dataset.x= 26; tin.dataset.y=tipY;
+        const tin=text(group, 26,tipY,'in','ruLbl', 90); tin.dataset.arm=which; tin.dataset.x= 26; tin.dataset.y=tipY;
       }
 
-      // state and render
-      let mov=0, gRot=0, panX=0, panY=0, zoom=1, mirrored=false;
+      // ===== Interaction state =====
+      let mov=0, zoom=1, panX=0, panY=0;
+      let baseRot=0, userRot=0; // base from stationary vector, plus user twist offset
+      let draggingArm = false;
+
       function applyView(){ viewport.setAttribute('transform', `translate(${panX},${panY}) scale(${zoom})`); }
-      function applyRot(){ rotWrap.setAttribute('transform', `rotate(${gRot})`); }
+      function applyRot(){ rotWrap.setAttribute('transform', `rotate(${baseRot + userRot})`); }
       function applyLabelFix(){
-        const sx = mirrored ? -1 : 1;
-        document.getElementById('labelsFixed').setAttribute('transform', `scale(${sx},1) rotate(${-gRot})`);
-        numsInWrap.setAttribute('transform', `rotate(${sx * gRot})`);
+        const sx = 1;
+        document.getElementById('labelsFixed').setAttribute('transform', `scale(${sx},1) rotate(${-(baseRot + userRot)})`);
+        numsInWrap.setAttribute('transform', `rotate(${sx * (baseRot + userRot)})`);
       }
       function render(){
-        armA_grp.setAttribute('transform', `rotate(0)`);
-        armB_grp.setAttribute('transform', `rotate(${mov})`);
+        document.getElementById('armA_grp').setAttribute('transform', `rotate(0)`);
+        document.getElementById('armB_grp').setAttribute('transform', `rotate(${mov})`);
         document.querySelectorAll('.ruLbl').forEach(t=>{
-          const which=t.dataset.arm; const base = (which==='A'? 0 : mov) + gRot;
+          const which=t.dataset.arm; const base = (which==='A'? 0 : mov) + baseRot + userRot;
           const x=+t.dataset.x, y=+t.dataset.y;
           t.setAttribute('transform', `rotate(${-base} ${x} ${y})`);
         });
       }
       applyView(); applyRot(); applyLabelFix(); render();
 
+      // ===== Gesture handlers (only on instrument) =====
+      const touches=new Map();
+      let lastGesture=null;
+
+      const tp = e => ({x:e.clientX,y:e.clientY});
+      const ctr=(a,b)=>({x:(a.x+b.x)/2,y:(a.y+b.y)/2});
+      const dst=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+      const ang=(a,b)=>Math.atan2(b.y-a.y,b.x-a.x)*180/Math.PI;
+
+      function startG(){ if(touches.size===2){ const [a,b]=[...touches.values()]; lastGesture={c:ctr(a,b), d:dst(a,b), a:ang(a,b), panX, panY, zoom, userRot}; } }
+      function moveG(){
+        if(touches.size!==2 || !lastGesture) return;
+        const [a,b]=[...touches.values()];
+        const c=ctr(a,b), d=dst(a,b), ag=ang(a,b);
+        // zoom around center of the instrument
+        zoom = Math.min(4, Math.max(0.4, lastGesture.zoom*(d/lastGesture.d)));
+        panX = lastGesture.panX + (c.x - lastGesture.c.x)/zoom;
+        panY = lastGesture.panY + (c.y - lastGesture.c.y)/zoom;
+        let da = ag - lastGesture.a; while(da>180) da-=360; while(da<-180) da+=360;
+        userRot = lastGesture.userRot + da;
+        applyView(); applyRot(); applyLabelFix(); render();
+      }
+      function endG(){ lastGesture=null; }
+
+      // Attach to instrument only, so outside of it the canvas receives events
+      inst.addEventListener('pointerdown', e=>{
+        if(e.pointerType==='touch'){
+          touches.set(e.pointerId, tp(e));
+          startG();
+        }
+      });
+      inst.addEventListener('pointermove', e=>{
+        if(e.pointerType==='touch' && touches.has(e.pointerId)){
+          touches.set(e.pointerId, tp(e));
+          moveG();
+        }
+      });
+      inst.addEventListener('pointerup',   e=>{ if(touches.delete(e.pointerId)) endG(); });
+      inst.addEventListener('pointercancel',e=>{ if(touches.delete(e.pointerId)) endG(); });
+
+      // Wheel zoom (desktop) on instrument
+      inst.addEventListener('wheel', e=>{
+        e.preventDefault();
+        const fac = e.deltaY>0 ? 1/1.1 : 1.1;
+        const newZoom = Math.min(4, Math.max(0.4, zoom*fac));
+        const k = newZoom/zoom;
+        // zoom toward the pointer position
+        const pt = svg.createSVGPoint(); pt.x=e.clientX; pt.y=e.clientY;
+        const inV = pt.matrixTransform(viewport.getScreenCTM().inverse());
+        panX = inV.x - k*(inV.x - panX);
+        panY = inV.y - k*(inV.y - panY);
+        zoom = newZoom; applyView();
+      }, {passive:false});
+
+      // Drag the green arm (desktop or touch) when landmarks are not placed yet
+      armB_grp.addEventListener('pointerdown', e=>{
+        draggingArm = true; armB_grp.setPointerCapture?.(e.pointerId);
+      });
+      armB_grp.addEventListener('pointermove', e=>{
+        if(!draggingArm) return;
+        const pt = svg.createSVGPoint(); pt.x=e.clientX; pt.y=e.clientY;
+        const p = pt.matrixTransform(rotWrap.getScreenCTM().inverse());
+        mov = toDegUp(p.x, p.y);
+        render();
+      });
+      armB_grp.addEventListener('pointerup', ()=> draggingArm=false);
+      armB_grp.addEventListener('pointercancel', ()=> draggingArm=false);
+
+      // Public API
       function show(){ host.classList.remove('hide'); host.setAttribute('aria-hidden','false'); }
       function hide(){ host.classList.add('hide'); host.setAttribute('aria-hidden','true'); }
-      // center at screen (cx,cy); red arm = baseDeg; green arm = movDeg
+      /** center at (cx,cy) in screen px; baseDeg = stationary absolute; movDeg = moving absolute */
       function setPose(cx, cy, baseDeg, movDeg){
-        panX = cx; panY = cy; zoom = 1;
-        gRot = baseDeg;
-        mov  = ((movDeg - baseDeg)%360 + 360)%360;
+        // keep user zoom/rotation; just anchor and update base
+        panX = cx; panY = cy;
+        baseRot = baseDeg;
+        mov  = clamp360(movDeg - baseDeg);
         applyView(); applyRot(); applyLabelFix(); render();
       }
       function degFromScreenVec(dx,dy){ return toDegUp(dx,dy); }
@@ -399,21 +473,9 @@
                                       m.visible = false; scene.add(m); });
 
   const PRESETS = {
-    cerv_flex: {
-      fulcrum:   new THREE.Vector3(0.08, 1.65, 0.02),
-      stationary:new THREE.Vector3(0.12, 1.55, 0.15),
-      moving:    new THREE.Vector3(0.10, 1.68, 0.12)
-    },
-    cerv_rot: {
-      fulcrum:   new THREE.Vector3(0.08, 1.80, 0.02),
-      stationary:new THREE.Vector3(0.18, 1.55, 0.15),
-      moving:    new THREE.Vector3(0.10, 1.70, 0.20)
-    },
-    cerv_lat: {
-      fulcrum:   new THREE.Vector3(0.05, 1.55, 0.02),
-      stationary:new THREE.Vector3(0.00, 1.45, 0.10),
-      moving:    new THREE.Vector3(0.10, 1.60, 0.02)
-    }
+    cerv_flex: { fulcrum:new THREE.Vector3(0.08,1.65,0.02), stationary:new THREE.Vector3(0.12,1.55,0.15), moving:new THREE.Vector3(0.10,1.68,0.12) },
+    cerv_rot:  { fulcrum:new THREE.Vector3(0.08,1.80,0.02), stationary:new THREE.Vector3(0.18,1.55,0.15), moving:new THREE.Vector3(0.10,1.70,0.20) },
+    cerv_lat:  { fulcrum:new THREE.Vector3(0.05,1.55,0.02), stationary:new THREE.Vector3(0.00,1.45,0.10), moving:new THREE.Vector3(0.10,1.60,0.02) }
   };
   let truth = { ...PRESETS.cerv_rot };
 
@@ -430,23 +492,17 @@
   const ray = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
 
-  // track “buttons clicked” vs “points placed”
   const clicked = { fulcrum:false, stationary:false, moving:false };
-  const placed  = { fulcrum:false, stationary:false, moving:false };
 
   function maybeShowGoniometerOnClicks(){
     if (clicked.fulcrum && clicked.stationary && clicked.moving) {
-      // show centered preview immediately (like old popup)
       const cx = innerWidth/2, cy = innerHeight/2;
       Gonio.show();
-      Gonio.setPose(cx, cy, 0, 45); // neutral preview; real pose will override once points are placed
+      Gonio.setPose(cx, cy, 0, 45); // preview before points are placed
     }
   }
 
-  function log(t) {
-    logEl.textContent += t + "\n";
-    logEl.scrollTop = logEl.scrollHeight;
-  }
+  function log(t) { logEl.textContent += t + "\n"; logEl.scrollTop = logEl.scrollHeight; }
 
   function toScreen(v3){
     const v = v3.clone().project(camera);
@@ -459,12 +515,9 @@
     userLocal[name] = local;
     user[name].visible = true;
     user[name].position.copy(worldPoint);
-    placed[name] = true;
-
     const cm = worldPoint.distanceTo(truth[name]) * 100.0;
     user[name].material.color.set(cm <= tol ? 0x22c55e : 0xef4444);
     log(`${name}: ${cm.toFixed(1)} cm`);
-
     updateFromLocals();
   }
 
@@ -512,7 +565,7 @@
       const ang = THREE.MathUtils.radToDeg(Math.acos(THREE.MathUtils.clamp(vs.dot(vm), -1, 1)));
       setAngle(ang);
 
-      // Drive overlay to real pose
+      // Drive overlay to real pose (anchor at fulcrum, align arms)
       const Fs = toScreen(f), Ss = toScreen(s), Ms = toScreen(m);
       const baseDeg = Gonio.degFromScreenVec(Ss.x - Fs.x, Ss.y - Fs.y); // Stationary (RED)
       const movDeg  = Gonio.degFromScreenVec(Ms.x - Fs.x, Ms.y - Fs.y); // Moving (GREEN)
@@ -520,7 +573,6 @@
       Gonio.setPose(Fs.x, Fs.y, baseDeg, movDeg);
     } else {
       setAngle(0);
-      // Keep preview if shown by button-click rule; otherwise hide
       if (!(clicked.fulcrum && clicked.stationary && clicked.moving)) Gonio.hide();
     }
   }
@@ -549,7 +601,6 @@
   resetAll.onclick = () => {
     Object.values(user).forEach(m => m.visible = false);
     userLocal.fulcrum = userLocal.stationary = userLocal.moving = null;
-    Object.keys(placed).forEach(k=> placed[k]=false);
     Object.keys(clicked).forEach(k=> clicked[k]=false);
     line1.visible = line2.visible = false;
     setAngle(0);
@@ -597,3 +648,4 @@
 </script>
 </body>
 </html>
+
