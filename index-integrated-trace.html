@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Race to Housing — Map with Logo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet" />
+  <style>
+    html,body { height:100%; margin:0; }
+    #map { position:absolute; inset:0; }
+  </style>
+
+<style>
+  .mini-trace {
+    position:absolute; top:12px; left:12px; z-index:5;
+    background:#111; color:#fff; border:0; border-radius:10px;
+    padding:8px 12px; font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    box-shadow:0 2px 10px rgba(0,0,0,.15); cursor:pointer;
+  }
+  .mini-hint {
+    position:absolute; top:12px; left:120px; z-index:5;
+    background:rgba(255,255,255,.92); border-radius:10px; padding:6px 10px;
+    font-size:12px; color:#111; backdrop-filter: blur(4px);
+  }
+  .hidden { display:none !important; }
+</style>
+
+</head>
+<body>
+
+<button id="miniTraceBtn" class="mini-trace hidden">Trace Route</button>
+<div id="miniTraceHint" class="mini-hint hidden">Click to add points. Double‑click to finish.</div>
+
+  <div id="map"></div>
+
+  <script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
+  <script>
+    const GEOJSON_URL = 'ysu_race_buildings_exact_final.geojson';
+    const COURTYARDS_URL = 'university_courtyards.geojson';
+
+    mapboxgl.accessToken = 'pk.eyJ1IjoieXN1LWhybCIsImEiOiJjbWZtcjVkNXUwNTJkMmxvaDZpaTF6b2x2In0.8-4W7BoAy5GmwM2_-L_Jzw';
+
+    const map = new mapboxgl.Map({
+      container: 'map',
+      style: 'mapbox://styles/ysu-hrl/cmfpr50qm00a401ry0uzb5b1q',
+      center: [-80.6458, 41.1090],
+      zoom: 16.8,
+      pitch: 60,
+      bearing: -133.6
+    });
+
+    map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+
+    async function loadJSON(url){ const r=await fetch(url); return r.json(); }
+
+    map.on('load', async () => {
+      const data = await loadJSON(GEOJSON_URL);
+      const courtyards = await loadJSON(COURTYARDS_URL);
+
+      map.addSource('race', { type:'geojson', data });
+      map.addSource('courtyards', { type:'geojson', data:courtyards });
+
+      // Building colors
+      const colorExpression = [
+        'match',
+        ['get','name'],
+        'Lyden House', '#FF69B4',          // Pink
+        'Cafaro House', '#0072CE',         // Blue
+        'Wick House (Art)', '#FFFF00',     // Yellow
+        'Weller House', '#582C83',         // Purple
+        'Christman Dining', '#FFDF00',     // Bright Gold
+        'Kilcawley House', '#E4002B',      // Red
+        /* fallback */ '#d6001c'
+      ];
+
+      map.addLayer({
+        id:'race-buildings',
+        type:'fill-extrusion',
+        source:'race',
+        paint:{
+          'fill-extrusion-color': colorExpression,
+          'fill-extrusion-height':['coalesce',['get','height'],22],
+          'fill-extrusion-opacity':0.96,
+          'fill-extrusion-vertical-gradient': false
+        }
+      });
+
+      map.addLayer({
+        id:'courtyards-fill3d',
+        type:'fill-extrusion',
+        source:'courtyards',
+        paint:{
+          'fill-extrusion-color':'#78BE20',
+          'fill-extrusion-height':['coalesce',['get','height'],22],
+          'fill-extrusion-opacity':0.96,
+          'fill-extrusion-vertical-gradient': false
+        }
+      });
+
+      // === Logo Overlay (locked to your coords) ===
+      map.addSource('housing-overlay', {
+        type:'image',
+        url:'housing-overlay.png',
+        coordinates: [
+          [-80.64825006745193, 41.102595011939734], // top-left
+          [-80.6538515500109,  41.104745219637],    // top-right
+          [-80.65205971026316, 41.109413121769485], // bottom-right
+          [-80.64645822770419, 41.107262914072216]  // bottom-left
+        ]
+      });
+
+      map.addLayer({
+        id:'housing-overlay-layer',
+        type:'raster',
+        source:'housing-overlay',
+        paint:{ 'raster-opacity': 1.0 }
+      });
+    });
+  
+// === Minimal Inline Route Trace (solid red, no undo/cancel/save UI) ===
+(function(){
+  const BTN_ID = 'miniTraceBtn';
+  const HINT_ID = 'miniTraceHint';
+  const LS_KEY = 'ysu_route_geojson_final';  // persists route
+  const LS_DONE = 'ysu_route_done';          // hides UI after set
+
+  function hasRoute(){ try { return !!localStorage.getItem(LS_DONE); } catch(e){ return false; } }
+  function getSavedGeo(){ try { const j = localStorage.getItem(LS_KEY); return j ? JSON.parse(j) : null; } catch(e){ return null; } }
+
+  function show(el){ el && el.classList.remove('hidden'); }
+  function hide(el){ el && el.classList.add('hidden'); }
+
+  map.on('load', () => {
+    // If a saved route exists, load it as a source/layer and skip UI
+    const saved = getSavedGeo();
+    if (saved) {
+      if(!map.getSource('ysu-route')){
+        map.addSource('ysu-route', { type:'geojson', data: saved, lineMetrics: false });
+      }
+      if(!map.getLayer('ysu-route-line')){
+        map.addLayer({
+          id:'ysu-route-line',
+          type:'line',
+          source:'ysu-route',
+          layout:{ 'line-cap':'round','line-join':'round' },
+          paint:{ 'line-color':'#cc0000','line-width':5,'line-opacity':0.95 }
+        });
+      }
+      // UI stays hidden permanently
+      return;
+    }
+
+    // Prepare draft source/layer for live tracing
+    map.addSource('route-draft', { type:'geojson', data:{ type:'FeatureCollection', features: [] }, lineMetrics:false });
+    map.addLayer({
+      id:'route-draft-line',
+      type:'line',
+      source:'route-draft',
+      layout:{ 'line-cap':'round','line-join':'round' },
+      paint:{ 'line-color':'#cc0000','line-width':5,'line-opacity':0.95 }
+    });
+
+    const btn = document.getElementById(BTN_ID);
+    const hint = document.getElementById(HINT_ID);
+
+    // Only show the launcher if route is not done yet
+    if(!hasRoute()){ show(btn); }
+
+    let tracing = false;
+    let pts = [];
+
+    function updateDraft(){
+      const features = [];
+      if (pts.length >= 2){
+        features.push({
+          type:'Feature',
+          properties:{},
+          geometry:{ type:'LineString', coordinates: pts.map(p=>[p.lng, p.lat]) }
+        });
+      } else if (pts.length === 1){
+        // Single-point: keep empty or a tiny line segment? We'll keep empty until 2 points.
+      }
+      map.getSource('route-draft').setData({ type:'FeatureCollection', features });
+    }
+
+    btn.addEventListener('click', () => {
+      tracing = true;
+      pts = [];
+      show(hint);
+      hide(btn);
+    });
+
+    map.on('click', (e) => {
+      if(!tracing) return;
+      pts.push(e.lngLat);
+      updateDraft();
+    });
+
+    // Double-click finishes: save to localStorage, create final static layer, remove UI for good
+    map.on('dblclick', (e) => {
+      if(!tracing) return;
+      if(pts.length < 2) return; // need at least 2 points
+      const finalGeo = {
+        type:'FeatureCollection',
+        features:[{
+          type:'Feature',
+          properties:{ name:'Race Route', createdAt:new Date().toISOString() },
+          geometry:{ type:'LineString', coordinates: pts.map(p=>[p.lng,p.lat]) }
+        }]
+      };
+      try {
+        localStorage.setItem(LS_KEY, JSON.stringify(finalGeo));
+        localStorage.setItem(LS_DONE, '1');
+      } catch(err){ /* ignore quota errors */ }
+
+      // Replace draft with final layer
+      if(!map.getSource('ysu-route')){
+        map.addSource('ysu-route', { type:'geojson', data: finalGeo, lineMetrics:false });
+      }
+      if(!map.getLayer('ysu-route-line')){
+        map.addLayer({
+          id:'ysu-route-line',
+          type:'line',
+          source:'ysu-route',
+          layout:{ 'line-cap':'round','line-join':'round' },
+          paint:{ 'line-color':'#cc0000','line-width':5,'line-opacity':0.95 }
+        }, ''); // default top or adjust ordering later if needed
+      }
+
+      // Clean up UI permanently
+      tracing = false;
+      hide(hint);
+      hide(btn);
+      // Optionally remove draft layer/source
+      try {
+        if(map.getLayer('route-draft-line')) map.removeLayer('route-draft-line');
+        if(map.getSource('route-draft')) map.removeSource('route-draft');
+      } catch(e){}
+    });
+
+  });
+})();
+// === End Minimal Inline Route Trace =========================================
+
+</script>
+</body>
+</html>
