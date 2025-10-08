@@ -20,7 +20,7 @@
   canvas{width:100%;height:100%;display:block}
   .panel{
     position:fixed;left:0;top:0;bottom:0;width:320px;background:#0f172a;
-    border-right:1px solid #1f2937;padding:14px;overflow:auto
+    border-right:1px solid #1f2937;padding:14px;overflow:auto;z-index:20
   }
   h3{margin:8px 0 12px 0}
   label{display:block;font-size:13px;margin-top:10px;color:#cbd5e1}
@@ -33,18 +33,41 @@
   .hud{
     position:fixed;top:10px;left:50%;transform:translateX(-50%);
     background:rgba(15,23,42,.75);border:1px solid #334155;border-radius:10px;
-    padding:6px 10px;font-weight:700;backdrop-filter:blur(6px)
+    padding:6px 10px;font-weight:700;backdrop-filter:blur(6px);z-index:15
   }
   .toast{
     position:fixed;bottom:10px;left:50%;transform:translateX(-50%);
     background:rgba(2,6,23,.7);border:1px solid #334155;border-radius:10px;
-    padding:6px 10px;font-size:13px;display:none
+    padding:6px 10px;font-size:13px;display:none;z-index:15
   }
   #log{background:#0b1220;border:1px solid #1f2937;height:130px;overflow:auto;border-radius:8px;padding:8px}
   #msg{position:fixed;top:10px;left:10px;color:#e5e7eb;background:rgba(15,23,42,.7);
-       border:1px solid #334155;border-radius:8px;padding:6px 10px;font-size:13px}
+       border:1px solid #334155;border-radius:8px;padding:6px 10px;font-size:13px;z-index:15}
   .legend{font-size:12px;color:#cbd5e1;margin-top:6px}
   .chip{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid #334155;background:#0b1220;margin-right:6px}
+  /* ===== SVG goniometer overlay ===== */
+  #gonioHost{
+    position:fixed;left:0;top:0;right:0;bottom:0;
+    pointer-events:none; /* let three.js interactions pass through unless using gestures on SVG */
+    z-index:12 /* under HUD/panel, over canvas */
+  }
+  #gonioHost svg{width:100vw;height:100vh;background:transparent}
+  /* (styles copied from the standalone SVG, trimmed to essentials) */
+  .tick{stroke:#64748b;stroke-width:.9}
+  .tickBig{stroke-width:1.6}
+  .armA{stroke:#ef4444;fill:none}
+  .armB{stroke:#22c55e;fill:none}
+  .knobA{fill:#ef4444}
+  .knobB{fill:#22c55e}
+  .axisA{stroke:#ef4444;stroke-width:1.6;opacity:.85}
+  .axisB{stroke:#22c55e;stroke-width:1.6;opacity:.85}
+  .rulerTick{stroke:#94a3b8}
+  .labelOuter{fill:#e5e7eb;font-size:11px;text-anchor:middle;dominant-baseline:middle;paint-order:stroke;stroke:#0b1220;stroke-width:3px}
+  .labelInner{fill:#fca5a5;font-size:8.2px;text-anchor:middle;dominant-baseline:middle;paint-order:stroke;stroke:#0b1220;stroke-width:3px}
+  .ruLbl{fill:#cbd5e1;font-size:9.5px;dominant-baseline:middle;paint-order:stroke;stroke:#0b1220;stroke-width:3px}
+  .bar{position:fixed;top:0;left:0;right:0;display:flex;gap:12px;justify-content:center;align-items:center;padding:6px 10px;background:#0b1220cc;border-bottom:1px solid #1f2937;backdrop-filter:blur(6px);z-index:13;font-weight:700}
+  .btn{background:#0f172a;border:1px solid #334155;color:#e5e7eb;border-radius:10px;padding:4px 8px;cursor:pointer}
+  .hide{display:none}
 </style>
 </head>
 <body>
@@ -87,6 +110,52 @@
   <pre id="log"></pre>
 </div>
 
+<div class="bar hide" id="gonioBar">
+  <div>Angle (0–180°): <span id="goniA180">0°</span></div>
+  <button id="goniReset" class="btn">Reset goniometer</button>
+  <span style="font-weight:600;opacity:.85">Pinch to zoom • 2-finger rotate • drag green arm</span>
+</div>
+
+<!-- SVG goniometer overlay (hidden until all 3 points placed) -->
+<div id="gonioHost" class="hide" aria-hidden="true">
+  <svg id="gonioSvg" aria-label="Universal goniometer" style="pointer-events:auto">
+    <g id="viewport" transform="translate(0,0) scale(1)">
+      <g id="rotWrap" transform="rotate(0)">
+        <g id="mirrorWrap" transform="scale(1,1)">
+          <g id="instrument">
+            <g id="head">
+              <circle r="120" fill="#0f172a" stroke="#94a3b8" stroke-width="1.6"/>
+              <circle r="86"  fill="none" stroke="#94a3b8" stroke-width="0.9" opacity="0.65"/>
+              <g id="ticks"></g>
+              <g id="labelsFixed">
+                <g id="numsOut"></g>
+                <g id="numsInWrap"><g id="numsIn"></g></g>
+              </g>
+              <circle r="3.2" fill="#94a3b8"/>
+            </g>
+
+            <!-- RED stationary arm (non-draggable) -->
+            <g id="armA_grp">
+              <rect class="armA" x="-10" y="120" width="20" height="260" rx="10" stroke-width="3"/>
+              <line id="axisA" class="axisA" x1="0" y1="380" x2="0" y2="-116" stroke-linecap="round"/>
+              <g id="armA_ruler"></g>
+              <circle id="armA_knob" cx="0" cy="380" r="10" class="knobA"/>
+            </g>
+
+            <!-- GREEN moving arm (draggable) -->
+            <g id="armB_grp" class="handle">
+              <rect class="armB" x="-10" y="-380" width="20" height="500" rx="10" stroke-width="3"/>
+              <line id="axisB" class="axisB" x1="0" y1="-380" x2="0" y2="124" stroke-linecap="round"/>
+              <g id="armB_ruler"></g>
+              <circle id="armB_knob" cx="0" cy="-380" r="10" class="knobB"/>
+            </g>
+          </g>
+        </g>
+      </g>
+    </g>
+  </svg>
+</div>
+
 <div id="msg">Loading model…</div>
 <div class="hud" id="hud">Angle: 0°</div>
 <div class="toast" id="toast">Preset updated</div>
@@ -99,6 +168,188 @@
   import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
   import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
   import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
+
+  /* ==============================
+     Small helper: SVG goniometer API
+     ============================== */
+  const Gonio = (() => {
+    const host  = document.getElementById('gonioHost');
+    const bar   = document.getElementById('gonioBar');
+    const svg   = document.getElementById('gonioSvg');
+    const a180  = document.getElementById('goniA180');
+    const reset = document.getElementById('goniReset');
+
+    const viewport   = document.getElementById('viewport');
+    const rotWrap    = document.getElementById('rotWrap');
+    const mirrorWrap = document.getElementById('mirrorWrap');
+    const ticks = document.getElementById('ticks');
+    const numsOut = document.getElementById('numsOut');
+    const numsInWrap = document.getElementById('numsInWrap');
+    const numsIn = document.getElementById('numsIn');
+    const armA_grp = document.getElementById('armA_grp');
+    const armB_grp = document.getElementById('armB_grp');
+    const armA_ruler = document.getElementById('armA_ruler');
+    const armB_ruler = document.getElementById('armB_ruler');
+
+    const R=120, Rin=86;
+    const clamp360 = a => (a%360+360)%360;
+    const toDegUp  = (x,y)=> clamp360(Math.atan2(-y,x)*180/Math.PI + 90); // 0° = up
+
+    function line(parent,x1,y1,x2,y2,cls){
+      const n=document.createElementNS('http://www.w3.org/2000/svg','line');
+      n.setAttribute('x1',x1); n.setAttribute('y1',y1);
+      n.setAttribute('x2',x2); n.setAttribute('y2',y2);
+      if (cls) n.setAttribute('class',cls); parent.appendChild(n);
+    }
+    function text(parent,x,y,str,cls,rot){
+      const n=document.createElementNS('http://www.w3.org/2000/svg','text');
+      n.setAttribute('x',x); n.setAttribute('y',y);
+      n.setAttribute('class',cls||'labelOuter');
+      if (rot) n.setAttribute('transform',`rotate(${rot} ${x} ${y})`);
+      n.textContent=str; parent.appendChild(n); return n;
+    }
+
+    // one-time build
+    (function build(){
+      for(let d=0; d<360; d+=5){
+        const a=(d-90)*Math.PI/180, big=d%30===0, len=big?12:6;
+        line(ticks, Math.cos(a)*(R-len), Math.sin(a)*(R-len), Math.cos(a)*R, Math.sin(a)*R, big?'tick tickBig':'tick');
+      }
+      // OUTER 0/20/40/60/80 around 90° and 270°
+      const rWhite = R - 8;
+      for (let d = 0; d < 360; d += 10) {
+        const diff90  = Math.abs(((d - 90)  % 360 + 540) % 360 - 180);
+        const diff270 = Math.abs(((d - 270) % 360 + 540) % 360 - 180);
+        const val = Math.min(diff90, diff270);
+        if (val % 20 === 0 && val <= 80) {
+          const a=(d-90)*Math.PI/180, x=Math.cos(a)*rWhite, y=Math.sin(a)*rWhite;
+          text(numsOut, x, y, String(val), 'labelOuter');
+        }
+      }
+      // INNER 0–180–0 every 10°, with single centered 0 between the red 10s
+      const rInnerText = Rin + 9;
+      const valFromTheta = th => { const t=(th+180)%360; return t<=180? t : 360-t; };
+      for(let th=0; th<360; th+=10){
+        const val = valFromTheta(th);
+        if (val % 10 !== 0) continue;
+        const a=(th-90)*Math.PI/180, x=Math.cos(a)*rInnerText, y=Math.sin(a)*rInnerText;
+        // hide the duplicate 0 at top; add a single centered 0 at 180 below
+        if (val===0 && th!==180) continue;
+        text(numsIn, x, y, String(val), 'labelInner');
+      }
+      // tip rulers (labels auto-upright)
+      buildTipRuler(armA_ruler,  380, +1, 'A');
+      buildTipRuler(armB_ruler, -380, -1, 'B');
+    })();
+
+    function buildTipRuler(group, tipY, dir, which){
+      group.innerHTML='';
+      const CM_TO_PX = 14, IN_TO_CM = 2.5;
+      const cmMax=15, inMax=6;
+      for(let cm=0; cm<=cmMax+1e-6; cm+=0.5){
+        const y = tipY - dir*(cm*CM_TO_PX);
+        const long = Math.abs(cm - Math.round(cm)) < 1e-6;
+        const mid  = !long && Math.abs(cm*2 - Math.round(cm*2)) < 1e-6;
+        const w = long?8:mid?5:3;
+        line(group, -10, y, -10-w, y, 'rulerTick');
+        if (long){ const t=text(group,-18,y,Math.round(cm),'ruLbl',-90); t.dataset.arm=which; t.dataset.x=-18; t.dataset.y=y; }
+      }
+      for(let inch=0; inch<=inMax+1e-6; inch+=0.5){
+        const y = tipY - dir*(inch*IN_TO_CM*14);
+        const long = Math.abs(inch - Math.round(inch)) < 1e-6;
+        const mid  = !long && Math.abs(inch*2 - Math.round(inch*2)) < 1e-6;
+        const w = long?8:mid?5:3;
+        line(group, 10, y, 10+w, y, 'rulerTick');
+        if (long){ const t=text(group,18,y,Math.round(inch),'ruLbl',90); t.dataset.arm=which; t.dataset.x=18; t.dataset.y=y; }
+      }
+      const tcm=text(group,-26,tipY,'cm','ruLbl',-90); tcm.dataset.arm=which; tcm.dataset.x=-26; tcm.dataset.y=tipY;
+      const tin=text(group, 26,tipY,'in','ruLbl', 90); tin.dataset.arm=which; tin.dataset.x= 26; tin.dataset.y=tipY;
+    }
+
+    // state
+    let mov=0, gRot=0, zoom=1, panX=0, panY=0, mirrored=false;
+
+    function applyView(){ viewport.setAttribute('transform', `translate(${panX},${panY}) scale(${zoom})`); }
+    function applyRot(){ rotWrap.setAttribute('transform', `rotate(${gRot})`); }
+    function applyMirror(){ mirrorWrap.setAttribute('transform', `scale(${mirrored?-1:1},1)`); }
+    function applyLabelFix(){
+      const sx = mirrored ? -1 : 1;
+      document.getElementById('labelsFixed').setAttribute('transform', `scale(${sx},1) rotate(${-gRot})`);
+      numsInWrap.setAttribute('transform', `rotate(${sx * gRot})`);
+    }
+    function render(){
+      armA_grp.setAttribute('transform', `rotate(0)`);
+      armB_grp.setAttribute('transform', `rotate(${mov})`);
+      document.querySelectorAll('.ruLbl').forEach(t=>{
+        const which=t.dataset.arm; const base = (which==='A'? 0 : mov) + gRot;
+        const x=+t.dataset.x, y=+t.dataset.y;
+        t.setAttribute('transform', `rotate(${-base} ${x} ${y})`);
+      });
+      const d180 = (mov>180)? 360-mov : mov;
+      a180.textContent = Math.round(d180)+'°';
+    }
+
+    // gestures (touch) + wheel zoom
+    let touches=new Map(), lastGesture=null;
+    const tp = e => ({x:e.clientX,y:e.clientY});
+    const ctr=(a,b)=>({x:(a.x+b.x)/2,y:(a.y+b.y)/2});
+    const dst=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+    const ang=(a,b)=>Math.atan2(b.y-a.y,b.x-a.x)*180/Math.PI;
+
+    svg.addEventListener('pointerdown', e=>{ if(e.pointerType==='touch'){ touches.set(e.pointerId, tp(e)); startG(); }});
+    svg.addEventListener('pointermove', e=>{ if(e.pointerType==='touch' && touches.has(e.pointerId)){ touches.set(e.pointerId, tp(e)); moveG(); }});
+    svg.addEventListener('pointerup',   e=>{ if(touches.delete(e.pointerId)) endG(); });
+    svg.addEventListener('pointercancel', e=>{ if(touches.delete(e.pointerId)) endG(); });
+
+    function startG(){ if(touches.size===2){ const [a,b]=[...touches.values()]; lastGesture={c:ctr(a,b), d:dst(a,b), a:ang(a,b), panX, panY, zoom, gRot}; } }
+    function moveG(){
+      if(touches.size!==2 || !lastGesture) return;
+      const [a,b]=[...touches.values()];
+      const c=ctr(a,b), d=dst(a,b), ag=ang(a,b);
+      zoom = Math.min(4, Math.max(0.4, lastGesture.zoom*(d/lastGesture.d)));
+      panX = lastGesture.panX + (c.x - lastGesture.c.x)/zoom;
+      panY = lastGesture.panY + (c.y - lastGesture.c.y)/zoom;
+      let da = ag - lastGesture.a; while(da>180) da-=360; while(da<-180) da+=360;
+      gRot = lastGesture.gRot + da;
+      applyView(); applyRot(); applyLabelFix(); render();
+    }
+    function endG(){ lastGesture=null; }
+
+    svg.addEventListener('wheel', e=>{
+      e.preventDefault();
+      const fac = e.deltaY>0 ? 1/1.1 : 1.1;
+      const pt = svg.createSVGPoint(); pt.x=e.clientX; pt.y=e.clientY;
+      const inV = pt.matrixTransform(viewport.getScreenCTM().inverse());
+      const newZoom = Math.min(4, Math.max(0.4, zoom*fac));
+      const k = newZoom/zoom;
+      panX = inV.x - k*(inV.x - panX);
+      panY = inV.y - k*(inV.y - panY);
+      zoom = newZoom; applyView();
+    }, {passive:false});
+
+    document.getElementById('gonioReset').onclick = ()=>{ mov=0; gRot=0; zoom=1; mirrored=false; applyView(); applyRot(); applyMirror(); applyLabelFix(); render(); };
+
+    // public API
+    function show(){ host.classList.remove('hide'); host.setAttribute('aria-hidden','false'); bar.classList.remove('hide'); }
+    function hide(){ host.classList.add('hide'); host.setAttribute('aria-hidden','true'); bar.classList.add('hide'); }
+
+    /** Center at (cx,cy) in screen pixels; baseDeg = absolute screen angle of Stationary vector; movDeg = absolute screen angle of Moving vector. */
+    function setPose(cx, cy, baseDeg, movDeg){
+      // lock center to fulcrum
+      panX = cx; panY = cy; zoom = 1;
+      // rotate instrument so red arm points along Stationary vector
+      // Our head uses 0° = up; convert screen vector (dx,dy) to that space first
+      gRot = baseDeg; // baseDeg is already in "0 up" convention
+      // moving arm relative to base
+      mov = clamp360(movDeg - baseDeg);
+      applyView(); applyRot(); applyMirror(); applyLabelFix(); render();
+    }
+
+    // expose conversion helper for screen vectors
+    function degFromScreenVec(dx, dy){ return toDegUp(dx, dy); }
+
+    return { show, hide, setPose, degFromScreenVec };
+  })();
 
   // ===== UI =====
   const msg = document.getElementById("msg");
@@ -128,23 +379,20 @@
   dl.position.set(3, 4, 2);
   scene.add(dl);
 
-  // ===== Floor protractor (auto aligned to model facing) =====
+  // ===== Floor protractor (kept) =====
   const protractor = new THREE.Group();
   scene.add(protractor);
   const radius = 1.8;
   const tickMat = new THREE.LineBasicMaterial({ color: 0x475569 });
   for (let d = 0; d < 360; d += 10) {
-    // Build with 0° along +X; we'll rotate the group later to match forward
     const a = THREE.MathUtils.degToRad(d);
-    const r1 = radius * 0.95,
-          r2 = (d % 30 === 0) ? radius * 0.88 : radius * 0.93;
+    const r1 = radius * 0.95, r2 = (d % 30 === 0) ? radius * 0.88 : radius * 0.93;
     const pts = [
       new THREE.Vector3(Math.cos(a) * r1, 0, Math.sin(a) * r1),
       new THREE.Vector3(Math.cos(a) * r2, 0, Math.sin(a) * r2)
     ];
     protractor.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), tickMat));
   }
-  // degree labels (DOM) every 30°
   const makeLabel = (text) => {
     const div = document.createElement('div');
     div.textContent = text;
@@ -152,16 +400,14 @@
     div.style.color = '#94a3b8';
     div.style.font = '12px system-ui';
     div.style.pointerEvents = 'none';
+    div.style.zIndex = 10;
     document.body.appendChild(div);
     return div;
   };
   const labels = [];
-  for (let d = 0; d < 360; d += 30) {
-    labels.push({deg:d, el:makeLabel(`${d}°`)});
-  }
+  for (let d = 0; d < 360; d += 30) labels.push({deg:d, el:makeLabel(`${d}°`)});
   const tmpV = new THREE.Vector3();
   function layoutLabels() {
-    // project points built in protractor frame (rotate with group via matrixWorld)
     labels.forEach(({deg, el})=>{
       const a = THREE.MathUtils.degToRad(deg);
       tmpV.set(Math.cos(a) * radius, 0, Math.sin(a) * radius).applyMatrix4(protractor.matrixWorld);
@@ -173,7 +419,7 @@
     });
   }
 
-  // ===== Model loader (with decoders) =====
+  // ===== Model loader =====
   const loader = new GLTFLoader();
   loader.setMeshoptDecoder(MeshoptDecoder);
   const draco = new DRACOLoader();
@@ -190,23 +436,19 @@
   loader.load(MODEL_URL, (gltf) => {
     model = gltf.scene;
     scene.add(model);
-
-    // center model at world origin horizontally
     const box = new THREE.Box3().setFromObject(model);
     const c = box.getCenter(new THREE.Vector3());
-    model.position.sub(new THREE.Vector3(c.x, 0, c.z)); // keep current Y
+    model.position.sub(new THREE.Vector3(c.x, 0, c.z)); // keep Y
 
-    // Align floor protractor's 0° to model forward (+Z in model space)
+    // Align floor protractor 0° to model anterior
     const forward = new THREE.Vector3(0,0,1).applyQuaternion(model.quaternion);
-    const yaw = Math.atan2(forward.z, forward.x); // angle from +X to forward
-    protractor.rotation.y = yaw;                  // rotate ring so 0° faces anterior
+    const yaw = Math.atan2(forward.z, forward.x);
+    protractor.rotation.y = yaw;
 
     msg.textContent = "✅ Model loaded";
   }, (xhr) => {
     msg.textContent = xhr.lengthComputable ? `Loading ${Math.round((xhr.loaded/xhr.total)*100)}%` : "Loading…";
-  }, (err) => {
-    console.error(err); msg.textContent = "❌ Failed to load model (see console)";
-  });
+  }, (err) => { console.error(err); msg.textContent = "❌ Failed to load model (see console)"; });
 
   // ===== Landmarks =====
   const matGood = new THREE.MeshBasicMaterial({ color: 0x22c55e });
@@ -247,7 +489,7 @@
     ghost.fulcrum.position.copy(truth.fulcrum);
     ghost.stationary.position.copy(truth.stationary);
     ghost.moving.position.copy(truth.moving);
-    Object.values(ghost).forEach(m => m.visible = ghostOn);
+    Object.values(ghost).forEach(m => { m.visible = ghostOn; });
   }
 
   // picking
@@ -255,20 +497,21 @@
   const ray = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
 
+  function log(t) {
+    logEl.textContent += t + "\n";
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
   function placePoint(name, worldPoint) {
-    // bind as LOCAL to model, so it follows animation/pose
     if (!model) return;
     const local = model.worldToLocal(worldPoint.clone());
     userLocal[name] = local;
-    // also set visible marker now
     user[name].visible = true;
-    // immediate world placement
     user[name].position.copy(worldPoint);
-    // tolerance color (compare to preset truth in world)
     const cm = worldPoint.distanceTo(truth[name]) * 100.0;
     user[name].material.color.set(cm <= tol ? 0x22c55e : 0xef4444);
     log(`${name}: ${cm.toFixed(1)} cm`);
-    updateFromLocals();
+    updateFromLocals(true);
   }
 
   canvas.addEventListener("pointerdown", (e) => {
@@ -284,65 +527,21 @@
     target = null;
   });
 
-  // ===== Measurement visuals =====
+  // ===== Measurement visuals (lines only; SVG goniometer handles the rest) =====
   const line1 = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: 0x60a5fa }));
   const line2 = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: 0xf472b6 }));
   scene.add(line1, line2);
 
-  const gonio = new THREE.Group(); gonio.visible = false; scene.add(gonio);
-  const rInner = 0.095, rOuter = 0.105;
-  gonio.add(new THREE.Mesh(
-    new THREE.RingGeometry(rInner, rOuter, 96),
-    new THREE.MeshBasicMaterial({ color: 0x94a3b8, transparent:true, opacity:0.25, side:THREE.DoubleSide })
-  ));
-  const tickMat2 = new THREE.LineBasicMaterial({ color: 0xb0c4de });
-  for (let d = 0; d < 360; d += 10) {
-    const a = THREE.MathUtils.degToRad(d);
-    const inR = (d % 30 === 0) ? rInner * 0.8 : rInner * 0.9;
-    const x1 = Math.cos(a) * inR,  y1 = Math.sin(a) * inR;
-    const x2 = Math.cos(a) * rInner, y2 = Math.sin(a) * rInner;
-    const geo = new THREE.BufferGeometry().setFromPoints([ new THREE.Vector3(x1,0,y1), new THREE.Vector3(x2,0,y2) ]);
-    gonio.add(new THREE.Line(geo, tickMat2));
-  }
-  const armMatA = new THREE.LineBasicMaterial({ color: 0x60a5fa });
-  const armMatB = new THREE.LineBasicMaterial({ color: 0xf472b6 });
-  const armLen = 0.22;
-  const armA = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3(armLen,0,0)]), armMatA);
-  const armB = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3(armLen,0,0)]), armMatB);
-  gonio.add(armA, armB);
-
-  function updateGoniometer(f, s, m) {
-    if (!f || !s || !m) { gonio.visible = false; return; }
-
-    gonio.position.copy(f);
-
-    const vs = s.clone().sub(f).normalize();
-    const vm = m.clone().sub(f).normalize();
-    let n = vs.clone().cross(vm);
-    if (n.lengthSq() < 1e-6) n.set(0,1,0);
-    n.normalize();
-
-    const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,0,1), n);
-    gonio.quaternion.copy(q);
-
-    const endAWorld = f.clone().add( vs.clone().multiplyScalar(armLen) );
-    const endBWorld = f.clone().add( vm.clone().multiplyScalar(armLen) );
-
-    const toLocal = (wp) => gonio.worldToLocal(wp.clone());
-    armA.geometry.dispose();
-    armA.geometry = new THREE.BufferGeometry().setFromPoints([ new THREE.Vector3(0,0,0), toLocal(endAWorld) ]);
-    armB.geometry.dispose();
-    armB.geometry = new THREE.BufferGeometry().setFromPoints([ new THREE.Vector3(0,0,0), toLocal(endBWorld) ]);
-
-    gonio.position.add(n.clone().multiplyScalar(0.02)); // slight lift
-
-    gonio.visible = true;
-  }
-
   function setAngle(a) { hud.textContent = `Angle: ${a.toFixed(0)}°`; }
 
+  // project world -> screen
+  const toScreen = (vec3) => {
+    const v = vec3.clone().project(camera);
+    return { x: (v.x * 0.5 + 0.5) * innerWidth, y: (-v.y * 0.5 + 0.5) * innerHeight };
+  };
+
   // Update from LOCAL bindings each frame (so markers follow rig/animation)
-  function updateFromLocals() {
+  function updateFromLocals(force=false) {
     if (!model) return;
     ["fulcrum","stationary","moving"].forEach(k=>{
       if (userLocal[k]) {
@@ -355,27 +554,27 @@
     const s = user.stationary.visible ? user.stationary.position : null;
     const m = user.moving.visible ? user.moving.position : null;
 
-    if (f && s) {
-      line1.geometry.dispose();
-      line1.geometry = new THREE.BufferGeometry().setFromPoints([f, s]);
-      line1.visible = true;
-    } else line1.visible = false;
-
-    if (f && m) {
-      line2.geometry.dispose();
-      line2.geometry = new THREE.BufferGeometry().setFromPoints([f, m]);
-      line2.visible = true;
-    } else line2.visible = false;
+    // draw 3D helper lines
+    line1.visible = !!(f && s);
+    line2.visible = !!(f && m);
+    if (line1.visible){ line1.geometry.dispose(); line1.geometry = new THREE.BufferGeometry().setFromPoints([f, s]); }
+    if (line2.visible){ line2.geometry.dispose(); line2.geometry = new THREE.BufferGeometry().setFromPoints([f, m]); }
 
     if (f && s && m) {
       const vs = s.clone().sub(f).normalize();
       const vm = m.clone().sub(f).normalize();
       const ang = THREE.MathUtils.radToDeg(Math.acos(THREE.MathUtils.clamp(vs.dot(vm), -1, 1)));
       setAngle(ang);
-      updateGoniometer(f, s, m);
+
+      // ***** Drive SVG goniometer overlay *****
+      const Fs = toScreen(f), Ss = toScreen(s), Ms = toScreen(m);
+      const baseDeg = Gonio.degFromScreenVec(Ss.x - Fs.x, Ss.y - Fs.y); // Stationary (RED)
+      const movDeg  = Gonio.degFromScreenVec(Ms.x - Fs.x, Ms.y - Fs.y); // Moving (GREEN)
+      Gonio.show();
+      Gonio.setPose(Fs.x, Fs.y, baseDeg, movDeg);
     } else {
       setAngle(0);
-      updateGoniometer(null,null,null);
+      Gonio.hide();
     }
   }
 
@@ -405,7 +604,7 @@
     userLocal.fulcrum = userLocal.stationary = userLocal.moving = null;
     line1.visible = line2.visible = false;
     setAngle(0);
-    updateGoniometer(null,null,null);
+    Gonio.hide();
     log("Reset");
   };
 
@@ -428,24 +627,21 @@
     showToast.tid = setTimeout(()=> toast.style.display='none', 1200);
   }
 
-  function log(t) {
-    logEl.textContent += t + "\n";
-    logEl.scrollTop = logEl.scrollHeight;
-  }
-
   // layout + render
   addEventListener("resize", () => {
     camera.aspect = innerWidth / innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(innerWidth, innerHeight);
     layoutLabels();
+    // keep the SVG overlay centered correctly on resize
+    updateFromLocals(true);
   });
 
   const clock = new THREE.Clock();
   (function animate() {
     const dt = clock.getDelta();
     controls.update();
-    if (followMeasure) updateFromLocals(); // keep reading moving rig
+    if (followMeasure) updateFromLocals();
     renderer.render(scene, camera);
     layoutLabels();
     requestAnimationFrame(animate);
