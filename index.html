@@ -143,13 +143,18 @@ import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 
 /* ========================
- *  CONFIG – sensitivity
+ *  CONFIG – sensitivity / clamp
  * ======================== */
 const S = {
   MIN_ZOOM: 0.10, MAX_ZOOM: 10.0,
   WHEEL_STEP: 1.22, WHEEL_ACCEL: 1/100,
-  PINCH_EXP: 1.25, ROT_GAIN: 1.25, PAN_GAIN: 1.35
+  PINCH_EXP: 1.25, ROT_GAIN: 1.25,
+  PAN_GAIN: 1.10,                     // slightly calmer drag
+  PX_PER_CM: 37.7952755906,           // CSS px per cm
+  MARGIN_CM: 4,                       // keep ~4 cm from edges
+  INSTR_RADIUS_PX: 390                // worst-case visual radius (arms)
 };
+const MARGIN_PX = S.PX_PER_CM * S.MARGIN_CM;
 
 /* ===== UI refs ===== */
 const msg = document.getElementById("msg");
@@ -163,7 +168,7 @@ let tol = parseFloat(tolEl.value);
 tolEl.oninput = () => (tol = parseFloat(tolEl.value));
 const log = (t)=>{ logEl.textContent += t + "\\n"; logEl.scrollTop = logEl.scrollHeight; };
 
-/* ===== Three.js ===== */
+/* ===== Three.js (unchanged) ===== */
 const canvas = document.getElementById("c");
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setPixelRatio(devicePixelRatio);
@@ -178,7 +183,7 @@ controls.enableDamping = true;
 scene.add(new THREE.HemisphereLight(0xffffff, 0x333344, 1.2));
 const dl = new THREE.DirectionalLight(0xffffff, 1); dl.position.set(3, 4, 2); scene.add(dl);
 
-/* Floor protractor (kept) */
+/* Floor protractor */
 const protractor = new THREE.Group(); scene.add(protractor);
 const radius = 1.8;
 const tickMat = new THREE.LineBasicMaterial({ color: 0x475569 });
@@ -211,7 +216,7 @@ const ktx2 = new KTX2Loader(); ktx2.setTranscoderPath("https://unpkg.com/three@0
 ktx2.detectSupport(renderer); loader.setKTX2Loader(ktx2);
 
 let model = null;
-const MODEL_URL = "./Athletic_Grace_1006002620_texture.glb"; // same folder
+const MODEL_URL = "./Athletic_Grace_1006002620_texture.glb";
 loader.load(MODEL_URL, (gltf) => {
   model = gltf.scene; scene.add(model);
   const box = new THREE.Box3().setFromObject(model);
@@ -223,10 +228,9 @@ loader.load(MODEL_URL, (gltf) => {
   msg.textContent = "✅ Model loaded";
 }, (xhr) => {
   msg.textContent = xhr.lengthComputable ? `Loading ${Math.round((xhr.loaded/xhr.total)*100)}%` : "Loading…";
-}, (err) => {
-  console.error(err); msg.textContent = "❌ Failed to load model (check file name/path)"; });
+}, (err) => { console.error(err); msg.textContent = "❌ Failed to load model"; });
 
-/* Landmarks */
+/* Landmarks, picking, helpers (unchanged) */
 const matGood = new THREE.MeshBasicMaterial({ color: 0x22c55e });
 const matBad  = new THREE.MeshBasicMaterial({ color: 0xef4444 });
 const dot = () => new THREE.Mesh(new THREE.SphereGeometry(0.01, 16, 16), matBad.clone());
@@ -243,36 +247,20 @@ const PRESETS = {
   cerv_lat:  { fulcrum:new THREE.Vector3(0.05,1.55,0.02), stationary:new THREE.Vector3(0.00,1.45,0.10), moving:new THREE.Vector3(0.10,1.60,0.02) }
 };
 let truth = { ...PRESETS.cerv_rot };
-let ghostOn = false;
-function updateGhost(){ ghost.fulcrum.position.copy(truth.fulcrum); ghost.stationary.position.copy(truth.stationary); ghost.moving.position.copy(truth.moving); Object.values(ghost).forEach(m => m.visible = ghostOn); }
+let ghostOn = false; function updateGhost(){ ghost.fulcrum.position.copy(truth.fulcrum); ghost.stationary.position.copy(truth.stationary); ghost.moving.position.copy(truth.moving); Object.values(ghost).forEach(m => m.visible = ghostOn); }
 
-/* Picking & placement */
 let target = null;
 const ray = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 const clicked = { fulcrum:false, stationary:false, moving:false };
-
-function maybeShowGonioOnClicks(){
-  if (clicked.fulcrum && clicked.stationary && clicked.moving) {
-    const cx = innerWidth/2, cy = innerHeight/2;
-    Gonio.show();
-    Gonio.setPose(cx, cy, 0, 45); // preview until true points exist
-  }
-}
-function toScreen(v3){
-  const v = v3.clone().project(camera);
-  return { x:(v.x*0.5+0.5)*innerWidth, y:(-v.y*0.5+0.5)*innerHeight };
-}
+function maybeShowGonioOnClicks(){ if (clicked.fulcrum && clicked.stationary && clicked.moving) { const cx=innerWidth/2, cy=innerHeight/2; Gonio.show(); Gonio.setPose(cx, cy, 0, 45); } }
+function toScreen(v3){ const v=v3.clone().project(camera); return { x:(v.x*0.5+0.5)*innerWidth, y:(-v.y*0.5+0.5)*innerHeight }; }
 function placePoint(name, worldPoint) {
   if (!model) return;
   const local = model.worldToLocal(worldPoint.clone());
-  userLocal[name] = local;
-  user[name].visible = true;
-  user[name].position.copy(worldPoint);
-  const cm = worldPoint.distanceTo(truth[name]) * 100.0;
-  user[name].material.color.set(cm <= tol ? 0x22c55e : 0xef4444);
-  log(`${name}: ${cm.toFixed(1)} cm`);
-  updateFromLocals();
+  userLocal[name] = local; user[name].visible = true; user[name].position.copy(worldPoint);
+  const cm = worldPoint.distanceTo(truth[name]) * 100.0; user[name].material.color.set(cm <= tol ? 0x22c55e : 0xef4444);
+  log(`${name}: ${cm.toFixed(1)} cm`); updateFromLocals();
 }
 canvas.addEventListener("pointerdown", (e) => {
   if (!target || !model) return;
@@ -283,47 +271,36 @@ canvas.addEventListener("pointerdown", (e) => {
   const hits = ray.intersectObjects(scene.children, true)
     .filter(h => !(h.object instanceof THREE.Line) && h.object !== protractor);
   if (!hits.length) return;
-  placePoint(target, hits[0].point);
-  target = null;
+  placePoint(target, hits[0].point); target = null;
 });
-
-/* Helper lines */
 const line1 = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: 0x60a5fa }));
 const line2 = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: 0xf472b6 }));
 scene.add(line1, line2);
-
 function setAngle(a) { hud.textContent = `Angle: ${a.toFixed(0)}°`; }
 function updateFromLocals() {
   if (!model) return;
-  ["fulcrum","stationary","moving"].forEach(k=>{
-    if (userLocal[k]) { user[k].position.copy(userLocal[k].clone()).applyMatrix4(model.matrixWorld); user[k].visible = true; }
-  });
+  ["fulcrum","stationary","moving"].forEach(k=>{ if (userLocal[k]) { user[k].position.copy(userLocal[k].clone()).applyMatrix4(model.matrixWorld); user[k].visible = true; } });
   const f = user.fulcrum.visible ? user.fulcrum.position : null;
   const s = user.stationary.visible ? user.stationary.position : null;
   const m = user.moving.visible ? user.moving.position : null;
-
   line1.visible = !!(f && s); line2.visible = !!(f && m);
   if (line1.visible){ line1.geometry.dispose(); line1.geometry = new THREE.BufferGeometry().setFromPoints([f, s]); }
   if (line2.visible){ line2.geometry.dispose(); line2.geometry = new THREE.BufferGeometry().setFromPoints([f, m]); }
-
   if (f && s && m) {
-    const vs = s.clone().sub(f).normalize();
-    const vm = m.clone().sub(f).normalize();
+    const vs = s.clone().sub(f).normalize(); const vm = m.clone().sub(f).normalize();
     const ang = THREE.MathUtils.radToDeg(Math.acos(THREE.MathUtils.clamp(vs.dot(vm), -1, 1)));
     setAngle(ang);
-
     const Fs = toScreen(f), Ss = toScreen(s), Ms = toScreen(m);
-    const baseDeg = Gonio.degFromScreenVec(Ss.x - Fs.x, Ss.y - Fs.y); // RED
-    const movDeg  = Gonio.degFromScreenVec(Ms.x - Fs.x, Ms.y - Fs.y); // GREEN
-    Gonio.show();
-    Gonio.setPose(Fs.x, Fs.y, baseDeg, movDeg);
+    const baseDeg = Gonio.degFromScreenVec(Ss.x - Fs.x, Ss.y - Fs.y);
+    const movDeg  = Gonio.degFromScreenVec(Ms.x - Fs.x, Ms.y - Fs.y);
+    Gonio.show(); Gonio.setPose(Fs.x, Fs.y, baseDeg, movDeg);
   } else {
     setAngle(0);
     if (!(clicked.fulcrum && clicked.stationary && clicked.moving)) Gonio.hide();
   }
 }
 
-/* Buttons */
+/* Buttons & locks */
 const pickFulcrum = document.getElementById("pickFulcrum");
 const pickStationary = document.getElementById("pickStationary");
 const pickMoving = document.getElementById("pickMoving");
@@ -336,7 +313,6 @@ let followMeasure = false;
 pickFulcrum.onclick   = () => { clicked.fulcrum=true;   target = "fulcrum";   log("Place Fulcrum");   maybeShowGonioOnClicks(); };
 pickStationary.onclick= () => { clicked.stationary=true;target = "stationary";log("Place Stationary"); maybeShowGonioOnClicks(); };
 pickMoving.onclick    = () => { clicked.moving=true;    target = "moving";    log("Place Moving");    maybeShowGonioOnClicks(); };
-
 toggleGhostBtn.onclick = () => { ghostOn=!ghostOn; updateGhost(); toast.textContent = ghostOn ? "Ghost landmarks ON" : "Ghost landmarks OFF"; showToast(); };
 resetAll.onclick = () => {
   Object.values(user).forEach(m => m.visible = false);
@@ -358,12 +334,12 @@ lockGonioBtn.onclick = ()=> setGonioLock(!lockGonio);
 function showToast(){ toast.style.display='block'; clearTimeout(showToast.tid); showToast.tid=setTimeout(()=>toast.style.display='none',1200); }
 
 /* Render loop */
-addEventListener("resize", () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); layoutLabels(); updateFromLocals(); });
+addEventListener("resize", () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); layoutLabels(); updateFromLocals(); Gonio._clampNow?.(); });
 const clock = new THREE.Clock();
 (function animate(){ clock.getDelta(); controls.update(); if (followMeasure) updateFromLocals(); renderer.render(scene, camera); layoutLabels(); requestAnimationFrame(animate); })();
 
 /* ==============================
-   SVG goniometer (one definition)
+   SVG goniometer (with clamped pan)
    ============================== */
 const Gonio = (() => {
   const host  = document.getElementById('gonioHost');
@@ -383,9 +359,9 @@ const Gonio = (() => {
 
   const clamp = (v,a,b)=> Math.min(b, Math.max(a, v));
   const clamp360 = a => (a%360+360)%360;
-  const toDegUp  = (x,y)=> clamp360(Math.atan2(-y,x)*180/Math.PI + 90); // 0° up
+  const toDegUp  = (x,y)=> clamp360(Math.atan2(-y,x)*180/Math.PI + 90);
 
-  // Build once
+  // Build ticks/labels/rulers once
   (function build(){
     const R=120, Rin=86;
     const line=(parent,x1,y1,x2,y2,cls)=>{ const n=document.createElementNS('http://www.w3.org/2000/svg','line');
@@ -439,13 +415,13 @@ const Gonio = (() => {
         if (long){ const t=text(group,18,y,Math.round(inch),'ruLbl',90); t.dataset.arm=which; t.dataset.x=18; t.dataset.y=y; }
       }
       const tcm=text(group,-26,tipY,'cm','ruLbl',-90); tcm.dataset.arm=which; tcm.dataset.x=-26; tcm.dataset.y=tipY;
-      const tin=text(group, 26,tipY,'in','ruLbl', 90); tin.dataset.arm=which; tin.dataset.x= 26; tin.dataset.y=tipY;
+      const tin=text(group, 26,tipY,'in','ruLbl', 90); tin.dataset.arm=which; t.datasetx; tin.dataset.y=tipY;
     };
     buildTipRuler(armA_ruler,  380, +1, 'A');
     buildTipRuler(armB_ruler, -380, -1, 'B');
   })();
 
-  // Interaction state
+  // --- Interaction state ---
   let mov=0, zoom=1, panX=innerWidth/2, panY=innerHeight/2;
   let baseRot=0, userRot=0;
   let draggingArm=false, draggingPan=false, lastPanPt=null;
@@ -457,6 +433,21 @@ const Gonio = (() => {
     labelsFixed.setAttribute('transform', `rotate(${t})`);
     numsInWrap.setAttribute('transform', `rotate(${-t})`);
   }
+
+  // ---- CLAMP to visible area with 4cm margin ----
+  function clampPanToViewport(){
+    const bound = S.INSTR_RADIUS_PX * zoom;
+    const minX = MARGIN_PX + bound;
+    const maxX = innerWidth  - MARGIN_PX - bound;
+    const minY = MARGIN_PX + bound;
+    const maxY = innerHeight - MARGIN_PX - bound;
+
+    if (minX <= maxX) panX = clamp(panX, minX, maxX); else panX = innerWidth/2;
+    if (minY <= maxY) panY = clamp(panY, minY, maxY); else panY = innerHeight/2;
+  }
+  // expose one-shot clamp for resize
+  function clampNow(){ clampPanToViewport(); applyView(); }
+
   function render(){
     armA_grp.setAttribute('transform', `rotate(0)`);
     armB_grp.setAttribute('transform', `rotate(${mov})`);
@@ -466,7 +457,8 @@ const Gonio = (() => {
       t.setAttribute('transform', `rotate(${-base} ${x} ${y})`);
     });
   }
-  applyView(); applyRot(); applyLabelFix(); render();
+  // initial draw
+  clampPanToViewport(); applyView(); applyRot(); applyLabelFix(); render();
 
   // Utilities
   function toLocal(node, clientX, clientY){
@@ -493,12 +485,12 @@ const Gonio = (() => {
     const [a,b]=[...touches.values()];
     const c=ctr(a,b), d=dst(a,b), ag=ang(a,b);
     const scale = Math.pow(d/lastG.d, S.PINCH_EXP);
-    zoom = clamp(lastG.zoom * scale, S.MIN_ZOOM, S.MAX_ZOOM);
+    zoom = Math.min(S.MAX_ZOOM, Math.max(S.MIN_ZOOM, lastG.zoom * scale));
     panX = lastG.panX + S.PAN_GAIN * (c.x - lastG.c.x)/zoom;
     panY = lastG.panY + S.PAN_GAIN * (c.y - lastG.c.y)/zoom;
     let da = ag - lastG.a; while(da>180) da-=360; while(da<-180) da+=360;
     userRot = lastG.userRot + da * S.ROT_GAIN;
-    applyView(); applyRot(); applyLabelFix(); render();
+    clampPanToViewport(); applyView(); applyRot(); applyLabelFix(); render();
   }
   function endGesture(){ lastG=null; }
 
@@ -517,7 +509,7 @@ const Gonio = (() => {
       const p = toLocal(viewport, e.clientX, e.clientY);
       panX += S.PAN_GAIN * (p.x - lastPanPt.x);
       panY += S.PAN_GAIN * (p.y - lastPanPt.y);
-      lastPanPt = p; applyView();
+      lastPanPt = p; clampPanToViewport(); applyView();
     }
   });
   inst.addEventListener('pointerup',   e=>{ if (touches.delete(e.pointerId)) endGesture(); draggingPan=false; draggingArm=false; lastPanPt=null; });
@@ -529,12 +521,12 @@ const Gonio = (() => {
     const step = Math.sign(e.deltaY) < 0 ? S.WHEEL_STEP : 1/S.WHEEL_STEP;
     const accel = Math.exp(Math.log(S.WHEEL_STEP) * Math.abs(e.deltaY) * S.WHEEL_ACCEL);
     const fac = Math.sign(e.deltaY) < 0 ? step*accel : (1/(step*accel));
-    const newZoom = clamp(zoom * fac, S.MIN_ZOOM, S.MAX_ZOOM);
+    const newZoom = Math.min(S.MAX_ZOOM, Math.max(S.MIN_ZOOM, zoom * fac));
     const k = newZoom/zoom;
     const pt = toLocal(viewport, e.clientX, e.clientY);
     panX = pt.x - k*(pt.x - panX);
     panY = pt.y - k*(pt.y - panY);
-    zoom = newZoom; applyView();
+    zoom = newZoom; clampPanToViewport(); applyView();
   }, {passive:false});
 
   // Green arm drag
@@ -553,22 +545,20 @@ const Gonio = (() => {
   armB_grp.addEventListener('pointercancel', ()=> draggingArm=false);
 
   // Public API
-  function show(){ host.classList.remove('hide'); host.setAttribute('aria-hidden','false'); }
+  function show(){ host.classList.remove('hide'); host.setAttribute('aria-hidden','false'); clampPanToViewport(); applyView(); }
   function hide(){ host.classList.add('hide'); host.setAttribute('aria-hidden','true'); }
   function setPose(cx, cy, baseDeg, movDeg){
-    panX = cx; panY = cy;         // keep current zoom/userRot
-    baseRot = baseDeg;
-    mov  = clamp360(movDeg - baseDeg);
-    applyView(); applyRot(); applyLabelFix(); render();
+    panX = cx; panY = cy; baseRot = baseDeg; mov  = clamp360(movDeg - baseDeg);
+    clampPanToViewport(); applyView(); applyRot(); applyLabelFix(); render();
   }
   function degFromScreenVec(dx,dy){ return toDegUp(dx,dy); }
 
-  return { show, hide, setPose, degFromScreenVec };
+  // expose a one-shot clamp for window resize
+  return { show, hide, setPose, degFromScreenVec, _clampNow: clampNow };
 })();
+window.Gonio = Gonio;
 
-window.Gonio = Gonio; // (optional) debug
-
-/* Final safety: show meaningful JS errors in-page */
+/* Show JS errors in-page */
 window.addEventListener('error', (e)=> { msg.textContent = '❌ ' + (e.message || 'Script error'); });
 </script>
 </body>
