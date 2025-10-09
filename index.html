@@ -31,7 +31,8 @@
 
   /* SVG overlay */
   #gonioHost{position:fixed;inset:0;z-index:12;pointer-events:none}
-  #gonioHost svg{width:100vw;height:100vh;background:transparent;pointer-events:none}
+  /* KEY CHANGE: SVG now accepts events everywhere so panning works */
+  #gonioHost svg{width:100vw;height:100vh;background:transparent;pointer-events:auto}
   #instrument{pointer-events:auto;cursor:grab;touch-action:none}
   .tick{stroke:#64748b;stroke-width:.9}.tickBig{stroke-width:1.6}
   .armA{stroke:#ef4444;fill:none}.armB{stroke:#22c55e;fill:none}
@@ -377,7 +378,7 @@ const clock = new THREE.Clock();
 /* ===== SVG goniometer module ===== */
 const Gonio = (() => {
   const host  = document.getElementById('gonioHost');
-  const svg   = document.getElementById('gonioSvg');
+  const svg   = document.getElementById('gonioSvg');      // pan/zoom listeners now on SVG root
   const inst  = document.getElementById('instrument');
   const viewport   = document.getElementById('viewport');
   const rotWrap    = document.getElementById('rotWrap');
@@ -403,6 +404,7 @@ const Gonio = (() => {
     for(let d=0; d<360; d+=10){ const diff90=Math.abs(((d-90)%360+540)%360-180); const diff270=Math.abs(((d-270)%360+540)%360-180); const val=Math.min(diff90,diff270); if(val%20===0 && val<=80){ const a=(d-90)*Math.PI/180,x=Math.cos(a)*rWhite,y=Math.sin(a)*rWhite; text(numsOut,x,y,String(val),'labelOuter'); } }
     const rInner=Rin+9, valFromTheta=th=>{const t=(th+180)%360; return t<=180?t:360-t;};
     for(let th=0; th<360; th+=10){ const v=valFromTheta(th); if(v%10!==0) continue; if(v===0 && th!==180) continue; const a=(th-90)*Math.PI/180,x=Math.cos(a)*rInner,y=Math.sin(a)*rInner; text(numsIn,x,y,String(v),'labelInner'); }
+
     buildTipRuler(armA_ruler, +380, +1, 'A');
     buildTipRuler(armB_ruler, -380, -1, 'B');
     function buildTipRuler(group, tipY, dir, which){
@@ -472,34 +474,34 @@ const Gonio = (() => {
   function moveGesture(){ if (lockGonio || touches.size!==2 || !lastG) return; const [a,b]=[...touches.values()]; const c=ctr(a,b), d=dst(a,b), ag=ang(a,b); const scaleFac=Math.pow(d/lastG.d,S.PINCH_EXP); zoom=Math.min(S.MAX_ZOOM,Math.max(S.MIN_ZOOM,lastG.zoom*scaleFac)); panX = lastG.panX + S.PAN_GAIN*(c.x-lastG.c.x)/zoom; panY = lastG.panY + S.PAN_GAIN*(c.y-lastG.c.y)/zoom; let da=ag-lastG.a; while(da>180) da-=360; while(da<-180) da+=360; userRot = lastG.userRot + da*S.ROT_GAIN; clampPanToViewport(); applyView(); applyRot(); applyLabelFix(); render(); }
   function endGesture(){ lastG=null; }
 
-  // PAN with screen-pixel deltas
-  inst.addEventListener('pointerdown', e=>{
+  /* ===== PAN on SVG root (and do NOT start pan if drag begins on green arm) ===== */
+  svg.addEventListener('pointerdown', e=>{
     if (lockGonio) return;
-    e.stopPropagation(); e.preventDefault();
-    if (e.pointerType === 'touch') { touches.set(e.pointerId, tp(e)); startGesture(); }
+    // if the press starts on the green arm, let the arm logic grab it
+    if (e.target.closest('#armB_grp')) return;
+    e.preventDefault();
     draggingPan = true;
     lastPanScreen = { x: e.clientX, y: e.clientY };
-    inst.setPointerCapture?.(e.pointerId);
+    svg.setPointerCapture?.(e.pointerId);
   });
-  inst.addEventListener('pointermove', e=>{
+  svg.addEventListener('pointermove', e=>{
     if (lockGonio) return;
     if (e.pointerType === 'touch' && touches.has(e.pointerId)) { touches.set(e.pointerId, tp(e)); moveGesture(); }
-    if (draggingPan && lastPanScreen){
-      e.stopPropagation(); e.preventDefault();
-      const dx = (e.clientX - lastPanScreen.x) / (zoom * scale);
-      const dy = (e.clientY - lastPanScreen.y) / (zoom * scale);
-      panX += S.PAN_GAIN * dx;
-      panY += S.PAN_GAIN * dy;
-      lastPanScreen = { x: e.clientX, y: e.clientY };
-      clampPanToViewport(); applyView();
-    }
+    if (!draggingPan || !lastPanScreen) return;
+    e.preventDefault();
+    const dx = (e.clientX - lastPanScreen.x) / (zoom * scale);
+    const dy = (e.clientY - lastPanScreen.y) / (zoom * scale);
+    panX += S.PAN_GAIN * dx;
+    panY += S.PAN_GAIN * dy;
+    lastPanScreen = { x: e.clientX, y: e.clientY };
+    clampPanToViewport(); applyView();
   });
-  inst.addEventListener('pointerup', e=>{ if (touches.delete(e.pointerId)) endGesture(); draggingPan=false; lastPanScreen=null; });
-  inst.addEventListener('pointercancel', e=>{ if (touches.delete(e.pointerId)) endGesture(); draggingPan=false; lastPanScreen=null; });
+  svg.addEventListener('pointerup',   ()=>{ draggingPan=false; lastPanScreen=null; });
+  svg.addEventListener('pointercancel',()=>{ draggingPan=false; lastPanScreen=null; });
 
-  inst.addEventListener('wheel', e=>{
+  svg.addEventListener('wheel', e=>{
     if (lockGonio) return;
-    e.preventDefault(); e.stopPropagation();
+    e.preventDefault();
     const step=Math.sign(e.deltaY)<0?S.WHEEL_STEP:1/S.WHEEL_STEP;
     const accel=Math.exp(Math.log(S.WHEEL_STEP)*Math.abs(e.deltaY)*S.WHEEL_ACCEL);
     const fac=Math.sign(e.deltaY)<0?step*accel:(1/(step*accel));
@@ -512,7 +514,7 @@ const Gonio = (() => {
     zoom=newZoom; clampPanToViewport(); applyView();
   }, {passive:false});
 
-  // GREEN arm drag anywhere on arm/knob
+  /* ===== GREEN ARM DRAG (wins when you grab the arm/knob) ===== */
   function startArmDrag(e){
     if (lockGonio) return;
     e.stopPropagation(); e.preventDefault();
