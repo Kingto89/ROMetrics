@@ -80,8 +80,8 @@
     <button id="lockGonio">🔓 Gonio: Unlocked</button>
   </div>
 
-  <label>Gonio Size (50–200%)</label>
-  <input type="range" min="50" max="200" step="5" value="100" id="gonioSize">
+  <label>Gonio Size (10–200%)</label>
+  <input type="range" min="10" max="200" step="5" value="100" id="gonioSize">
 
   <div class="legend">
     <span class="chip" style="border-color:#ef4444">Stationary arm (red)</span>
@@ -165,7 +165,7 @@ const lockGonioBtn = document.getElementById("lockGonio");
 const sizeEl = document.getElementById("gonioSize");
 let tol = parseFloat(tolEl.value);
 tolEl.oninput = () => (tol = parseFloat(tolEl.value));
-const log = (t)=>{ logEl.textContent += t + "\\n"; logEl.scrollTop = logEl.scrollHeight; };
+const log = (t)=>{ logEl.textContent += t + "\n"; logEl.scrollTop = logEl.scrollHeight; };
 
 /* ===== Three.js ===== */
 const canvas = document.getElementById("c");
@@ -229,24 +229,15 @@ function addFallbackMannequin(){
   mk(new THREE.SphereGeometry(0.16,16,16),        1.8);
   mk(new THREE.CylinderGeometry(0.1,0.12,0.3,12), 1.45);
   mk(new THREE.CylinderGeometry(0.11,0.11,0.8,12),0.55);
-  g.position.y = 0; scene.add(g); model = g;
+  scene.add(g); model = g;
   msg.textContent = "⚠️ GLB missing/blocked — fallback mannequin shown";
 }
 
 async function loadModel() {
   try {
-    // HEAD check so we can print a precise 404/403/etc on Pages
     const head = await fetch(MODEL_URL, { method: "HEAD", cache: "no-store" });
-    if (!head.ok) {
-      msg.textContent = `⚠️ Could not fetch ${MODEL_URL} (HTTP ${head.status}) — using fallback`;
-      addFallbackMannequin();
-      return;
-    }
-  } catch (e) {
-    msg.textContent = `⚠️ Network error for ${MODEL_URL} — using fallback`;
-    addFallbackMannequin();
-    return;
-  }
+    if (!head.ok) { msg.textContent = `⚠️ ${MODEL_URL} (HTTP ${head.status}) — using fallback`; addFallbackMannequin(); return; }
+  } catch { msg.textContent = `⚠️ Network error — using fallback`; addFallbackMannequin(); return; }
 
   loader.load(MODEL_URL, (gltf) => {
     model = gltf.scene; scene.add(model);
@@ -259,14 +250,9 @@ async function loadModel() {
     msg.textContent = "✅ Model loaded";
   }, (xhr) => {
     msg.textContent = xhr.lengthComputable ? `Loading ${Math.round((xhr.loaded/xhr.total)*100)}%` : "Loading…";
-  }, (err) => {
-    console.error(err);
-    msg.textContent = "⚠️ Loader error — using fallback";
-    addFallbackMannequin();
-  });
+  }, () => { msg.textContent = "⚠️ Loader error — using fallback"; addFallbackMannequin(); });
 
-  // safety timeout: if nothing is on screen after 6s, show mannequin
-  setTimeout(()=>{ if (!model) { addFallbackMannequin(); } }, 6000);
+  setTimeout(()=>{ if (!model) addFallbackMannequin(); }, 6000);
 }
 loadModel();
 
@@ -397,12 +383,6 @@ const Gonio = (() => {
   const rotWrap    = document.getElementById('rotWrap');
   const numsInWrap = document.getElementById('numsInWrap');
   const labelsFixed= document.getElementById('labelsFixed');
-  const ticks = document.getElementById('ticks');
-  const numsOut = document.getElementById('numsOut');
-  const numsIn = document.getElementById('numsIn');
-  const armA_grp = document.getElementById('armA_grp');
-  const armB_handleKnob = document.getElementById('armB_handleKnob');
-  const armB_handleShaft= document.getElementById('armB_handleShaft');
 
   const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
   const clamp360=a=>(a%360+360)%360;
@@ -410,6 +390,9 @@ const Gonio = (() => {
 
   /* build ticks/labels/rulers once */
   (function build(){
+    const ticks = document.getElementById('ticks');
+    const numsOut = document.getElementById('numsOut');
+    const numsIn = document.getElementById('numsIn');
     const R=120, Rin=86;
     const line=(p,x1,y1,x2,y2,cls)=>{ const n=document.createElementNS('http://www.w3.org/2000/svg','line'); n.setAttribute('x1',x1);n.setAttribute('y1',y1);n.setAttribute('x2',x2);n.setAttribute('y2',y2); if(cls)n.setAttribute('class',cls); p.appendChild(n); };
     const text=(p,x,y,t,cls,rot)=>{ const n=document.createElementNS('http://www.w3.org/2000/svg','text'); n.setAttribute('x',x); n.setAttribute('y',y); n.setAttribute('class',cls||'labelOuter'); if(rot)n.setAttribute('transform',`rotate(${rot} ${x} ${y})`); n.textContent=t; p.appendChild(n); return n; };
@@ -422,42 +405,106 @@ const Gonio = (() => {
 
   let mov=0, zoom=1, panX=innerWidth/2, panY=innerHeight/2;
   let baseRot=0, userRot=0, scale=1;
-  let draggingArm=false, draggingPan=false, lastPanPt=null;
+  let draggingArm=false, draggingPan=false, lastPanScreen=null;
 
   function applyView(){ viewport.setAttribute('transform',`translate(${panX},${panY}) scale(${zoom*scale})`); }
   function applyRot(){ rotWrap.setAttribute('transform',`rotate(${baseRot+userRot})`); }
   function applyLabelFix(){ const t=-(baseRot+userRot); labelsFixed.setAttribute('transform',`rotate(${t})`); numsInWrap.setAttribute('transform',`rotate(${-t})`); }
-  function clampPan(){ const bound=S.INSTR_BASE_RADIUS_PX*zoom*scale, minX=MARGIN_PX+bound, maxX=innerWidth-MARGIN_PX-bound, minY=MARGIN_PX+bound, maxY=innerHeight-MARGIN_PX-bound; if(minX<=maxX) panX=Math.min(maxX,Math.max(minX,panX)); else panX=innerWidth/2; if(minY<=maxY) panY=Math.min(maxY,Math.max(minY,panY)); else panY=innerHeight/2; }
-  function clampNow(){ clampPan(); applyView(); }
 
-  function render(){ document.getElementById('armA_grp').setAttribute('transform','rotate(0)'); document.getElementById('armB_grp').setAttribute('transform',`rotate(${mov})`); }
-  clampPan(); applyView(); applyRot(); applyLabelFix(); render();
+  // keep overlay on screen (~4 cm margin)
+  function clampPanToViewport(){
+    const bound = S.INSTR_BASE_RADIUS_PX * zoom * scale;
+    const minX = MARGIN_PX + bound, maxX = innerWidth - MARGIN_PX - bound;
+    const minY = MARGIN_PX + bound, maxY = innerHeight - MARGIN_PX - bound;
+    if (minX <= maxX) panX = clamp(panX, minX, maxX); else panX = innerWidth/2;
+    if (minY <= maxY) panY = clamp(panY, minY, maxY); else panY = innerHeight/2;
+  }
+  function clampNow(){ clampPanToViewport(); applyView(); }
 
-  function toLocal(node, x, y){ const pt=svg.createSVGPoint(); pt.x=x; pt.y=y; return pt.matrixTransform(node.getScreenCTM().inverse()); }
+  function render(){
+    document.getElementById('armA_grp').setAttribute('transform','rotate(0)');
+    document.getElementById('armB_grp').setAttribute('transform',`rotate(${mov})`);
+  }
+  clampPanToViewport(); applyView(); applyRot(); applyLabelFix(); render();
 
+  // gestures
   const touches=new Map(); let lastG=null;
   const tp=e=>({x:e.clientX,y:e.clientY}); const ctr=(a,b)=>({x:(a.x+b.x)/2,y:(a.y+b.y)/2}); const dst=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y); const ang=(a,b)=>Math.atan2(b.y-a.y,b.x-a.x)*180/Math.PI;
 
   function startGesture(){ if (lockGonio) return; if(touches.size===2){ const [a,b]=[...touches.values()]; lastG={c:ctr(a,b), d:dst(a,b), a:ang(a,b), panX, panY, zoom, userRot}; }}
-  function moveGesture(){ if (lockGonio || touches.size!==2 || !lastG) return; const [a,b]=[...touches.values()]; const c=ctr(a,b), d=dst(a,b), ag=ang(a,b); const scaleFac=Math.pow(d/lastG.d,S.PINCH_EXP); zoom=Math.min(S.MAX_ZOOM,Math.max(S.MIN_ZOOM,lastG.zoom*scaleFac)); panX = lastG.panX + S.PAN_GAIN*(c.x-lastG.c.x)/zoom; panY = lastG.panY + S.PAN_GAIN*(c.y-lastG.c.y)/zoom; let da=ag-lastG.a; while(da>180) da-=360; while(da<-180) da+=360; userRot = lastG.userRot + da*S.ROT_GAIN; clampPan(); applyView(); applyRot(); applyLabelFix(); render(); }
+  function moveGesture(){ if (lockGonio || touches.size!==2 || !lastG) return; const [a,b]=[...touches.values()]; const c=ctr(a,b), d=dst(a,b), ag=ang(a,b); const scaleFac=Math.pow(d/lastG.d,S.PINCH_EXP); zoom=Math.min(S.MAX_ZOOM,Math.max(S.MIN_ZOOM,lastG.zoom*scaleFac)); panX = lastG.panX + S.PAN_GAIN*(c.x-lastG.c.x)/zoom; panY = lastG.panY + S.PAN_GAIN*(c.y-lastG.c.y)/zoom; let da=ag-lastG.a; while(da>180) da-=360; while(da<-180) da+=360; userRot = lastG.userRot + da*S.ROT_GAIN; clampPanToViewport(); applyView(); applyRot(); applyLabelFix(); render(); }
   function endGesture(){ lastG=null; }
 
-  inst.addEventListener('pointerdown', e=>{ if(lockGonio) return; e.stopPropagation(); e.preventDefault(); if(e.pointerType==='touch'){ touches.set(e.pointerId,tp(e)); startGesture(); } draggingPan=true; lastPanPt=toLocal(viewport,e.clientX,e.clientY); inst.setPointerCapture?.(e.pointerId); });
-  inst.addEventListener('pointermove', e=>{ if(lockGonio) return; if(e.pointerType==='touch'&&touches.has(e.pointerId)){ touches.set(e.pointerId,tp(e)); moveGesture(); } if(draggingPan){ e.stopPropagation(); e.preventDefault(); const p=toLocal(viewport,e.clientX,e.clientY); panX += S.PAN_GAIN*(p.x-lastPanPt.x); panY += S.PAN_GAIN*(p.y-lastPanPt.y); lastPanPt=p; clampPan(); applyView(); }});
-  inst.addEventListener('pointerup', e=>{ if(touches.delete(e.pointerId)) endGesture(); draggingPan=false; lastPanPt=null; });
-  inst.addEventListener('pointercancel', e=>{ if(touches.delete(e.pointerId)) endGesture(); draggingPan=false; lastPanPt=null; });
+  // PAN with screen-pixel deltas (smooth)
+  inst.addEventListener('pointerdown', e=>{
+    if (lockGonio) return;
+    e.stopPropagation(); e.preventDefault();
+    if (e.pointerType === 'touch') { touches.set(e.pointerId, tp(e)); startGesture(); }
+    draggingPan = true;
+    lastPanScreen = { x: e.clientX, y: e.clientY };
+    inst.setPointerCapture?.(e.pointerId);
+  });
+  inst.addEventListener('pointermove', e=>{
+    if (lockGonio) return;
+    if (e.pointerType === 'touch' && touches.has(e.pointerId)) { touches.set(e.pointerId, tp(e)); moveGesture(); }
+    if (draggingPan && lastPanScreen){
+      e.stopPropagation(); e.preventDefault();
+      const dx = (e.clientX - lastPanScreen.x) / (zoom * scale);
+      const dy = (e.clientY - lastPanScreen.y) / (zoom * scale);
+      panX += S.PAN_GAIN * dx;
+      panY += S.PAN_GAIN * dy;
+      lastPanScreen = { x: e.clientX, y: e.clientY };
+      clampPanToViewport(); applyView();
+    }
+  });
+  inst.addEventListener('pointerup', e=>{ if (touches.delete(e.pointerId)) endGesture(); draggingPan=false; lastPanScreen=null; });
+  inst.addEventListener('pointercancel', e=>{ if (touches.delete(e.pointerId)) endGesture(); draggingPan=false; lastPanScreen=null; });
 
-  inst.addEventListener('wheel', e=>{ if(lockGonio) return; e.preventDefault(); e.stopPropagation(); const step=Math.sign(e.deltaY)<0?S.WHEEL_STEP:1/S.WHEEL_STEP; const accel=Math.exp(Math.log(S.WHEEL_STEP)*Math.abs(e.deltaY)*S.WHEEL_ACCEL); const fac=Math.sign(e.deltaY)<0?step*accel:(1/(step*accel)); const newZoom=Math.min(S.MAX_ZOOM,Math.max(S.MIN_ZOOM,zoom*fac)); const k=newZoom/zoom; const pt=toLocal(viewport,e.clientX,e.clientY); panX = pt.x - k*(pt.x - panX); panY = pt.y - k*(pt.y - panY); zoom=newZoom; clampPan(); applyView(); }, {passive:false});
+  inst.addEventListener('wheel', e=>{
+    if (lockGonio) return;
+    e.preventDefault(); e.stopPropagation();
+    const step=Math.sign(e.deltaY)<0?S.WHEEL_STEP:1/S.WHEEL_STEP;
+    const accel=Math.exp(Math.log(S.WHEEL_STEP)*Math.abs(e.deltaY)*S.WHEEL_ACCEL);
+    const fac=Math.sign(e.deltaY)<0?step*accel:(1/(step*accel));
+    const newZoom=Math.min(S.MAX_ZOOM,Math.max(S.MIN_ZOOM,zoom*fac));
+    const k=newZoom/zoom;
+    const pt=viewport.ownerSVGElement.createSVGPoint(); pt.x=e.clientX; pt.y=e.clientY;
+    const loc=pt.matrixTransform(viewport.getScreenCTM().inverse());
+    panX = loc.x - k*(loc.x - panX);
+    panY = loc.y - k*(loc.y - panY);
+    zoom=newZoom; clampPanToViewport(); applyView();
+  }, {passive:false});
 
-  function startArmDrag(e){ if(lockGonio) return; e.stopPropagation(); e.preventDefault(); document.getElementById('armB_grp').setPointerCapture?.(e.pointerId); draggingArm=true; }
-  function moveArm(e){ if(!draggingArm) return; e.stopPropagation(); e.preventDefault(); const p=toLocal(rotWrap,e.clientX,e.clientY); mov = toDegUp(p.x,p.y); render(); }
+  // GREEN arm drag anywhere on arm/knob
+  function startArmDrag(e){
+    if (lockGonio) return;
+    e.stopPropagation(); e.preventDefault();
+    document.getElementById('armB_grp').setPointerCapture?.(e.pointerId);
+    draggingArm = true;
+  }
+  function moveArm(e){
+    if(!draggingArm) return;
+    e.stopPropagation(); e.preventDefault();
+    const pt = svg.createSVGPoint(); pt.x=e.clientX; pt.y=e.clientY;
+    const p = pt.matrixTransform(rotWrap.getScreenCTM().inverse());
+    mov = toDegUp(p.x, p.y);
+    render();
+  }
   function endArm(){ draggingArm=false; }
-  [armB_handleKnob, armB_handleShaft].forEach(el=>{ el.addEventListener('pointerdown',startArmDrag); el.addEventListener('pointermove',moveArm); el.addEventListener('pointerup',endArm); el.addEventListener('pointercancel',endArm); });
 
-  function show(){ host.classList.remove('hide'); host.setAttribute('aria-hidden','false'); clampPan(); applyView(); }
+  ['armB_handleKnob','armB_handleShaft','armB_grp','armB_knob'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el) return;
+    el.addEventListener('pointerdown', startArmDrag);
+    el.addEventListener('pointermove', moveArm);
+    el.addEventListener('pointerup', endArm);
+    el.addEventListener('pointercancel', endArm);
+  });
+
+  function show(){ host.classList.remove('hide'); host.setAttribute('aria-hidden','false'); clampPanToViewport(); applyView(); }
   function hide(){ host.classList.add('hide'); host.setAttribute('aria-hidden','true'); }
-  function setPose(cx,cy,baseDeg,movDeg){ panX=cx; panY=cy; baseRot=baseDeg; mov=clamp360(movDeg-baseDeg); clampPan(); applyView(); applyRot(); applyLabelFix(); render(); }
-  function setScale(k){ scale=Math.min(2,Math.max(0.5,k||1)); clampPan(); applyView(); }
+  function setPose(cx,cy,baseDeg,movDeg){ panX=cx; panY=cy; baseRot=baseDeg; mov=clamp360(movDeg-baseDeg); clampPanToViewport(); applyView(); applyRot(); applyLabelFix(); render(); }
+  function setScale(k){ scale=Math.min(2,Math.max(0.1,k||1)); clampPanToViewport(); applyView(); }  /* 10%–200% */
   function degFromScreenVec(dx,dy){ return toDegUp(dx,dy); }
 
   return { show, hide, setPose, setScale, degFromScreenVec, _clampNow:clampNow };
