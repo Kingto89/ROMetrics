@@ -16,24 +16,47 @@
 
 <style>
   html,body{margin:0;height:100%;background:#0b1220;color:#e5e7eb;overflow:hidden;font-family:system-ui,Segoe UI,Roboto}
-  canvas{width:100%;height:100%;display:block}
-  .panel{position:fixed;left:0;top:0;bottom:0;width:340px;background:#0f172a;border-right:1px solid #1f2937;padding:14px;overflow:auto;z-index:20}
+
+  /* ===== Stacking order fix ===== */
+  /* Canvas sits at the very back */
+  canvas{
+    position:fixed; inset:0; z-index:0;
+    width:100%; height:100%; display:block;
+  }
+  /* Left panel is pinned and always above canvas & overlay */
+  .panel{
+    position:fixed; left:0; top:0; bottom:0; width:340px;
+    background:#0f172a; border-right:1px solid #1f2937; padding:14px; overflow:auto;
+    z-index:50;  /* keep highest */
+  }
+  /* SVG goniometer overlay */
+  #gonioHost{position:fixed; inset:0; z-index:30; pointer-events:none}
+  #gonioHost svg{width:100vw;height:100vh;background:transparent;pointer-events:auto}
+
+  /* HUD & toasts above overlay */
+  .hud,.toast,#msg{z-index:40}
+  .hud{
+    position:fixed;top:10px;left:50%;transform:translateX(-50%);
+    background:rgba(15,23,42,.75);border:1px solid #334155;border-radius:10px;
+    padding:6px 10px;font-weight:700;backdrop-filter:blur(6px)
+  }
+  .toast{
+    position:fixed;bottom:10px;left:50%;transform:translateX(-50%);
+    background:rgba(2,6,23,.7);border:1px solid #334155;border-radius:10px;
+    padding:6px 10px;font-size:13px;display:none
+  }
+  #msg{position:fixed;top:10px;left:10px;background:rgba(15,23,42,.7);
+       border:1px solid #334155;border-radius:8px;padding:6px 10px;font-size:13px}
+
   h3{margin:8px 0 12px 0}
   label{display:block;font-size:13px;margin-top:10px;color:#cbd5e1}
   select,button,input[type=range]{width:100%;margin:6px 0 8px 0;padding:8px 10px;border-radius:10px;background:#1e293b;border:1px solid #334155;color:#e2e8f0}
   .row{display:flex;gap:8px}.row>button{flex:1}
-  .hud{position:fixed;top:10px;left:50%;transform:translateX(-50%);background:rgba(15,23,42,.75);border:1px solid #334155;border-radius:10px;padding:6px 10px;font-weight:700;backdrop-filter:blur(6px);z-index:15}
-  .toast{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(2,6,23,.7);border:1px solid #334155;border-radius:10px;padding:6px 10px;font-size:13px;display:none;z-index:15}
-  #msg{position:fixed;top:10px;left:10px;background:rgba(15,23,42,.7);border:1px solid #334155;border-radius:8px;padding:6px 10px;font-size:13px;z-index:15;max-width:50vw}
   #log{background:#0b1220;border:1px solid #1f2937;height:130px;overflow:auto;border-radius:8px;padding:8px}
   .legend{font-size:12px;color:#cbd5e1;margin-top:6px}
   .chip{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid #334155;background:#0b1220;margin-right:6px}
 
-  /* SVG overlay */
-  #gonioHost{position:fixed;inset:0;z-index:12;pointer-events:none}
-  /* KEY CHANGE: SVG now accepts events everywhere so panning works */
-  #gonioHost svg{width:100vw;height:100vh;background:transparent;pointer-events:auto}
-  #instrument{pointer-events:auto;cursor:grab;touch-action:none}
+  /* Gonio styles */
   .tick{stroke:#64748b;stroke-width:.9}.tickBig{stroke-width:1.6}
   .armA{stroke:#ef4444;fill:none}.armB{stroke:#22c55e;fill:none}
   .axisA{stroke:#ef4444;stroke-width:1.6;opacity:.85}.axisB{stroke:#22c55e;stroke-width:1.6;opacity:.85}
@@ -173,10 +196,13 @@ const canvas = document.getElementById("c");
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setPixelRatio(devicePixelRatio);
 renderer.setSize(innerWidth, innerHeight);
+
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x0b1220);
+
 const camera = new THREE.PerspectiveCamera(45, innerWidth/innerHeight, 0.1, 100);
 camera.position.set(0.8, 1.6, 2.5);
+
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.enabled = true;                      // UNLOCKED on load
@@ -378,7 +404,7 @@ const clock = new THREE.Clock();
 /* ===== SVG goniometer module ===== */
 const Gonio = (() => {
   const host  = document.getElementById('gonioHost');
-  const svg   = document.getElementById('gonioSvg');      // pan/zoom listeners now on SVG root
+  const svg   = document.getElementById('gonioSvg');      // pan/zoom listeners on SVG root
   const inst  = document.getElementById('instrument');
   const viewport   = document.getElementById('viewport');
   const rotWrap    = document.getElementById('rotWrap');
@@ -474,10 +500,9 @@ const Gonio = (() => {
   function moveGesture(){ if (lockGonio || touches.size!==2 || !lastG) return; const [a,b]=[...touches.values()]; const c=ctr(a,b), d=dst(a,b), ag=ang(a,b); const scaleFac=Math.pow(d/lastG.d,S.PINCH_EXP); zoom=Math.min(S.MAX_ZOOM,Math.max(S.MIN_ZOOM,lastG.zoom*scaleFac)); panX = lastG.panX + S.PAN_GAIN*(c.x-lastG.c.x)/zoom; panY = lastG.panY + S.PAN_GAIN*(c.y-lastG.c.y)/zoom; let da=ag-lastG.a; while(da>180) da-=360; while(da<-180) da+=360; userRot = lastG.userRot + da*S.ROT_GAIN; clampPanToViewport(); applyView(); applyRot(); applyLabelFix(); render(); }
   function endGesture(){ lastG=null; }
 
-  /* ===== PAN on SVG root (and do NOT start pan if drag begins on green arm) ===== */
+  /* PAN on SVG root (don’t start pan if the press began on green arm) */
   svg.addEventListener('pointerdown', e=>{
     if (lockGonio) return;
-    // if the press starts on the green arm, let the arm logic grab it
     if (e.target.closest('#armB_grp')) return;
     e.preventDefault();
     draggingPan = true;
@@ -486,7 +511,6 @@ const Gonio = (() => {
   });
   svg.addEventListener('pointermove', e=>{
     if (lockGonio) return;
-    if (e.pointerType === 'touch' && touches.has(e.pointerId)) { touches.set(e.pointerId, tp(e)); moveGesture(); }
     if (!draggingPan || !lastPanScreen) return;
     e.preventDefault();
     const dx = (e.clientX - lastPanScreen.x) / (zoom * scale);
@@ -514,7 +538,7 @@ const Gonio = (() => {
     zoom=newZoom; clampPanToViewport(); applyView();
   }, {passive:false});
 
-  /* ===== GREEN ARM DRAG (wins when you grab the arm/knob) ===== */
+  /* GREEN ARM DRAG */
   function startArmDrag(e){
     if (lockGonio) return;
     e.stopPropagation(); e.preventDefault();
