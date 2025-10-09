@@ -44,20 +44,34 @@
   .labelInner{fill:#fca5a5;font-size:8.2px;text-anchor:middle;dominant-baseline:middle;paint-order:stroke;stroke:#0b1220;stroke-width:3px}
   .ruLbl{fill:#cbd5e1;font-size:9.5px;dominant-baseline:middle;paint-order:stroke;stroke:#0b1220;stroke-width:3px}
   .hide{display:none}.lockOn{background:#0b3a1f;border-color:#16a34a}
+
+  /* pop-up note for placements */
+  .note {
+    position: fixed; right: 16px; bottom: 16px; z-index: 60;
+    background: rgba(2,6,23,.92); border:1px solid #334155; border-radius:12px;
+    padding:12px 14px; width: 340px; color:#e5e7eb; box-shadow:0 10px 30px rgba(0,0,0,.35);
+  }
+  .note h4{margin:0 0 8px 0}
+  .note pre{white-space:pre-wrap;font-size:13px;color:#cbd5e1;margin:0}
+  .note .x{position:absolute; top:6px; right:8px; border:none; background:transparent; color:#94a3b8; font-size:18px; cursor:pointer}
 </style>
 </head>
 <body>
 <div class="panel">
   <h3>Goniometry Trainer</h3>
 
-  <label>Measurement Preset</label>
-  <select id="preset">
-    <option value="cerv_flex">Cervical Flexion</option>
-    <option value="cerv_rot" selected>Cervical Rotation</option>
-    <option value="cerv_lat">Cervical Lateral Bending</option>
-  </select>
+  <!-- REPLACED: Markdown-driven Region/Motion -->
+  <label>Region</label>
+  <select id="region"></select>
 
-  <div class="row">
+  <label>Motion</label>
+  <select id="motion"></select>
+
+  <div class="row" style="margin-top:6px">
+    <button id="showPlacement">📌 Show goniometer placement</button>
+  </div>
+
+  <div class="row" style="margin-top:8px">
     <button id="pickFulcrum">1️⃣ Fulcrum</button>
     <button id="pickStationary">2️⃣ Stationary</button>
     <button id="pickMoving">3️⃣ Moving</button>
@@ -143,7 +157,7 @@
 
 <div id="msg">Loading…</div>
 <div class="hud" id="hud">Angle: 0°</div>
-<div class="toast" id="toast">Preset updated</div>
+<div class="toast" id="toast">Ready</div>
 <canvas id="c"></canvas>
 
 <script type="module">
@@ -170,6 +184,16 @@ const lockGonioBtn = document.getElementById("lockGonio");
 const sizeEl = document.getElementById("gonioSize");
 const rotateMoveEl = document.getElementById("rotateMove");
 const rotateGonioEl = document.getElementById("rotateGonio");
+const pickFulcrum = document.getElementById("pickFulcrum");
+const pickStationary = document.getElementById("pickStationary");
+const pickMoving = document.getElementById("pickMoving");
+const toggleGhostBtn = document.getElementById("toggleGhost");
+const resetAll = document.getElementById("resetAll");
+const measureToggle = document.getElementById("measureToggle");
+const regionSel = document.getElementById('region');
+const motionSel = document.getElementById('motion');
+const showPlacementBtn = document.getElementById('showPlacement');
+
 const log = (t)=>{ logEl.textContent += t + "\n"; logEl.scrollTop = logEl.scrollHeight; };
 
 /* ===== Three.js ===== */
@@ -282,6 +306,7 @@ const userLocal = { fulcrum:null, stationary:null, moving:null };
 const ghost = { fulcrum: dot(COLORS.ghost), stationary: dot(COLORS.ghost), moving: dot(COLORS.ghost) };
 Object.values(ghost).forEach(m => { m.visible = false; scene.add(m); });
 
+/* Simple default ghost positions (kept so Ghost button still works) */
 const PRESETS = {
   cerv_flex: { fulcrum:new THREE.Vector3(0.08,1.65,0.02), stationary:new THREE.Vector3(0.12,1.55,0.15), moving:new THREE.Vector3(0.10,1.68,0.12) },
   cerv_rot:  { fulcrum:new THREE.Vector3(0.08,1.80,0.02), stationary:new THREE.Vector3(0.18,1.55,0.15), moving:new THREE.Vector3(0.10,1.70,0.20) },
@@ -362,13 +387,6 @@ function updateFromLocals() {
 }
 
 /* Buttons */
-const pickFulcrum = document.getElementById("pickFulcrum");
-const pickStationary = document.getElementById("pickStationary");
-const pickMoving = document.getElementById("pickMoving");
-const toggleGhostBtn = document.getElementById("toggleGhost");
-const resetAll = document.getElementById("resetAll");
-const presetSel = document.getElementById("preset");
-const measureToggle = document.getElementById("measureToggle");
 let followMeasure = true;
 
 pickFulcrum.onclick   = () => { target = "fulcrum";   log("Place Fulcrum");   };
@@ -381,7 +399,6 @@ resetAll.onclick = () => {
   userLocal.fulcrum = userLocal.stationary = userLocal.moving = null;
   line1.visible = line2.visible = false; setAngle(0); Gonio.hide(); log("Reset");
 };
-presetSel.onchange = () => { const p=presetSel.value; truth = { ...PRESETS[p] }; updateGhost(); toast.textContent = `Preset: ${presetSel.options[presetSel.selectedIndex].text}`; showToast(); };
 measureToggle.onclick = () => { followMeasure = !followMeasure; measureToggle.textContent = followMeasure ? "🧭 Measure: ON" : "🧭 Measure: OFF"; };
 
 /* Locks */
@@ -401,12 +418,12 @@ sizeEl.oninput = ()=> { Gonio.setScale(parseInt(sizeEl.value,10)/100); Gonio.ref
 
 /* === guards so lock actually locks === */
 rotateMoveEl.oninput = ()=>{
-  if (lockGonio) return;                       // NEW
+  if (lockGonio) return;
   Gonio.setMovDegAbs(parseFloat(rotateMoveEl.value));
   setAngle(Gonio.angle);
 };
 rotateGonioEl.oninput = ()=>{
-  if (lockGonio) return;                       // NEW
+  if (lockGonio) return;
   Gonio.setUserRot(parseFloat(rotateGonioEl.value));
   setAngle(Gonio.angle);
 };
@@ -517,14 +534,14 @@ const Gonio = (() => {
 
   /* Drag pan on empty SVG (not on green arm) */
   svg.addEventListener('pointerdown', e=>{
-    if (lockGonio) return;                           // NEW
+    if (lockGonio) return;
     if (e.target.closest('#armB_grp')) return;
     e.preventDefault(); draggingPan = true;
     lastPanScreen = { x: e.clientX, y: e.clientY };
     svg.setPointerCapture?.(e.pointerId);
   });
   svg.addEventListener('pointermove', e=>{
-    if (lockGonio) return;                           // NEW
+    if (lockGonio) return;
     if (!draggingPan || !lastPanScreen) return;
     e.preventDefault();
     const dx = (e.clientX - lastPanScreen.x) / (zoom * scale);
@@ -537,7 +554,7 @@ const Gonio = (() => {
   svg.addEventListener('pointercancel',()=>{ draggingPan=false; lastPanScreen=null; });
 
   svg.addEventListener('wheel', e=>{
-    if (lockGonio) return;                           // NEW
+    if (lockGonio) return;
     e.preventDefault();
     const step=Math.sign(e.deltaY)<0?S.WHEEL_STEP:1/S.WHEEL_STEP;
     const accel=Math.exp(Math.log(S.WHEEL_STEP)*Math.abs(e.deltaY)*S.WHEEL_ACCEL);
@@ -552,13 +569,13 @@ const Gonio = (() => {
 
   /* GREEN ARM DRAG */
   function startArmDrag(e){
-    if (lockGonio) return;                           // NEW
+    if (lockGonio) return;
     e.stopPropagation(); e.preventDefault();
     document.getElementById('armB_grp').setPointerCapture?.(e.pointerId);
     draggingArm = true;
   }
   function moveArm(e){
-    if (lockGonio) return;                           // NEW
+    if (lockGonio) return;
     if(!draggingArm) return;
     e.stopPropagation(); e.preventDefault();
     const pt = svg.createSVGPoint(); pt.x=e.clientX; pt.y=e.clientY;
@@ -598,6 +615,140 @@ const Gonio = (() => {
   };
 })();
 window.Gonio = Gonio;
+
+/* ===== Markdown content wiring ===== */
+const CONTENT_BASE = './content/goniometry/';
+const REGIONS = [
+  "cervical_spine",
+  "thoracic_lumbar_spine",
+  "glenohumeral_joint",
+  "elbow_radioulnar",
+  "wrist","hip","knee",
+  "talocrural_ankle",
+  "transverse_tarsal_subtalar",
+  "fingers_mcp_pip_dip",
+  "thumb_cmc_mcp_ip",
+  "toes_mtp_pip_dip"
+];
+
+function toNice(slug){
+  return slug.replace(/_/g,' ').replace(/\b\w/g, s=>s.toUpperCase());
+}
+
+async function loadRegionMD(regionName){
+  const res = await fetch(`${CONTENT_BASE}${regionName}.md`, {cache:'no-store'});
+  if(!res.ok) throw new Error(`Failed to load ${regionName}.md`);
+  const md = await res.text();
+  return parseRegionMarkdown(md);
+}
+
+function parseRegionMarkdown(md){
+  const out = { title: '', motions: {} };
+  const lines = md.split(/\r?\n/);
+
+  for(const ln of lines){
+    const m = ln.match(/^#\s+(.+)/);
+    if(m){ out.title = m[1].trim(); break; }
+  }
+
+  let cur = null;
+  for(let i=0;i<lines.length;i++){
+    const h = lines[i].match(/^##\s+(.+)/);
+    if(h){
+      cur = { motion: h[1].trim(), position:'', stabilization:'', center:'', proximal:'', distal:'', notes:'' };
+      out.motions[cur.motion] = cur;
+      continue;
+    }
+    if(!cur) continue;
+
+    const bullet = lines[i].match(/^\s*-\s+\*\*(.+?)\*\*:\s*(.*)$/);
+    if(bullet){
+      const key = bullet[1].toLowerCase();
+      const val = bullet[2].trim();
+      if(key.includes('recommended position')) cur.position = val;
+      else if(key.includes('stabilization')) cur.stabilization = val;
+      else if(key.includes('fulcrum')) cur.center = val;
+      else if(key.includes('stationary')) cur.proximal = val;
+      else if(key.includes('moving')) cur.distal = val;
+      else if(key.includes('notes')) cur.notes = val;
+    }
+  }
+  return out;
+}
+
+// cache each region file after first load
+const regionCache = new Map();
+
+async function ensureRegion(regionName){
+  if(regionCache.has(regionName)) return regionCache.get(regionName);
+  const data = await loadRegionMD(regionName);
+  regionCache.set(regionName, data);
+  return data;
+}
+
+function populateRegions(){
+  regionSel.innerHTML = '';
+  REGIONS.forEach(r=>{
+    const opt = document.createElement('option');
+    opt.value = r;
+    opt.textContent = toNice(r);
+    regionSel.appendChild(opt);
+  });
+}
+
+async function onRegionChange(){
+  const region = regionSel.value;
+  const data = await ensureRegion(region);
+  const names = Object.keys(data.motions);
+  motionSel.innerHTML = '';
+  names.forEach(name=>{
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name;
+    motionSel.appendChild(opt);
+  });
+  toast.textContent = `Region: ${toNice(region)}`;
+  showToast();
+}
+
+regionSel.addEventListener('change', onRegionChange);
+motionSel.addEventListener('change', ()=> {
+  toast.textContent = `Motion: ${motionSel.value}`;
+  showToast();
+});
+
+(function initContent(){
+  populateRegions();
+  onRegionChange();
+})();
+
+function closeNote(){ const n = document.getElementById('placementNote'); if(n) n.remove(); }
+
+showPlacementBtn.addEventListener('click', async ()=>{
+  closeNote();
+  const region = regionSel.value;
+  const motion = motionSel.value;
+  const data = await ensureRegion(region);
+  const m = data.motions[motion];
+  if(!m) return;
+
+  const div = document.createElement('div');
+  div.className = 'note';
+  div.id = 'placementNote';
+  div.innerHTML = `
+    <button class="x" aria-label="Close">×</button>
+    <h4>${toNice(region)} — ${motion}</h4>
+    <pre>
+<strong>Recommended position:</strong> ${m.position || '—'}
+<strong>Stabilization:</strong> ${m.stabilization || '—'}
+<strong>Fulcrum (axis):</strong> ${m.center || '—'}
+<strong>Stationary arm:</strong> ${m.proximal || '—'}
+<strong>Moving arm:</strong> ${m.distal || '—'}
+${m.notes ? `<strong>Notes:</strong> ${m.notes}` : ''}</pre>
+  `;
+  div.querySelector('.x').addEventListener('click', closeNote);
+  document.body.appendChild(div);
+});
 
 /* Errors in-page */
 window.addEventListener('error', e => { msg.textContent = '❌ ' + (e.message || 'Script error'); });
