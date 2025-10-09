@@ -29,7 +29,7 @@
   .legend{font-size:12px;color:#cbd5e1;margin-top:6px}
   .chip{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid #334155;background:#0b1220;margin-right:6px}
 
-  /* SVG goniometer overlay */
+  /* SVG overlay */
   #gonioHost{position:fixed;inset:0;z-index:12;pointer-events:none}
   #gonioHost svg{width:100vw;height:100vh;background:transparent;pointer-events:none}
   #instrument{pointer-events:auto;cursor:grab;touch-action:none}
@@ -92,7 +92,7 @@
   <pre id="log"></pre>
 </div>
 
-<!-- SVG goniometer overlay (appears after 3 dots) -->
+<!-- SVG goniometer (appears after 3 dots) -->
 <div id="gonioHost" class="hide" aria-hidden="true">
   <svg id="gonioSvg" aria-label="Universal goniometer">
     <g id="viewport" transform="translate(0,0) scale(1)">
@@ -124,7 +124,7 @@
               <line id="axisB" class="axisB" x1="0" y1="-380" x2="0" y2="124" stroke-linecap="round"/>
               <g id="armB_ruler"></g>
               <circle id="armB_knob" cx="0" cy="-380" r="10" fill="#22c55e"/>
-              <!-- big invisible drag handles -->
+              <!-- generous invisible drag handles -->
               <circle id="armB_handleKnob" cx="0" cy="-380" r="38" fill="rgba(0,0,0,0)" style="pointer-events:all"/>
               <rect   id="armB_handleShaft" x="-20" y="-380" width="40" height="500" fill="rgba(0,0,0,0)" style="pointer-events:all"/>
             </g>
@@ -218,7 +218,7 @@ const ktx2 = new KTX2Loader(); ktx2.setTranscoderPath("https://unpkg.com/three@0
 ktx2.detectSupport(renderer); loader.setKTX2Loader(ktx2);
 
 let model = null;
-const MODEL_URL = "./Athletic_Grace_1006002620_texture.glb";  // case-sensitive, same folder as this file
+const MODEL_URL = "./Athletic_Grace_1006002620_texture.glb";
 
 function addFallbackMannequin(){
   if (model) return;
@@ -383,6 +383,8 @@ const Gonio = (() => {
   const rotWrap    = document.getElementById('rotWrap');
   const numsInWrap = document.getElementById('numsInWrap');
   const labelsFixed= document.getElementById('labelsFixed');
+  const armA_ruler = document.getElementById('armA_ruler');
+  const armB_ruler = document.getElementById('armB_ruler');
 
   const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
   const clamp360=a=>(a%360+360)%360;
@@ -401,6 +403,32 @@ const Gonio = (() => {
     for(let d=0; d<360; d+=10){ const diff90=Math.abs(((d-90)%360+540)%360-180); const diff270=Math.abs(((d-270)%360+540)%360-180); const val=Math.min(diff90,diff270); if(val%20===0 && val<=80){ const a=(d-90)*Math.PI/180,x=Math.cos(a)*rWhite,y=Math.sin(a)*rWhite; text(numsOut,x,y,String(val),'labelOuter'); } }
     const rInner=Rin+9, valFromTheta=th=>{const t=(th+180)%360; return t<=180?t:360-t;};
     for(let th=0; th<360; th+=10){ const v=valFromTheta(th); if(v%10!==0) continue; if(v===0 && th!==180) continue; const a=(th-90)*Math.PI/180,x=Math.cos(a)*rInner,y=Math.sin(a)*rInner; text(numsIn,x,y,String(v),'labelInner'); }
+    buildTipRuler(armA_ruler, +380, +1, 'A');
+    buildTipRuler(armB_ruler, -380, -1, 'B');
+    function buildTipRuler(group, tipY, dir, which){
+      const CM_TO_PX = 14, IN_TO_CM = 2.5;
+      group.innerHTML='';
+      const line2=(x1,y1,x2,y2)=>{const n=document.createElementNS('http://www.w3.org/2000/svg','line');n.setAttribute('x1',x1);n.setAttribute('y1',y1);n.setAttribute('x2',x2);n.setAttribute('y2',y2);n.setAttribute('class','rulerTick');group.appendChild(n);};
+      const label=(x,y,t,rot)=>{const n=document.createElementNS('http://www.w3.org/2000/svg','text');n.setAttribute('x',x);n.setAttribute('y',y);n.setAttribute('class','ruLbl'); if(rot) n.setAttribute('transform',`rotate(${rot} ${x} ${y})`); n.textContent=t; n.dataset.arm=which; n.dataset.x=x; n.dataset.y=y; group.appendChild(n); return n;};
+      const cmMax=15, inMax=6;
+      for(let cm=0; cm<=cmMax+1e-6; cm+=0.5){
+        const y = tipY - dir*(cm*CM_TO_PX);
+        const long = Math.abs(cm - Math.round(cm)) < 1e-6;
+        const mid  = !long && Math.abs(cm*2 - Math.round(cm*2)) < 1e-6;
+        const w = long?8:mid?5:3;
+        line2(-10,y,-10-w,y);
+        if (long) label(-18,y,String(Math.round(cm)),-90);
+      }
+      for(let inch=0; inch<=inMax+1e-6; inch+=0.5){
+        const y = tipY - dir*(inch*IN_TO_CM*CM_TO_PX);
+        const long = Math.abs(inch - Math.round(inch)) < 1e-6;
+        const mid  = !long && Math.abs(inch*2 - Math.round(inch*2)) < 1e-6;
+        const w = long?8:mid?5:3;
+        line2(10,y,10+w,y);
+        if (long) label(18,y,String(Math.round(inch)),90);
+      }
+      label(-26,tipY,'cm',-90); label(26,tipY,'in',90);
+    }
   })();
 
   let mov=0, zoom=1, panX=innerWidth/2, panY=innerHeight/2;
@@ -410,8 +438,16 @@ const Gonio = (() => {
   function applyView(){ viewport.setAttribute('transform',`translate(${panX},${panY}) scale(${zoom*scale})`); }
   function applyRot(){ rotWrap.setAttribute('transform',`rotate(${baseRot+userRot})`); }
   function applyLabelFix(){ const t=-(baseRot+userRot); labelsFixed.setAttribute('transform',`rotate(${t})`); numsInWrap.setAttribute('transform',`rotate(${-t})`); }
+  function updateRulerUpright(){
+    const labels = document.querySelectorAll('.ruLbl');
+    labels.forEach(t=>{
+      const which=t.dataset.arm;
+      const base = (which==='A'? 0 : mov) + baseRot + userRot;
+      const x=+t.dataset.x, y=+t.dataset.y;
+      t.setAttribute('transform', `rotate(${-base} ${x} ${y})`);
+    });
+  }
 
-  // keep overlay on screen (~4 cm margin)
   function clampPanToViewport(){
     const bound = S.INSTR_BASE_RADIUS_PX * zoom * scale;
     const minX = MARGIN_PX + bound, maxX = innerWidth - MARGIN_PX - bound;
@@ -424,6 +460,7 @@ const Gonio = (() => {
   function render(){
     document.getElementById('armA_grp').setAttribute('transform','rotate(0)');
     document.getElementById('armB_grp').setAttribute('transform',`rotate(${mov})`);
+    updateRulerUpright();
   }
   clampPanToViewport(); applyView(); applyRot(); applyLabelFix(); render();
 
@@ -435,7 +472,7 @@ const Gonio = (() => {
   function moveGesture(){ if (lockGonio || touches.size!==2 || !lastG) return; const [a,b]=[...touches.values()]; const c=ctr(a,b), d=dst(a,b), ag=ang(a,b); const scaleFac=Math.pow(d/lastG.d,S.PINCH_EXP); zoom=Math.min(S.MAX_ZOOM,Math.max(S.MIN_ZOOM,lastG.zoom*scaleFac)); panX = lastG.panX + S.PAN_GAIN*(c.x-lastG.c.x)/zoom; panY = lastG.panY + S.PAN_GAIN*(c.y-lastG.c.y)/zoom; let da=ag-lastG.a; while(da>180) da-=360; while(da<-180) da+=360; userRot = lastG.userRot + da*S.ROT_GAIN; clampPanToViewport(); applyView(); applyRot(); applyLabelFix(); render(); }
   function endGesture(){ lastG=null; }
 
-  // PAN with screen-pixel deltas (smooth)
+  // PAN with screen-pixel deltas
   inst.addEventListener('pointerdown', e=>{
     if (lockGonio) return;
     e.stopPropagation(); e.preventDefault();
