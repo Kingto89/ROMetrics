@@ -75,8 +75,8 @@
 
   <label>Interaction Locks</label>
   <div class="row">
-    <!-- model locked by default -->
-    <button id="lock3D" class="lockOn">🔒 3D: Locked</button>
+    <!-- UNLOCKED by default now -->
+    <button id="lock3D">🔓 3D: Unlocked</button>
     <button id="lockGonio">🔓 Gonio: Unlocked</button>
   </div>
 
@@ -124,7 +124,7 @@
               <line id="axisB" class="axisB" x1="0" y1="-380" x2="0" y2="124" stroke-linecap="round"/>
               <g id="armB_ruler"></g>
               <circle id="armB_knob" cx="0" cy="-380" r="10" fill="#22c55e"/>
-              <!-- big invisible drag handles for easy grab -->
+              <!-- big invisible drag handles -->
               <circle id="armB_handleKnob" cx="0" cy="-380" r="38" fill="rgba(0,0,0,0)" style="pointer-events:all"/>
               <rect   id="armB_handleShaft" x="-20" y="-380" width="40" height="500" fill="rgba(0,0,0,0)" style="pointer-events:all"/>
             </g>
@@ -152,13 +152,13 @@ import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
  *  CONFIG
  * ======================== */
 const S = {
-  MIN_ZOOM: 0.07, MAX_ZOOM: 10.0,     // overlay zoom range
+  MIN_ZOOM: 0.07, MAX_ZOOM: 10.0,
   WHEEL_STEP: 1.22, WHEEL_ACCEL: 1/120,
   PINCH_EXP: 1.25, ROT_GAIN: 1.25,
   PAN_GAIN: 1.00,
   PX_PER_CM: 37.7952755906,
   MARGIN_CM: 4,
-  INSTR_BASE_RADIUS_PX: 140           // used for on-screen clamping
+  INSTR_BASE_RADIUS_PX: 140
 };
 const MARGIN_PX = S.PX_PER_CM * S.MARGIN_CM;
 
@@ -187,10 +187,16 @@ camera.position.set(0.8, 1.6, 2.5);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 
+/* UNLOCKED by default */
+controls.enabled = true;
+lock3DBtn.classList.remove('lockOn');
+lock3DBtn.textContent = "🔓 3D: Unlocked";
+
+/* Lights */
 scene.add(new THREE.HemisphereLight(0xffffff, 0x333344, 1.2));
 const dl = new THREE.DirectionalLight(0xffffff, 1); dl.position.set(3, 4, 2); scene.add(dl);
 
-/* Floor protractor ring (static visual) */
+/* Protractor floor ring */
 const protractor = new THREE.Group(); scene.add(protractor);
 const radius = 1.8;
 const tickMat = new THREE.LineBasicMaterial({ color: 0x475569 });
@@ -214,7 +220,7 @@ function layoutLabels() {
   });
 }
 
-/* Model loader */
+/* Model loader (with fallback) */
 const loader = new GLTFLoader();
 loader.setMeshoptDecoder(MeshoptDecoder);
 const draco = new DRACOLoader(); draco.setDecoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/draco/");
@@ -223,7 +229,20 @@ const ktx2 = new KTX2Loader(); ktx2.setTranscoderPath("https://unpkg.com/three@0
 ktx2.detectSupport(renderer); loader.setKTX2Loader(ktx2);
 
 let model = null;
-const MODEL_URL = "./Athletic_Grace_1006002620_texture.glb";
+const MODEL_URL = "./Athletic_Grace_1006002620_texture.glb"; // ensure exact filename
+
+function addFallbackMannequin(){
+  const g = new THREE.Group();
+  const mat = new THREE.MeshStandardMaterial({color:0xa0a4ae, metalness:0.1, roughness:0.8});
+  const mk = (geo,y,s=1)=>{ const m=new THREE.Mesh(geo,mat); m.position.y=y; m.scale.setScalar(s); g.add(m); };
+  mk(new THREE.CapsuleGeometry(0.22,0.8,8,16), 1.1);               // torso
+  mk(new THREE.SphereGeometry(0.16,16,16),        1.8);            // head
+  mk(new THREE.CylinderGeometry(0.1,0.12,0.3,12), 1.45);           // neck/upper
+  mk(new THREE.CylinderGeometry(0.11,0.11,0.8,12),0.55);           // pelvis/legs block
+  g.position.y = 0; scene.add(g); model = g;
+  msg.textContent = "⚠️ GLB not found — using fallback mannequin";
+}
+
 loader.load(MODEL_URL, (gltf) => {
   model = gltf.scene; scene.add(model);
   const box = new THREE.Box3().setFromObject(model);
@@ -235,7 +254,10 @@ loader.load(MODEL_URL, (gltf) => {
   msg.textContent = "✅ Model loaded";
 }, (xhr) => {
   msg.textContent = xhr.lengthComputable ? `Loading ${Math.round((xhr.loaded/xhr.total)*100)}%` : "Loading…";
-}, (err) => { console.error(err); msg.textContent = "❌ Failed to load model"; });
+}, (err) => {
+  console.error(err);
+  addFallbackMannequin();
+});
 
 /* Landmarks / picking */
 const matGood = new THREE.MeshBasicMaterial({ color: 0x22c55e });
@@ -295,7 +317,7 @@ function autoAlignGonioFromDots(f, s, m){
   const baseDeg = Gonio.degFromScreenVec(Ss.x - Fs.x, Ss.y - Fs.y);   // red to stationary
   const movDeg  = Gonio.degFromScreenVec(Ms.x - Fs.x, Ms.y - Fs.y);   // green to moving
   Gonio.show();
-  Gonio.setPose(Fs.x, Fs.y, baseDeg, movDeg);                         // center=fulcrum, arms along lines
+  Gonio.setPose(Fs.x, Fs.y, baseDeg, movDeg);                         // center=fulcrum
 }
 
 function updateFromLocals() {
@@ -313,7 +335,7 @@ function updateFromLocals() {
     const vs = s.clone().sub(f).normalize(); const vm = m.clone().sub(f).normalize();
     const ang = THREE.MathUtils.radToDeg(Math.acos(THREE.MathUtils.clamp(vs.dot(vm), -1, 1)));
     setAngle(ang);
-    autoAlignGonioFromDots(f,s,m);     // <= auto-snap every update (when ON)
+    autoAlignGonioFromDots(f,s,m);
   } else {
     setAngle(0);
     Gonio.hide();
@@ -344,7 +366,8 @@ resetAll.onclick = () => {
 presetSel.onchange = () => { const p=presetSel.value; truth = { ...PRESETS[p] }; updateGhost(); toast.textContent = `Preset: ${presetSel.options[presetSel.selectedIndex].text}`; showToast(); };
 measureToggle.onclick = () => { followMeasure = !followMeasure; measureToggle.textContent = followMeasure ? "🧭 Measure: ON" : "🧭 Measure: OFF"; };
 
-let lock3D = true, lockGonio = false;         // model locked by default
+/* Locks (unlocked by default now) */
+let lock3D = false, lockGonio = false;
 function set3DLock(v){ lock3D=v; controls.enabled=!lock3D; lock3DBtn.textContent=(lock3D? "🔒 3D: Locked":"🔓 3D: Unlocked"); lock3DBtn.classList.toggle('lockOn', lock3D); }
 function setGonioLock(v){ lockGonio=v; document.getElementById('instrument').style.pointerEvents = lockGonio ? 'none' : 'auto'; lockGonioBtn.textContent=(lockGonio? "🔒 Gonio: Locked":"🔓 Gonio: Unlocked"); lockGonioBtn.classList.toggle('lockOn', lockGonio); }
 set3DLock(lock3D); setGonioLock(lockGonio);
@@ -385,7 +408,6 @@ const Gonio = (() => {
   const clamp360 = a => (a%360+360)%360;
   const toDegUp  = (x,y)=> clamp360(Math.atan2(-y,x)*180/Math.PI + 90);
 
-  // Build scales/ticks/labels once
   (function build(){
     const R=120, Rin=86;
     const line=(parent,x1,y1,x2,y2,cls)=>{ const n=document.createElementNS('http://www.w3.org/2000/svg','line');
@@ -430,7 +452,7 @@ const Gonio = (() => {
         if (long){ const t=text(group,-18,y,Math.round(cm),'ruLbl',-90); t.dataset.arm=which; t.dataset.x=-18; t.dataset.y=y; }
       }
       for(let inch=0; inch<=inMax+1e-6; inch+=0.5){
-        const y = tipY - dir*(inch*IN_TO_CM*CM_TO_PX);
+        const y = tipY - dir*(inch*IN_TO_PX);
         const long = Math.abs(inch - Math.round(inch)) < 1e-6;
         const mid  = !long && Math.abs(inch*2 - Math.round(inch*2)) < 1e-6;
         const w = long?8:mid?5:3;
@@ -447,7 +469,7 @@ const Gonio = (() => {
   // --- Interaction state ---
   let mov=0, zoom=1, panX=innerWidth/2, panY=innerHeight/2;
   let baseRot=0, userRot=0;
-  let scale=1; // 50–200% via slider
+  let scale=1; // via slider
 
   let draggingArm=false, draggingPan=false, lastPanPt=null;
 
@@ -459,15 +481,15 @@ const Gonio = (() => {
     numsInWrap.setAttribute('transform', `rotate(${-t})`);
   }
 
-  // keep it on screen (≈4 cm margin)
+  // keep overlay on screen (~4 cm margin)
   function clampPanToViewport(){
     const bound = S.INSTR_BASE_RADIUS_PX * zoom * scale;
     const minX = MARGIN_PX + bound;
     const maxX = innerWidth  - MARGIN_PX - bound;
     const minY = MARGIN_PX + bound;
     const maxY = innerHeight - MARGIN_PX - bound;
-    if (minX <= maxX) panX = clamp(panX, minX, maxX); else panX = innerWidth/2;
-    if (minY <= maxY) panY = clamp(panY, minY, maxY); else panY = innerHeight/2;
+    if (minX <= maxX) panX = Math.min(maxX, Math.max(minX, panX)); else panX = innerWidth/2;
+    if (minY <= maxY) panY = Math.min(maxY, Math.max(minY, panY)); else panY = innerHeight/2;
   }
   function clampNow(){ clampPanToViewport(); applyView(); }
 
@@ -553,7 +575,7 @@ const Gonio = (() => {
     zoom = newZoom; clampPanToViewport(); applyView();
   }, {passive:false});
 
-  // green arm drag (use the big invisible handles for easy grab)
+  // green arm drag (big invisible handles)
   function startArmDrag(e){ if (lockGonio) return; e.stopPropagation(); e.preventDefault(); armB_grp.setPointerCapture?.(e.pointerId); draggingArm = true; }
   function moveArm(e){
     if(!draggingArm) return;
@@ -584,7 +606,7 @@ const Gonio = (() => {
 })();
 window.Gonio = Gonio;
 
-/* Show JS errors in-page */
+/* show errors in-page */
 window.addEventListener('error', (e)=> { msg.textContent = '❌ ' + (e.message || 'Script error'); });
 </script>
 </body>
