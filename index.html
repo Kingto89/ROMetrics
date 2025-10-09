@@ -34,7 +34,10 @@
   .row{display:flex;gap:8px}.row>button{flex:1}
   #log{background:#0b1220;border:1px solid #1f2937;height:130px;overflow:auto;border-radius:8px;padding:8px}
 
-  .pill{border:2px solid #334155;border-radius:12px;padding:6px 10px}
+  /* Landmark pills – number on top, label under, unified style */
+  .pill{display:flex;flex-direction:column;align-items:center;gap:2px;line-height:1;border:2px solid #334155;border-radius:12px;padding:6px 10px}
+  .pill .num{font-weight:700;font-size:12px}
+  .pill .lbl{font-size:12px}
   .pill.orange{border-color:#f59e0b}
   .pill.red{border-color:#ef4444}
   .pill.green{border-color:#22c55e}
@@ -52,6 +55,15 @@
   .note .x{position:absolute; right:8px; top:6px; cursor:pointer; border:0; background:transparent; color:#94a3b8; font-size:18px}
   .note .md *{margin:0 0 6px 0; line-height:1.35}
   .note .md ul{padding-left:18px}
+
+  /* Goniometer crispness */
+  .tick,.tickBig,.armA,.armB,.axisA,.axisB,.rulerTick { vector-effect: non-scaling-stroke; }
+  #ticks{opacity:.75}
+  #numsInWrap{opacity:.85}
+  .ruLbl{opacity:.7}
+  .labelOuter{font-size:10px}
+  .labelInner{font-size:7.5px}
+  .ruLbl{font-size:9px}
 </style>
 </head>
 <body>
@@ -82,9 +94,9 @@
   </div>
 
   <div class="row">
-    <button class="pill orange" id="pickFulcrum">🟧 1 Fulcrum</button>
-    <button class="pill red" id="pickStationary">🟥 2 Stationary</button>
-    <button class="pill green" id="pickMoving">🟩 3 Moving</button>
+    <button class="pill orange" id="pickFulcrum"><span class="num">1</span><span class="lbl">Fulcrum</span></button>
+    <button class="pill red" id="pickStationary"><span class="num">2</span><span class="lbl">Stationary</span></button>
+    <button class="pill green" id="pickMoving"><span class="num">3</span><span class="lbl">Moving</span></button>
   </div>
 
   <label>Options</label>
@@ -111,6 +123,12 @@
 
   <label>Rotate Goniometer (°)</label>
   <input type="range" min="0" max="360" step="1" value="0" id="rotateGonio">
+
+  <!-- NEW: independent yaw control -->
+  <label>Model Yaw (°)</label>
+  <input type="range" min="-180" max="180" step="1" value="0" id="modelYaw">
+  <label>Room Yaw (°)</label>
+  <input type="range" min="-180" max="180" step="1" value="0" id="roomYaw">
 
   <label>Range of Motion</label>
   <div class="row">
@@ -202,6 +220,8 @@ const note = document.getElementById("note");
 const noteTitle = document.getElementById("noteTitle");
 const noteBody = document.getElementById("noteBody");
 document.getElementById("noteClose").onclick = ()=> note.classList.add("hide");
+const modelYawEl = document.getElementById("modelYaw");
+const roomYawEl  = document.getElementById("roomYaw");
 
 const log = (t)=>{ logEl.textContent += t + "\n"; logEl.scrollTop = logEl.scrollHeight; };
 
@@ -235,8 +255,8 @@ function refreshMotions(){
     motionSel.appendChild(o);
   });
 }
-try { refreshMotions(); } catch(e){ console.error(e); }
-regionSel.onchange = ()=>{ try { refreshMotions(); } catch(e){ console.error(e);} };
+refreshMotions();
+regionSel.onchange = refreshMotions;
 
 /* ===================== THREE SETUP ===================== */
 const canvas = document.getElementById("c");
@@ -263,22 +283,19 @@ lock3DBtn.classList.remove("lockOn");
 scene.add(new THREE.HemisphereLight(0xffffff, 0x333344, 1.2));
 const dl = new THREE.DirectionalLight(0xffffff, 1); dl.position.set(3, 4, 2); scene.add(dl);
 
-/* ===== Natural-looking interior HDRI via EXR on inverted sphere + PMREM env ===== */
+/* ===== Interior HDRI on inverted sphere + PMREM ===== */
 const pmremGen = new THREE.PMREMGenerator(renderer);
 pmremGen.compileEquirectangularShader();
+let backgroundSphere = null;
 
 new EXRLoader().setPath("assets/")
   .load("pt_evaluation_room.exr?v=" + Date.now(), (exrTex) => {
-    // environment for PBR
     const envRT = pmremGen.fromEquirectangular(exrTex);
     scene.environment = envRT.texture;
 
-    // visual background as photo-sphere
     const sphereGeo = new THREE.SphereGeometry(12, 96, 96);
     const sphereMat = new THREE.MeshBasicMaterial({ map: exrTex, side: THREE.BackSide });
-    const backgroundSphere = new THREE.Mesh(sphereGeo, sphereMat);
-    backgroundSphere.rotation.y = 0;        // tweak which wall you see
-    backgroundSphere.rotation.x = 0;        // tilt if needed
+    backgroundSphere = new THREE.Mesh(sphereGeo, sphereMat);
     scene.add(backgroundSphere);
 
     renderer.toneMappingExposure = 0.95;
@@ -287,8 +304,6 @@ new EXRLoader().setPath("assets/")
     scene.background = new THREE.Color(0x0b1220);
     scene.environment = null;
   });
-
-/* Decorative floor degree ticks REMOVED per your request */
 
 /* ========== Model loader (+ fallback mannequin) ========== */
 const loader = new GLTFLoader();
@@ -342,7 +357,7 @@ Object.values(user).forEach(m => { m.visible = false; scene.add(m); });
 const userLocal = { fulcrum:null, stationary:null, moving:null };
 const ghost = { fulcrum: dot(COLORS.ghost), stationary: dot(COLORS.ghost), moving: dot(COLORS.ghost) };
 Object.values(ghost).forEach(m => { m.visible = false; scene.add(m); });
-let ghostOn = false; function updateGhost(){ Object.entries(ghost).forEach(([k,m])=>{ if(userLocal[k]){ const w=userLocal[k].clone().applyMatrix4(model.matrixWorld); m.position.copy(w);} m.visible=ghostOn; }); }
+let ghostOn = false; function updateGhost(){ Object.entries(ghost).forEach(([k,m])=>{ if(userLocal[k] && model){ const w=userLocal[k].clone().applyMatrix4(model.matrixWorld); m.position.copy(w);} m.visible=ghostOn; }); }
 
 let target = null;
 const ray = new THREE.Raycaster();
@@ -381,15 +396,8 @@ function setAngleHUD(angle, romStr=""){
 
 /* ROM tracking */
 let romActive = false, romStartDeg = null;
-document.getElementById("startROM").onclick = ()=>{
-  romActive = true;
-  romStartDeg = Gonio.angle;
-  log(`ROM start @ ${romStartDeg.toFixed(0)}°`);
-};
-document.getElementById("resetROM").onclick = ()=>{
-  romActive = false; romStartDeg = null;
-  log(`ROM reset`);
-};
+document.getElementById("startROM").onclick = ()=>{ romActive = true; romStartDeg = Gonio.angle; log(`ROM start @ ${romStartDeg.toFixed(0)}°`); };
+document.getElementById("resetROM").onclick = ()=>{ romActive = false; romStartDeg = null; log(`ROM reset`); };
 
 function romString(){
   if (!romActive || romStartDeg==null) return "";
@@ -472,6 +480,10 @@ sizeEl.oninput = ()=> { Gonio.setScale(parseInt(sizeEl.value,10)/100); Gonio.ref
 rotateMoveEl.oninput = ()=>{ if (lockGonio) return; Gonio.setMovDegAbs(parseFloat(rotateMoveEl.value)); };
 rotateGonioEl.oninput = ()=>{ if (lockGonio) return; Gonio.setUserRot(parseFloat(rotateGonioEl.value)); };
 
+/* NEW: model & room yaw */
+modelYawEl.oninput = ()=>{ if (model) model.rotation.y = THREE.MathUtils.degToRad(parseFloat(modelYawEl.value||0)); };
+roomYawEl.oninput  = ()=>{ if (backgroundSphere) backgroundSphere.rotation.y = THREE.MathUtils.degToRad(parseFloat(roomYawEl.value||0)); };
+
 function showToast(){ toast.style.display='block'; clearTimeout(showToast.tid); showToast.tid=setTimeout(()=>toast.style.display='none',1200); }
 
 /* Render loop */
@@ -511,7 +523,7 @@ const Gonio = (() => {
     const R=120, Rin=86;
     const line=(p,x1,y1,x2,y2,cls)=>{ const n=document.createElementNS('http://www.w3.org/2000/svg','line'); n.setAttribute('x1',x1);n.setAttribute('y1',y1);n.setAttribute('x2',x2);n.setAttribute('y2',y2); if(cls)n.setAttribute('class',cls); p.appendChild(n); };
     const text=(p,x,y,t,cls,rot)=>{ const n=document.createElementNS('http://www.w3.org/2000/svg','text'); n.setAttribute('x',x); n.setAttribute('y',y); n.setAttribute('class',cls||'labelOuter'); if(rot)n.setAttribute('transform',`rotate(${rot} ${x} ${y})`); n.textContent=t; p.appendChild(n); return n; };
-    for(let d=0; d<360; d+=5){ const a=(d-90)*Math.PI/180, big=d%30===0, len=big?12:6; line(ticks,Math.cos(a)*(R-len),Math.sin(a)*(R-len),Math.cos(a)*R,Math.sin(a)*R,big?'tick tickBig':''); }
+    for(let d=0; d<360; d+=5){ const a=(d-90)*Math.PI/180, big=d%30===0, len=big?12:6; line(ticks,Math.cos(a)*(R-len),Math.sin(a)*(R-len),Math.cos(a)*R,Math.sin(a)*R,big?'tick tickBig':'tick'); }
     const rWhite=R-8;
     for(let d=0; d<360; d+=10){ const diff90=Math.abs(((d-90)%360+540)%360-180); const diff270=Math.abs(((d-270)%360+540)%360-180); const val=Math.min(diff90,diff270); if(val%20===0 && val<=80){ const a=(d-90)*Math.PI/180,x=Math.cos(a)*rWhite,y=Math.sin(a)*rWhite; text(numsOut,x,y,String(val),'labelOuter'); } }
     const rInner=Rin+9, valFromTheta=th=>{const t=(th+180)%360; return t<=180?t:360-t;};
@@ -561,8 +573,8 @@ const Gonio = (() => {
   }
 
   function clampPanToViewport(){
-    const bound = 140 * zoom * scale; // approx instrument base radius in px
-    const margin = 150; // padding from screen edges
+    const bound = 140 * zoom * scale;
+    const margin = 150;
     const minX = margin + bound, maxX = innerWidth - margin - bound;
     const minY = margin + bound, maxY = innerHeight - margin - bound;
     if (minX <= maxX) panX = Math.min(maxX, Math.max(minX, panX)); else panX = innerWidth/2;
@@ -574,10 +586,16 @@ const Gonio = (() => {
     document.getElementById('armA_grp').setAttribute('transform','rotate(0)');
     document.getElementById('armB_grp').setAttribute('transform',`rotate(${mov})`);
     updateRulerUpright();
+
+    // Show dense details only when zoomed enough (keeps instrument clean)
+    const dense = (zoom * scale) >= 1.2;
+    numsInWrap.style.display = dense ? 'block' : 'none';
+    armA_ruler.style.display  = dense ? 'block' : 'none';
+    armB_ruler.style.display  = dense ? 'block' : 'none';
   }
   clampPanToViewport(); applyView(); applyRot(); applyLabelFix(); render();
 
-  // Pan drag on empty svg (not green arm)
+  // Pan
   svg.addEventListener('pointerdown', e=>{
     if (lockGonio) return;
     if (e.target.closest('#armB_grp')) return;
@@ -598,12 +616,13 @@ const Gonio = (() => {
   svg.addEventListener('pointerup',   ()=>{ draggingPan=false; lastPanScreen=null; });
   svg.addEventListener('pointercancel',()=>{ draggingPan=false; lastPanScreen=null; });
 
+  // Zoom
   svg.addEventListener('wheel', e=>{
     if (lockGonio) return;
     e.preventDefault();
     const step = Math.sign(e.deltaY) < 0 ? 1.22 : 1/1.22;
     zoom = clamp(zoom * step, 0.07, 10);
-    clampPanToViewport(); applyView();
+    clampPanToViewport(); applyView(); render();
   }, {passive:false});
 
   // GREEN ARM DRAG
@@ -636,7 +655,7 @@ const Gonio = (() => {
   function show(){ host.classList.remove('hide'); host.setAttribute('aria-hidden','false'); clampPanToViewport(); applyView(); }
   function hide(){ host.classList.add('hide'); host.setAttribute('aria-hidden','true'); }
   function setPose(cx,cy,baseDeg,movDeg){ panX=cx; panY=cy; baseRot=baseDeg; mov=clamp360(movDeg-baseDeg); clampPanToViewport(); applyView(); applyRot(); applyLabelFix(); render(); }
-  function setScale(k){ scale=clamp(k||1,0.1,2); clampPanToViewport(); applyView(); }
+  function setScale(k){ scale=clamp(k||1,0.1,2); clampPanToViewport(); applyView(); render(); }
   function degFromScreenVec(dx,dy){ return toDegUp(dx,dy); }
 
   // slider helpers
@@ -673,7 +692,6 @@ async function loadNote(region, motion){
     const res = await fetch(url);
     if(!res.ok){ throw new Error(`HTTP ${res.status}`); }
     const md = await res.text();
-    // Try to find the motion section by heading
     const re = new RegExp(`(^|\\n)##?\\s*${motion}\\s*\\n([\\s\\S]*?)(\\n##?\\s|$)`,'i');
     const m = md.match(re);
     const section = m ? m[2].trim() : md;
@@ -699,12 +717,7 @@ function regionToTitle(r){
     toes_mtp_pip_dip:"Toes (MTP, PIP, DIP)"
   }[r]||r.replace(/_/g,' '));
 }
-showNoteBtn.onclick = async ()=>{
-  const region = regionSel.value;
-  const motion = motionSel.value || "(General)";
-  await loadNote(region, motion);
-  note.classList.remove("hide");
-};
+showNoteBtn.onclick = async ()=>{ const region = regionSel.value; const motion = motionSel.value || "(General)"; await loadNote(region, motion); note.classList.remove("hide"); };
 
 /* ===================== ERROR HOOK ===================== */
 window.addEventListener('error', e => { msg.textContent = '❌ ' + (e.message || 'Script error'); console.error(e); });
