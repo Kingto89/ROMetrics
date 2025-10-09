@@ -42,4 +42,4 @@ _Landmarks and positions adapted for study practice._
 - **Stabilization**: Stabilize calcaneus and talus to prevent ankle plantarflexion and subtalar eversion.
 - **Fulcrum (axis)**: Medial aspect of 1st metatarsal head.
 - **Stationary arm (proximal)**: Parallel to anterior midline of lower leg.
-- **Moving arm (distal)**: Plantar aspect spanning 1st–5th metatarsal heads (align with 1st ray).
+- **Moving arm (distal)**: Plantar aspect spanning 1st–5th metatarsal heads.
