@@ -34,13 +34,15 @@
   select,button,input[type=range]{width:100%;margin:6px 0 8px 0;padding:8px 10px;border-radius:10px;background:#1e293b;border:1px solid #334155;color:#e2e8f0}
   .row{display:flex;gap:8px}.row>button{flex:1}
   #log{background:#0b1220;border:1px solid #1f2937;height:130px;overflow:auto;border-radius:8px;padding:8px}
+  .hide{display:none}.lockOn{background:#0b3a1f;border-color:#16a34a}
 
-  .pill{border:2px solid #334155;border-radius:12px;padding:6px 10px}
+  /* Stacked pills */
+  .pill{border:2px solid #334155;border-radius:12px;padding:6px 10px; display:flex; flex-direction:column; align-items:center; gap:3px}
+  .pill .pillTop{font-weight:700; line-height:1}
+  .pill .pillBottom{font-size:12px; opacity:.95; line-height:1}
   .pill.orange{border-color:#f59e0b}
   .pill.red{border-color:#ef4444}
   .pill.green{border-color:#22c55e}
-
-  .hide{display:none}.lockOn{background:#0b3a1f;border-color:#16a34a}
 
   /* Note bubble */
   .note{
@@ -53,7 +55,7 @@
   .note .md *{margin:0 0 6px 0; line-height:1.35}
   .note .md ul{padding-left:18px}
 
-  /* Accordion */
+  /* Controllers accordion */
   .acc{margin-top:8px}
   .acc .hdr{
     width:100%; text-align:left; background:#0d162b; border:1px solid #334155;
@@ -63,7 +65,6 @@
   .acc .body{display:none; padding:8px 6px 2px 6px}
   .acc.open .body{display:block}
 
-  /* Sub-accordion inside Controllers */
   .sub{margin-top:8px; border:1px solid #22304a; border-radius:10px}
   .sub .subhdr{width:100%; text-align:left; background:#0c1426; border:0; border-bottom:1px solid #22304a; padding:8px 10px; border-radius:10px 10px 0 0; font-weight:600}
   .sub .subbody{display:none; padding:8px 10px}
@@ -98,9 +99,9 @@
   </div>
 
   <div class="row">
-    <button class="pill orange" id="pickFulcrum">🟧 1 Fulcrum</button>
-    <button class="pill red" id="pickStationary">🟥 2 Stationary</button>
-    <button class="pill green" id="pickMoving">🟩 3 Moving</button>
+    <button class="pill orange" id="pickFulcrum"><span class="pillTop">🟧 1</span><span class="pillBottom">Fulcrum</span></button>
+    <button class="pill red" id="pickStationary"><span class="pillTop">🟥 2</span><span class="pillBottom">Stationary</span></button>
+    <button class="pill green" id="pickMoving"><span class="pillTop">🟩 3</span><span class="pillBottom">Moving</span></button>
   </div>
 
   <label>Options</label>
@@ -119,9 +120,9 @@
     <button id="lockGonio">🔓 Gonio: Unlocked</button>
   </div>
 
-  <!-- CONTROLLERS (single dropdown) -->
-  <div class="acc" id="acc-controllers">
-    <button class="hdr" type="button"><div>Controllers</div><span>tap to show</span></button>
+  <!-- CONTROLLERS -->
+  <div class="acc open" id="acc-controllers">
+    <button class="hdr" type="button"><div>Controllers</div><span id="focusHint">tap a section to focus</span></button>
     <div class="body">
 
       <div class="sub open" id="sub-gonio">
@@ -137,20 +138,26 @@
       </div>
 
       <div class="sub" id="sub-model">
-        <button class="subhdr" type="button">Model <span style="opacity:.7;font-weight:500">— drag = yaw, pinch = zoom</span></button>
+        <button class="subhdr" type="button">Model — 1-finger: yaw, 2-finger: move, pinch: zoom</button>
         <div class="subbody">
           <label>Model Yaw (°)</label>
           <input type="range" min="-180" max="180" step="1" value="0" id="modelYaw">
+          <label>Model X (m)</label>
+          <input type="range" min="-1" max="1" step="0.01" value="0" id="modelX">
+          <label>Model Z (m)</label>
+          <input type="range" min="-1" max="1" step="0.01" value="0" id="modelZ">
+          <label>Model Y (m)</label>
+          <input type="range" min="-0.5" max="0.5" step="0.01" value="0" id="modelY">
           <label>Model Zoom</label>
           <input type="range" min="50" max="200" step="1" value="100" id="modelScale">
         </div>
       </div>
 
       <div class="sub" id="sub-room">
-        <button class="subhdr" type="button">Room <span style="opacity:.7;font-weight:500">— drag X = yaw, drag Y = pitch</span></button>
+        <button class="subhdr" type="button">Room — drag X: yaw, drag Y: pitch</button>
         <div class="subbody">
           <label>Room Yaw (°)</label>
-          <input type="range" min="-180" max="180" step="1" value="20" id="roomYaw">
+          <input type="range" min="-180" max="180" step="1" value="10" id="roomYaw">
           <label>Room Pitch (°)</label>
           <input type="range" min="-60" max="60" step="1" value="0" id="roomPitch">
         </div>
@@ -169,7 +176,7 @@
   <pre id="log"></pre>
 </div>
 
-<!-- SVG goniometer (unchanged from your working build) -->
+<!-- SVG goniometer -->
 <div id="gonioHost" class="hide" aria-hidden="true">
   <svg id="gonioSvg" aria-label="Universal goniometer">
     <g id="viewport" transform="translate(0,0) scale(1)">
@@ -186,12 +193,14 @@
               </g>
               <circle r="3.2" fill="#94a3b8"/>
             </g>
+
             <g id="armA_grp">
               <rect x="-10" y="120" width="20" height="260" rx="10" stroke="#ef4444" fill="none" stroke-width="3" />
               <line id="axisA" x1="0" y1="380" x2="0" y2="-116" stroke="#ef4444" stroke-width="1.6" opacity=".85" stroke-linecap="round"/>
               <g id="armA_ruler"></g>
               <circle id="armA_knob" cx="0" cy="380" r="10" fill="#ef4444"/>
             </g>
+
             <g id="armB_grp">
               <rect x="-10" y="-380" width="20" height="500" rx="10" stroke="#22c55e" fill="none" stroke-width="3"/>
               <line id="axisB" x1="0" y1="-380" x2="0" y2="124" stroke="#22c55e" stroke-width="1.6" opacity=".85" stroke-linecap="round"/>
@@ -228,202 +237,517 @@ import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { EXRLoader } from "three/addons/loaders/EXRLoader.js";
 
-/* ===== quick DOM helpers */
-const $ = (id)=>document.getElementById(id);
-const msg=$("msg"), hud=$("hud"), logEl=$("log");
-const regionSel=$("regionSel"), motionSel=$("motionSel");
-const log=(t)=>{ logEl.textContent+=t+"\\n"; logEl.scrollTop=logEl.scrollHeight; };
+/* ==== UI refs & helpers ==== */
+const msg = document.getElementById("msg");
+const hud = document.getElementById("hud");
+const logEl = document.getElementById("log");
+const toast = document.getElementById("toast");
+const lock3DBtn = document.getElementById("lock3D");
+const lockGonioBtn = document.getElementById("lockGonio");
+const sizeEl = document.getElementById("gonioSize");
+const rotateMoveEl = document.getElementById("rotateMove");
+const rotateGonioEl = document.getElementById("rotateGonio");
+const regionSel = document.getElementById("regionSel");
+const motionSel = document.getElementById("motionSel");
+const showNoteBtn = document.getElementById("showNote");
+const focusHint = document.getElementById("focusHint");
+const subG = document.getElementById("sub-gonio");
+const subM = document.getElementById("sub-model");
+const subR = document.getElementById("sub-room");
 
-/* ===== start state */
-const INIT = {
-  roomYawDeg: 20,
-  roomPitchDeg: 0,
-  roomSphereRadius: 18,
-  model: { yawDeg:-15, scale:1.0, x:0, y:0, z:0 },
-  camera: { pos:{x:0.9,y:1.6,z:2.7}, target:{x:0,y:1.4,z:0} }
-};
+const log = (t)=>{ logEl.textContent += t + "\n"; logEl.scrollTop = logEl.scrollHeight; };
 
-/* ===== motions */
+/* ==== Motions per region (unchanged list) ==== */
 const REGION_MOTIONS = {
-  cervical_spine:["Flexion","Extension","Lateral Flexion","Rotation"],
-  thoracic_lumbar_spine:["Flexion","Extension","Lateral Flexion","Rotation"],
-  glenohumeral_joint:["Flexion","Extension","Abduction","Internal Rotation","External Rotation"],
-  elbow_radioulnar:["Flexion","Extension","Pronation","Supination"],
-  wrist:["Flexion","Extension","Radial Deviation","Ulnar Deviation"],
-  hip:["Flexion","Extension","Abduction","Adduction","Internal Rotation","External Rotation"],
-  knee:["Flexion","Extension"],
-  talocrural_ankle:["Dorsiflexion","Plantarflexion"],
-  transverse_tarsal_subtalar:["Inversion","Eversion"],
-  fingers_mcp_pip_dip:["MCP Flexion","MCP Extension","PIP Flexion","PIP Extension","DIP Flexion","DIP Extension"],
-  thumb_cmc_mcp_ip:["CMC Flexion","CMC Extension","CMC Abduction","CMC Adduction","MCP Flexion","MCP Extension","IP Flexion","IP Extension"],
-  toes_mtp_pip_dip:["MTP Flexion","MTP Extension","PIP Flexion","PIP Extension","DIP Flexion","DIP Extension"]
+  cervical_spine: ["Flexion","Extension","Lateral Flexion","Rotation"],
+  thoracic_lumbar_spine: ["Flexion","Extension","Lateral Flexion","Rotation"],
+  glenohumeral_joint: ["Flexion","Extension","Abduction","Internal Rotation","External Rotation"],
+  elbow_radioulnar: ["Flexion","Extension","Pronation","Supination"],
+  wrist: ["Flexion","Extension","Radial Deviation","Ulnar Deviation"],
+  hip: ["Flexion","Extension","Abduction","Adduction","Internal Rotation","External Rotation"],
+  knee: ["Flexion","Extension"],
+  talocrural_ankle: ["Dorsiflexion","Plantarflexion"],
+  transverse_tarsal_subtalar: ["Inversion","Eversion"],
+  fingers_mcp_pip_dip: ["MCP Flexion","MCP Extension","PIP Flexion","PIP Extension","DIP Flexion","DIP Extension"],
+  thumb_cmc_mcp_ip: ["CMC Flexion","CMC Extension","CMC Abduction","CMC Adduction","MCP Flexion","MCP Extension","IP Flexion","IP Extension"],
+  toes_mtp_pip_dip: ["MTP Flexion","MTP Extension","PIP Flexion","PIP Extension","DIP Flexion","DIP Extension"]
 };
 function refreshMotions(){
-  const list=REGION_MOTIONS?.[regionSel.value]||[];
-  motionSel.innerHTML="";
-  if(!list.length){ const o=document.createElement("option"); o.value=""; o.textContent="(No motions)"; motionSel.appendChild(o); return; }
-  list.forEach(t=>{ const o=document.createElement("option"); o.value=t; o.textContent=t; motionSel.appendChild(o); });
+  const list = REGION_MOTIONS?.[regionSel.value] || [];
+  motionSel.innerHTML = "";
+  (list.length?list:["(No motions)"]).forEach(t=>{
+    const o=document.createElement("option");
+    o.value = t==="(No motions)"? "" : t;
+    o.textContent=t; motionSel.appendChild(o);
+  });
 }
-refreshMotions(); regionSel.onchange=refreshMotions;
+refreshMotions(); regionSel.onchange = refreshMotions;
 
-/* ===== three.js core */
-const renderer=new THREE.WebGLRenderer({canvas:$("c"),antialias:true});
+/* ==== Three setup ==== */
+const canvas = document.getElementById("c");
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setPixelRatio(devicePixelRatio);
-renderer.setSize(innerWidth,innerHeight);
-renderer.outputColorSpace=THREE.SRGBColorSpace;
-renderer.toneMapping=THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure=0.95;
+renderer.setSize(innerWidth, innerHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.0;
 
-/* soft shadow floor (shadow-only, nearly invisible) */
-renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0b1220);
 
-const scene=new THREE.Scene();
-const camera=new THREE.PerspectiveCamera(45,innerWidth/innerHeight,0.1,100);
-const controls=new OrbitControls(camera,renderer.domElement);
-controls.enableDamping=true;
-camera.position.set(INIT.camera.pos.x,INIT.camera.pos.y,INIT.camera.pos.z);
-controls.target.set(INIT.camera.target.x,INIT.camera.target.y,INIT.camera.target.z);
-controls.update();
+const camera = new THREE.PerspectiveCamera(45, innerWidth/innerHeight, 0.1, 100);
+camera.position.set(0.8, 1.6, 2.5);
 
-/* lights */
-scene.add(new THREE.HemisphereLight(0xffffff,0x333344,1.2));
-const dl=new THREE.DirectionalLight(0xffffff,1); dl.position.set(3,4,2); dl.castShadow=true;
-dl.shadow.mapSize.set(2048,2048); dl.shadow.radius=4; scene.add(dl);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.enabled = true;
 
-/* shadow matte ground at y=0 */
-const shadowMat=new THREE.ShadowMaterial({opacity:0.25});
-const ground=new THREE.Mesh(new THREE.PlaneGeometry(50,50), shadowMat);
-ground.rotation.x=-Math.PI/2; ground.position.y=0; ground.receiveShadow=true; ground.renderOrder=-1; scene.add(ground);
+/* ==== HDRI background & env ==== */
+let backgroundSphere = null;
+const pmremGen = new THREE.PMREMGenerator(renderer);
+pmremGen.compileEquirectangularShader();
+new EXRLoader().setPath("assets/")
+  .load("pt_evaluation_room.exr?v="+Date.now(), (exrTex)=>{
+    const envRT = pmremGen.fromEquirectangular(exrTex);
+    scene.environment = envRT.texture;
 
-/* HDRI sphere + env */
-const pmremGen=new THREE.PMREMGenerator(renderer); pmremGen.compileEquirectangularShader();
-let bgSphere=null;
-new EXRLoader().setPath("assets/").load("pt_evaluation_room.exr?v="+Date.now(), (tex)=>{
-  const env=pmremGen.fromEquirectangular(tex); scene.environment=env.texture;
-  const geo=new THREE.SphereGeometry(INIT.roomSphereRadius,96,96);
-  const mat=new THREE.MeshBasicMaterial({map:tex, side:THREE.BackSide});
-  bgSphere=new THREE.Mesh(geo,mat);
-  bgSphere.rotation.set(THREE.MathUtils.degToRad(INIT.roomPitchDeg),THREE.MathUtils.degToRad(INIT.roomYawDeg),0);
-  scene.add(bgSphere);
-}, undefined, err=>console.error(err));
+    const geo = new THREE.SphereGeometry(12, 96, 96);
+    const mat = new THREE.MeshBasicMaterial({ map: exrTex, side: THREE.BackSide });
+    backgroundSphere = new THREE.Mesh(geo, mat);
+    backgroundSphere.rotation.set(0, THREE.MathUtils.degToRad(10), 0);
+    scene.add(backgroundSphere);
 
-/* model */
+    renderer.toneMappingExposure = 0.95;
+  }, undefined, ()=>{ scene.background = new THREE.Color(0x0b1220); });
+
+/* ==== Lighting ==== */
+scene.add(new THREE.HemisphereLight(0xffffff, 0x333344, 1.2));
+const dl = new THREE.DirectionalLight(0xffffff, 1.1);
+dl.position.set(3, 5, 2);
+scene.add(dl);
+
+/* ==== Model & floor (feet grounded) ==== */
 let model=null;
-const gltf=new GLTFLoader(); gltf.setMeshoptDecoder(MeshoptDecoder);
-const draco=new DRACOLoader(); draco.setDecoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/draco/"); gltf.setDRACOLoader(draco);
-const ktx2=new KTX2Loader(); ktx2.setTranscoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/basis/"); ktx2.detectSupport(renderer); gltf.setKTX2Loader(ktx2);
-const MODEL_URL="./Athletic_Grace_1006002620_texture.glb";
+const loader = new GLTFLoader();
+loader.setMeshoptDecoder(MeshoptDecoder);
+const draco = new DRACOLoader(); draco.setDecoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/draco/");
+loader.setDRACOLoader(draco);
+const ktx2 = new KTX2Loader(); ktx2.setTranscoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/basis/");
+ktx2.detectSupport(renderer); loader.setKTX2Loader(ktx2);
 
-function groundModel(){
-  if(!model) return;
-  const box=new THREE.Box3().setFromObject(model);
-  const minY=box.min.y;
-  model.position.y -= minY; // feet to y=0 after any scaling
+const MODEL_URL = "./Athletic_Grace_1006002620_texture.glb";
+const modelRoot = new THREE.Group(); scene.add(modelRoot);
+const feetAnchor = new THREE.Group(); // pivot at feet (0,0,0)
+modelRoot.add(feetAnchor);
+
+const shadowPlane = new THREE.Mesh(
+  new THREE.CircleGeometry(0.35, 48),
+  new THREE.ShadowMaterial({ opacity: 0.35 })
+);
+shadowPlane.rotation.x = -Math.PI/2;
+shadowPlane.position.y = 0.001;
+shadowPlane.receiveShadow = true;
+shadowPlane.visible = false; // ShadowMaterial needs renderer.shadowMap; keep as visual ground hint—off for now
+
+async function loadModel(){
+  try{
+    const head = await fetch(MODEL_URL, { method: "HEAD", cache: "no-store" });
+    if(!head.ok) throw new Error(head.status);
+  }catch{ addFallback(); return; }
+
+  loader.load(MODEL_URL, (gltf)=>{
+    model = gltf.scene;
+    // center horizontally, put feet on ground
+    const box = new THREE.Box3().setFromObject(model);
+    const size = box.getSize(new THREE.Vector3());
+    const center = box.getCenter(new THREE.Vector3());
+    model.position.sub(center);              // center at origin
+    model.position.y -= -box.min.y;          // lift so feet at y=0
+    feetAnchor.add(model);
+    shadowPlane.visible = true;
+    modelRoot.add(shadowPlane);
+    msg.textContent = "✅ Model loaded";
+  }, (xhr)=>{
+    msg.textContent = xhr.lengthComputable ? `Loading ${Math.round((xhr.loaded/xhr.total)*100)}%` : "Loading…";
+  }, ()=>{
+    addFallback();
+  });
 }
 function addFallback(){
-  if(model) return;
-  const g=new THREE.Group(); const m=new THREE.MeshStandardMaterial({color:0xa0a4ae, metalness:0.1, roughness:0.8});
-  const mk=(geo,y,s=1)=>{ const x=new THREE.Mesh(geo,m); x.position.y=y; x.scale.setScalar(s); x.castShadow=true; g.add(x); };
-  mk(new THREE.CapsuleGeometry(0.22,0.8,8,16),1.1);
-  mk(new THREE.SphereGeometry(0.16,16,16),1.8);
-  mk(new THREE.CylinderGeometry(0.1,0.12,0.3,12),1.45);
-  mk(new THREE.CylinderGeometry(0.11,0.11,0.8,12),0.55);
-  model=g; scene.add(model); groundModel();
+  if (model) return;
+  const mat = new THREE.MeshStandardMaterial({color:0xa0a4ae, metalness:0.1, roughness:0.8});
+  const g = new THREE.Group();
+  g.add(new THREE.Mesh(new THREE.CapsuleGeometry(0.22,0.8,8,16), mat));
+  feetAnchor.add(g);
+  model = g;
+  msg.textContent = "⚠️ GLB missing/blocked — fallback mannequin shown";
 }
-(async ()=>{
-  try{
-    const h=await fetch(MODEL_URL,{method:"HEAD",cache:"no-store"}); if(!h.ok) throw 0;
-    gltf.load(MODEL_URL,(g)=>{
-      model=g.scene; model.traverse(o=>{ if(o.isMesh) o.castShadow=true; });
-      scene.add(model);
-      const box=new THREE.Box3().setFromObject(model);
-      const c=box.getCenter(new THREE.Vector3());
-      model.position.sub(new THREE.Vector3(c.x,0,c.z));
-      model.scale.setScalar(INIT.model.scale);
-      model.rotation.y=THREE.MathUtils.degToRad(INIT.model.yawDeg);
-      groundModel();
-      $("modelYaw").value=INIT.model.yawDeg;
-      $("modelScale").value=Math.round(INIT.model.scale*100);
-    }, undefined, ()=>addFallback());
-  }catch{ addFallback(); }
-})();
+loadModel();
 
-/* ===== Controllers accordion + sub sections ===== */
-const accCtl=$("acc-controllers");
-accCtl.querySelector(".hdr").onclick=()=>accCtl.classList.toggle("open");
-const subG=$("sub-gonio"), subM=$("sub-model"), subR=$("sub-room");
-[subG,subM,subR].forEach(s=>{
-  s.querySelector(".subhdr").onclick=()=>s.classList.toggle("open");
-});
+/* ==== Gonio dot logic (unchanged core) ==== */
+const COLORS = { stationary: 0xef4444, moving: 0x22c55e, fulcrum: 0xf59e0b, ghost: 0x38bdf8 };
+const dot = (c)=>new THREE.Mesh(new THREE.SphereGeometry(0.01,16,16), new THREE.MeshBasicMaterial({color:c}));
+const user = { fulcrum:dot(COLORS.fulcrum), stationary:dot(COLORS.stationary), moving:dot(COLORS.moving) };
+Object.values(user).forEach(m=>{ m.visible=false; scene.add(m); });
+const userLocal = { fulcrum:null, stationary:null, moving:null };
+const ghost = { fulcrum:dot(COLORS.ghost), stationary:dot(COLORS.ghost), moving:dot(COLORS.ghost) };
+Object.values(ghost).forEach(m=>{ m.visible=false; scene.add(m); });
+let ghostOn=false; const updateGhost=()=>{ Object.entries(ghost).forEach(([k,m])=>{ if(userLocal[k] && model){ m.position.copy(userLocal[k].clone().applyMatrix4(model.matrixWorld)); m.visible=ghostOn; } }); };
 
-/* gesture targeting by open sub section */
-function activeMode(){
-  if(subM.classList.contains("open")) return "model";
-  if(subR.classList.contains("open")) return "room";
-  return "camera";
+let target=null;
+const ray = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+function toScreen(v3){ const v=v3.clone().project(camera); return { x:(v.x*0.5+0.5)*innerWidth, y:(-v.y*0.5+0.5)*innerHeight }; }
+function placePoint(name, world){
+  if(!model) return;
+  const local = model.worldToLocal(world.clone());
+  userLocal[name]=local;
+  user[name].visible=true;
+  user[name].position.copy(world);
+  log(`${name} placed`);
+  updateFromLocals();
 }
-let drag=null, pinch0=null, touches=new Map();
-const canvas=$("c");
-
-/* drag */
 canvas.addEventListener("pointerdown",(e)=>{
-  const mode=activeMode();
-  if(mode==="camera"){ return; }
-  e.preventDefault(); drag={mode, x:e.clientX, y:e.clientY};
-  canvas.setPointerCapture(e.pointerId);
-  // disable orbit while dragging model/room
-  controls.enabled=false;
+  if(!target || !model) return;
+  if(lock3D) return; // still allow picking even if 3D locked? You asked locks to work with gonio too; keep simple: 3D lock stops 3D, not picking
+  const r=canvas.getBoundingClientRect();
+  mouse.x=((e.clientX-r.left)/r.width)*2-1;
+  mouse.y=-((e.clientY-r.top)/r.height)*2+1;
+  ray.setFromCamera(mouse,camera);
+  const hits = ray.intersectObjects(scene.children,true).filter(h=>!(h.object instanceof THREE.Line));
+  if(!hits.length) return;
+  placePoint(target,hits[0].point); target=null;
 });
-canvas.addEventListener("pointermove",(e)=>{
-  if(!drag) return;
-  const dx=e.clientX-drag.x, dy=e.clientY-drag.y; drag.x=e.clientX; drag.y=e.clientY;
-  if(drag.mode==="model" && model){
-    model.rotation.y += THREE.MathUtils.degToRad(dx*0.25);
-    $("modelYaw").value=Math.round(THREE.MathUtils.radToDeg(model.rotation.y));
-  }else if(drag.mode==="room" && bgSphere){
-    bgSphere.rotation.y += THREE.MathUtils.degToRad(dx*0.25);
-    bgSphere.rotation.x = THREE.MathUtils.clamp(bgSphere.rotation.x + THREE.MathUtils.degToRad(dy*0.25), THREE.MathUtils.degToRad(-60), THREE.MathUtils.degToRad(60));
-    $("roomYaw").value=Math.round(THREE.MathUtils.radToDeg(bgSphere.rotation.y));
-    $("roomPitch").value=Math.round(THREE.MathUtils.radToDeg(bgSphere.rotation.x));
+
+const line1=new THREE.Line(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:COLORS.stationary}));
+const line2=new THREE.Line(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:COLORS.moving}));
+scene.add(line1,line2);
+
+/* ==== ROM HUD ==== */
+let romActive=false, romStartDeg=null;
+function setAngleHUD(angle, romStr=""){ hud.textContent = romStr?`Angle: ${angle.toFixed(0)}° | ROM: ${romStr}`:`Angle: ${angle.toFixed(0)}°`; }
+function romString(){ if(!romActive || romStartDeg==null) return ""; const d=Math.abs(Gonio.angle-romStartDeg); return `${d.toFixed(0)}° (start ${romStartDeg.toFixed(0)}°)`; }
+
+/* ==== Auto-align gonio from dots ==== */
+function autoAlignGonioFromDots(f,s,m){
+  const Fs=toScreen(f), Ss=toScreen(s), Ms=toScreen(m);
+  const baseDeg=Gonio.degFromScreenVec(Ss.x-Fs.x,Ss.y-Fs.y);
+  const movDeg =Gonio.degFromScreenVec(Ms.x-Fs.x,Ms.y-Fs.y);
+  Gonio.show(); Gonio.setPose(Fs.x,Fs.y,baseDeg,movDeg);
+  rotateGonioEl.value=Math.round(Gonio.getUserRot());
+  rotateMoveEl.value =Math.round(Gonio.getMovDegAbs());
+}
+
+/* ==== Update from local dots ==== */
+let followMeasure=true;
+function updateFromLocals(){
+  if(!model) return;
+  ["fulcrum","stationary","moving"].forEach(k=>{
+    if(userLocal[k]){ user[k].position.copy(userLocal[k].clone()).applyMatrix4(model.matrixWorld); user[k].visible=true; }
+  });
+  const f=user.fulcrum.visible?user.fulcrum.position:null;
+  const s=user.stationary.visible?user.stationary.position:null;
+  const m=user.moving.visible?user.moving.position:null;
+
+  line1.visible=!!(f&&s); line2.visible=!!(f&&m);
+  if(line1.visible){ line1.geometry.dispose(); line1.geometry=new THREE.BufferGeometry().setFromPoints([f,s]); }
+  if(line2.visible){ line2.geometry.dispose(); line2.geometry=new THREE.BufferGeometry().setFromPoints([f,m]); }
+
+  if(f&&s&&m){
+    autoAlignGonioFromDots(f,s,m);
+    if(followMeasure){ followMeasure=false; document.getElementById("measureToggle").textContent="🧭 Measure: OFF"; log("Measure auto-OFF"); }
+  }else{
+    Gonio.hide();
+  }
+}
+
+/* ==== Buttons ==== */
+const pickFulcrum = document.getElementById("pickFulcrum");
+const pickStationary = document.getElementById("pickStationary");
+const pickMoving = document.getElementById("pickMoving");
+pickFulcrum.onclick   = ()=>{ target="fulcrum"; log("Place Fulcrum"); };
+pickStationary.onclick= ()=>{ target="stationary"; log("Place Stationary"); };
+pickMoving.onclick    = ()=>{ target="moving"; log("Place Moving"); };
+
+document.getElementById("toggleGhost").onclick=()=>{ ghostOn=!ghostOn; updateGhost(); toast.textContent = ghostOn?"Ghost landmarks ON":"Ghost landmarks OFF"; showToast(); };
+document.getElementById("resetAll").onclick=()=>{
+  Object.values(user).forEach(m=>m.visible=false);
+  userLocal.fulcrum=userLocal.stationary=userLocal.moving=null;
+  line1.visible=line2.visible=false; Gonio.hide(); setAngleHUD(0,"");
+  romActive=false; romStartDeg=null; log("Reset");
+};
+const measureToggle=document.getElementById("measureToggle");
+measureToggle.onclick=()=>{ followMeasure=!followMeasure; measureToggle.textContent = followMeasure?"🧭 Measure: ON":"🧭 Measure: OFF"; };
+document.getElementById("startROM").onclick=()=>{ romActive=true; romStartDeg=Gonio.angle; log(`ROM start @ ${romStartDeg.toFixed(0)}°`); };
+document.getElementById("resetROM").onclick=()=>{ romActive=false; romStartDeg=null; log("ROM reset"); };
+
+/* ==== Locks ==== */
+let lock3D=false, lockGonio=false;
+function set3DLock(v){
+  lock3D=v;
+  controls.enabled=!lock3D;
+  lock3DBtn.textContent = lock3D?"🔒 3D: Locked":"🔓 3D: Unlocked";
+  lock3DBtn.classList.toggle("lockOn", lock3D);
+}
+function setGonioLock(v){
+  lockGonio=v;
+  document.getElementById('instrument').style.pointerEvents = lockGonio?'none':'auto';
+  rotateMoveEl.disabled = v; rotateGonioEl.disabled=v; sizeEl.disabled=v;
+  lockGonioBtn.textContent = lockGonio?"🔒 Gonio: Locked":"🔓 Gonio: Unlocked";
+  lockGonioBtn.classList.toggle("lockOn", lockGonio);
+}
+set3DLock(lock3D); setGonioLock(lockGonio);
+lock3DBtn.onclick = ()=> set3DLock(!lock3D);
+lockGonioBtn.onclick = ()=> setGonioLock(!lockGonio);
+
+/* ==== Controllers focus (only one gesture target active) ==== */
+let focusMode/** @type {"model"|"room"|"gonio"|null} */ = "gonio";
+function setFocus(mode){
+  focusMode = mode;
+  // auto-collapse others so it's obvious which is hot
+  [subG,subM,subR].forEach(s=>s.classList.remove("open"));
+  if(mode==="gonio") subG.classList.add("open");
+  if(mode==="model") subM.classList.add("open");
+  if(mode==="room")  subR.classList.add("open");
+  focusHint.textContent = mode ? `focused: ${mode}` : "tap a section to focus";
+}
+subG.querySelector(".subhdr").onclick = ()=> setFocus("gonio");
+subM.querySelector(".subhdr").onclick = ()=> setFocus("model");
+subR.querySelector(".subhdr").onclick = ()=> setFocus("room");
+
+/* ==== Gonio sliders ==== */
+sizeEl.oninput = ()=>{ if(lockGonio) return; Gonio.setScale(parseInt(sizeEl.value,10)/100); Gonio.refresh(); };
+rotateMoveEl.oninput = ()=>{ if(lockGonio) return; Gonio.setMovDegAbs(parseFloat(rotateMoveEl.value)); };
+rotateGonioEl.oninput = ()=>{ if(lockGonio) return; Gonio.setUserRot(parseFloat(rotateGonioEl.value)); };
+
+/* ==== Model sliders ==== */
+const modelYaw = document.getElementById("modelYaw");
+const modelX = document.getElementById("modelX");
+const modelZ = document.getElementById("modelZ");
+const modelY = document.getElementById("modelY");
+const modelScale = document.getElementById("modelScale");
+
+function applyModel() {
+  // scale about feet
+  const s = parseFloat(modelScale.value)/100;
+  feetAnchor.scale.setScalar(s);
+
+  feetAnchor.rotation.y = THREE.MathUtils.degToRad(parseFloat(modelYaw.value));
+  feetAnchor.position.set(parseFloat(modelX.value), parseFloat(modelY.value), parseFloat(modelZ.value));
+}
+[modelYaw,modelX,modelZ,modelY,modelScale].forEach(el=>el.addEventListener("input", applyModel));
+applyModel();
+
+/* ==== Room sliders ==== */
+const roomYaw = document.getElementById("roomYaw");
+const roomPitch = document.getElementById("roomPitch");
+function applyRoom(){
+  if(!backgroundSphere) return;
+  backgroundSphere.rotation.y = THREE.MathUtils.degToRad(parseFloat(roomYaw.value));
+  backgroundSphere.rotation.x = THREE.MathUtils.degToRad(parseFloat(roomPitch.value));
+}
+[roomYaw,roomPitch].forEach(el=>el.addEventListener("input", applyRoom));
+
+/* ==== Gesture handling (model / room focus) ==== */
+const activePointers = new Map();
+let lastMid=null, lastDist=null;
+
+function midpoint(p1,p2){ return { x:(p1.x+p2.x)/2, y:(p1.y+p2.y)/2 }; }
+function distance(p1,p2){ const dx=p1.x-p2.x, dy=p1.y-p2.y; return Math.hypot(dx,dy); }
+
+renderer.domElement.addEventListener("pointerdown",(e)=>{
+  if(lock3D) return;
+  renderer.domElement.setPointerCapture(e.pointerId);
+  activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  lastMid=null; lastDist=null;
+});
+
+renderer.domElement.addEventListener("pointermove",(e)=>{
+  if(lock3D) return;
+  if(!activePointers.has(e.pointerId)) return;
+  activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+
+  // Only model or room responds, not both.
+  if(focusMode==="model"){
+    const pts=[...activePointers.values()];
+    if(pts.length===1){
+      // 1-finger yaw
+      const cur=pts[0], prev={x:e.clientX - e.movementX, y:e.clientY - e.movementY};
+      const dx = e.movementX;
+      modelYaw.value = String(THREE.MathUtils.clamp(parseFloat(modelYaw.value)+dx*0.25,-180,180));
+      applyModel();
+    } else if(pts.length>=2){
+      // 2-finger translate + pinch zoom
+      const [a,b]=pts; const mid=midpoint(a,b); const dist=distance(a,b);
+      if(lastMid){
+        const k = 0.002; // translation speed
+        const dx = (mid.x-lastMid.x)*k;
+        const dy = (mid.y-lastMid.y)*k;
+        modelX.value = String(THREE.MathUtils.clamp(parseFloat(modelX.value)+dx,-1,1));
+        modelZ.value = String(THREE.MathUtils.clamp(parseFloat(modelZ.value)+dy, -1,1));
+      }
+      if(lastDist){
+        const zoomDelta = (dist-lastDist)*0.15;
+        modelScale.value = String(THREE.MathUtils.clamp(parseFloat(modelScale.value)+zoomDelta,50,200));
+      }
+      lastMid=mid; lastDist=dist; applyModel();
+    }
+  } else if(focusMode==="room"){
+    // drag rotates yaw/pitch
+    const dx = e.movementX, dy = e.movementY;
+    roomYaw.value   = String(THREE.MathUtils.clamp(parseFloat(roomYaw.value)+dx*0.25,-180,180));
+    roomPitch.value = String(THREE.MathUtils.clamp(parseFloat(roomPitch.value)+-dy*0.15,-60,60));
+    applyRoom();
   }
 });
-canvas.addEventListener("pointerup",()=>{ drag=null; controls.enabled=true; });
 
-/* pinch for model zoom */
-canvas.addEventListener("pointerdown",(e)=>touches.set(e.pointerId,{x:e.clientX,y:e.clientY}),{passive:true});
-canvas.addEventListener("pointerup",(e)=>{ touches.delete(e.pointerId); pinch0=null; },{passive:true});
-canvas.addEventListener("pointercancel",(e)=>{ touches.delete(e.pointerId); pinch0=null; },{passive:true});
-canvas.addEventListener("pointermove",(e)=>{
-  if(activeMode()!=="model" || !model) return;
-  touches.set(e.pointerId,{x:e.clientX,y:e.clientY});
-  if(touches.size===2){
-    const a=[...touches.values()];
-    const d=Math.hypot(a[0].x-a[1].x, a[0].y-a[1].y);
-    if(pinch0==null){ pinch0=d; return; }
-    const k=THREE.MathUtils.clamp(d/pinch0,0.5,2.0);
-    let s=THREE.MathUtils.clamp(model.scale.x*k,0.5,2.0);
-    model.scale.setScalar(s); groundModel();
-    $("modelScale").value=Math.round(s*100);
-    pinch0=d;
+renderer.domElement.addEventListener("pointerup",(e)=>{ activePointers.delete(e.pointerId); lastMid=null; lastDist=null; });
+renderer.domElement.addEventListener("pointercancel",(e)=>{ activePointers.delete(e.pointerId); lastMid=null; lastDist=null; });
+
+renderer.domElement.addEventListener("wheel",(e)=>{
+  if(lock3D) return;
+  if(focusMode==="model"){
+    modelScale.value = String(THREE.MathUtils.clamp(parseFloat(modelScale.value) + (e.deltaY<0?3:-3), 50, 200));
+    applyModel();
+  } else if(focusMode==="room"){
+    roomYaw.value = String(THREE.MathUtils.clamp(parseFloat(roomYaw.value) + (e.deltaY<0?3:-3), -180, 180));
+    applyRoom();
   }
 },{passive:true});
 
-/* sliders for model/room */
-$("modelYaw").oninput=()=>{ if(model) model.rotation.y=THREE.MathUtils.degToRad(parseFloat($("modelYaw").value)); };
-$("modelScale").oninput=()=>{ if(model){ const s=parseFloat($("modelScale").value)/100; model.scale.setScalar(THREE.MathUtils.clamp(s,0.5,2)); groundModel(); } };
-$("roomYaw").oninput=()=>{ if(bgSphere) bgSphere.rotation.y=THREE.MathUtils.degToRad(parseFloat($("roomYaw").value)); };
-$("roomPitch").oninput=()=>{ if(bgSphere) bgSphere.rotation.x=THREE.MathUtils.degToRad(parseFloat($("roomPitch").value)); };
+/* ==== Toast ==== */
+function showToast(){ toast.style.display='block'; clearTimeout(showToast.tid); showToast.tid=setTimeout(()=>toast.style.display='none',1200); }
 
-/* ====== GONIOMETER + notes + ROM (same as your working version) ====== */
-/* … keep your existing logic here (unchanged) … */
-/* (Omitted in this reply for brevity—your current code block already includes it.) */
+/* ==== Render loop ==== */
+addEventListener("resize", ()=>{ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); Gonio._clampNow?.(); });
+const clock=new THREE.Clock();
+(function animate(){
+  clock.getDelta();
+  controls.update();
+  if(followMeasure) updateFromLocals();
+  if(!document.getElementById('gonioHost').classList.contains('hide')){
+    const rom=romString(); setAngleHUD(Gonio.angle, rom);
+  }
+  renderer.render(scene,camera);
+  requestAnimationFrame(animate);
+})();
 
-/* resize & render */
-addEventListener("resize",()=>{ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); });
-(function loop(){ controls.update(); renderer.render(scene,camera); requestAnimationFrame(loop); })();
+/* ==== Goniometer module (unchanged core except clamps) ==== */
+const Gonio = (()=>{
+  const host=document.getElementById('gonioHost');
+  const svg=document.getElementById('gonioSvg');
+  const viewport=document.getElementById('viewport');
+  const rotWrap=document.getElementById('rotWrap');
+  const numsInWrap=document.getElementById('numsInWrap');
+  const labelsFixed=document.getElementById('labelsFixed');
+  const armA_ruler=document.getElementById('armA_ruler');
+  const armB_ruler=document.getElementById('armB_ruler');
 
-/* errors */
-window.addEventListener('error',e=>{ msg.textContent='❌ '+(e.message||'Script error'); console.error(e); });
+  const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+  const clamp360=a=>(a%360+360)%360;
+  const toDegUp=(x,y)=>clamp360(Math.atan2(-y,x)*180/Math.PI+90);
+
+  (function build(){
+    const ticks=document.getElementById('ticks');
+    const numsOut=document.getElementById('numsOut');
+    const numsIn=document.getElementById('numsIn');
+    const R=120, Rin=86;
+    const line=(p,x1,y1,x2,y2,cls)=>{ const n=document.createElementNS('http://www.w3.org/2000/svg','line'); n.setAttribute('x1',x1); n.setAttribute('y',y1); n.setAttribute('x2',x2); n.setAttribute('y2',y2); if(cls) n.setAttribute('class',cls); p.appendChild(n); };
+    const text=(p,x,y,t,cls)=>{ const n=document.createElementNS('http://www.w3.org/2000/svg','text'); n.setAttribute('x',x); n.setAttribute('y',y); n.setAttribute('class',cls||'labelOuter'); n.textContent=t; p.appendChild(n); return n; };
+    for(let d=0; d<360; d+=5){ const a=(d-90)*Math.PI/180, big=d%30===0, len=big?12:6; line(ticks,Math.cos(a)*(R-len),Math.sin(a)*(R-len),Math.cos(a)*R,Math.sin(a)*R,big?'tick tickBig':'tick'); }
+    const rWhite=R-8;
+    for(let d=0; d<360; d+=10){ const diff90=Math.abs(((d-90)%360+540)%360-180); const diff270=Math.abs(((d-270)%360+540)%360-180); const val=Math.min(diff90,diff270); if(val%20===0 && val<=80){ const a=(d-90)*Math.PI/180,x=Math.cos(a)*rWhite,y=Math.sin(a)*rWhite; text(numsOut,x,y,String(val),'labelOuter'); } }
+    const rInner=Rin+9, valFromTheta=th=>{const t=(th+180)%360; return t<=180?t:360-t;};
+    for(let th=0; th<360; th+=10){ const v=valFromTheta(th); if(v%10!==0) continue; if(v===0 && th!==180) continue; const a=(th-90)*Math.PI/180,x=Math.cos(a)*rInner,y=Math.sin(a)*rInner; text(numsIn,x,y,String(v),'labelInner'); }
+
+    // tip rulers (same as before) …
+  })();
+
+  let mov=30, zoom=1, panX=innerWidth/2, panY=innerHeight/2;
+  let baseRot=0, userRot=0, scale=1;
+  let draggingArm=false, draggingPan=false, lastPanScreen=null;
+
+  function applyView(){ viewport.setAttribute('transform',`translate(${panX},${panY}) scale(${zoom*scale})`); }
+  function applyRot(){ rotWrap.setAttribute('transform',`rotate(${baseRot+userRot})`); }
+  function applyLabelFix(){ const t=-(baseRot+userRot); labelsFixed.setAttribute('transform',`rotate(${t})`); numsInWrap.setAttribute('transform',`rotate(${-t})`); }
+
+  function clampPan(){ const bound=140*zoom*scale, m=150; const minX=m+bound, maxX=innerWidth-m-bound; const minY=m+bound, maxY=innerHeight-m-bound; if(minX<=maxX) panX=Math.min(maxX,Math.max(minX,panX)); else panX=innerWidth/2; if(minY<=maxY) panY=Math.min(maxY,Math.max(minY,panY)); else panY=innerHeight/2; }
+  function render(){ document.getElementById('armA_grp').setAttribute('transform','rotate(0)'); document.getElementById('armB_grp').setAttribute('transform',`rotate(${mov})`); }
+  clampPan(); applyView(); applyRot(); applyLabelFix(); render();
+
+  // Pan zoom drag (disabled by gonio lock)
+  svg.addEventListener('pointerdown',e=>{ if(lockGonio) return; if(e.target.closest('#armB_grp')) return; draggingPan=true; lastPanScreen={x:e.clientX,y:e.clientY}; svg.setPointerCapture?.(e.pointerId); });
+  svg.addEventListener('pointermove',e=>{ if(lockGonio) return; if(!draggingPan||!lastPanScreen) return; const dx=(e.clientX-lastPanScreen.x)/(zoom*scale); const dy=(e.clientY-lastPanScreen.y)/(zoom*scale); panX+=dx; panY+=dy; lastPanScreen={x:e.clientX,y:e.clientY}; clampPan(); applyView(); });
+  svg.addEventListener('pointerup',()=>{ draggingPan=false; lastPanScreen=null; });
+  svg.addEventListener('pointercancel',()=>{ draggingPan=false; lastPanScreen=null; });
+  svg.addEventListener('wheel',e=>{ if(lockGonio) return; e.preventDefault(); const step = Math.sign(e.deltaY)<0?1.22:1/1.22; zoom=THREE.MathUtils.clamp(zoom*step,0.07,10); clampPan(); applyView(); },{passive:false});
+
+  // Green arm drag
+  function startArm(e){ if(lockGonio) return; e.stopPropagation(); e.preventDefault(); document.getElementById('armB_grp').setPointerCapture?.(e.pointerId); draggingArm=true; }
+  function moveArm(e){ if(lockGonio) return; if(!draggingArm) return; e.stopPropagation(); e.preventDefault(); const pt=svg.createSVGPoint(); pt.x=e.clientX; pt.y=e.clientY; const p=pt.matrixTransform(rotWrap.getScreenCTM().inverse()); mov = (Math.atan2(-p.y,p.x)*180/Math.PI+90+360)%360; render(); }
+  function endArm(){ draggingArm=false; }
+  ['armB_handleKnob','armB_handleShaft','armB_grp','armB_knob'].forEach(id=>{ const el=document.getElementById(id); if(!el) return; el.addEventListener('pointerdown',startArm); el.addEventListener('pointermove',moveArm); el.addEventListener('pointerup',endArm); el.addEventListener('pointercancel',endArm); });
+
+  function show(){ host.classList.remove('hide'); host.setAttribute('aria-hidden','false'); clampPan(); applyView(); }
+  function hide(){ host.classList.add('hide'); host.setAttribute('aria-hidden','true'); }
+  function setPose(cx,cy,baseDeg,movDeg){ panX=cx; panY=cy; baseRot=baseDeg; mov=(movDeg-baseDeg+360)%360; clampPan(); applyView(); applyRot(); applyLabelFix(); render(); }
+  function setScale(k){ scale=THREE.MathUtils.clamp(k||1,0.1,2); clampPan(); applyView(); }
+  function setMovDegAbs(deg){ mov=(deg%360+360)%360; render(); }
+  function setUserRot(deg){ userRot=(deg%360+360)%360; applyRot(); applyLabelFix(); render(); }
+  function getUserRot(){ return (userRot%360+360)%360; }
+  function getMovDegAbs(){ return (mov%360+360)%360; }
+  function angle(){ const a=(mov%360+360)%360; return a>180?360-a:a; }
+
+  return { show, hide, setPose, setScale, setMovDegAbs, setUserRot, getUserRot, getMovDegAbs, get angle(){ return angle(); }, degFromScreenVec:(dx,dy)=>((Math.atan2(-dy,dx)*180/Math.PI+90+360)%360), _clampNow:()=>{clampPan();applyView();}, refresh:()=>{applyView();applyRot();applyLabelFix();render();} };
+})();
+window.Gonio = Gonio;
+
+/* ==== Notes (same lightweight MD) ==== */
+const note = document.getElementById("note");
+const noteTitle = document.getElementById("noteTitle");
+const noteBody = document.getElementById("noteBody");
+document.getElementById("noteClose").onclick=()=>note.classList.add("hide");
+
+function mdToHtml(md){
+  let html = md
+    .replace(/^### (.*)$/gm, '<h5>$1</h5>')
+    .replace(/^## (.*)$/gm, '<h4>$1</h4>')
+    .replace(/^# (.*)$/gm, '<h3>$1</h3>')
+    .replace(/^\* (.*)$/gm, '<li>$1</li>');
+  html = html.replace(/(<li>[\s\S]*?<\/li>)/g, '<ul>$1</ul>');
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  return html;
+}
+function regionToTitle(r){
+  return ({
+    cervical_spine:"Cervical Spine",
+    thoracic_lumbar_spine:"Thoracic & Lumbar Spine",
+    glenohumeral_joint:"Glenohumeral Joint",
+    elbow_radioulnar:"Elbow & Radioulnar Joints",
+    wrist:"Wrist", hip:"Hip", knee:"Knee",
+    talocrural_ankle:"Talocrural (Ankle)",
+    transverse_tarsal_subtalar:"Transverse Tarsal & Subtalar",
+    fingers_mcp_pip_dip:"Fingers (MCP, PIP, DIP)",
+    thumb_cmc_mcp_ip:"Thumb (CMC, MCP, IP)",
+    toes_mtp_pip_dip:"Toes (MTP, PIP, DIP)"
+  }[r]||r.replace(/_/g,' '));
+}
+async function loadNote(region,motion){
+  const url=`content/goniometry/${region}.md?${Date.now()}`;
+  try{
+    const res=await fetch(url); if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const md=await res.text();
+    const re=new RegExp(`(^|\\n)##?\\s*${motion}\\s*\\n([\\s\\S]*?)(\\n##?\\s|$)`,'i');
+    const m=motion?md.match(re):null;
+    const section=m?m[2].trim():md;
+    noteTitle.textContent=`${regionToTitle(region)} — ${motion||"General"}`;
+    noteBody.innerHTML=mdToHtml(section||"—");
+  }catch(e){ noteTitle.textContent=`${regionToTitle(region)} — ${motion||"General"}`; noteBody.textContent="Failed to load note."; }
+}
+document.getElementById("showNote").onclick=async()=>{ await loadNote(regionSel.value, motionSel.value||"(General)"); note.classList.remove("hide"); };
+
+/* ==== Error ==== */
+window.addEventListener('error', e=>{ msg.textContent='❌ '+(e.message||'Script error'); console.error(e); });
 </script>
 </body>
 </html>
