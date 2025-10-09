@@ -16,8 +16,6 @@
 
 <style>
   html,body{margin:0;height:100%;background:#0b1220;color:#e5e7eb;overflow:hidden;font-family:system-ui,Segoe UI,Roboto}
-
-  /* ===== Stacking order fix ===== */
   canvas{position:fixed; inset:0; z-index:0; width:100%; height:100%; display:block}
   .panel{
     position:fixed; left:0; top:0; bottom:0; width:340px;
@@ -25,7 +23,6 @@
   }
   #gonioHost{position:fixed; inset:0; z-index:30; pointer-events:none}
   #gonioHost svg{width:100vw;height:100vh;background:transparent;pointer-events:auto}
-
   .hud,.toast,#msg{z-index:40}
   .hud{position:fixed;top:10px;left:50%;transform:translateX(-50%);background:rgba(15,23,42,.75);border:1px solid #334155;border-radius:10px;padding:6px 10px;font-weight:700;backdrop-filter:blur(6px)}
   .toast{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(2,6,23,.7);border:1px solid #334155;border-radius:10px;padding:6px 10px;font-size:13px;display:none}
@@ -44,7 +41,7 @@
   .axisA{stroke:#ef4444;stroke-width:1.6;opacity:.85}.axisB{stroke:#22c55e;stroke-width:1.6;opacity:.85}
   .rulerTick{stroke:#94a3b8}
   .labelOuter{fill:#e5e7eb;font-size:11px;text-anchor:middle;dominant-baseline:middle;paint-order:stroke;stroke:#0b1220;stroke-width:3px}
-  .labelInner{fill:#fca5a5;font-size:8.2px;text-anchor:middle;dominant-baseline:middle;paint-order:stroke;stroke-width:3px;stroke:#0b1220}
+  .labelInner{fill:#fca5a5;font-size:8.2px;text-anchor:middle;dominant-baseline:middle;paint-order:stroke;stroke:#0b1220;stroke-width:3px}
   .ruLbl{fill:#cbd5e1;font-size:9.5px;dominant-baseline:middle;paint-order:stroke;stroke:#0b1220;stroke-width:3px}
   .hide{display:none}.lockOn{background:#0b3a1f;border-color:#16a34a}
 </style>
@@ -66,10 +63,6 @@
     <button id="pickMoving">3️⃣ Moving</button>
   </div>
 
-  <label>Tolerance (cm)</label>
-  <input type="range" min="0.5" max="5" step="0.5" value="2" id="tol">
-  <div class="legend">Green ≤ tolerance • Red > tolerance</div>
-
   <label>Options</label>
   <div class="row">
     <button id="toggleGhost">👻 Ghost Landmarks</button>
@@ -89,16 +82,25 @@
   <label>Gonio Size (10–200%)</label>
   <input type="range" min="10" max="200" step="5" value="100" id="gonioSize">
 
+  <!-- NEW: rotate the moving (green) arm -->
+  <label>Rotate Moving Arm (°)</label>
+  <input type="range" min="0" max="360" step="1" value="30" id="rotateMove">
+
+  <!-- NEW: spin the entire goniometer body -->
+  <label>Rotate Goniometer (°)</label>
+  <input type="range" min="0" max="360" step="1" value="0" id="rotateGonio">
+
   <div class="legend">
     <span class="chip" style="border-color:#ef4444">Stationary arm (red)</span>
     <span class="chip" style="border-color:#22c55e">Moving arm (green)</span>
+    <span class="chip" style="border-color:#f59e0b">Fulcrum (orange)</span>
   </div>
 
   <label>Event Log</label>
   <pre id="log"></pre>
 </div>
 
-<!-- SVG goniometer (appears after 3 dots) -->
+<!-- SVG goniometer -->
 <div id="gonioHost" class="hide" aria-hidden="true">
   <svg id="gonioSvg" aria-label="Universal goniometer">
     <g id="viewport" transform="translate(0,0) scale(1)">
@@ -124,13 +126,12 @@
               <circle id="armA_knob" cx="0" cy="380" r="10" fill="#ef4444"/>
             </g>
 
-            <!-- GREEN moving arm (draggable) -->
+            <!-- GREEN moving arm -->
             <g id="armB_grp">
               <rect class="armB" x="-10" y="-380" width="20" height="500" rx="10" stroke-width="3"/>
               <line id="axisB" class="axisB" x1="0" y1="-380" x2="0" y2="124" stroke-linecap="round"/>
               <g id="armB_ruler"></g>
               <circle id="armB_knob" cx="0" cy="-380" r="10" fill="#22c55e"/>
-              <!-- generous invisible drag handles -->
               <circle id="armB_handleKnob" cx="0" cy="-380" r="38" fill="rgba(0,0,0,0)" style="pointer-events:all"/>
               <rect   id="armB_handleShaft" x="-20" y="-380" width="40" height="500" fill="rgba(0,0,0,0)" style="pointer-events:all"/>
             </g>
@@ -165,12 +166,11 @@ const msg = document.getElementById("msg");
 const hud = document.getElementById("hud");
 const logEl = document.getElementById("log");
 const toast = document.getElementById("toast");
-const tolEl = document.getElementById("tol");
 const lock3DBtn = document.getElementById("lock3D");
 const lockGonioBtn = document.getElementById("lockGonio");
 const sizeEl = document.getElementById("gonioSize");
-let tol = parseFloat(tolEl.value);
-tolEl.oninput = () => (tol = parseFloat(tolEl.value));
+const rotateMoveEl = document.getElementById("rotateMove");      // NEW
+const rotateGonioEl = document.getElementById("rotateGonio");    // NEW
 const log = (t)=>{ logEl.textContent += t + "\n"; logEl.scrollTop = logEl.scrollHeight; };
 
 /* ===== Three.js ===== */
@@ -195,7 +195,7 @@ lock3DBtn.classList.remove("lockOn");
 scene.add(new THREE.HemisphereLight(0xffffff, 0x333344, 1.2));
 const dl = new THREE.DirectionalLight(0xffffff, 1); dl.position.set(3, 4, 2); scene.add(dl);
 
-/* Protractor floor ring */
+/* Protractor floor ring (decor) */
 const protractor = new THREE.Group(); scene.add(protractor);
 const radius = 1.8;
 const tickMat = new THREE.LineBasicMaterial({ color: 0x475569 });
@@ -265,16 +265,23 @@ async function loadModel() {
 }
 loadModel();
 
-/* Landmarks / picking */
-const matGood = new THREE.MeshBasicMaterial({ color: 0x22c55e });
-const matBad  = new THREE.MeshBasicMaterial({ color: 0xef4444 });
-const dot = () => new THREE.Mesh(new THREE.SphereGeometry(0.01, 16, 16), matBad.clone());
-const user = { fulcrum: dot(), stationary: dot(), moving: dot() };
+/* Landmarks / picking — COLORED DOTS */
+const COLORS = { stationary: 0xef4444, moving: 0x22c55e, fulcrum: 0xf59e0b, ghost: 0x38bdf8 };
+const dot = (color) => {
+  const mat = new THREE.MeshBasicMaterial({ color });
+  return new THREE.Mesh(new THREE.SphereGeometry(0.01, 16, 16), mat);
+};
+const user = {
+  fulcrum: dot(COLORS.fulcrum),
+  stationary: dot(COLORS.stationary),
+  moving: dot(COLORS.moving)
+};
 Object.values(user).forEach(m => { m.visible = false; scene.add(m); });
+
 const userLocal = { fulcrum:null, stationary:null, moving:null };
 
-const ghost = { fulcrum: dot(), stationary: dot(), moving: dot() };
-Object.values(ghost).forEach(m => { m.material = new THREE.MeshBasicMaterial({ color: 0x38bdf8 }); m.visible = false; scene.add(m); });
+const ghost = { fulcrum: dot(COLORS.ghost), stationary: dot(COLORS.ghost), moving: dot(COLORS.ghost) };
+Object.values(ghost).forEach(m => { m.visible = false; scene.add(m); });
 
 const PRESETS = {
   cerv_flex: { fulcrum:new THREE.Vector3(0.08,1.65,0.02), stationary:new THREE.Vector3(0.12,1.55,0.15), moving:new THREE.Vector3(0.10,1.68,0.12) },
@@ -293,9 +300,11 @@ function toScreen(v3){ const v=v3.clone().project(camera); return { x:(v.x*0.5+0
 function placePoint(name, worldPoint) {
   if (!model) return;
   const local = model.worldToLocal(worldPoint.clone());
-  userLocal[name] = local; user[name].visible = true; user[name].position.copy(worldPoint);
-  const cm = worldPoint.distanceTo(truth[name]) * 100.0; user[name].material.color.set(cm <= tol ? 0x22c55e : 0xef4444);
-  log(`${name}: ${cm.toFixed(1)} cm`); updateFromLocals();
+  userLocal[name] = local;
+  user[name].visible = true;
+  user[name].position.copy(worldPoint);
+  log(`${name} placed`);
+  updateFromLocals();
 }
 
 canvas.addEventListener("pointerdown", (e) => {
@@ -310,8 +319,8 @@ canvas.addEventListener("pointerdown", (e) => {
   placePoint(target, hits[0].point); target = null;
 });
 
-const line1 = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: 0xef4444 }));
-const line2 = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: 0x22c55e }));
+const line1 = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: COLORS.stationary }));
+const line2 = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: COLORS.moving }));
 scene.add(line1, line2);
 
 function setAngle(a) { hud.textContent = `Angle: ${a.toFixed(0)}°`; }
@@ -321,6 +330,9 @@ function autoAlignGonioFromDots(f, s, m){
   const baseDeg = Gonio.degFromScreenVec(Ss.x - Fs.x, Ss.y - Fs.y);   // red→stationary
   const movDeg  = Gonio.degFromScreenVec(Ms.x - Fs.x, Ms.y - Fs.y);   // green→moving
   Gonio.show(); Gonio.setPose(Fs.x, Fs.y, baseDeg, movDeg);           // center=fulcrum
+  // Sync sliders to what the gonio just became
+  rotateGonioEl.value = Math.round(Gonio.getUserRot());
+  rotateMoveEl.value  = Math.round(Gonio.getMovDegAbs());
 }
 
 function updateFromLocals() {
@@ -341,7 +353,7 @@ function updateFromLocals() {
     const ang = THREE.MathUtils.radToDeg(Math.acos(THREE.MathUtils.clamp(vs.dot(vm), -1, 1)));
     setAngle(ang); autoAlignGonioFromDots(f,s,m);
 
-    /* Keep your earlier behavior: auto-turn Measure OFF the first time it appears */
+    // Auto-turn Measure OFF when gonio first appears
     if (followMeasure) {
       followMeasure = false;
       measureToggle.textContent = "🧭 Measure: OFF";
@@ -375,7 +387,7 @@ resetAll.onclick = () => {
 presetSel.onchange = () => { const p=presetSel.value; truth = { ...PRESETS[p] }; updateGhost(); toast.textContent = `Preset: ${presetSel.options[presetSel.selectedIndex].text}`; showToast(); };
 measureToggle.onclick = () => { followMeasure = !followMeasure; measureToggle.textContent = followMeasure ? "🧭 Measure: ON" : "🧭 Measure: OFF"; };
 
-/* Locks (unlocked by default) */
+/* Locks */
 let lock3D=false, lockGonio=false;
 function set3DLock(v){ lock3D=v; controls.enabled=!lock3D; lock3DBtn.textContent=(lock3D? "🔒 3D: Locked":"🔓 3D: Unlocked"); lock3DBtn.classList.toggle('lockOn', lock3D); }
 function setGonioLock(v){ lockGonio=v; document.getElementById('instrument').style.pointerEvents = lockGonio ? 'none' : 'auto'; lockGonioBtn.textContent=(lockGonio? "🔒 Gonio: Locked":"🔓 Gonio: Unlocked"); lockGonioBtn.classList.toggle('lockOn', lockGonio); }
@@ -383,7 +395,17 @@ set3DLock(lock3D); setGonioLock(lockGonio);
 lock3DBtn.onclick = ()=> set3DLock(!lock3D);
 lockGonioBtn.onclick = ()=> setGonioLock(!lockGonio);
 
-sizeEl.oninput = ()=> Gonio.setScale(parseInt(sizeEl.value,10)/100);
+sizeEl.oninput = ()=> { Gonio.setScale(parseInt(sizeEl.value,10)/100); Gonio.refresh(); };
+
+/* NEW: sliders to rotate moving arm and whole goniometer */
+rotateMoveEl.oninput = ()=>{
+  Gonio.setMovDegAbs(parseFloat(rotateMoveEl.value));
+  setAngle(Gonio.angle);
+};
+rotateGonioEl.oninput = ()=>{
+  Gonio.setUserRot(parseFloat(rotateGonioEl.value));
+  setAngle(Gonio.angle);
+};
 
 function showToast(){ toast.style.display='block'; clearTimeout(showToast.tid); showToast.tid=setTimeout(()=>toast.style.display='none',1200); }
 
@@ -395,12 +417,9 @@ const clock = new THREE.Clock();
   controls.update();
 
   if (followMeasure) updateFromLocals();
-
-  /* NEW: keep ROM/HUD live even when Measure is OFF and during manual moves */
   if (!document.getElementById('gonioHost').classList.contains('hide')) {
     setAngle(Gonio.angle);
   }
-  /* END NEW */
 
   renderer.render(scene, camera);
   layoutLabels();
@@ -422,7 +441,6 @@ const Gonio = (() => {
   const clamp360=a=>(a%360+360)%360;
   const toDegUp=(x,y)=>clamp360(Math.atan2(-y,x)*180/Math.PI+90);
 
-  /* build ticks/labels/rulers once */
   (function build(){
     const ticks = document.getElementById('ticks');
     const numsOut = document.getElementById('numsOut');
@@ -448,23 +466,21 @@ const Gonio = (() => {
         const y = tipY - dir*(cm*CM_TO_PX);
         const long = Math.abs(cm - Math.round(cm)) < 1e-6;
         const mid  = !long && Math.abs(cm*2 - Math.round(cm*2)) < 1e-6;
-        const w = long?8:mid?5:3;
-        line2(-10,y,-10-w,y);
+        const w = long?8:mid?5:3; line2(-10,y,-10-w,y);
         if (long) label(-18,y,String(Math.round(cm)),-90);
       }
       for(let inch=0; inch<=inMax+1e-6; inch+=0.5){
         const y = tipY - dir*(inch*IN_TO_CM*CM_TO_PX);
         const long = Math.abs(inch - Math.round(inch)) < 1e-6;
         const mid  = !long && Math.abs(inch*2 - Math.round(inch*2)) < 1e-6;
-        const w = long?8:mid?5:3;
-        line2(10,y,10+w,y);
+        const w = long?8:mid?5:3; line2(10,y,10+w,y);
         if (long) label(18,y,String(Math.round(inch)),90);
       }
       label(-26,tipY,'cm',-90); label(26,tipY,'in',90);
     }
   })();
 
-  let mov=0, zoom=1, panX=innerWidth/2, panY=innerHeight/2;
+  let mov=30, zoom=1, panX=innerWidth/2, panY=innerHeight/2;
   let baseRot=0, userRot=0, scale=1;
   let draggingArm=false, draggingPan=false, lastPanScreen=null;
 
@@ -497,14 +513,7 @@ const Gonio = (() => {
   }
   clampPanToViewport(); applyView(); applyRot(); applyLabelFix(); render();
 
-  // gestures
-  const touches=new Map(); let lastG=null;
-  const tp=e=>({x:e.clientX,y:e.clientY}); const ctr=(a,b)=>({x:(a.x+b.x)/2,y:(a.y+b.y)/2}); const dst=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y); const ang=(a,b)=>Math.atan2(b.y-a.y,b.x-a.x)*180/Math.PI;
-
-  function startGesture(){ if(touches.size===2){ const [a,b]=[...touches.values()]; lastG={c:ctr(a,b), d:dst(a,b), a:ang(a,b), panX, panY, zoom, userRot}; }}
-  function moveGesture(){ if (touches.size!==2 || !lastG) return; const [a,b]=[...touches.values()]; const c=ctr(a,b), d=dst(a,b), ag=ang(a,b); const scaleFac=Math.pow(d/lastG.d,S.PINCH_EXP); zoom=Math.min(S.MAX_ZOOM,Math.max(S.MIN_ZOOM,lastG.zoom*scaleFac)); panX = lastG.panX + S.PAN_GAIN*(c.x-lastG.c.x)/zoom; panY = lastG.panY + S.PAN_GAIN*(c.y-lastG.c.y)/zoom; let da=ag-lastG.a; while(da>180) da-=360; while(da<-180) da+=360; userRot = lastG.userRot + da*S.ROT_GAIN; clampPanToViewport(); applyView(); applyRot(); applyLabelFix(); render(); }
-  function endGesture(){ lastG=null; }
-
+  /* Drag pan on empty SVG (not on green arm) */
   svg.addEventListener('pointerdown', e=>{
     if (e.target.closest('#armB_grp')) return;
     e.preventDefault(); draggingPan = true;
@@ -549,9 +558,6 @@ const Gonio = (() => {
     const p = pt.matrixTransform(rotWrap.getScreenCTM().inverse());
     mov = toDegUp(p.x, p.y);
     render();
-
-    /* NEW: live ROM update while dragging */
-    try { parent.setAngle && parent.setAngle(Gonio.angle); } catch {}
   }
   function endArm(){ draggingArm=false; }
 
@@ -570,15 +576,18 @@ const Gonio = (() => {
   function setScale(k){ scale=Math.min(2,Math.max(0.1,k||1)); clampPanToViewport(); applyView(); }
   function degFromScreenVec(dx,dy){ return toDegUp(dx,dy); }
 
-  /* NEW: expose current ROM so UI can refresh even when Measure is OFF */
-  function currentAngle(){
-    const a = clamp360(mov);
-    return a > 180 ? 360 - a : a;
-  }
-  Object.defineProperty(window, 'Gonio', { value: null, writable: true }); // (keep window.Gonio later)
+  // NEW helpers for UI sliders:
+  function setMovDegAbs(deg){ mov = clamp360(deg); render(); }
+  function setUserRot(deg){ userRot = clamp360(deg); applyRot(); applyLabelFix(); render(); }
+  function getUserRot(){ return clamp360(userRot); }
+  function getMovDegAbs(){ return clamp360(mov); }
+
+  function currentAngle(){ const a = clamp360(mov); return a>180 ? 360-a : a; }
   return {
     show, hide, setPose, setScale, degFromScreenVec, _clampNow:clampNow,
-    get angle(){ return currentAngle(); }  /* ← NEW */
+    setMovDegAbs, setUserRot, getUserRot, getMovDegAbs,
+    get angle(){ return currentAngle(); },
+    refresh: ()=>{ applyView(); applyRot(); applyLabelFix(); render(); }
   };
 })();
 window.Gonio = Gonio;
