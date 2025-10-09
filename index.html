@@ -106,7 +106,7 @@
         <g id="mirrorWrap" transform="scale(1,1)">
           <g id="instrument">
             <g id="head">
-              <!-- CHANGED: fill="none" so the center is transparent -->
+              <!-- center is transparent -->
               <circle r="120" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
               <circle r="86"  fill="none" stroke="#94a3b8" stroke-width="0.9" opacity="0.65"/>
               <g id="ticks"></g>
@@ -387,14 +387,29 @@ measureToggle.onclick = () => { followMeasure = !followMeasure; measureToggle.te
 /* Locks */
 let lock3D=false, lockGonio=false;
 function set3DLock(v){ lock3D=v; controls.enabled=!lock3D; lock3DBtn.textContent=(lock3D? "🔒 3D: Locked":"🔓 3D: Unlocked"); lock3DBtn.classList.toggle('lockOn', lock3D); }
-function setGonioLock(v){ lockGonio=v; document.getElementById('instrument').style.pointerEvents = lockGonio ? 'none' : 'auto'; lockGonioBtn.textContent=(lockGonio? "🔒 Gonio: Locked":"🔓 Gonio: Unlocked"); lockGonioBtn.classList.toggle('lockOn', lockGonio); }
+function setGonioLock(v){
+  lockGonio=v;
+  document.getElementById('instrument').style.pointerEvents = lockGonio ? 'none' : 'auto';
+  lockGonioBtn.textContent=(lockGonio? "🔒 Gonio: Locked":"🔓 Gonio: Unlocked");
+  lockGonioBtn.classList.toggle('lockOn', lockGonio);
+}
 set3DLock(lock3D); setGonioLock(lockGonio);
 lock3DBtn.onclick = ()=> set3DLock(!lock3D);
 lockGonioBtn.onclick = ()=> setGonioLock(!lockGonio);
 
 sizeEl.oninput = ()=> { Gonio.setScale(parseInt(sizeEl.value,10)/100); Gonio.refresh(); };
-rotateMoveEl.oninput = ()=>{ Gonio.setMovDegAbs(parseFloat(rotateMoveEl.value)); setAngle(Gonio.angle); };
-rotateGonioEl.oninput = ()=>{ Gonio.setUserRot(parseFloat(rotateGonioEl.value)); setAngle(Gonio.angle); };
+
+/* === guards so lock actually locks === */
+rotateMoveEl.oninput = ()=>{
+  if (lockGonio) return;                       // NEW
+  Gonio.setMovDegAbs(parseFloat(rotateMoveEl.value));
+  setAngle(Gonio.angle);
+};
+rotateGonioEl.oninput = ()=>{
+  if (lockGonio) return;                       // NEW
+  Gonio.setUserRot(parseFloat(rotateGonioEl.value));
+  setAngle(Gonio.angle);
+};
 
 function showToast(){ toast.style.display='block'; clearTimeout(showToast.tid); showToast.tid=setTimeout(()=>toast.style.display='none',1200); }
 
@@ -502,12 +517,14 @@ const Gonio = (() => {
 
   /* Drag pan on empty SVG (not on green arm) */
   svg.addEventListener('pointerdown', e=>{
+    if (lockGonio) return;                           // NEW
     if (e.target.closest('#armB_grp')) return;
     e.preventDefault(); draggingPan = true;
     lastPanScreen = { x: e.clientX, y: e.clientY };
     svg.setPointerCapture?.(e.pointerId);
   });
   svg.addEventListener('pointermove', e=>{
+    if (lockGonio) return;                           // NEW
     if (!draggingPan || !lastPanScreen) return;
     e.preventDefault();
     const dx = (e.clientX - lastPanScreen.x) / (zoom * scale);
@@ -520,6 +537,7 @@ const Gonio = (() => {
   svg.addEventListener('pointercancel',()=>{ draggingPan=false; lastPanScreen=null; });
 
   svg.addEventListener('wheel', e=>{
+    if (lockGonio) return;                           // NEW
     e.preventDefault();
     const step=Math.sign(e.deltaY)<0?S.WHEEL_STEP:1/S.WHEEL_STEP;
     const accel=Math.exp(Math.log(S.WHEEL_STEP)*Math.abs(e.deltaY)*S.WHEEL_ACCEL);
@@ -534,11 +552,13 @@ const Gonio = (() => {
 
   /* GREEN ARM DRAG */
   function startArmDrag(e){
+    if (lockGonio) return;                           // NEW
     e.stopPropagation(); e.preventDefault();
     document.getElementById('armB_grp').setPointerCapture?.(e.pointerId);
     draggingArm = true;
   }
   function moveArm(e){
+    if (lockGonio) return;                           // NEW
     if(!draggingArm) return;
     e.stopPropagation(); e.preventDefault();
     const pt = svg.createSVGPoint(); pt.x=e.clientX; pt.y=e.clientY;
