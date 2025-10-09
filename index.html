@@ -82,11 +82,9 @@
   <label>Gonio Size (10–200%)</label>
   <input type="range" min="10" max="200" step="5" value="100" id="gonioSize">
 
-  <!-- NEW: rotate the moving (green) arm -->
   <label>Rotate Moving Arm (°)</label>
   <input type="range" min="0" max="360" step="1" value="30" id="rotateMove">
 
-  <!-- NEW: spin the entire goniometer body -->
   <label>Rotate Goniometer (°)</label>
   <input type="range" min="0" max="360" step="1" value="0" id="rotateGonio">
 
@@ -108,7 +106,8 @@
         <g id="mirrorWrap" transform="scale(1,1)">
           <g id="instrument">
             <g id="head">
-              <circle r="120" fill="#0f172a" stroke="#94a3b8" stroke-width="1.6"/>
+              <!-- CHANGED: fill="none" so the center is transparent -->
+              <circle r="120" fill="none" stroke="#94a3b8" stroke-width="1.6"/>
               <circle r="86"  fill="none" stroke="#94a3b8" stroke-width="0.9" opacity="0.65"/>
               <g id="ticks"></g>
               <g id="labelsFixed">
@@ -169,8 +168,8 @@ const toast = document.getElementById("toast");
 const lock3DBtn = document.getElementById("lock3D");
 const lockGonioBtn = document.getElementById("lockGonio");
 const sizeEl = document.getElementById("gonioSize");
-const rotateMoveEl = document.getElementById("rotateMove");      // NEW
-const rotateGonioEl = document.getElementById("rotateGonio");    // NEW
+const rotateMoveEl = document.getElementById("rotateMove");
+const rotateGonioEl = document.getElementById("rotateGonio");
 const log = (t)=>{ logEl.textContent += t + "\n"; logEl.scrollTop = logEl.scrollHeight; };
 
 /* ===== Three.js ===== */
@@ -330,7 +329,6 @@ function autoAlignGonioFromDots(f, s, m){
   const baseDeg = Gonio.degFromScreenVec(Ss.x - Fs.x, Ss.y - Fs.y);   // red→stationary
   const movDeg  = Gonio.degFromScreenVec(Ms.x - Fs.x, Ms.y - Fs.y);   // green→moving
   Gonio.show(); Gonio.setPose(Fs.x, Fs.y, baseDeg, movDeg);           // center=fulcrum
-  // Sync sliders to what the gonio just became
   rotateGonioEl.value = Math.round(Gonio.getUserRot());
   rotateMoveEl.value  = Math.round(Gonio.getMovDegAbs());
 }
@@ -353,7 +351,6 @@ function updateFromLocals() {
     const ang = THREE.MathUtils.radToDeg(Math.acos(THREE.MathUtils.clamp(vs.dot(vm), -1, 1)));
     setAngle(ang); autoAlignGonioFromDots(f,s,m);
 
-    // Auto-turn Measure OFF when gonio first appears
     if (followMeasure) {
       followMeasure = false;
       measureToggle.textContent = "🧭 Measure: OFF";
@@ -396,16 +393,8 @@ lock3DBtn.onclick = ()=> set3DLock(!lock3D);
 lockGonioBtn.onclick = ()=> setGonioLock(!lockGonio);
 
 sizeEl.oninput = ()=> { Gonio.setScale(parseInt(sizeEl.value,10)/100); Gonio.refresh(); };
-
-/* NEW: sliders to rotate moving arm and whole goniometer */
-rotateMoveEl.oninput = ()=>{
-  Gonio.setMovDegAbs(parseFloat(rotateMoveEl.value));
-  setAngle(Gonio.angle);
-};
-rotateGonioEl.oninput = ()=>{
-  Gonio.setUserRot(parseFloat(rotateGonioEl.value));
-  setAngle(Gonio.angle);
-};
+rotateMoveEl.oninput = ()=>{ Gonio.setMovDegAbs(parseFloat(rotateMoveEl.value)); setAngle(Gonio.angle); };
+rotateGonioEl.oninput = ()=>{ Gonio.setUserRot(parseFloat(rotateGonioEl.value)); setAngle(Gonio.angle); };
 
 function showToast(){ toast.style.display='block'; clearTimeout(showToast.tid); showToast.tid=setTimeout(()=>toast.style.display='none',1200); }
 
@@ -417,9 +406,7 @@ const clock = new THREE.Clock();
   controls.update();
 
   if (followMeasure) updateFromLocals();
-  if (!document.getElementById('gonioHost').classList.contains('hide')) {
-    setAngle(Gonio.angle);
-  }
+  if (!document.getElementById('gonioHost').classList.contains('hide')) setAngle(Gonio.angle);
 
   renderer.render(scene, camera);
   layoutLabels();
@@ -576,7 +563,7 @@ const Gonio = (() => {
   function setScale(k){ scale=Math.min(2,Math.max(0.1,k||1)); clampPanToViewport(); applyView(); }
   function degFromScreenVec(dx,dy){ return toDegUp(dx,dy); }
 
-  // NEW helpers for UI sliders:
+  // slider helpers
   function setMovDegAbs(deg){ mov = clamp360(deg); render(); }
   function setUserRot(deg){ userRot = clamp360(deg); applyRot(); applyLabelFix(); render(); }
   function getUserRot(){ return clamp360(userRot); }
