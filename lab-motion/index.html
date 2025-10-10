@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>3D Motion Lab — Anatomical Joints</title>
 
-  <!-- Import map -->
   <script type="importmap">
   {
     "imports": {
@@ -19,17 +18,10 @@
     :root{--bg:#0b1220;--panel:#0f172a;--line:#1f2937;--ctrl:#1e293b;--text:#e2e8f0;--muted:#cbd5e1}
     html,body{margin:0;height:100%;background:var(--bg);color:var(--text);overflow:hidden;font-family:system-ui,Segoe UI,Roboto}
     canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
-
-    .panel{
-      position:fixed;left:12px;top:12px;width:360px;max-height:90vh;z-index:10;
-      background:var(--panel);border:1px solid var(--line);border-radius:12px;
-      box-shadow:0 8px 28px rgba(0,0,0,.4);display:flex;flex-direction:column;overflow:hidden;
-    }
-    .dragbar{cursor:move;background:#0c1628;border-bottom:1px solid #162235;
-      padding:8px 12px;font-weight:700;display:flex;align-items:center;gap:8px}
+    .panel{position:fixed;left:12px;top:12px;width:360px;max-height:90vh;z-index:10;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.4);display:flex;flex-direction:column;overflow:hidden}
+    .dragbar{cursor:move;background:#0c1628;border-bottom:1px solid #162235;padding:8px 12px;font-weight:700;display:flex;align-items:center;gap:8px}
     .dragbar .hint{margin-left:auto;font-size:12px;color:#9fb0c9}
     .content{padding:12px;overflow:auto}
-
     label{display:block;font-size:12px;margin-top:8px;color:var(--muted)}
     select,button,input[type=range]{width:100%;margin:6px 0 8px 0;padding:8px 10px;border-radius:10px;background:var(--ctrl);border:1px solid #334155;color:var(--text)}
     .row{display:flex;gap:8px}.row>button{flex:1}
@@ -37,10 +29,8 @@
     .seg{display:flex;gap:8px}
     .seg button{flex:1;padding:8px 10px;border-radius:10px;background:#142033;border:1px solid #334155;color:#cbd5e1}
     .seg button.on{background:#1f2c43;color:#fff;border-color:#47618e}
-
     details{border:1px solid #162235;border-radius:10px;padding:8px;background:#0b1426;margin-top:8px}
     summary{cursor:pointer;font-weight:600;color:#dbe7ff}
-
     #log{background:#0b1220;border:1px solid #1f2937;min-height:100px;max-height:140px;overflow:auto;border-radius:8px;padding:8px;font-size:12px;white-space:pre-wrap}
     #msg{position:fixed;bottom:10px;left:12px;background:rgba(15,23,42,.75);border:1px solid #334155;border-radius:8px;padding:6px 10px;font-size:12px;z-index:20}
     optgroup{color:#9fb0c9;font-style:normal}
@@ -457,13 +447,16 @@
         ["pip_toe_f",{label:"PIP Flexion (Toe)", axis:"z", sign:-1, side:"", bones:[/pip/i], range:[0,35]}],
         ["pip_toe_e",{label:"PIP Extension (Toe)", axis:"z", sign:+1, side:"", bones:[/pip/i], range:[-5,0]}],
         ["dip_flex",{label:"DIP Flexion", axis:"z", sign:-1, side:"", bones:[/dip/i], range:[0,90]}],
-        ["dip_ext",{label:"DIP Extension", axis:"z", sign:+1, side:"", bones:[/dip/i], range:[-10,0]}],  
+        ["dip_ext",{label:"DIP Extension", axis:"z", sign:+1, side:"", bones:[/dip/i], range:[-10,0]}]
       ]]
     ]
   };
 
+  /* GLOBAL current region (FIX) */
+  let CURRENT = null;
+
   function setRegion(which){
-    CURRENT = (which==='upper') ? UPPER : LOWER;
+    CURRENT = (which==='upper') ? UPPER : LOWER;   // <-- no 'let' here
     segUpper.classList.toggle('on', which==='upper');
     segLower.classList.toggle('on', which!=='upper');
     segUpper.setAttribute('aria-selected', String(which==='upper'));
@@ -471,7 +464,9 @@
     fillActionMenu();
     syncActionUI();
   }
+
   function fillActionMenu(){
+    if (!CURRENT) return;
     actionSel.innerHTML = "";
     for (const [groupName, items] of CURRENT.groups){
       const og = document.createElement("optgroup");
@@ -480,12 +475,15 @@
         const o = document.createElement("option");
         o.value = key;
         o.textContent = cfg.label;
-        actionSel.appendChild(o);
+        og.appendChild(o);                 // <-- append to optgroup
       }
       actionSel.appendChild(og);
     }
+    if (actionSel.options.length) actionSel.selectedIndex = 0;
   }
+
   function cfgFromKey(key){
+    if (!CURRENT) return null;
     for (const [, items] of CURRENT.groups){
       for (const [k,c] of items){
         if (k === key) return c;
@@ -493,6 +491,7 @@
     }
     return null;
   }
+
   function syncActionUI(){
     const key = actionSel.value;
     const cfg = cfgFromKey(key);
@@ -527,7 +526,7 @@
   }
 
   function zeroAllJoints(){
-    for (const [k,bind] of JOINT_BIND.entries()){
+    for (const [,bind] of JOINT_BIND.entries()){
       bind.bone.quaternion.copy(bind.qBind);
     }
     actionDeg.value = "0";
@@ -536,42 +535,22 @@
 
   function applyPosturePreset(kind){
     zeroAllJoints();
-
-    if (kind === "stand"){
-      model.rotation.x = 0;
-      groundSnap(); fitView();
-      return;
-    }
+    if (kind === "stand"){ model.rotation.x = 0; groundSnap(); fitView(); return; }
     if (kind === "sit"){
-      // Seated: flex thighs, knees, small ankle DF
       const L = findOne([/\bupper.?leg_l\b/i, /\bthigh_l\b/i]);
       const R = findOne([/\bupper.?leg_r\b/i, /\bthigh_r\b/i]);
       if (L) rotateBoneDelta(L, -90, 0, 0);
       if (R) rotateBoneDelta(R, -90, 0, 0);
-      const kfl = cfgFromKey("knee_flex_l");
-      const kfr = cfgFromKey("knee_flex_r");
-      applyMotion("knee_flex_l", kfl, 90);
-      applyMotion("knee_flex_r", kfr, 90);
-      const adfl = cfgFromKey("ankle_df_l");
-      const adfr = cfgFromKey("ankle_df_r");
-      applyMotion("ankle_df_l", adfl, 5);
-      applyMotion("ankle_df_r", adfr, 5);
-      model.rotation.x = 0;
-      groundSnap(); fitView();
-      return;
+      const kfl = cfgFromKey("knee_flex_l"); const kfr = cfgFromKey("knee_flex_r");
+      if (kfl) applyMotion("knee_flex_l", kfl, 90);
+      if (kfr) applyMotion("knee_flex_r", kfr, 90);
+      const adfl = cfgFromKey("ankle_df_l"); const adfr = cfgFromKey("ankle_df_r");
+      if (adfl) applyMotion("ankle_df_l", adfl, 5);
+      if (adfr) applyMotion("ankle_df_r", adfr, 5);
+      model.rotation.x = 0; groundSnap(); fitView(); return;
     }
-    if (kind === "supine"){
-      model.rotation.x = Math.PI/2;
-      model.position.y += 0.02;
-      groundSnap(); fitView();
-      return;
-    }
-    if (kind === "prone"){
-      model.rotation.x = -Math.PI/2;
-      model.position.y += 0.02;
-      groundSnap(); fitView();
-      return;
-    }
+    if (kind === "supine"){ model.rotation.x = Math.PI/2; model.position.y += 0.02; groundSnap(); fitView(); return; }
+    if (kind === "prone"){ model.rotation.x = -Math.PI/2; model.position.y += 0.02; groundSnap(); fitView(); return; }
   }
 
   /* ===== UI wiring ===== */
@@ -597,9 +576,7 @@
     if (b) log(`Bound to bone: ${b.bone.name}`);
   };
 
-  boneSel.onchange = () => {
-    rx.value="0"; ry.value="0"; rz.value="0"; setBoneRotationFromUI();
-  };
+  boneSel.onchange = () => { rx.value="0"; ry.value="0"; rz.value="0"; setBoneRotationFromUI(); };
   [rx,ry,rz].forEach(el => el.addEventListener("input", setBoneRotationFromUI));
   [mx,my,mz,ms,myaw].forEach(el => el.addEventListener("input", () => {
     if (!model) return;
@@ -610,18 +587,10 @@
   zeroBone.onclick = zeroSelectedBone;
   resetModel.onclick = () => {
     mx.value="0"; my.value="0"; mz.value="0.6"; ms.value="100"; myaw.value="0";
-    if (model) {
-      model.position.set(0,0,0.6);
-      model.scale.setScalar(1);
-      model.rotation.y = 0;
-    }
+    if (model) { model.position.set(0,0,0.6); model.scale.setScalar(1); model.rotation.y = 0; }
     groundSnap(); fitView();
   };
-  reloadBtn.onclick = () => {
-    MODEL_URL = pickModelUrl();
-    log(`Reload: ${MODEL_URL}`);
-    loadModel();
-  };
+  reloadBtn.onclick = () => { MODEL_URL = pickModelUrl(); log(`Reload: ${MODEL_URL}`); loadModel(); };
   fitBtn.onclick = fitView;
   applyPosture.onclick = () => applyPosturePreset(postureSel.value);
   zeroAll.onclick = zeroAllJoints;
@@ -652,17 +621,11 @@
         msg.textContent = "✅ Model loaded";
         log("Model load OK");
         populateBones();
-        setRegion("upper");
+        setRegion("upper");       // initializes CURRENT + menu
         syncActionUI();
       },
-      (xhr) => {
-        msg.textContent = xhr.lengthComputable ? `Loading ${Math.round((xhr.loaded/xhr.total)*100)}%` : "Loading…";
-      },
-      (err) => {
-        console.error(err);
-        msg.textContent = "⚠️ Load error";
-        log(`Error: ${err?.message || err}`);
-      }
+      (xhr) => { msg.textContent = xhr.lengthComputable ? `Loading ${Math.round((xhr.loaded/xhr.total)*100)}%` : "Loading…"; },
+      (err) => { console.error(err); msg.textContent = "⚠️ Load error"; log(`Error: ${err?.message || err}`); }
     );
   }
   loadModel();
