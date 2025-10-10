@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>3D Motion Lab — Joints</title>
+<title>3D Motion Lab — Joint Manager</title>
 
 <!-- Import map -->
 <script type="importmap">
@@ -19,11 +19,19 @@
   :root{--bg:#0b1220;--panel:#0f172a;--line:#1f2937;--ctrl:#1e293b;--text:#e2e8f0;--muted:#cbd5e1}
   html,body{margin:0;height:100%;background:var(--bg);color:var(--text);overflow:hidden;font-family:system-ui,Segoe UI,Roboto}
   canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
+
+  /* Floating draggable panel */
   .panel{
-    position:fixed;left:0;top:0;bottom:0;width:380px;z-index:10;
-    background:var(--panel);border-right:1px solid var(--line);padding:14px;overflow:auto
+    position:fixed;left:12px;top:12px;width:360px;max-height:92vh;z-index:10;
+    background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.4);
+    display:flex;flex-direction:column;overflow:hidden
   }
-  h3{margin:6px 0 10px 0}
+  .dragbar{cursor:move;-webkit-app-region:drag;background:#0c1628;border-bottom:1px solid #162235;
+    padding:8px 12px;font-weight:700;display:flex;align-items:center;gap:8px}
+  .dragbar .hint{margin-left:auto;font-size:12px;color:#9fb0c9}
+  .content{padding:12px;overflow:auto}
+
+  h4{margin:6px 0 8px 0}
   label{display:block;font-size:12px;margin-top:8px;color:var(--muted)}
   select,button,input[type=range]{width:100%;margin:6px 0 8px 0;padding:8px 10px;border-radius:10px;background:var(--ctrl);border:1px solid #334155;color:var(--text)}
   .row{display:flex;gap:8px}.row>button{flex:1}
@@ -32,90 +40,108 @@
   .seg{display:flex;gap:8px}
   .seg button{flex:1;padding:8px 10px;border-radius:10px;background:#142033;border:1px solid #334155;color:#cbd5e1}
   .seg button.on{background:#1f2c43;color:#fff;border-color:#47618e}
-  #log{background:#0b1220;border:1px solid #1f2937;min-height:120px;max-height:180px;overflow:auto;border-radius:8px;padding:8px;font-size:12px;white-space:pre-wrap}
-  #msg{position:fixed;top:10px;left:10px;background:rgba(15,23,42,.75);border:1px solid #334155;border-radius:8px;padding:6px 10px;font-size:12px;z-index:20}
+
+  details{border:1px solid #162235;border-radius:10px;padding:8px;background:#0b1426;margin-top:8px}
+  summary{cursor:pointer;font-weight:600;color:#dbe7ff}
+
+  #log{background:#0b1220;border:1px solid #1f2937;min-height:100px;max-height:140px;overflow:auto;border-radius:8px;padding:8px;font-size:12px;white-space:pre-wrap}
+
+  #msg{position:fixed;bottom:10px;left:12px;background:rgba(15,23,42,.75);border:1px solid #334155;border-radius:8px;padding:6px 10px;font-size:12px;z-index:20}
 </style>
 </head>
 <body>
-<div class="panel" aria-label="Motion Lab Controls">
-  <h3>3D Motion Lab</h3>
+<div class="panel" id="panel" aria-label="Motion Lab Controls">
+  <div class="dragbar" id="dragbar">🧭 Joint Manager <span class="hint">drag me</span></div>
+  <div class="content">
+    <label>Model URL (optional via ?model=)</label>
+    <div class="row">
+      <button id="reload" class="mini">Reload Model</button>
+      <button id="fit" class="mini">Fit View</button>
+    </div>
 
-  <label>Model URL (optional via ?model=)</label>
-  <div class="row">
-    <button id="reload" class="mini">Reload Model</button>
-    <button id="fit" class="mini">Fit View</button>
-  </div>
+    <label>Posture</label>
+    <select id="postureSel">
+      <option value="stand">Stand (neutral)</option>
+      <option value="sit">Sit 90/90</option>
+      <option value="supine">Supine</option>
+      <option value="prone">Prone</option>
+    </select>
+    <div class="row">
+      <button id="applyPosture" class="mini">Apply</button>
+      <button id="zeroAll" class="mini">Zero All Joints</button>
+    </div>
 
-  <label>Body Region</label>
-  <div class="seg" role="tablist" aria-label="Body Region">
-    <button id="segUpper" class="on" role="tab" aria-selected="true">Upper Body</button>
-    <button id="segLower" role="tab" aria-selected="false">Lower Body</button>
-  </div>
+    <label>Body Region</label>
+    <div class="seg" role="tablist" aria-label="Body Region">
+      <button id="segUpper" class="on" role="tab" aria-selected="true">Upper Body</button>
+      <button id="segLower" role="tab" aria-selected="false">Lower Body</button>
+    </div>
 
-  <label>Joints</label>
-  <div class="grid">
-    <div>
-      <label for="jointSel">Joint</label>
-      <select id="jointSel" name="jointSel"></select>
+    <label>Joint</label>
+    <div class="grid">
+      <div>
+        <label for="jointSel">Action</label>
+        <select id="jointSel" name="jointSel"></select>
+      </div>
+      <div>
+        <label for="jointAngle">Angle (°)</label>
+        <input type="range" id="jointAngle" min="-90" max="150" step="1" value="0">
+      </div>
     </div>
-    <div>
-      <label for="jointAngle">Angle (°)</label>
-      <input type="range" id="jointAngle" min="-90" max="150" step="1" value="0">
+    <div class="row">
+      <button id="jointZero" class="mini">Zero Joint</button>
+      <button id="jointLog" class="mini">Log Joint Bone</button>
     </div>
-  </div>
-  <div class="row">
-    <button id="jointZero" class="mini">Zero Joint</button>
-    <button id="jointLog" class="mini">Log Joint Bone</button>
-  </div>
 
-  <label>Bone (auto-detected)</label>
-  <select id="boneSel"></select>
-  <div class="grid">
-    <div>
-      <label>Rotate X (°)</label>
-      <input type="range" min="-180" max="180" step="1" value="0" id="rx">
-    </div>
-    <div>
-      <label>Rotate Y (°)</label>
-      <input type="range" min="-180" max="180" step="1" value="0" id="ry">
-    </div>
-  </div>
-  <label>Rotate Z (°)</label>
-  <input type="range" min="-180" max="180" step="1" value="0" id="rz">
-  <div class="row">
-    <button id="zeroBone" class="mini">Zero Bone</button>
-  </div>
+    <details>
+      <summary>Bone (Advanced)</summary>
+      <label>Bone (auto-detected list)</label>
+      <select id="boneSel"></select>
+      <div class="grid">
+        <div>
+          <label>Rotate X (°)</label>
+          <input type="range" min="-180" max="180" step="1" value="0" id="rx">
+        </div>
+        <div>
+          <label>Rotate Y (°)</label>
+          <input type="range" min="-180" max="180" step="1" value="0" id="ry">
+        </div>
+      </div>
+      <label>Rotate Z (°)</label>
+      <input type="range" min="-180" max="180" step="1" value="0" id="rz">
+      <div class="row"><button id="zeroBone" class="mini">Zero Bone</button></div>
+    </details>
 
-  <label>Model (no rig required)</label>
-  <div class="grid">
-    <div>
-      <label>Model X (m)</label>
-      <input type="range" min="-2" max="2" step="0.01" value="0" id="mx">
-    </div>
-    <div>
-      <label>Model Z (m)</label>
-      <input type="range" min="-2" max="2" step="0.01" value="0.6" id="mz">
-    </div>
-  </div>
-  <div class="grid">
-    <div>
-      <label>Model Y (m)</label>
-      <input type="range" min="-0.2" max="0.6" step="0.005" value="0" id="my">
-    </div>
-    <div>
-      <label>Scale (%)</label>
-      <input type="range" min="40" max="200" step="1" value="100" id="ms">
-    </div>
-  </div>
-  <label>Yaw (°)</label>
-  <input type="range" min="0" max="360" step="1" value="0" id="myaw">
+    <details>
+      <summary>Model (no rig required)</summary>
+      <div class="grid">
+        <div>
+          <label>Model X (m)</label>
+          <input type="range" min="-2" max="2" step="0.01" value="0" id="mx">
+        </div>
+        <div>
+          <label>Model Z (m)</label>
+          <input type="range" min="-2" max="2" step="0.01" value="0.6" id="mz">
+        </div>
+      </div>
+      <div class="grid">
+        <div>
+          <label>Model Y (m)</label>
+          <input type="range" min="-0.2" max="0.6" step="0.005" value="0" id="my">
+        </div>
+        <div>
+          <label>Scale (%)</label>
+          <input type="range" min="40" max="200" step="1" value="100" id="ms">
+        </div>
+      </div>
+      <label>Yaw (°)</label>
+      <input type="range" min="0" max="360" step="1" value="0" id="myaw">
+      <div class="row"><button id="resetModel" class="mini">Reset Model</button></div>
+    </details>
 
-  <div class="row">
-    <button id="resetModel" class="mini">Reset Model</button>
+    <label>Event Log</label>
+    <pre id="log"></pre>
   </div>
-
-  <label>Event Log</label>
-  <pre id="log"></pre>
 </div>
 
 <div id="msg">Loading…</div>
@@ -129,13 +155,19 @@ import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 
-/* ===== UI ===== */
+/* ===== UI & helpers ===== */
 const msg = document.getElementById("msg");
 const logEl = document.getElementById("log");
 const log = (t)=>{ logEl.textContent += t + "\\n"; logEl.scrollTop = logEl.scrollHeight; };
 
+const panel = document.getElementById("panel");
+const dragbar = document.getElementById("dragbar");
+
 const reloadBtn = document.getElementById("reload");
 const fitBtn = document.getElementById("fit");
+const postureSel = document.getElementById("postureSel");
+const applyPosture = document.getElementById("applyPosture");
+const zeroAll = document.getElementById("zeroAll");
 
 const segUpper = document.getElementById("segUpper");
 const segLower = document.getElementById("segLower");
@@ -158,7 +190,25 @@ const ms = document.getElementById("ms");
 const myaw = document.getElementById("myaw");
 const resetModel = document.getElementById("resetModel");
 
-/* ===== Three setup ===== */
+/* ===== Draggable panel ===== */
+(function makeDraggable(){
+  let dragging=false, sx=0, sy=0, startLeft=0, startTop=0;
+  const onDown=(e)=>{ dragging=true; sx=e.clientX; sy=e.clientY;
+    const r=panel.getBoundingClientRect(); startLeft=r.left; startTop=r.top;
+    e.preventDefault();
+  };
+  const onMove=(e)=>{ if(!dragging) return;
+    const dx=e.clientX-sx, dy=e.clientY-sy;
+    panel.style.left = Math.max(8, startLeft+dx) + "px";
+    panel.style.top  = Math.max(8, startTop +dy) + "px";
+  };
+  const onUp=()=>{ dragging=false; };
+  dragbar.addEventListener("pointerdown", onDown);
+  window.addEventListener("pointermove", onMove);
+  window.addEventListener("pointerup", onUp);
+})();
+
+/* ===== Three.js ===== */
 const canvas = document.getElementById("c");
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setPixelRatio(devicePixelRatio);
@@ -182,19 +232,14 @@ controls.target.set(0,1.1,0);
 scene.add(new THREE.HemisphereLight(0xffffff, 0x333344, 0.7));
 const key = new THREE.DirectionalLight(0xffffff, 1.2);
 key.position.set(2.5,4,2.5);
-key.castShadow = true;
-key.shadow.mapSize.set(2048,2048);
+key.castShadow = true; key.shadow.mapSize.set(2048,2048);
 key.shadow.camera.near = 0.1; key.shadow.camera.far = 15;
 key.shadow.camera.left = -4; key.shadow.camera.right = 4;
 key.shadow.camera.top = 4; key.shadow.camera.bottom = -4;
 scene.add(key);
 
-const ground = new THREE.Mesh(
-  new THREE.PlaneGeometry(20,20),
-  new THREE.ShadowMaterial({ opacity: 0.45 })
-);
-ground.rotation.x = -Math.PI/2; ground.receiveShadow = true;
-scene.add(ground);
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(20,20), new THREE.ShadowMaterial({ opacity: 0.45 }));
+ground.rotation.x = -Math.PI/2; ground.receiveShadow = true; scene.add(ground);
 
 /* ===== Loader ===== */
 const loader = new GLTFLoader();
@@ -225,10 +270,7 @@ function autoScaleToHeight(targetMeters=1.75){
   const h = box.max.y - box.min.y;
   if (!isFinite(h) || h <= 0) return;
   const s = targetMeters / h;
-  if (s < 0.4 || s > 2.5) {
-    model.scale.multiplyScalar(s);
-    log(`Auto-scaled by ${s.toFixed(2)}×`);
-  }
+  if (s < 0.4 || s > 2.5) { model.scale.multiplyScalar(s); log(`Auto-scaled by ${s.toFixed(2)}×`); }
 }
 function fitView(){
   const box = new THREE.Box3().setFromObject(model || scene);
@@ -241,14 +283,13 @@ function fitView(){
   camera.lookAt(center);
 }
 
-/* ===== Bone list / sliders ===== */
+/* ===== Bone list (Advanced) ===== */
 function populateBones(){
   boneSel.innerHTML = "";
   if (!skeleton) {
     const o = document.createElement("option");
     o.value = ""; o.textContent = "(No skeleton found)";
-    boneSel.appendChild(o);
-    return;
+    boneSel.appendChild(o); return;
   }
   skeleton.bones.forEach((b,i)=>{
     const o = document.createElement("option");
@@ -258,8 +299,7 @@ function populateBones(){
     if (!initialBoneRot.has(b)) initialBoneRot.set(b, b.quaternion.clone());
   });
   if (skeleton.bones.length) boneSel.value = "0";
-  rx.value="0"; ry.value="0"; rz.value="0";
-  setBoneRotationFromUI(); // apply 0 delta
+  rx.value="0"; ry.value="0"; rz.value="0"; setBoneRotationFromUI();
 }
 function setBoneRotationFromUI(){
   const idx = parseInt(boneSel.value || "-1", 10);
@@ -275,82 +315,55 @@ function setBoneRotationFromUI(){
 function zeroSelectedBone(){
   const idx = parseInt(boneSel.value || "-1", 10);
   if (!skeleton || isNaN(idx) || !skeleton.bones[idx]) return;
-  const b = skeleton.bones[idx];
-  const q0 = initialBoneRot.get(b);
-  if (q0) b.quaternion.copy(q0);
-  rx.value="0"; ry.value="0"; rz.value="0";
+  const b = skeleton.bones[idx]; const q0 = initialBoneRot.get(b);
+  if (q0) b.quaternion.copy(q0); rx.value="0"; ry.value="0"; rz.value="0";
 }
 
-/* ===== Joint controls (clinical motions) ===== */
-/* Upper body joints */
+/* ===== Joints (no hip root) ===== */
+/* Upper Body */
 const JOINTS_UPPER = {
-  wrist_fe_l:  { id:'wrist_fe_l',  side:'l', bones:[/wrist|hand/i,/\bhand_l\b/i], axis:'x', sign:-1, range:[-80,80]  },
-  wrist_fe_r:  { id:'wrist_fe_r',  side:'r', bones:[/wrist|hand/i,/\bhand_r\b/i], axis:'x', sign:-1, range:[-80,80]  },
-  wrist_ru_l:  { id:'wrist_ru_l',  side:'l', bones:[/wrist|hand/i,/\bhand_l\b/i], axis:'z', sign:+1, range:[-30,30]  },
-  wrist_ru_r:  { id:'wrist_ru_r',  side:'r', bones:[/wrist|hand/i,/\bhand_r\b/i], axis:'z', sign:-1, range:[-30,30]  },
-  forearm_ps_l:{ id:'forearm_ps_l',side:'l', bones:[/forearm|radius|ulna/i,/\blowerarm_l\b/i], axis:'y', sign:+1, range:[-90,90]  },
-  forearm_ps_r:{ id:'forearm_ps_r',side:'r', bones:[/forearm|radius|ulna/i,/\blowerarm_r\b/i], axis:'y', sign:-1, range:[-90,90]  }
+  wrist_fe_l:  { id:'wrist_fe_l',  side:'l', bones:[/wrist|hand/i,/\bhand_l\b/i], axis:'x', sign:-1, range:[-80,80],  label:"Wrist Flex/Ext — Left" },
+  wrist_fe_r:  { id:'wrist_fe_r',  side:'r', bones:[/wrist|hand/i,/\bhand_r\b/i], axis:'x', sign:-1, range:[-80,80],  label:"Wrist Flex/Ext — Right" },
+  wrist_ru_l:  { id:'wrist_ru_l',  side:'l', bones:[/wrist|hand/i,/\bhand_l\b/i], axis:'z', sign:+1, range:[-30,30],  label:"Wrist Radial/Ulnar — Left" },
+  wrist_ru_r:  { id:'wrist_ru_r',  side:'r', bones:[/wrist|hand/i,/\bhand_r\b/i], axis:'z', sign:-1, range:[-30,30],  label:"Wrist Radial/Ulnar — Right" },
+  forearm_ps_l:{ id:'forearm_ps_l',side:'l', bones:[/forearm|radius|ulna/i,/\blowerarm_l\b/i], axis:'y', sign:+1, range:[-90,90],  label:"Forearm Pro/Sup — Left" },
+  forearm_ps_r:{ id:'forearm_ps_r',side:'r', bones:[/forearm|radius|ulna/i,/\blowerarm_r\b/i], axis:'y', sign:-1, range:[-90,90],  label:"Forearm Pro/Sup — Right" }
 };
-/* Lower body joints */
+/* Lower Body (no hip root; knee & ankle only) */
 const JOINTS_LOWER = {
-  knee_flex_l: { id:'knee_flex_l', side:'l', bones:[/knee/i,/lower.?leg|calf|shin/i,/\blowerleg_l\b/i,/\bup?leg_l\b/i], axis:'x', sign:-1, range:[-5,140] },
-  knee_flex_r: { id:'knee_flex_r', side:'r', bones:[/knee/i,/lower.?leg|calf|shin/i,/\blowerleg_r\b/i,/\bup?leg_r\b/i], axis:'x', sign:-1, range:[-5,140] },
-  ankle_dp_l:  { id:'ankle_dp_l',  side:'l', bones:[/ankle|foot/i,/\bfoot_l\b/i,/\b(?:left)?foot\b/i], axis:'x', sign:-1, range:[-30,50]  },
-  ankle_dp_r:  { id:'ankle_dp_r',  side:'r', bones:[/ankle|foot/i,/\bfoot_r\b/i,/\b(?:right)?foot\b/i], axis:'x', sign:-1, range:[-30,50]  }
+  knee_flex_l: { id:'knee_flex_l', side:'l', bones:[/knee/i,/lower.?leg|calf|shin/i,/\blowerleg_l\b/i,/\bup?leg_l\b/i], axis:'x', sign:-1, range:[-5,140], label:"Knee Flex/Ext — Left" },
+  knee_flex_r: { id:'knee_flex_r', side:'r', bones:[/knee/i,/lower.?leg|calf|shin/i,/\blowerleg_r\b/i,/\bup?leg_r\b/i], axis:'x', sign:-1, range:[-5,140], label:"Knee Flex/Ext — Right" },
+  ankle_dp_l:  { id:'ankle_dp_l',  side:'l', bones:[/ankle|foot/i,/\bfoot_l\b/i,/\b(?:left)?foot\b/i], axis:'x', sign:-1, range:[-30,50],  label:"Ankle Dorsi/Plantar — Left" },
+  ankle_dp_r:  { id:'ankle_dp_r',  side:'r', bones:[/ankle|foot/i,/\bfoot_r\b/i,/\b(?:right)?foot\b/i], axis:'x', sign:-1, range:[-30,50],  label:"Ankle Dorsi/Plantar — Right" }
 };
-let JOINTS = JOINTS_UPPER; // start with upper
-
+let JOINTS = JOINTS_UPPER;
 const JOINT_BIND = new Map(); // id -> { bone, qBind }
 
 function setJointRegion(which){
   JOINTS = (which==='upper') ? JOINTS_UPPER : JOINTS_LOWER;
-  segUpper.classList.toggle('on', which==='upper');
-  segLower.classList.toggle('on', which!=='upper');
+  segUpper.classList.toggle('on', which==='upper'); segLower.classList.toggle('on', which!=='upper');
   segUpper.setAttribute('aria-selected', String(which==='upper'));
   segLower.setAttribute('aria-selected', String(which!=='upper'));
-  populateJointSelect();
-  syncJointUI();
+  populateJointSelect(); syncJointUI();
 }
 function populateJointSelect(){
   jointSel.innerHTML = "";
-  const entries = Object.values(JOINTS);
-  for (const j of entries){
-    const opt = document.createElement('option');
-    opt.value = j.id;
-    opt.textContent = labelForJoint(j.id);
-    jointSel.appendChild(opt);
-  }
-  if (entries.length) jointSel.value = entries[0].id;
+  const list = Object.values(JOINTS);
+  list.forEach(j=>{
+    const o=document.createElement("option");
+    o.value=j.id; o.textContent=j.label; jointSel.appendChild(o);
+  });
+  if (list.length) jointSel.value = list[0].id;
 }
-function labelForJoint(id){
-  const map = {
-    wrist_fe_l:"Wrist Flex/Ext — Left",
-    wrist_fe_r:"Wrist Flex/Ext — Right",
-    wrist_ru_l:"Wrist Radial/Ulnar — Left",
-    wrist_ru_r:"Wrist Radial/Ulnar — Right",
-    forearm_ps_l:"Forearm Pro/Sup — Left",
-    forearm_ps_r:"Forearm Pro/Sup — Right",
-    knee_flex_l:"Knee Flex/Ext — Left",
-    knee_flex_r:"Knee Flex/Ext — Right",
-    ankle_dp_l:"Ankle Dorsi/Plantar — Left",
-    ankle_dp_r:"Ankle Dorsi/Plantar — Right"
-  };
-  return map[id] || id;
-}
-
 function findBoneForJoint(cfg){
   if (!skeleton) return null;
-  const names = skeleton.bones.map(b=>b.name);
-  const lower = names.map(n=>n.toLowerCase());
+  const lower = skeleton.bones.map(b=>b.name.toLowerCase());
   const sideREs = cfg.side === 'l' ? [/left|_l\b|\.l\b/i] : [/right|_r\b|\.r\b/i];
-
   for (const cand of cfg.bones){
-    // prefer side-marked
     for (let i=0;i<lower.length;i++){
       if (!sideREs.some(re=>re.test(lower[i]))) continue;
       if (cand.test(lower[i])) return skeleton.bones[i];
     }
-    // any match
     for (let i=0;i<lower.length;i++){
       if (cand.test(lower[i])) return skeleton.bones[i];
     }
@@ -358,40 +371,36 @@ function findBoneForJoint(cfg){
   return null;
 }
 function resolveJoint(id){
-  if (!skeleton) return null;
   if (JOINT_BIND.has(id)) return JOINT_BIND.get(id);
-  const cfg = JOINTS[id]; if (!cfg) return null;
+  const cfg = JOINTS[id]; if (!cfg || !skeleton) return null;
   const bone = findBoneForJoint(cfg);
-  if (!bone) { log(`Joint '${id}': bone not found`); return null; }
+  if (!bone){ log(`Joint '${id}': bone not found`); return null; }
   const qBind = (initialBoneRot.get(bone) || bone.quaternion.clone()).clone();
-  const bind = { bone, qBind };
-  JOINT_BIND.set(id, bind);
-  log(`Joint '${id}' -> bone '${bone.name}'`);
-  return bind;
+  const pair = { bone, qBind }; JOINT_BIND.set(id, pair);
+  log(`Joint '${cfg.label}' -> bone '${bone.name}'`);
+  return pair;
 }
 function applyJointAngle(id, deg){
   const cfg = JOINTS[id]; if (!cfg) return;
   const bind = resolveJoint(id); if (!bind) return;
   const { bone, qBind } = bind;
-
-  const rad = THREE.MathUtils.degToRad((deg || 0) * cfg.sign);
+  const rad = THREE.MathUtils.degToRad((deg||0)*cfg.sign);
   const e = new THREE.Euler(0,0,0,"XYZ");
-  if (cfg.axis === 'x') e.set(rad,0,0,"XYZ");
-  if (cfg.axis === 'y') e.set(0,rad,0,"XYZ");
-  if (cfg.axis === 'z') e.set(0,0,rad,"XYZ");
-
+  if (cfg.axis==='x') e.set(rad,0,0,"XYZ");
+  if (cfg.axis==='y') e.set(0,rad,0,"XYZ");
+  if (cfg.axis==='z') e.set(0,0,rad,"XYZ");
   const qDelta = new THREE.Quaternion().setFromEuler(e);
   bone.quaternion.copy(qBind).multiply(qDelta);
 }
 function syncJointUI(){
-  const id = jointSel.value;
-  const cfg = JOINTS[id]; if (!cfg) return;
-  jointAngle.min = cfg.range[0];
-  jointAngle.max = cfg.range[1];
-  let v = parseFloat(jointAngle.value) || 0;
-  v = Math.min(cfg.range[1], Math.max(cfg.range[0], v));
-  jointAngle.value = String(v);
-  applyJointAngle(id, v);
+  const id = jointSel.value; const cfg = JOINTS[id]; if (!cfg) return;
+  jointAngle.min=cfg.range[0]; jointAngle.max=cfg.range[1];
+  let v=parseFloat(jointAngle.value)||0; v=Math.min(cfg.range[1],Math.max(cfg.range[0],v));
+  jointAngle.value=String(v); applyJointAngle(id,v);
+}
+function zeroAllJoints(){
+  [...JOINT_BIND.values()].forEach(({bone,qBind})=> bone.quaternion.copy(qBind));
+  jointAngle.value="0"; log("All joints zeroed");
 }
 
 /* ===== Model transforms ===== */
@@ -404,9 +413,42 @@ function applyModelUI(){
   model.rotation.y = THREE.MathUtils.degToRad(parseFloat(myaw.value));
 }
 function resetModelUI(){
-  mx.value="0"; my.value="0"; mz.value="0.6";
-  ms.value="100"; myaw.value="0";
+  mx.value="0"; my.value="0"; mz.value="0.6"; ms.value="100"; myaw.value="0";
   applyModelUI(); groundSnap(); fitView();
+}
+
+/* ===== Postures (bundle moves) ===== */
+function applyPosturePreset(kind){
+  // Always zero first, then apply
+  zeroAllJoints();
+
+  if (kind==='stand'){
+    // Neutral — nothing to do, but orient upright
+    model.rotation.x = 0; groundSnap(); fitView(); return;
+  }
+  if (kind==='sit'){
+    // 90/90 sitting on an invisible seat (hips ~90, knees 90, ankles neutral)
+    // We don't rotate hips root; emulate by knee flexion and slight ankle DF
+    // Knees:
+    applyJointAngle('knee_flex_l', 90);
+    applyJointAngle('knee_flex_r', 90);
+    // Ankles: small dorsiflexion so feet flat
+    applyJointAngle('ankle_dp_l', -5);
+    applyJointAngle('ankle_dp_r', -5);
+    // Tilt whole model back a hint so torso looks seated
+    model.rotation.x = 0;
+    groundSnap(); fitView(); return;
+  }
+  if (kind==='supine'){
+    // Lie on back: rotate whole body 90° around X
+    model.rotation.x = Math.PI/2; model.position.y += 0.02;
+    groundSnap(); fitView(); return;
+  }
+  if (kind==='prone'){
+    // Lie face down: -90° around X
+    model.rotation.x = -Math.PI/2; model.position.y += 0.02;
+    groundSnap(); fitView(); return;
+  }
 }
 
 /* ===== Load Model ===== */
@@ -416,32 +458,25 @@ function clearModel(){
   boneSel.innerHTML = "";
 }
 function loadModel(){
-  msg.textContent = "Loading 3D model…";
-  log("Loading GLB…");
+  msg.textContent = "Loading 3D model…"; log("Loading GLB…");
   clearModel();
   loader.load(
     MODEL_URL,
     (gltf)=>{
       model = gltf.scene;
       model.traverse((o)=>{
-        if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; }
-        if (o.isSkinnedMesh && !skeleton) { skeleton = o.skeleton; }
+        if (o.isMesh){ o.castShadow = true; o.receiveShadow = true; }
+        if (o.isSkinnedMesh && !skeleton){ skeleton = o.skeleton; }
       });
       scene.add(model);
       applyModelUI(); groundSnap(); autoScaleToHeight(1.75); fitView();
       msg.textContent = "✅ Model loaded"; log("✅ Model loaded OK");
       populateBones();
-      setJointRegion('upper'); // initialize UI with upper joints
+      setJointRegion('upper'); // default view
       syncJointUI();
     },
-    (xhr)=>{
-      msg.textContent = xhr.lengthComputable ? `Loading ${Math.round((xhr.loaded/xhr.total)*100)}%` : "Loading…";
-    },
-    (err)=>{
-      console.error(err);
-      msg.textContent = "⚠️ Loader error (check URL/CORS)";
-      log(`❌ Loader error: ${err?.message || err}`);
-    }
+    (xhr)=>{ msg.textContent = xhr.lengthComputable ? `Loading ${Math.round((xhr.loaded/xhr.total)*100)}%` : "Loading…"; },
+    (err)=>{ console.error(err); msg.textContent = "⚠️ Loader error (check URL/CORS)"; log(`❌ Loader error: ${err?.message||err}`); }
   );
 }
 
@@ -451,22 +486,19 @@ segLower.onclick = ()=> setJointRegion('lower');
 
 jointSel.addEventListener("change", syncJointUI);
 jointAngle.addEventListener("input", ()=> applyJointAngle(jointSel.value, parseFloat(jointAngle.value)||0));
-jointZero.addEventListener("click", ()=>{ jointAngle.value = "0"; applyJointAngle(jointSel.value, 0); });
-jointLog.addEventListener("click", ()=>{
-  const id = jointSel.value;
-  const bind = resolveJoint(id);
-  if (bind) log(`Joint '${id}' bound to: ${bind.bone.name}`);
-});
+jointZero.addEventListener("click", ()=>{ jointAngle.value="0"; applyJointAngle(jointSel.value, 0); });
+jointLog.addEventListener("click", ()=>{ const b=resolveJoint(jointSel.value); if(b) log(`Bound to: ${b.bone.name}`); });
 
 boneSel.onchange = ()=>{ rx.value="0"; ry.value="0"; rz.value="0"; setBoneRotationFromUI(); };
 [rx,ry,rz].forEach(el=> el.addEventListener("input", setBoneRotationFromUI));
 [mx,my,mz,ms,myaw].forEach(el=> el.addEventListener("input", applyModelUI));
 zeroBone.onclick = zeroSelectedBone;
 resetModel.onclick = resetModelUI;
-reloadBtn.onclick = ()=>{
-  MODEL_URL = pickModelUrl(); log(`Reload with: ${MODEL_URL}`); loadModel();
-};
+reloadBtn.onclick = ()=>{ MODEL_URL = pickModelUrl(); log(`Reload: ${MODEL_URL}`); loadModel(); };
 fitBtn.onclick = fitView;
+
+applyPosture.onclick = ()=> applyPosturePreset(postureSel.value);
+zeroAll.onclick = zeroAllJoints;
 
 /* ===== Start ===== */
 loadModel();
