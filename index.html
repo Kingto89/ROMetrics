@@ -75,7 +75,7 @@
 <div class="panel">
   <h3>Goniometry Trainer</h3>
 
-  <label>Region</label>
+  <label for="regionSel">Region</label>
   <select id="regionSel">
     <option value="cervical_spine">Cervical Spine</option>
     <option value="thoracic_lumbar_spine">Thoracic & Lumbar Spine</option>
@@ -91,7 +91,7 @@
     <option value="toes_mtp_pip_dip">Toes (MTP, PIP, DIP)</option>
   </select>
 
-  <label>Motion</label>
+  <label for="motionSel">Motion</label>
   <select id="motionSel"></select>
 
   <div class="row">
@@ -123,10 +123,11 @@
     <div class="group">
       <details id="ctrlGonio">
         <summary>🧭 Goniometer</summary>
-        <label>Gonio Size (10–200%)</label>
+
+        <label for="gonioSize">Gonio Size (10–200%)</label>
         <input type="range" min="10" max="200" step="5" value="100" id="gonioSize">
 
-        <!-- NEW: unlimited dial -->
+        <!-- free dial -->
         <label>Rotate Moving Arm — free dial (relative)</label>
         <div class="dialWrap">
           <div class="dial" id="dial">
@@ -136,29 +137,31 @@
           <div class="dialRead">
             Δ <span id="dialDeg">0</span>°
             <div style="margin-top:6px">
-              <button class="btnMini" id="nudgeNeg">−5°</button>
-              <button class="btnMini" id="nudgePos">+5°</button>
-              <button class="btnMini" id="dialZero">Zero</button>
+              <button class="btnMini" id="nudgeNeg" type="button">−5°</button>
+              <button class="btnMini" id="nudgePos" type="button">+5°</button>
+              <button class="btnMini" id="dialZero" type="button">Zero</button>
             </div>
           </div>
         </div>
 
-        <label>Rotate Goniometer (°)</label>
+        <label for="rotateGonio">Rotate Goniometer (°)</label>
         <input type="range" min="0" max="360" step="1" value="0" id="rotateGonio">
-        <label>Gonio X (px)</label>
+
+        <label for="gonioX">Gonio X (px)</label>
         <input type="range" min="0" max="2000" step="1" value="0" id="gonioX">
-        <label>Gonio Y (px)</label>
+
+        <label for="gonioY">Gonio Y (px)</label>
         <input type="range" min="0" max="2000" step="1" value="0" id="gonioY">
       </details>
 
       <details id="ctrlModel">
         <summary>🧍 Model</summary>
-        <label>Model X (m)</label><input type="range" min="-2" max="2" step="0.01" value="0" id="modelX">
-        <label>Model Z (m)</label><input type="range" min="-2" max="2" step="0.01" value="0.6" id="modelZ">
-        <label>Model Y (m) — up/down</label><input type="range" min="-0.2" max="0.6" step="0.005" value="0" id="modelY">
-        <label>Model Scale (%)</label><input type="range" min="60" max="160" step="1" value="100" id="modelScale">
-        <label>Model Yaw (°)</label><input type="range" min="0" max="360" step="1" value="0" id="modelYaw">
-        <div class="row" style="margin-top:6px"><button id="resetPose">Reset Pose</button></div>
+        <label for="modelX">Model X (m)</label><input type="range" min="-2" max="2" step="0.01" value="0" id="modelX">
+        <label for="modelZ">Model Z (m)</label><input type="range" min="-2" max="2" step="0.01" value="0.6" id="modelZ">
+        <label for="modelY">Model Y (m) — up/down</label><input type="range" min="-0.2" max="0.6" step="0.005" value="0" id="modelY">
+        <label for="modelScale">Model Scale (%)</label><input type="range" min="60" max="160" step="1" value="100" id="modelScale">
+        <label for="modelYaw">Model Yaw (°)</label><input type="range" min="0" max="360" step="1" value="0" id="modelYaw">
+        <div class="row" style="margin-top:6px"><button id="resetPose" type="button">Reset Pose</button></div>
       </details>
     </div>
   </details>
@@ -273,7 +276,6 @@ function groundSnap(){ if(!model) return; const box=new THREE.Box3().setFromObje
 async function loadModel(){ try{ const head=await fetch(MODEL_URL,{method:"HEAD",cache:"no-store"}); if(!head.ok){ msg.textContent=`⚠️ ${MODEL_URL} (HTTP ${head.status}) — using fallback`; addFallbackMannequin(); return; } }catch{ msg.textContent=`⚠️ Network error — using fallback`; addFallbackMannequin(); return; }
   loader.load(MODEL_URL,(gltf)=>{ model=gltf.scene; model.traverse(o=>{ if(o.isMesh){o.castShadow=true;} if(o.isSkinnedMesh){ skeleton=o.skeleton; }});
     scene.add(model); groundSnap(); model.position.set(0,model.position.y,0.6); model.scale.setScalar(1.0); controls.target.set(0,1.1,0); msg.textContent="✅ Model loaded";
-    // try to find neck/head bones
     if(skeleton){ skeleton.bones.forEach(b=>{ const n=b.name.toLowerCase(); if(!neckBone && /neck|cspine|c_spine/.test(n)) neckBone=b; if(!headBone && /head/.test(n)) headBone=b; }); }
   },(xhr)=>{ msg.textContent = xhr.lengthComputable?`Loading ${Math.round((xhr.loaded/xhr.total)*100)}%`:"Loading…"; },()=>{ msg.textContent="⚠️ Loader error — using fallback"; addFallbackMannequin(); }); setTimeout(()=>{ if(!model) addFallbackMannequin(); },6000);
 }
@@ -295,7 +297,7 @@ function refreshScreenDots(){
     const baseDeg=Gonio.degFromScreenVec(Ss.x-Fs.x,Ss.y-Fs.y);
     const movDeg =Gonio.degFromScreenVec(Ms.x-Fs.x,Ms.y-Fs.y);
     Gonio.show(); Gonio.setPose(Fs.x,Fs.y,baseDeg,movDeg); Gonio.zeroHere();
-    dialRel=0; updateDial(0); // dial shows 0 at ROM start
+    dialRel=0; updateDial(0);
     const p=Gonio.getPan(); gonioXEl.value=Math.round(p.x); gonioYEl.value=Math.round(p.y);
     setAngleHUD(Gonio.angle,romString());
   } else { Gonio.hide(); }
@@ -356,7 +358,7 @@ resetMeasurementBtn.onclick=()=>{ scr.fulcrum=scr.stationary=scr.moving=null; re
 addEventListener("resize",()=>{ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); });
 (function animate(){ controls.update(); if(!document.getElementById('gonioHost').classList.contains('hide')) setAngleHUD(Gonio.angle,romString()); renderer.render(scene,camera); requestAnimationFrame(animate); })();
 
-/* ---------- Goniometer (same core) ---------- */
+/* ---------- Goniometer (single helper names; no duplicates) ---------- */
 const Gonio=(()=>{ const host=document.getElementById('gonioHost'), svg=document.getElementById('gonioSvg'), viewport=document.getElementById('viewport'), rotWrap=document.getElementById('rotWrap'), numsInWrap=document.getElementById('numsInWrap'), labelsFixed=document.getElementById('labelsFixed'), armA_ruler=document.getElementById('armA_ruler'), armB_ruler=document.getElementById('armB_ruler');
   const clamp=(v,a,b)=>Math.min(b,Math.max(a,v)), clamp360=a=>(a%360+360)%360, toDegUp=(x,y)=>clamp360(Math.atan2(-y,x)*180/Math.PI+90), shortest=(a,b)=>{let d=clamp360(a-b); return d>180?360-d:d;};
   (function build(){ const ticks=document.getElementById('ticks'), numsOut=document.getElementById('numsOut'), numsIn=document.getElementById('numsIn'); const R=120,Rin=86; const line=(p,x1,y1,x2,y2,cls)=>{const n=document.createElementNS('http://www.w3.org/2000/svg','line'); n.setAttribute('x1',x1); n.setAttribute('y1',y1); n.setAttribute('x2',x2); n.setAttribute('y2',y2); if(cls)n.setAttribute('class',cls); p.appendChild(n);}; const text=(p,x,y,t,cls,rot)=>{const n=document.createElementNS('http://www.w3.org/2000/svg','text'); n.setAttribute('x',x); n.setAttribute('y',y); n.setAttribute('class',cls||'labelOuter'); if(rot)n.setAttribute('transform',`rotate(${rot} ${x} ${y})`); n.textContent=t; p.appendChild(n); return n;};
@@ -405,7 +407,7 @@ const Gonio=(()=>{ const host=document.getElementById('gonioHost'), svg=document
 window.Gonio=Gonio;
 
 /* ---------- Dial (free-spin) ---------- */
-let dialRel=0; // accumulated relative degrees about current zero
+let dialRel=0;
 function updateDial(v){ dialMarker.style.transform=`translate(-50%,-100%) rotate(${v}deg)`; dialDeg.textContent=Math.round(v); Gonio.setMovDegRel(v); setAngleHUD(Gonio.angle,romString()); }
 function angleFromCenter(e,el){ const r=el.getBoundingClientRect(); const cx=r.left+r.width/2, cy=r.top+r.height/2; return Math.atan2(cy-e.clientY, e.clientX-cx)*180/Math.PI; }
 let draggingDial=false, dialLastAngle=0;
@@ -427,9 +429,9 @@ function animateBoneRotation(bone, targetDegX, dur=0.9){
   if(!bone) return;
   const start=performance.now();
   const startQ=bone.quaternion.clone();
-  const endQ=new THREE.Quaternion().setFromEuler(new THREE.Euler(THREE.MathUtils.degToRad(targetDegX),0,0,'XYZ')).multiply(startQ); // apply delta on top
+  const endQ=new THREE.Quaternion().setFromEuler(new THREE.Euler(THREE.MathUtils.degToRad(targetDegX),0,0,'XYZ')).multiply(startQ);
   function step(t){
-    const k=Math.min(1,(t-start)/ (dur*1000));
+    const k=Math.min(1,(t-start)/(dur*1000));
     const ease=k<0.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
     THREE.Quaternion.slerp(startQ,endQ,bone.quaternion,ease);
     if(k<1) requestAnimationFrame(step);
@@ -441,8 +443,7 @@ doMotionBtn.onclick=()=>{
   if(region==='cervical_spine' && /flexion/i.test(motion)){
     const bone = neckBone || headBone;
     if(!bone){ log("No rig/neck found — action skipped"); return; }
-    // Flex ~30° forward (negative X in most rigs)
-    animateBoneRotation(bone, THREE.MathUtils.degToRad(-30), 0.8);
+    animateBoneRotation(bone, -30, 0.8); // ~30° flexion
   } else {
     log(`Action not implemented for ${region} → ${motion}`);
   }
