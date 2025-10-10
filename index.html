@@ -355,9 +355,6 @@ const draco = new DRACOLoader(); draco.setDecoderPath("https://unpkg.com/three@0
 const ktx2 = new KTX2Loader(); ktx2.setTranscoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/basis/"); ktx2.detectSupport(renderer); loader.setKTX2Loader(ktx2);
 
 let model = null;
-/* NEW: dedicated list of raycastable meshes */
-let clickableMeshes = []; // NEW
-
 const MODEL_URL = "./Athletic_Grace_1006002620_texture.glb";
 
 function addFallbackMannequin(){
@@ -365,11 +362,11 @@ function addFallbackMannequin(){
   const g = new THREE.Group();
   const mat = new THREE.MeshStandardMaterial({color:0xa0a4ae, metalness:0.1, roughness:0.8});
   const mk = (geo,y,s=1)=>{ const m=new THREE.Mesh(geo,mat); m.position.y=y; m.scale.setScalar(s); m.castShadow=true; g.add(m); };
-  const a = new THREE.Mesh(new THREE.CapsuleGeometry(0.22,0.8,8,16), mat); a.position.y=1.1; a.castShadow=true; g.add(a);
-  const b = new THREE.Mesh(new THREE.SphereGeometry(0.16,16,16), mat);       b.position.y=1.8; b.castShadow=true; g.add(b);
-  const c = new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.12,0.3,12), mat); c.position.y=1.45; c.castShadow=true; g.add(c);
-  const d = new THREE.Mesh(new THREE.CylinderGeometry(0.11,0.11,0.8,12), mat);d.position.y=0.55; d.castShadow=true; g.add(d);
-  g.traverse(o=>{ if(o.isMesh){ o.castShadow = true; clickableMeshes.push(o); }}); // NEW: collect meshes
+  mk(new THREE.CapsuleGeometry(0.22,0.8,8,16), 1.1);
+  mk(new THREE.SphereGeometry(0.16,16,16),        1.8);
+  mk(new THREE.CylinderGeometry(0.1,0.12,0.3,12), 1.45);
+  mk(new THREE.CylinderGeometry(0.11,0.11,0.8,12),0.55);
+  g.traverse(o=>{ if(o.isMesh){ o.castShadow = true; }});
   scene.add(g); model = g; msg.textContent = "⚠️ GLB missing/blocked — fallback mannequin shown";
   groundSnap();
 }
@@ -389,8 +386,7 @@ async function loadModel() {
 
   loader.load(MODEL_URL, (gltf) => {
     model = gltf.scene;
-    clickableMeshes = []; // NEW: reset and repopulate
-    model.traverse(o=>{ if(o.isMesh){ o.castShadow = true; clickableMeshes.push(o); }}); // NEW: collect meshes
+    model.traverse(o=>{ if(o.isMesh){ o.castShadow = true; }});
     scene.add(model);
 
     groundSnap();
@@ -429,18 +425,18 @@ function placePoint(name, worldPoint) {
   updateFromLocals();
 }
 
-/* RAYCAST ONLY THE MODEL'S MESHES (robust on rigged models) */
+/* RAYCAST (from working index 55): hit any mesh, ignore ground & helper lines */
 canvas.addEventListener("pointerdown", (e) => {
-  if (!target || !model) return;
+  if (!target) return;
   const r = canvas.getBoundingClientRect();
   mouse.x = ((e.clientX - r.left) / r.width) * 2 - 1;
   mouse.y = -((e.clientY - r.top) / r.height) * 2 + 1;
   ray.setFromCamera(mouse, camera);
-  const hits = clickableMeshes.length
-    ? ray.intersectObjects(clickableMeshes, true)   // CHANGED
-    : ray.intersectObject(model, true);
+  const hits = ray.intersectObjects(scene.children, true)
+    .filter(h => h.object?.isMesh && h.object !== ground && !(h.object instanceof THREE.Line));
   if (!hits.length) return;
-  placePoint(target, hits[0].point); target = null;
+  placePoint(target, hits[0].point);
+  target = null;
 });
 
 const line1 = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: COLORS.stationary }));
@@ -753,11 +749,12 @@ const Gonio = (() => {
   function getUserRot(){ return clamp360(userRot); }
   function getMovDegAbs(){ return clamp360(mov); }
 
-  // NEW: expose pan getters/setters for sliders
+  // expose pan for sliders
   function setPan(x,y){ panX = x; panY = y; clampPanToViewport(); applyView(); }
   function getPan(){ return { x: panX, y: panY }; }
 
   // Angle is shortest arc from zeroRef to mov (<=180°)
+  function shortest(a,b){ let d=(a-b)%360; d=(d+540)%360-180; return Math.abs(d); }
   function currentAngle(){ return shortest(mov, zeroRef); }
 
   return {
