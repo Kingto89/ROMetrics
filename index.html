@@ -393,20 +393,12 @@ ground.position.y = 0;
 ground.receiveShadow = true;
 scene.add(ground);
 
-<!-- ========== Model loader (+ ground-snap) ========== -->
-<script type="module">
-// keep existing imports above
-
-// --- helpers ---
-const logEl = document.getElementById("log");
-const log = (t)=>{ logEl.textContent += t + "\n"; logEl.scrollTop = logEl.scrollHeight; };
-
-// Choose model URL (query wins, then your default)
+// ========== Model loader (+ ground-snap) ==========
 function pickModelUrl(){
   const u = new URL(location.href);
   const q = u.searchParams.get("model");
-  if (q && /^https?:\/\//i.test(q)) return q;                // absolute http(s)
-  if (q && q.trim())        return new URL(q, location.href).href; // relative
+  if (q && /^https?:\/\//i.test(q)) return q;
+  if (q && q.trim()) return new URL(q, location.href).href;
   return new URL("./Athletic_Grace_1006002620_texture.glb", location.href).href;
 }
 const MODEL_URL = pickModelUrl();
@@ -415,7 +407,6 @@ log(`Model URL: ${MODEL_URL}`);
 const loader = new GLTFLoader();
 loader.setMeshoptDecoder(MeshoptDecoder);
 
-// DRACO & KTX2 paths must end with a trailing slash and be same-origin friendly
 const draco = new DRACOLoader();
 draco.setDecoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/draco/");
 loader.setDRACOLoader(draco);
@@ -426,7 +417,7 @@ ktx2.detectSupport(renderer);
 loader.setKTX2Loader(ktx2);
 
 let model = null, skeleton=null, neckBone=null, headBone=null;
-window.__PT_MODEL__ = () => model; // handy for quick console checks
+window.__PT_MODEL__ = () => model;
 
 function addFallbackMannequin(reason="Unknown"){
   if (model) return;
@@ -443,28 +434,23 @@ function addFallbackMannequin(reason="Unknown"){
   log(`Fallback mannequin: ${reason}`);
   groundSnap();
 }
-
 function groundSnap(){
   if(!model) return;
   const box = new THREE.Box3().setFromObject(model);
   const minY = box.min.y;
-  model.position.y -= minY; // feet at y=0
+  model.position.y -= minY;
 }
-
 function autoScaleToHeight(targetMeters=1.75){
-  // Fit the model to ~human height if the authoring scale is wild
   const box = new THREE.Box3().setFromObject(model);
   const h = box.max.y - box.min.y;
   if (!isFinite(h) || h <= 0) return;
   const s = targetMeters / h;
-  // Only scale if model is bizarrely tiny or huge
   if (s < 0.4 || s > 2.5) {
     model.scale.multiplyScalar(s);
     log(`Auto-scaled model by ${s.toFixed(2)}× to ~${targetMeters}m tall`);
   }
 }
-
-async function loadModel() {
+function loadModel() {
   msg.textContent = "Loading 3D model…";
   log("Loading GLB via GLTFLoader…");
 
@@ -476,12 +462,11 @@ async function loadModel() {
         if (o.isMesh) { o.castShadow = true; }
         if (o.isSkinnedMesh && !skeleton) { skeleton = o.skeleton; }
       });
-
       scene.add(model);
       autoScaleToHeight(1.75);
       groundSnap();
 
-      // your initial placement
+      // honor UI initial values
       model.position.x = parseFloat(modelX.value);
       model.position.z = parseFloat(modelZ.value);
       const s = parseInt(modelScale.value,10)/100;
@@ -492,7 +477,6 @@ async function loadModel() {
       msg.textContent = "✅ Model loaded";
       log("✅ Model loaded OK");
 
-      // find neck/head bones if present
       if (skeleton) {
         skeleton.bones.forEach(b=>{
           const n = b.name.toLowerCase();
@@ -505,12 +489,7 @@ async function loadModel() {
       }
     },
     (xhr) => {
-      if (xhr.lengthComputable) {
-        const pct = Math.round((xhr.loaded / xhr.total) * 100);
-        msg.textContent = `Loading ${pct}%`;
-      } else {
-        msg.textContent = "Loading…";
-      }
+      msg.textContent = xhr.lengthComputable ? `Loading ${Math.round((xhr.loaded/xhr.total)*100)}%` : "Loading…";
     },
     (err) => {
       console.error(err);
@@ -520,14 +499,11 @@ async function loadModel() {
     }
   );
 
-  // Safety net: if nothing set within 8s, show fallback
   setTimeout(()=>{ if (!model) addFallbackMannequin("Timeout / CORS / path issue"); }, 8000);
 }
 loadModel();
-
-// Re-expose for the rest of your script that references these
 window._pt_bones = { get neck(){return neckBone;}, get head(){return headBone;}, get skeleton(){return skeleton;} };
-</script>
+
 
 /* ===================== SCREEN-SPACE DOTS ===================== */
 const scr={fulcrum:null,stationary:null,moving:null};
