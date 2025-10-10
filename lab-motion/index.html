@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>3D Motion Lab — Anatomical Joints</title>
 
+  <!-- Import map -->
   <script type="importmap">
   {
     "imports": {
@@ -18,10 +19,17 @@
     :root{--bg:#0b1220;--panel:#0f172a;--line:#1f2937;--ctrl:#1e293b;--text:#e2e8f0;--muted:#cbd5e1}
     html,body{margin:0;height:100%;background:var(--bg);color:var(--text);overflow:hidden;font-family:system-ui,Segoe UI,Roboto}
     canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
-    .panel{position:fixed;left:12px;top:12px;width:360px;max-height:90vh;z-index:10;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.4);display:flex;flex-direction:column;overflow:hidden}
-    .dragbar{cursor:move;background:#0c1628;border-bottom:1px solid #162235;padding:8px 12px;font-weight:700;display:flex;align-items:center;gap:8px}
+
+    .panel{
+      position:fixed;left:12px;top:12px;width:360px;max-height:90vh;z-index:10;
+      background:var(--panel);border:1px solid var(--line);border-radius:12px;
+      box-shadow:0 8px 28px rgba(0,0,0,.4);display:flex;flex-direction:column;overflow:hidden;
+    }
+    .dragbar{cursor:move;background:#0c1628;border-bottom:1px solid #162235;
+      padding:8px 12px;font-weight:700;display:flex;align-items:center;gap:8px}
     .dragbar .hint{margin-left:auto;font-size:12px;color:#9fb0c9}
     .content{padding:12px;overflow:auto}
+
     label{display:block;font-size:12px;margin-top:8px;color:var(--muted)}
     select,button,input[type=range]{width:100%;margin:6px 0 8px 0;padding:8px 10px;border-radius:10px;background:var(--ctrl);border:1px solid #334155;color:var(--text)}
     .row{display:flex;gap:8px}.row>button{flex:1}
@@ -29,8 +37,10 @@
     .seg{display:flex;gap:8px}
     .seg button{flex:1;padding:8px 10px;border-radius:10px;background:#142033;border:1px solid #334155;color:#cbd5e1}
     .seg button.on{background:#1f2c43;color:#fff;border-color:#47618e}
+
     details{border:1px solid #162235;border-radius:10px;padding:8px;background:#0b1426;margin-top:8px}
     summary{cursor:pointer;font-weight:600;color:#dbe7ff}
+
     #log{background:#0b1220;border:1px solid #1f2937;min-height:100px;max-height:140px;overflow:auto;border-radius:8px;padding:8px;font-size:12px;white-space:pre-wrap}
     #msg{position:fixed;bottom:10px;left:12px;background:rgba(15,23,42,.75);border:1px solid #334155;border-radius:8px;padding:6px 10px;font-size:12px;z-index:20}
     optgroup{color:#9fb0c9;font-style:normal}
@@ -227,13 +237,10 @@
   /* ===== Loader ===== */
   const loader = new GLTFLoader();
   loader.setMeshoptDecoder(MeshoptDecoder);
-  const draco = new DRACOLoader();
-  draco.setDecoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/draco/");
+  const draco = new DRACOLoader(); draco.setDecoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/draco/");
   loader.setDRACOLoader(draco);
-  const ktx2 = new KTX2Loader();
-  ktx2.setTranscoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/basis/");
-  ktx2.detectSupport(renderer);
-  loader.setKTX2Loader(ktx2);
+  const ktx2 = new KTX2Loader(); ktx2.setTranscoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/basis/");
+  ktx2.detectSupport(renderer); loader.setKTX2Loader(ktx2);
 
   let model = null, skeleton = null;
   const initialBoneRot = new Map();
@@ -311,7 +318,12 @@
     rx.value="0"; ry.value="0"; rz.value="0";
   }
 
-  /* ===== Clinical Motion Configs ===== */
+  /* ===== Anatomical planes → rig axes ===== */
+  // Adjust this mapping if your rig's local axes differ.
+  // sagittal = flex/extend (forward/back), frontal = ab/adduct (side), transverse = rotate/twist
+  const RIG_AXES = { sagittal: 'z', frontal: 'x', transverse: 'y' };
+
+  /* ===== Find/Bind helpers ===== */
   const EXCLUDE = /(pelvis|root|spine)/i;
 
   function findBoneBy(cfg){
@@ -319,11 +331,13 @@
     const names = skeleton.bones.map(b=>b.name.toLowerCase());
     const sideREs = cfg.side ? (cfg.side==='l'?[/left|_l\b|\.l\b/i]:[/right|_r\b|\.r\b/i]) : [/.*/];
     for (const cand of cfg.bones){
+      // prefer side match
       for (let i=0;i<names.length;i++){
         if (EXCLUDE.test(names[i])) continue;
         if (!sideREs.some(r=>r.test(names[i]))) continue;
         if (cand.test(names[i])) return skeleton.bones[i];
       }
+      // fallback any side
       for (let i=0;i<names.length;i++){
         if (EXCLUDE.test(names[i])) continue;
         if (cand.test(names[i])) return skeleton.bones[i];
@@ -344,65 +358,69 @@
     return obj;
   }
 
+  /* ===== Motions: use plane first, axis as fallback ===== */
   function applyMotion(key, cfg, deg){
     const bind = resolveBind(key, cfg);
     if (!bind) return;
     const { bone, qBind } = bind;
     const rad = THREE.MathUtils.degToRad((deg||0) * (cfg.sign||1));
+    const axis = cfg.plane ? (RIG_AXES[cfg.plane] || 'z') : (cfg.axis || 'z');
     const e = new THREE.Euler(0,0,0,"XYZ");
-    if (cfg.axis === 'x') e.set(rad,0,0,"XYZ");
-    if (cfg.axis === 'y') e.set(0,rad,0,"XYZ");
-    if (cfg.axis === 'z') e.set(0,0,rad,"XYZ");
+    if (axis === 'x') e.set(rad,0,0,"XYZ");
+    if (axis === 'y') e.set(0,rad,0,"XYZ");
+    if (axis === 'z') e.set(0,0,rad,"XYZ");
     const qDelta = new THREE.Quaternion().setFromEuler(e);
     bone.quaternion.copy(qBind).multiply(qDelta);
   }
 
-  /* ===== Joint menus definitions ===== */
+  /* ===== Joint menus definitions (now with plane) ===== */
   const UPPER = {
     groups: [
       ["Cervical",[
-        ["cerv_flex",{label:"Cervical Flexion", axis:"x", sign:-1, side:"", bones:[/neck|cspine/i], range:[-60,60]}],
-        ["cerv_ext",{label:"Cervical Extension", axis:"x", sign:+1, side:"", bones:[/neck|cspine/i], range:[-60,60]}],
-        ["cerv_lat",{label:"Cervical Lateral Flexion", axis:"z", sign:-1, side:"", bones:[/neck|cspine/i], range:[-50,50]}],
-        ["cerv_rot",{label:"Cervical Rotation", axis:"y", sign:+1, side:"", bones:[/neck|cspine/i], range:[-80,80]}],
+        ["cerv_flex",{label:"Cervical Flexion",  plane:"sagittal",  sign:-1, side:"", bones:[/neck|cspine/i], range:[-60,60]}],
+        ["cerv_ext", {label:"Cervical Extension",plane:"sagittal",  sign:+1, side:"", bones:[/neck|cspine/i], range:[-60,60]}],
+        ["cerv_lat", {label:"Cervical Lateral Flexion", plane:"frontal",   sign:-1, side:"", bones:[/neck|cspine/i], range:[-50,50]}],
+        ["cerv_rot", {label:"Cervical Rotation", plane:"transverse", sign:+1, side:"", bones:[/neck|cspine/i], range:[-80,80]}],
       ]],
       ["Shoulder (GH)",[
-        ["sh_flex_l",{label:"Shoulder Flexion — Left", axis:"x", sign:-1, side:"l", bones:[/upper.?arm|shoulder/i], range:[-5,180]}],
-        ["sh_flex_r",{label:"Shoulder Flexion — Right", axis:"x", sign:-1, side:"r", bones:[/upper.?arm|shoulder/i], range:[-5,180]}],
-        ["sh_ext_l",{label:"Shoulder Extension — Left", axis:"x", sign:+1, side:"l", bones:[/upper.?arm|shoulder/i], range:[-60,45]}],
-        ["sh_ext_r",{label:"Shoulder Extension — Right", axis:"x", sign:+1, side:"r", bones:[/upper.?arm|shoulder/i], range:[-60,45]}],
-        ["sh_abd_l",{label:"Shoulder Abduction — Left", axis:"z", sign:+1, side:"l", bones:[/upper.?arm|shoulder/i], range:[0,180]}],
-        ["sh_abd_r",{label:"Shoulder Abduction — Right", axis:"z", sign:+1, side:"r", bones:[/upper.?arm|shoulder/i], range:[0,180]}],
-        ["sh_ir_l",{label:"Shoulder Internal Rotation — Left", axis:"y", sign:-1, side:"l", bones:[/upper.?arm|shoulder/i], range:[-90,90]}],
-        ["sh_ir_r",{label:"Shoulder Internal Rotation — Right", axis:"y", sign:-1, side:"r", bones:[/upper.?arm|shoulder/i], range:[-90,90]}],
-        ["sh_er_l",{label:"Shoulder External Rotation — Left", axis:"y", sign:+1, side:"l", bones:[/upper.?arm|shoulder/i], range:[-90,90]}],
-        ["sh_er_r",{label:"Shoulder External Rotation — Right", axis:"y", sign:+1, side:"r", bones:[/upper.?arm|shoulder/i], range:[-90,90]}],
+        ["sh_flex_l",{label:"Shoulder Flexion — Left",  plane:"sagittal",   sign:-1, side:"l", bones:[/upper.?arm|shoulder/i], range:[-5,180]}],
+        ["sh_flex_r",{label:"Shoulder Flexion — Right", plane:"sagittal",   sign:-1, side:"r", bones:[/upper.?arm|shoulder/i], range:[-5,180]}],
+        ["sh_ext_l", {label:"Shoulder Extension — Left",plane:"sagittal",   sign:+1, side:"l", bones:[/upper.?arm|shoulder/i], range:[-60,45]}],
+        ["sh_ext_r", {label:"Shoulder Extension — Right",plane:"sagittal",  sign:+1, side:"r", bones:[/upper.?arm|shoulder/i], range:[-60,45]}],
+        ["sh_abd_l", {label:"Shoulder Abduction — Left",plane:"frontal",    sign:+1, side:"l", bones:[/upper.?arm|shoulder/i], range:[0,180]}],
+        ["sh_abd_r", {label:"Shoulder Abduction — Right",plane:"frontal",   sign:+1, side:"r", bones:[/upper.?arm|shoulder/i], range:[0,180]}],
+        ["sh_add_l", {label:"Shoulder Adduction — Left",plane:"frontal",    sign:-1, side:"l", bones:[/upper.?arm|shoulder/i], range:[0,45]}],
+        ["sh_add_r", {label:"Shoulder Adduction — Right",plane:"frontal",   sign:-1, side:"r", bones:[/upper.?arm|shoulder/i], range:[0,45]}],
+        ["sh_ir_l",  {label:"Shoulder Internal Rotation — Left", plane:"transverse", sign:-1, side:"l", bones:[/upper.?arm|shoulder/i], range:[-90,90]}],
+        ["sh_ir_r",  {label:"Shoulder Internal Rotation — Right",plane:"transverse", sign:-1, side:"r", bones:[/upper.?arm|shoulder/i], range:[-90,90]}],
+        ["sh_er_l",  {label:"Shoulder External Rotation — Left", plane:"transverse", sign:+1, side:"l", bones:[/upper.?arm|shoulder/i], range:[-90,90]}],
+        ["sh_er_r",  {label:"Shoulder External Rotation — Right",plane:"transverse", sign:+1, side:"r", bones:[/upper.?arm|shoulder/i], range:[-90,90]}],
       ]],
       ["Elbow / Forearm",[
-        ["el_flex_l",{label:"Elbow Flexion — Left", axis:"x", sign:-1, side:"l", bones:[/forearm|radius|ulna/i], range:[0,150]}],
-        ["el_flex_r",{label:"Elbow Flexion — Right", axis:"x", sign:-1, side:"r", bones:[/forearm|radius|ulna/i], range:[0,150]}],
-        ["el_ext_l",{label:"Elbow Extension — Left", axis:"x", sign:+1, side:"l", bones:[/forearm|radius|ulna/i], range:[-10,0]}],
-        ["el_ext_r",{label:"Elbow Extension — Right", axis:"x", sign:+1, side:"r", bones:[/forearm|radius|ulna/i], range:[-10,0]}],
-        ["fa_pro_l",{label:"Forearm Pronation — Left", axis:"y", sign:+1, side:"l", bones:[/forearm|radius|ulna/i], range:[-90,90]}],
-        ["fa_pro_r",{label:"Forearm Pronation — Right", axis:"y", sign:+1, side:"r", bones:[/forearm|radius|ulna/i], range:[-90,90]}],
-        ["fa_sup_l",{label:"Forearm Supination — Left", axis:"y", sign:-1, side:"l", bones:[/forearm|radius|ulna/i], range:[-90,90]}],
-        ["fa_sup_r",{label:"Forearm Supination — Right", axis:"y", sign:-1, side:"r", bones:[/forearm|radius|ulna/i], range:[-90,90]}],
+        ["el_flex_l",{label:"Elbow Flexion — Left", plane:"sagittal",  sign:-1, side:"l", bones:[/forearm|radius|ulna/i], range:[0,150]}],
+        ["el_flex_r",{label:"Elbow Flexion — Right",plane:"sagittal",  sign:-1, side:"r", bones:[/forearm|radius|ulna/i], range:[0,150]}],
+        ["el_ext_l", {label:"Elbow Extension — Left",plane:"sagittal",  sign:+1, side:"l", bones:[/forearm|radius|ulna/i], range:[-10,0]}],
+        ["el_ext_r", {label:"Elbow Extension — Right",plane:"sagittal", sign:+1, side:"r", bones:[/forearm|radius|ulna/i], range:[-10,0]}],
+        ["fa_pro_l", {label:"Forearm Pronation — Left", plane:"transverse", sign:+1, side:"l", bones:[/forearm|radius|ulna/i], range:[-90,90]}],
+        ["fa_pro_r", {label:"Forearm Pronation — Right",plane:"transverse", sign:+1, side:"r", bones:[/forearm|radius|ulna/i], range:[-90,90]}],
+        ["fa_sup_l", {label:"Forearm Supination — Left", plane:"transverse", sign:-1, side:"l", bones:[/forearm|radius|ulna/i], range:[-90,90]}],
+        ["fa_sup_r", {label:"Forearm Supination — Right",plane:"transverse", sign:-1, side:"r", bones:[/forearm|radius|ulna/i], range:[-90,90]}],
       ]],
       ["Wrist",[
-        ["wr_fe_l",{label:"Wrist Flex/Ext — Left", axis:"z", sign:-1, side:"l", bones:[/wrist|hand/i], range:[-80,80]}],
-        ["wr_fe_r",{label:"Wrist Flex/Ext — Right", axis:"z", sign:-1, side:"r", bones:[/wrist|hand/i], range:[-80,80]}],
-        ["wr_ru_l",{label:"Wrist Radial/Ulnar — Left", axis:"x", sign:+1, side:"l", bones:[/wrist|hand/i], range:[-30,30]}],
-        ["wr_ru_r",{label:"Wrist Radial/Ulnar — Right", axis:"x", sign:-1, side:"r", bones:[/wrist|hand/i], range:[-30,30]}],
+        ["wr_fe_l",{label:"Wrist Flex/Ext — Left",  plane:"sagittal", sign:-1, side:"l", bones:[/wrist|hand/i], range:[-80,80]}],
+        ["wr_fe_r",{label:"Wrist Flex/Ext — Right", plane:"sagittal", sign:-1, side:"r", bones:[/wrist|hand/i], range:[-80,80]}],
+        ["wr_ru_l",{label:"Wrist Radial/Ulnar — Left",  plane:"frontal", sign:+1, side:"l", bones:[/wrist|hand/i], range:[-30,30]}],
+        ["wr_ru_r",{label:"Wrist Radial/Ulnar — Right", plane:"frontal", sign:-1, side:"r", bones:[/wrist|hand/i], range:[-30,30]}],
       ]],
       ["Fingers",[
-        ["mcp_flex",{label:"MCP Flexion", axis:"z", sign:-1, side:"", bones:[/mcp/i], range:[0,90]}],
-        ["mcp_ext",{label:"MCP Extension", axis:"z", sign:+1, side:"", bones:[/mcp/i], range:[-30,30]}],
-        ["mcp_abd",{label:"MCP Abduction", axis:"x", sign:+1, side:"", bones:[/mcp/i], range:[0,25]}],
-        ["mcp_add",{label:"MCP Adduction", axis:"x", sign:-1, side:"", bones:[/mcp/i], range:[0,25]}],
-        ["pip_flex",{label:"PIP Flexion", axis:"z", sign:-1, side:"", bones:[/pip/i], range:[0,110]}],
-        ["pip_ext",{label:"PIP Extension", axis:"z", sign:+1, side:"", bones:[/pip/i], range:[-10,0]}],
-        ["dip_flex",{label:"DIP Flexion", axis:"z", sign:-1, side:"", bones:[/dip/i], range:[0,90]}],
-        ["dip_ext",{label:"DIP Extension", axis:"z", sign:+1, side:"", bones:[/dip/i], range:[-10,0]}],
+        ["mcp_flex",{label:"MCP Flexion", plane:"sagittal", sign:-1, side:"", bones:[/mcp/i], range:[0,90]}],
+        ["mcp_ext",{label:"MCP Extension",plane:"sagittal", sign:+1, side:"", bones:[/mcp/i], range:[-30,30]}],
+        ["mcp_abd",{label:"MCP Abduction",plane:"frontal",  sign:+1, side:"", bones:[/mcp/i], range:[0,25]}],
+        ["mcp_add",{label:"MCP Adduction",plane:"frontal",  sign:-1, side:"", bones:[/mcp/i], range:[0,25]}],
+        ["pip_flex",{label:"PIP Flexion", plane:"sagittal", sign:-1, side:"", bones:[/pip/i], range:[0,110]}],
+        ["pip_ext",{label:"PIP Extension",plane:"sagittal", sign:+1, side:"", bones:[/pip/i], range:[-10,0]}],
+        ["dip_flex",{label:"DIP Flexion", plane:"sagittal", sign:-1, side:"", bones:[/dip/i], range:[0,90]}],
+        ["dip_ext",{label:"DIP Extension",plane:"sagittal", sign:+1, side:"", bones:[/dip/i], range:[-10,0]}],
       ]]
     ]
   };
@@ -410,53 +428,53 @@
   const LOWER = {
     groups: [
       ["Hip (Thigh)",[
-        ["hip_flex_l",{label:"Hip Flexion — Left", axis:"x", sign:-1, side:"l", bones:[/upper.?leg|thigh/i], range:[0,120]}],
-        ["hip_flex_r",{label:"Hip Flexion — Right", axis:"x", sign:-1, side:"r", bones:[/upper.?leg|thigh/i], range:[0,120]}],
-        ["hip_ext_l",{label:"Hip Extension — Left", axis:"x", sign:+1, side:"l", bones:[/upper.?leg|thigh/i], range:[0,30]}],
-        ["hip_ext_r",{label:"Hip Extension — Right", axis:"x", sign:+1, side:"r", bones:[/upper.?leg|thigh/i], range:[0,30]}],
-        ["hip_abd_l",{label:"Hip Abduction — Left", axis:"z", sign:+1, side:"l", bones:[/upper.?leg|thigh/i], range:[0,45]}],
-        ["hip_abd_r",{label:"Hip Abduction — Right", axis:"z", sign:+1, side:"r", bones:[/upper.?leg|thigh/i], range:[0,45]}],
-        ["hip_add_l",{label:"Hip Adduction — Left", axis:"z", sign:-1, side:"l", bones:[/upper.?leg|thigh/i], range:[0,30]}],
-        ["hip_add_r",{label:"Hip Adduction — Right", axis:"z", sign:-1, side:"r", bones:[/upper.?leg|thigh/i], range:[0,30]}],
-        ["hip_ir_l",{label:"Hip Internal Rotation — Left", axis:"y", sign:+1, side:"l", bones:[/upper.?leg|thigh/i], range:[-45,45]}],
-        ["hip_ir_r",{label:"Hip Internal Rotation — Right", axis:"y", sign:+1, side:"r", bones:[/upper.?leg|thigh/i], range:[-45,45]}],
-        ["hip_er_l",{label:"Hip External Rotation — Left", axis:"y", sign:-1, side:"l", bones:[/upper.?leg|thigh/i], range:[-45,45]}],
-        ["hip_er_r",{label:"Hip External Rotation — Right", axis:"y", sign:-1, side:"r", bones:[/upper.?leg|thigh/i], range:[-45,45]}],
+        ["hip_flex_l",{label:"Hip Flexion — Left",  plane:"sagittal",   sign:-1, side:"l", bones:[/upper.?leg|thigh/i], range:[0,120]}],
+        ["hip_flex_r",{label:"Hip Flexion — Right", plane:"sagittal",   sign:-1, side:"r", bones:[/upper.?leg|thigh/i], range:[0,120]}],
+        ["hip_ext_l", {label:"Hip Extension — Left",plane:"sagittal",   sign:+1, side:"l", bones:[/upper.?leg|thigh/i], range:[0,30]}],
+        ["hip_ext_r", {label:"Hip Extension — Right",plane:"sagittal",  sign:+1, side:"r", bones:[/upper.?leg|thigh/i], range:[0,30]}],
+        ["hip_abd_l", {label:"Hip Abduction — Left",plane:"frontal",    sign:+1, side:"l", bones:[/upper.?leg|thigh/i], range:[0,45]}],
+        ["hip_abd_r", {label:"Hip Abduction — Right",plane:"frontal",   sign:+1, side:"r", bones:[/upper.?leg|thigh/i], range:[0,45]}],
+        ["hip_add_l", {label:"Hip Adduction — Left",plane:"frontal",    sign:-1, side:"l", bones:[/upper.?leg|thigh/i], range:[0,30]}],
+        ["hip_add_r", {label:"Hip Adduction — Right",plane:"frontal",   sign:-1, side:"r", bones:[/upper.?leg|thigh/i], range:[0,30]}],
+        ["hip_ir_l",  {label:"Hip Internal Rotation — Left", plane:"transverse", sign:+1, side:"l", bones:[/upper.?leg|thigh/i], range:[-45,45]}],
+        ["hip_ir_r",  {label:"Hip Internal Rotation — Right",plane:"transverse", sign:+1, side:"r", bones:[/upper.?leg|thigh/i], range:[-45,45]}],
+        ["hip_er_l",  {label:"Hip External Rotation — Left", plane:"transverse", sign:-1, side:"l", bones:[/upper.?leg|thigh/i], range:[-45,45]}],
+        ["hip_er_r",  {label:"Hip External Rotation — Right",plane:"transverse", sign:-1, side:"r", bones:[/upper.?leg|thigh/i], range:[-45,45]}],
       ]],
       ["Knee",[
-        ["knee_flex_l",{label:"Knee Flexion — Left", axis:"x", sign:-1, side:"l", bones:[/lower.?leg|calf|shin/i], range:[0,140]}],
-        ["knee_flex_r",{label:"Knee Flexion — Right", axis:"x", sign:-1, side:"r", bones:[/lower.?leg|calf|shin/i], range:[0,140]}],
-        ["knee_ext_l",{label:"Knee Extension — Left", axis:"x", sign:+1, side:"l", bones:[/lower.?leg|calf|shin/i], range:[-10,0]}],
-        ["knee_ext_r",{label:"Knee Extension — Right", axis:"x", sign:+1, side:"r", bones:[/lower.?leg|calf|shin/i], range:[-10,0]}],
+        ["knee_flex_l",{label:"Knee Flexion — Left", plane:"sagittal",  sign:-1, side:"l", bones:[/lower.?leg|calf|shin/i], range:[0,140]}],
+        ["knee_flex_r",{label:"Knee Flexion — Right",plane:"sagittal",  sign:-1, side:"r", bones:[/lower.?leg|calf|shin/i], range:[0,140]}],
+        ["knee_ext_l", {label:"Knee Extension — Left",plane:"sagittal", sign:+1, side:"l", bones:[/lower.?leg|calf|shin/i], range:[-10,0]}],
+        ["knee_ext_r", {label:"Knee Extension — Right",plane:"sagittal",sign:+1, side:"r", bones:[/lower.?leg|calf|shin/i], range:[-10,0]}],
       ]],
       ["Ankle",[
-        ["ankle_df_l",{label:"Dorsiflexion — Left", axis:"z", sign:+1, side:"l", bones:[/ankle|foot/i], range:[-20,20]}],
-        ["ankle_df_r",{label:"Dorsiflexion — Right", axis:"z", sign:+1, side:"r", bones:[/ankle|foot/i], range:[-20,20]}],
-        ["ankle_pf_l",{label:"Plantarflexion — Left", axis:"z", sign:-1, side:"l", bones:[/ankle|foot/i], range:[-50,40]}],
-        ["ankle_pf_r",{label:"Plantarflexion — Right", axis:"z", sign:-1, side:"r", bones:[/ankle|foot/i], range:[-50,40]}],
+        ["ankle_df_l",{label:"Dorsiflexion — Left",  plane:"sagittal", sign:+1, side:"l", bones:[/ankle|foot/i], range:[-20,20]}],
+        ["ankle_df_r",{label:"Dorsiflexion — Right", plane:"sagittal", sign:+1, side:"r", bones:[/ankle|foot/i], range:[-20,20]}],
+        ["ankle_pf_l",{label:"Plantarflexion — Left",plane:"sagittal", sign:-1, side:"l", bones:[/ankle|foot/i], range:[-50,40]}],
+        ["ankle_pf_r",{label:"Plantarflexion — Right",plane:"sagittal",sign:-1, side:"r", bones:[/ankle|foot/i], range:[-50,40]}],
       ]],
       ["Subtalar / TT",[
-        ["foot_inv",{label:"Forefoot Inversion", axis:"x", sign:-1, side:"", bones:[/foot|metatars/i], range:[0,30]}],
-        ["foot_evr",{label:"Forefoot Eversion", axis:"x", sign:+1, side:"", bones:[/foot|metatars/i], range:[0,20]}],
-        ["hind_inv",{label:"Hindfoot Inversion", axis:"x", sign:-1, side:"", bones:[/calcaneus|heel/i], range:[0,10]}],
-        ["hind_evr",{label:"Hindfoot Eversion", axis:"x", sign:+1, side:"", bones:[/calcaneus|heel/i], range:[0,10]}],
+        ["foot_inv",{label:"Forefoot Inversion", plane:"frontal",  sign:-1, side:"", bones:[/foot|metatars/i], range:[0,30]}],
+        ["foot_evr",{label:"Forefoot Eversion",  plane:"frontal",  sign:+1, side:"", bones:[/foot|metatars/i], range:[0,20]}],
+        ["hind_inv",{label:"Hindfoot Inversion", plane:"frontal",  sign:-1, side:"", bones:[/calcaneus|heel/i], range:[0,10]}],
+        ["hind_evr",{label:"Hindfoot Eversion",  plane:"frontal",  sign:+1, side:"", bones:[/calcaneus|heel/i], range:[0,10]}],
       ]],
       ["Toes",[
-        ["mtp_flex",{label:"MTP Flexion", axis:"z", sign:-1, side:"", bones:[/mtp/i], range:[0,40]}],
-        ["mtp_ext",{label:"MTP Extension", axis:"z", sign:+1, side:"", bones:[/mtp/i], range:[0,80]}],
-        ["pip_toe_f",{label:"PIP Flexion (Toe)", axis:"z", sign:-1, side:"", bones:[/pip/i], range:[0,35]}],
-        ["pip_toe_e",{label:"PIP Extension (Toe)", axis:"z", sign:+1, side:"", bones:[/pip/i], range:[-5,0]}],
-        ["dip_flex",{label:"DIP Flexion", axis:"z", sign:-1, side:"", bones:[/dip/i], range:[0,90]}],
-        ["dip_ext",{label:"DIP Extension", axis:"z", sign:+1, side:"", bones:[/dip/i], range:[-10,0]}]
+        ["mtp_flex",{label:"MTP Flexion", plane:"sagittal", sign:-1, side:"", bones:[/mtp/i], range:[0,40]}],
+        ["mtp_ext",{label:"MTP Extension",plane:"sagittal", sign:+1, side:"", bones:[/mtp/i], range:[0,80]}],
+        ["pip_toe_f",{label:"PIP Flexion (Toe)", plane:"sagittal", sign:-1, side:"", bones:[/pip/i], range:[0,35]}],
+        ["pip_toe_e",{label:"PIP Extension (Toe)",plane:"sagittal", sign:+1, side:"", bones:[/pip/i], range:[-5,0]}],
+        ["dip_flex",{label:"DIP Flexion", plane:"sagittal", sign:-1, side:"", bones:[/dip/i], range:[0,90]}],
+        ["dip_ext",{label:"DIP Extension",plane:"sagittal", sign:+1, side:"", bones:[/dip/i], range:[-10,0]}]
       ]]
     ]
   };
 
-  /* GLOBAL current region (FIX) */
+  /* ===== Region menu state ===== */
   let CURRENT = null;
 
   function setRegion(which){
-    CURRENT = (which==='upper') ? UPPER : LOWER;   // <-- no 'let' here
+    CURRENT = (which==='upper') ? UPPER : LOWER;
     segUpper.classList.toggle('on', which==='upper');
     segLower.classList.toggle('on', which!=='upper');
     segUpper.setAttribute('aria-selected', String(which==='upper'));
@@ -475,19 +493,26 @@
         const o = document.createElement("option");
         o.value = key;
         o.textContent = cfg.label;
-        og.appendChild(o);                 // <-- append to optgroup
+        og.appendChild(o);
       }
       actionSel.appendChild(og);
     }
     if (actionSel.options.length) actionSel.selectedIndex = 0;
   }
 
+  /* Search configs across BOTH regions (used by posture presets) */
+  function cfgFromKeyGlobal(key){
+    for (const G of [UPPER, LOWER]){
+      for (const [, items] of G.groups){
+        for (const [k,c] of items){ if (k===key) return c; }
+      }
+    }
+    return null;
+  }
   function cfgFromKey(key){
     if (!CURRENT) return null;
     for (const [, items] of CURRENT.groups){
-      for (const [k,c] of items){
-        if (k === key) return c;
-      }
+      for (const [k,c] of items){ if (k===key) return c; }
     }
     return null;
   }
@@ -515,15 +540,6 @@
     ));
     b.quaternion.copy(qb).multiply(dq);
   }
-  function findOne(reList){
-    if (!skeleton) return null;
-    const names = skeleton.bones.map(b=>b.name.toLowerCase());
-    for (const re of reList){
-      const i = names.findIndex(n => re.test(n));
-      if (i >= 0) return skeleton.bones[i];
-    }
-    return null;
-  }
 
   function zeroAllJoints(){
     for (const [,bind] of JOINT_BIND.entries()){
@@ -535,22 +551,42 @@
 
   function applyPosturePreset(kind){
     zeroAllJoints();
-    if (kind === "stand"){ model.rotation.x = 0; groundSnap(); fitView(); return; }
-    if (kind === "sit"){
-      const L = findOne([/\bupper.?leg_l\b/i, /\bthigh_l\b/i]);
-      const R = findOne([/\bupper.?leg_r\b/i, /\bthigh_r\b/i]);
-      if (L) rotateBoneDelta(L, -90, 0, 0);
-      if (R) rotateBoneDelta(R, -90, 0, 0);
-      const kfl = cfgFromKey("knee_flex_l"); const kfr = cfgFromKey("knee_flex_r");
-      if (kfl) applyMotion("knee_flex_l", kfl, 90);
-      if (kfr) applyMotion("knee_flex_r", kfr, 90);
-      const adfl = cfgFromKey("ankle_df_l"); const adfr = cfgFromKey("ankle_df_r");
-      if (adfl) applyMotion("ankle_df_l", adfl, 5);
-      if (adfr) applyMotion("ankle_df_r", adfr, 5);
-      model.rotation.x = 0; groundSnap(); fitView(); return;
+
+    if (kind === "stand"){
+      model.rotation.x = 0;
+      groundSnap(); fitView();
+      return;
     }
-    if (kind === "supine"){ model.rotation.x = Math.PI/2; model.position.y += 0.02; groundSnap(); fitView(); return; }
-    if (kind === "prone"){ model.rotation.x = -Math.PI/2; model.position.y += 0.02; groundSnap(); fitView(); return; }
+    if (kind === "sit"){
+      // Drive via joint configs so it works regardless of tab.
+      const hipL = cfgFromKeyGlobal("hip_flex_l");
+      const hipR = cfgFromKeyGlobal("hip_flex_r");
+      const kneeL = cfgFromKeyGlobal("knee_flex_l");
+      const kneeR = cfgFromKeyGlobal("knee_flex_r");
+      const dfL = cfgFromKeyGlobal("ankle_df_l");
+      const dfR = cfgFromKeyGlobal("ankle_df_r");
+      if (hipL) applyMotion("hip_flex_l", hipL, 90);
+      if (hipR) applyMotion("hip_flex_r", hipR, 90);
+      if (kneeL) applyMotion("knee_flex_l", kneeL, 90);
+      if (kneeR) applyMotion("knee_flex_r", kneeR, 90);
+      if (dfL) applyMotion("ankle_df_l", dfL, 5);
+      if (dfR) applyMotion("ankle_df_r", dfR, 5);
+      model.rotation.x = 0;
+      groundSnap(); fitView();
+      return;
+    }
+    if (kind === "supine"){
+      model.rotation.x = Math.PI/2;
+      model.position.y += 0.02;
+      groundSnap(); fitView();
+      return;
+    }
+    if (kind === "prone"){
+      model.rotation.x = -Math.PI/2;
+      model.position.y += 0.02;
+      groundSnap(); fitView();
+      return;
+    }
   }
 
   /* ===== UI wiring ===== */
@@ -621,11 +657,17 @@
         msg.textContent = "✅ Model loaded";
         log("Model load OK");
         populateBones();
-        setRegion("upper");       // initializes CURRENT + menu
+        setRegion("upper");       // init CURRENT + populate menu
         syncActionUI();
       },
-      (xhr) => { msg.textContent = xhr.lengthComputable ? `Loading ${Math.round((xhr.loaded/xhr.total)*100)}%` : "Loading…"; },
-      (err) => { console.error(err); msg.textContent = "⚠️ Load error"; log(`Error: ${err?.message || err}`); }
+      (xhr) => {
+        msg.textContent = xhr.lengthComputable ? `Loading ${Math.round((xhr.loaded/xhr.total)*100)}%` : "Loading…";
+      },
+      (err) => {
+        console.error(err);
+        msg.textContent = "⚠️ Load error";
+        log(`Error: ${err?.message || err}`);
+      }
     );
   }
   loadModel();
