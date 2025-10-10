@@ -309,6 +309,9 @@ renderer.toneMappingExposure = 1.0;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
+/* Prevent touch gestures from interfering with picking */
+renderer.domElement.style.touchAction = 'none';
+
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x0b1220);
 
@@ -410,7 +413,25 @@ const user = { fulcrum: dot(COLORS.fulcrum), stationary: dot(COLORS.stationary),
 Object.values(user).forEach(m => { m.visible = false; scene.add(m); });
 const userLocal = { fulcrum:null, stationary:null, moving:null };
 
+/* --- Picking mode (prevents SVG from stealing clicks & freezes camera) --- */
 let target = null;
+let picking = false;
+function beginPicking(which){
+  picking = true;
+  target = which;
+  controls.enabled = false;
+  document.getElementById('gonioHost').style.pointerEvents = 'none';
+  canvas.style.cursor = 'crosshair';
+  log(`Place ${which}`);
+}
+function endPicking(){
+  picking = false;
+  target = null;
+  controls.enabled = !lock3D;
+  document.getElementById('gonioHost').style.pointerEvents = '';
+  canvas.style.cursor = 'default';
+}
+
 const ray = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
@@ -425,16 +446,21 @@ function placePoint(name, worldPoint) {
   updateFromLocals();
 }
 
-/* RAYCAST NOW ONLY HITS THE MODEL (prevents dot drifting to hair/other) */
+/* Canvas click: only when picking, and only intersect the model */
+renderer.domElement.style.touchAction = 'none';
 canvas.addEventListener("pointerdown", (e) => {
-  if (!target || !model) return;
+  if (!picking || !model) return;
+
   const r = canvas.getBoundingClientRect();
   mouse.x = ((e.clientX - r.left) / r.width) * 2 - 1;
   mouse.y = -((e.clientY - r.top) / r.height) * 2 + 1;
+
   ray.setFromCamera(mouse, camera);
-  const hits = ray.intersectObject(model, true); // <— only the model
+  const hits = ray.intersectObject(model, true);
   if (!hits.length) return;
-  placePoint(target, hits[0].point); target = null;
+
+  placePoint(target, hits[0].point);
+  endPicking();
 });
 
 const line1 = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: COLORS.stationary }));
@@ -500,10 +526,10 @@ function updateFromLocals() {
   }
 }
 
-/* Pills */
-document.getElementById("pickFulcrum").onclick   = () => { target = "fulcrum";   log("Place Fulcrum");   };
-document.getElementById("pickStationary").onclick= () => { target = "stationary";log("Place Stationary"); };
-document.getElementById("pickMoving").onclick    = () => { target = "moving";    log("Place Moving");    };
+/* Pills -> begin picking (instead of directly setting target) */
+document.getElementById("pickFulcrum").onclick   = () => beginPicking("fulcrum");
+document.getElementById("pickStationary").onclick= () => beginPicking("stationary");
+document.getElementById("pickMoving").onclick    = () => beginPicking("moving");
 
 /* Locks */
 let lock3D=false, lockGonio=false;
