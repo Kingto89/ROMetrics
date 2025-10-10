@@ -53,14 +53,18 @@
   summary{cursor:pointer; font-weight:600; color:#e2e8f0}
   .group{padding:6px 4px}
 
-  /* Note bubble (X pinned right) */
+  /* Note bubble (X pinned to far right) */
   .note{
     position:fixed; right:16px; bottom:16px; width:min(520px, 90vw);
     background:rgba(2,6,23,.9); border:1px solid #334155; border-radius:12px;
     padding:14px 46px 14px 14px; z-index:45; backdrop-filter: blur(6px);
   }
   .note h4{margin:0 0 6px 0}
-  .note .x{position:absolute; right:10px; top:8px; cursor:pointer; border:0; background:transparent; color:#94a3b8; font-size:18px; display:block}
+  .note .x{
+    position:absolute; top:8px; right:10px;
+    width:auto; height:auto; line-height:1;
+    cursor:pointer; border:0; background:transparent; color:#94a3b8; font-size:18px; display:block;
+  }
   .note .md *{margin:0 0 6px 0; line-height:1.35}
   .note .md ul{padding-left:18px}
 
@@ -123,7 +127,6 @@
     <button id="resetMeasurement" title="Clear dots + lines + goniometer">🧹 Reset Measurement</button>
   </div>
 
-  <!-- Always-visible locks -->
   <label>Interaction Locks</label>
   <div class="row">
     <button id="lock3D">🔓 3D: Unlocked</button>
@@ -141,6 +144,11 @@
         <input type="range" min="0" max="360" step="1" value="0" id="rotateMove">
         <label>Rotate Goniometer (°)</label>
         <input type="range" min="0" max="360" step="1" value="0" id="rotateGonio">
+        <!-- NEW: Gonio pan controls -->
+        <label>Gonio X (px)</label>
+        <input type="range" min="0" max="2000" step="1" value="0" id="gonioX">
+        <label>Gonio Y (px)</label>
+        <input type="range" min="0" max="2000" step="1" value="0" id="gonioY">
       </details>
 
       <details id="ctrlModel">
@@ -153,6 +161,9 @@
         <input type="range" min="-0.2" max="0.6" step="0.005" value="0" id="modelY">
         <label>Model Scale (%)</label>
         <input type="range" min="60" max="160" step="1" value="100" id="modelScale">
+        <!-- NEW: Model yaw -->
+        <label>Model Yaw (°)</label>
+        <input type="range" min="0" max="360" step="1" value="0" id="modelYaw">
         <div class="row" style="margin-top:6px">
           <button id="resetPose">Reset Pose</button>
         </div>
@@ -238,6 +249,8 @@ const lockGonioBtn = document.getElementById("lockGonio");
 const sizeEl = document.getElementById("gonioSize");
 const rotateMoveEl = document.getElementById("rotateMove");
 const rotateGonioEl = document.getElementById("rotateGonio");
+const gonioXEl = document.getElementById("gonioX");
+const gonioYEl = document.getElementById("gonioY");
 
 const regionSel = document.getElementById("regionSel");
 const motionSel = document.getElementById("motionSel");
@@ -255,6 +268,7 @@ const modelX = document.getElementById("modelX");
 const modelZ = document.getElementById("modelZ");
 const modelY = document.getElementById("modelY");
 const modelScale = document.getElementById("modelScale");
+const modelYaw = document.getElementById("modelYaw");
 const resetPose = document.getElementById("resetPose");
 
 const log = (t)=>{ logEl.textContent += t + "\n"; logEl.scrollTop = logEl.scrollHeight; };
@@ -334,6 +348,7 @@ ground.receiveShadow = true;
 scene.add(ground);
 
 /* ========== Model loader (+ ground-snap) ========== */
+import { GLTFLoader as _GLTF } from "three/addons/loaders/GLTFLoader.js"; // (already imported above; kept consistent)
 const loader = new GLTFLoader();
 loader.setMeshoptDecoder(MeshoptDecoder);
 const draco = new DRACOLoader(); draco.setDecoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/draco/"); loader.setDRACOLoader(draco);
@@ -410,14 +425,14 @@ function placePoint(name, worldPoint) {
   updateFromLocals();
 }
 
+/* RAYCAST NOW ONLY HITS THE MODEL (prevents dot drifting to hair/other) */
 canvas.addEventListener("pointerdown", (e) => {
   if (!target || !model) return;
   const r = canvas.getBoundingClientRect();
   mouse.x = ((e.clientX - r.left) / r.width) * 2 - 1;
   mouse.y = -((e.clientY - r.top) / r.height) * 2 + 1;
   ray.setFromCamera(mouse, camera);
-  const hits = ray.intersectObjects(scene.children, true)
-    .filter(h => h.object !== ground);
+  const hits = ray.intersectObject(model, true); // <— only the model
   if (!hits.length) return;
   placePoint(target, hits[0].point); target = null;
 });
@@ -433,16 +448,13 @@ function setAngleHUD(angle, romStr=""){
 /* ROM tracking (zero at current position) */
 let romActive = false;
 startROMBtn.onclick = ()=>{
-  Gonio.zeroHere();                 // zero at current arm
-  rotateMoveEl.value = 0;           // slider shows 0
+  Gonio.zeroHere();       // zero at current arm
+  rotateMoveEl.value = 0; // slider shows 0
   romActive = true;
   log(`ROM start @ 0°`);
 };
 resetROMBtn.onclick = ()=>{ romActive = false; log(`ROM reset`); };
-function romString(){
-  if (!romActive) return "";
-  return `${Gonio.angle.toFixed(0)}° (start 0°)`;
-}
+function romString(){ return romActive ? `${Gonio.angle.toFixed(0)}° (start 0°)` : ""; }
 
 /* Auto-align goniometer to dots; zero at that alignment */
 function autoAlignGonioFromDots(f, s, m){
@@ -451,10 +463,16 @@ function autoAlignGonioFromDots(f, s, m){
   const movDeg  = Gonio.degFromScreenVec(Ms.x - Fs.x, Ms.y - Fs.y);
 
   Gonio.show();
-  Gonio.setPose(Fs.x, Fs.y, baseDeg, movDeg); // VISUAL: green arm points to green dot
-  Gonio.zeroHere();                           // ANGLE: 0 at this pose
+  Gonio.setPose(Fs.x, Fs.y, baseDeg, movDeg); // visual align
+  Gonio.zeroHere();                           // angle zero
   rotateMoveEl.value = 0;
   rotateGonioEl.value = Math.round(Gonio.getUserRot());
+
+  // update gonio pan sliders to current center
+  const p = Gonio.getPan();
+  gonioXEl.value = Math.round(p.x);
+  gonioYEl.value = Math.round(p.y);
+
   romActive = true;
   setAngleHUD(Gonio.angle, romString());
 }
@@ -500,7 +518,7 @@ set3DLock(false); setGonioLock(false);
 lock3DBtn.onclick = ()=> set3DLock(!lock3D);
 lockGonioBtn.onclick = ()=> setGonioLock(!lockGonio);
 
-/* Controllers: only one open + auto-locks */
+/* Controllers: only one open + auto-locks (unchanged) */
 const ctrlGonio = document.getElementById("ctrlGonio");
 const ctrlModel = document.getElementById("ctrlModel");
 [ctrlGonio, ctrlModel].forEach(d=>{
@@ -517,6 +535,10 @@ sizeEl.oninput = ()=> { Gonio.setScale(parseInt(sizeEl.value,10)/100); Gonio.ref
 rotateMoveEl.oninput = ()=>{ if (lockGonio) return; Gonio.setMovDegRel(parseFloat(rotateMoveEl.value)); setAngleHUD(Gonio.angle, romString()); };
 rotateGonioEl.oninput = ()=>{ if (lockGonio) return; Gonio.setUserRot(parseFloat(rotateGonioEl.value)); setAngleHUD(Gonio.angle, romString()); };
 
+/* NEW: Gonio pan sliders */
+gonioXEl.oninput = ()=>{ const y = Gonio.getPan().y; Gonio.setPan(parseFloat(gonioXEl.value), y); };
+gonioYEl.oninput = ()=>{ const x = Gonio.getPan().x; Gonio.setPan(x, parseFloat(gonioYEl.value)); };
+
 function applyModelTransform(){
   if(!model) return;
   model.position.x = parseFloat(modelX.value);
@@ -525,10 +547,11 @@ function applyModelTransform(){
   model.scale.setScalar(s);
   groundSnap();
   model.position.y += parseFloat(modelY.value);
+  model.rotation.y = THREE.MathUtils.degToRad(parseFloat(modelYaw.value)); // NEW yaw
 }
-[modelX,modelZ,modelY,modelScale].forEach(el=> el.addEventListener('input', applyModelTransform));
+[modelX,modelZ,modelY,modelScale,modelYaw].forEach(el=> el.addEventListener('input', applyModelTransform));
 resetPose.onclick = ()=>{
-  modelX.value = "0"; modelZ.value = "0.6"; modelY.value = "0"; modelScale.value = "100";
+  modelX.value = "0"; modelZ.value = "0.6"; modelY.value = "0"; modelScale.value = "100"; modelYaw.value="0";
   applyModelTransform(); controls.target.set(0,1.1,0);
 };
 
@@ -558,7 +581,7 @@ const clock = new THREE.Clock();
   requestAnimationFrame(animate);
 })();
 
-/* ===================== GONIOMETER MODULE (visual align + zeroRef) ===================== */
+/* ===================== GONIOMETER MODULE (visual align + zeroRef + pan API) ===================== */
 const Gonio = (() => {
   const host  = document.getElementById('gonioHost');
   const svg   = document.getElementById('gonioSvg');
@@ -615,7 +638,7 @@ const Gonio = (() => {
 
   let mov=30, zoom=1, panX=innerWidth/2, panY=innerHeight/2;
   let baseRot=0, userRot=0, scale=1;
-  let zeroRef=0; // NEW: reference (visual) moving angle for ROM zero
+  let zeroRef=0; // reference for ROM zero
   let draggingArm=false, draggingPan=false, lastPanScreen=null;
 
   function applyView(){ viewport.setAttribute('transform',`translate(${panX},${panY}) scale(${zoom*scale})`); }
@@ -690,7 +713,7 @@ const Gonio = (() => {
     e.stopPropagation(); e.preventDefault();
     const pt = svg.createSVGPoint(); pt.x=e.clientX; pt.y=e.clientY;
     const p = pt.matrixTransform(rotWrap.getScreenCTM().inverse());
-    mov = toDegUp(p.x, p.y); // 0..360 visual
+    mov = toDegUp(p.x, p.y); // 0..360
     render();
   }
   function endArm(){ draggingArm=false; }
@@ -707,9 +730,9 @@ const Gonio = (() => {
   function show(){ host.classList.remove('hide'); host.setAttribute('aria-hidden','false'); clampPanToViewport(); applyView(); }
   function hide(){ host.classList.add('hide'); host.setAttribute('aria-hidden','true'); }
 
-  // baseDeg = stationary vector; movDeg = moving vector (both absolute screen angles)
+  // baseDeg=stationary vector; movDeg=moving vector (absolute screen angles)
   function setPose(cx,cy,baseDeg,movDeg){
-    panX=cx; panY=cy; baseRot=baseDeg; mov=clamp360(movDeg-baseDeg); // VISUAL alignment
+    panX=cx; panY=cy; baseRot=baseDeg; mov=clamp360(movDeg-baseDeg);
     clampPanToViewport(); applyView(); applyRot(); applyLabelFix(); render();
   }
 
@@ -717,12 +740,16 @@ const Gonio = (() => {
   function degFromScreenVec(dx,dy){ return toDegUp(dx,dy); }
 
   // Relative-zero API
-  function zeroHere(){ zeroRef = clamp360(mov); }                    // set current visual as 0
-  function setMovDegRel(deg){ mov = clamp360(zeroRef + deg); render(); } // slider sets relative offset
-  function setMovDegAbs(deg){ mov = clamp360(deg); render(); }       // kept for completeness
+  function zeroHere(){ zeroRef = clamp360(mov); }
+  function setMovDegRel(deg){ mov = clamp360(zeroRef + deg); render(); }
+  function setMovDegAbs(deg){ mov = clamp360(deg); render(); }
   function setUserRot(deg){ userRot = clamp360(deg); applyRot(); applyLabelFix(); render(); }
   function getUserRot(){ return clamp360(userRot); }
   function getMovDegAbs(){ return clamp360(mov); }
+
+  // NEW: expose pan getters/setters for sliders
+  function setPan(x,y){ panX = x; panY = y; clampPanToViewport(); applyView(); }
+  function getPan(){ return { x: panX, y: panY }; }
 
   // Angle is shortest arc from zeroRef to mov (<=180°)
   function currentAngle(){ return shortest(mov, zeroRef); }
@@ -730,6 +757,7 @@ const Gonio = (() => {
   return {
     show, hide, setPose, setScale, degFromScreenVec, _clampNow:clampNow,
     zeroHere, setMovDegRel, setMovDegAbs, setUserRot, getUserRot, getMovDegAbs,
+    setPan, getPan,
     get angle(){ return currentAngle(); },
     refresh: ()=>{ applyView(); applyRot(); applyLabelFix(); render(); }
   };
