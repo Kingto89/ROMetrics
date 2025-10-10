@@ -29,7 +29,7 @@
   #log{background:#0b1220;border:1px solid #1f2937;height:130px;overflow:auto;border-radius:8px;padding:8px}
   .hide{display:none}.lockOn{background:#0b3a1f;border-color:#16a34a}
 
-  /* Pills stacked */
+  /* Pills stacked, #3 matches #1/#2 */
   .pill{
     display:flex; flex-direction:column; align-items:center; gap:4px;
     border:2px solid #334155; border-radius:12px; padding:8px 6px; line-height:1;
@@ -53,14 +53,14 @@
   summary{cursor:pointer; font-weight:600; color:#e2e8f0}
   .group{padding:6px 4px}
 
-  /* Note bubble (X far right) */
+  /* Note bubble (X pinned right) */
   .note{
     position:fixed; right:16px; bottom:16px; width:min(520px, 90vw);
-    background:rgba(2,6,23,.85); border:1px solid #334155; border-radius:12px;
-    padding:14px 44px 14px 14px; z-index:45; backdrop-filter: blur(6px);
+    background:rgba(2,6,23,.9); border:1px solid #334155; border-radius:12px;
+    padding:14px 46px 14px 14px; z-index:45; backdrop-filter: blur(6px);
   }
   .note h4{margin:0 0 6px 0}
-  .note .x{position:absolute; right:10px; top:8px; cursor:pointer; border:0; background:transparent; color:#94a3b8; font-size:18px}
+  .note .x{position:absolute; right:10px; top:8px; cursor:pointer; border:0; background:transparent; color:#94a3b8; font-size:18px; display:block}
   .note .md *{margin:0 0 6px 0; line-height:1.35}
   .note .md ul{padding-left:18px}
 
@@ -123,7 +123,7 @@
     <button id="resetMeasurement" title="Clear dots + lines + goniometer">🧹 Reset Measurement</button>
   </div>
 
-  <!-- Always-visible locks row (so model lock is easy to find) -->
+  <!-- Always-visible locks -->
   <label>Interaction Locks</label>
   <div class="row">
     <button id="lock3D">🔓 3D: Unlocked</button>
@@ -137,7 +137,7 @@
         <summary>🧭 Goniometer</summary>
         <label>Gonio Size (10–200%)</label>
         <input type="range" min="10" max="200" step="5" value="100" id="gonioSize">
-        <label>Rotate Moving Arm (°) — 0–360</label>
+        <label>Rotate Moving Arm (°) — relative 0–360</label>
         <input type="range" min="0" max="360" step="1" value="0" id="rotateMove">
         <label>Rotate Goniometer (°)</label>
         <input type="range" min="0" max="360" step="1" value="0" id="rotateGonio">
@@ -430,34 +430,32 @@ function setAngleHUD(angle, romStr=""){
   hud.textContent = romStr ? `Angle: ${angle.toFixed(0)}° | ROM: ${romStr}` : `Angle: ${angle.toFixed(0)}°`;
 }
 
-/* ROM tracking */
-let romActive = false, romStartDeg = null;
-startROMBtn.onclick = ()=>{ romActive = true; romStartDeg = Gonio.angle; log(`ROM start @ ${romStartDeg.toFixed(0)}°`); };
-resetROMBtn.onclick = ()=>{ romActive = false; romStartDeg = null; log(`ROM reset`); };
-
+/* ROM tracking (zero at current position) */
+let romActive = false;
+startROMBtn.onclick = ()=>{
+  Gonio.zeroHere();                 // zero at current arm
+  rotateMoveEl.value = 0;           // slider shows 0
+  romActive = true;
+  log(`ROM start @ 0°`);
+};
+resetROMBtn.onclick = ()=>{ romActive = false; log(`ROM reset`); };
 function romString(){
-  if (!romActive || romStartDeg==null) return "";
-  const delta = Math.abs(Gonio.angle - romStartDeg);
-  return `${delta.toFixed(0)}° (start ${romStartDeg.toFixed(0)}°)`;
+  if (!romActive) return "";
+  return `${Gonio.angle.toFixed(0)}° (start 0°)`;
 }
 
-/* Auto-align goniometer to dots — and zero the moving arm */
+/* Auto-align goniometer to dots; zero at that alignment */
 function autoAlignGonioFromDots(f, s, m){
   const Fs = toScreen(f), Ss = toScreen(s), Ms = toScreen(m);
   const baseDeg = Gonio.degFromScreenVec(Ss.x - Fs.x, Ss.y - Fs.y);
   const movDeg  = Gonio.degFromScreenVec(Ms.x - Fs.x, Ms.y - Fs.y);
 
   Gonio.show();
-  Gonio.setPose(Fs.x, Fs.y, baseDeg, movDeg);
-
-  // IMPORTANT: zero moving arm so Angle=0 at start, and start ROM at 0
-  Gonio.setMovDegAbs(0);
+  Gonio.setPose(Fs.x, Fs.y, baseDeg, movDeg); // VISUAL: green arm points to green dot
+  Gonio.zeroHere();                           // ANGLE: 0 at this pose
   rotateMoveEl.value = 0;
   rotateGonioEl.value = Math.round(Gonio.getUserRot());
-
   romActive = true;
-  romStartDeg = 0;
-
   setAngleHUD(Gonio.angle, romString());
 }
 
@@ -484,12 +482,12 @@ function updateFromLocals() {
   }
 }
 
-/* Pill buttons */
+/* Pills */
 document.getElementById("pickFulcrum").onclick   = () => { target = "fulcrum";   log("Place Fulcrum");   };
 document.getElementById("pickStationary").onclick= () => { target = "stationary";log("Place Stationary"); };
 document.getElementById("pickMoving").onclick    = () => { target = "moving";    log("Place Moving");    };
 
-/* Locks (always visible row) */
+/* Locks */
 let lock3D=false, lockGonio=false;
 function set3DLock(v){ lock3D=v; controls.enabled=!lock3D; lock3DBtn.textContent=(lock3D? "🔒 3D: Locked":"🔓 3D: Unlocked"); lock3DBtn.classList.toggle('lockOn', lock3D); }
 function setGonioLock(v){
@@ -502,7 +500,7 @@ set3DLock(false); setGonioLock(false);
 lock3DBtn.onclick = ()=> set3DLock(!lock3D);
 lockGonioBtn.onclick = ()=> setGonioLock(!lockGonio);
 
-/* Controllers accordion: only one open at a time + auto-locks */
+/* Controllers: only one open + auto-locks */
 const ctrlGonio = document.getElementById("ctrlGonio");
 const ctrlModel = document.getElementById("ctrlModel");
 [ctrlGonio, ctrlModel].forEach(d=>{
@@ -512,11 +510,11 @@ const ctrlModel = document.getElementById("ctrlModel");
     if (d===ctrlModel){ ctrlGonio.open=false; set3DLock(false); setGonioLock(true);  }
   });
 });
-document.getElementById("controllers").open = false; // collapsed on load
+document.getElementById("controllers").open = false;
 
 /* Sliders */
 sizeEl.oninput = ()=> { Gonio.setScale(parseInt(sizeEl.value,10)/100); Gonio.refresh(); };
-rotateMoveEl.oninput = ()=>{ if (lockGonio) return; Gonio.setMovDegAbs(parseFloat(rotateMoveEl.value)); setAngleHUD(Gonio.angle, romString()); };
+rotateMoveEl.oninput = ()=>{ if (lockGonio) return; Gonio.setMovDegRel(parseFloat(rotateMoveEl.value)); setAngleHUD(Gonio.angle, romString()); };
 rotateGonioEl.oninput = ()=>{ if (lockGonio) return; Gonio.setUserRot(parseFloat(rotateGonioEl.value)); setAngleHUD(Gonio.angle, romString()); };
 
 function applyModelTransform(){
@@ -526,7 +524,7 @@ function applyModelTransform(){
   const s = parseInt(modelScale.value,10)/100;
   model.scale.setScalar(s);
   groundSnap();
-  model.position.y += parseFloat(modelY.value); // optional offset after snap
+  model.position.y += parseFloat(modelY.value);
 }
 [modelX,modelZ,modelY,modelScale].forEach(el=> el.addEventListener('input', applyModelTransform));
 resetPose.onclick = ()=>{
@@ -540,7 +538,7 @@ resetMeasurementBtn.onclick = ()=>{
   userLocal.fulcrum = userLocal.stationary = userLocal.moving = null;
   line1.visible = line2.visible = false;
   Gonio.hide();
-  romActive = false; romStartDeg = null;
+  romActive = false;
   rotateMoveEl.value = 0; rotateGonioEl.value = 0;
   setAngleHUD(0,"");
   log("Measurement reset");
@@ -560,7 +558,7 @@ const clock = new THREE.Clock();
   requestAnimationFrame(animate);
 })();
 
-/* ===================== GONIOMETER MODULE (360° moving arm) ===================== */
+/* ===================== GONIOMETER MODULE (visual align + zeroRef) ===================== */
 const Gonio = (() => {
   const host  = document.getElementById('gonioHost');
   const svg   = document.getElementById('gonioSvg');
@@ -574,6 +572,7 @@ const Gonio = (() => {
   const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
   const clamp360=a=>(a%360+360)%360;
   const toDegUp=(x,y)=>clamp360(Math.atan2(-y,x)*180/Math.PI+90);
+  const shortest=(a,b)=>{ let d=clamp360(a-b); return d>180? 360-d: d; };
 
   (function build(){
     const ticks = document.getElementById('ticks');
@@ -616,6 +615,7 @@ const Gonio = (() => {
 
   let mov=30, zoom=1, panX=innerWidth/2, panY=innerHeight/2;
   let baseRot=0, userRot=0, scale=1;
+  let zeroRef=0; // NEW: reference (visual) moving angle for ROM zero
   let draggingArm=false, draggingPan=false, lastPanScreen=null;
 
   function applyView(){ viewport.setAttribute('transform',`translate(${panX},${panY}) scale(${zoom*scale})`); }
@@ -648,7 +648,7 @@ const Gonio = (() => {
   }
   clampPanToViewport(); applyView(); applyRot(); applyLabelFix(); render();
 
-  // Pan drag on empty svg (not green arm)
+  // Pan
   svg.addEventListener('pointerdown', e=>{
     if (lockGonio) return;
     if (e.target.closest('#armB_grp')) return;
@@ -677,7 +677,7 @@ const Gonio = (() => {
     clampPanToViewport(); applyView();
   }, {passive:false});
 
-  // GREEN ARM DRAG — FULL 360°
+  // Drag moving arm (visual), full 360
   function startArmDrag(e){
     if (lockGonio) return;
     e.stopPropagation(); e.preventDefault();
@@ -690,7 +690,7 @@ const Gonio = (() => {
     e.stopPropagation(); e.preventDefault();
     const pt = svg.createSVGPoint(); pt.x=e.clientX; pt.y=e.clientY;
     const p = pt.matrixTransform(rotWrap.getScreenCTM().inverse());
-    mov = toDegUp(p.x, p.y); // 0..360
+    mov = toDegUp(p.x, p.y); // 0..360 visual
     render();
   }
   function endArm(){ draggingArm=false; }
@@ -706,20 +706,30 @@ const Gonio = (() => {
 
   function show(){ host.classList.remove('hide'); host.setAttribute('aria-hidden','false'); clampPanToViewport(); applyView(); }
   function hide(){ host.classList.add('hide'); host.setAttribute('aria-hidden','true'); }
-  function setPose(cx,cy,baseDeg,movDeg){ panX=cx; panY=cy; baseRot=baseDeg; mov=clamp360(movDeg-baseDeg); clampPanToViewport(); applyView(); applyRot(); applyLabelFix(); render(); }
+
+  // baseDeg = stationary vector; movDeg = moving vector (both absolute screen angles)
+  function setPose(cx,cy,baseDeg,movDeg){
+    panX=cx; panY=cy; baseRot=baseDeg; mov=clamp360(movDeg-baseDeg); // VISUAL alignment
+    clampPanToViewport(); applyView(); applyRot(); applyLabelFix(); render();
+  }
+
   function setScale(k){ scale=clamp(k||1,0.1,2); clampPanToViewport(); applyView(); }
   function degFromScreenVec(dx,dy){ return toDegUp(dx,dy); }
 
-  // slider helpers
-  function setMovDegAbs(deg){ mov = clamp360(deg); render(); }
+  // Relative-zero API
+  function zeroHere(){ zeroRef = clamp360(mov); }                    // set current visual as 0
+  function setMovDegRel(deg){ mov = clamp360(zeroRef + deg); render(); } // slider sets relative offset
+  function setMovDegAbs(deg){ mov = clamp360(deg); render(); }       // kept for completeness
   function setUserRot(deg){ userRot = clamp360(deg); applyRot(); applyLabelFix(); render(); }
   function getUserRot(){ return clamp360(userRot); }
   function getMovDegAbs(){ return clamp360(mov); }
 
-  function currentAngle(){ const a = clamp360(mov); return a>180 ? 360-a : a; }
+  // Angle is shortest arc from zeroRef to mov (<=180°)
+  function currentAngle(){ return shortest(mov, zeroRef); }
+
   return {
     show, hide, setPose, setScale, degFromScreenVec, _clampNow:clampNow,
-    setMovDegAbs, setUserRot, getUserRot, getMovDegAbs,
+    zeroHere, setMovDegRel, setMovDegAbs, setUserRot, getUserRot, getMovDegAbs,
     get angle(){ return currentAngle(); },
     refresh: ()=>{ applyView(); applyRot(); applyLabelFix(); render(); }
   };
@@ -768,7 +778,7 @@ function regionToTitle(r){
     toes_mtp_pip_dip:"Toes (MTP, PIP, DIP)"
   }[r]||r.replace(/_/g,' '));
 }
-showNoteBtn.onclick = async ()=>{
+document.getElementById("showNote").onclick = async ()=>{
   const region = regionSel.value;
   const motion = motionSel.value || "(General)";
   await loadNote(region, motion);
