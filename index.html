@@ -29,7 +29,7 @@
   #log{background:#0b1220;border:1px solid #1f2937;height:130px;overflow:auto;border-radius:8px;padding:8px}
   .hide{display:none}.lockOn{background:#0b3a1f;border-color:#16a34a}
 
-  /* Pills: dot+number on top, word under (stacked) */
+  /* Pills stacked */
   .pill{
     display:flex; flex-direction:column; align-items:center; gap:4px;
     border:2px solid #334155; border-radius:12px; padding:8px 6px; line-height:1;
@@ -53,7 +53,7 @@
   summary{cursor:pointer; font-weight:600; color:#e2e8f0}
   .group{padding:6px 4px}
 
-  /* Note bubble (X pinned far right) */
+  /* Note bubble (X far right) */
   .note{
     position:fixed; right:16px; bottom:16px; width:min(520px, 90vw);
     background:rgba(2,6,23,.85); border:1px solid #334155; border-radius:12px;
@@ -315,7 +315,7 @@ key.shadow.camera.top = 4;
 key.shadow.camera.bottom = -4;
 scene.add(key);
 
-/* Ground plane to anchor + receive shadow */
+/* Ground plane */
 const groundGeo = new THREE.PlaneGeometry(20, 20);
 const groundMat = new THREE.ShadowMaterial({ opacity: 0.45 });
 const ground = new THREE.Mesh(groundGeo, groundMat);
@@ -352,8 +352,7 @@ function groundSnap(){
   if(!model) return;
   const box = new THREE.Box3().setFromObject(model);
   const minY = box.min.y;
-  // shift down so feet sit at y=0 (ground)
-  model.position.y -= minY;
+  model.position.y -= minY; // feet = y 0
 }
 
 async function loadModel() {
@@ -369,7 +368,6 @@ async function loadModel() {
 
     groundSnap();
 
-    // initial placement (in front of “chair” spot)
     model.position.x = 0;
     model.position.z = 0.6;
     model.scale.setScalar(1.0);
@@ -412,7 +410,7 @@ canvas.addEventListener("pointerdown", (e) => {
   mouse.y = -((e.clientY - r.top) / r.height) * 2 + 1;
   ray.setFromCamera(mouse, camera);
   const hits = ray.intersectObjects(scene.children, true)
-    .filter(h => h.object !== ground); // allow clicking model/meshes
+    .filter(h => h.object !== ground);
   if (!hits.length) return;
   placePoint(target, hits[0].point); target = null;
 });
@@ -459,7 +457,7 @@ function updateFromLocals() {
     autoAlignGonioFromDots(f,s,m);
     if (followMeasure) {
       followMeasure = false;
-      document.getElementById("measureToggle")?.textContent = "🧭 Measure: OFF";
+      // measure toggle removed from UI — leave as is
       log("Measure auto-OFF");
     }
   } else {
@@ -471,8 +469,6 @@ function updateFromLocals() {
 const pickFulcrum = document.getElementById("pickFulcrum");
 const pickStationary = document.getElementById("pickStationary");
 const pickMoving = document.getElementById("pickMoving");
-const resetAll = document.getElementById("resetAll"); // (not shown now, but harmless)
-const measureToggle = document.getElementById("measureToggle"); // (not shown now)
 
 pickFulcrum.onclick   = () => { target = "fulcrum";   log("Place Fulcrum");   };
 pickStationary.onclick= () => { target = "stationary";log("Place Stationary"); };
@@ -480,16 +476,16 @@ pickMoving.onclick    = () => { target = "moving";    log("Place Moving");    };
 
 /* Locks + accordion auto-locking */
 let lock3D=false, lockGonio=false;
-function set3DLock(v){ lock3D=v; controls.enabled=!lock3D; lock3DBtn.textContent=(lock3D? "🔒 3D: Locked":"🔓 3D: Unlocked"); lock3DBtn.classList.toggle('lockOn', lock3D); }
+function set3DLock(v){ lock3D=v; controls.enabled=!lock3D; document.getElementById("lock3D").textContent=(lock3D? "🔒 3D: Locked":"🔓 3D: Unlocked"); document.getElementById("lock3D").classList.toggle('lockOn', lock3D); }
 function setGonioLock(v){
   lockGonio=v;
   document.getElementById('instrument').style.pointerEvents = lockGonio ? 'none' : 'auto';
-  lockGonioBtn.textContent=(lockGonio? "🔒 Gonio: Locked":"🔓 Gonio: Unlocked");
-  lockGonioBtn.classList.toggle('lockOn', lockGonio);
+  document.getElementById("lockGonio").textContent=(lockGonio? "🔒 Gonio: Locked":"🔓 Gonio: Unlocked");
+  document.getElementById("lockGonio").classList.toggle('lockOn', lockGonio);
 }
 set3DLock(false); setGonioLock(false);
-lock3DBtn.onclick = ()=> set3DLock(!lock3D);
-lockGonioBtn.onclick = ()=> setGonioLock(!lockGonio);
+document.getElementById("lock3D").onclick = ()=> set3DLock(!lock3D);
+document.getElementById("lockGonio").onclick = ()=> setGonioLock(!lockGonio);
 
 /* Accordion behavior: only one open + auto-locks */
 const ctrlGonio = document.getElementById("ctrlGonio");
@@ -522,7 +518,6 @@ function applyModelTransform(){
   model.position.y = baseY + parseFloat(modelY.value);
   const s = parseInt(modelScale.value,10)/100;
   model.scale.setScalar(s);
-  // keep feet near ground when scaling
   groundSnap();
 }
 [modelX,modelZ,modelY,modelScale].forEach(el=> el.addEventListener('input', applyModelTransform));
@@ -622,8 +617,8 @@ const Gonio = (() => {
   }
 
   function clampPanToViewport(){
-    const bound = 140 * zoom * scale; // approx instrument base radius in px
-    const margin = 150; // padding from screen edges
+    const bound = 140 * zoom * scale;
+    const margin = 150;
     const minX = margin + bound, maxX = innerWidth - margin - bound;
     const minY = margin + bound, maxY = innerHeight - margin - bound;
     if (minX <= maxX) panX = Math.min(maxX, Math.max(minX, panX)); else panX = innerWidth/2;
@@ -706,7 +701,7 @@ const Gonio = (() => {
   function getUserRot(){ return clamp360(userRot); }
   function getMovDegAbs(){ return clamp360(mov); }
 
-  function currentAngle(){ const a = clamp360(mov); return a>180 ? 360-a : a; } // measured 0..180
+  function currentAngle(){ const a = clamp360(mov); return a>180 ? 360-a : a; }
   return {
     show, hide, setPose, setScale, degFromScreenVec, _clampNow:clampNow,
     setMovDegAbs, setUserRot, getUserRot, getMovDegAbs,
@@ -718,7 +713,6 @@ window.Gonio = Gonio;
 
 /* ===================== NOTES LOADER (Markdown) ===================== */
 function mdToHtml(md){
-  // minimal markdown-to-HTML for our bullets/headers
   let html = md
     .replace(/^### (.*)$/gm, '<h5>$1</h5>')
     .replace(/^## (.*)$/gm, '<h4>$1</h4>')
@@ -734,7 +728,6 @@ async function loadNote(region, motion){
     const res = await fetch(url);
     if(!res.ok){ throw new Error(`HTTP ${res.status}`); }
     const md = await res.text();
-    // Try to find the motion section by heading
     const re = new RegExp(`(^|\\n)##?\\s*${motion}\\s*\\n([\\s\\S]*?)(\\n##?\\s|$)`,'i');
     const m = md.match(re);
     const section = m ? m[2].trim() : md;
