@@ -21,21 +21,20 @@
 
     /* ====== HERO ====== */
     .hero{position:relative; min-height:100svh; overflow:hidden;}
-    .hero::before{ /* backdrop image */
+    .hero::before{ /* removed bg to avoid stretch; using non-upscaling <img> instead */
       content:""; position:absolute; inset:0; z-index:0;
-      background:url('./assets/backdrop.png') center right / cover no-repeat fixed;
-      filter:saturate(1.05) contrast(1.02);
-      transform:translateZ(0);
+      background:linear-gradient(180deg, rgba(2,10,22,.15), rgba(2,10,22,.6));
     }
     .hero::after{ /* darken + vignette for legibility */
-      content:""; position:absolute; inset:0; z-index:1;
+      content:""; position:absolute; inset:0; z-index:2;
       background:
         radial-gradient(1200px 70% at 65% 45%, rgba(0,255,194,.10), transparent 60%),
-        linear-gradient(to bottom, rgba(2,10,22,.35), rgba(2,10,22,.75));
+        linear-gradient(to bottom, rgba(2,10,22,.25), rgba(2,10,22,.75));
       pointer-events:none;
     }
+    .hero-img{position:absolute; z-index:1; right:0; bottom:0; top:0; margin:auto 0; height:min(100svh, 980px); width:auto; max-width:100vw; image-rendering:auto;}
 
-    /* ====== TOP NAV (optional logo slot) ====== */
+    /* ====== TOP NAV (optional logo slot) ====== */ (optional logo slot) ====== */
     .nav{position:absolute; z-index:3; inset:18px 18px auto 18px; display:flex; align-items:center; gap:14px}
     .brand{display:flex; align-items:center; gap:10px; font-weight:700; letter-spacing:.2px}
     .brand-dot{width:10px;height:10px;border-radius:999px;background:var(--glow);box-shadow:0 0 18px var(--glow)}
@@ -82,19 +81,13 @@
 </head>
 <body>
   <main class="hero" role="main">
+    <!-- non-upscaling image to prevent blur/stretch -->
+    <img class="hero-img" src="./assets/backdrop.png" alt="Clinician reading transparent panel with holographic model" />
     <nav class="nav" aria-label="Top">
       <div class="brand"><span class="brand-dot" aria-hidden="true"></span> PT&nbsp;Lab</div>
     </nav>
-
-    <!-- Glow orbs to echo the art's brain/strength/compass -->
-    <div class="halo" aria-hidden="true">
-      <div class="orb"> <!-- brain -->
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-          <path d="M9 7a2.5 2.5 0 0 0-5 1.2c0 1.3 1.2 2 2.3 2.3M9 7v7M5.8 10.5C6 12 7.2 13 8.6 13"/>
-          <path d="M15 7a2.5 2.5 0 0 1 5 1.2c0 1.3-1.2 2-2.3 2.3M15 7v7M18.2 10.5C18 12 16.8 13 15.4 13"/>
-        </svg>
-      </div>
-      <div class="orb"> <!-- biceps -->
+    <!-- removed decorative orbs per request -->
+<div class="orb"> <!-- biceps -->
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
           <path d="M7 16s2.5 2 5 .6c1.5-.8 1.7-2.6.7-3.9-.6-.8-1.2-1.5-1.2-2.5V8m-2.4 3.1C8 11 7 10.6 7 9.2 7 7.4 8.3 6 10 6h2"/>
         </svg>
@@ -114,47 +107,47 @@
 
     <div class="strip" aria-label="Quick links">
       <div class="bubbles">
-        <a class="bubble b1" href="./mmt.html">
+        <a class="bubble b3" href="./goniometry-trainer/">
+          <div class="b-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21a9 9 0 0 1 18 0H3Z"/><path d="M12 12v6"/></svg>
+          </div>
+          <div class="b-title">Goniometry Trainer</div>
+          <div class="b-sub">Interactive ROM trainer</div>
+        </a>
+        <a class="bubble b4" href="./lab-motion/">
+          <div class="b-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12h8M4 8h12M4 16h6"/></svg>
+          </div>
+          <div class="b-title">Motions Lab</div>
+          <div class="b-sub">Kinematics sandbox</div>
+        </a>
+        <a class="bubble b1" href="./mmt/">
           <div class="b-ico" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 12h5l2 4 3-8"/><circle cx="7" cy="12" r="3"/></svg>
           </div>
-          <div class="b-title">MMT</div>
-          <div class="b-sub">Manual Muscle Testing</div>
+          <div class="b-title">Manual Muscle Test</div>
+          <div class="b-sub">MMT positions & cues</div>
         </a>
-        <a class="bubble b2" href="./lqs.html">
+        <a class="bubble b2" href="./lqs/">
           <div class="b-ico" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12h8M4 8h12M4 16h6"/></svg>
           </div>
           <div class="b-title">LQS</div>
-          <div class="b-sub">Movement Quality Screen</div>
+          <div class="b-sub">Lower/Movement Quality</div>
         </a>
-        <a class="bubble b3" href="./goniometry/index.html">
-          <div class="b-ico" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21a9 9 0 0 1 18 0H3Z"/><path d="M12 12v6"/></svg>
-          </div>
-          <div class="b-title">Goniometer</div>
-          <div class="b-sub">Interactive ROM trainer</div>
-        </a>
-        <a class="bubble b4" href="#">
-          <div class="b-ico" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 6v12M6 12h12"/></svg>
-          </div>
-          <div class="b-title">Add Tool</div>
-          <div class="b-sub">Placeholder link</div>
-        </a>
-        <a class="bubble b5" href="#">
-          <div class="b-ico" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l3 7h7l-5.6 4.1L18 21l-6-4-6 4 1.6-6.9L2 10h7z"/></svg>
-          </div>
-          <div class="b-title">Cases</div>
-          <div class="b-sub">Scenarios & checklists</div>
-        </a>
-        <a class="bubble b6" href="#">
+        <a class="bubble b6" href="./uqs/">
           <div class="b-ico" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
           </div>
-          <div class="b-title">Quick Start</div>
-          <div class="b-sub">Cheat sheets</div>
+          <div class="b-title">UQS</div>
+          <div class="b-sub">Upper Quarter Screen</div>
+        </a>
+        <a class="bubble b5" href="./neuro/">
+          <div class="b-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 7a2.5 2.5 0 0 0-5 1.2c0 1.3 1.2 2 2.3 2.3M9 7v7M5.8 10.5C6 12 7.2 13 8.6 13"/><path d="M15 7a2.5 2.5 0 0 1 5 1.2c0 1.3-1.2 2-2.3 2.3M15 7v7M18.2 10.5C18 12 16.8 13 15.4 13"/></svg>
+          </div>
+          <div class="b-title">Neuro</div>
+          <div class="b-sub">Screens & quick tests</div>
         </a>
       </div>
     </div>
