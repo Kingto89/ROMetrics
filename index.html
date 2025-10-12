@@ -21,18 +21,15 @@
 
     /* ====== HERO ====== */
     .hero{position:relative; min-height:100svh; overflow:hidden;}
-    .hero::before{ /* remove shapes; no bg image here */
-      content:""; position:absolute; inset:0; z-index:0; background:transparent;
-    }
-    .hero::after{content:"";position:absolute;inset:0;z-index:2;background:none;pointer-events:none;}
-    .hero-img{position:absolute; z-index:1; inset:0; margin:auto;
-      width:100vw; height:100svh; object-fit:contain; object-position:center center; image-rendering:auto;}
-    
+    /* remove any pseudo-element art entirely */
+    .hero::before{content:none !important;}
+    .hero::after{content:none !important;}
+    .hero-img{position:fixed; z-index:1; inset:0; margin:auto; width:100vw; height:100svh; object-fit:contain; object-position:center center; image-rendering:auto; pointer-events:none;}
 
-    /* ====== TOP NAV (optional logo slot) ====== */ (optional logo slot) ====== */
+    /* ====== TOP NAV (optional logo slot) ====== */ (optional logo slot) ====== */ (optional logo slot) ====== */
     .nav{position:absolute; z-index:3; inset:18px 18px auto 18px; display:flex; align-items:center; gap:14px}
     .brand{display:flex; align-items:center; gap:10px; font-weight:700; letter-spacing:.2px}
-    .brand-dot{width:10px;height:10px;border-radius:999px;background:var(--glow);box-shadow:0 0 18px var(--glow)}
+    .brand-dot{display:none}
 
     /* ====== OVERLAY COPY ====== */
     .copy{position:absolute; z-index:3; inset:auto 6vw 28vh 6vw; max-width:min(760px, 88vw);}
@@ -76,7 +73,6 @@
 </head>
 <body>
   <main class="hero" role="main">
-    <!-- non-upscaling image to prevent blur/stretch -->
     <img class="hero-img" src="./assets/backdrop.png" alt="Clinician reading transparent panel with holographic model" />
     <nav class="nav" aria-label="Top">
       <div class="brand"><span class="brand-dot" aria-hidden="true"></span> PT&nbsp;Lab</div>
@@ -149,4 +145,3 @@
   </main>
 </body>
 </html>
-
