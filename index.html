@@ -3,43 +3,158 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PT Lab — Full-Width Scrollable Backdrop</title>
+  <title>PT Lab — Landing</title>
+  <meta name="description" content="PT Lab landing page with hero backdrop and quick links to Goniometry Trainer, Motions Lab, MMT, LQS, UQS, and Neuro." />
   <style>
-    /* Page chrome */
-    html, body {
-      margin: 0;
-      padding: 0;
-      background: radial-gradient(
-        circle at 58% 40%,
-        #06355c 0%,
-        #0a2d4a 45%,
-        #081b2d 85%,
-        #051423 100%
-      ); /* gentle blend to match your art */
-      overscroll-behavior: none;
+    :root{
+      --bg1:#06355c;  /* center glow */
+      --bg2:#0a2d4a;  /* mid */
+      --bg3:#081b2d;  /* outer */
+      --bg4:#051423;  /* edge */
+      --ink:#e6eef7;
+      --muted:#a8c0da;
+      --ring:rgba(255,255,255,.18);
     }
 
-    /* Center the image; enable scrolling */
-    .frame {
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
+    /* Page background + layout */
+    html, body{
+      margin:0; padding:0;
+      background: radial-gradient(circle at 58% 40%, var(--bg1) 0%, var(--bg2) 45%, var(--bg3) 85%, var(--bg4) 100%);
+      color:var(--ink);
+      font-family:system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
     }
 
-    /* Key rule: fill device width, keep proportions, allow vertical scroll */
-    img.backdrop {
-      display: block;
-      width: 100vw;     /* fit device width */
-      height: auto;     /* maintain aspect ratio */
-      max-width: none;  /* never shrink due to ancestors */
-      user-select: none;
-      -webkit-user-drag: none;
+    /* Backdrop image: always fit device width; scroll allowed */
+    .frame{
+      position:relative;
+      min-height:100vh;
     }
+    .frame img.hero{
+      display:block;
+      width:100vw;   /* fit width of device */
+      height:auto;   /* keep proportions */
+      user-select:none;
+      -webkit-user-drag:none;
+    }
+
+    /* Overlay content */
+    .overlay{
+      position:absolute;
+      inset:0;
+      display:grid;
+      grid-template-rows:auto 1fr auto;
+      pointer-events:none; /* only buttons get events below */
+    }
+
+    /* Headline block (left) */
+    .copy{
+      align-self:start;
+      pointer-events:auto;
+      padding: clamp(14px, 3vw, 28px);
+      max-width:min(820px, 90vw);
+    }
+    .kicker{
+      display:inline-block; font-size:12px; letter-spacing:.16em; text-transform:uppercase;
+      color:var(--muted);
+      background:rgba(3,14,28,.55);
+      border:1px solid var(--ring);
+      padding:6px 10px; border-radius:999px;
+      backdrop-filter: blur(6px);
+    }
+    h1{margin:12px 0 10px 0; font-size:clamp(28px, 5vw, 54px); line-height:1.06}
+    .sub{max-width:60ch; color:var(--muted); font-size:clamp(14px, 1.6vw, 18px)}
+
+    /* Bubbles strip (bottom, centered) */
+    .strip{
+      display:grid; place-items:center;
+      padding: 10px clamp(10px, 3vw, 24px) clamp(16px, 3.5vw, 28px);
+      pointer-events:auto;
+    }
+    .bubbles{
+      display:grid; gap:12px;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      width:min(1100px, 95vw);
+    }
+    @media (max-width:1100px){ .bubbles{grid-template-columns:repeat(3,1fr);} }
+    @media (max-width:620px){  .bubbles{grid-template-columns:repeat(2,1fr);} }
+
+    .bubble{
+      text-decoration:none; color:var(--ink);
+      background:rgba(4,18,32,.65);
+      border:1px solid var(--ring);
+      border-radius:16px;
+      padding:14px 12px;
+      display:flex; flex-direction:column; gap:8px;
+      transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+      backdrop-filter: blur(6px);
+    }
+    .bubble:hover{ transform:translateY(-2px); border-color:rgba(255,255,255,.35); box-shadow:0 12px 28px rgba(0,0,0,.25) }
+    .b-ico{ width:36px;height:36px;border-radius:12px;display:grid;place-items:center;border:1px solid var(--ring) }
+    .b-title{ font-weight:700; font-size:15px; letter-spacing:.2px }
+    .b-sub{ font-size:12px; color:var(--muted) }
+
+    /* Subtle icon tints */
+    .b1 .b-ico{background:linear-gradient(180deg, rgba(245,158,11,.22), rgba(245,158,11,.06))}
+    .b2 .b-ico{background:linear-gradient(180deg, rgba(99,102,241,.22), rgba(99,102,241,.06))}
+    .b3 .b-ico{background:linear-gradient(180deg, rgba(14,165,233,.22), rgba(14,165,233,.06))}
+    .b4 .b-ico{background:linear-gradient(180deg, rgba(16,185,129,.22), rgba(16,185,129,.06))}
+    .b5 .b-ico{background:linear-gradient(180deg, rgba(34,197,94,.22), rgba(34,197,94,.06))}
+    .b6 .b-ico{background:linear-gradient(180deg, rgba(236,72,153,.22), rgba(236,72,153,.06))}
+
+    /* Accessibility */
+    .bubble:focus-visible{ outline:3px solid rgba(46,255,186,.6); outline-offset:2px }
   </style>
 </head>
 <body>
   <div class="frame">
-    <img class="backdrop" src="./assets/backdrop.png" alt="PT Lab backdrop" />
+    <!-- Backdrop -->
+    <img class="hero" src="./assets/backdrop.png" alt="PT Lab backdrop" />
+
+    <!-- Content overlay -->
+    <div class="overlay" aria-hidden="false">
+      <section class="copy" aria-label="Intro">
+        <span class="kicker">Clinical Skills Playground</span>
+        <h1>Assess, Measure, and Train — all in one place.</h1>
+        <p class="sub">Use the PT Lab toolkit to practice manual muscle testing (MMT), screen postural and movement quality (LQS), and run precise digital goniometry. Tap a tool below to get started.</p>
+      </section>
+
+      <div></div> <!-- spacer row -->
+
+      <nav class="strip" aria-label="Quick links">
+        <div class="bubbles">
+          <a class="bubble b1" href="./goniometry-trainer/">
+            <div class="b-ico" aria-hidden="true">📐</div>
+            <div class="b-title">Goniometry Trainer</div>
+            <div class="b-sub">Interactive ROM trainer</div>
+          </a>
+          <a class="bubble b2" href="./lab-motion/">
+            <div class="b-ico" aria-hidden="true">🎛️</div>
+            <div class="b-title">Motions Lab</div>
+            <div class="b-sub">Kinematics sandbox</div>
+          </a>
+          <a class="bubble b3" href="./mmt/">
+            <div class="b-ico" aria-hidden="true">💪</div>
+            <div class="b-title">Manual Muscle Test</div>
+            <div class="b-sub">MMT positions & cues</div>
+          </a>
+          <a class="bubble b4" href="./lqs/">
+            <div class="b-ico" aria-hidden="true">📋</div>
+            <div class="b-title">LQS</div>
+            <div class="b-sub">Movement Quality</div>
+          </a>
+          <a class="bubble b5" href="./uqs/">
+            <div class="b-ico" aria-hidden="true">🧭</div>
+            <div class="b-title">UQS</div>
+            <div class="b-sub">Upper Quarter Screen</div>
+          </a>
+          <a class="bubble b6" href="./neuro/">
+            <div class="b-ico" aria-hidden="true">🧠</div>
+            <div class="b-title">Neuro</div>
+            <div class="b-sub">Screens & quick tests</div>
+          </a>
+        </div>
+      </nav>
+    </div>
   </div>
 </body>
 </html>
