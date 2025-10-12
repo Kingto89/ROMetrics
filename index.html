@@ -1,32 +1,192 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PT Lab — Backdrop Full Width</title>
-  <style>
-    html, body {
-      margin: 0;
-      height: 100%;
-      background-color: #071a2b; /* sampled dark navy for smooth edges */
-      overflow: hidden;
-    }
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PT Lab — Backdrop Editor</title>
+<style>
+  :root{
+    --bg:#071a2b;   /* fallback color close to the art */
+    --ink:#e6eef7;  /* UI text */
+    --ring:rgba(255,255,255,.18);
+  }
+  html,body{margin:0;height:100%;background:var(--bg);overflow:hidden;font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
 
-    /* full-width responsive background */
-    img {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 100vw;
-      height: 100vh;
-      object-fit: cover;        /* fills screen width naturally */
-      object-position: center;  /* keeps the man + hologram centered */
-      image-rendering: auto;
-    }
-  </style>
+  /* Backdrop layer */
+  #stage{position:fixed; inset:0; overflow:hidden; touch-action:none;}
+  #img{
+    position:absolute; left:50%; top:50%;
+    transform-origin:center center; will-change:transform;
+    user-select:none; -webkit-user-drag:none; pointer-events:auto;
+  }
+
+  /* Minimal HUD */
+  #hud{
+    position:fixed; left:12px; top:12px; z-index:10; display:flex; gap:8px; align-items:center;
+    background:rgba(8,18,32,.55); border:1px solid var(--ring); color:var(--ink);
+    padding:8px 10px; border-radius:10px; backdrop-filter:blur(6px);
+  }
+  #hud button{
+    appearance:none; border:1px solid var(--ring); background:rgba(255,255,255,.06);
+    color:var(--ink); border-radius:9px; padding:6px 10px; cursor:pointer;
+  }
+  #hud button[aria-pressed="true"]{outline:2px solid rgba(46,255,186,.6)}
+  #hud .sep{width:1px;height:22px;background:var(--ring); margin:0 4px}
+  #hint{font-size:12px; opacity:.8; display:none}
+  #hud[datamode="edit"] #hint{display:block}
+
+  /* Invisible overlay used only while editing (to catch drags) */
+  #overlay{position:fixed; inset:0; z-index:5; pointer-events:none;}
+  #overlay.edit{pointer-events:auto; cursor:grab}
+  #overlay.edit.dragging{cursor:grabbing}
+</style>
 </head>
 <body>
-  <img src="./assets/backdrop.png" alt="PT Lab full backdrop" />
+  <div id="stage">
+    <img id="img" src="./assets/backdrop.png" alt="Backdrop"/>
+  </div>
+
+  <div id="overlay"></div>
+
+  <div id="hud" datamode="view" role="group" aria-label="Backdrop controls">
+    <button id="toggleEdit" aria-pressed="false" title="Toggle edit mode">✏️ Edit</button>
+    <span class="sep"></span>
+    <button id="fit">Fit</button>
+    <button id="center">Center</button>
+    <button id="save">Save</button>
+    <button id="reset">Reset</button>
+    <span id="hint">Drag to pan • Wheel/Pinch to zoom</span>
+  </div>
+
+<script>
+(() => {
+  const img = document.getElementById('img');
+  const overlay = document.getElementById('overlay');
+  const hud = document.getElementById('hud');
+  const btnEdit = document.getElementById('toggleEdit');
+  const btnFit = document.getElementById('fit');
+  const btnCenter = document.getElementById('center');
+  const btnSave = document.getElementById('save');
+  const btnReset = document.getElementById('reset');
+  const KEY = 'ptlab_hero_pose_v1';
+
+  // Pose = { x, y, s } in pixels/scale, centered transform from viewport center
+  let pose = { x: 0, y: 0, s: 1 };
+  let editing = false;
+  let dragging = false;
+  let last = null;
+
+  // Apply transform
+  const apply = () => {
+    img.style.transform = `translate(${pose.x}px, ${pose.y}px) scale(${pose.s}) translate(-50%, -50%)`;
+  };
+
+  // Constrain zoom and keep at least some part visible
+  const clamp = () => { pose.s = Math.max(0.25, Math.min(pose.s, 3.0)); };
+
+  // Fit image to screen height (no distortion)
+  const fitToContain = () => {
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const naturalW = img.naturalWidth || 1536; // fallback
+    const naturalH = img.naturalHeight || 2304;
+    // contain: choose the smaller ratio
+    const sContain = Math.min(vw / naturalW, vh / naturalH);
+    pose.s = sContain;
+    pose.x = 0; pose.y = 0;
+    clamp(); apply();
+  };
+
+  // Center without changing scale
+  const center = () => { pose.x = 0; pose.y = 0; apply(); };
+
+  // Save/Load
+  const save = () => localStorage.setItem(KEY, JSON.stringify(pose));
+  const load = () => {
+    try {
+      const raw = localStorage.getItem(KEY);
+      if (!raw) return false;
+      const p = JSON.parse(raw);
+      if (typeof p?.x === 'number' && typeof p?.y === 'number' && typeof p?.s === 'number'){
+        pose = p; clamp(); apply(); return true;
+      }
+    } catch {}
+    return false;
+  };
+  const reset = () => { localStorage.removeItem(KEY); fitToContain(); };
+
+  // Edit mode toggle
+  const setEdit = (v) => {
+    editing = v;
+    btnEdit.setAttribute('aria-pressed', v ? 'true' : 'false');
+    overlay.classList.toggle('edit', v);
+    hud.setAttribute('datamode', v ? 'edit' : 'view');
+  };
+
+  // Pointer drag pan
+  overlay.addEventListener('pointerdown', (e) => {
+    if (!editing) return;
+    dragging = true; overlay.classList.add('dragging');
+    overlay.setPointerCapture?.(e.pointerId);
+    last = { x: e.clientX, y: e.clientY };
+  });
+  overlay.addEventListener('pointermove', (e) => {
+    if (!editing || !dragging || !last) return;
+    const dx = e.clientX - last.x, dy = e.clientY - last.y;
+    pose.x += dx; pose.y += dy; last = { x: e.clientX, y: e.clientY };
+    apply();
+  });
+  const endDrag = () => { dragging = false; overlay.classList.remove('dragging'); last = null; };
+  overlay.addEventListener('pointerup', endDrag);
+  overlay.addEventListener('pointercancel', endDrag);
+  overlay.addEventListener('pointerleave', endDrag);
+
+  // Wheel zoom at cursor
+  window.addEventListener('wheel', (e) => {
+    if (!editing) return;
+    e.preventDefault();
+    const rect = img.getBoundingClientRect();
+    const cx = e.clientX - (rect.left + rect.width/2);
+    const cy = e.clientY - (rect.top + rect.height/2);
+    const k = Math.pow(1.2, -Math.sign(e.deltaY)); // smooth
+    const newS = Math.min(3, Math.max(0.25, pose.s * k));
+    const factor = (newS / pose.s);
+    // Zoom toward cursor by adjusting pan
+    pose.x = pose.x * factor + cx * (1 - factor);
+    pose.y = pose.y * factor + cy * (1 - factor);
+    pose.s = newS; apply();
+  }, { passive:false });
+
+  // Touch pinch zoom
+  let pinch = null;
+  overlay.addEventListener('touchstart', (e) => { if (!editing) return;
+    if (e.touches.length === 2){
+      const d = dist(e.touches[0], e.touches[1]); pinch = { d, s: pose.s };
+    }
+  }, {passive:false});
+  overlay.addEventListener('touchmove', (e) => { if (!editing) return;
+    if (pinch && e.touches.length === 2){
+      e.preventDefault();
+      const d2 = dist(e.touches[0], e.touches[1]);
+      pose.s = Math.min(3, Math.max(0.25, pinch.s * (d2 / pinch.d))); apply();
+    }
+  }, {passive:false});
+  overlay.addEventListener('touchend', ()=> pinch=null, {passive:true});
+  function dist(a,b){ const dx=a.clientX-b.clientX, dy=a.clientY-b.clientY; return Math.hypot(dx,dy); }
+
+  // Buttons
+  btnEdit.onclick   = () => setEdit(!editing);
+  btnFit.onclick    = fitToContain;
+  btnCenter.onclick = center;
+  btnSave.onclick   = () => { save(); setEdit(false); };
+  btnReset.onclick  = reset;
+
+  // On load: wait for natural size, then apply saved pose or fit
+  img.addEventListener('load', () => { if (!load()) fitToContain(); });
+  window.addEventListener('resize', () => apply());
+
+  // Start in view mode
+  setEdit(false);
+})();
+</script>
 </body>
 </html>
