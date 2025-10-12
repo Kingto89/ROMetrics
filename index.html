@@ -46,23 +46,37 @@
       pointer-events:none; /* only buttons get events below */
     }
 
-    /* Headline block (left) */
-    .copy{
-      align-self:start;
-      pointer-events:auto;
-      padding: clamp(14px, 3vw, 28px);
-      max-width:min(820px, 90vw);
-    }
-    .kicker{
-      display:inline-block; font-size:12px; letter-spacing:.16em; text-transform:uppercase;
-      color:var(--muted);
-      background:rgba(3,14,28,.55);
-      border:1px solid var(--ring);
-      padding:6px 10px; border-radius:999px;
-      backdrop-filter: blur(6px);
-    }
-    h1{margin:12px 0 10px 0; font-size:clamp(28px, 5vw, 54px); line-height:1.06}
-    .sub{max-width:60ch; color:var(--muted); font-size:clamp(14px, 1.6vw, 18px)}
+/* Headline block (left) */
+.copy{
+  align-self:start;
+  pointer-events:auto;
+  padding: clamp(14px, 3vw, 28px);
+  max-width: min(700px, 46vw); /* cap width so text doesn't run into the image */
+}
+
+.kicker{
+  display:inline-block; font-size:11px; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--muted);
+  background:rgba(3,14,28,.55);
+  border:1px solid var(--ring);
+  padding:6px 10px; border-radius:999px;
+  backdrop-filter: blur(6px);
+}
+
+/* Slightly smaller headline & sub so 100% zoom fits cleanly */
+h1{ margin:12px 0 10px 0; font-size:clamp(26px, 4.2vw, 44px); line-height:1.08 }
+.sub{ max-width:60ch; color:var(--muted); font-size:clamp(14px, 1.3vw, 17px) }
+
+/* On very wide screens, keep copy tighter left */
+@media (min-width: 1200px){
+  .copy{ max-width: 42vw; }
+}
+
+/* On shorter viewports, step headline down more */
+@media (max-height: 750px){
+  h1{ font-size:clamp(24px, 3.6vw, 38px); }
+  .sub{ font-size:clamp(13px, 1.2vw, 16px); }
+}
 
     /* Bubbles strip (bottom, centered) */
     .strip{
