@@ -2,181 +2,162 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>PT Lab — Training Hub</title>
-  <meta name="description" content="PT Lab: Goniometry Trainer, Motion Lab, MMT, UQS, LQS, Neuro Screen." />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PT Lab — Landing</title>
+  <meta name="description" content="PT Lab landing page with hero backdrop and quick links to MMT, LQS, and Goniometry Trainer." />
   <style>
     :root{
-      --bg:#0b0d12; --card:#141821; --muted:#a9b0bf; --text:#e9edf5; --accent:#d62828;
-      --cardHover:#191e28; --ring:rgba(214,40,40,.35);
+      --bg:#071427;           /* deep navy to match art */
+      --ink:#e6eef7;          /* light text */
+      --muted:#a8c0da;        /* supporting text */
+      --glow:#20ffa8;         /* neon accent */
+      --btn:#0ea5e9;          /* bubble default */
+      --btn-2:#16a34a;        /* bubble alt */
+      --btn-3:#f59e0b;        /* bubble alt */
+      --ring:rgba(255,255,255,.22);
     }
-    *{box-sizing:border-box}
-    html,body{margin:0;height:100%}
-    body{
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;
-      color:var(--text); background:var(--bg);
-      background-image:
-        radial-gradient(1200px 800px at 80% -10%, #1a1f29 0%, #0f1115 60%),
-        radial-gradient(700px 500px at -10% 110%, #151a24 0%, #0b0d12 60%);
-      background-blend-mode:screen,normal;
-    }
-    .wrap{max-width:1160px;margin:0 auto;padding:28px}
+    html,body{height:100%;margin:0}
+    body{font-family:system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif;background:var(--bg);color:var(--ink);}
 
-    /* ===== Hero ===== */
-    .hero{
-      position:relative; overflow:hidden;
-      border-radius:18px; padding:28px; margin:8px 0 28px;
-      background:#0d121b;
-      border:1px solid rgba(255,255,255,.06);
-      display:grid; grid-template-columns:1.3fr 1fr; gap:18px;
-      box-shadow:0 2px 0 rgba(255,255,255,.02), 0 24px 48px rgba(0,0,0,.45);
-      isolation:isolate;
+    /* ====== HERO ====== */
+    .hero{position:relative; min-height:100svh; overflow:hidden;}
+    .hero::before{ /* backdrop image */
+      content:""; position:absolute; inset:0; z-index:0;
+      background:url('./assets/backdrop.png') center right / cover no-repeat fixed;
+      filter:saturate(1.05) contrast(1.02);
+      transform:translateZ(0);
     }
-    .hero h1{margin:0 0 6px; font-size:1.9rem}
-    .hero p{margin:0; color:var(--muted)}
-    .badge{display:inline-flex;align-items:center;gap:8px;font-size:.85rem;
-      background:linear-gradient(135deg,var(--accent),#b81e1e); color:#fff;
-      padding:6px 10px; border-radius:999px; margin-top:10px}
-    .art{
-      position:relative; min-height:220px; border-radius:14px; overflow:hidden;
+    .hero::after{ /* darken + vignette for legibility */
+      content:""; position:absolute; inset:0; z-index:1;
       background:
-        linear-gradient(120deg, rgba(214,40,40,.12), rgba(255,255,255,.02)),
-        radial-gradient(60% 70% at 75% 40%, rgba(214,40,40,.25), transparent 60%),
-        radial-gradient(50% 60% at 20% 80%, rgba(255,255,255,.08), transparent 60%),
-        #0b0f17;
-      border:1px solid rgba(255,255,255,.06);
-    }
-    /* Optional: drop an image at ./assets/hero.jpg to override the art block */
-    .art::after{
-      content:"";
-      position:absolute; inset:0; background-size:cover; background-position:center;
-      opacity:.38; mix-blend-mode:screen;
-      background-image:url("./assets/hero.jpg"); /* add your photo here */
+        radial-gradient(1200px 70% at 65% 45%, rgba(0,255,194,.10), transparent 60%),
+        linear-gradient(to bottom, rgba(2,10,22,.35), rgba(2,10,22,.75));
       pointer-events:none;
     }
-    /* Inline SVG decorative overlay */
-    .art svg{position:absolute; inset:0; width:100%; height:100%; opacity:.9}
 
-    header.hub{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 0 10px}
-    .brand{display:flex;align-items:center;gap:12px}
-    .logo{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:linear-gradient(135deg,var(--accent),#8b1c1c)}
-    .tag{color:var(--muted);font-size:.98rem}
+    /* ====== TOP NAV (optional logo slot) ====== */
+    .nav{position:absolute; z-index:3; inset:18px 18px auto 18px; display:flex; align-items:center; gap:14px}
+    .brand{display:flex; align-items:center; gap:10px; font-weight:700; letter-spacing:.2px}
+    .brand-dot{width:10px;height:10px;border-radius:999px;background:var(--glow);box-shadow:0 0 18px var(--glow)}
 
-    /* ===== Cards ===== */
-    .grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px}
-    .card{
-      grid-column:span 12; padding:18px 18px 20px; border-radius:16px; background:var(--card);
-      border:1px solid rgba(255,255,255,.06); position:relative; text-decoration:none; color:inherit;
-      transition:transform .18s ease, background .18s ease, border-color .18s ease, box-shadow .18s ease;
-      box-shadow:0 1px 0 rgba(255,255,255,.02), 0 12px 28px rgba(0,0,0,.35);
-    }
-    .card:hover{transform:translateY(-2px); background:var(--cardHover); border-color:var(--ring); box-shadow:0 0 0 3px var(--ring), 0 18px 36px rgba(0,0,0,.45)}
-    .card h2{margin:6px 0 6px; font-size:1.15rem}
-    .card p{margin:0; color:var(--muted); font-size:.98rem}
-    .small{font-size:.85rem}
-    .soon{opacity:.55; pointer-events:none; border-style:dashed}
-    @media (min-width:740px){ .card{grid-column:span 6} }
-    @media (min-width:1040px){ .card{grid-column:span 4} }
+    /* ====== OVERLAY COPY ====== */
+    .copy{position:absolute; z-index:3; inset:auto 6vw 28vh 6vw; max-width:min(760px, 88vw);}
+    .kicker{display:inline-block; font-size:13px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); background:rgba(3,14,28,.6); border:1px solid var(--ring); padding:6px 10px; border-radius:999px; backdrop-filter: blur(6px)}
+    h1{margin:12px 0 10px 0; font-size:clamp(28px, 4.5vw, 54px); line-height:1.06}
+    .sub{max-width:60ch; color:var(--muted); font-size:clamp(14px, 1.6vw, 18px);}
 
-    footer{margin:28px 0 8px; color:var(--muted); font-size:.9rem; text-align:center}
+    /* ====== ICON BUBBLES (to mirror art’s glow) ====== */
+    .halo{position:absolute; z-index:3; top:8vh; right:7vw; display:flex; gap:18px}
+    .halo .orb{width:64px;height:64px;border-radius:999px;border:2px solid rgba(32,255,168,.65); box-shadow:0 0 22px rgba(32,255,168,.35) inset, 0 0 30px rgba(32,255,168,.25); display:grid; place-items:center; background:rgba(2, 20, 32, .35); backdrop-filter: blur(4px)}
+    .halo svg{width:32px; height:32px; opacity:.95;}
+
+    /* ====== BUBBLE LINKS STRIP ====== */
+    .strip{position:absolute; z-index:4; inset:auto 0 20px 0; display:grid; place-items:center; padding:0 16px}
+    .bubbles{display:grid; grid-template-columns:repeat(6, minmax(0, 1fr)); gap:12px; width:min(1000px, 95vw)}
+    @media (max-width:900px){ .bubbles{grid-template-columns:repeat(3, 1fr);} }
+    @media (max-width:520px){ .bubbles{grid-template-columns:repeat(2, 1fr);} }
+
+    .bubble{position:relative; display:flex; flex-direction:column; align-items:center; gap:8px; text-decoration:none; color:var(--ink);
+      padding:14px 10px; border-radius:16px; background:rgba(4,18,32,.65); border:1px solid var(--ring); backdrop-filter: blur(6px);
+      transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease}
+    .bubble:hover{transform:translateY(-2px); border-color:rgba(255,255,255,.35); box-shadow:0 10px 26px rgba(0,0,0,.25), 0 0 0 4px rgba(32,255,168,.08)}
+    .b-ico{width:36px; height:36px; border-radius:12px; display:grid; place-items:center; box-shadow: inset 0 0 28px rgba(255,255,255,.06);}
+    .b-ico svg{width:22px; height:22px}
+    .b-title{font-weight:700; font-size:15px; letter-spacing:.3px}
+    .b-sub{font-size:12px; color:var(--muted); text-align:center}
+
+    .b1 .b-ico{background:linear-gradient(180deg, rgba(14,165,233,.2), rgba(14,165,233,.05)); border:1px solid rgba(14,165,233,.45)}
+    .b2 .b-ico{background:linear-gradient(180deg, rgba(22,163,74,.2), rgba(22,163,74,.05)); border:1px solid rgba(22,163,74,.45)}
+    .b3 .b-ico{background:linear-gradient(180deg, rgba(245,158,11,.22), rgba(245,158,11,.05)); border:1px solid rgba(245,158,11,.45)}
+    .b4 .b-ico{background:linear-gradient(180deg, rgba(99,102,241,.22), rgba(99,102,241,.05)); border:1px solid rgba(99,102,241,.45)}
+    .b5 .b-ico{background:linear-gradient(180deg, rgba(236,72,153,.22), rgba(236,72,153,.05)); border:1px solid rgba(236,72,153,.45)}
+    .b6 .b-ico{background:linear-gradient(180deg, rgba(34,197,94,.22), rgba(34,197,94,.05)); border:1px solid rgba(34,197,94,.45)}
+
+    /* Safe area for notches on mobile */
+    .strip{padding-bottom:calc(12px + env(safe-area-inset-bottom));}
+
+    /* Accessibility focus */
+    .bubble:focus-visible{outline:3px solid var(--glow); outline-offset:2px}
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <!-- Hero with brand + art -->
-    <div class="hero">
-      <div>
-        <header class="hub">
-          <div class="brand">
-            <div class="logo">🧭</div>
-            <div>
-              <div class="tag">Interactive Clinical Training Suite</div>
-              <h1>PT Lab — Training Hub</h1>
-            </div>
-          </div>
-          <div class="badge">⚡ Beta</div>
-        </header>
-        <p>Learn • Test • Apply — build confidence in every clinical skill.</p>
+  <main class="hero" role="main">
+    <nav class="nav" aria-label="Top">
+      <div class="brand"><span class="brand-dot" aria-hidden="true"></span> PT&nbsp;Lab</div>
+    </nav>
+
+    <!-- Glow orbs to echo the art's brain/strength/compass -->
+    <div class="halo" aria-hidden="true">
+      <div class="orb"> <!-- brain -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <path d="M9 7a2.5 2.5 0 0 0-5 1.2c0 1.3 1.2 2 2.3 2.3M9 7v7M5.8 10.5C6 12 7.2 13 8.6 13"/>
+          <path d="M15 7a2.5 2.5 0 0 1 5 1.2c0 1.3-1.2 2-2.3 2.3M15 7v7M18.2 10.5C18 12 16.8 13 15.4 13"/>
+        </svg>
       </div>
-      <div class="art" aria-hidden="true">
-        <!-- decorative vector (goniometer arc + figure outline) -->
-        <svg viewBox="0 0 600 360" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0" stop-color="#ff3b3b" stop-opacity=".85"/>
-              <stop offset="1" stop-color="#9b1c1c" stop-opacity=".4"/>
-            </linearGradient>
-            <linearGradient id="g2" x1="0" y1="1" x2="1" y2="0">
-              <stop offset="0" stop-color="#ffffff" stop-opacity=".15"/>
-              <stop offset="1" stop-color="#ffffff" stop-opacity=".02"/>
-            </linearGradient>
-          </defs>
-          <!-- goniometer arc -->
-          <g transform="translate(320,280)">
-            <circle r="120" fill="none" stroke="url(#g1)" stroke-width="3"/>
-            <circle r="90"  fill="none" stroke="url(#g2)" stroke-width="1.5"/>
-            <!-- ticks -->
-            <g opacity=".7" stroke="#c3c7cf">
-              <!-- 5° ticks -->
-              <g>
-                <!-- generate ticks in code typically; here is a simplified ring -->
-                <circle r="120" stroke-dasharray="2 8" stroke-width="2" fill="none"/>
-              </g>
-            </g>
-            <!-- arms -->
-            <line x1="0" y1="0" x2="0" y2="-135" stroke="#ef4444" stroke-width="4" stroke-linecap="round"/>
-            <line x1="0" y1="0" x2="105" y2="-75" stroke="#22c55e" stroke-width="4" stroke-linecap="round"/>
-          </g>
-          <!-- subtle human outline -->
-          <path d="M130 320c10-40 22-60 50-78 25-16 44-52 44-90 0-20-6-38-18-52 16-3 28-3 44 0-12 14-18 32-18 52 0 38 19 74 44 90 28 18 40 38 50 78"
-                fill="none" stroke="url(#g2)" stroke-width="3" stroke-linecap="round" opacity=".8"/>
+      <div class="orb"> <!-- biceps -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <path d="M7 16s2.5 2 5 .6c1.5-.8 1.7-2.6.7-3.9-.6-.8-1.2-1.5-1.2-2.5V8m-2.4 3.1C8 11 7 10.6 7 9.2 7 7.4 8.3 6 10 6h2"/>
+        </svg>
+      </div>
+      <div class="orb"> <!-- compass / divider -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <path d="M12 3v18M7 13l5-10 5 10M6 21h12"/>
         </svg>
       </div>
     </div>
 
-    <!-- Modules -->
-    <section class="grid" aria-label="Modules">
-      <a class="card" href="./goniometry-trainer/index.html">
-        <div class="small">Module</div>
-        <h2>Goniometry Trainer</h2>
-        <p>Measure ROM in 3D. Landmark → align → record. Built for lab check-offs and practice.</p>
-      </a>
-
-      <a class="card" href="./lab-motion/index.html">
-        <div class="small">Module</div>
-        <h2>Motion Lab</h2>
-        <p>Explore joint motions on a realistic model. DAZ-powered model integration coming.</p>
-      </a>
-
-      <a class="card soon" href="./mmt/index.html" title="Coming soon">
-        <div class="small">Module</div>
-        <h2>Manual Muscle Testing (MMT)</h2>
-        <p>Positions, stabilization, grades, and substitutions. Coming soon.</p>
-      </a>
-
-      <a class="card soon" href="./uqs/index.html" title="Coming soon">
-        <div class="small">Module</div>
-        <h2>Upper Quarter Screen (UQS)</h2>
-        <p>Cervical scan, neuro screen, shoulder/elbow/wrist checks. Coming soon.</p>
-      </a>
-
-      <a class="card soon" href="./lqs/index.html" title="Coming soon">
-        <div class="small">Module</div>
-        <h2>Lower Quarter Screen (LQS)</h2>
-        <p>Lumbar scan, neuro screen, hip/knee/ankle checks. Coming soon.</p>
-      </a>
-
-      <a class="card soon" href="./neuro/index.html" title="Coming soon">
-        <div class="small">Module</div>
-        <h2>Neuro Screen</h2>
-        <p>Cranial nerves, dermatomes, myotomes, reflexes. Coming soon.</p>
-      </a>
+    <section class="copy" aria-label="Intro">
+      <span class="kicker">Clinical Skills Playground</span>
+      <h1>Assess, Measure, and Train — all in one place.</h1>
+      <p class="sub">Use the PT Lab toolkit to practice manual muscle testing (MMT), screen postural and movement quality (LQS), and run precise digital goniometry. Tap a tool below to get started.</p>
     </section>
 
-    <footer>
-      PT Lab © <span id="y"></span> • Built by K. K.
-    </footer>
-  </div>
-  <script>document.getElementById('y').textContent = new Date().getFullYear();</script>
+    <div class="strip" aria-label="Quick links">
+      <div class="bubbles">
+        <a class="bubble b1" href="./mmt.html">
+          <div class="b-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 12h5l2 4 3-8"/><circle cx="7" cy="12" r="3"/></svg>
+          </div>
+          <div class="b-title">MMT</div>
+          <div class="b-sub">Manual Muscle Testing</div>
+        </a>
+        <a class="bubble b2" href="./lqs.html">
+          <div class="b-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12h8M4 8h12M4 16h6"/></svg>
+          </div>
+          <div class="b-title">LQS</div>
+          <div class="b-sub">Movement Quality Screen</div>
+        </a>
+        <a class="bubble b3" href="./goniometry/index.html">
+          <div class="b-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21a9 9 0 0 1 18 0H3Z"/><path d="M12 12v6"/></svg>
+          </div>
+          <div class="b-title">Goniometer</div>
+          <div class="b-sub">Interactive ROM trainer</div>
+        </a>
+        <a class="bubble b4" href="#">
+          <div class="b-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 6v12M6 12h12"/></svg>
+          </div>
+          <div class="b-title">Add Tool</div>
+          <div class="b-sub">Placeholder link</div>
+        </a>
+        <a class="bubble b5" href="#">
+          <div class="b-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l3 7h7l-5.6 4.1L18 21l-6-4-6 4 1.6-6.9L2 10h7z"/></svg>
+          </div>
+          <div class="b-title">Cases</div>
+          <div class="b-sub">Scenarios & checklists</div>
+        </a>
+        <a class="bubble b6" href="#">
+          <div class="b-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+          </div>
+          <div class="b-title">Quick Start</div>
+          <div class="b-sub">Cheat sheets</div>
+        </a>
+      </div>
+    </div>
+  </main>
 </body>
 </html>
