@@ -3,99 +3,24 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>PT Lab — Training Hub</title>
-  <meta name="description" content="PT Lab: Goniometry Trainer, Motion Lab, MMT, UQS, LQS, Neuro Screen." />
+  <title>Coming Soon — PT Lab</title>
   <style>
-    :root{
-      --bg:#0f1115; --card:#171a21; --muted:#a9b0bf; --text:#e9edf5; --accent:#d62828;
-      --cardHover:#1d212b; --ring:rgba(214,40,40,.35);
-    }
-    *{box-sizing:border-box}
-    html,body{margin:0;height:100%}
-    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;background:radial-gradient(1200px 800px at 80% -10%, #1a1f29 0%, #0f1115 60%), var(--bg);color:var(--text);}
-    .wrap{max-width:1100px;margin:0 auto;padding:28px}
-    header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:12px 0 24px}
-    .brand{display:flex;align-items:center;gap:14px}
-    .logo{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:linear-gradient(135deg,var(--accent),#8b1c1c)}
-    h1{font-size:1.65rem;line-height:1.2;margin:0}
-    .tag{color:var(--muted);font-size:.98rem}
-    .grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px}
-    .card{
-      grid-column:span 12; padding:18px 18px 20px; border-radius:16px; background:var(--card);
-      border:1px solid rgba(255,255,255,.06); position:relative; text-decoration:none; color:inherit;
-      transition:transform .18s ease, background .18s ease, border-color .18s ease, box-shadow .18s ease;
-      box-shadow:0 1px 0 rgba(255,255,255,.02), 0 12px 28px rgba(0,0,0,.35);
-    }
-    .card:hover{transform:translateY(-2px); background:var(--cardHover); border-color:var(--ring); box-shadow:0 0 0 3px var(--ring), 0 18px 36px rgba(0,0,0,.45)}
-    .card h2{margin:6px 0 6px; font-size:1.15rem}
-    .card p{margin:0; color:var(--muted); font-size:.98rem}
-    .small{font-size:.85rem}
-    .soon{opacity:.55; pointer-events:none; border-style:dashed}
-    @media (min-width:720px){ .card{grid-column:span 6} }
-    @media (min-width:1024px){ .card{grid-column:span 4} }
-    footer{margin:28px 0 8px; color:var(--muted); font-size:.9rem}
+    html,body{margin:0;height:100%;display:flex;align-items:center;justify-content:center;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;
+      background:#0f1115;color:#e9edf5;text-align:center}
+    .box{max-width:420px;padding:28px;background:#171a21;border-radius:16px;
+      box-shadow:0 10px 30px rgba(0,0,0,.4)}
+    h1{margin:0 0 12px;font-size:1.8rem;color:#d62828}
+    p{margin:0 0 18px;color:#a9b0bf}
+    a{color:#fff;background:#d62828;padding:10px 16px;border-radius:8px;text-decoration:none}
+    a:hover{background:#b81e1e}
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <div class="brand">
-        <div class="logo">🧭</div>
-        <div>
-          <h1>PT Lab — Training Hub</h1>
-          <div class="tag">Learn • Test • Apply — confidence in every clinical skill.</div>
-        </div>
-      </div>
-      <div style="background:linear-gradient(135deg,var(--accent),#b81e1e);color:#fff;padding:6px 10px;border-radius:999px;font-size:.85rem;">
-        ⚡ Beta
-      </div>
-    </header>
-
-    <section class="grid" aria-label="Modules">
-      <!-- LIVE MODULES -->
-      <a class="card" href="./goniometry-trainer/index.html">
-        <div class="small">Module</div>
-        <h2>Goniometry Trainer</h2>
-        <p>Measure ROM in 3D. Landmark → align → record. Built for lab check-offs and practice.</p>
-      </a>
-
-      <a class="card" href="./lab-motion/index.html">
-        <div class="small">Module</div>
-        <h2>Motion Lab</h2>
-        <p>Explore joint motions on a realistic model. (DAZ-powered model integration coming.)</p>
-      </a>
-
-      <!-- PLACEHOLDERS -->
-      <a class="card soon" href="./mmt/index.html" title="Coming soon">
-        <div class="small">Module</div>
-        <h2>Manual Muscle Testing (MMT)</h2>
-        <p>Positions, stabilization, grades, and common substitutions. (Coming soon)</p>
-      </a>
-
-      <a class="card soon" href="./uqs/index.html" title="Coming soon">
-        <div class="small">Module</div>
-        <h2>Upper Quarter Screen (UQS)</h2>
-        <p>Cervical scan, neuro screen, shoulder/elbow/wrist quick checks. (Coming soon)</p>
-      </a>
-
-      <a class="card soon" href="./lqs/index.html" title="Coming soon">
-        <div class="small">Module</div>
-        <h2>Lower Quarter Screen (LQS)</h2>
-        <p>Lumbar scan, neuro screen, hip/knee/ankle quick checks. (Coming soon)</p>
-      </a>
-
-      <a class="card soon" href="./neuro/index.html" title="Coming soon">
-        <div class="small">Module</div>
-        <h2>Neuro Screen</h2>
-        <p>Cranial nerves, dermatomes, myotomes, reflexes. (Coming soon)</p>
-      </a>
-    </section>
-
-    <footer>
-      PT Lab © <span id="y"></span> • Built by K. K. • YSU-inspired.
-    </footer>
+  <div class="box">
+    <h1>Coming Soon</h1>
+    <p>This module is under development. Check back soon for interactive content.</p>
+    <a href="../index.html">← Back to PT Lab Hub</a>
   </div>
-
-  <script>document.getElementById('y').textContent = new Date().getFullYear();</script>
 </body>
 </html>
