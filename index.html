@@ -3,148 +3,25 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PT Lab — Landing</title>
-  <meta name="description" content="PT Lab landing page with hero backdrop and quick links to MMT, LQS, and Goniometry Trainer." />
+  <title>PT Lab — Backdrop Only</title>
   <style>
-    :root{
-      --bg:#071427;           /* deep navy to match art */
-      --ink:#e6eef7;          /* light text */
-      --muted:#a8c0da;        /* supporting text */
-      --glow:#20ffa8;         /* neon accent */
-      --btn:#0ea5e9;          /* bubble default */
-      --btn-2:#16a34a;        /* bubble alt */
-      --btn-3:#f59e0b;        /* bubble alt */
-      --ring:rgba(255,255,255,.22);
+    html, body {
+      margin: 0;
+      height: 100%;
+      background-color: #000; /* fallback color */
+      overflow: hidden;
     }
-    html,body{height:100%;margin:0}
-    /* HARD RESET: remove any decorative pseudo-elements or background art */
-    html::before, html::after, body::before, body::after, main::before, main::after{content:none !important; background:none !important;}
-    *::before, *::after{background:none !important; background-image:none !important; box-shadow:none !important;}
-    body{font-family:system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif;background:var(--bg);color:var(--ink);}
-
-    /* ====== HERO ====== */
-    .hero{position:relative; min-height:100svh; overflow:hidden;}
-    /* remove any pseudo-element art entirely */
-    .hero::before{content:none !important;}
-    .hero::after{content:none !important;}
-    .hero-img{position:fixed; z-index:1; inset:0; margin:auto; width:100vw; height:100svh; object-fit:contain; object-position:center center; image-rendering:auto; pointer-events:none;}
-
-    /* ====== TOP NAV (optional logo slot) ====== */ (optional logo slot) ====== */ (optional logo slot) ====== */
-    .nav{position:absolute; z-index:3; inset:18px 18px auto 18px; display:flex; align-items:center; gap:14px}
-    .brand{display:flex; align-items:center; gap:10px; font-weight:700; letter-spacing:.2px}
-    .brand-dot{display:none}
-
-    /* ====== OVERLAY COPY ====== */
-    .copy{position:absolute; z-index:3; inset:auto 6vw 28vh 6vw; max-width:min(760px, 88vw);}
-    .kicker{display:inline-block; font-size:13px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); background:rgba(3,14,28,.6); border:1px solid var(--ring); padding:6px 10px; border-radius:999px; backdrop-filter: blur(6px)}
-    h1{margin:12px 0 10px 0; font-size:clamp(28px, 4.5vw, 54px); line-height:1.06}
-    .sub{max-width:60ch; color:var(--muted); font-size:clamp(14px, 1.6vw, 18px);}
-
-    /* ====== ICON BUBBLES (to mirror art’s glow) ====== */
-    .halo{position:absolute; z-index:3; top:8vh; right:7vw; display:flex; gap:18px}
-    .halo .orb{width:64px;height:64px;border-radius:999px;border:2px solid rgba(32,255,168,.65); box-shadow:0 0 22px rgba(32,255,168,.35) inset, 0 0 30px rgba(32,255,168,.25); display:grid; place-items:center; background:rgba(2, 20, 32, .35); backdrop-filter: blur(4px)}
-    .halo svg{width:32px; height:32px; opacity:.95;}
-
-    /* ====== BUBBLE LINKS STRIP ====== */
-    .strip{position:absolute; z-index:4; inset:auto 0 20px 0; display:grid; place-items:center; padding:0 16px}
-    .bubbles{display:grid; grid-template-columns:repeat(6, minmax(0, 1fr)); gap:12px; width:min(1000px, 95vw)}
-    @media (max-width:900px){ .bubbles{grid-template-columns:repeat(3, 1fr);} }
-    @media (max-width:520px){ .bubbles{grid-template-columns:repeat(2, 1fr);} }
-
-    .bubble{position:relative; display:flex; flex-direction:column; align-items:center; gap:8px; text-decoration:none; color:var(--ink);
-      padding:14px 10px; border-radius:16px; background:rgba(4,18,32,.65); border:1px solid var(--ring); backdrop-filter: blur(6px);
-      transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease}
-    .bubble:hover{transform:translateY(-2px); border-color:rgba(255,255,255,.35); box-shadow:0 10px 26px rgba(0,0,0,.25), 0 0 0 4px rgba(32,255,168,.08)}
-    .b-ico{width:36px; height:36px; border-radius:12px; display:grid; place-items:center; box-shadow: inset 0 0 28px rgba(255,255,255,.06);}
-    .b-ico svg{width:22px; height:22px}
-    .b-title{font-weight:700; font-size:15px; letter-spacing:.3px}
-    .b-sub{font-size:12px; color:var(--muted); text-align:center}
-
-    .b1 .b-ico{background:linear-gradient(180deg, rgba(14,165,233,.2), rgba(14,165,233,.05)); border:1px solid rgba(14,165,233,.45)}
-    .b2 .b-ico{background:linear-gradient(180deg, rgba(22,163,74,.2), rgba(22,163,74,.05)); border:1px solid rgba(22,163,74,.45)}
-    .b3 .b-ico{background:linear-gradient(180deg, rgba(245,158,11,.22), rgba(245,158,11,.05)); border:1px solid rgba(245,158,11,.45)}
-    .b4 .b-ico{background:linear-gradient(180deg, rgba(99,102,241,.22), rgba(99,102,241,.05)); border:1px solid rgba(99,102,241,.45)}
-    .b5 .b-ico{background:linear-gradient(180deg, rgba(236,72,153,.22), rgba(236,72,153,.05)); border:1px solid rgba(236,72,153,.45)}
-    .b6 .b-ico{background:linear-gradient(180deg, rgba(34,197,94,.22), rgba(34,197,94,.05)); border:1px solid rgba(34,197,94,.45)}
-
-    /* Safe area for notches on mobile */
-    .strip{padding-bottom:calc(12px + env(safe-area-inset-bottom));}
-
-    /* Accessibility focus */
-    .bubble:focus-visible{outline:3px solid var(--glow); outline-offset:2px}
+    img {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      object-fit: contain;      /* shows entire image without stretch */
+      object-position: center;  /* keeps it centered */
+    }
   </style>
 </head>
 <body>
-  <main class="hero" role="main">
-    <img class="hero-img" src="./assets/backdrop.png" alt="Clinician reading transparent panel with holographic model" />
-    <nav class="nav" aria-label="Top">
-      <div class="brand"><span class="brand-dot" aria-hidden="true"></span> PT&nbsp;Lab</div>
-    </nav>
-    <!-- removed decorative orbs per request -->
-<div class="orb"> <!-- biceps -->
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-          <path d="M7 16s2.5 2 5 .6c1.5-.8 1.7-2.6.7-3.9-.6-.8-1.2-1.5-1.2-2.5V8m-2.4 3.1C8 11 7 10.6 7 9.2 7 7.4 8.3 6 10 6h2"/>
-        </svg>
-      </div>
-      <div class="orb"> <!-- compass / divider -->
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-          <path d="M12 3v18M7 13l5-10 5 10M6 21h12"/>
-        </svg>
-      </div>
-    </div>
-
-    <section class="copy" aria-label="Intro">
-      <span class="kicker">Clinical Skills Playground</span>
-      <h1>Assess, Measure, and Train — all in one place.</h1>
-      <p class="sub">Use the PT Lab toolkit to practice manual muscle testing (MMT), screen postural and movement quality (LQS), and run precise digital goniometry. Tap a tool below to get started.</p>
-    </section>
-
-    <div class="strip" aria-label="Quick links">
-      <div class="bubbles">
-        <a class="bubble b3" href="./goniometry-trainer/">
-          <div class="b-ico" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21a9 9 0 0 1 18 0H3Z"/><path d="M12 12v6"/></svg>
-          </div>
-          <div class="b-title">Goniometry Trainer</div>
-          <div class="b-sub">Interactive ROM trainer</div>
-        </a>
-        <a class="bubble b4" href="./lab-motion/">
-          <div class="b-ico" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12h8M4 8h12M4 16h6"/></svg>
-          </div>
-          <div class="b-title">Motions Lab</div>
-          <div class="b-sub">Kinematics sandbox</div>
-        </a>
-        <a class="bubble b1" href="./mmt/">
-          <div class="b-ico" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 12h5l2 4 3-8"/><circle cx="7" cy="12" r="3"/></svg>
-          </div>
-          <div class="b-title">Manual Muscle Test</div>
-          <div class="b-sub">MMT positions & cues</div>
-        </a>
-        <a class="bubble b2" href="./lqs/">
-          <div class="b-ico" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12h8M4 8h12M4 16h6"/></svg>
-          </div>
-          <div class="b-title">LQS</div>
-          <div class="b-sub">Lower/Movement Quality</div>
-        </a>
-        <a class="bubble b6" href="./uqs/">
-          <div class="b-ico" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
-          </div>
-          <div class="b-title">UQS</div>
-          <div class="b-sub">Upper Quarter Screen</div>
-        </a>
-        <a class="bubble b5" href="./neuro/">
-          <div class="b-ico" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 7a2.5 2.5 0 0 0-5 1.2c0 1.3 1.2 2 2.3 2.3M9 7v7M5.8 10.5C6 12 7.2 13 8.6 13"/><path d="M15 7a2.5 2.5 0 0 1 5 1.2c0 1.3-1.2 2-2.3 2.3M15 7v7M18.2 10.5C18 12 16.8 13 15.4 13"/></svg>
-          </div>
-          <div class="b-title">Neuro</div>
-          <div class="b-sub">Screens & quick tests</div>
-        </a>
-      </div>
-    </div>
-  </main>
+  <img src="./assets/backdrop.png" alt="PT Lab background" />
 </body>
 </html>
+
