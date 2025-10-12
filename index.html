@@ -24,11 +24,7 @@
     .hero::before{ /* remove shapes; no bg image here */
       content:""; position:absolute; inset:0; z-index:0; background:transparent;
     }
-    .hero::after{ /* subtle dark overlay for legibility */
-      content:""; position:absolute; inset:0; z-index:2;
-      background:linear-gradient(to bottom, rgba(2,10,22,.38), rgba(2,10,22,.78));
-      pointer-events:none;
-    }
+    .hero::after{content:"";position:absolute;inset:0;z-index:2;background:none;pointer-events:none;}
     .hero-img{position:absolute; z-index:1; inset:0; margin:auto;
       width:100vw; height:100svh; object-fit:contain; object-position:center center; image-rendering:auto;}
     
@@ -153,3 +149,4 @@
   </main>
 </body>
 </html>
+
