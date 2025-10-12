@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PT Lab — Landing</title>
-  <meta name="description" content="PT Lab landing page with hero backdrop and quick links to Goniometry Trainer, Motions Lab, MMT, LQS, UQS, and Neuro." />
+  <title>ROMetrics — Landing</title>
+  <meta name="description" content="ROMetrics landing page with hero backdrop and quick links to Goniometry Trainer, Motions Lab, MMT, LQS, UQS, and Neuro." />
   <style>
     :root{
       --bg1:#06355c;  /* center glow */
@@ -46,37 +46,60 @@
       pointer-events:none; /* only buttons get events below */
     }
 
-/* Headline block (left) */
-.copy{
-  align-self:start;
-  pointer-events:auto;
-  padding: clamp(14px, 3vw, 28px);
-  max-width: min(700px, 46vw); /* cap width so text doesn't run into the image */
-}
+    /* Top-center brand wordmark */
+    .brand{
+      position:absolute;
+      top:10px;
+      left:50%;
+      transform:translateX(-50%);
+      z-index:60;
+      pointer-events:auto;
+      padding:6px 12px;
+      border-radius:10px;
+      color:var(--ink);
+      text-decoration:none;
+      font-weight:800;
+      letter-spacing:.5px;
+      font-size: clamp(16px, 2.2vw, 24px);
+      background:rgba(3,14,28,.45);
+      border:1px solid var(--ring);
+      backdrop-filter: blur(6px);
+    }
+    @media (max-width:480px){
+      .brand{ top:8px; font-size: clamp(15px, 4.5vw, 20px); padding:5px 10px; }
+    }
 
-.kicker{
-  display:inline-block; font-size:11px; letter-spacing:.16em; text-transform:uppercase;
-  color:var(--muted);
-  background:rgba(3,14,28,.55);
-  border:1px solid var(--ring);
-  padding:6px 10px; border-radius:999px;
-  backdrop-filter: blur(6px);
-}
+    /* Headline block (left) */
+    .copy{
+      align-self:start;
+      pointer-events:auto;
+      padding: clamp(14px, 3vw, 28px);
+      max-width: min(700px, 46vw); /* cap width so text doesn't run into the image */
+    }
 
-/* Slightly smaller headline & sub so 100% zoom fits cleanly */
-h1{ margin:12px 0 10px 0; font-size:clamp(26px, 4.2vw, 44px); line-height:1.08 }
-.sub{ max-width:60ch; color:var(--muted); font-size:clamp(14px, 1.3vw, 17px) }
+    .kicker{
+      display:inline-block; font-size:11px; letter-spacing:.16em; text-transform:uppercase;
+      color:var(--muted);
+      background:rgba(3,14,28,.55);
+      border:1px solid var(--ring);
+      padding:6px 10px; border-radius:999px;
+      backdrop-filter: blur(6px);
+    }
 
-/* On very wide screens, keep copy tighter left */
-@media (min-width: 1200px){
-  .copy{ max-width: 42vw; }
-}
+    /* Slightly smaller headline & sub so 100% zoom fits cleanly */
+    h1{ margin:12px 0 10px 0; font-size:clamp(26px, 4.2vw, 44px); line-height:1.08 }
+    .sub{ max-width:60ch; color:var(--muted); font-size:clamp(14px, 1.3vw, 17px) }
 
-/* On shorter viewports, step headline down more */
-@media (max-height: 750px){
-  h1{ font-size:clamp(24px, 3.6vw, 38px); }
-  .sub{ font-size:clamp(13px, 1.2vw, 16px); }
-}
+    /* On very wide screens, keep copy tighter left */
+    @media (min-width: 1200px){
+      .copy{ max-width: 42vw; }
+    }
+
+    /* On shorter viewports, step headline down more */
+    @media (max-height: 750px){
+      h1{ font-size:clamp(24px, 3.6vw, 38px); }
+      .sub{ font-size:clamp(13px, 1.2vw, 16px); }
+    }
 
     /* Bubbles strip (bottom, centered) */
     .strip{
@@ -122,14 +145,17 @@ h1{ margin:12px 0 10px 0; font-size:clamp(26px, 4.2vw, 44px); line-height:1.08 }
 <body>
   <div class="frame">
     <!-- Backdrop -->
-    <img class="hero" src="./assets/backdrop.png" alt="PT Lab backdrop" />
+    <img class="hero" src="./assets/backdrop.png" alt="ROMetrics backdrop" />
 
     <!-- Content overlay -->
     <div class="overlay" aria-hidden="false">
+      <!-- Brand wordmark -->
+      <a class="brand" href="./" aria-label="ROMetrics home">ROMetrics</a>
+
       <section class="copy" aria-label="Intro">
         <span class="kicker">Clinical Skills Workspace</span>
         <h1>Assess, Measure, and Train — all in one place.</h1>
-        <p class="sub">Use the PT Lab toolkit to practice manual muscle testing (MMT), screen postural and movement quality (LQS), and run digital goniometry. Tap a tool below to get started.</p>
+        <p class="sub">Use the ROMetrics toolkit to practice manual muscle testing (MMT), screen postural and movement quality (LQS), and run digital goniometry. Tap a tool below to get started.</p>
       </section>
 
       <div></div> <!-- spacer row -->
