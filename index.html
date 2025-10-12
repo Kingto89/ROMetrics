@@ -3,20 +3,21 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PT Lab — Backdrop Only</title>
+  <title>PT Lab — Backdrop Right Aligned</title>
   <style>
     html, body {
       margin: 0;
       height: 100%;
-      background-color: #000; /* fallback color */
+      background-color: #061a2c; /* sampled matching color */
       overflow: hidden;
     }
     img {
       display: block;
       width: 100vw;
       height: 100vh;
-      object-fit: contain;      /* shows entire image without stretch */
-      object-position: center;  /* keeps it centered */
+      object-fit: contain;          /* keep proportions */
+      object-position: 95% center;  /* push image to extreme right */
+      background-color: #061a2c;    /* fill visible gaps */
     }
   </style>
 </head>
@@ -24,4 +25,3 @@
   <img src="./assets/backdrop.png" alt="PT Lab background" />
 </body>
 </html>
-
