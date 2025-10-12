@@ -3,36 +3,43 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PT Lab — Seamless Backdrop</title>
+  <title>PT Lab — Full-Width Scrollable Backdrop</title>
   <style>
+    /* Page chrome */
     html, body {
-      height: 100%;
       margin: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
+      padding: 0;
       background: radial-gradient(
-        circle at 60% 50%, 
-        #06355c 0%,    /* lighter center */
-        #0a2d4a 40%, 
-        #081b2d 80%,   /* darker outer */
+        circle at 58% 40%,
+        #06355c 0%,
+        #0a2d4a 45%,
+        #081b2d 85%,
         #051423 100%
-      );
+      ); /* gentle blend to match your art */
+      overscroll-behavior: none;
     }
-    img {
+
+    /* Center the image; enable scrolling */
+    .frame {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+    }
+
+    /* Key rule: fill device width, keep proportions, allow vertical scroll */
+    img.backdrop {
       display: block;
-      max-width: 100%;
-      max-height: 100%;
-      width: auto;
-      height: auto;
-      object-fit: contain;
+      width: 100vw;     /* fit device width */
+      height: auto;     /* maintain aspect ratio */
+      max-width: none;  /* never shrink due to ancestors */
       user-select: none;
       -webkit-user-drag: none;
     }
   </style>
 </head>
 <body>
-  <img src="./assets/backdrop.png" alt="PT Lab Backdrop" />
+  <div class="frame">
+    <img class="backdrop" src="./assets/backdrop.png" alt="PT Lab backdrop" />
+  </div>
 </body>
 </html>
