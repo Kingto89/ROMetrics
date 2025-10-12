@@ -3,25 +3,30 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PT Lab — Backdrop Right Aligned</title>
+  <title>PT Lab — Backdrop Full Width</title>
   <style>
     html, body {
       margin: 0;
       height: 100%;
-      background-color: #061a2c; /* sampled matching color */
+      background-color: #071a2b; /* sampled dark navy for smooth edges */
       overflow: hidden;
     }
+
+    /* full-width responsive background */
     img {
-      display: block;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
       width: 100vw;
       height: 100vh;
-      object-fit: contain;          /* keep proportions */
-      object-position: 95% center;  /* push image to extreme right */
-      background-color: #061a2c;    /* fill visible gaps */
+      object-fit: cover;        /* fills screen width naturally */
+      object-position: center;  /* keeps the man + hologram centered */
+      image-rendering: auto;
     }
   </style>
 </head>
 <body>
-  <img src="./assets/backdrop.png" alt="PT Lab background" />
+  <img src="./assets/backdrop.png" alt="PT Lab full backdrop" />
 </body>
 </html>
