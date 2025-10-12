@@ -17,6 +17,9 @@
       --ring:rgba(255,255,255,.22);
     }
     html,body{height:100%;margin:0}
+    /* HARD RESET: remove any decorative pseudo-elements or background art */
+    html::before, html::after, body::before, body::after, main::before, main::after{content:none !important; background:none !important;}
+    *::before, *::after{background:none !important; background-image:none !important; box-shadow:none !important;}
     body{font-family:system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif;background:var(--bg);color:var(--ink);}
 
     /* ====== HERO ====== */
