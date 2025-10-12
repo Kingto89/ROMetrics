@@ -3,19 +3,16 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PT Lab — Backdrop Only (Natural Size)</title>
+  <title>PT Lab — Static Backdrop</title>
   <style>
-    /* zero chrome, just center the image; no scaling */
     html, body {
       height: 100%;
       margin: 0;
-      background: #071a2b; /* match edge tone */
-      overflow: auto;      /* allow scroll if image is larger */
-    }
-    body {
+      background-color: #071a2b; /* backdrop tone */
       display: flex;
       align-items: center;
       justify-content: center;
+      overflow: auto; /* scroll if needed */
     }
     img {
       display: block;
@@ -23,9 +20,8 @@
       height: auto;
       max-width: none;
       max-height: none;
-      image-rendering: auto;
-      -webkit-user-drag: none;
       user-select: none;
+      -webkit-user-drag: none;
     }
   </style>
 </head>
