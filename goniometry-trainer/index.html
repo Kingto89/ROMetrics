@@ -762,7 +762,7 @@ function mdToHtml(md){
   return html;
 }
 async function loadNote(region, motion){
-  const url = `content/goniometry/${region}.md?${Date.now()}`;
+  const url = `./goniometer-placement-guide/${region}.md?${Date.now()}`;
   try{
     const res = await fetch(url);
     if(!res.ok){ throw new Error(`HTTP ${res.status}`); }
