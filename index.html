@@ -7,22 +7,62 @@
   <meta name="description" content="PT Lab: Goniometry Trainer, Motion Lab, MMT, UQS, LQS, Neuro Screen." />
   <style>
     :root{
-      --bg:#0f1115; --card:#171a21; --muted:#a9b0bf; --text:#e9edf5; --accent:#d62828;
-      --cardHover:#1d212b; --ring:rgba(214,40,40,.35);
+      --bg:#0b0d12; --card:#141821; --muted:#a9b0bf; --text:#e9edf5; --accent:#d62828;
+      --cardHover:#191e28; --ring:rgba(214,40,40,.35);
     }
     *{box-sizing:border-box}
     html,body{margin:0;height:100%}
     body{
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;
-      background:radial-gradient(1200px 800px at 80% -10%, #1a1f29 0%, #0f1115 60%), var(--bg);
-      color:var(--text);
+      color:var(--text); background:var(--bg);
+      background-image:
+        radial-gradient(1200px 800px at 80% -10%, #1a1f29 0%, #0f1115 60%),
+        radial-gradient(700px 500px at -10% 110%, #151a24 0%, #0b0d12 60%);
+      background-blend-mode:screen,normal;
     }
-    .wrap{max-width:1100px;margin:0 auto;padding:28px}
-    header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:12px 0 24px}
-    .brand{display:flex;align-items:center;gap:14px}
+    .wrap{max-width:1160px;margin:0 auto;padding:28px}
+
+    /* ===== Hero ===== */
+    .hero{
+      position:relative; overflow:hidden;
+      border-radius:18px; padding:28px; margin:8px 0 28px;
+      background:#0d121b;
+      border:1px solid rgba(255,255,255,.06);
+      display:grid; grid-template-columns:1.3fr 1fr; gap:18px;
+      box-shadow:0 2px 0 rgba(255,255,255,.02), 0 24px 48px rgba(0,0,0,.45);
+      isolation:isolate;
+    }
+    .hero h1{margin:0 0 6px; font-size:1.9rem}
+    .hero p{margin:0; color:var(--muted)}
+    .badge{display:inline-flex;align-items:center;gap:8px;font-size:.85rem;
+      background:linear-gradient(135deg,var(--accent),#b81e1e); color:#fff;
+      padding:6px 10px; border-radius:999px; margin-top:10px}
+    .art{
+      position:relative; min-height:220px; border-radius:14px; overflow:hidden;
+      background:
+        linear-gradient(120deg, rgba(214,40,40,.12), rgba(255,255,255,.02)),
+        radial-gradient(60% 70% at 75% 40%, rgba(214,40,40,.25), transparent 60%),
+        radial-gradient(50% 60% at 20% 80%, rgba(255,255,255,.08), transparent 60%),
+        #0b0f17;
+      border:1px solid rgba(255,255,255,.06);
+    }
+    /* Optional: drop an image at ./assets/hero.jpg to override the art block */
+    .art::after{
+      content:"";
+      position:absolute; inset:0; background-size:cover; background-position:center;
+      opacity:.38; mix-blend-mode:screen;
+      background-image:url("./assets/hero.jpg"); /* add your photo here */
+      pointer-events:none;
+    }
+    /* Inline SVG decorative overlay */
+    .art svg{position:absolute; inset:0; width:100%; height:100%; opacity:.9}
+
+    header.hub{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 0 10px}
+    .brand{display:flex;align-items:center;gap:12px}
     .logo{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:linear-gradient(135deg,var(--accent),#8b1c1c)}
-    h1{font-size:1.65rem;line-height:1.2;margin:0}
     .tag{color:var(--muted);font-size:.98rem}
+
+    /* ===== Cards ===== */
     .grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px}
     .card{
       grid-column:span 12; padding:18px 18px 20px; border-radius:16px; background:var(--card);
@@ -35,27 +75,67 @@
     .card p{margin:0; color:var(--muted); font-size:.98rem}
     .small{font-size:.85rem}
     .soon{opacity:.55; pointer-events:none; border-style:dashed}
-    @media (min-width:720px){ .card{grid-column:span 6} }
-    @media (min-width:1024px){ .card{grid-column:span 4} }
-    footer{margin:28px 0 8px; color:var(--muted); font-size:.9rem;text-align:center}
+    @media (min-width:740px){ .card{grid-column:span 6} }
+    @media (min-width:1040px){ .card{grid-column:span 4} }
+
+    footer{margin:28px 0 8px; color:var(--muted); font-size:.9rem; text-align:center}
   </style>
 </head>
 <body>
   <div class="wrap">
-    <header>
-      <div class="brand">
-        <div class="logo">🧭</div>
-        <div>
-          <h1>PT Lab — Training Hub</h1>
-          <div class="tag">Learn • Test • Apply — confidence in every clinical skill.</div>
-        </div>
+    <!-- Hero with brand + art -->
+    <div class="hero">
+      <div>
+        <header class="hub">
+          <div class="brand">
+            <div class="logo">🧭</div>
+            <div>
+              <div class="tag">Interactive Clinical Training Suite</div>
+              <h1>PT Lab — Training Hub</h1>
+            </div>
+          </div>
+          <div class="badge">⚡ Beta</div>
+        </header>
+        <p>Learn • Test • Apply — build confidence in every clinical skill.</p>
       </div>
-      <div style="background:linear-gradient(135deg,var(--accent),#b81e1e);color:#fff;padding:6px 10px;border-radius:999px;font-size:.85rem;">
-        ⚡ Beta
+      <div class="art" aria-hidden="true">
+        <!-- decorative vector (goniometer arc + figure outline) -->
+        <svg viewBox="0 0 600 360" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#ff3b3b" stop-opacity=".85"/>
+              <stop offset="1" stop-color="#9b1c1c" stop-opacity=".4"/>
+            </linearGradient>
+            <linearGradient id="g2" x1="0" y1="1" x2="1" y2="0">
+              <stop offset="0" stop-color="#ffffff" stop-opacity=".15"/>
+              <stop offset="1" stop-color="#ffffff" stop-opacity=".02"/>
+            </linearGradient>
+          </defs>
+          <!-- goniometer arc -->
+          <g transform="translate(320,280)">
+            <circle r="120" fill="none" stroke="url(#g1)" stroke-width="3"/>
+            <circle r="90"  fill="none" stroke="url(#g2)" stroke-width="1.5"/>
+            <!-- ticks -->
+            <g opacity=".7" stroke="#c3c7cf">
+              <!-- 5° ticks -->
+              <g>
+                <!-- generate ticks in code typically; here is a simplified ring -->
+                <circle r="120" stroke-dasharray="2 8" stroke-width="2" fill="none"/>
+              </g>
+            </g>
+            <!-- arms -->
+            <line x1="0" y1="0" x2="0" y2="-135" stroke="#ef4444" stroke-width="4" stroke-linecap="round"/>
+            <line x1="0" y1="0" x2="105" y2="-75" stroke="#22c55e" stroke-width="4" stroke-linecap="round"/>
+          </g>
+          <!-- subtle human outline -->
+          <path d="M130 320c10-40 22-60 50-78 25-16 44-52 44-90 0-20-6-38-18-52 16-3 28-3 44 0-12 14-18 32-18 52 0 38 19 74 44 90 28 18 40 38 50 78"
+                fill="none" stroke="url(#g2)" stroke-width="3" stroke-linecap="round" opacity=".8"/>
+        </svg>
       </div>
-    </header>
+    </div>
 
-    <section class="grid">
+    <!-- Modules -->
+    <section class="grid" aria-label="Modules">
       <a class="card" href="./goniometry-trainer/index.html">
         <div class="small">Module</div>
         <h2>Goniometry Trainer</h2>
@@ -65,28 +145,28 @@
       <a class="card" href="./lab-motion/index.html">
         <div class="small">Module</div>
         <h2>Motion Lab</h2>
-        <p>Explore joint motions on a realistic model. (DAZ-powered model integration coming.)</p>
+        <p>Explore joint motions on a realistic model. DAZ-powered model integration coming.</p>
       </a>
 
-      <a class="card soon" href="./mmt/index.html">
+      <a class="card soon" href="./mmt/index.html" title="Coming soon">
         <div class="small">Module</div>
         <h2>Manual Muscle Testing (MMT)</h2>
         <p>Positions, stabilization, grades, and substitutions. Coming soon.</p>
       </a>
 
-      <a class="card soon" href="./uqs/index.html">
+      <a class="card soon" href="./uqs/index.html" title="Coming soon">
         <div class="small">Module</div>
         <h2>Upper Quarter Screen (UQS)</h2>
         <p>Cervical scan, neuro screen, shoulder/elbow/wrist checks. Coming soon.</p>
       </a>
 
-      <a class="card soon" href="./lqs/index.html">
+      <a class="card soon" href="./lqs/index.html" title="Coming soon">
         <div class="small">Module</div>
         <h2>Lower Quarter Screen (LQS)</h2>
         <p>Lumbar scan, neuro screen, hip/knee/ankle checks. Coming soon.</p>
       </a>
 
-      <a class="card soon" href="./neuro/index.html">
+      <a class="card soon" href="./neuro/index.html" title="Coming soon">
         <div class="small">Module</div>
         <h2>Neuro Screen</h2>
         <p>Cranial nerves, dermatomes, myotomes, reflexes. Coming soon.</p>
@@ -94,7 +174,7 @@
     </section>
 
     <footer>
-      PT Lab © <span id="y"></span> • Built by K. K. • YSU-inspired.
+      PT Lab © <span id="y"></span> • Built by K. K.
     </footer>
   </div>
   <script>document.getElementById('y').textContent = new Date().getFullYear();</script>
