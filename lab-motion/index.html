@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>3D Motion Lab — Joint Trainer</title>
 
-<!-- Import map -->
 <script type="importmap">
 {
   "imports": {
@@ -19,14 +18,8 @@
 :root{--bg:#0b1220;--panel:#0f172a;--line:#1f2937;--ctrl:#1e293b;--text:#e2e8f0;--muted:#cbd5e1}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--text);overflow:hidden;font-family:system-ui,Segoe UI,Roboto}
 canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
-
-.panel{
-  position:fixed;left:12px;top:12px;width:360px;max-height:90vh;z-index:20;
-  background:var(--panel);border:1px solid var(--line);border-radius:12px;
-  box-shadow:0 8px 28px rgba(0,0,0,.4);display:flex;flex-direction:column;overflow:hidden
-}
-.dragbar{cursor:move;background:#0c1628;border-bottom:1px solid #162235;
-  padding:8px 12px;font-weight:700;display:flex;align-items:center;gap:8px}
+.panel{position:fixed;left:12px;top:12px;width:360px;max-height:90vh;z-index:20;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.4);display:flex;flex-direction:column;overflow:hidden}
+.dragbar{cursor:move;background:#0c1628;border-bottom:1px solid #162235;padding:8px 12px;font-weight:700;display:flex;align-items:center;gap:8px}
 .dragbar .hint{margin-left:auto;font-size:12px;color:#9fb0c9}
 .content{padding:12px;overflow:auto}
 label{display:block;font-size:12px;margin-top:8px;color:var(--muted)}
@@ -38,27 +31,15 @@ select,button,input[type=range]{width:100%;margin:6px 0 8px 0;padding:8px 10px;b
 .seg button.on{background:#1f2c43;color:#fff;border-color:#47618e}
 details{border:1px solid #162235;border-radius:10px;padding:8px;background:#0b1426;margin-top:8px}
 summary{cursor:pointer;font-weight:600;color:#dbe7ff}
-#log{background:#0b1220;border:1px solid #1f2937;min-height:100px;max-height:140px;overflow:auto;border-radius:8px;padding:8px;font-size:12px;white-space:pre-wrap}
+#log{background:#0b1220;border:1px solid #1f2937;min-height:90px;max-height:130px;overflow:auto;border-radius:8px;padding:8px;font-size:12px;white-space:pre-wrap}
 #msg{position:fixed;bottom:10px;left:12px;background:rgba(15,23,42,.75);border:1px solid #334155;border-radius:8px;padding:6px 10px;font-size:12px;z-index:25}
 optgroup{color:#9fb0c9;font-style:normal}
-
-/* ROM modal */
-.modal{position:fixed;right:16px;bottom:16px;width:min(560px,92vw);max-height:78vh;z-index:30;
-  background:rgba(8,13,26,.96);border:1px solid #334155;border-radius:12px;backdrop-filter:blur(6px);
-  display:none;flex-direction:column;overflow:hidden}
+.modal{position:fixed;right:16px;bottom:16px;width:min(560px,92vw);max-height:78vh;z-index:30;background:rgba(8,13,26,.96);border:1px solid #334155;border-radius:12px;backdrop-filter:blur(6px);display:none;flex-direction:column;overflow:hidden}
 .modal.on{display:flex}
 .modal .top{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid #1f2a40;background:#0c1628}
 .modal .top h4{margin:0;font-size:14px}
 .modal .x{margin-left:auto;background:transparent;border:0;color:#9fb0c9;font-size:18px;cursor:pointer}
 .modal .body{padding:12px;overflow:auto}
-.modal .body h3, .modal .body h4{margin:.6em 0}
-.modal .body p{margin:.4em 0}
-.modal .body details{background:transparent;border:1px solid #243244}
-.modal .body summary{color:#e5edff}
-.modal .body code{background:#0a1222;padding:2px 4px;border-radius:6px}
-
-/* draggable modal */
-.modal.dragging{opacity:.98}
 </style>
 </head>
 <body>
@@ -96,7 +77,6 @@ optgroup{color:#9fb0c9;font-style:normal}
       <input type="range" id="actionDeg" min="-90" max="150" step="1" value="0">
       <div class="row">
         <button id="zeroAction" class="mini">Zero Motion</button>
-        <button id="logBind" class="mini">Log Bound Bone</button>
       </div>
 
       <details>
@@ -150,7 +130,6 @@ optgroup{color:#9fb0c9;font-style:normal}
     </div>
   </div>
 
-  <!-- ROM Modal -->
   <div class="modal" id="romModal" aria-modal="true" role="dialog">
     <div class="top">
       <h4>ROM Reference</h4>
@@ -195,7 +174,6 @@ optgroup{color:#9fb0c9;font-style:normal}
   const actionDeg = document.getElementById("actionDeg");
   const pairLabel = document.getElementById("pairLabel");
   const zeroAction = document.getElementById("zeroAction");
-  const logBind = document.getElementById("logBind");
 
   const boneSel = document.getElementById("boneSel");
   const rx = document.getElementById("rx");
@@ -210,39 +188,23 @@ optgroup{color:#9fb0c9;font-style:normal}
   const myaw = document.getElementById("myaw");
   const resetModel = document.getElementById("resetModel");
 
-  /* ===== Draggable panels ===== */
-  (function drag(el, handle){
+  /* ===== Draggable panel ===== */
+  (function(){
     let dragging=false, sx=0, sy=0, startLeft=0, startTop=0;
     const onDown = (e)=>{ dragging=true; sx=e.clientX; sy=e.clientY;
-      const r = el.getBoundingClientRect(); startLeft=r.left; startTop=r.top; e.preventDefault(); };
-    const onMove = (e)=>{ if(!dragging) return;
-      const dx=e.clientX-sx, dy=e.clientY-sy;
-      el.style.left=Math.max(8,startLeft+dx)+"px";
-      el.style.top=Math.max(8,startTop+dy)+"px";
+      const r = panel.getBoundingClientRect();
+      startLeft = r.left; startTop = r.top;
+      e.preventDefault();
     };
-    const onUp=()=>{ dragging=false; };
-    handle.addEventListener("pointerdown", onDown);
+    const onMove = (e)=>{ if(!dragging) return;
+      const dx = e.clientX - sx, dy = e.clientY - sy;
+      panel.style.left = Math.max(8, startLeft + dx) + "px";
+      panel.style.top = Math.max(8, startTop + dy) + "px";
+    };
+    const onUp = ()=>{ dragging = false; };
+    dragbar.addEventListener("pointerdown", onDown);
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
-  })(panel, dragbar);
-
-  (function dragModal(){
-    let dragging=false, sx=0, sy=0, startLeft=0, startTop=0;
-    const top = romModal.querySelector('.top');
-    top.style.cursor='move';
-    top.addEventListener('pointerdown', (e)=>{
-      dragging=true; romModal.classList.add('dragging');
-      sx=e.clientX; sy=e.clientY;
-      const r=romModal.getBoundingClientRect(); startLeft=r.left; startTop=r.top; e.preventDefault();
-    });
-    window.addEventListener('pointermove', (e)=>{
-      if(!dragging) return;
-      const dx=e.clientX-sx, dy=e.clientY-sy;
-      romModal.style.right=''; romModal.style.bottom='';
-      romModal.style.left=Math.max(8,startLeft+dx)+'px';
-      romModal.style.top=Math.max(8,startTop+dy)+'px';
-    });
-    window.addEventListener('pointerup', ()=>{ dragging=false; romModal.classList.remove('dragging'); });
   })();
 
   /* ===== Three setup ===== */
@@ -281,13 +243,8 @@ optgroup{color:#9fb0c9;font-style:normal}
   /* ===== Loader ===== */
   const loader = new GLTFLoader();
   loader.setMeshoptDecoder(MeshoptDecoder);
-  const draco = new DRACOLoader();
-  draco.setDecoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/draco/");
-  loader.setDRACOLoader(draco);
-  const ktx2 = new KTX2Loader();
-  ktx2.setTranscoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/basis/");
-  ktx2.detectSupport(renderer);
-  loader.setKTX2Loader(ktx2);
+  const draco = new DRACOLoader(); draco.setDecoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/draco/"); loader.setDRACOLoader(draco);
+  const ktx2 = new KTX2Loader(); ktx2.setTranscoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/basis/"); ktx2.detectSupport(renderer); loader.setKTX2Loader(ktx2);
 
   let model = null, skeleton = null;
   const initialBoneRot = new Map();
@@ -325,7 +282,7 @@ optgroup{color:#9fb0c9;font-style:normal}
     camera.lookAt(center);
   }
 
-  /* ===== Bone list (Advanced) ===== */
+  /* ===== Populate bones ===== */
   function populateBones(){
     boneSel.innerHTML = "";
     if (!skeleton) {
@@ -353,7 +310,7 @@ optgroup{color:#9fb0c9;font-style:normal}
     const ey = THREE.MathUtils.degToRad(parseFloat(ry.value)||0);
     const ez = THREE.MathUtils.degToRad(parseFloat(rz.value)||0);
     const qDelta = new THREE.Quaternion().setFromEuler(new THREE.Euler(ex,ey,ez,"XYZ"));
-    const qBase = initialBoneRot.get(b) || new THREE.Quaternion();  /* ← FIXED */
+    const qBase = initialBoneRot.get(b) || new THREE.Quaternion();
     b.quaternion.copy(qBase).multiply(qDelta);
   }
   function zeroSelectedBone(){
@@ -365,37 +322,149 @@ optgroup{color:#9fb0c9;font-style:normal}
     rx.value="0"; ry.value="0"; rz.value="0";
   }
 
-  /* ===== Central plane → axis map ===== */
-  const AXIS_FROM_PLANE = {
-    sagittal: 'x',   // pitch
-    frontal:  'z',   // roll
-    transverse:'y'   // yaw / axial
-  };
+  /* ===== Rig profile detection & axis map ===== */
+  let RIG_PROFILE = 'generic';
+  function detectRigProfile(){
+    const names = skeleton?.bones.map(b=>b.name.toLowerCase()).join(' ') || '';
+    if (/\bmixamorig\b/.test(names)) RIG_PROFILE = 'mixamo';
+    else RIG_PROFILE = 'generic';
+    log(`Rig profile: ${RIG_PROFILE}`);
+  }
 
-  /* ===== Joint config (paired motions) ===== */
+  // Return the local axis to drive for a given motion key under a profile
+  function axisFor(profile, motionKey, defaultAxis){
+    if (profile==='mixamo'){
+      // Mixamo typical local axes
+      const map = {
+        // Upper arm / shoulder
+        sh_fe_l:'z', sh_fe_r:'z',   // flex/ext
+        sh_aa_l:'x', sh_aa_r:'x',   // abd/add
+        sh_irer_l:'y', sh_irer_r:'y', // int/ext rot
+
+        // Elbow (lower arm)
+        el_fe_l:'z', el_fe_r:'z',
+
+        // Forearm pronation/supination (twist)
+        fa_ps_l:'y', fa_ps_r:'y',
+
+        // Wrist
+        wr_fe_l:'z', wr_fe_r:'z',   // flex/ext
+        wr_ru_l:'x', wr_ru_r:'x',   // radial/ulnar
+
+        // Hip (thigh)
+        hip_fe_l:'z', hip_fe_r:'z',
+        hip_aa_l:'x', hip_aa_r:'x',
+        hip_irer_l:'y', hip_irer_r:'y',
+
+        // Knee
+        knee_fe_l:'z', knee_fe_r:'z',
+
+        // Ankle / foot
+        ankle_dfpf_l:'x', ankle_dfpf_r:'x',    // DF/PF
+        foot_invev_l:'z', foot_invev_r:'z'     // inversion/eversion
+      };
+      if (motionKey in map) return map[motionKey];
+    }
+    // Generic fallback: use plane mapping
+    return defaultAxis;
+  }
+
+  /* ===== Side-aware bone finding (no wrong-side fallback) ===== */
   const EXCLUDE = /(pelvis|root|spine|clavicle|scapula)/i;
 
+  function sideRegex(side){
+    if (!side) return [/.*/];
+    if (side==='l'){
+      return [
+        /\bleft\b/i, /\b_left\b/i, /\.l\b/i, /_l\b/i, /\bl\b(?![a-z])/i,
+        /\bleft(?=[A-Z_])/i, /mixamorig:.*left/i
+      ];
+    } else {
+      return [
+        /\bright\b/i, /\b_right\b/i, /\.r\b/i, /_r\b/i, /\br\b(?![a-z])/i,
+        /\bright(?=[A-Z_])/i, /mixamorig:.*right/i
+      ];
+    }
+  }
+
+  function findBoneBy(cfg){
+    if (!skeleton) return null;
+    const names = skeleton.bones.map(b=>b.name.toLowerCase());
+    const sideREs = sideRegex(cfg.side);
+    // First pass: must match side (if specified) AND hint
+    for (const cand of cfg.hints){
+      for (let i=0;i<names.length;i++){
+        if (EXCLUDE.test(names[i])) continue;
+        if (!sideREs.some(r=>r.test(names[i]))) continue;
+        if (cand.test(names[i])) return skeleton.bones[i];
+      }
+    }
+    // Second pass (only when no side specified): hint only
+    if (!cfg.side){
+      for (const cand of cfg.hints){
+        for (let i=0;i<names.length;i++){
+          if (EXCLUDE.test(names[i])) continue;
+          if (cand.test(names[i])) return skeleton.bones[i];
+        }
+      }
+    }
+    return null;
+  }
+
+  const JOINT_BIND = new Map();
+  function resolveBind(key,cfg){
+    if (JOINT_BIND.has(key)) return JOINT_BIND.get(key);
+    const bone = findBoneBy(cfg);
+    if (!bone) { log(`No bind for ${key}`); return null; }
+    const qBind = (initialBoneRot.get(bone) || bone.quaternion.clone()).clone();
+    const obj = {bone,qBind};
+    JOINT_BIND.set(key,obj);
+    log(`Bound ${key} → ${bone.name}`);
+    return obj;
+  }
+
+  function applyPairAngle(key,cfg,sliderDeg){
+    const bind = resolveBind(key,cfg);
+    if (!bind) return;
+    const {bone,qBind} = bind;
+
+    // Determine correct local axis based on profile
+    const baseAxis = ({sagittal:'x', frontal:'z', transverse:'y'})[cfg.plane] || 'x';
+    const axis = axisFor(RIG_PROFILE, key, baseAxis);
+
+    const rad = THREE.MathUtils.degToRad(sliderDeg + (cfg.neutral||0));
+    const e = new THREE.Euler(0,0,0,"XYZ");
+    if (axis==='x') e.set(rad,0,0,"XYZ");
+    if (axis==='y') e.set(0,rad,0,"XYZ");
+    if (axis==='z') e.set(0,0,rad,"XYZ");
+
+    const qDelta = new THREE.Quaternion().setFromEuler(e);
+    bone.quaternion.copy(qBind).multiply(qDelta);
+  }
+
+  /* ===== Joint definitions (paired) ===== */
+  // Hints prefer specific limb bones (avoid scapula/clavicle for GH; avoid forearm for wrist)
   const UPPER = [
     {key:'cerv_fe',   pair:'Cervical Flex / Ext',                side:'', plane:'sagittal',   neutral:0, min:-60,  max:70,  hints:[/neck|cspine|head/i]},
     {key:'cerv_lat',  pair:'Cervical Lat Flex (L / R)',          side:'', plane:'frontal',    neutral:0, min:-45,  max:45,  hints:[/neck|cspine|head/i]},
     {key:'cerv_rot',  pair:'Cervical Rotation (L / R)',          side:'', plane:'transverse', neutral:0, min:-80,  max:80,  hints:[/neck|cspine|head/i]},
 
-    {key:'sh_fe_l',   pair:'Shoulder L — Flex / Ext',            side:'l', plane:'sagittal',  neutral:0, min:-180, max:60,  hints:[/upper.?arm|humerus|shoulder/i]},
-    {key:'sh_fe_r',   pair:'Shoulder R — Flex / Ext',            side:'r', plane:'sagittal',  neutral:0, min:-180, max:60,  hints:[/upper.?arm|humerus|shoulder/i]},
-    {key:'sh_aa_l',   pair:'Shoulder L — Abd / Add',             side:'l', plane:'frontal',   neutral:0, min:-180, max:40,  hints:[/upper.?arm|humerus|shoulder/i]},
-    {key:'sh_aa_r',   pair:'Shoulder R — Abd / Add',             side:'r', plane:'frontal',   neutral:0, min:-180, max:40,  hints:[/upper.?arm|humerus|shoulder/i]},
-    {key:'sh_irer_l', pair:'Shoulder L — Internal / External',   side:'l', plane:'transverse',neutral:0, min:-70,  max:90,  hints:[/upper.?arm|humerus|shoulder/i]},
-    {key:'sh_irer_r', pair:'Shoulder R — Internal / External',   side:'r', plane:'transverse',neutral:0, min:-70,  max:90,  hints:[/upper.?arm|humerus|shoulder/i]},
+    {key:'sh_fe_l',   pair:'Shoulder L — Flex / Ext',            side:'l', plane:'sagittal',  neutral:0, min:-180, max:60,  hints:[/upper.?arm|humerus|shoulder|arm(?!.*lower)/i]},
+    {key:'sh_fe_r',   pair:'Shoulder R — Flex / Ext',            side:'r', plane:'sagittal',  neutral:0, min:-180, max:60,  hints:[/upper.?arm|humerus|shoulder|arm(?!.*lower)/i]},
+    {key:'sh_aa_l',   pair:'Shoulder L — Abd / Add',             side:'l', plane:'frontal',   neutral:0, min:-180, max:40,  hints:[/upper.?arm|humerus|shoulder|arm(?!.*lower)/i]},
+    {key:'sh_aa_r',   pair:'Shoulder R — Abd / Add',             side:'r', plane:'frontal',   neutral:0, min:-180, max:40,  hints:[/upper.?arm|humerus|shoulder|arm(?!.*lower)/i]},
+    {key:'sh_irer_l', pair:'Shoulder L — Internal / External',   side:'l', plane:'transverse',neutral:0, min:-70,  max:90,  hints:[/upper.?arm|humerus|shoulder|arm(?!.*lower)/i]},
+    {key:'sh_irer_r', pair:'Shoulder R — Internal / External',   side:'r', plane:'transverse',neutral:0, min:-70,  max:90,  hints:[/upper.?arm|humerus|shoulder|arm(?!.*lower)/i]},
 
-    {key:'el_fe_l',   pair:'Elbow L — Flex / Ext',               side:'l', plane:'sagittal',  neutral:0, min:-150, max:10,  hints:[/forearm|ulna|radius/i]},
-    {key:'el_fe_r',   pair:'Elbow R — Flex / Ext',               side:'r', plane:'sagittal',  neutral:0, min:-150, max:10,  hints:[/forearm|ulna|radius/i]},
-    {key:'fa_ps_l',   pair:'Forearm L — Pronation / Supination', side:'l', plane:'transverse',neutral:0, min:-85,  max:95,  hints:[/forearm|radius|ulna/i]},
-    {key:'fa_ps_r',   pair:'Forearm R — Pronation / Supination', side:'r', plane:'transverse',neutral:0, min:-85,  max:95,  hints:[/forearm|radius|ulna/i]},
+    {key:'el_fe_l',   pair:'Elbow L — Flex / Ext',               side:'l', plane:'sagittal',  neutral:0, min:-150, max:10,  hints:[/lower.?arm|forearm|ulna|radius/i]},
+    {key:'el_fe_r',   pair:'Elbow R — Flex / Ext',               side:'r', plane:'sagittal',  neutral:0, min:-150, max:10,  hints:[/lower.?arm|forearm|ulna|radius/i]},
+    {key:'fa_ps_l',   pair:'Forearm L — Pronation / Supination', side:'l', plane:'transverse',neutral:0, min:-85,  max:95,  hints:[/lower.?arm|forearm|ulna|radius/i]},
+    {key:'fa_ps_r',   pair:'Forearm R — Pronation / Supination', side:'r', plane:'transverse',neutral:0, min:-85,  max:95,  hints:[/lower.?arm|forearm|ulna|radius/i]},
 
-    {key:'wr_fe_l',   pair:'Wrist L — Flex / Ext',               side:'l', plane:'sagittal',  neutral:0, min:-80,  max:70,  hints:[/wrist|hand/i]},
-    {key:'wr_fe_r',   pair:'Wrist R — Flex / Ext',               side:'r', plane:'sagittal',  neutral:0, min:-80,  max:70,  hints:[/wrist|hand/i]},
-    {key:'wr_ru_l',   pair:'Wrist L — Radial / Ulnar Dev',       side:'l', plane:'frontal',   neutral:0, min:-20,  max:40,  hints:[/wrist|hand/i]},
-    {key:'wr_ru_r',   pair:'Wrist R — Radial / Ulnar Dev',       side:'r', plane:'frontal',   neutral:0, min:-20,  max:40,  hints:[/wrist|hand/i]},
+    {key:'wr_fe_l',   pair:'Wrist L — Flex / Ext',               side:'l', plane:'sagittal',  neutral:0, min:-80,  max:70,  hints:[/wrist|hand(?!.*thumb|.*index|.*middle|.*ring|.*pinky)/i]},
+    {key:'wr_fe_r',   pair:'Wrist R — Flex / Ext',               side:'r', plane:'sagittal',  neutral:0, min:-80,  max:70,  hints:[/wrist|hand(?!.*thumb|.*index|.*middle|.*ring|.*pinky)/i]},
+    {key:'wr_ru_l',   pair:'Wrist L — Radial / Ulnar Dev',       side:'l', plane:'frontal',   neutral:0, min:-20,  max:40,  hints:[/wrist|hand(?!.*thumb|.*index|.*middle|.*ring|.*pinky)/i]},
+    {key:'wr_ru_r',   pair:'Wrist R — Radial / Ulnar Dev',       side:'r', plane:'frontal',   neutral:0, min:-20,  max:40,  hints:[/wrist|hand(?!.*thumb|.*index|.*middle|.*ring|.*pinky)/i]},
   ];
 
   const LOWER = [
@@ -416,77 +485,23 @@ optgroup{color:#9fb0c9;font-style:normal}
   ];
 
   let CURRENT = UPPER;
-  const JOINT_BIND = new Map();
-
-  function findBoneBy(cfg){
-    if (!skeleton) return null;
-    const names = skeleton.bones.map(b=>b.name.toLowerCase());
-    const sideREs = cfg.side
-      ? (cfg.side==='l' ? [/left\b|_l\b|\.l\b|\bl\b/i] : [/right\b|_r\b|\.r\b|\br\b/i])
-      : [/.*/];
-    for (const cand of cfg.hints){
-      for (let i=0;i<names.length;i++){
-        if (EXCLUDE.test(names[i])) continue;
-        if (!sideREs.some(r=>r.test(names[i]))) continue;
-        if (cand.test(names[i])) return skeleton.bones[i];
-      }
-      for (let i=0;i<names.length;i++){
-        if (EXCLUDE.test(names[i])) continue;
-        if (cand.test(names[i])) return skeleton.bones[i];
-      }
-    }
-    return null;
-  }
-
-  function resolveBind(key,cfg){
-    if (JOINT_BIND.has(key)) return JOINT_BIND.get(key);
-    const bone = findBoneBy(cfg);
-    if (!bone) { log(`No bind for ${key}`); return null; }
-    const qBind = (initialBoneRot.get(bone) || bone.quaternion.clone()).clone();
-    const obj = {bone,qBind};
-    JOINT_BIND.set(key,obj);
-    log(`Bound ${key} → ${bone.name}`);
-    return obj;
-  }
-
-  function applyPairAngle(key,cfg,sliderDeg){
-    const bind = resolveBind(key,cfg);
-    if (!bind) return;
-    const {bone,qBind} = bind;
-
-    const axis = AXIS_FROM_PLANE[cfg.plane] || 'x';
-    const rad = THREE.MathUtils.degToRad(sliderDeg + (cfg.neutral||0));
-    const e = new THREE.Euler(0,0,0,"XYZ");
-    if (axis==='x') e.set(rad,0,0,"XYZ");
-    if (axis==='y') e.set(0,rad,0,"XYZ");
-    if (axis==='z') e.set(0,0,rad,"XYZ");
-
-    const qDelta = new THREE.Quaternion().setFromEuler(e);
-    bone.quaternion.copy(qBind).multiply(qDelta);
-  }
 
   /* ===== UI: actions ===== */
   function fillActionMenu(){
     actionSel.innerHTML = "";
-    const groups = [
-      ["Cervical, Shoulder & Arm", UPPER],
-      ["Hip, Leg & Foot", LOWER]
-    ];
-    const src = (CURRENT===UPPER) ? [groups[0]] : [groups[1]];
-    for (const [label, list] of src){
-      const og = document.createElement("optgroup");
-      og.label = label;
-      for (const item of list){
-        const opt = document.createElement("option");
-        opt.value = item.key;
-        opt.textContent = item.pair;
-        og.appendChild(opt);             /* ← FIXED: append to group */
-      }
-      actionSel.appendChild(og);         /* ← then append group to select */
+    const list = (CURRENT===UPPER) ? UPPER : LOWER;
+    const og = document.createElement("optgroup");
+    og.label = (CURRENT===UPPER) ? "Cervical, Shoulder & Arm" : "Hip, Leg & Foot";
+    for (const item of list){
+      const opt = document.createElement("option");
+      opt.value = item.key;
+      opt.textContent = item.pair;
+      og.appendChild(opt);
     }
+    actionSel.appendChild(og);
     const first = actionSel.querySelector('option');
     if (first) actionSel.value = first.value;
-    syncActionUI();
+    syncActionUI(true);
   }
 
   function cfgFromKey(k){
@@ -494,17 +509,16 @@ optgroup{color:#9fb0c9;font-style:normal}
     return list.find(x=>x.key===k) || null;
   }
 
-  function syncActionUI(){
+  function syncActionUI(forceZero=false){
     const key = actionSel.value;
     const cfg = cfgFromKey(key);
     if (!cfg) return;
     pairLabel.textContent = cfg.pair + " — Angle (°)";
     actionDeg.min = String(cfg.min);
     actionDeg.max = String(cfg.max);
-    let v = parseFloat(actionDeg.value)||0;
-    v = Math.min(cfg.max, Math.max(cfg.min, v));
-    actionDeg.value = String(v);
-    applyPairAngle(key, cfg, v);
+    if (forceZero) actionDeg.value = "0";
+    // ensure neutral baseline applied immediately
+    applyPairAngle(key, cfg, parseFloat(actionDeg.value)||0);
   }
 
   /* ===== Postures ===== */
@@ -544,13 +558,13 @@ optgroup{color:#9fb0c9;font-style:normal}
       groundSnap(); fitView(); return;
     }
     if (kind === "sit"){
-      // Sit 90/90: hips ~90 flex, knees ~90 flex, slight ankle DF
-      const Lhip = findOne([/upper.?leg_l|thigh_l|femur_l/i]);
-      const Rhip = findOne([/upper.?leg_r|thigh_r|femur_r/i]);
-      const Lk = findOne([/lower.?leg_l|tibia_l|shin_l|calf_l/i]);
-      const Rk = findOne([/lower.?leg_r|tibia_r|shin_r|calf_r/i]);
-      const Lank = findOne([/foot.*l|ankle.*l|talus.*l|tarsal.*l/i]);
-      const Rank = findOne([/foot.*r|ankle.*r|talus.*r|tarsal.*r/i]);
+      // Mixamo-friendly names
+      const Lhip = findOne([/upper.?leg_l|thigh_l|femur_l|mixamorig:lefthip|mixamorig:leftupleg/i, /left upleg/i]);
+      const Rhip = findOne([/upper.?leg_r|thigh_r|femur_r|mixamorig:righthip|mixamorig:rightupleg/i, /right upleg/i]);
+      const Lk = findOne([/lower.?leg_l|tibia_l|shin_l|calf_l|mixamorig:leftleg/i]);
+      const Rk = findOne([/lower.?leg_r|tibia_r|shin_r|calf_r|mixamorig:rightleg/i]);
+      const Lank = findOne([/foot.*l|ankle.*l|talus.*l|tarsal.*l|mixamorig:leftfoot/i]);
+      const Rank = findOne([/foot.*r|ankle.*r|talus.*r|tarsal.*r|mixamorig:rightfoot/i]);
 
       if (Lhip) rotateBoneDelta(Lhip, -90,0,0);
       if (Rhip) rotateBoneDelta(Rhip, -90,0,0);
@@ -576,7 +590,7 @@ optgroup{color:#9fb0c9;font-style:normal}
   segUpper.onclick = ()=>{ CURRENT = UPPER; segUpper.classList.add('on'); segLower.classList.remove('on'); fillActionMenu(); };
   segLower.onclick = ()=>{ CURRENT = LOWER; segLower.classList.add('on'); segUpper.classList.remove('on'); fillActionMenu(); };
 
-  actionSel.addEventListener("change", syncActionUI);
+  actionSel.addEventListener("change", ()=>syncActionUI(true));
   actionDeg.addEventListener("input", ()=>{
     const key = actionSel.value; const cfg = cfgFromKey(key);
     if (cfg) applyPairAngle(key,cfg, parseFloat(actionDeg.value)||0);
@@ -585,14 +599,8 @@ optgroup{color:#9fb0c9;font-style:normal}
   zeroAction.onclick = ()=>{
     const key = actionSel.value; const cfg = cfgFromKey(key);
     if (!cfg) return;
-    actionDeg.value = String(cfg.neutral||0);
-    applyPairAngle(key,cfg, cfg.neutral||0);
-  };
-
-  logBind.onclick = ()=>{
-    const key = actionSel.value; const cfg = cfgFromKey(key);
-    const b = resolveBind(key, cfg);
-    if (b) log(`Bound bone: ${b.bone.name}`);
+    actionDeg.value = "0";
+    applyPairAngle(key,cfg, 0);
   };
 
   boneSel.onchange = ()=>{ rx.value="0"; ry.value="0"; rz.value="0"; setBoneRotationFromUI(); };
@@ -616,8 +624,6 @@ optgroup{color:#9fb0c9;font-style:normal}
   };
   reloadBtn.onclick = ()=>{ MODEL_URL = pickModelUrl(); log(`Reload: ${MODEL_URL}`); loadModel(); };
   fitBtn.onclick = fitView;
-  applyPosture.onclick = ()=> applyPosturePreset(postureSel.value);
-  zeroAll.onclick = zeroAllJoints;
 
   // ROM modal
   romBtn.onclick = async ()=>{
@@ -625,25 +631,10 @@ optgroup{color:#9fb0c9;font-style:normal}
     try{
       const res = await fetch('./ROM_reference.md?'+Date.now());
       const md = await res.text();
-      romBody.innerHTML = mdToSimpleHtml(md);
-    }catch(e){
-      romBody.textContent = 'Failed to load ROM_reference.md';
-    }
+      romBody.innerHTML = md.replace(/^\- (.*)$/gm,'<li>$1</li>').replace(/(<li>[\s\S]*?<\/li>)/g,'<ul>$1</ul>').replace(/^# (.*)$/gm,'<h3>$1</h3>').replace(/^### (.*)$/gm,'<h4>$1</h4>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+    }catch(e){ romBody.textContent='Failed to load ROM_reference.md'; }
   };
-  romClose.onclick = ()=> romModal.classList.remove('on');
-
-  function mdToSimpleHtml(md){
-    // keep <details> and <summary> literals; convert basic headings & lists & bold
-    let html = md
-      .replace(/^# (.*)$/gm, '<h3>$1</h3>')
-      .replace(/^### (.*)$/gm, '<h4>$1</h4>')
-      .replace(/^\- (.*)$/gm, '<li>$1</li>')
-      .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
-    // wrap list items
-    html = html.replace(/(<li>[\s\S]*?<\/li>)/g, '<ul>$1</ul>');
-    // preserve details/summary already in markdown
-    return html;
-  }
+  document.getElementById("romClose").onclick = ()=> romModal.classList.remove('on');
 
   /* ===== Load model ===== */
   function clearModel(){
@@ -671,6 +662,7 @@ optgroup{color:#9fb0c9;font-style:normal}
         msg.textContent = "✅ Model loaded";
         log("Model load OK");
         populateBones();
+        detectRigProfile();
         CURRENT = UPPER;
         segUpper.classList.add('on'); segLower.classList.remove('on');
         fillActionMenu();
@@ -699,7 +691,6 @@ optgroup{color:#9fb0c9;font-style:normal}
     requestAnimationFrame(animate);
   })();
 
-  // safety
   window.addEventListener('error', e=>{ msg.textContent='❌ '+(e.message||'Script error'); console.error(e); });
   </script>
 </body>
