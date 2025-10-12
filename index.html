@@ -3,23 +3,24 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PT Lab — Static Backdrop</title>
+  <title>PT Lab — Full Image Fit</title>
   <style>
     html, body {
       height: 100%;
       margin: 0;
-      background-color: #071a2b; /* backdrop tone */
+      background-color: #071a2b; /* match backdrop tone */
       display: flex;
       align-items: center;
       justify-content: center;
-      overflow: auto; /* scroll if needed */
+      overflow: hidden; /* prevent scrollbars */
     }
     img {
       display: block;
+      max-width: 100%;
+      max-height: 100%;
       width: auto;
       height: auto;
-      max-width: none;
-      max-height: none;
+      object-fit: contain; /* ensures the full image fits */
       user-select: none;
       -webkit-user-drag: none;
     }
