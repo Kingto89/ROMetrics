@@ -3,16 +3,22 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PT Lab — Full Image Fit</title>
+  <title>PT Lab — Seamless Backdrop</title>
   <style>
     html, body {
       height: 100%;
       margin: 0;
-      background-color: #071a2b; /* match backdrop tone */
       display: flex;
       align-items: center;
       justify-content: center;
-      overflow: hidden; /* prevent scrollbars */
+      overflow: hidden;
+      background: radial-gradient(
+        circle at 60% 50%, 
+        #06355c 0%,    /* lighter center */
+        #0a2d4a 40%, 
+        #081b2d 80%,   /* darker outer */
+        #051423 100%
+      );
     }
     img {
       display: block;
@@ -20,13 +26,13 @@
       max-height: 100%;
       width: auto;
       height: auto;
-      object-fit: contain; /* ensures the full image fits */
+      object-fit: contain;
       user-select: none;
       -webkit-user-drag: none;
     }
   </style>
 </head>
 <body>
-  <img src="./assets/backdrop.png" alt="Backdrop" />
+  <img src="./assets/backdrop.png" alt="PT Lab Backdrop" />
 </body>
 </html>
