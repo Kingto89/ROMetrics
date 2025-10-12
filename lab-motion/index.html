@@ -152,7 +152,7 @@ optgroup{color:#9fb0c9;font-style:normal}
   /* ===== UI ===== */
   const msg = document.getElementById("msg");
   const logEl = document.getElementById("log");
-  const log = (t)=>{ logEl.textContent += t + "\\n"; logEl.scrollTop = logEl.scrollHeight; };
+  const log = (t)=>{ logEl.textContent += t + "\n"; logEl.scrollTop = logEl.scrollHeight; };
 
   const panel = document.getElementById("panel");
   const dragbar = document.getElementById("dragbar");
@@ -334,34 +334,34 @@ optgroup{color:#9fb0c9;font-style:normal}
   // Return the local axis to drive for a given motion key under a profile
   function axisFor(profile, motionKey, defaultAxis){
     if (profile==='mixamo'){
-      // Mixamo typical local axes
+      // Corrected Mixamo local axes
       const map = {
-        // Upper arm / shoulder
-        sh_fe_l:'z', sh_fe_r:'z',   // flex/ext
-        sh_aa_l:'x', sh_aa_r:'x',   // abd/add
-        sh_irer_l:'y', sh_irer_r:'y', // int/ext rot
+        // Shoulder (GH)
+        sh_fe_l:'x', sh_fe_r:'x',           // flex / ext → sagittal
+        sh_aa_l:'z', sh_aa_r:'z',           // abd / add  → frontal
+        sh_irer_l:'y', sh_irer_r:'y',       // IR / ER    → transverse
 
-        // Elbow (lower arm)
-        el_fe_l:'z', el_fe_r:'z',
+        // Elbow (humeroulnar)
+        el_fe_l:'x', el_fe_r:'x',           // flex / ext
 
-        // Forearm pronation/supination (twist)
-        fa_ps_l:'y', fa_ps_r:'y',
+        // Forearm
+        fa_ps_l:'y', fa_ps_r:'y',           // pronation / supination
 
         // Wrist
-        wr_fe_l:'z', wr_fe_r:'z',   // flex/ext
-        wr_ru_l:'x', wr_ru_r:'x',   // radial/ulnar
+        wr_fe_l:'x', wr_fe_r:'x',           // flex / ext
+        wr_ru_l:'z', wr_ru_r:'z',           // radial / ulnar deviation
 
-        // Hip (thigh)
-        hip_fe_l:'z', hip_fe_r:'z',
-        hip_aa_l:'x', hip_aa_r:'x',
-        hip_irer_l:'y', hip_irer_r:'y',
+        // Hip
+        hip_fe_l:'x', hip_fe_r:'x',         // flex / ext
+        hip_aa_l:'z', hip_aa_r:'z',         // abd / add
+        hip_irer_l:'y', hip_irer_r:'y',     // IR / ER
 
         // Knee
-        knee_fe_l:'z', knee_fe_r:'z',
+        knee_fe_l:'x', knee_fe_r:'x',       // flex / ext
 
         // Ankle / foot
-        ankle_dfpf_l:'x', ankle_dfpf_r:'x',    // DF/PF
-        foot_invev_l:'z', foot_invev_r:'z'     // inversion/eversion
+        ankle_dfpf_l:'x', ankle_dfpf_r:'x', // dorsi / plantarflex
+        foot_invev_l:'z', foot_invev_r:'z'  // inversion / eversion
       };
       if (motionKey in map) return map[motionKey];
     }
@@ -412,27 +412,69 @@ optgroup{color:#9fb0c9;font-style:normal}
   }
 
   const JOINT_BIND = new Map();
+
+  /* ===== Neutral calibration helpers (NEW) ===== */
+  function axisCharToVec(axis){
+    if (axis==='x') return new THREE.Vector3(1,0,0);
+    if (axis==='y') return new THREE.Vector3(0,1,0);
+    return new THREE.Vector3(0,0,1);
+  }
+
+  // Extract signed twist angle of q around local axis v (swing-twist split)
+  function twistAngleAroundAxis(q, v){
+    // q must be unit quaternion; v must be normalized axis in local space
+    const vx = v.x, vy = v.y, vz = v.z;
+    const s = vx*q.x + vy*q.y + vz*q.z;             // projection of q’s vector part
+    // twist quaternion = normalize( [v*s, q.w] )
+    let tx = vx*s, ty = vy*s, tz = vz*s, tw = q.w;
+    const len = Math.hypot(tx,ty,tz,tw);
+    if (len > 0) { tx/=len; ty/=len; tz/=len; tw/=len; }
+    const sinHalf = Math.hypot(tx,ty,tz);
+    let angle = 2*Math.atan2(sinHalf, Math.max(-1, Math.min(1, tw)));
+    // sign based on direction along v
+    const dot = tx*vx + ty*vy + tz*vz;
+    if (dot < 0) angle = -angle;
+    return angle; // radians
+  }
+
+  /* ===== Bind resolver with neutral shift (UPDATED) ===== */
   function resolveBind(key,cfg){
     if (JOINT_BIND.has(key)) return JOINT_BIND.get(key);
     const bone = findBoneBy(cfg);
     if (!bone) { log(`No bind for ${key}`); return null; }
+
+    // Store bind (rest) orientation
     const qBind = (initialBoneRot.get(bone) || bone.quaternion.clone()).clone();
-    const obj = {bone,qBind};
-    JOINT_BIND.set(key,obj);
-    log(`Bound ${key} → ${bone.name}`);
-    return obj;
-  }
 
-  function applyPairAngle(key,cfg,sliderDeg){
-    const bind = resolveBind(key,cfg);
-    if (!bind) return;
-    const {bone,qBind} = bind;
-
-    // Determine correct local axis based on profile
+    // Determine driving axis for this motion
     const baseAxis = ({sagittal:'x', frontal:'z', transverse:'y'})[cfg.plane] || 'x';
     const axis = axisFor(RIG_PROFILE, key, baseAxis);
 
-    const rad = THREE.MathUtils.degToRad(sliderDeg + (cfg.neutral||0));
+    // Compute relative bind rotation vs parent, then the twist angle around that axis.
+    let neutralShiftDeg = 0;
+    try{
+      const parent = bone.parent && bone.parent.isBone ? bone.parent : null;
+      const qp = parent ? (initialBoneRot.get(parent) || parent.quaternion.clone()).clone()
+                        : new THREE.Quaternion(); // identity if no parent
+      const qRel = qp.clone().invert().multiply(qBind); // parent→child rotation at rest
+      const v = axisCharToVec(axis);
+      const ang = twistAngleAroundAxis(qRel, v); // radians (signed)
+      neutralShiftDeg = THREE.MathUtils.radToDeg(-ang); // negate to zero it out
+    }catch(e){ neutralShiftDeg = 0; }
+
+    const obj = {bone, qBind, axis, neutralShiftDeg};
+    JOINT_BIND.set(key,obj);
+    log(`Bound ${key} → ${bone.name} (axis ${axis}, neutralShift ${neutralShiftDeg.toFixed(1)}°)`);
+    return obj;
+  }
+
+  /* ===== Apply motion using calibrated neutral (UPDATED) ===== */
+  function applyPairAngle(key,cfg,sliderDeg){
+    const bind = resolveBind(key,cfg);
+    if (!bind) return;
+    const {bone, qBind, axis, neutralShiftDeg} = bind;
+
+    const rad = THREE.MathUtils.degToRad(sliderDeg + (cfg.neutral||0) + (neutralShiftDeg||0));
     const e = new THREE.Euler(0,0,0,"XYZ");
     if (axis==='x') e.set(rad,0,0,"XYZ");
     if (axis==='y') e.set(0,rad,0,"XYZ");
@@ -445,10 +487,17 @@ optgroup{color:#9fb0c9;font-style:normal}
   /* ===== Joint definitions (paired) ===== */
   // Hints prefer specific limb bones (avoid scapula/clavicle for GH; avoid forearm for wrist)
   const UPPER = [
+    // NEW trunk/thoracic motions
+    {key:'trunk_fe',  pair:'Trunk — Flex / Ext',            side:'', plane:'sagittal',   neutral:0, min:-60, max:80,  hints:[/spine|chest|thor/i]},
+    {key:'trunk_lat', pair:'Trunk — Lateral Bend (L / R)',  side:'', plane:'frontal',    neutral:0, min:-40, max:40,  hints:[/spine|chest|thor/i]},
+    {key:'trunk_rot', pair:'Trunk — Rotation (L / R)',      side:'', plane:'transverse', neutral:0, min:-45, max:45,  hints:[/spine|chest|thor/i]},
+
+    // Cervical
     {key:'cerv_fe',   pair:'Cervical Flex / Ext',                side:'', plane:'sagittal',   neutral:0, min:-60,  max:70,  hints:[/neck|cspine|head/i]},
     {key:'cerv_lat',  pair:'Cervical Lat Flex (L / R)',          side:'', plane:'frontal',    neutral:0, min:-45,  max:45,  hints:[/neck|cspine|head/i]},
     {key:'cerv_rot',  pair:'Cervical Rotation (L / R)',          side:'', plane:'transverse', neutral:0, min:-80,  max:80,  hints:[/neck|cspine|head/i]},
 
+    // Shoulder
     {key:'sh_fe_l',   pair:'Shoulder L — Flex / Ext',            side:'l', plane:'sagittal',  neutral:0, min:-180, max:60,  hints:[/upper.?arm|humerus|shoulder|arm(?!.*lower)/i]},
     {key:'sh_fe_r',   pair:'Shoulder R — Flex / Ext',            side:'r', plane:'sagittal',  neutral:0, min:-180, max:60,  hints:[/upper.?arm|humerus|shoulder|arm(?!.*lower)/i]},
     {key:'sh_aa_l',   pair:'Shoulder L — Abd / Add',             side:'l', plane:'frontal',   neutral:0, min:-180, max:40,  hints:[/upper.?arm|humerus|shoulder|arm(?!.*lower)/i]},
@@ -456,11 +505,13 @@ optgroup{color:#9fb0c9;font-style:normal}
     {key:'sh_irer_l', pair:'Shoulder L — Internal / External',   side:'l', plane:'transverse',neutral:0, min:-70,  max:90,  hints:[/upper.?arm|humerus|shoulder|arm(?!.*lower)/i]},
     {key:'sh_irer_r', pair:'Shoulder R — Internal / External',   side:'r', plane:'transverse',neutral:0, min:-70,  max:90,  hints:[/upper.?arm|humerus|shoulder|arm(?!.*lower)/i]},
 
+    // Elbow / Forearm
     {key:'el_fe_l',   pair:'Elbow L — Flex / Ext',               side:'l', plane:'sagittal',  neutral:0, min:-150, max:10,  hints:[/lower.?arm|forearm|ulna|radius/i]},
     {key:'el_fe_r',   pair:'Elbow R — Flex / Ext',               side:'r', plane:'sagittal',  neutral:0, min:-150, max:10,  hints:[/lower.?arm|forearm|ulna|radius/i]},
     {key:'fa_ps_l',   pair:'Forearm L — Pronation / Supination', side:'l', plane:'transverse',neutral:0, min:-85,  max:95,  hints:[/lower.?arm|forearm|ulna|radius/i]},
     {key:'fa_ps_r',   pair:'Forearm R — Pronation / Supination', side:'r', plane:'transverse',neutral:0, min:-85,  max:95,  hints:[/lower.?arm|forearm|ulna|radius/i]},
 
+    // Wrist
     {key:'wr_fe_l',   pair:'Wrist L — Flex / Ext',               side:'l', plane:'sagittal',  neutral:0, min:-80,  max:70,  hints:[/wrist|hand(?!.*thumb|.*index|.*middle|.*ring|.*pinky)/i]},
     {key:'wr_fe_r',   pair:'Wrist R — Flex / Ext',               side:'r', plane:'sagittal',  neutral:0, min:-80,  max:70,  hints:[/wrist|hand(?!.*thumb|.*index|.*middle|.*ring|.*pinky)/i]},
     {key:'wr_ru_l',   pair:'Wrist L — Radial / Ulnar Dev',       side:'l', plane:'frontal',   neutral:0, min:-20,  max:40,  hints:[/wrist|hand(?!.*thumb|.*index|.*middle|.*ring|.*pinky)/i]},
@@ -491,7 +542,7 @@ optgroup{color:#9fb0c9;font-style:normal}
     actionSel.innerHTML = "";
     const list = (CURRENT===UPPER) ? UPPER : LOWER;
     const og = document.createElement("optgroup");
-    og.label = (CURRENT===UPPER) ? "Cervical, Shoulder & Arm" : "Hip, Leg & Foot";
+    og.label = (CURRENT===UPPER) ? "Cervical, Trunk, Shoulder & Arm" : "Hip, Leg & Foot";
     for (const item of list){
       const opt = document.createElement("option");
       opt.value = item.key;
