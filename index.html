@@ -1,141 +1,99 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ROMetrics — Home</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    :root{
-      --bg:#0b1220; --panel:#0f172a; --muted:#94a3b8; --text:#e5e7eb; --ring:rgba(239,68,68,.32);
-      --accent:#ef4444; --accent-2:#22d3ee; --card:#0f172a; --line:#1f2937;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text)}
-    a{color:#93c5fd;text-decoration:none}
-    .wrap{min-height:100%;display:flex;flex-direction:column}
-    header{padding:24px 18px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,0));position:sticky;top:0;backdrop-filter:saturate(140%) blur(8px)}
-    .brand{display:flex;align-items:center;gap:12px;justify-content:center}
-    .logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#ef4444,#dc2626);display:grid;place-items:center;font-weight:800}
-    .title{font-weight:800;letter-spacing:.25px;font-size:1.35rem}
-    .subtitle{color:var(--muted);text-align:center;margin-top:4px}
-
-    main{padding:26px 18px;max-width:1100px;margin:0 auto}
-
-    /* Bubbles grid */
-    .bubbles{display:grid;gap:14px;grid-template-columns:repeat(2,minmax(0,1fr))}
-    @media(min-width:720px){.bubbles{grid-template-columns:repeat(3,minmax(0,1fr))}}
-    @media(min-width:1024px){.bubbles{grid-template-columns:repeat(4,minmax(0,1fr))}}
-    @media(min-width:1360px){.bubbles{grid-template-columns:repeat(5,minmax(0,1fr))}}
-
-    .bubble{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;gap:8px;align-items:center;background:var(--card);border:1px solid var(--line);padding:14px;border-radius:16px;position:relative;transition:transform .15s ease, border-color .15s ease, box-shadow .15s ease}
-    .bubble:hover{transform:translateY(-2px);border-color:#273247;box-shadow:0 10px 30px rgba(0,0,0,.2)}
-    .bubble .b-ico{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:#0b1220;border:1px solid #22304a;box-shadow:inset 0 0 0 1px rgba(255,255,255,.02)}
-    .bubble .b-title{font-weight:700}
-    .bubble .b-sub{grid-column:2;line-height:1.25;color:var(--muted);font-size:.9rem}
-
-    /* Optional per-bubble tint accents */
-    .b1 .b-ico{background:linear-gradient(180deg, rgba(59,130,246,.22), rgba(59,130,246,.06))}
-    .b2 .b-ico{background:linear-gradient(180deg, rgba(16,185,129,.22), rgba(16,185,129,.06))}
-    .b3 .b-ico{background:linear-gradient(180deg, rgba(234,179,8,.22), rgba(234,179,8,.06))}
-    .b4 .b-ico{background:linear-gradient(180deg, rgba(168,85,247,.22), rgba(168,85,247,.06))}
-    .b5 .b-ico{background:linear-gradient(180deg, rgba(14,165,233,.22), rgba(14,165,233,.06))}
-    .b6 .b-ico{background:linear-gradient(180deg, rgba(244,63,94,.22), rgba(244,63,94,.06))}
-    .b7 .b-ico{background:linear-gradient(180deg, rgba(239,68,68,.22), rgba(239,68,68,.06))} /* Performance Hub */
-
-    /* Footer */
-    footer{padding:22px 18px;border-top:1px solid var(--line);margin-top:28px;color:var(--muted);text-align:center}
-    .tag{display:inline-flex;align-items:center;gap:8px;background:#0b1220;border:1px solid #22304a;padding:6px 10px;border-radius:999px}
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>ROMetrics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b1220;--panel:#0f172a;--text:#e5e7eb;--muted:#9ca3af;--line:#1f2937;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:Inter,system-ui,Segoe UI,Roboto,sans-serif}
+a{text-decoration:none;color:inherit}
+.wrap{display:flex;flex-direction:column;min-height:100vh}
+header{padding:24px;text-align:center;border-bottom:1px solid var(--line)}
+.logo{width:42px;height:42px;border-radius:10px;background:linear-gradient(135deg,#ef4444,#dc2626);display:inline-grid;place-items:center;font-weight:800}
+h1{margin:10px 0 4px 0;font-weight:800}
+.subtitle{color:var(--muted);margin:0}
+main{padding:30px 20px;flex:1}
+.bubbles{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));max-width:1100px;margin:0 auto}
+.bubble{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;align-items:center;gap:8px;padding:16px;border:1px solid var(--line);border-radius:16px;background:var(--panel);transition:transform .15s ease,border-color .15s ease}
+.bubble:hover{transform:translateY(-3px);border-color:#273247}
+.b-ico{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:#0b1220;border:1px solid #22304a}
+.b-title{font-weight:700}
+.b-sub{grid-column:2;color:var(--muted);font-size:.9rem;line-height:1.25}
+.b1 .b-ico{background:linear-gradient(180deg, rgba(245,158,11,.22), rgba(245,158,11,.06))}
+.b2 .b-ico{background:linear-gradient(180deg, rgba(59,130,246,.22), rgba(59,130,246,.06))}
+.b3 .b-ico{background:linear-gradient(180deg, rgba(16,185,129,.22), rgba(16,185,129,.06))}
+.b4 .b-ico{background:linear-gradient(180deg, rgba(14,165,233,.22), rgba(14,165,233,.06))}
+.b5 .b-ico{background:linear-gradient(180deg, rgba(168,85,247,.22), rgba(168,85,247,.06))}
+.b6 .b-ico{background:linear-gradient(180deg, rgba(244,63,94,.22), rgba(244,63,94,.06))}
+.b7 .b-ico{background:linear-gradient(180deg, rgba(239,68,68,.22), rgba(239,68,68,.06))} /* Performance Hub */
+footer{text-align:center;color:var(--muted);padding:20px;border-top:1px solid var(--line)}
+</style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <div class="brand">
-        <div class="logo">R</div>
-        <div>
-          <div class="title">ROMetrics</div>
-          <div class="subtitle">Measure. Track. Improve.</div>
-        </div>
-      </div>
-    </header>
+<div class="wrap">
+  <header>
+    <div class="logo">R</div>
+    <h1>ROMetrics</h1>
+    <p class="subtitle">Measure • Track • Improve</p>
+  </header>
 
-    <main>
-      <section class="bubbles">
-        <!-- 1. Goniometry Trainer -->
-        <a class="bubble b1" href="./goniometry/" aria-label="Open Goniometry Trainer">
-          <div class="b-ico" aria-hidden="true">📐</div>
-          <div class="b-title">Goniometry Trainer</div>
-          <div class="b-sub">Measure ROM with guides & overlays</div>
-        </a>
+  <main>
+    <div class="bubbles">
+      <a class="bubble b1" href="./goniometry-trainer/">
+        <div class="b-ico" aria-hidden="true">📐</div>
+        <div class="b-title">Goniometry Trainer</div>
+        <div class="b-sub">Interactive ROM trainer</div>
+      </a>
 
-        <!-- 2. MMT Studio -->
-        <a class="bubble b2" href="./mmt/" aria-label="Open Manual Muscle Testing Studio">
-          <div class="b-ico" aria-hidden="true">🧪</div>
-          <div class="b-title">MMT Studio</div>
-          <div class="b-sub">Self-guided strength positions & grading</div>
-        </a>
+      <a class="bubble b2" href="./mmt/">
+        <div class="b-ico" aria-hidden="true">💪</div>
+        <div class="b-title">MMT Studio</div>
+        <div class="b-sub">Manual Muscle Testing positions</div>
+      </a>
 
-        <!-- 3. LQ Screen (Lower Quarter) -->
-        <a class="bubble b3" href="./lqs/" aria-label="Open Lower Quarter Screen">
-          <div class="b-ico" aria-hidden="true">🦵</div>
-          <div class="b-title">LQ Screen</div>
-          <div class="b-sub">Quick lower quarter functional screen</div>
-        </a>
+      <a class="bubble b3" href="./llq/">
+        <div class="b-ico" aria-hidden="true">🦵</div>
+        <div class="b-title">LLQ Screen</div>
+        <div class="b-sub">Lower quarter mobility & tests</div>
+      </a>
 
-        <!-- 4. UQ Screen (Upper Quarter) -->
-        <a class="bubble b4" href="./uqs/" aria-label="Open Upper Quarter Screen">
-          <div class="b-ico" aria-hidden="true">💪</div>
-          <div class="b-title">UQ Screen</div>
-          <div class="b-sub">Upper quarter checks & patterns</div>
-        </a>
+      <a class="bubble b4" href="./ulq/">
+        <div class="b-ico" aria-hidden="true">🤚</div>
+        <div class="b-title">ULQ Screen</div>
+        <div class="b-sub">Upper quarter mobility & tests</div>
+      </a>
 
-        <!-- 5. Body Regions -->
-        <a class="bubble b5" href="./body-regions/" aria-label="Open Body Regions">
-          <div class="b-ico" aria-hidden="true">🧍‍♀️</div>
-          <div class="b-title">Body Regions</div>
-          <div class="b-sub">Tap a joint to focus testing</div>
-        </a>
+      <a class="bubble b5" href="./body-regions/">
+        <div class="b-ico" aria-hidden="true">🧍‍♀️</div>
+        <div class="b-title">Body Regions</div>
+        <div class="b-sub">Select joint or limb to assess</div>
+      </a>
 
-        <!-- 6. How-To / Library -->
-        <a class="bubble b6" href="./how-to/" aria-label="Open How-To Library">
-          <div class="b-ico" aria-hidden="true">📚</div>
-          <div class="b-title">How‑To Library</div>
-          <div class="b-sub">Short guides for setup & technique</div>
-        </a>
+      <a class="bubble b6" href="./how-to/">
+        <div class="b-ico" aria-hidden="true">📚</div>
+        <div class="b-title">How-To Library</div>
+        <div class="b-sub">Guides and setup instructions</div>
+      </a>
 
-        <!-- 7. NEW: Performance Hub (Pro) -->
-        <a class="bubble b7" href="./performance-hub/" aria-label="Open Performance Hub — Pro analytics & reports">
-          <div class="b-ico" aria-hidden="true">📈</div>
-          <div class="b-title">Performance Hub</div>
-          <div class="b-sub">Pro analytics • trends • reports</div>
-        </a>
-      </section>
+      <!-- 7. NEW: Performance Hub -->
+      <a class="bubble b7" href="./performance-hub/" aria-label="Open Performance Hub — Pro analytics & reports">
+        <div class="b-ico" aria-hidden="true">📈</div>
+        <div class="b-title">Performance Hub</div>
+        <div class="b-sub">Pro analytics • trends • reports</div>
+      </a>
+    </div>
+  </main>
 
-      <!-- Optional Pro badge / upsell ribbon (only if user is not Pro) -->
-      <div id="pro-flag" hidden style="margin-top:16px;display:flex;justify-content:center">
-        <span class="tag">⚡ Pro features available — <span style="opacity:.8">Unlock in Performance Hub</span></span>
-      </div>
-    </main>
-
-    <footer>
-      © <span id="yr"></span> ROMetrics • <a href="./privacy.html">Privacy</a> • <a href="./terms.html">Terms</a>
-    </footer>
-  </div>
-
-  <script>
-    // Auto year
-    document.getElementById('yr').textContent = new Date().getFullYear();
-
-    // Example: Show the Pro ribbon if window.ROMetrics?.subscriptionStatus !== 'pro'
-    (function(){
-      try{
-        const isPro = (window.ROMetrics && window.ROMetrics.subscriptionStatus === 'pro');
-        if(!isPro){ document.getElementById('pro-flag').hidden = false; }
-      }catch(e){ /* no-op */ }
-    })();
-  </script>
+  <footer>
+    © <script>document.write(new Date().getFullYear())</script> ROMetrics
+  </footer>
+</div>
 </body>
 </html>
