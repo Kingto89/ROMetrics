@@ -11,9 +11,10 @@
     :root{ --bg:#0b0f14; --card:rgba(255,255,255,.88); --ink:#0f172a; }
     *{box-sizing:border-box}
     html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:#111}
-    .bg{position:fixed;inset:0;background:radial-gradient(1200px 800px at 70% 20%,rgba(255,255,255,.12),transparent),
-                               radial-gradient(800px 800px at 10% 90%,rgba(255,255,255,.10),transparent),
-                               #0b0f14 url('./assets/bg_pt_office.jpg') center/cover no-repeat;
+    .bg{position:fixed;inset:0;background:
+        radial-gradient(1200px 800px at 70% 20%,rgba(255,255,255,.12),transparent),
+        radial-gradient(800px 800px at 10% 90%,rgba(255,255,255,.10),transparent),
+        #0b0f14 url('./assets/bg_pt_office.jpg') center/cover no-repeat;
         filter:saturate(1.05) brightness(.9);}
     .overlay{position:fixed;inset:0;background:linear-gradient(180deg,rgba(11,15,20,.25),rgba(11,15,20,.6));}
     .wrap{position:relative;display:grid;grid-template-columns:1.2fr 1fr;gap:20px;max-width:1100px;margin:40px auto;padding:16px}
@@ -29,16 +30,31 @@
     .search{width:100%;padding:12px 14px;border-radius:10px;border:1px solid rgba(0,0,0,.08);font-size:14px}
     .list{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
     @media (max-width:980px){.list{grid-template-columns:1fr}}
-    .item{background:white;border:1px solid rgba(0,0,0,.08);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px}
+    .item{background:white;border:1px solid rgba(0,0,0,.08);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px;transition:all .15s}
     .item h4{margin:0;font-size:15px}
     .item small{color:#475569}
+    .item[data-active="true"]{outline:2px solid #1d4ed8;background:#eef2ff}
+
     .viewer{height:360px;position:relative}
-    .viewer .caption{position:absolute;bottom:10px;left:10px;background:rgba(255,255,255,.9);padding:6px 10px;border-radius:8px;font-size:12px;font-weight:600}
     .footer{padding:12px 18px;color:white;opacity:.9;text-align:center;font-size:12px}
     .kbd{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:#111827;color:#fff;padding:2px 6px;border-radius:6px;font-size:12px}
 
-    /* Floating panel */
-    .floating{position:fixed;right:20px;top:20px;width:min(520px,92vw);max-height:85vh;overflow:auto;z-index:50}
+    /* Right column stage (3D placeholder) */
+    .stage{height:360px;display:flex;align-items:center;justify-content:center}
+    .stage .placeholder{
+      width:96%;height:86%;border:2px dashed rgba(0,0,0,.15);border-radius:14px;
+      display:flex;align-items:center;justify-content:center;
+      background:repeating-linear-gradient(135deg, rgba(0,0,0,.03), rgba(0,0,0,.03) 12px, rgba(255,255,255,.4) 12px, rgba(255,255,255,.4) 24px);
+      font-weight:700;color:#334155
+    }
+
+    /* Floating panel (draggable) */
+    .floating{
+      position:fixed; left:auto; right:20px; top:20px;
+      width:min(520px,92vw); max-height:85vh; overflow:auto; z-index:50;
+      user-select:none; /* prevent text selection while dragging */
+    }
+    .floating .header{ cursor:move; } /* drag handle */
     .hidden{display:none}
   </style>
   <script type="module" src="https://unpkg.com/@google/model-viewer@3.5.0/dist/model-viewer.min.js"></script>
@@ -49,7 +65,7 @@
   <div class="overlay" aria-hidden="true"></div>
 
   <main class="wrap">
-    <!-- Left column: scene + grid -->
+    <!-- Left column -->
     <section class="card">
       <div class="header">
         <div>
@@ -61,7 +77,6 @@
       <div class="panel viewer">
         <model-viewer id="chair" src="./assets/Blue_Seating.glb" camera-controls disable-zoom environment-image="neutral" exposure="0.9" style="position:absolute;left:5%;bottom:-10px;width:46%;height:360px"></model-viewer>
         <model-viewer id="table" src="./assets/medical_examination_table.glb" camera-controls disable-zoom environment-image="neutral" exposure="0.9" style="position:absolute;right:0;bottom:-20px;width:56%;height:360px"></model-viewer>
-        <div class="caption">Chair + Exam Table props (static preview)</div>
       </div>
       <div class="panel">
         <input id="q" class="search" placeholder="Search tests… (e.g., shoulder flexion, hip abduction)" />
@@ -74,9 +89,14 @@
       </div>
     </section>
 
+    <!-- Right column: 3D stage -->
+    <section class="card stage" aria-label="3D stage">
+      <div class="placeholder">3D MODEL STAGE (loads here)</div>
+    </section>
+
     <!-- Floating details panel -->
     <aside id="detail" class="card floating hidden" role="dialog" aria-modal="false" aria-labelledby="detailTitle">
-      <div class="header">
+      <div class="header" id="dragHandle">
         <div class="title" id="detailTitle">Test Details</div>
         <div class="row" style="gap:8px">
           <button id="pinBtn" class="pill" title="Pin / Unpin panel">Pin</button>
@@ -101,12 +121,12 @@
 
     let rawMD = '';
     let sections = []; // {id, scope, title, html}
+    let selectedId = null;
 
     async function loadMD(){
       try {
         let res = await fetch(MD_PATH);
         if(!res.ok){
-          // fallback to raw
           MD_PATH = RAW_MD;
           res = await fetch(MD_PATH);
           if(!res.ok){
@@ -120,7 +140,6 @@
         return;
       }
 
-      // Parse sections by ### headings, scoping by Upper/Lower H2
       const lines = rawMD.split(/\n/);
       const scopeMap = [];
       let scope = 'upper';
@@ -143,12 +162,11 @@
         sections.push({id, scope:scopeMap[j].scope, title, html});
       }
       renderGrid();
-      if(sections[0]) selectTest(sections[0].id);
     }
 
     function showError(msg){
-      const md = document.getElementById('md');
-      md.innerHTML = `<div class="panel">${msg}<br/>Confirm file name and path are exactly <code>/mmt/rometrics_mmt_library.md</code>.</div>`;
+      document.getElementById('md').innerHTML =
+        `<div class="panel">${msg}<br/>Confirm path is exactly <code>/mmt/rometrics_mmt_library.md</code>.</div>`;
     }
 
     /* ---------- Grid & selection ---------- */
@@ -157,11 +175,13 @@
       const q = (query||'').trim().toLowerCase();
       const items = sections.filter(s => (filter==='all'||s.scope===filter) && (!q || s.title.toLowerCase().includes(q)));
       grid.innerHTML = items.length
-        ? items.map(s => `<button class="item" data-id="${s.id}"><h4>${s.title}</h4><small>${s.scope==='upper'?'Upper body':'Lower body'}</small></button>`).join('')
+        ? items.map(s => `<button class="item" data-id="${s.id}" ${selectedId===s.id?'data-active="true"':''}><h4>${s.title}</h4><small>${s.scope==='upper'?'Upper body':'Lower body'}</small></button>`).join('')
         : `<div class="muted" style="padding:8px">No tests found.</div>`;
     }
 
     function selectTest(id){
+      selectedId = id;
+      renderGrid(currentScope(), document.getElementById('q').value||'');
       const sec = sections.find(s => s.id===id);
       if(!sec) return;
       const acc = document.getElementById('accordion');
@@ -173,10 +193,15 @@
       openDetail();
     }
 
+    function currentScope(){
+      const active = document.querySelector('.pill[data-active="true"]');
+      return active ? active.dataset.scope : 'all';
+    }
+
     /* ---------- UI wiring ---------- */
     document.addEventListener('click', (e)=>{
       const pill = e.target.closest('.pill');
-      if(pill && pill.id!=='closeBtn' && pill.id!=='pinBtn'){
+      if(pill && !pill.id){ // scope buttons
         document.querySelectorAll('.pill[data-scope]').forEach(b=>b.dataset.active=false);
         pill.dataset.active = true;
         renderGrid(pill.dataset.scope, document.getElementById('q').value||'');
@@ -186,8 +211,7 @@
       if(item){ selectTest(item.dataset.id); return; }
     });
     document.getElementById('q').addEventListener('input', (e)=>{
-      const active = document.querySelector('.pill[data-active="true"]').dataset.scope;
-      renderGrid(active, e.target.value);
+      renderGrid(currentScope(), e.target.value);
     });
     document.addEventListener('keydown', (e)=>{
       if(e.key === '/' && document.activeElement.tagName !== 'INPUT'){
@@ -196,18 +220,67 @@
       if(e.key === 'Escape'){ closeDetail(); }
     });
 
-    /* ---------- Floating panel controls ---------- */
+    /* ---------- Floating panel: open/close/pin ---------- */
     const panel = document.getElementById('detail');
     const closeBtn = document.getElementById('closeBtn');
     const pinBtn = document.getElementById('pinBtn');
     let pinned = false;
     function openDetail(){ panel.classList.remove('hidden'); }
-    function closeDetail(){ if(!pinned){ panel.classList.add('hidden'); } }
+    function closeDetail(){
+      if(!pinned){
+        panel.classList.add('hidden');
+        selectedId = null; // remove highlight on close
+        renderGrid(currentScope(), document.getElementById('q').value||'');
+      }
+    }
     closeBtn.addEventListener('click', closeDetail);
     pinBtn.addEventListener('click', ()=>{ pinned = !pinned; pinBtn.textContent = pinned ? 'Pinned' : 'Pin'; });
 
+    /* ---------- Drag to move (header is the handle) ---------- */
+    const handle = document.getElementById('dragHandle');
+    let dragActive = false, startX=0, startY=0, startLeft=0, startTop=0;
+
+    function ensureLeftTop(){
+      // switch from right:20px to explicit left once we first drag/open
+      if(getComputedStyle(panel).right !== 'auto'){
+        const rect = panel.getBoundingClientRect();
+        panel.style.left = rect.left + 'px';
+        panel.style.top  = rect.top  + 'px';
+        panel.style.right = 'auto';
+      }
+    }
+
+    handle.addEventListener('pointerdown', (e)=>{
+      if(e.button!==0) return; // left click only
+      ensureLeftTop();
+      dragActive = true;
+      startX = e.clientX; startY = e.clientY;
+      const rect = panel.getBoundingClientRect();
+      startLeft = rect.left; startTop = rect.top;
+      panel.setPointerCapture(e.pointerId);
+    });
+
+    handle.addEventListener('pointermove', (e)=>{
+      if(!dragActive) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      // bounds
+      const pad = 10;
+      const maxLeft = window.innerWidth - panel.offsetWidth - pad;
+      const maxTop  = window.innerHeight - panel.offsetHeight - pad;
+      const newLeft = Math.min(Math.max(startLeft + dx, pad), Math.max(maxLeft, pad));
+      const newTop  = Math.min(Math.max(startTop  + dy, pad), Math.max(maxTop, pad));
+      panel.style.left = newLeft + 'px';
+      panel.style.top  = newTop + 'px';
+    });
+
+    handle.addEventListener('pointerup', (e)=>{
+      dragActive = false;
+      try{ panel.releasePointerCapture(e.pointerId); }catch(_){}
+    });
+    handle.addEventListener('pointercancel', ()=>{ dragActive = false; });
+
     /* ---------- Startup ---------- */
-    // Surface any runtime JS errors into the panel so the screen never looks “blank”
     window.addEventListener('error', (e)=>{
       showError('Runtime error: '+ (e?.message || 'unknown'));
       openDetail();
