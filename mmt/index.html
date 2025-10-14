@@ -84,23 +84,32 @@
   </main>
 
   <script>
-    const MD_PATH = (window.location.pathname.includes('/ROMetrics/'))
-      ? '/ROMetrics/mmt/rometrics_mmt_library.md?cache=' + Date.now()
-      : './rometrics_mmt_library.md?cache=' + Date.now();
+    const OWNER = location.hostname.split('.')[0] || 'USERNAME';
+    const REPO = (location.pathname.split('/')[1] || 'ROMetrics');
+    const PAGES_MD = `/${REPO}/mmt/rometrics_mmt_library.md?cache=${Date.now()}`;
+    const RAW_MD = `https://raw.githubusercontent.com/${OWNER}/${REPO}/main/mmt/rometrics_mmt_library.md?cache=${Date.now()}`;
+    let MD_PATH = PAGES_MD;
 
     let rawMD = '';
     let sections = [];
 
     async function loadMD(){
-      try{
-        const res = await fetch(MD_PATH);
+      // Try GitHub Pages path first; if 404, fall back to raw.githubusercontent.com (bypasses Jekyll processing)
+      try {
+        let res = await fetch(MD_PATH);
         if(!res.ok){
-          document.getElementById('md').innerHTML = `<div class="panel">Cannot load <code>${MD_PATH}</code> (HTTP ${res.status}). Check path/case.</div>`;
-          return;
+          const fallback = RAW_MD;
+          res = await fetch(fallback);
+          if(!res.ok){
+            document.getElementById('md').innerHTML = `<div class=\"panel\">Cannot load <code>${MD_PATH}</code> or fallback <code>${fallback}</code> (HTTP ${res.status}). Add a <code>.nojekyll</code> file at repo root or keep the MD in <code>/mmt/</code>. </div>`;
+            return;
+          } else {
+            MD_PATH = fallback;
+          }
         }
         rawMD = await res.text();
-      }catch(err){
-        document.getElementById('md').innerHTML = `<div class="panel">Error loading markdown: ${err.message}</div>`;
+      } catch(err){
+        document.getElementById('md').innerHTML = `<div class=\"panel\">Error loading markdown: ${err.message}</div>`;
         return;
       }
 
