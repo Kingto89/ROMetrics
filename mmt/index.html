@@ -31,101 +31,160 @@ flex-direction:column;gap:6px;transition:all .15s}
 .item h4{margin:0;font-size:15px}
 .item small{color:#475569}
 .item[data-active="true"]{outline:2px solid #1d4ed8;background:#eef2ff}
-.footer{padding:12px 18px;color:white;opacity:.9;text-align:center;font-size:12px}
+
+/* Right column stage (pure 3D area) */
 .stage{height:360px;display:flex;align-items:center;justify-content:center}
-.stage .placeholder{width:96%;height:86%;border:2px dashed rgba(0,0,0,.15);border-radius:14px;
-display:flex;align-items:center;justify-content:center;
-background:repeating-linear-gradient(135deg,rgba(0,0,0,.03),rgba(0,0,0,.03) 12px,rgba(255,255,255,.4) 12px,rgba(255,255,255,.4) 24px);
-font-weight:700;color:#334155}
+#stageModel{width:100%;height:100%}
+.footer{padding:12px 18px;color:white;opacity:.9;text-align:center;font-size:12px}
+
 /* Floating panel */
 .floating{position:fixed;right:20px;top:20px;width:min(520px,92vw);max-height:85vh;overflow:auto;z-index:50;user-select:none}
 .floating .header{cursor:move}
 .hidden{display:none}
 </style>
+<script type="module" src="https://unpkg.com/@google/model-viewer@3.5.0/dist/model-viewer.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
 <div class="bg"></div><div class="overlay"></div>
+
 <main class="wrap">
-<section class="card">
-  <div class="header">
-    <div>
-      <div class="title">ROMetrics — MMT Lab</div>
-      <div class="muted">Interactive manual muscle testing space</div>
+  <!-- Left column -->
+  <section class="card">
+    <div class="header">
+      <div>
+        <div class="title">ROMetrics — MMT Lab</div>
+        <div class="muted">Interactive manual muscle testing space</div>
+      </div>
     </div>
-  </div>
-  <div class="panel">
-    <input id="q" class="search" placeholder="Search tests… (e.g., shoulder flexion, hip abduction)">
-    <div class="row" style="margin-top:10px">
-      <button class="pill" data-scope="all" data-active="true">All</button>
-      <button class="pill" data-scope="upper">Upper Body</button>
-      <button class="pill" data-scope="lower">Lower Body</button>
+    <div class="panel">
+      <input id="q" class="search" placeholder="Search tests… (e.g., shoulder flexion, hip abduction)">
+      <div class="row" style="margin-top:10px">
+        <button class="pill" data-scope="all" data-active="true">All</button>
+        <button class="pill" data-scope="upper">Upper Body</button>
+        <button class="pill" data-scope="lower">Lower Body</button>
+      </div>
+      <div id="grid" class="list" aria-live="polite"></div>
     </div>
-    <div id="grid" class="list" aria-live="polite"></div>
-  </div>
-</section>
-<section class="card stage"><div class="placeholder">3D MODEL STAGE (loads here)</div></section>
-<aside id="detail" class="card floating hidden">
-  <div class="header" id="dragHandle">
-    <div class="title">Test Details</div>
-    <div class="row"><button id="pinBtn" class="pill">Pin</button><button id="closeBtn" class="pill">✕</button></div>
-  </div>
-  <div id="md" class="panel"><div class="muted">Loading test library…</div><div id="accordion"></div></div>
-  <div class="footer">Always test in <strong>mid-range</strong>. Apply resistance gradually (~3 s).</div>
-</aside>
+  </section>
+
+  <!-- Right column: 3D stage (blank by default; loads stick model if found) -->
+  <section class="card stage" aria-label="3D stage">
+    <model-viewer id="stageModel" exposure="1" camera-controls auto-rotate autoplay
+      reveal="interaction" ar-status="not-presenting" style="display:none"></model-viewer>
+  </section>
+
+  <!-- Floating details panel -->
+  <aside id="detail" class="card floating hidden" role="dialog" aria-modal="false" aria-labelledby="detailTitle">
+    <div class="header" id="dragHandle">
+      <div class="title" id="detailTitle">Test Details</div>
+      <div class="row"><button id="pinBtn" class="pill">Pin</button><button id="closeBtn" class="pill">✕</button></div>
+    </div>
+    <div id="md" class="panel"><div class="muted">Loading test library…</div><div id="accordion"></div></div>
+    <div class="footer">Always test in <strong>mid-range</strong>. Apply resistance gradually (~3 s).</div>
+  </aside>
 </main>
 
 <script>
-const OWNER='Kingto89',REPO='ROMetrics';
+/* ------------ Load MD (Pages path -> raw fallback) ------------- */
+const OWNER='Kingto89', REPO='ROMetrics';
 const PAGES_MD=`/${REPO}/mmt/rometrics_mmt_library.md?cache=${Date.now()}`;
 const RAW_MD=`https://raw.githubusercontent.com/${OWNER}/${REPO}/main/mmt/rometrics_mmt_library.md?cache=${Date.now()}`;
-let MD_PATH=PAGES_MD,sections=[],selectedId=null;
-async function loadMD(){
-  try{let r=await fetch(MD_PATH);if(!r.ok){r=await fetch(RAW_MD)};sections=parse(await r.text())}catch(e){showError(e)}
+let sections=[], selectedId=null;
+
+(async function loadMD(){
+  try{
+    let r=await fetch(PAGES_MD); if(!r.ok) r=await fetch(RAW_MD);
+    const text=await r.text(); parseAndRender(text);
+  }catch(e){ document.getElementById('md').innerHTML='<div class="panel">Error loading library.</div>'; }
+})();
+
+function parseAndRender(t){
+  const lines=t.split(/\n/), map=[]; let scope='upper';
+  for(let i=0;i<lines.length;i++){
+    if(/^##\s+Upper/i.test(lines[i])) scope='upper';
+    if(/^##\s+Lower/i.test(lines[i])) scope='lower';
+    if(/^###\s+/.test(lines[i])) map.push({idx:i,scope});
+  }
+  sections=[];
+  for(let j=0;j<map.length;j++){
+    const start=map[j].idx, end=(map[j+1]?map[j+1].idx:lines.length);
+    const block=lines.slice(start,end).join('\n');
+    const m=block.match(/^###\s+(.+)$/m); if(!m) continue;
+    const id=m[1].toLowerCase().replace(/[^a-z0-9]+/g,'-');
+    sections.push({id,scope:map[j].scope,title:m[1],html:marked.parse(block)});
+  }
+  renderGrid();
 }
-function parse(t){
-  const lines=t.split(/\n/);const out=[],map=[];let s='upper';
-  for(let i=0;i<lines.length;i++){if(/^##\s+Upper/i.test(lines[i]))s='upper';if(/^##\s+Lower/i.test(lines[i]))s='lower';
-    if(/^###\s+/.test(lines[i]))map.push({idx:i,scope:s})}
-  for(let j=0;j<map.length;j++){const a=map[j].idx,b=(map[j+1]?map[j+1].idx:lines.length),
-  blk=lines.slice(a,b).join('\n');const m=blk.match(/^###\s+(.+)$/m);if(!m)continue;
-  const id=m[1].toLowerCase().replace(/[^a-z0-9]+/g,'-');
-  out.push({id,scope:map[j].scope,title:m[1],html:marked.parse(blk)})}
-  renderGrid();return out;
+
+/* ------------ Grid & selection (no 'No tests' message) ---------- */
+function renderGrid(filter='all', q=''){
+  const grid=document.getElementById('grid'); const qq=(q||'').toLowerCase();
+  const items=sections.filter(s=>(filter==='all'||s.scope===filter)&&(!qq||s.title.toLowerCase().includes(qq)));
+  grid.innerHTML = items.map(s=>(
+    `<button class="item" data-id="${s.id}" ${selectedId===s.id?'data-active="true"':''}>
+       <h4>${s.title}</h4><small>${s.scope==='upper'?'Upper body':'Lower body'}</small>
+     </button>`
+  )).join('');
 }
-function showError(e){document.getElementById('md').innerHTML='<div class="panel">'+e+'</div>'}
-function renderGrid(f='all',q=''){
-  const grid=document.getElementById('grid'),qq=q.toLowerCase();
-  const items=sections.filter(s=>(f==='all'||s.scope===f)&&(!qq||s.title.toLowerCase().includes(qq)));
-  grid.innerHTML=items.map(s=>`<button class="item" data-id="${s.id}" ${selectedId===s.id?'data-active="true"':''}><h4>${s.title}</h4><small>${s.scope==='upper'?'Upper body':'Lower body'}</small></button>`).join('')||'<div class="muted" style="padding:8px">No tests.</div>';
-}
+
 function selectTest(id){
-  selectedId=id;renderGrid(currScope(),document.getElementById('q').value||'');
-  const s=sections.find(x=>x.id===id);if(!s)return;
-  document.getElementById('accordion').innerHTML=s.html;openDetail();
+  selectedId=id; renderGrid(currentScope(), document.getElementById('q').value||'');
+  const s=sections.find(x=>x.id===id); if(!s) return;
+  document.getElementById('accordion').innerHTML=s.html;
+  openDetail();
 }
-function currScope(){const a=document.querySelector('.pill[data-active="true"]');return a?a.dataset.scope:'all'}
+
+function currentScope(){ const a=document.querySelector('.pill[data-active="true"]'); return a?a.dataset.scope:'all'; }
+
+/* ------------ UI wiring ------------- */
 document.addEventListener('click',e=>{
-  const p=e.target.closest('.pill');if(p&&!p.id){document.querySelectorAll('.pill[data-scope]').forEach(b=>b.dataset.active=false);
-  p.dataset.active=true;renderGrid(p.dataset.scope,document.getElementById('q').value||'');return;}
-  const it=e.target.closest('.item');if(it)selectTest(it.dataset.id);
+  const pill=e.target.closest('.pill');
+  if(pill && !pill.id){
+    document.querySelectorAll('.pill[data-scope]').forEach(b=>b.dataset.active=false);
+    pill.dataset.active=true; renderGrid(pill.dataset.scope, document.getElementById('q').value||''); return;
+  }
+  const item=e.target.closest('.item'); if(item) selectTest(item.dataset.id);
 });
-document.getElementById('q').oninput=e=>renderGrid(currScope(),e.target.value);
-document.addEventListener('keydown',e=>{if(e.key==='/'&&document.activeElement.tagName!=='INPUT'){e.preventDefault();q.focus()}if(e.key==='Escape')closeDetail()});
-const panel=document.getElementById('detail'),closeBtn=document.getElementById('closeBtn'),pinBtn=document.getElementById('pinBtn');let pinned=false;
-function openDetail(){panel.classList.remove('hidden')}
-function closeDetail(){if(!pinned){panel.classList.add('hidden');selectedId=null;renderGrid(currScope(),document.getElementById('q').value||'')}}
-closeBtn.onclick=closeDetail;pinBtn.onclick=()=>{pinned=!pinned;pinBtn.textContent=pinned?'Pinned':'Pin'}
-/* drag */
-const h=document.getElementById('dragHandle');let drag=false,sx,sy,sl,st;
-h.onpointerdown=e=>{if(e.button!==0)return;ensureLeftTop();drag=true;sx=e.clientX;sy=e.clientY;
-const r=panel.getBoundingClientRect();sl=r.left;st=r.top;panel.setPointerCapture(e.pointerId)}
-h.onpointermove=e=>{if(!drag)return;const dx=e.clientX-sx,dy=e.clientY-sy;
-panel.style.left=Math.max(10,sl+dx)+'px';panel.style.top=Math.max(10,st+dy)+'px';}
-h.onpointerup=e=>{drag=false;panel.releasePointerCapture(e.pointerId)}
-function ensureLeftTop(){if(getComputedStyle(panel).right!=='auto'){const r=panel.getBoundingClientRect();
-panel.style.left=r.left+'px';panel.style.top=r.top+'px';panel.style.right='auto'}}
-loadMD();
+document.getElementById('q').addEventListener('input',e=>renderGrid(currentScope(),e.target.value));
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeDetail(); });
+
+/* ------------ Floating panel: open/close/pin + drag ------------- */
+const panel=document.getElementById('detail'), closeBtn=document.getElementById('closeBtn'), pinBtn=document.getElementById('pinBtn');
+let pinned=false;
+function openDetail(){ panel.classList.remove('hidden'); }
+function closeDetail(){ if(!pinned){ panel.classList.add('hidden'); selectedId=null; renderGrid(currentScope(), document.getElementById('q').value||''); } }
+closeBtn.onclick=closeDetail; pinBtn.onclick=()=>{ pinned=!pinned; pinBtn.textContent=pinned?'Pinned':'Pin'; };
+
+const handle=document.getElementById('dragHandle'); let drag=false,sx,sy,sl,st;
+handle.addEventListener('pointerdown',e=>{ if(e.button!==0) return; ensureLeftTop(); drag=true; sx=e.clientX; sy=e.clientY;
+  const r=panel.getBoundingClientRect(); sl=r.left; st=r.top; panel.setPointerCapture(e.pointerId); });
+handle.addEventListener('pointermove',e=>{ if(!drag) return; const dx=e.clientX-sx, dy=e.clientY-sy;
+  panel.style.left=Math.max(10,sl+dx)+'px'; panel.style.top=Math.max(10,st+dy)+'px'; });
+handle.addEventListener('pointerup',e=>{ drag=false; try{panel.releasePointerCapture(e.pointerId)}catch{} });
+handle.addEventListener('pointercancel',()=>{ drag=false; });
+function ensureLeftTop(){ if(getComputedStyle(panel).right!=='auto'){ const r=panel.getBoundingClientRect();
+  panel.style.left=r.left+'px'; panel.style.top=r.top+'px'; panel.style.right='auto'; } }
+
+/* ------------ Optional: auto-load stick model if present -------- */
+(async function loadStageModel(){
+  const el=document.getElementById('stageModel');
+  const candidates = [
+    // common spots you might have used
+    '/ROMetrics/goniometry-trainer/assets/stick.glb',
+    '/ROMetrics/goniometry-trainer/stick.glb',
+    './assets/stick.glb'
+  ];
+  for(const url of candidates){
+    try{
+      const res = await fetch(url, { method:'HEAD' });
+      if(res.ok){
+        el.src = url; el.style.display='block'; return;
+      }
+    }catch(_){}
+  }
+  // If nothing found, leave stage blank (no text shown)
+})();
 </script>
 </body>
 </html>
