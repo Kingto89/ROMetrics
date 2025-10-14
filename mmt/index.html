@@ -40,6 +40,7 @@ flex-direction:column;gap:6px;transition:all .15s}
 /* Floating panel */
 .floating{position:fixed;right:20px;top:20px;width:min(520px,92vw);max-height:85vh;overflow:auto;z-index:50;user-select:none}
 .floating .header{cursor:move}
+.floating.pinned .header{cursor:default} /* show it's locked */
 .hidden{display:none}
 </style>
 <script type="module" src="https://unpkg.com/@google/model-viewer@3.5.0/dist/model-viewer.min.js"></script>
@@ -78,7 +79,10 @@ flex-direction:column;gap:6px;transition:all .15s}
   <aside id="detail" class="card floating hidden" role="dialog" aria-modal="false" aria-labelledby="detailTitle">
     <div class="header" id="dragHandle">
       <div class="title" id="detailTitle">Test Details</div>
-      <div class="row"><button id="pinBtn" class="pill">Pin</button><button id="closeBtn" class="pill">✕</button></div>
+      <div class="row">
+        <button id="pinBtn" class="pill" aria-pressed="false" title="Pin to lock position">Pin</button>
+        <button id="closeBtn" class="pill" title="Close">✕</button>
+      </div>
     </div>
     <div id="md" class="panel"><div class="muted">Loading test library…</div><div id="accordion"></div></div>
     <div class="footer">Always test in <strong>mid-range</strong>. Apply resistance gradually (~3 s).</div>
@@ -149,28 +153,75 @@ document.addEventListener('click',e=>{
 document.getElementById('q').addEventListener('input',e=>renderGrid(currentScope(),e.target.value));
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeDetail(); });
 
-/* ------------ Floating panel: open/close/pin + drag ------------- */
+/* ------------ Floating panel: open/close + Pin/Lock + Drag ------------- */
 const panel=document.getElementById('detail'), closeBtn=document.getElementById('closeBtn'), pinBtn=document.getElementById('pinBtn');
 let pinned=false;
+function setPinned(val){
+  pinned=!!val;
+  panel.classList.toggle('pinned', pinned);
+  pinBtn.textContent=pinned?'Unpin':'Pin';
+  pinBtn.setAttribute('aria-pressed', String(pinned));
+}
 function openDetail(){ panel.classList.remove('hidden'); }
 function closeDetail(){ if(!pinned){ panel.classList.add('hidden'); selectedId=null; renderGrid(currentScope(), document.getElementById('q').value||''); } }
-closeBtn.onclick=closeDetail; pinBtn.onclick=()=>{ pinned=!pinned; pinBtn.textContent=pinned?'Pinned':'Pin'; };
+closeBtn.onclick=closeDetail; pinBtn.onclick=()=>setPinned(!pinned);
 
-const handle=document.getElementById('dragHandle'); let drag=false,sx,sy,sl,st;
-handle.addEventListener('pointerdown',e=>{ if(e.button!==0) return; ensureLeftTop(); drag=true; sx=e.clientX; sy=e.clientY;
-  const r=panel.getBoundingClientRect(); sl=r.left; st=r.top; panel.setPointerCapture(e.pointerId); });
-handle.addEventListener('pointermove',e=>{ if(!drag) return; const dx=e.clientX-sx, dy=e.clientY-sy;
-  panel.style.left=Math.max(10,sl+dx)+'px'; panel.style.top=Math.max(10,st+dy)+'px'; });
-handle.addEventListener('pointerup',e=>{ drag=false; try{panel.releasePointerCapture(e.pointerId)}catch{} });
+const handle=document.getElementById('dragHandle');
+let drag=false,sx=0,sy=0,sl=0,st=0,moved=false;
+
+handle.addEventListener('pointerdown',e=>{
+  if(e.button!==0) return;
+  if(pinned) return;               // 🚫 ignore drag when pinned
+  ensureLeftTop();
+  drag=true; moved=false;
+  sx=e.clientX; sy=e.clientY;
+  const r=panel.getBoundingClientRect(); sl=r.left; st=r.top;
+  panel.setPointerCapture(e.pointerId);
+});
+
+handle.addEventListener('pointermove',e=>{
+  if(!drag) return;
+  const dx=e.clientX-sx, dy=e.clientY-sy;
+  if(Math.abs(dx)>2 || Math.abs(dy)>2) moved=true; // detect real drag vs click
+  panel.style.left=Math.max(10,sl+dx)+'px';
+  panel.style.top=Math.max(10,st+dy)+'px';
+});
+
+handle.addEventListener('pointerup',e=>{
+  if(drag){
+    try{panel.releasePointerCapture(e.pointerId)}catch{}
+  }
+  drag=false;
+});
+
 handle.addEventListener('pointercancel',()=>{ drag=false; });
-function ensureLeftTop(){ if(getComputedStyle(panel).right!=='auto'){ const r=panel.getBoundingClientRect();
-  panel.style.left=r.left+'px'; panel.style.top=r.top+'px'; panel.style.right='auto'; } }
+
+/* Click-to-lock: single click on header (not on buttons), only if there wasn't a drag */
+handle.addEventListener('click',e=>{
+  if(e.target.closest('button')) return; // ignore clicks on Pin/Close
+  if(moved) { moved=false; return; }     // suppress after dragging
+  setPinned(!pinned);                    // toggle lock
+});
+
+function ensureLeftTop(){
+  const cs=getComputedStyle(panel);
+  if(cs.right!=='auto'){
+    const r=panel.getBoundingClientRect();
+    panel.style.left=r.left+'px';
+    panel.style.top=r.top+'px';
+    panel.style.right='auto';
+  }
+}
+
+/* Quick keyboard toggle for accessibility */
+document.addEventListener('keydown',e=>{
+  if(e.key.toLowerCase()==='p') setPinned(!pinned);
+});
 
 /* ------------ Optional: auto-load stick model if present -------- */
 (async function loadStageModel(){
   const el=document.getElementById('stageModel');
   const candidates = [
-    // common spots you might have used
     '/ROMetrics/goniometry-trainer/assets/stick.glb',
     '/ROMetrics/goniometry-trainer/stick.glb',
     './assets/stick.glb'
