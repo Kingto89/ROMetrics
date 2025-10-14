@@ -39,9 +39,14 @@ flex-direction:column;gap:6px;transition:all .15s}
 .footer{padding:12px 18px;color:white;opacity:.9;text-align:center;font-size:12px}
 
 /* Floating panel */
-.floating{position:fixed;right:20px;top:20px;width:min(520px,92vw);max-height:85vh;overflow:auto;z-index:50}
+.floating{
+  position:fixed; right:20px; top:20px;
+  width:min(520px,92vw); max-height:85vh; overflow:auto; z-index:50;
+}
 .floating .header{cursor:grab;-webkit-user-select:none;user-select:none}
 .floating[data-dragging="true"] .header{cursor:grabbing}
+/* pinned = not draggable */
+.floating.pinned .header{cursor:default}
 .hidden{display:none}
 </style>
 <script type="module" src="https://unpkg.com/@google/model-viewer@3.5.0/dist/model-viewer.min.js"></script>
@@ -151,19 +156,21 @@ document.addEventListener('click',e=>{
 document.getElementById('q').addEventListener('input',e=>renderGrid(currentScope(),e.target.value));
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeDetail(); });
 
-/* ------------ Floating panel: open/close/pin ------------- */
+/* ------------ Floating panel: open/close/pin (drag only when unpinned) ------------- */
 const panel=document.getElementById('detail'), closeBtn=document.getElementById('closeBtn'), pinBtn=document.getElementById('pinBtn');
 let pinned=false;
-function openDetail(){ panel.classList.remove('hidden'); }
+function openDetail(){ panel.classList.remove('hidden'); ensureLeftTop(); }
 function closeDetail(){ if(!pinned){ panel.classList.add('hidden'); selectedId=null; renderGrid(currentScope(), document.getElementById('q').value||''); } }
-closeBtn.onclick=closeDetail; pinBtn.onclick=()=>{ pinned=!pinned; pinBtn.textContent=pinned?'Pinned':'Pin'; };
+closeBtn.onclick=closeDetail;
+pinBtn.onclick=()=>{ pinned=!pinned; panel.classList.toggle('pinned', pinned); pinBtn.textContent=pinned?'Pinned':'Pin'; };
 
-/* ------------ DRAG: stable, releases even if pointer leaves header ---------- */
+/* ------------ DRAG: stable & bounded; disabled when pinned ---------- */
 const handle=document.getElementById('dragHandle');
 let dragging=false, startX=0, startY=0, startLeft=0, startTop=0, activeId=null;
 
 function ensureLeftTop(){
-  if(getComputedStyle(panel).right!=='auto'){
+  const cs=getComputedStyle(panel);
+  if(cs.right!=='auto'){
     const r=panel.getBoundingClientRect();
     panel.style.left=r.left+'px';
     panel.style.top=r.top+'px';
@@ -172,8 +179,9 @@ function ensureLeftTop(){
 }
 
 function onPointerDown(e){
-  if (e.target.closest('button')) return;       // ignore clicks on pin/close
-  if (e.button !== 0) return;                   // left click only
+  if(pinned) return;                         // don't drag if pinned
+  if(e.target.closest('button')) return;     // ignore clicks on Pin/Close
+  if(e.button!==0) return;                   // left click only
   ensureLeftTop();
   dragging=true; activeId=e.pointerId;
   panel.dataset.dragging='true';
@@ -207,7 +215,7 @@ handle.addEventListener('pointerdown', onPointerDown);
 handle.addEventListener('pointermove', onPointerMove);
 handle.addEventListener('pointerup', endDrag);
 handle.addEventListener('pointercancel', endDrag);
-window.addEventListener('pointerup', endDrag); // safety: end drag even outside the header
+window.addEventListener('pointerup', endDrag); // safety: end drag anywhere
 
 /* ------------ Optional: auto-load stick model if present -------- */
 (async function loadStageModel(){
