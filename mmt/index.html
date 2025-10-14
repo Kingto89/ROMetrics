@@ -2,25 +2,188 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Coming Soon — PT Lab</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ROMetrics — Manual Muscle Testing (MMT)</title>
+  <!-- Icons & fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Minimal utility CSS (no build step) -->
   <style>
-    html,body{margin:0;height:100%;display:flex;align-items:center;justify-content:center;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;
-      background:#0f1115;color:#e9edf5;text-align:center}
-    .box{max-width:420px;padding:28px;background:#171a21;border-radius:16px;
-      box-shadow:0 10px 30px rgba(0,0,0,.4)}
-    h1{margin:0 0 12px;font-size:1.8rem;color:#d62828}
-    p{margin:0 0 18px;color:#a9b0bf}
-    a{color:#fff;background:#d62828;padding:10px 16px;border-radius:8px;text-decoration:none}
-    a:hover{background:#b81e1e}
+    :root{
+      --bg: #0b0f14; --card: rgba(255,255,255,0.85); --muted: rgba(255,255,255,0.72);
+      --accent: #e11d48; --accent2:#06b6d4; --ink:#0f172a;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:#111}
+    .bg{position:fixed;inset:0;background:radial-gradient(1200px 800px at 70% 20%, rgba(255,255,255,0.12), transparent),
+                                radial-gradient(800px 800px at 10% 90%, rgba(255,255,255,0.10), transparent),
+                                #0b0f14 url('./assets/bg_pt_office.jpg') center/cover no-repeat;filter:saturate(1.05) brightness(0.9);}
+    .overlay{position:fixed;inset:0;background:linear-gradient(180deg, rgba(11,15,20,0.25), rgba(11,15,20,0.6));}
+    .wrap{position:relative;display:grid;grid-template-columns:1.2fr 2fr;gap:20px;max-width:1100px;margin:40px auto;padding:16px}
+    @media (max-width: 980px){.wrap{grid-template-columns:1fr;gap:14px;margin:20px auto}}
+    .card{backdrop-filter: blur(10px);background:var(--card);border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.25);overflow:hidden}
+    .header{padding:18px 20px;border-bottom:1px solid rgba(0,0,0,.06);display:flex;align-items:center;justify-content:space-between}
+    .title{font-weight:700;letter-spacing:.2px}
+    .muted{color:#1f2937;opacity:.75}
+    .panel{padding:16px 18px}
+    .row{display:flex;gap:10px;flex-wrap:wrap}
+    .pill{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(0,0,0,.08);background:white;border-radius:999px;padding:8px 12px;font-weight:600;cursor:pointer}
+    .pill[data-active="true"]{background:var(--ink);color:white;border-color:transparent}
+    .search{width:100%;padding:12px 14px;border-radius:10px;border:1px solid rgba(0,0,0,.08);font-size:14px}
+    .list{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+    @media (max-width: 980px){.list{grid-template-columns:1fr}}
+    .item{background:white;border:1px solid rgba(0,0,0,.08);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px}
+    .item h4{margin:0;font-size:15px}
+    .item small{color:#475569}
+    .viewer{height:360px;position:relative}
+    .viewer .caption{position:absolute;bottom:10px;left:10px;background:rgba(255,255,255,.9);padding:6px 10px;border-radius:8px;font-size:12px;font-weight:600}
+    .content{padding:0 0 10px 0}
+    .accordion details{background:white;border:1px solid rgba(0,0,0,.08);border-radius:12px;padding:10px}
+    .accordion details+details{margin-top:10px}
+    .accordion summary{cursor:pointer;font-weight:700}
+    .tag{display:inline-block;background:#111827;color:#fff;padding:2px 8px;border-radius:8px;font-size:12px;margin-left:8px}
+    .footer{padding:12px 18px;color:white;opacity:.9;text-align:center;font-size:12px}
+    .kbd{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:#111827;color:#fff;padding:2px 6px;border-radius:6px;font-size:12px}
   </style>
+  <!-- model-viewer for GLB props (no build step) -->
+  <script type="module" src="https://unpkg.com/@google/model-viewer@3.5.0/dist/model-viewer.min.js"></script>
+  <!-- Marked for Markdown rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
-  <div class="box">
-    <h1>Coming Soon</h1>
-    <p>This module is under development. Check back soon for interactive content.</p>
-    <a href="../index.html">← Back to PT Lab Hub</a>
-  </div>
+  <div class="bg" aria-hidden="true"></div>
+  <div class="overlay" aria-hidden="true"></div>
+
+  <main class="wrap">
+    <!-- Left: Scene/Props -->
+    <section class="card">
+      <div class="header">
+        <div>
+          <div class="title">ROMetrics — MMT Lab</div>
+          <div class="muted">Interactive manual muscle testing space</div>
+        </div>
+        <div class="muted" title="Tip: press / to search"><span class="kbd">/</span></div>
+      </div>
+      <div class="panel viewer">
+        <model-viewer id="chair" src="./assets/Blue_Seating.glb" camera-controls disable-zoom environment-image="neutral" exposure="0.9" style="position:absolute;left:5%;bottom:-10px;width:46%;height:360px"></model-viewer>
+        <model-viewer id="table" src="./assets/medical_examination_table.glb" camera-controls disable-zoom environment-image="neutral" exposure="0.9" style="position:absolute;right:0;bottom:-20px;width:56%;height:360px"></model-viewer>
+        <div class="caption">Chair + Exam Table props (static preview)</div>
+      </div>
+      <div class="panel">
+        <input id="q" class="search" placeholder="Search tests… (e.g., shoulder flexion, hip abduction)" />
+        <div class="row" style="margin-top:10px">
+          <button class="pill" data-scope="all" data-active="true">All</button>
+          <button class="pill" data-scope="upper">Upper Body</button>
+          <button class="pill" data-scope="lower">Lower Body</button>
+        </div>
+        <div id="grid" class="list" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- Right: Markdown-rendered detail -->
+    <section class="card">
+      <div class="header"><div class="title">Test Details</div><div class="muted">From <strong>rometrics_mmt_library.md</strong></div></div>
+      <div id="md" class="content panel">
+        <div class="muted">Select a test to see setup, mid-range grading, and the voice script.</div>
+        <div class="accordion" id="accordion"></div>
+      </div>
+      <div class="footer">Always test in <strong>mid-range</strong>. Apply resistance gradually (~3s). Correct compensations, then grade.</div>
+    </section>
+  </main>
+
+  <script>
+    // --- Load and render the Markdown file ---
+    const MD_PATH = './rometrics_mmt_library.md';
+    let rawMD = '';
+    let sections = []; // {id, scope:'upper'|'lower', title, html}
+
+    async function loadMD(){
+      const res = await fetch(MD_PATH);
+      if(!res.ok){
+        document.getElementById('md').innerHTML = `<div class="panel">Cannot load <code>${MD_PATH}</code>. Ensure it sits in the <code>/mmt/</code> folder.</div>`;
+        return;
+      }
+      rawMD = await res.text();
+      // Basic split by H3 test headings (### ) under Upper/Lower sections
+      const scopeMap = []; // array of {idx, scope}
+      const lines = rawMD.split(/\n/);
+      let scope = 'upper';
+      for(let i=0;i<lines.length;i++){
+        const ln = lines[i];
+        if(/^##\s+Upper Extremity/i.test(ln)) scope='upper';
+        if(/^##\s+Lower Extremity/i.test(ln)) scope='lower';
+        if(/^###\s+/.test(ln)) scopeMap.push({idx:i, scope});
+      }
+      // Build sections by slicing between ### headings
+      for(let j=0;j<scopeMap.length;j++){
+        const start = scopeMap[j].idx;
+        const end = (j+1 < scopeMap.length ? scopeMap[j+1].idx : lines.length);
+        const block = lines.slice(start, end).join('\n');
+        const m = block.match(/^###\s+(.+)$/m);
+        if(!m) continue;
+        const title = m[1].trim();
+        const id = title.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$|--+/g,'-');
+        const html = marked.parse(block);
+        sections.push({id, scope:scopeMap[j].scope, title, html});
+      }
+      renderGrid();
+      // Default: expand first item
+      if(sections[0]) selectTest(sections[0].id);
+    }
+
+    function renderGrid(filter='all', query=''){
+      const grid = document.getElementById('grid');
+      const q = query.trim().toLowerCase();
+      const items = sections.filter(s => (filter==='all'||s.scope===filter) && (!q || s.title.toLowerCase().includes(q)));
+      grid.innerHTML = items.map(s => `
+        <button class="item" data-id="${s.id}" aria-label="Open ${s.title}">
+          <h4>${s.title}</h4>
+          <small>${s.scope==='upper'?'Upper body':'Lower body'}</small>
+        </button>
+      `).join('');
+    }
+
+    function selectTest(id){
+      const sec = sections.find(s => s.id===id);
+      if(!sec) return;
+      const acc = document.getElementById('accordion');
+      acc.innerHTML = sec.html
+        // Make markdown subsections collapsible where possible
+        .replaceAll('<h4', '<h4 style="margin:6px 0"')
+        .replaceAll('<h3', '<h3 style="display:none"') // hide duplicate h3 title inside pane
+        .replaceAll('<ul', '<ul style="margin:8px 0 8px 18px"')
+        .replaceAll('<p', '<p style="margin:8px 0"');
+      // Scroll to details panel on small screens
+      if(window.innerWidth < 980){
+        document.querySelectorAll('.card')[1].scrollIntoView({behavior:'smooth'});
+      }
+    }
+
+    // --- Interactions ---
+    document.addEventListener('click', (e)=>{
+      const pill = e.target.closest('.pill');
+      if(pill){
+        document.querySelectorAll('.pill').forEach(b=>b.dataset.active=false);
+        pill.dataset.active = true;
+        renderGrid(pill.dataset.scope, document.getElementById('q').value||'');
+        return;
+      }
+      const item = e.target.closest('.item');
+      if(item){ selectTest(item.dataset.id); return; }
+    });
+    document.getElementById('q').addEventListener('input', (e)=>{
+      const active = document.querySelector('.pill[data-active="true"]').dataset.scope;
+      renderGrid(active, e.target.value);
+    });
+    document.addEventListener('keydown', (e)=>{
+      if(e.key === '/' && document.activeElement.tagName !== 'INPUT'){
+        e.preventDefault(); document.getElementById('q').focus();
+      }
+    });
+
+    // Kick off
+    loadMD();
+  </script>
 </body>
 </html>
