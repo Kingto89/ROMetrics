@@ -24,26 +24,33 @@
       font-family:system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
     }
 
-    .frame{ position:relative; min-height:100vh; }
+    /* Backdrop image: always fit device width; scroll allowed */
+    .frame{
+      position:relative;
+      min-height:100vh;
+    }
     .frame img.hero{
       display:block;
-      width:100vw;
-      height:auto;
+      width:100vw;   /* fit width of device */
+      height:auto;   /* keep proportions */
       user-select:none;
       -webkit-user-drag:none;
     }
 
+    /* Overlay content */
     .overlay{
       position:absolute;
       inset:0;
       display:grid;
       grid-template-rows:auto 1fr auto;
-      pointer-events:none;
+      pointer-events:none; /* only buttons get events below */
     }
 
+    /* Top-center brand wordmark */
     .brand{
       position:absolute;
-      top:10px; left:50%;
+      top:10px;
+      left:50%;
       transform:translateX(-50%);
       z-index:60;
       pointer-events:auto;
@@ -53,49 +60,57 @@
       text-decoration:none;
       font-weight:800;
       letter-spacing:.5px;
-      font-size:clamp(16px,2.2vw,24px);
+      font-size: clamp(16px, 2.2vw, 24px);
       background:rgba(3,14,28,.45);
       border:1px solid var(--ring);
-      backdrop-filter:blur(6px);
+      backdrop-filter: blur(6px);
     }
     @media (max-width:480px){
-      .brand{ top:8px; font-size:clamp(15px,4.5vw,20px); padding:5px 10px; }
+      .brand{ top:8px; font-size: clamp(15px, 4.5vw, 20px); padding:5px 10px; }
     }
 
+    /* Headline block (left) */
     .copy{
       align-self:start;
       pointer-events:auto;
-      padding:clamp(14px,3vw,28px);
-      max-width:min(700px,46vw);
+      padding: clamp(14px, 3vw, 28px);
+      max-width: min(700px, 46vw); /* cap width so text doesn't run into the image */
     }
 
     .kicker{
-      display:inline-block;
-      font-size:11px;
-      letter-spacing:.16em;
-      text-transform:uppercase;
+      display:inline-block; font-size:11px; letter-spacing:.16em; text-transform:uppercase;
       color:var(--muted);
       background:rgba(3,14,28,.55);
       border:1px solid var(--ring);
-      padding:6px 10px;
-      border-radius:999px;
-      backdrop-filter:blur(6px);
+      padding:6px 10px; border-radius:999px;
+      backdrop-filter: blur(6px);
     }
 
-    h1{ margin:12px 0 10px 0; font-size:clamp(26px,4.2vw,44px); line-height:1.08 }
-    .sub{ max-width:60ch; color:var(--muted); font-size:clamp(14px,1.3vw,17px) }
+    /* Slightly smaller headline & sub so 100% zoom fits cleanly */
+    h1{ margin:12px 0 10px 0; font-size:clamp(26px, 4.2vw, 44px); line-height:1.08 }
+    .sub{ max-width:60ch; color:var(--muted); font-size:clamp(14px, 1.3vw, 17px) }
 
-    @media (min-width:1200px){ .copy{ max-width:42vw; } }
-    @media (max-height:750px){
-      h1{ font-size:clamp(24px,3.6vw,38px); }
-      .sub{ font-size:clamp(13px,1.2vw,16px); }
+    /* On very wide screens, keep copy tighter left */
+    @media (min-width: 1200px){
+      .copy{ max-width: 42vw; }
     }
 
-    .strip{ display:grid; place-items:center; padding:10px clamp(10px,3vw,24px) clamp(16px,3.5vw,28px); pointer-events:auto; }
+    /* On shorter viewports, step headline down more */
+    @media (max-height: 750px){
+      h1{ font-size:clamp(24px, 3.6vw, 38px); }
+      .sub{ font-size:clamp(13px, 1.2vw, 16px); }
+    }
+
+    /* Bubbles strip (bottom, centered) */
+    .strip{
+      display:grid; place-items:center;
+      padding: 10px clamp(10px, 3vw, 24px) clamp(16px, 3.5vw, 28px);
+      pointer-events:auto;
+    }
     .bubbles{
       display:grid; gap:12px;
-      grid-template-columns:repeat(7,minmax(0,1fr)); /* increased from 6 → 7 */
-      width:min(1100px,95vw);
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      width:min(1100px, 95vw);
     }
     @media (max-width:1100px){ .bubbles{grid-template-columns:repeat(3,1fr);} }
     @media (max-width:620px){  .bubbles{grid-template-columns:repeat(2,1fr);} }
@@ -108,27 +123,34 @@
       padding:14px 12px;
       display:flex; flex-direction:column; gap:8px;
       transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
-      backdrop-filter:blur(6px);
+      backdrop-filter: blur(6px);
     }
     .bubble:hover{ transform:translateY(-2px); border-color:rgba(255,255,255,.35); box-shadow:0 12px 28px rgba(0,0,0,.25) }
     .b-ico{ width:36px;height:36px;border-radius:12px;display:grid;place-items:center;border:1px solid var(--ring) }
     .b-title{ font-weight:700; font-size:15px; letter-spacing:.2px }
     .b-sub{ font-size:12px; color:var(--muted) }
 
-    .b1 .b-ico{background:linear-gradient(180deg,rgba(245,158,11,.22),rgba(245,158,11,.06))}
-    .b2 .b-ico{background:linear-gradient(180deg,rgba(99,102,241,.22),rgba(99,102,241,.06))}
-    .b3 .b-ico{background:linear-gradient(180deg,rgba(14,165,233,.22),rgba(14,165,233,.06))}
-    .b4 .b-ico{background:linear-gradient(180deg,rgba(16,185,129,.22),rgba(16,185,129,.06))}
-    .b5 .b-ico{background:linear-gradient(180deg,rgba(34,197,94,.22),rgba(34,197,94,.06))}
-    .b6 .b-ico{background:linear-gradient(180deg,rgba(236,72,153,.22),rgba(236,72,153,.06))}
-    .b7 .b-ico{background:linear-gradient(180deg,rgba(239,68,68,.22),rgba(239,68,68,.06))} /* Performance Hub */
+    /* Subtle icon tints */
+    .b1 .b-ico{background:linear-gradient(180deg, rgba(245,158,11,.22), rgba(245,158,11,.06))}
+    .b2 .b-ico{background:linear-gradient(180deg, rgba(99,102,241,.22), rgba(99,102,241,.06))}
+    .b3 .b-ico{background:linear-gradient(180deg, rgba(14,165,233,.22), rgba(14,165,233,.06))}
+    .b4 .b-ico{background:linear-gradient(180deg, rgba(16,185,129,.22), rgba(16,185,129,.06))}
+    .b5 .b-ico{background:linear-gradient(180deg, rgba(34,197,94,.22), rgba(34,197,94,.06))}
+    .b6 .b-ico{background:linear-gradient(180deg, rgba(236,72,153,.22), rgba(236,72,153,.06))}
+    .b7 .b-ico{background:linear-gradient(180deg, rgba(239,68,68,.22), rgba(239,68,68,.06))} /* Performance Hub */
+
+    /* Accessibility */
     .bubble:focus-visible{ outline:3px solid rgba(46,255,186,.6); outline-offset:2px }
   </style>
 </head>
 <body>
   <div class="frame">
+    <!-- Backdrop -->
     <img class="hero" src="./assets/backdrop.png" alt="ROMetrics backdrop" />
+
+    <!-- Content overlay -->
     <div class="overlay" aria-hidden="false">
+      <!-- Brand wordmark -->
       <a class="brand" href="./" aria-label="ROMetrics home">ROMetrics</a>
 
       <section class="copy" aria-label="Intro">
@@ -137,7 +159,7 @@
         <p class="sub">Use the ROMetrics toolkit to practice manual muscle testing (MMT), screen postural and movement quality (LQS), and run digital goniometry. Tap a tool below to get started.</p>
       </section>
 
-      <div></div>
+      <div></div> <!-- spacer row -->
 
       <nav class="strip" aria-label="Quick links">
         <div class="bubbles">
@@ -156,22 +178,22 @@
             <div class="b-title">Manual Muscle Test</div>
             <div class="b-sub">MMT positions & cues</div>
           </a>
-          <a class="bubble b4" href="./lqs/">
+
+          <!-- CHANGED: LQS + UQS → Mobility Screens (single bubble) -->
+          <a class="bubble b4" href="./mobility-screens/">
             <div class="b-ico" aria-hidden="true">📋</div>
-            <div class="b-title">LQS</div>
-            <div class="b-sub">Movement Quality</div>
+            <div class="b-title">Mobility Screens</div>
+            <div class="b-sub">Upper & Lower Quarter</div>
           </a>
-          <a class="bubble b5" href="./uqs/">
-            <div class="b-ico" aria-hidden="true">🧭</div>
-            <div class="b-title">UQS</div>
-            <div class="b-sub">Upper Quarter Screen</div>
-          </a>
+
+          <!-- REMOVED: previous UQS bubble -->
           <a class="bubble b6" href="./neuro/">
             <div class="b-ico" aria-hidden="true">🧠</div>
             <div class="b-title">Neuro</div>
             <div class="b-sub">Screens & quick tests</div>
           </a>
-          <!-- 7. NEW: Performance Hub -->
+
+          <!-- Performance Hub remains unchanged -->
           <a class="bubble b7" href="./performance-hub/" aria-label="Open Performance Hub — Pro analytics & reports">
             <div class="b-ico" aria-hidden="true">📈</div>
             <div class="b-title">Performance Hub</div>
