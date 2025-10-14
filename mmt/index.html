@@ -32,18 +32,13 @@ flex-direction:column;gap:6px;transition:all .15s}
 .item small{color:#475569}
 .item[data-active="true"]{outline:2px solid #1d4ed8;background:#eef2ff}
 
-/* Right column stage (blank 3D area) */
+/* Right column stage (pure 3D area) */
 .stage{height:360px;display:flex;align-items:center;justify-content:center}
 #stageModel{width:100%;height:100%}
-
 .footer{padding:12px 18px;color:white;opacity:.9;text-align:center;font-size:12px}
 
-/* Floating panel — ALWAYS draggable (like the version that worked) */
-.floating{
-  position:fixed; right:20px; top:20px;
-  width:min(520px,92vw); max-height:85vh; overflow:auto; z-index:50;
-  user-select:none;
-}
+/* Floating panel */
+.floating{position:fixed;right:20px;top:20px;width:min(520px,92vw);max-height:85vh;overflow:auto;z-index:50;user-select:none}
 .floating .header{cursor:move}
 .hidden{display:none}
 </style>
@@ -73,7 +68,7 @@ flex-direction:column;gap:6px;transition:all .15s}
     </div>
   </section>
 
-  <!-- Right column: 3D stage -->
+  <!-- Right column: 3D stage (blank by default; loads stick model if found) -->
   <section class="card stage" aria-label="3D stage">
     <model-viewer id="stageModel" exposure="1" camera-controls auto-rotate autoplay
       reveal="interaction" ar-status="not-presenting" style="display:none"></model-viewer>
@@ -83,10 +78,7 @@ flex-direction:column;gap:6px;transition:all .15s}
   <aside id="detail" class="card floating hidden" role="dialog" aria-modal="false" aria-labelledby="detailTitle">
     <div class="header" id="dragHandle">
       <div class="title" id="detailTitle">Test Details</div>
-      <div class="row">
-        <button id="pinBtn" class="pill">Pin</button>
-        <button id="closeBtn" class="pill">✕</button>
-      </div>
+      <div class="row"><button id="pinBtn" class="pill">Pin</button><button id="closeBtn" class="pill">✕</button></div>
     </div>
     <div id="md" class="panel"><div class="muted">Loading test library…</div><div id="accordion"></div></div>
     <div class="footer">Always test in <strong>mid-range</strong>. Apply resistance gradually (~3 s).</div>
@@ -119,7 +111,7 @@ function parseAndRender(t){
     const start=map[j].idx, end=(map[j+1]?map[j+1].idx:lines.length);
     const block=lines.slice(start,end).join('\n');
     const m=block.match(/^###\s+(.+)$/m); if(!m) continue;
-    const id=m[1].toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$|--+/g,'-');
+    const id=m[1].toLowerCase().replace(/[^a-z0-9]+/g,'-');
     sections.push({id,scope:map[j].scope,title:m[1],html:marked.parse(block)});
   }
   renderGrid();
@@ -157,66 +149,41 @@ document.addEventListener('click',e=>{
 document.getElementById('q').addEventListener('input',e=>renderGrid(currentScope(),e.target.value));
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeDetail(); });
 
-/* ------------ Floating panel: open/close; ALWAYS draggable ------------- */
+/* ------------ Floating panel: open/close/pin + drag ------------- */
 const panel=document.getElementById('detail'), closeBtn=document.getElementById('closeBtn'), pinBtn=document.getElementById('pinBtn');
-function openDetail(){ panel.classList.remove('hidden'); ensureLeftTop(); }
-function closeDetail(){ panel.classList.add('hidden'); selectedId=null; renderGrid(currentScope(), document.getElementById('q').value||''); }
-closeBtn.onclick=closeDetail;
-pinBtn.onclick=()=>{ pinBtn.textContent = (pinBtn.textContent==='Pin'?'Pinned':'Pin'); } // visual only (doesn't lock)
+let pinned=false;
+function openDetail(){ panel.classList.remove('hidden'); }
+function closeDetail(){ if(!pinned){ panel.classList.add('hidden'); selectedId=null; renderGrid(currentScope(), document.getElementById('q').value||''); } }
+closeBtn.onclick=closeDetail; pinBtn.onclick=()=>{ pinned=!pinned; pinBtn.textContent=pinned?'Pinned':'Pin'; };
 
-/* ---- Drag to move (mouse + touch via Pointer Events) ---- */
-const handle=document.getElementById('dragHandle');
-let drag=false,sx=0,sy=0,sl=0,st=0,activeId=null;
-
-function ensureLeftTop(){
-  if(getComputedStyle(panel).right!=='auto'){
-    const r=panel.getBoundingClientRect();
-    panel.style.left=r.left+'px';
-    panel.style.top=r.top+'px';
-    panel.style.right='auto';
-  }
-}
-
-handle.addEventListener('pointerdown',e=>{
-  if(e.target.closest('button')) return; // ignore buttons
-  if(e.button!==0) return;               // left click only
-  ensureLeftTop();
-  drag=true; sx=e.clientX; sy=e.clientY;
-  const r=panel.getBoundingClientRect(); sl=r.left; st=r.top;
-  activeId=e.pointerId; panel.setPointerCapture(activeId);
-  e.preventDefault();
-});
-handle.addEventListener('pointermove',e=>{
-  if(!drag||e.pointerId!==activeId) return;
-  const dx=e.clientX-sx, dy=e.clientY-sy;
-  const pad=10, maxLeft=window.innerWidth-panel.offsetWidth-pad, maxTop=window.innerHeight-panel.offsetHeight-pad;
-  panel.style.left=Math.min(Math.max(sl+dx,pad), Math.max(maxLeft,pad))+'px';
-  panel.style.top =Math.min(Math.max(st+dy,pad), Math.max(maxTop,pad)) +'px';
-});
-function endDrag(e){
-  if(!drag) return; drag=false;
-  try{ if(activeId!==null) panel.releasePointerCapture(activeId); }catch{}
-  activeId=null;
-}
-handle.addEventListener('pointerup',endDrag);
-handle.addEventListener('pointercancel',endDrag);
-window.addEventListener('pointerup',endDrag); // safety: end drag even outside
+const handle=document.getElementById('dragHandle'); let drag=false,sx,sy,sl,st;
+handle.addEventListener('pointerdown',e=>{ if(e.button!==0) return; ensureLeftTop(); drag=true; sx=e.clientX; sy=e.clientY;
+  const r=panel.getBoundingClientRect(); sl=r.left; st=r.top; panel.setPointerCapture(e.pointerId); });
+handle.addEventListener('pointermove',e=>{ if(!drag) return; const dx=e.clientX-sx, dy=e.clientY-sy;
+  panel.style.left=Math.max(10,sl+dx)+'px'; panel.style.top=Math.max(10,st+dy)+'px'; });
+handle.addEventListener('pointerup',e=>{ drag=false; try{panel.releasePointerCapture(e.pointerId)}catch{} });
+handle.addEventListener('pointercancel',()=>{ drag=false; });
+function ensureLeftTop(){ if(getComputedStyle(panel).right!=='auto'){ const r=panel.getBoundingClientRect();
+  panel.style.left=r.left+'px'; panel.style.top=r.top+'px'; panel.style.right='auto'; } }
 
 /* ------------ Optional: auto-load stick model if present -------- */
 (async function loadStageModel(){
   const el=document.getElementById('stageModel');
-  const candidates=[
+  const candidates = [
+    // common spots you might have used
     '/ROMetrics/goniometry-trainer/assets/stick.glb',
     '/ROMetrics/goniometry-trainer/stick.glb',
     './assets/stick.glb'
   ];
   for(const url of candidates){
     try{
-      const res=await fetch(url,{method:'HEAD'});
-      if(res.ok){ el.src=url; el.style.display='block'; return; }
+      const res = await fetch(url, { method:'HEAD' });
+      if(res.ok){
+        el.src = url; el.style.display='block'; return;
+      }
     }catch(_){}
   }
-  // Stage stays blank if not found.
+  // If nothing found, leave stage blank (no text shown)
 })();
 </script>
 </body>
