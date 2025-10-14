@@ -12,7 +12,7 @@ html,body{height:100%;margin:0;font-family:Inter,system-ui,sans-serif;background
 .bg{position:fixed;inset:0;background:#0b0f14 url('./assets/bg_pt_office.jpg') center/cover no-repeat;filter:saturate(1.05) brightness(.9)}
 .overlay{position:fixed;inset:0;background:linear-gradient(180deg,rgba(11,15,20,.25),rgba(11,15,20,.6))}
 
-/* Layout: big left stage, tiny right controls */
+/* Layout: big left stage, compact right controls */
 .wrap{position:relative;display:grid;grid-template-columns:1fr auto;gap:16px;max-width:1200px;margin:32px auto;padding:12px}
 .card{backdrop-filter:blur(10px);background:var(--card);border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.25);overflow:hidden}
 .header{padding:14px 16px;border-bottom:1px solid rgba(0,0,0,.06);display:flex;align-items:center;justify-content:space-between}
@@ -26,21 +26,20 @@ html,body{height:100%;margin:0;font-family:Inter,system-ui,sans-serif;background
 
 /* Compact controls (right) */
 .controls{width:280px}
-.controls .panel{display:grid;gap:10px}
+.controls .panel{display:grid;gap:10px; position:relative;} /* relative to place overlay */
 .select, .search{width:100%;padding:10px 12px;border-radius:10px;border:1px solid rgba(0,0,0,.08);font-size:14px;background:#fff}
 .small{font-size:12px;color:#475569}
 
-/* Floating detail panel */
-.floating{position:fixed;left:24px;top:24px;width:min(520px,92vw);max-height:85vh;overflow:auto;z-index:50;user-select:none}
-.floating .header{cursor:move}
-.floating.pinned .header{cursor:grab}
-.hidden{display:none}
-.footer{padding:10px 14px;color:#0b0f14;opacity:.9;text-align:center;font-size:12px;border-top:1px solid rgba(0,0,0,.06)}
-
-/* Buttons */
-.row{display:flex;gap:8px;flex-wrap:wrap}
+/* In-card detail overlay (same width as controls panel) */
+.detail-overlay{position:absolute; inset:0; z-index:5; background:#ffffff; border:1px solid rgba(0,0,0,.08);
+  border-radius:12px; box-shadow:0 12px 30px rgba(0,0,0,.25); display:none; overflow:auto; }
+.detail-overlay.open{display:block;}
+.detail-header{position:sticky;top:0;background:#fff;border-bottom:1px solid rgba(0,0,0,.06);
+  display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px}
+.detail-title{font-weight:700}
+.detail-body{padding:14px}
+.detail-footer{padding:10px 14px;color:#0b0f14;opacity:.9;text-align:center;font-size:12px;border-top:1px solid rgba(0,0,0,.06)}
 .pill{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(0,0,0,.08);background:#fff;border-radius:999px;padding:8px 12px;font-weight:600;cursor:pointer}
-.pill[data-active="true"]{background:var(--ink);color:#fff;border-color:transparent}
 
 @media(max-width:960px){
   .wrap{grid-template-columns:1fr}
@@ -60,37 +59,37 @@ html,body{height:100%;margin:0;font-family:Inter,system-ui,sans-serif;background
       reveal="interaction" ar-status="not-presenting" style="display:none"></model-viewer>
   </section>
 
-  <!-- Right: ultra-compact controls -->
+  <!-- Right: compact controls -->
   <aside class="card controls" aria-label="MMT controls">
     <div class="header">
       <div>
         <div class="title">ROMetrics — MMT</div>
-        <div class="muted small">Tiny picker • details float</div>
+        <div class="muted small">Select a region & test</div>
       </div>
     </div>
-    <div class="panel">
+    <div class="panel" id="controlsPanel">
       <select id="scope" class="select" aria-label="Region">
         <option value="all" selected>All regions</option>
         <option value="upper">Upper body</option>
         <option value="lower">Lower body</option>
       </select>
       <input id="q" class="search" placeholder="Search test…" />
-      <select id="test" class="select" size="6" aria-label="Tests"></select>
-      <div class="small">Tip: Click a test to open the floating panel. Click the panel header to lock/unlock.</div>
-    </div>
-  </aside>
+      <select id="test" class="select" size="8" aria-label="Tests"></select>
+      <div class="small">Pick a test to open details. Press Esc to close.</div>
 
-  <!-- Floating details panel (follows cursor when unpinned) -->
-  <aside id="detail" class="card floating hidden" role="dialog" aria-modal="false" aria-labelledby="detailTitle">
-    <div class="header" id="dragHandle">
-      <div class="title" id="detailTitle">Test Details</div>
-      <div class="row">
-        <button id="pinBtn" class="pill" aria-pressed="false" title="Pin to lock position">Pin</button>
-        <button id="closeBtn" class="pill" title="Close">✕</button>
+      <!-- Details overlay lives INSIDE this panel; same width, no floating -->
+      <div id="detail" class="detail-overlay" role="dialog" aria-modal="false" aria-labelledby="detailTitle">
+        <div class="detail-header">
+          <div class="detail-title" id="detailTitle">Test Details</div>
+          <button id="closeBtn" class="pill" title="Close">✕</button>
+        </div>
+        <div id="md" class="detail-body">
+          <div class="muted">Loading test library…</div>
+          <div id="accordion"></div>
+        </div>
+        <div class="detail-footer">Always test in <strong>mid-range</strong>. Apply resistance gradually (~3 s).</div>
       </div>
     </div>
-    <div id="md" class="panel"><div class="muted">Loading test library…</div><div id="accordion"></div></div>
-    <div class="footer">Always test mid-range • Apply resistance gradually (~3 s)</div>
   </aside>
 </main>
 
@@ -105,7 +104,7 @@ let SECTIONS=[], selectedId=null;
   try{
     let r=await fetch(PAGES_MD); if(!r.ok) r=await fetch(RAW_MD);
     const text=await r.text(); parseAndRender(text);
-  }catch(e){ document.getElementById('md').innerHTML='<div class="panel">Error loading library.</div>'; }
+  }catch(e){ document.getElementById('md').innerHTML='<div class="detail-body">Error loading library.</div>'; }
 })();
 
 function parseAndRender(t){
@@ -147,86 +146,22 @@ testSel.addEventListener('change', ()=>{
 });
 testSel.addEventListener('dblclick', ()=>{ if(testSel.value) openTest(testSel.value); });
 
+/* ---------- In-card overlay behavior (no floating) ---------- */
+const detail=document.getElementById('detail');
+const closeBtn=document.getElementById('closeBtn');
+
 function openTest(id){
   selectedId=id;
   const s=SECTIONS.find(x=>x.id===id); if(!s) return;
   document.getElementById('accordion').innerHTML=s.html;
-  openDetail(); // floating panel
+  openDetail();
 }
 
-/* ---------- Floating panel behavior ---------- */
-const panel=document.getElementById('detail');
-const handle=document.getElementById('dragHandle');
-const closeBtn=document.getElementById('closeBtn');
-const pinBtn=document.getElementById('pinBtn');
-
-let pinned=false;              // when false -> panel follows cursor
-let drag=false, moved=false;   // manual drag only when pinned
-let sx=0, sy=0, sl=0, st=0;
-const FOLLOW_OFFSET={x:18,y:18};
-
-function setPinned(val){
-  pinned=!!val;
-  panel.classList.toggle('pinned', pinned);
-  pinBtn.textContent=pinned?'Unpin':'Pin';
-  pinBtn.setAttribute('aria-pressed', String(pinned));
-}
-
-function openDetail(){
-  panel.classList.remove('hidden');
-  // If unpinned, start following immediately (no click required)
-}
-function closeDetail(){
-  panel.classList.add('hidden');
-  selectedId=null;
-}
+function openDetail(){ detail.classList.add('open'); }
+function closeDetail(){ detail.classList.remove('open'); selectedId=null; }
 
 closeBtn.onclick=closeDetail;
-pinBtn.onclick=()=>setPinned(!pinned);
-
-/* Follow-cursor mode when UNPINNED */
-document.addEventListener('pointermove', (e)=>{
-  if(panel.classList.contains('hidden')) return;
-  if(pinned) return;
-  const x=Math.min(Math.max(10, e.clientX + FOLLOW_OFFSET.x), window.innerWidth - panel.offsetWidth - 10);
-  const y=Math.min(Math.max(10, e.clientY + FOLLOW_OFFSET.y), window.innerHeight - panel.offsetHeight - 10);
-  panel.style.left = x + 'px';
-  panel.style.top  = y + 'px';
-});
-
-/* Click header toggles pin/unpin (and stops following instantly) */
-handle.addEventListener('click', (e)=>{
-  if(e.target.closest('button')) return; // ignore clicks on buttons
-  if(moved){ moved=false; return; }      // ignore click after a drag
-  setPinned(!pinned);
-});
-
-/* While PINNED, allow precise drag with the header */
-handle.addEventListener('pointerdown', (e)=>{
-  if(e.button!==0) return;
-  if(!pinned) return; // only drag when pinned
-  moved=false; drag=true; sx=e.clientX; sy=e.clientY;
-  const r=panel.getBoundingClientRect(); sl=r.left; st=r.top;
-  panel.setPointerCapture(e.pointerId);
-});
-handle.addEventListener('pointermove', (e)=>{
-  if(!drag) return;
-  const dx=e.clientX-sx, dy=e.clientY-sy;
-  if(Math.abs(dx)>2 || Math.abs(dy)>2) moved=true;
-  panel.style.left=Math.min(Math.max(10, sl+dx), window.innerWidth - panel.offsetWidth - 10)+'px';
-  panel.style.top =Math.min(Math.max(10, st+dy), window.innerHeight - panel.offsetHeight - 10)+'px';
-});
-handle.addEventListener('pointerup', (e)=>{
-  if(drag){ try{ panel.releasePointerCapture(e.pointerId) }catch{} }
-  drag=false;
-});
-handle.addEventListener('pointercancel', ()=>{ drag=false; });
-
-/* Keyboard shortcut: P = pin/unpin; Esc = close (only if unpinned) */
-document.addEventListener('keydown', (e)=>{
-  if(e.key.toLowerCase()==='p') setPinned(!pinned);
-  if(e.key==='Escape' && !pinned) closeDetail();
-});
+document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeDetail(); });
 
 /* ---------- Optional: auto-load stick model if present ---------- */
 (async function loadStageModel(){
