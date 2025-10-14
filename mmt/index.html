@@ -1,291 +1,131 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ROMetrics — Manual Muscle Testing (MMT)</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root{ --bg:#0b0f14; --card:rgba(255,255,255,.88); --ink:#0f172a; }
-    *{box-sizing:border-box}
-    html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:#111}
-    .bg{position:fixed;inset:0;background:
-        radial-gradient(1200px 800px at 70% 20%,rgba(255,255,255,.12),transparent),
-        radial-gradient(800px 800px at 10% 90%,rgba(255,255,255,.10),transparent),
-        #0b0f14 url('./assets/bg_pt_office.jpg') center/cover no-repeat;
-        filter:saturate(1.05) brightness(.9);}
-    .overlay{position:fixed;inset:0;background:linear-gradient(180deg,rgba(11,15,20,.25),rgba(11,15,20,.6));}
-    .wrap{position:relative;display:grid;grid-template-columns:1.2fr 1fr;gap:20px;max-width:1100px;margin:40px auto;padding:16px}
-    @media (max-width:980px){.wrap{grid-template-columns:1fr}}
-    .card{backdrop-filter:blur(10px);background:var(--card);border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.25);overflow:hidden}
-    .header{padding:18px 20px;border-bottom:1px solid rgba(0,0,0,.06);display:flex;align-items:center;justify-content:space-between}
-    .title{font-weight:700}
-    .muted{color:#1f2937;opacity:.75}
-    .panel{padding:16px 18px}
-    .row{display:flex;gap:10px;flex-wrap:wrap}
-    .pill{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(0,0,0,.08);background:white;border-radius:999px;padding:8px 12px;font-weight:600;cursor:pointer}
-    .pill[data-active="true"]{background:var(--ink);color:white;border-color:transparent}
-    .search{width:100%;padding:12px 14px;border-radius:10px;border:1px solid rgba(0,0,0,.08);font-size:14px}
-    .list{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
-    @media (max-width:980px){.list{grid-template-columns:1fr}}
-    .item{background:white;border:1px solid rgba(0,0,0,.08);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px;transition:all .15s}
-    .item h4{margin:0;font-size:15px}
-    .item small{color:#475569}
-    .item[data-active="true"]{outline:2px solid #1d4ed8;background:#eef2ff}
-
-    .viewer{height:360px;position:relative}
-    .footer{padding:12px 18px;color:white;opacity:.9;text-align:center;font-size:12px}
-    .kbd{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:#111827;color:#fff;padding:2px 6px;border-radius:6px;font-size:12px}
-
-    /* Right column stage (3D placeholder) */
-    .stage{height:360px;display:flex;align-items:center;justify-content:center}
-    .stage .placeholder{
-      width:96%;height:86%;border:2px dashed rgba(0,0,0,.15);border-radius:14px;
-      display:flex;align-items:center;justify-content:center;
-      background:repeating-linear-gradient(135deg, rgba(0,0,0,.03), rgba(0,0,0,.03) 12px, rgba(255,255,255,.4) 12px, rgba(255,255,255,.4) 24px);
-      font-weight:700;color:#334155
-    }
-
-    /* Floating panel (draggable) */
-    .floating{
-      position:fixed; left:auto; right:20px; top:20px;
-      width:min(520px,92vw); max-height:85vh; overflow:auto; z-index:50;
-      user-select:none; /* prevent text selection while dragging */
-    }
-    .floating .header{ cursor:move; } /* drag handle */
-    .hidden{display:none}
-  </style>
-  <script type="module" src="https://unpkg.com/@google/model-viewer@3.5.0/dist/model-viewer.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>ROMetrics — Manual Muscle Testing (MMT)</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b0f14;--card:rgba(255,255,255,.88);--ink:#0f172a;}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;font-family:Inter,system-ui,sans-serif;background:var(--bg);color:#111}
+.bg{position:fixed;inset:0;background:#0b0f14 url('./assets/bg_pt_office.jpg') center/cover no-repeat;
+filter:saturate(1.05) brightness(.9);}
+.overlay{position:fixed;inset:0;background:linear-gradient(180deg,rgba(11,15,20,.25),rgba(11,15,20,.6));}
+.wrap{position:relative;display:grid;grid-template-columns:1.2fr 1fr;gap:20px;max-width:1100px;margin:40px auto;padding:16px}
+@media(max-width:980px){.wrap{grid-template-columns:1fr}}
+.card{backdrop-filter:blur(10px);background:var(--card);border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.25);overflow:hidden}
+.header{padding:18px 20px;border-bottom:1px solid rgba(0,0,0,.06);display:flex;align-items:center;justify-content:space-between}
+.title{font-weight:700}
+.muted{color:#1f2937;opacity:.75}
+.panel{padding:16px 18px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(0,0,0,.08);background:white;
+border-radius:999px;padding:8px 12px;font-weight:600;cursor:pointer}
+.pill[data-active="true"]{background:var(--ink);color:white;border-color:transparent}
+.search{width:100%;padding:12px 14px;border-radius:10px;border:1px solid rgba(0,0,0,.08);font-size:14px}
+.list{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+@media(max-width:980px){.list{grid-template-columns:1fr}}
+.item{background:white;border:1px solid rgba(0,0,0,.08);border-radius:12px;padding:12px;display:flex;
+flex-direction:column;gap:6px;transition:all .15s}
+.item h4{margin:0;font-size:15px}
+.item small{color:#475569}
+.item[data-active="true"]{outline:2px solid #1d4ed8;background:#eef2ff}
+.footer{padding:12px 18px;color:white;opacity:.9;text-align:center;font-size:12px}
+.stage{height:360px;display:flex;align-items:center;justify-content:center}
+.stage .placeholder{width:96%;height:86%;border:2px dashed rgba(0,0,0,.15);border-radius:14px;
+display:flex;align-items:center;justify-content:center;
+background:repeating-linear-gradient(135deg,rgba(0,0,0,.03),rgba(0,0,0,.03) 12px,rgba(255,255,255,.4) 12px,rgba(255,255,255,.4) 24px);
+font-weight:700;color:#334155}
+/* Floating panel */
+.floating{position:fixed;right:20px;top:20px;width:min(520px,92vw);max-height:85vh;overflow:auto;z-index:50;user-select:none}
+.floating .header{cursor:move}
+.hidden{display:none}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
-  <div class="bg" aria-hidden="true"></div>
-  <div class="overlay" aria-hidden="true"></div>
+<div class="bg"></div><div class="overlay"></div>
+<main class="wrap">
+<section class="card">
+  <div class="header">
+    <div>
+      <div class="title">ROMetrics — MMT Lab</div>
+      <div class="muted">Interactive manual muscle testing space</div>
+    </div>
+  </div>
+  <div class="panel">
+    <input id="q" class="search" placeholder="Search tests… (e.g., shoulder flexion, hip abduction)">
+    <div class="row" style="margin-top:10px">
+      <button class="pill" data-scope="all" data-active="true">All</button>
+      <button class="pill" data-scope="upper">Upper Body</button>
+      <button class="pill" data-scope="lower">Lower Body</button>
+    </div>
+    <div id="grid" class="list" aria-live="polite"></div>
+  </div>
+</section>
+<section class="card stage"><div class="placeholder">3D MODEL STAGE (loads here)</div></section>
+<aside id="detail" class="card floating hidden">
+  <div class="header" id="dragHandle">
+    <div class="title">Test Details</div>
+    <div class="row"><button id="pinBtn" class="pill">Pin</button><button id="closeBtn" class="pill">✕</button></div>
+  </div>
+  <div id="md" class="panel"><div class="muted">Loading test library…</div><div id="accordion"></div></div>
+  <div class="footer">Always test in <strong>mid-range</strong>. Apply resistance gradually (~3 s).</div>
+</aside>
+</main>
 
-  <main class="wrap">
-    <!-- Left column -->
-    <section class="card">
-      <div class="header">
-        <div>
-          <div class="title">ROMetrics — MMT Lab</div>
-          <div class="muted">Interactive manual muscle testing space</div>
-        </div>
-        <div class="muted" title="Tip: press / to search"><span class="kbd">/</span></div>
-      </div>
-      <div class="panel viewer">
-        <model-viewer id="chair" src="./assets/Blue_Seating.glb" camera-controls disable-zoom environment-image="neutral" exposure="0.9" style="position:absolute;left:5%;bottom:-10px;width:46%;height:360px"></model-viewer>
-        <model-viewer id="table" src="./assets/medical_examination_table.glb" camera-controls disable-zoom environment-image="neutral" exposure="0.9" style="position:absolute;right:0;bottom:-20px;width:56%;height:360px"></model-viewer>
-      </div>
-      <div class="panel">
-        <input id="q" class="search" placeholder="Search tests… (e.g., shoulder flexion, hip abduction)" />
-        <div class="row" style="margin-top:10px">
-          <button class="pill" data-scope="all" data-active="true">All</button>
-          <button class="pill" data-scope="upper">Upper Body</button>
-          <button class="pill" data-scope="lower">Lower Body</button>
-        </div>
-        <div id="grid" class="list" aria-live="polite"></div>
-      </div>
-    </section>
-
-    <!-- Right column: 3D stage -->
-    <section class="card stage" aria-label="3D stage">
-      <div class="placeholder">3D MODEL STAGE (loads here)</div>
-    </section>
-
-    <!-- Floating details panel -->
-    <aside id="detail" class="card floating hidden" role="dialog" aria-modal="false" aria-labelledby="detailTitle">
-      <div class="header" id="dragHandle">
-        <div class="title" id="detailTitle">Test Details</div>
-        <div class="row" style="gap:8px">
-          <button id="pinBtn" class="pill" title="Pin / Unpin panel">Pin</button>
-          <button id="closeBtn" class="pill" title="Close (Esc)">✕</button>
-        </div>
-      </div>
-      <div id="md" class="panel">
-        <div class="muted">Loading test library…</div>
-        <div class="accordion" id="accordion"></div>
-      </div>
-      <div class="footer">Always test in <strong>mid-range</strong>. Apply resistance gradually (~3s). Correct compensations, then grade.</div>
-    </aside>
-  </main>
-
-  <script>
-    /* ---------- Robust MD loader (Pages path -> raw fallback) ---------- */
-    const OWNER = 'Kingto89';
-    const REPO  = 'ROMetrics';
-    const PAGES_MD = `/${REPO}/mmt/rometrics_mmt_library.md?cache=${Date.now()}`;
-    const RAW_MD   = `https://raw.githubusercontent.com/${OWNER}/${REPO}/main/mmt/rometrics_mmt_library.md?cache=${Date.now()}`;
-    let MD_PATH = PAGES_MD;
-
-    let rawMD = '';
-    let sections = []; // {id, scope, title, html}
-    let selectedId = null;
-
-    async function loadMD(){
-      try {
-        let res = await fetch(MD_PATH);
-        if(!res.ok){
-          MD_PATH = RAW_MD;
-          res = await fetch(MD_PATH);
-          if(!res.ok){
-            showError(`Cannot load <code>${PAGES_MD}</code> or fallback <code>${RAW_MD}</code> (HTTP ${res.status}).`);
-            return;
-          }
-        }
-        rawMD = await res.text();
-      } catch (err) {
-        showError(`Error loading markdown: ${err.message}`);
-        return;
-      }
-
-      const lines = rawMD.split(/\n/);
-      const scopeMap = [];
-      let scope = 'upper';
-      for(let i=0;i<lines.length;i++){
-        const ln = lines[i];
-        if(/^##\s+Upper/i.test(ln)) scope = 'upper';
-        if(/^##\s+Lower/i.test(ln)) scope = 'lower';
-        if(/^###\s+/.test(ln)) scopeMap.push({idx:i, scope});
-      }
-      sections = [];
-      for(let j=0;j<scopeMap.length;j++){
-        const start = scopeMap[j].idx;
-        const end = (j+1 < scopeMap.length ? scopeMap[j+1].idx : lines.length);
-        const block = lines.slice(start, end).join('\n');
-        const m = block.match(/^###\s+(.+)$/m);
-        if(!m) continue;
-        const title = m[1].trim();
-        const id = title.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$|--+/g,'-');
-        const html = marked.parse(block);
-        sections.push({id, scope:scopeMap[j].scope, title, html});
-      }
-      renderGrid();
-    }
-
-    function showError(msg){
-      document.getElementById('md').innerHTML =
-        `<div class="panel">${msg}<br/>Confirm path is exactly <code>/mmt/rometrics_mmt_library.md</code>.</div>`;
-    }
-
-    /* ---------- Grid & selection ---------- */
-    function renderGrid(filter='all', query=''){
-      const grid = document.getElementById('grid');
-      const q = (query||'').trim().toLowerCase();
-      const items = sections.filter(s => (filter==='all'||s.scope===filter) && (!q || s.title.toLowerCase().includes(q)));
-      grid.innerHTML = items.length
-        ? items.map(s => `<button class="item" data-id="${s.id}" ${selectedId===s.id?'data-active="true"':''}><h4>${s.title}</h4><small>${s.scope==='upper'?'Upper body':'Lower body'}</small></button>`).join('')
-        : `<div class="muted" style="padding:8px">No tests found.</div>`;
-    }
-
-    function selectTest(id){
-      selectedId = id;
-      renderGrid(currentScope(), document.getElementById('q').value||'');
-      const sec = sections.find(s => s.id===id);
-      if(!sec) return;
-      const acc = document.getElementById('accordion');
-      acc.innerHTML = sec.html
-        .replaceAll('<h4','<h4 style="margin:6px 0"')
-        .replaceAll('<h3','<h3 style="display:none"')
-        .replaceAll('<ul','<ul style="margin:8px 0 8px 18px"')
-        .replaceAll('<p','<p style="margin:8px 0"');
-      openDetail();
-    }
-
-    function currentScope(){
-      const active = document.querySelector('.pill[data-active="true"]');
-      return active ? active.dataset.scope : 'all';
-    }
-
-    /* ---------- UI wiring ---------- */
-    document.addEventListener('click', (e)=>{
-      const pill = e.target.closest('.pill');
-      if(pill && !pill.id){ // scope buttons
-        document.querySelectorAll('.pill[data-scope]').forEach(b=>b.dataset.active=false);
-        pill.dataset.active = true;
-        renderGrid(pill.dataset.scope, document.getElementById('q').value||'');
-        return;
-      }
-      const item = e.target.closest('.item');
-      if(item){ selectTest(item.dataset.id); return; }
-    });
-    document.getElementById('q').addEventListener('input', (e)=>{
-      renderGrid(currentScope(), e.target.value);
-    });
-    document.addEventListener('keydown', (e)=>{
-      if(e.key === '/' && document.activeElement.tagName !== 'INPUT'){
-        e.preventDefault(); document.getElementById('q').focus();
-      }
-      if(e.key === 'Escape'){ closeDetail(); }
-    });
-
-    /* ---------- Floating panel: open/close/pin ---------- */
-    const panel = document.getElementById('detail');
-    const closeBtn = document.getElementById('closeBtn');
-    const pinBtn = document.getElementById('pinBtn');
-    let pinned = false;
-    function openDetail(){ panel.classList.remove('hidden'); }
-    function closeDetail(){
-      if(!pinned){
-        panel.classList.add('hidden');
-        selectedId = null; // remove highlight on close
-        renderGrid(currentScope(), document.getElementById('q').value||'');
-      }
-    }
-    closeBtn.addEventListener('click', closeDetail);
-    pinBtn.addEventListener('click', ()=>{ pinned = !pinned; pinBtn.textContent = pinned ? 'Pinned' : 'Pin'; });
-
-    /* ---------- Drag to move (header is the handle) ---------- */
-    const handle = document.getElementById('dragHandle');
-    let dragActive = false, startX=0, startY=0, startLeft=0, startTop=0;
-
-    function ensureLeftTop(){
-      // switch from right:20px to explicit left once we first drag/open
-      if(getComputedStyle(panel).right !== 'auto'){
-        const rect = panel.getBoundingClientRect();
-        panel.style.left = rect.left + 'px';
-        panel.style.top  = rect.top  + 'px';
-        panel.style.right = 'auto';
-      }
-    }
-
-    handle.addEventListener('pointerdown', (e)=>{
-      if(e.button!==0) return; // left click only
-      ensureLeftTop();
-      dragActive = true;
-      startX = e.clientX; startY = e.clientY;
-      const rect = panel.getBoundingClientRect();
-      startLeft = rect.left; startTop = rect.top;
-      panel.setPointerCapture(e.pointerId);
-    });
-
-    handle.addEventListener('pointermove', (e)=>{
-      if(!dragActive) return;
-      const dx = e.clientX - startX;
-      const dy = e.clientY - startY;
-      // bounds
-      const pad = 10;
-      const maxLeft = window.innerWidth - panel.offsetWidth - pad;
-      const maxTop  = window.innerHeight - panel.offsetHeight - pad;
-      const newLeft = Math.min(Math.max(startLeft + dx, pad), Math.max(maxLeft, pad));
-      const newTop  = Math.min(Math.max(startTop  + dy, pad), Math.max(maxTop, pad));
-      panel.style.left = newLeft + 'px';
-      panel.style.top  = newTop + 'px';
-    });
-
-    handle.addEventListener('pointerup', (e)=>{
-      dragActive = false;
-      try{ panel.releasePointerCapture(e.pointerId); }catch(_){}
-    });
-    handle.addEventListener('pointercancel', ()=>{ dragActive = false; });
-
-    /* ---------- Startup ---------- */
-    window.addEventListener('error', (e)=>{
-      showError('Runtime error: '+ (e?.message || 'unknown'));
-      openDetail();
-    });
-    loadMD();
-  </script>
+<script>
+const OWNER='Kingto89',REPO='ROMetrics';
+const PAGES_MD=`/${REPO}/mmt/rometrics_mmt_library.md?cache=${Date.now()}`;
+const RAW_MD=`https://raw.githubusercontent.com/${OWNER}/${REPO}/main/mmt/rometrics_mmt_library.md?cache=${Date.now()}`;
+let MD_PATH=PAGES_MD,sections=[],selectedId=null;
+async function loadMD(){
+  try{let r=await fetch(MD_PATH);if(!r.ok){r=await fetch(RAW_MD)};sections=parse(await r.text())}catch(e){showError(e)}
+}
+function parse(t){
+  const lines=t.split(/\n/);const out=[],map=[];let s='upper';
+  for(let i=0;i<lines.length;i++){if(/^##\s+Upper/i.test(lines[i]))s='upper';if(/^##\s+Lower/i.test(lines[i]))s='lower';
+    if(/^###\s+/.test(lines[i]))map.push({idx:i,scope:s})}
+  for(let j=0;j<map.length;j++){const a=map[j].idx,b=(map[j+1]?map[j+1].idx:lines.length),
+  blk=lines.slice(a,b).join('\n');const m=blk.match(/^###\s+(.+)$/m);if(!m)continue;
+  const id=m[1].toLowerCase().replace(/[^a-z0-9]+/g,'-');
+  out.push({id,scope:map[j].scope,title:m[1],html:marked.parse(blk)})}
+  renderGrid();return out;
+}
+function showError(e){document.getElementById('md').innerHTML='<div class="panel">'+e+'</div>'}
+function renderGrid(f='all',q=''){
+  const grid=document.getElementById('grid'),qq=q.toLowerCase();
+  const items=sections.filter(s=>(f==='all'||s.scope===f)&&(!qq||s.title.toLowerCase().includes(qq)));
+  grid.innerHTML=items.map(s=>`<button class="item" data-id="${s.id}" ${selectedId===s.id?'data-active="true"':''}><h4>${s.title}</h4><small>${s.scope==='upper'?'Upper body':'Lower body'}</small></button>`).join('')||'<div class="muted" style="padding:8px">No tests.</div>';
+}
+function selectTest(id){
+  selectedId=id;renderGrid(currScope(),document.getElementById('q').value||'');
+  const s=sections.find(x=>x.id===id);if(!s)return;
+  document.getElementById('accordion').innerHTML=s.html;openDetail();
+}
+function currScope(){const a=document.querySelector('.pill[data-active="true"]');return a?a.dataset.scope:'all'}
+document.addEventListener('click',e=>{
+  const p=e.target.closest('.pill');if(p&&!p.id){document.querySelectorAll('.pill[data-scope]').forEach(b=>b.dataset.active=false);
+  p.dataset.active=true;renderGrid(p.dataset.scope,document.getElementById('q').value||'');return;}
+  const it=e.target.closest('.item');if(it)selectTest(it.dataset.id);
+});
+document.getElementById('q').oninput=e=>renderGrid(currScope(),e.target.value);
+document.addEventListener('keydown',e=>{if(e.key==='/'&&document.activeElement.tagName!=='INPUT'){e.preventDefault();q.focus()}if(e.key==='Escape')closeDetail()});
+const panel=document.getElementById('detail'),closeBtn=document.getElementById('closeBtn'),pinBtn=document.getElementById('pinBtn');let pinned=false;
+function openDetail(){panel.classList.remove('hidden')}
+function closeDetail(){if(!pinned){panel.classList.add('hidden');selectedId=null;renderGrid(currScope(),document.getElementById('q').value||'')}}
+closeBtn.onclick=closeDetail;pinBtn.onclick=()=>{pinned=!pinned;pinBtn.textContent=pinned?'Pinned':'Pin'}
+/* drag */
+const h=document.getElementById('dragHandle');let drag=false,sx,sy,sl,st;
+h.onpointerdown=e=>{if(e.button!==0)return;ensureLeftTop();drag=true;sx=e.clientX;sy=e.clientY;
+const r=panel.getBoundingClientRect();sl=r.left;st=r.top;panel.setPointerCapture(e.pointerId)}
+h.onpointermove=e=>{if(!drag)return;const dx=e.clientX-sx,dy=e.clientY-sy;
+panel.style.left=Math.max(10,sl+dx)+'px';panel.style.top=Math.max(10,st+dy)+'px';}
+h.onpointerup=e=>{drag=false;panel.releasePointerCapture(e.pointerId)}
+function ensureLeftTop(){if(getComputedStyle(panel).right!=='auto'){const r=panel.getBoundingClientRect();
+panel.style.left=r.left+'px';panel.style.top=r.top+'px';panel.style.right='auto'}}
+loadMD();
+</script>
 </body>
 </html>
