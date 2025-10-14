@@ -40,7 +40,9 @@
     .accordion summary{cursor:pointer;font-weight:700}
     .footer{padding:12px 18px;color:white;opacity:.9;text-align:center;font-size:12px}
     .kbd{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:#111827;color:#fff;padding:2px 6px;border-radius:6px;font-size:12px}
-  </style>
+  .floating{position:fixed;right:20px;top:20px;width:min(520px,92vw);max-height:85vh;overflow:auto;z-index:50}
+    .hidden{display:none}
+    </style>
   <script type="module" src="https://unpkg.com/@google/model-viewer@3.5.0/dist/model-viewer.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
@@ -49,38 +51,20 @@
   <div class="overlay" aria-hidden="true"></div>
 
   <main class="wrap">
-    <section class="card">
+    <aside id="detail" class="card floating hidden" role="dialog" aria-modal="false" aria-labelledby="detailTitle">
       <div class="header">
-        <div>
-          <div class="title">ROMetrics — MMT Lab</div>
-          <div class="muted">Interactive manual muscle testing space</div>
+        <div class="title" id="detailTitle">Test Details</div>
+        <div class="row" style="gap:8px">
+          <button id="pinBtn" class="pill" title="Pin / Unpin panel">Pin</button>
+          <button id="closeBtn" class="pill" title="Close (Esc)">✕</button>
         </div>
-        <div class="muted"><span class="kbd">/</span></div>
       </div>
-      <div class="panel viewer">
-        <model-viewer id="chair" src="./assets/Blue_Seating.glb" camera-controls disable-zoom environment-image="neutral" exposure="0.9" style="position:absolute;left:5%;bottom:-10px;width:46%;height:360px"></model-viewer>
-        <model-viewer id="table" src="./assets/medical_examination_table.glb" camera-controls disable-zoom environment-image="neutral" exposure="0.9" style="position:absolute;right:0;bottom:-20px;width:56%;height:360px"></model-viewer>
-        <div class="caption">Chair + Exam Table props (static preview)</div>
-      </div>
-      <div class="panel">
-        <input id="q" class="search" placeholder="Search tests… (e.g., shoulder flexion, hip abduction)" />
-        <div class="row" style="margin-top:10px">
-          <button class="pill" data-scope="all" data-active="true">All</button>
-          <button class="pill" data-scope="upper">Upper Body</button>
-          <button class="pill" data-scope="lower">Lower Body</button>
-        </div>
-        <div id="grid" class="list" aria-live="polite"></div>
-      </div>
-    </section>
-
-    <section class="card">
-      <div class="header"><div class="title">Test Details</div><div class="muted">From <strong>rometrics_mmt_library.md</strong></div></div>
       <div id="md" class="content panel">
         <div class="muted">Loading test library…</div>
         <div class="accordion" id="accordion"></div>
       </div>
       <div class="footer">Always test in <strong>mid-range</strong>. Apply resistance gradually (~3s). Correct compensations, then grade.</div>
-    </section>
+    </aside>
   </main>
 
   <script>
@@ -167,6 +151,23 @@
     document.addEventListener('keydown',e=>{
       if(e.key==='/'&&document.activeElement.tagName!=='INPUT'){e.preventDefault();document.getElementById('q').focus();}
     });
+
+    // Floating panel controls
+    const panel = document.getElementById('detail');
+    const closeBtn = document.getElementById('closeBtn');
+    const pinBtn = document.getElementById('pinBtn');
+    let pinned = false;
+
+    function openDetail(){ panel.classList.remove('hidden'); }
+    function closeDetail(){ if(!pinned){ panel.classList.add('hidden'); } }
+
+    closeBtn?.addEventListener('click', closeDetail);
+    pinBtn?.addEventListener('click', ()=>{ pinned = !pinned; pinBtn.textContent = pinned? 'Pinned' : 'Pin'; });
+    document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeDetail(); });
+
+    // When a test is selected, auto-open the floating panel
+    const _selectTest = selectTest;
+    selectTest = function(id){ _selectTest(id); openDetail(); };
 
     loadMD();
   </script>
