@@ -44,7 +44,7 @@ optgroup{color:#9fb0c9;font-style:normal}
 </head>
 <body>
   <div class="panel" id="panel">
-    <div class="dragbar" id="dragbar">🧭 Joint Lab <span class="hint">drag me</span></div>
+    <div class="dragbar" id="dragbar">🧭 Joint Lab</div>
     <div class="content">
       <div class="row">
         <button id="reload" class="mini">Reload Model</button>
@@ -78,6 +78,22 @@ optgroup{color:#9fb0c9;font-style:normal}
       <div class="row">
         <button id="zeroAction" class="mini">Zero Motion</button>
       </div>
+      <div class="row">
+        <button id="testAction" class="mini">Test</button>
+        <div style="display:flex;gap:8px;align-items:center;flex:1">
+          <label style="margin:0;min-width:60px">Force</label>
+          <input type="range" id="forceLvl" min="0" max="5" step="1" value="0" style="flex:1">
+          <span id="forceVal" style="width:2ch;text-align:right">0</span>
+        </div>
+      </div>
+      <div class="row" id="rangeRow" style="align-items:center;gap:10px">
+        <label style="margin:0;min-width:140px">Range Gauge</label>
+        <div id="rangeGauge" style="height:14px;border-radius:8px;flex:1;background:linear-gradient(90deg,#16a34a 0 60%, #f59e0b 60% 85%, #ef4444 85% 100%); position:relative">
+          <div id="rangeMarker" style="position:absolute;top:-4px;width:2px;height:22px;background:#e2e8f0;left:50%"></div>
+        </div>
+        <label style="display:flex;align-items:center;gap:6px;margin:0"><input type="checkbox" id="lockRange" checked> Lock to normal</label>
+      </div>
+
 
       <details>
         <summary>Bone (Advanced)</summary>
@@ -99,7 +115,7 @@ optgroup{color:#9fb0c9;font-style:normal}
       </details>
 
       <details>
-        <summary>Model (no rig required)</summary>
+        <summary>Model</summary>
         <div class="row">
           <div style="flex:1">
             <label>Model X (m)</label>
@@ -687,6 +703,60 @@ optgroup{color:#9fb0c9;font-style:normal}
   };
   document.getElementById("romClose").onclick = ()=> romModal.classList.remove('on');
 
+
+  // Update force label
+  forceLvl.addEventListener("input", ()=>{ forceVal.textContent = String(forceLvl.value); });
+
+  // Expand or lock slider range
+  function applyRangeLock(){
+    const cfg = cfgFromKey(actionSel.value); if (!cfg) return;
+    if (lockRange.checked){
+      actionDeg.min = String(cfg.min); actionDeg.max = String(cfg.max);
+      actionDeg.value = String(clamp(parseFloat(actionDeg.value)||0, cfg.min, cfg.max));
+    }else{
+      actionDeg.min = "-180"; actionDeg.max = "180";
+    }
+    updateGauge();
+  }
+  lockRange.addEventListener("change", applyRangeLock);
+
+  actionDeg.addEventListener("input", updateGauge);
+  actionSel.addEventListener("change", ()=>{ applyRangeLock(); updateGauge(); });
+
+  function midRangeFor(cfg){
+    // Prefer positive direction mid if available; else average of bounds
+    if (cfg.max > 0) return Math.round(cfg.max/2);
+    if (cfg.min < 0) return Math.round(cfg.min/2);
+    return 0;
+  }
+
+  function testPrereqs(key){
+    // For forearm pronation/supination, set elbow flex to ~90° first
+    if (key === 'fa_ps_l'){
+      const ecfg = UPPER.find(x=>x.key==='el_fe_l'); if (ecfg) applyPairAngle('el_fe_l', ecfg, -90); // elbow flexion often negative in our min/max
+    }
+    if (key === 'fa_ps_r'){
+      const ecfg = UPPER.find(x=>x.key==='el_fe_r'); if (ecfg) applyPairAngle('el_fe_r', ecfg, -90);
+    }
+  }
+
+  testAction.addEventListener("click", ()=>{
+    const key = actionSel.value; const cfg = cfgFromKey(key); if (!cfg) return;
+    testPrereqs(key);
+    const target = midRangeFor(cfg);
+    actionDeg.value = String(target);
+    applyPairAngle(key, cfg, target);
+    updateGauge();
+    log(`Test: ${cfg.pair} at ${target}° (Force ${forceLvl.value})`);
+  });
+
+  function updateGauge(){
+    const v = parseFloat(actionDeg.value)||0;
+    // just reposition the marker; background bands are static green→orange→red
+    const pct = (Math.max(-180, Math.min(180, v)) + 180) / 360 * 100;
+    rangeMarker.style.left = pct + "%";
+  }
+
   /* ===== Load model ===== */
   function clearModel(){
     if (model) scene.remove(model);
@@ -746,3 +816,4 @@ optgroup{color:#9fb0c9;font-style:normal}
   </script>
 </body>
 </html>
+
