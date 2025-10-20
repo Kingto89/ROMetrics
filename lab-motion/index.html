@@ -85,10 +85,19 @@ optgroup{color:#9fb0c9;font-style:normal}
       <div class="row">
         <button id="zeroAction" class="mini">Zero Motion</button>
       </div>
+      
+      <div class="row" id="handsRow" style="align-items:center;gap:8px">
+        <label style="margin:0;min-width:140px">Hand Placement</label>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <span>Place the <b>Stabilize</b> and <b>Force</b> markers on the model, then click Test.</span>
+          <span id="handStatus" style="font-weight:600"></span>
+        </div>
+      </div>
+
       <div class="row">
         <button id="testAction" class="mini">Test</button>
         <div style="display:flex;gap:8px;align-items:center;flex:1">
-          <label style="margin:0;min-width:60px">Force</label>
+          <label style="margin:0;min-width:60px;font-weight:600">Force</label>
           <input type="range" id="forceLvl" min="0" max="5" step="1" value="0" style="flex:1">
           <span id="forceVal" style="width:2ch;text-align:right">0</span>
         </div>
@@ -837,6 +846,19 @@ optgroup{color:#9fb0c9;font-style:normal}
 
 
   // ===== Playbook-driven Test Engine =====
+
+  async function runNeutral(){
+    const zeros = ['gh_fe_l','gh_fe_r','el_fe_l','el_fe_r','fa_ps_l','fa_ps_r','cv_fe','cv_lat',
+                   'hi_fe_l','hi_fe_r','kn_fe_l','kn_fe_r','an_df_l','an_df_r','sp_flex'];
+    for (const key of zeros){
+      const cfg = cfgFromKey(key); if (!cfg) continue;
+      const cur = getCurrentAngle(key) || 0;
+      if (Math.abs(cur) > 0.5){
+        await tweenAngle(key, cfg, cur, 0, 250);
+      }
+    }
+  }
+
   function getPlaybook(){ 
     try{ return JSON.parse(document.getElementById('playbook').textContent); } catch(e){ console.warn(e); return null; }
   }
@@ -868,6 +890,93 @@ optgroup{color:#9fb0c9;font-style:normal}
     const name = (direction > 0 ? pair[1] : pair[0]) + side;
     return name;
   }
+
+
+  // ---- Hand markers (Stabilize & Force) ----
+  let handStab, handForce;
+  const raycaster = new THREE.Raycaster();
+  const mouse = new THREE.Vector2();
+  let dragging = null;
+
+  function makeMarker(labelText){
+    const group = new THREE.Group();
+    const geom = new THREE.SphereGeometry(0.02, 16, 16);
+    const mat = new THREE.MeshStandardMaterial({color: 0x999999, emissive:0x0, metalness:0.1, roughness:0.6});
+    const ball = new THREE.Mesh(geom, mat);
+    group.add(ball);
+    // label as Sprite
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = 256; canvas.height = 64;
+    ctx.font = '28px sans-serif'; ctx.fillStyle = '#111'; ctx.fillRect(0,0,256,64);
+    ctx.fillStyle = '#fff'; ctx.textBaseline='middle'; ctx.fillText(labelText, 12, 32);
+    const tex = new THREE.CanvasTexture(canvas);
+    const spriteMat = new THREE.SpriteMaterial({map: tex, depthTest:false});
+    const sprite = new THREE.Sprite(spriteMat);
+    sprite.scale.set(0.32, 0.08, 1);
+    sprite.position.set(0, 0.08, 0);
+    group.add(sprite);
+    group.userData.label = labelText;
+    group.userData.ball = ball;
+    group.visible = true;
+    return group;
+  }
+
+  function ensureMarkers(){
+    if (!model) return;
+    if (!handStab){ handStab = makeMarker('Stabilize'); scene.add(handStab); handStab.position.set(0.1, 1.2, 0.1); }
+    if (!handForce){ handForce = makeMarker('Force'); scene.add(handForce); handForce.position.set(0.3, 1.1, 0.2); }
+  }
+
+  function onPointerDown(e){
+    const rect = renderer.domElement.getBoundingClientRect();
+    mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+    const objs = [];
+    if (handStab) objs.push(handStab.userData.ball);
+    if (handForce) objs.push(handForce.userData.ball);
+    const hits = raycaster.intersectObjects(objs, true);
+    if (hits.length > 0){
+      dragging = (handStab && hits[0].object === handStab.userData.ball) ? handStab : handForce;
+    }
+  }
+  function onPointerMove(e){
+    if (!dragging) return;
+    const rect = renderer.domElement.getBoundingClientRect();
+    mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+    const plane = new THREE.Plane();
+    plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()).clone().negate(), dragging.position.clone());
+    const pos = new THREE.Vector3();
+    raycaster.ray.intersectPlane(plane, pos);
+    if (pos) dragging.position.copy(pos);
+  }
+  function onPointerUp(){ dragging = null; }
+
+  renderer.domElement.addEventListener('pointerdown', onPointerDown);
+  renderer.domElement.addEventListener('pointermove', onPointerMove);
+  window.addEventListener('pointerup', onPointerUp);
+
+  function validateHandsFor(name){
+    const hs = handStab ? handStab.position : null;
+    const hf = handForce ? handForce.position : null;
+    if (!hs || !hf) return {ok:false, msg:'Place both markers'};
+
+    let okStab=false, okForce=false;
+    if (name.startsWith('gh_flex') || name.startsWith('gh_ext')){
+      if (Math.abs(hs.x) < 0.25 && hs.y > 1.0) okStab=true;
+      if ((name.endsWith('_r') && hf.x > 0.2) || (name.endsWith('_l') && hf.x < -0.2)) okForce=true;
+    }
+    if (name.startsWith('cv_')){
+      if (Math.abs(hs.x) < 0.25 && hs.y > 0.9 && hs.y < 1.3) okStab=true;
+      if (hf.y > 1.5) okForce=true;
+    }
+    const pass = okStab && okForce;
+    return {ok:pass, msg: pass ? '✔ Hand positions OK' : '✖ Place hands correctly'};
+  }
+  const handStatus = document.getElementById('handStatus');
 
   // tween helper
   function tweenAngle(key, cfg, fromDeg, toDeg, ms){
