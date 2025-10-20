@@ -44,7 +44,7 @@ optgroup{color:#9fb0c9;font-style:normal}
 </head>
 <body>
   <div class="panel" id="panel">
-    <div class="dragbar" id="dragbar">🧭 Joint Lab</div>
+    <div class="dragbar" id="dragbar">🧭 Joint Lab <span class="hint">drag me</span></div>
     <div class="content">
       <div class="row">
         <button id="reload" class="mini">Reload Model</button>
@@ -75,51 +75,11 @@ optgroup{color:#9fb0c9;font-style:normal}
 
       <label><span id="pairLabel">Angle (°)</span></label>
       <input type="range" id="actionDeg" min="-90" max="150" step="1" value="0">
-      
-      <div class="row" id="dirRow" style="align-items:center;gap:12px">
-        <label style="margin:0;min-width:140px">Direction</label>
-        <label><input type="radio" name="dir" value="pos" checked> Flexion/Abduction/External</label>
-        <label><input type="radio" name="dir" value="neg"> Extension/Adduction/Internal</label>
-      </div>
-
+      <div class="row" style="align-items:center;gap:12px"><label style="margin:0;min-width:140px">Hands (student)</label><label><input type="checkbox" id="toggleHands" checked> Show</label></div>
+      <div class="row"><span id="handStatus" style="font-weight:600"></span></div>
       <div class="row">
         <button id="zeroAction" class="mini">Zero Motion</button>
       </div>
-      
-      <div class="row" id="handsRow" style="align-items:center;gap:8px">
-        <label style="margin:0;min-width:140px">Hand Placement</label>
-        <div style="display:flex;gap:12px;flex-wrap:wrap">
-          <span>Place the <b>Stabilize</b> and <b>Force</b> markers on the model, then click Test.</span>
-          <span id="handStatus" style="font-weight:600"></span>
-        </div>
-      </div>
-
-      <div class="row">
-        <button id="testAction" class="mini">Test</button>
-        <div style="display:flex;gap:8px;align-items:center;flex:1">
-          <label style="margin:0;min-width:60px;font-weight:600">Force</label>
-          <input type="range" id="forceLvl" min="0" max="5" step="1" value="0" style="flex:1">
-          <span id="forceVal" style="width:2ch;text-align:right">0</span>
-        </div>
-      </div>
-      
-      <div class="row" id="poseRow" style="align-items:center;gap:8px">
-        <label style="margin:0;min-width:140px">Posture</label>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button id="pose_supine" class="mini">Supine</button>
-          <button id="pose_prone" class="mini">Prone</button>
-          <button id="pose_sitting" class="mini">Sitting</button>
-        </div>
-      </div>
-
-      <div class="row" id="rangeRow" style="align-items:center;gap:10px">
-        <label style="margin:0;min-width:140px">Range Gauge</label>
-        <div id="rangeGauge" style="height:14px;border-radius:8px;flex:1;background:linear-gradient(90deg,#16a34a 0 60%, #f59e0b 60% 85%, #ef4444 85% 100%); position:relative">
-          <div id="rangeMarker" style="position:absolute;top:-4px;width:2px;height:22px;background:#e2e8f0;left:50%"></div>
-        </div>
-        <label style="display:flex;align-items:center;gap:6px;margin:0"><input type="checkbox" id="lockRange" checked> Lock to normal</label>
-      </div>
-
 
       <details>
         <summary>Bone (Advanced)</summary>
@@ -141,7 +101,7 @@ optgroup{color:#9fb0c9;font-style:normal}
       </details>
 
       <details>
-        <summary>Model</summary>
+        <summary>Model (no rig required)</summary>
         <div class="row">
           <div style="flex:1">
             <label>Model X (m)</label>
@@ -703,6 +663,7 @@ optgroup{color:#9fb0c9;font-style:normal}
     if (!model) return;
     model.position.set(parseFloat(mx.value), parseFloat(my.value), parseFloat(mz.value));
     model.scale.setScalar(parseInt(ms.value,10)/100);
+    model.scale.setScalar(0.60);
     model.rotation.y = THREE.MathUtils.degToRad(parseFloat(myaw.value));
   }));
   zeroBone.onclick = zeroSelectedBone;
@@ -730,334 +691,75 @@ optgroup{color:#9fb0c9;font-style:normal}
   document.getElementById("romClose").onclick = ()=> romModal.classList.remove('on');
 
 
+  /* ===== Student Floating Hands (MMT placements) ===== */
+  let handStab = null, handForce = null;
+  let handsVisible = true;
+  const rayHF = new THREE.Raycaster();
+  const mouseHF = new THREE.Vector2();
+  let draggingHF = null;
 
-  // ----- Direction radio controls -----
-  const dirRow = document.getElementById('dirRow');
-  const dirInputs = dirRow ? dirRow.querySelectorAll('input[name="dir"]') : [];
-
-  function currentSign(){
-    let sign = 1;
-    dirInputs.forEach(r => { if (r.checked) sign = (r.value==='neg') ? -1 : 1; });
-    return sign;
+  function makeHand(label){
+    const g = new THREE.Group();
+    const pad = new THREE.Mesh(new THREE.CircleGeometry(0.055, 32),
+      new THREE.MeshStandardMaterial({color:0xffc08a, transparent:true, opacity:0.78, roughness:0.9}));
+    pad.rotateX(-Math.PI/2); g.add(pad);
+    const c = document.createElement('canvas'); c.width=256; c.height=96;
+    const ctx = c.getContext('2d'); ctx.fillStyle='rgba(0,0,0,0.8)'; ctx.fillRect(0,0,256,96);
+    ctx.fillStyle='#fff'; ctx.font='28px sans-serif'; ctx.textBaseline='middle';
+    ctx.fillText(label+' hand', 12, 48);
+    const tex = new THREE.CanvasTexture(c);
+    const spr = new THREE.Sprite(new THREE.SpriteMaterial({map:tex, depthTest:false}));
+    spr.scale.set(0.40,0.16,1); spr.position.set(0,0.10,0); g.add(spr);
+    g.userData.pad = pad; g.name = label+'_hand'; return g;
   }
-  dirInputs.forEach(r => r.addEventListener('change', () => {
-    // Snap slider to same magnitude but new sign, clamped to allowed range
-    const cfg = cfgFromKey(actionSel.value); if (!cfg) return;
-    const mag = Math.abs(parseFloat(actionDeg.value)||0);
-    let target = mag * currentSign();
-    if (lockRange.checked){
-      target = clamp(target, cfg.min, cfg.max);
-    } else {
-      target = clamp(target, -180, 180);
-    }
-    actionDeg.value = String(target);
-    applyPairAngle(actionSel.value, cfg, target);
-    updateGauge();
-  }));
-
-  // Hook Test button so it uses midrange toward the selected direction only.
-  if (typeof testAction !== 'undefined'){
-    testAction.replaceWith(testAction.cloneNode(true));
+  function ensureHands(){
+    if (!scene) return;
+    if (!handStab){ handStab = makeHand('Stabilize'); scene.add(handStab); handStab.position.set(0.0,1.10,0.15); }
+    if (!handForce){ handForce = makeHand('Force');     scene.add(handForce); handForce.position.set(0.25,1.00,0.20); }
+    handStab.visible = handsVisible; handForce.visible = handsVisible;
   }
-
-  // Update force label
-  forceLvl.addEventListener("input", ()=>{ forceVal.textContent = String(forceLvl.value); });
-
-  // Expand or lock slider range
-  
-  // ----- Postures -----
-  function setPose(name){
-    // Utility to move common joints if they exist
-    const tryApply = (key, deg)=>{ const cfg = cfgFromKey(key); if (cfg) applyPairAngle(key, cfg, deg); }
-
-    if (name==='supine'){
-      // Neutral joints, lying face up: hips/knees ~0, spine neutral
-      ['hi_fe_l','hi_fe_r','kn_fe_l','kn_fe_r','sp_flex','an_df_l','an_df_r'].forEach(k=>tryApply(k, 0));
-    }
-    if (name==='prone'){
-      // Face down; keep neutrals (this app is joint-only), small hip extension is OK
-      tryApply('hi_fe_l', -10); tryApply('hi_fe_r', -10);
-      ['kn_fe_l','kn_fe_r','sp_flex','an_df_l','an_df_r'].forEach(k=>tryApply(k, 0));
-    }
-    if (name==='sitting'){
-      // 90-90-90 rule with slight lumbar flexion
-      tryApply('hi_fe_l', 90); tryApply('hi_fe_r', 90);
-      tryApply('kn_fe_l', 90); tryApply('kn_fe_r', 90);
-      tryApply('an_df_l', 0);  tryApply('an_df_r', 0);
-      tryApply('sp_flex', 10);
-    }
-  }
-
-  const poseSup = document.getElementById('pose_supine');
-  const posePro = document.getElementById('pose_prone');
-  const poseSit = document.getElementById('pose_sitting');
-  if (poseSup) poseSup.addEventListener('click', ()=>setPose('supine'));
-  if (posePro) posePro.addEventListener('click', ()=>setPose('prone'));
-  if (poseSit) poseSit.addEventListener('click', ()=>setPose('sitting'));
-
-  function applyRangeLock(){
-    const cfg = cfgFromKey(actionSel.value); if (!cfg) return;
-    if (lockRange.checked){
-      actionDeg.min = String(cfg.min); actionDeg.max = String(cfg.max);
-      actionDeg.value = String(clamp(parseFloat(actionDeg.value)||0, cfg.min, cfg.max));
-    }else{
-      actionDeg.min = "-180"; actionDeg.max = "180";
-    }
-    updateGauge();
-  }
-  lockRange.addEventListener("change", applyRangeLock);
-
-  actionDeg.addEventListener("input", updateGauge);
-  actionSel.addEventListener("change", ()=>{ applyRangeLock(); updateGauge(); });
-
-  function midRangeFor(cfg){
-    // Prefer positive direction mid if available; else average of bounds
-    if (cfg.max > 0) return Math.round(cfg.max/2);
-    if (cfg.min < 0) return Math.round(cfg.min/2);
-    return 0;
-  }
-
-  function testPrereqs(key){
-    // For forearm pronation/supination, set elbow flex to ~90° first
-    if (key === 'fa_ps_l'){
-      const ecfg = UPPER.find(x=>x.key==='el_fe_l'); if (ecfg) applyPairAngle('el_fe_l', ecfg, -90); // elbow flexion often negative in our min/max
-    }
-    if (key === 'fa_ps_r'){
-      const ecfg = UPPER.find(x=>x.key==='el_fe_r'); if (ecfg) applyPairAngle('el_fe_r', ecfg, -90);
-    }
-  }
-
-  testAction.addEventListener("click", ()=>{
-    const key = actionSel.value; const cfg = cfgFromKey(key); if (!cfg) return;
-    testPrereqs(key);
-    const target = Math.abs(midRangeFor(cfg)) * currentSign();
-    actionDeg.value = String(target);
-    applyPairAngle(key, cfg, target);
-    updateGauge();
-    log(`Test: ${cfg.pair} at ${target}° (Force ${forceLvl.value})`);
-  });
-
-  function updateGauge(){
-    const v = parseFloat(actionDeg.value)||0;
-    // just reposition the marker; background bands are static green→orange→red
-    const pct = (Math.max(-180, Math.min(180, v)) + 180) / 360 * 100;
-    rangeMarker.style.left = pct + "%";
-  }
-
-
-  // ===== Playbook-driven Test Engine =====
-
-  async function runNeutral(){
-    const zeros = ['gh_fe_l','gh_fe_r','el_fe_l','el_fe_r','fa_ps_l','fa_ps_r','cv_fe','cv_lat',
-                   'hi_fe_l','hi_fe_r','kn_fe_l','kn_fe_r','an_df_l','an_df_r','sp_flex'];
-    for (const key of zeros){
-      const cfg = cfgFromKey(key); if (!cfg) continue;
-      const cur = getCurrentAngle(key) || 0;
-      if (Math.abs(cur) > 0.5){
-        await tweenAngle(key, cfg, cur, 0, 250);
-      }
-    }
-  }
-
-  function getPlaybook(){ 
-    try{ return JSON.parse(document.getElementById('playbook').textContent); } catch(e){ console.warn(e); return null; }
-  }
-  const PB = getPlaybook();
-
-  // utility to mirror keys *_l <-> *_r if needed
-  function mirrorKey(key){
-    if (key.endsWith('_l')) return key.replace(/_l$/, '_r');
-    if (key.endsWith('_r')) return key.replace(/_r$/, '_l');
-    return key;
-  }
-
-  function resolveTestName(key, direction){
-    // Map UI action key + direction to a test name in PB.tests
-    // Example: gh_fe_l + pos -> gh_flex_l ; gh_fe_l + neg -> gh_ext_l
-    // We'll define a mapping for common labels:
-    const map = {
-      'gh_fe': ['gh_ext','gh_flex'],     // neg, pos
-      'el_fe': ['el_ext','el_flex'],
-      'fa_ps': ['fa_sup','fa_pro'],
-      'cv_fe': ['cv_ext','cv_flex'],
-      'cv_lat':['cv_lat_r','cv_lat_l'],
-      'an_df': ['an_pf','an_df']
-    };
-    const base = key.replace(/_(l|r)$/, '');
-    const side = key.endsWith('_r') ? '_r' : (key.endsWith('_l') ? '_l' : '');
-    const pair = map[base];
-    if (!pair) return null;
-    const name = (direction > 0 ? pair[1] : pair[0]) + side;
-    return name;
-  }
-
-
-  // ---- Hand markers (Stabilize & Force) ----
-  let handStab, handForce;
-  const raycaster = new THREE.Raycaster();
-  const mouse = new THREE.Vector2();
-  let dragging = null;
-
-  function makeMarker(labelText){
-    const group = new THREE.Group();
-    const geom = new THREE.SphereGeometry(0.02, 16, 16);
-    const mat = new THREE.MeshStandardMaterial({color: 0x999999, emissive:0x0, metalness:0.1, roughness:0.6});
-    const ball = new THREE.Mesh(geom, mat);
-    group.add(ball);
-    // label as Sprite
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    canvas.width = 256; canvas.height = 64;
-    ctx.font = '28px sans-serif'; ctx.fillStyle = '#111'; ctx.fillRect(0,0,256,64);
-    ctx.fillStyle = '#fff'; ctx.textBaseline='middle'; ctx.fillText(labelText, 12, 32);
-    const tex = new THREE.CanvasTexture(canvas);
-    const spriteMat = new THREE.SpriteMaterial({map: tex, depthTest:false});
-    const sprite = new THREE.Sprite(spriteMat);
-    sprite.scale.set(0.32, 0.08, 1);
-    sprite.position.set(0, 0.08, 0);
-    group.add(sprite);
-    group.userData.label = labelText;
-    group.userData.ball = ball;
-    group.visible = true;
-    return group;
-  }
-
-  function ensureMarkers(){
-    if (!model) return;
-    if (!handStab){ handStab = makeMarker('Stabilize'); scene.add(handStab); handStab.position.set(0.1, 1.2, 0.1); }
-    if (!handForce){ handForce = makeMarker('Force'); scene.add(handForce); handForce.position.set(0.3, 1.1, 0.2); }
-  }
-
-  function onPointerDown(e){
+  function setHandsVisible(v){ handsVisible = !!v; ensureHands(); }
+  function pickSurface(e){
     const rect = renderer.domElement.getBoundingClientRect();
-    mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-    mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-    raycaster.setFromCamera(mouse, camera);
-    const objs = [];
-    if (handStab) objs.push(handStab.userData.ball);
-    if (handForce) objs.push(handForce.userData.ball);
-    const hits = raycaster.intersectObjects(objs, true);
-    if (hits.length > 0){
-      dragging = (handStab && hits[0].object === handStab.userData.ball) ? handStab : handForce;
-    }
+    mouseHF.x = ((e.clientX-rect.left)/rect.width)*2-1;
+    mouseHF.y = -((e.clientY-rect.top)/rect.height)*2+1;
+    rayHF.setFromCamera(mouseHF, camera);
+    const meshes = []; if (model) model.traverse(o=>{ if (o.isMesh) meshes.push(o); });
+    return rayHF.intersectObjects(meshes, true)[0] || null;
   }
-  function onPointerMove(e){
-    if (!dragging) return;
-    const rect = renderer.domElement.getBoundingClientRect();
-    mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-    mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-    raycaster.setFromCamera(mouse, camera);
-    const plane = new THREE.Plane();
-    plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()).clone().negate(), dragging.position.clone());
-    const pos = new THREE.Vector3();
-    raycaster.ray.intersectPlane(plane, pos);
-    if (pos) dragging.position.copy(pos);
+  function alignToNormal(group, normal){
+    const up = new THREE.Vector3(0,1,0);
+    const q = new THREE.Quaternion().setFromUnitVectors(up, normal.clone().normalize());
+    group.quaternion.copy(q);
   }
-  function onPointerUp(){ dragging = null; }
-
-  renderer.domElement.addEventListener('pointerdown', onPointerDown);
-  renderer.domElement.addEventListener('pointermove', onPointerMove);
-  window.addEventListener('pointerup', onPointerUp);
-
-  function validateHandsFor(name){
-    const hs = handStab ? handStab.position : null;
-    const hf = handForce ? handForce.position : null;
-    if (!hs || !hf) return {ok:false, msg:'Place both markers'};
-
-    let okStab=false, okForce=false;
-    if (name.startsWith('gh_flex') || name.startsWith('gh_ext')){
-      if (Math.abs(hs.x) < 0.25 && hs.y > 1.0) okStab=true;
-      if ((name.endsWith('_r') && hf.x > 0.2) || (name.endsWith('_l') && hf.x < -0.2)) okForce=true;
-    }
-    if (name.startsWith('cv_')){
-      if (Math.abs(hs.x) < 0.25 && hs.y > 0.9 && hs.y < 1.3) okStab=true;
-      if (hf.y > 1.5) okForce=true;
-    }
-    const pass = okStab && okForce;
-    return {ok:pass, msg: pass ? '✔ Hand positions OK' : '✖ Place hands correctly'};
+  function onHFDown(e){
+    if (!handsVisible) return;
+    ensureHands();
+    const hit = pickSurface(e); if (!hit) return;
+    const pSt = handStab ? handStab.position.clone().project(camera) : null;
+    const pFo = handForce ? handForce.position.clone().project(camera) : null;
+    const dxSt = pSt ? ((pSt.x-mouseHF.x)**2 + (pSt.y-mouseHF.y)**2) : 999;
+    const dxFo = pFo ? ((pFo.x-mouseHF.x)**2 + (pFo.y-mouseHF.y)**2) : 999;
+    draggingHF = dxSt < dxFo ? handStab : handForce;
+    draggingHF.position.copy(hit.point);
+    if (hit.face && hit.face.normal) alignToNormal(draggingHF, hit.face.normal);
   }
-  const handStatus = document.getElementById('handStatus');
-
-  // tween helper
-  function tweenAngle(key, cfg, fromDeg, toDeg, ms){
-    return new Promise(res=>{
-      const start = performance.now();
-      function step(now){
-        const t = Math.min(1, (now-start)/ms);
-        const cur = fromDeg + (toDeg - fromDeg) * t;
-        applyPairAngle(key, cfg, cur);
-        if (t < 1) requestAnimationFrame(step); else res();
-      }
-      requestAnimationFrame(step);
-    });
+  function onHFMove(e){
+    if (!draggingHF) return;
+    const hit = pickSurface(e); if (!hit) return;
+    draggingHF.position.copy(hit.point);
+    if (hit.face && hit.face.normal) alignToNormal(draggingHF, hit.face.normal);
   }
-
-  async function runPosture(name){
-    if (!PB || !PB.postures || !PB.postures[name]) return;
-    for (const step of PB.postures[name]){
-      const cfg = cfgFromKey(step.key); if (!cfg) continue;
-      const current = getCurrentAngle(step.key) || 0;
-      await tweenAngle(step.key, cfg, current, step.deg, 300);
-    }
+  function onHFUp(){ draggingHF = null; }
+  function bindHF(){
+    const el = renderer && renderer.domElement; if (!el || el.__handsBound) return;
+    el.addEventListener('pointerdown', onHFDown);
+    el.addEventListener('pointermove', onHFMove);
+    window.addEventListener('pointerup', onHFUp);
+    el.__handsBound = true;
   }
-
-  async function runTestByName(name){
-    if (!PB) return;
-    // handle inheritance and mirroring
-    let spec = PB.tests[name];
-    if (!spec){
-      console.warn('No test spec:', name);
-      return;
-    }
-    if (spec.inherits){
-      const base = JSON.parse(JSON.stringify(PB.tests[spec.inherits]));
-      spec = Object.assign({}, base, spec);
-    }
-    // mirror step keys if flagged
-    if (spec.mirror){
-      if (spec.sequence){
-        spec.sequence = spec.sequence.map(s => (s.key ? Object.assign({}, s, {key: mirrorKey(s.key)}) : s));
-      }
-    }
-    if (spec.posture && spec.posture !== 'standing'){
-      await runPosture(spec.posture);
-    }
-    // execute sequence
-    for (const s of spec.sequence){
-      if (s.type === 'call'){
-        await runTestByName(s.name);
-      }else if (s.type === 'move'){
-        const cfg = cfgFromKey(s.key); if (!cfg) continue;
-        const cur = getCurrentAngle(s.key) || 0;
-        await tweenAngle(s.key, cfg, cur, s.deg, s.ms || 400);
-      }
-    }
-  }
-
-  function getCurrentAngle(key){
-    // We keep current in the UI slider only for selected action, so we cache applied angles on window.
-    window.__angles = window.__angles || {};
-    return window.__angles[key];
-  }
-  // wrap applyPairAngle so we track current angles
-  const __origApplyPairAngle = applyPairAngle;
-  applyPairAngle = function(key, cfg, deg){
-    window.__angles = window.__angles || {};
-    window.__angles[key] = deg;
-    __origApplyPairAngle(key, cfg, deg);
-  }
-
-  // Wire up Test to the playbook
-  const _origTestHandler = async ()=>{};
-  testAction.addEventListener('click', async (ev)=>{
-    ev.preventDefault();
-    const key = actionSel.value;
-    const cfg = cfgFromKey(key); if (!cfg) return;
-    const sign = currentSign();
-    const name = resolveTestName(key, sign);
-    if (!name){ console.warn('No mapping for', key); return; }
-    await runTestByName(name);
-  }, {once:false});
+  const toggleHands = document.getElementById('toggleHands');
+  if (toggleHands){ toggleHands.addEventListener('change', ()=> setHandsVisible(toggleHands.checked)); }
 
   /* ===== Load model ===== */
   function clearModel(){
@@ -1078,8 +780,11 @@ optgroup{color:#9fb0c9;font-style:normal}
           if (o.isSkinnedMesh && !skeleton) skeleton = o.skeleton;
         });
         scene.add(model);
+        ensureHands();
+        bindHF();
         model.position.set(parseFloat(mx.value), parseFloat(my.value), parseFloat(mz.value));
         model.scale.setScalar(parseInt(ms.value,10)/100);
+    model.scale.setScalar(0.60);
         model.rotation.y = THREE.MathUtils.degToRad(parseFloat(myaw.value));
         groundSnap(); autoScaleToHeight(1.75); fitView();
         msg.textContent = "✅ Model loaded";
@@ -1102,7 +807,14 @@ optgroup{color:#9fb0c9;font-style:normal}
   }
   loadModel();
 
+
+  function validateHandsFor(){
+    const ok = !!(handStab && handForce);
+    document.getElementById('handStatus').textContent = ok ? '✔ Hands ready' : '✖ Place both student hands';
+    return ok;
+  }
   /* ===== Render ===== */
+        
   addEventListener("resize", () => {
     camera.aspect = innerWidth/innerHeight;
     camera.updateProjectionMatrix();
@@ -1116,7 +828,6 @@ optgroup{color:#9fb0c9;font-style:normal}
 
   window.addEventListener('error', e=>{ msg.textContent='❌ '+(e.message||'Script error'); console.error(e); });
   </script>
-<script id="playbook" type="application/json">{"metadata": {"version": "0.1", "units": "degrees", "force_scale": [0, 1, 2, 3, 4, 5]}, "postures": {"supine": [{"key": "hi_fe_l", "deg": 0}, {"key": "hi_fe_r", "deg": 0}, {"key": "kn_fe_l", "deg": 0}, {"key": "kn_fe_r", "deg": 0}, {"key": "sp_flex", "deg": 0}], "prone": [{"key": "hi_fe_l", "deg": -10}, {"key": "hi_fe_r", "deg": -10}, {"key": "sp_flex", "deg": 0}], "sitting": [{"key": "hi_fe_l", "deg": 90}, {"key": "hi_fe_r", "deg": 90}, {"key": "kn_fe_l", "deg": 90}, {"key": "kn_fe_r", "deg": 90}, {"key": "sp_flex", "deg": 10}]}, "tests": {"gh_flex_l": {"posture": "standing", "sequence": [{"type": "move", "key": "sc_up_l", "deg": 10, "ms": 250, "optional": true}, {"type": "move", "key": "gh_fe_l", "deg": 90, "ms": 700}]}, "gh_ext_l": {"posture": "standing", "sequence": [{"type": "move", "key": "sc_down_l", "deg": 5, "ms": 250, "optional": true}, {"type": "move", "key": "gh_fe_l", "deg": -30, "ms": 600}]}, "gh_flex_r": {"inherits": "gh_flex_l", "mirror": true}, "gh_ext_r": {"inherits": "gh_ext_l", "mirror": true}, "el_flex_l": {"posture": "standing", "sequence": [{"type": "move", "key": "el_fe_l", "deg": -90, "ms": 500}]}, "el_ext_l": {"posture": "standing", "sequence": [{"type": "move", "key": "el_fe_l", "deg": 0, "ms": 400}]}, "el_flex_r": {"inherits": "el_flex_l", "mirror": true}, "el_ext_r": {"inherits": "el_ext_l", "mirror": true}, "fa_pro_l": {"posture": "sitting", "sequence": [{"type": "call", "name": "el_flex_l"}, {"type": "move", "key": "fa_ps_l", "deg": 90, "ms": 600}]}, "fa_sup_l": {"posture": "sitting", "sequence": [{"type": "call", "name": "el_flex_l"}, {"type": "move", "key": "fa_ps_l", "deg": -90, "ms": 600}]}, "fa_pro_r": {"inherits": "fa_pro_l", "mirror": true}, "fa_sup_r": {"inherits": "fa_sup_l", "mirror": true}, "cv_flex": {"posture": "sitting", "sequence": [{"type": "move", "key": "cv_fe", "deg": 30, "ms": 500}]}, "cv_ext": {"posture": "sitting", "sequence": [{"type": "move", "key": "cv_fe", "deg": -30, "ms": 500}]}, "cv_lat_l": {"posture": "sitting", "sequence": [{"type": "move", "key": "cv_lat", "deg": 30, "ms": 500}]}, "cv_lat_r": {"posture": "sitting", "sequence": [{"type": "move", "key": "cv_lat", "deg": -30, "ms": 500}]}, "an_df_l": {"posture": "sitting", "sequence": [{"type": "move", "key": "an_df_l", "deg": 15, "ms": 400}]}, "an_pf_l": {"posture": "sitting", "sequence": [{"type": "move", "key": "an_df_l", "deg": -40, "ms": 500}]}, "an_df_r": {"inherits": "an_df_l", "mirror": true}, "an_pf_r": {"inherits": "an_pf_l", "mirror": true}}}</script>
-
 </body>
 </html>
+
