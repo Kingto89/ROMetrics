@@ -1,0 +1,262 @@
+{
+  "metadata": {
+    "version": "0.1",
+    "units": "degrees",
+    "force_scale": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ]
+  },
+  "postures": {
+    "supine": [
+      {
+        "key": "hi_fe_l",
+        "deg": 0
+      },
+      {
+        "key": "hi_fe_r",
+        "deg": 0
+      },
+      {
+        "key": "kn_fe_l",
+        "deg": 0
+      },
+      {
+        "key": "kn_fe_r",
+        "deg": 0
+      },
+      {
+        "key": "sp_flex",
+        "deg": 0
+      }
+    ],
+    "prone": [
+      {
+        "key": "hi_fe_l",
+        "deg": -10
+      },
+      {
+        "key": "hi_fe_r",
+        "deg": -10
+      },
+      {
+        "key": "sp_flex",
+        "deg": 0
+      }
+    ],
+    "sitting": [
+      {
+        "key": "hi_fe_l",
+        "deg": 90
+      },
+      {
+        "key": "hi_fe_r",
+        "deg": 90
+      },
+      {
+        "key": "kn_fe_l",
+        "deg": 90
+      },
+      {
+        "key": "kn_fe_r",
+        "deg": 90
+      },
+      {
+        "key": "sp_flex",
+        "deg": 10
+      }
+    ]
+  },
+  "tests": {
+    "gh_flex_l": {
+      "posture": "standing",
+      "sequence": [
+        {
+          "type": "move",
+          "key": "sc_up_l",
+          "deg": 10,
+          "ms": 250,
+          "optional": true
+        },
+        {
+          "type": "move",
+          "key": "gh_fe_l",
+          "deg": 90,
+          "ms": 700
+        }
+      ]
+    },
+    "gh_ext_l": {
+      "posture": "standing",
+      "sequence": [
+        {
+          "type": "move",
+          "key": "sc_down_l",
+          "deg": 5,
+          "ms": 250,
+          "optional": true
+        },
+        {
+          "type": "move",
+          "key": "gh_fe_l",
+          "deg": -30,
+          "ms": 600
+        }
+      ]
+    },
+    "gh_flex_r": {
+      "inherits": "gh_flex_l",
+      "mirror": true
+    },
+    "gh_ext_r": {
+      "inherits": "gh_ext_l",
+      "mirror": true
+    },
+    "el_flex_l": {
+      "posture": "standing",
+      "sequence": [
+        {
+          "type": "move",
+          "key": "el_fe_l",
+          "deg": -90,
+          "ms": 500
+        }
+      ]
+    },
+    "el_ext_l": {
+      "posture": "standing",
+      "sequence": [
+        {
+          "type": "move",
+          "key": "el_fe_l",
+          "deg": 0,
+          "ms": 400
+        }
+      ]
+    },
+    "el_flex_r": {
+      "inherits": "el_flex_l",
+      "mirror": true
+    },
+    "el_ext_r": {
+      "inherits": "el_ext_l",
+      "mirror": true
+    },
+    "fa_pro_l": {
+      "posture": "sitting",
+      "sequence": [
+        {
+          "type": "call",
+          "name": "el_flex_l"
+        },
+        {
+          "type": "move",
+          "key": "fa_ps_l",
+          "deg": 90,
+          "ms": 600
+        }
+      ]
+    },
+    "fa_sup_l": {
+      "posture": "sitting",
+      "sequence": [
+        {
+          "type": "call",
+          "name": "el_flex_l"
+        },
+        {
+          "type": "move",
+          "key": "fa_ps_l",
+          "deg": -90,
+          "ms": 600
+        }
+      ]
+    },
+    "fa_pro_r": {
+      "inherits": "fa_pro_l",
+      "mirror": true
+    },
+    "fa_sup_r": {
+      "inherits": "fa_sup_l",
+      "mirror": true
+    },
+    "cv_flex": {
+      "posture": "sitting",
+      "sequence": [
+        {
+          "type": "move",
+          "key": "cv_fe",
+          "deg": 30,
+          "ms": 500
+        }
+      ]
+    },
+    "cv_ext": {
+      "posture": "sitting",
+      "sequence": [
+        {
+          "type": "move",
+          "key": "cv_fe",
+          "deg": -30,
+          "ms": 500
+        }
+      ]
+    },
+    "cv_lat_l": {
+      "posture": "sitting",
+      "sequence": [
+        {
+          "type": "move",
+          "key": "cv_lat",
+          "deg": 30,
+          "ms": 500
+        }
+      ]
+    },
+    "cv_lat_r": {
+      "posture": "sitting",
+      "sequence": [
+        {
+          "type": "move",
+          "key": "cv_lat",
+          "deg": -30,
+          "ms": 500
+        }
+      ]
+    },
+    "an_df_l": {
+      "posture": "sitting",
+      "sequence": [
+        {
+          "type": "move",
+          "key": "an_df_l",
+          "deg": 15,
+          "ms": 400
+        }
+      ]
+    },
+    "an_pf_l": {
+      "posture": "sitting",
+      "sequence": [
+        {
+          "type": "move",
+          "key": "an_df_l",
+          "deg": -40,
+          "ms": 500
+        }
+      ]
+    },
+    "an_df_r": {
+      "inherits": "an_df_l",
+      "mirror": true
+    },
+    "an_pf_r": {
+      "inherits": "an_pf_l",
+      "mirror": true
+    }
+  }
+}
