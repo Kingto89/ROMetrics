@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ROMetrics — Modular Minimal</title>
+  <title>ROMetrics — Modular Minimal (Fixed Paths)</title>
   <style>
     html,body {margin:0;height:100%;background:#0e1420;color:#dbe7ff;font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
     #app {position:fixed;inset:0;display:grid;grid-template-rows:auto 1fr}
@@ -34,9 +34,7 @@
 
 <div class="panel">
   <header class="row"><strong>Controls</strong></header>
-  <div class="content">
-    <!-- Keep this empty; addons will insert their own sections here -->
-  </div>
+  <div class="content"><!-- Add-ons inject here --></div>
 </div>
 
 <script type="module">
@@ -44,7 +42,7 @@ import * as THREE from "https://unpkg.com/three@0.159.0/build/three.module.js";
 import { OrbitControls } from "https://unpkg.com/three@0.159.0/examples/jsm/controls/OrbitControls.js";
 import { GLTFLoader } from "https://unpkg.com/three@0.159.0/examples/jsm/loaders/GLTFLoader.js";
 
-// Expose some globals so addons can use them
+// Expose for add-ons
 window.THREE = THREE;
 
 const root = document.getElementById("stage");
@@ -65,7 +63,6 @@ const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.target.set(0, 1.0, 0);
 
-// Basic lights & ground
 scene.add(new THREE.HemisphereLight(0xffffff, 0x334466, 0.6));
 const key = new THREE.DirectionalLight(0xffffff, 1.1);
 key.position.set(2, 4, 2);
@@ -78,18 +75,14 @@ const ground = new THREE.Mesh(new THREE.PlaneGeometry(20,20),
 ground.rotation.x = -Math.PI/2; ground.position.y = 0; ground.receiveShadow = true;
 scene.add(ground);
 
-// Public API for addons
 window.scene = scene;
 window.camera = camera;
 window.renderer = renderer;
 window.controls = controls;
-
-let model = null;
-window.model = model;
+window.model = null;
 
 const loader = new GLTFLoader();
-
-function fitView(target= model || scene){
+function fitView(target= window.model || scene){
   const box = new THREE.Box3().setFromObject(target);
   const size = box.getSize(new THREE.Vector3()).length();
   const center = box.getCenter(new THREE.Vector3());
@@ -99,63 +92,49 @@ function fitView(target= model || scene){
   const direction = new THREE.Vector3().subVectors(camera.position, controls.target).normalize();
   controls.target.copy(center);
   camera.position.copy(direction.multiplyScalar(distance).add(controls.target));
-  camera.near = distance / 100;
-  camera.far = distance * 100;
-  camera.updateProjectionMatrix();
+  camera.near = distance / 100; camera.far = distance * 100; camera.updateProjectionMatrix();
   controls.update();
 }
 
 async function loadModel(url){
-  if (model){ scene.remove(model); model = null; }
+  if (window.model){ scene.remove(window.model); window.model = null; }
   msg.textContent = "Loading…";
   return new Promise((resolve,reject)=>{
     loader.load(url, (gltf)=>{
-      model = gltf.scene;
-      window.model = model;
-      model.traverse(n=>{ if(n.isMesh){n.castShadow=true;n.receiveShadow=true;} });
-      scene.add(model);
+      window.model = gltf.scene;
+      window.model.traverse(n=>{ if(n.isMesh){n.castShadow=true;n.receiveShadow=true;} });
+      scene.add(window.model);
       msg.textContent = "✅ Model loaded";
-      fitView(model);
-      resolve(model);
+      fitView(window.model);
+      resolve(window.model);
     }, undefined, (err)=>{ console.error(err); msg.textContent = "⚠️ Load failed"; reject(err); });
   });
 }
 
-function getParam(name){
-  const u = new URL(location.href);
-  return u.searchParams.get(name);
-}
-
+function getParam(name){ const u=new URL(location.href); return u.searchParams.get(name); }
 async function boot(){
   const q = getParam("model");
-  const url = q || "./assets/model.glb"; // change default as needed
+  const url = q || "./Athletic_Grace_1006002620_texture.glb"; // change if needed
   try{ await loadModel(url); }catch{}
 }
 boot();
 
-// Reload Model button: prompt for URL
 document.getElementById("reload").onclick = async ()=>{
-  const cur = getParam("model") || "./assets/model.glb";
+  const cur = getParam("model") || "./Athletic_Grace_1006002620_texture.glb";
   const url = prompt("Enter GLB/GLTF URL", cur);
   if (url){ await loadModel(url); history.replaceState(null, "", "?model="+encodeURIComponent(url)); }
 };
 
-// Resize
 addEventListener("resize", ()=>{
   const h = innerHeight - document.querySelector("header").offsetHeight;
-  renderer.setSize(innerWidth, h);
-  camera.aspect = renderer.domElement.width / renderer.domElement.height;
+  renderer.setSize(innerWidth, h); camera.aspect = renderer.domElement.width / renderer.domElement.height;
   camera.updateProjectionMatrix();
 });
 
-// Simple loop
-renderer.setAnimationLoop(()=>{
-  controls.update();
-  renderer.render(scene, camera);
-});
+renderer.setAnimationLoop(()=>{ controls.update(); renderer.render(scene, camera); });
 </script>
 
-<!-- Add-ons load after the main app -->
+<!-- Fixed paths to /addons/ -->
 <script src="./addons/hands_addon.js"></script>
 <script src="./addons/posture_addon.js"></script>
 <script src="./addons/regions_actions_addon.js"></script>
