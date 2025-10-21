@@ -62,8 +62,7 @@ optgroup{color:#9fb0c9;font-style:normal}
     <div class="content">
       <div class="row">
         <button id="reload" class="mini">Reload Model</button>
-        <button id="fit" class="mini">Fit View</button>
-        <button id="romBtn" class="mini">📘 ROM Reference</button>
+<button id="romBtn" class="mini">📘 ROM Reference</button>
       </div>
 
       
@@ -195,8 +194,7 @@ optgroup{color:#9fb0c9;font-style:normal}
   const panel = document.getElementById("panel");
   const dragbar = document.getElementById("dragbar");
   const reloadBtn = document.getElementById("reload");
-  const fitBtn = document.getElementById("fit");
-  const romBtn = document.getElementById("romBtn");
+const romBtn = document.getElementById("romBtn");
   const romModal = document.getElementById("romModal");
   const romBody = document.getElementById("romBody");
   const romClose = document.getElementById("romClose");
@@ -653,7 +651,8 @@ function resolveBind(key,cfg){
 
     if (kind === "stand"){
       model.rotation.x = 0;
-      groundSnap(); fitView(); return;
+      groundSnap();
+return;
     }
     if (kind === "sit"){
       // Mixamo-friendly names
@@ -672,15 +671,18 @@ function resolveBind(key,cfg){
       if (Rank) rotateBoneDelta(Rank, +5,0,0);
 
       model.rotation.x = 0;
-      groundSnap(); fitView(); return;
+      groundSnap();
+return;
     }
     if (kind === "supine"){
       model.rotation.x = Math.PI/2;
-      groundSnap(); fitView(); return;
+      groundSnap();
+return;
     }
     if (kind === "prone"){
       model.rotation.x = -Math.PI/2;
-      groundSnap(); fitView(); return;
+      groundSnap();
+return;
     }
   }
 
@@ -718,12 +720,10 @@ function resolveBind(key,cfg){
       model.scale.setScalar(1);
       model.rotation.y = 0;
     }
-    groundSnap(); fitView();
-  };
+    groundSnap();
+};
   reloadBtn.onclick = ()=>{ MODEL_URL = pickModelUrl(); log(`Reload: ${MODEL_URL}`); loadModel(); };
-  fitBtn.onclick = fitView;
-
-  // ROM modal
+// ROM modal
   romBtn.onclick = async ()=>{
     romModal.classList.add('on');
     try{
@@ -756,8 +756,8 @@ function resolveBind(key,cfg){
         model.position.set(parseFloat(mx.value), parseFloat(my.value), parseFloat(mz.value));
         model.scale.setScalar(parseInt(ms.value,10)/100);
         model.rotation.y = THREE.MathUtils.degToRad(parseFloat(myaw.value));
-        groundSnap(); autoScaleToHeight(1.75); fitView();
-        msg.textContent = "✅ Model loaded";
+        groundSnap(); autoScaleToHeight(1.75);
+msg.textContent = "✅ Model loaded";
         log("Model load OK");
         populateBones();
         detectRigProfile();
