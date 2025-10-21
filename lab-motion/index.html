@@ -41,9 +41,11 @@ optgroup{color:#9fb0c9;font-style:normal}
 .modal .x{margin-left:auto;background:transparent;border:0;color:#9fb0c9;font-size:18px;cursor:pointer}
 .modal .body{padding:12px;overflow:auto}
 
-
-.handTag{ position:fixed; z-index:15; pointer-events:auto; user-select:none;
-  filter: drop-shadow(0 2px 8px rgba(0,0,0,.45)); cursor:grab; transform-origin:center center; }
+.handTag{
+  position:fixed; z-index:15; pointer-events:auto; user-select:none;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,.45));
+  cursor:grab; transform-origin:center center;
+}
 .handTag:active{ cursor:grabbing; }
 .handTag .badge{
   position:absolute; right:-8px; bottom:-8px; font:700 10px/1 system-ui,Segoe UI,Roboto;
@@ -619,7 +621,21 @@ function resolveBind(key,cfg){
     // Enable but DO NOT apply until user moves the slider
     actionDeg.disabled = false;
     zeroAction.disabled = false;
-  }  /* ===== Postures ===== */
+  }  
+// --- Posture hot-fix (force neutral then apply selected preset) ---
+applyPosture.onclick = () => {
+  const v = postureSel.value;          // "stand" | "sit" | "supine" | "prone"
+  try {
+    zeroAllJoints();                   // neutral first
+    applyPosturePreset(v);             // then apply posture
+    msg.textContent = `Posture set: ${v}`;
+  } catch (e) {
+    console.error(e);
+    msg.textContent = "⚠️ Posture apply failed";
+  }
+};
+
+  /* ===== Postures ===== */
   function rotateBoneDelta(b, x=0, y=0, z=0){
     const qb = (initialBoneRot.get(b) || b.quaternion.clone()).clone();
     const dq = new THREE.Quaternion().setFromEuler(new THREE.Euler(
@@ -685,7 +701,7 @@ function resolveBind(key,cfg){
   }
 
   /* ===== Wire UI ===== */
-  segUpper.onclick = ()=>{ CURRENT = UPPER; segUpper.classList.add('on'); segLower.classList.remove('on'); fillActionMenu(); actionDeg.value='0'; actionDeg.disabled=true; zeroAction.disabled=true; };
+  segUpper.onclick = ()=>{ CURRENT = UPPER; segUpper.classList.add('on'); segLower.classList.remove('on'); fillActionMenu(); actionDeg.value='0'; actionDeg.disabled=true; zeroAction.disabled=true; try{ zeroAllJoints(); applyPosturePreset('stand'); }catch(e){}; };
   segLower.onclick = ()=>{ CURRENT = LOWER; segLower.classList.add('on'); segUpper.classList.remove('on'); fillActionMenu(); };
 
   actionSel.addEventListener("change", ()=>syncActionUI(true));
@@ -763,10 +779,8 @@ function resolveBind(key,cfg){
         detectRigProfile();
         CURRENT = UPPER;
         segUpper.classList.add('on'); segLower.classList.remove('on');
-        // Force neutral start
-        try{ zeroAllJoints(); applyPosturePreset("stand"); }catch(e){}
         fillActionMenu();
-},
+      },
       (xhr) => {
         msg.textContent = xhr.lengthComputable ? `Loading ${Math.round((xhr.loaded/xhr.total)*100)}%` : "Loading…";
       },
@@ -808,20 +822,25 @@ function resolveBind(key,cfg){
   function mkHand(char, id){
     const div = document.createElement("div");
     div.className = "handTag"; div.id = id;
-    // add badge label
+    // badge
     const b = document.createElement("span"); b.className="badge"; b.textContent = (id==="hand_stab"?"S":"T");
     div.appendChild(b);
-    // add role class for styling
     if (id==="hand_stab") div.classList.add("stab"); else div.classList.add("test");
-    div.textContent = char;
-    div.style.fontSize = (parseInt(handSize?.value||120,10)) + "px";
-    // default placement: near upper screen center split left/right
+    // emoji (both back-of-hand)
+    const em = document.createElement("span"); em.textContent = "🤚🏽";
+    em.style.display = "inline-block";
+    em.style.fontSize = (parseInt(handSize?.value || 96, 10)) + "px";
+    div.appendChild(em);
+
+    // default placement: upper center split
     const w = innerWidth, h = innerHeight;
     const x = id==="hand_stab" ? (w*0.38) : (w*0.62);
     const y = h*0.35;
     div.style.left = x + "px";
     div.style.top  = y + "px";
-    // simple drag
+    div.style.position = "fixed";
+
+    // drag
     let dx=0, dy=0, dragging=false;
     const onDown = (e)=>{ dragging=true; dx=e.clientX-parseFloat(div.style.left); dy=e.clientY-parseFloat(div.style.top); e.preventDefault(); };
     const onMove = (e)=>{ if(!dragging) return; div.style.left = (e.clientX-dx)+"px"; div.style.top=(e.clientY-dy)+"px"; };
@@ -829,70 +848,62 @@ function resolveBind(key,cfg){
     div.addEventListener("pointerdown", onDown);
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
+
     document.body.appendChild(div);
     return div;
   }
 
   function ensureHands(){
     if (stab && test) return;
-    // Medium skin-tone emoji hands
-    stab = mkHand("🤚🏽","hand_stab"); // Stabilize
-    test = mkHand("🤚🏽","hand_test"); // Test (back-of-hand)
-    handsPanel.style.display = "";
+    stab = mkHand("🤚🏽","hand_stab");
+    test = mkHand("🤚🏽","hand_test");
+    if (handsPanel) handsPanel.style.display = "";
     msg.textContent = "Emoji hands added — drag to place; use size/flip as needed.";
   }
 
+  function updateSize(){
+    const px = parseInt(handSize.value || "96", 10);
+    [stab, test].forEach(div => {
+      if (!div) return;
+      const em = div.querySelector("span:not(.badge)");
+      if (em) em.style.fontSize = px + "px";
+    });
+  }
+
+  function setFlip(on){
+    const s = on ? "scaleX(-1)" : "scaleX(1)";
+    [stab, test].forEach(div => { if (div) div.style.transform = s; });
+  }
+
   if (handsBtn){
-    handsBtn.addEventListener("click", ()=>{ ensureHands(); handsPanel.open = true; });
+    handsBtn.addEventListener("click", ()=>{ ensureHands(); if (handsPanel) handsPanel.open = true; });
   }
-  if (pickStab){
-    pickStab.addEventListener("click", ()=>{ active="stab"; msg.textContent="Active: Stabilize hand"; });
-  }
-  if (pickTest){
-    pickTest.addEventListener("click", ()=>{ active="test"; msg.textContent="Active: Test hand"; });
-  }
-  if (handSize){
-    handSize.addEventListener("input", ()=>{
-      const px = parseInt(handSize.value,10) || 120;
-      if (stab) stab.style.fontSize = px+"px";
-      if (test) test.style.fontSize = px+"px";
-    });
-  }
-  if (flipHand){
-    flipHand.addEventListener("click", ()=>{
-      flipped = !flipped;
-      const s = flipped ? "scaleX(-1)" : "scaleX(1)";
-      if (stab) stab.style.transform = s;
-      if (test) test.style.transform = s;
-    });
-  }
-  if (toggleHands){
-    toggleHands.addEventListener("click", ()=>{
-      handsShown = !handsShown;
-      if (stab) stab.style.display = handsShown ? "" : "none";
-      if (test) test.style.display = handsShown ? "" : "none";
-      msg.textContent = handsShown ? "Hands shown" : "Hands hidden";
-    });
-  }
-  if (resetHands){
-    resetHands.addEventListener("click", ()=>{
-      if (!stab || !test) return;
-      const w = innerWidth, h = innerHeight;
-      stab.style.left = (w*0.38) + "px"; stab.style.top = (h*0.35) + "px";
-      test.style.left = (w*0.62) + "px"; test.style.top = (h*0.35) + "px";
-      msg.textContent = "Hands reset to default positions";
-    });
-  }
-  if (removeHands){
-    removeHands.addEventListener("click", ()=>{
-      if (stab){ stab.remove(); stab=null; }
-      if (test){ test.remove(); test=null; }
-      msg.textContent = "Hands removed";
-      handsPanel.open = false;
-    });
-  }
+  pickStab && pickStab.addEventListener("click", ()=>{ active="stab"; msg.textContent="Active: Stabilize hand"; });
+  pickTest && pickTest.addEventListener("click", ()=>{ active="test"; msg.textContent="Active: Test hand"; });
+  handSize && handSize.addEventListener("input", updateSize);
+  flipHand && flipHand.addEventListener("click", ()=>{ flipped=!flipped; setFlip(flipped); });
+  toggleHands && toggleHands.addEventListener("click", ()=>{
+    handsShown = !handsShown;
+    [stab, test].forEach(div => { if (div) div.style.display = handsShown ? "" : "none"; });
+    msg.textContent = handsShown ? "Hands shown" : "Hands hidden";
+  });
+  resetHands && resetHands.addEventListener("click", ()=>{
+    if (!stab || !test) return;
+    const w = innerWidth, h = innerHeight;
+    stab.style.left = (w*0.38) + "px"; stab.style.top = (h*0.35) + "px";
+    test.style.left = (w*0.62) + "px"; test.style.top = (h*0.35) + "px";
+    updateSize();
+    msg.textContent = "Hands reset to default positions";
+  });
+  removeHands && removeHands.addEventListener("click", ()=>{
+    if (stab){ stab.remove(); stab=null; }
+    if (test){ test.remove(); test=null; }
+    msg.textContent = "Hands removed";
+    if (handsPanel) handsPanel.open = false;
+  });
 
   window.addEventListener('error', e=>{ msg.textContent='❌ '+(e.message||'Script error'); console.error(e); });
   </script>
 </body>
 </html>
+
