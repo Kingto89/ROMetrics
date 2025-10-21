@@ -40,6 +40,14 @@ optgroup{color:#9fb0c9;font-style:normal}
 .modal .top h4{margin:0;font-size:14px}
 .modal .x{margin-left:auto;background:transparent;border:0;color:#9fb0c9;font-size:18px;cursor:pointer}
 .modal .body{padding:12px;overflow:auto}
+
+.handTag{
+  position:fixed; z-index:15; pointer-events:auto; user-select:none;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,.45));
+  cursor:grab; transform-origin:center center;
+}
+.handTag:active{ cursor:grabbing; }
+
 </style>
 </head>
 <body>
@@ -57,8 +65,24 @@ optgroup{color:#9fb0c9;font-style:normal}
 <div class="row">
   <button id="handsBtn" class="mini">✋ Hands</button>
 </div>
-<div class="row"><input id="handSize" type="range" min="50" max="200" value="100" /></div>
-<div class="row"><button id="handReset" class="mini">Reset Hands</button></div>
+<details id="handsPanel" style="display:none">
+  <summary>Hand Controls</summary>
+  <div class="row">
+    <button id="pickStab" class="mini">Active: Stabilize</button>
+    <button id="pickTest" class="mini">Active: Test</button>
+  </div>
+  <div class="row">
+    <label style="margin:0">Size</label>
+    <input id="handSize" type="range" min="60" max="220" value="120">
+  </div>
+  <div class="row">
+    <button id="flipHand" class="mini">Flip</button>
+    <button id="toggleHands" class="mini">Hide/Show</button>
+    <button id="resetHands" class="mini">Reset</button>
+    <button id="removeHands" class="mini">Remove</button>
+  </div>
+  <small style="color:#9fb0c9">Drag the hands over the model. Size slider adjusts both.</small>
+</details>
 
       <label>Posture</label>
       <div class="row">
@@ -156,7 +180,6 @@ optgroup{color:#9fb0c9;font-style:normal}
   import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
   import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
   import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
-  import { TransformControls } from "three/addons/controls/TransformControls.js";
 
   /* ===== UI ===== */
   const msg = document.getElementById("msg");
@@ -751,135 +774,100 @@ function resolveBind(key,cfg){
   })();
 
 
-  /* ===== Hands (3D model) — on-demand load + placement (CLEAN) ===== */
-  const HAND_URL = "../assets/hand_only.glb"; // confirmed path
+  /* ===== Emoji Hands Overlay (no GLB) ===== */
   const handsBtn = document.getElementById("handsBtn");
-  let handA = null, handB = null;  // Stabilize, Test
-  let activeHand = null;
+  const handsPanel = document.getElementById("handsPanel");
+  const pickStab = document.getElementById("pickStab");
+  const pickTest = document.getElementById("pickTest");
+  const handSize = document.getElementById("handSize");
+  const flipHand = document.getElementById("flipHand");
+  const toggleHands = document.getElementById("toggleHands");
+  const resetHands = document.getElementById("resetHands");
+  const removeHands = document.getElementById("removeHands");
 
-  // Transform controls attached to active hand
-  const tctrl = new TransformControls(camera, renderer.domElement);
-  scene.add(tctrl);
-  tctrl.addEventListener("dragging-changed", (e)=>{ controls.enabled = !e.value; });
+  let stab = null, test = null, active = "stab", handsShown = true, flipped = false;
 
-  function addShadow(o){
-    o.traverse(n => { if (n.isMesh){ n.castShadow = true; n.receiveShadow = true; } });
+  function mkHand(char, id){
+    const div = document.createElement("div");
+    div.className = "handTag"; div.id = id;
+    div.textContent = char;
+    div.style.fontSize = (parseInt(handSize?.value||120,10)) + "px";
+    // default placement: near upper screen center split left/right
+    const w = innerWidth, h = innerHeight;
+    const x = id==="hand_stab" ? (w*0.38) : (w*0.62);
+    const y = h*0.35;
+    div.style.left = x + "px";
+    div.style.top  = y + "px";
+    // simple drag
+    let dx=0, dy=0, dragging=false;
+    const onDown = (e)=>{ dragging=true; dx=e.clientX-parseFloat(div.style.left); dy=e.clientY-parseFloat(div.style.top); e.preventDefault(); };
+    const onMove = (e)=>{ if(!dragging) return; div.style.left = (e.clientX-dx)+"px"; div.style.top=(e.clientY-dy)+"px"; };
+    const onUp = ()=>{ dragging=false; };
+    div.addEventListener("pointerdown", onDown);
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    document.body.appendChild(div);
+    return div;
   }
 
-  
-  function spawnHands(gltf){
-    // Auto-size & position relative to current model bounding box
-    const base = gltf.scene;
-    const box = new THREE.Box3().setFromObject(model || scene);
-    const center = new THREE.Vector3();
-    box.getCenter(center);
-    const h = Math.max(0.5, box.max.y - box.min.y); // model height fallback
-    
-    // scale: hand about 12% of body height (tweakable)
-    const s = 0.12 * h;
-    base.scale.set(s, s, s);
-
-    // target y near upper chest/shoulder; z slightly in front; x offset left/right
-    const y = box.min.y + 0.68 * h;
-    const z = center.z + 0.18 * h;
-    const xoff = 0.22 * h;
-
-    // two hands
-    const handR = base;                         // Stabilize (right)
-    handR.position.set(center.x + xoff, y, z);
-    handR.rotation.set(0, 0, 0);
-
-    const handL = base.clone(true);             // Test (left)
-    handL.position.set(center.x - xoff, y, z);
-    handL.rotation.set(0, 0, 0);
-
-    // soft shadows
-    const addShadow = (o)=>o.traverse(n=>{ if(n.isMesh){ n.castShadow = true; n.receiveShadow = true; } });
-    addShadow(handR); addShadow(handL);
-
-    handA = handR; handB = handL;
-    handA.name = "Stabilize_Hand"; handB.name = "Test_Hand";
-    scene.add(handA, handB);
-
-    activeHand = handA;
-    tctrl.attach(activeHand);
-    msg.textContent = "✋ Hands added — drag to place • R = rotate/translate";
-    log(`Hands added. Scale=${s.toFixed(3)} (h=${h.toFixed(3)})`);
-  }
-
-  async function ensureHands(){
-{
-    return new Promise((resolve,reject)=>{
-      if (handA && handB) return resolve();
-      loader.load(HAND_URL, (gltf)=>{ spawnHands(gltf); resolve(); },
-        undefined, (err)=>{ console.error(err); msg.textContent="⚠️ Hand load error"; reject(err); });
-    });
+  function ensureHands(){
+    if (stab && test) return;
+    // Medium skin-tone emoji hands
+    stab = mkHand("✋🏽","hand_stab"); // Stabilize
+    test = mkHand("🤚🏽","hand_test"); // Test (back-of-hand)
+    handsPanel.style.display = "";
+    msg.textContent = "Emoji hands added — drag to place; use size/flip as needed.";
   }
 
   if (handsBtn){
-    handsBtn.addEventListener("click", async ()=>{
-      try { await ensureHands(); } catch {}
-    });
+    handsBtn.addEventListener("click", ()=>{ ensureHands(); handsPanel.open = true; });
   }
-
-  // Click-to-pick: choose which hand to edit
-  const raycaster = new THREE.Raycaster();
-  const ndc = new THREE.Vector2();
-  renderer.domElement.addEventListener("pointerdown", (e)=>{
-    if (!handA || !handB) return;
-    const rect = renderer.domElement.getBoundingClientRect();
-    ndc.x = ((e.clientX - rect.left)/rect.width)*2 - 1;
-    ndc.y = -((e.clientY - rect.top)/rect.height)*2 + 1;
-    raycaster.setFromCamera(ndc, camera);
-    const hits = raycaster.intersectObjects([handA, handB], true);
-    if (hits.length){
-      // ascend to hand root (handA or handB)
-      let node = hits[0].object;
-      while (node && node.parent && node !== handA && node !== handB) node = node.parent;
-      if (node===handA || node===handB){
-        activeHand = node;
-        tctrl.attach(activeHand);
-        msg.textContent = (activeHand===handA) ? "Active: Stabilize hand" : "Active: Test hand";
-      }
-    }
-  });
-
-  // Size slider & reset
-  const handSize = document.getElementById("handSize");
-  const handReset = document.getElementById("handReset");
+  if (pickStab){
+    pickStab.addEventListener("click", ()=>{ active="stab"; msg.textContent="Active: Stabilize hand"; });
+  }
+  if (pickTest){
+    pickTest.addEventListener("click", ()=>{ active="test"; msg.textContent="Active: Test hand"; });
+  }
   if (handSize){
     handSize.addEventListener("input", ()=>{
-      const scale = (parseInt(handSize.value,10) || 100) / 100;
-      if (handA) handA.scale.setScalar(handA.scale.x * 0 + scale * handA.scale.y); // keep uniform; base factor already set
-      if (handB) handB.scale.setScalar(handB.scale.x * 0 + scale * handB.scale.y);
+      const px = parseInt(handSize.value,10) || 120;
+      if (stab) stab.style.fontSize = px+"px";
+      if (test) test.style.fontSize = px+"px";
     });
   }
-  if (handReset){
-    handReset.addEventListener("click", ()=>{
-      if (!handA || !handB || !model) return;
-      // recompute from model bbox
-      const box = new THREE.Box3().setFromObject(model);
-      const center = new THREE.Vector3(); box.getCenter(center);
-      const h = Math.max(0.5, box.max.y - box.min.y);
-      const s = 0.12 * h;
-      const y = box.min.y + 0.68 * h;
-      const z = center.z + 0.18 * h;
-      const xoff = 0.22 * h;
-      handA.scale.set(s,s,s); handB.scale.set(s,s,s);
-      handA.position.set(center.x + xoff, y, z);
-      handB.position.set(center.x - xoff, y, z);
-      tctrl.attach(handA);
-      msg.textContent = "Hands reset";
+  if (flipHand){
+    flipHand.addEventListener("click", ()=>{
+      flipped = !flipped;
+      const s = flipped ? "scaleX(-1)" : "scaleX(1)";
+      if (stab) stab.style.transform = s;
+      if (test) test.style.transform = s;
     });
   }
-
-  // Keyboard helper: R toggles translate/rotate
-  window.addEventListener("keydown", (e)=>{
-    if (e.key && e.key.toLowerCase() === "r"){
-      tctrl.setMode(tctrl.mode === "translate" ? "rotate" : "translate");
-      msg.textContent = `Transform mode: ${tctrl.mode}`;
-    }
-  });
+  if (toggleHands){
+    toggleHands.addEventListener("click", ()=>{
+      handsShown = !handsShown;
+      if (stab) stab.style.display = handsShown ? "" : "none";
+      if (test) test.style.display = handsShown ? "" : "none";
+      msg.textContent = handsShown ? "Hands shown" : "Hands hidden";
+    });
+  }
+  if (resetHands){
+    resetHands.addEventListener("click", ()=>{
+      if (!stab || !test) return;
+      const w = innerWidth, h = innerHeight;
+      stab.style.left = (w*0.38) + "px"; stab.style.top = (h*0.35) + "px";
+      test.style.left = (w*0.62) + "px"; test.style.top = (h*0.35) + "px";
+      msg.textContent = "Hands reset to default positions";
+    });
+  }
+  if (removeHands){
+    removeHands.addEventListener("click", ()=>{
+      if (stab){ stab.remove(); stab=null; }
+      if (test){ test.remove(); test=null; }
+      msg.textContent = "Hands removed";
+      handsPanel.open = false;
+    });
+  }
 
   window.addEventListener('error', e=>{ msg.textContent='❌ '+(e.message||'Script error'); console.error(e); });
   </script>
