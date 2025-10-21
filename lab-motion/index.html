@@ -79,7 +79,7 @@ optgroup{color:#9fb0c9;font-style:normal}
   </div>
   <div class="row">
     <label style="margin:0">Size</label>
-    <input id="handSize" type="range" min="60" max="220" value="120">
+    <input id="handSize" type="range" min="60" max="220" value="96">
   </div>
   <div class="row">
     <button id="flipHand" class="mini">Flip</button>
@@ -577,6 +577,11 @@ function resolveBind(key,cfg){
   /* ===== UI: actions ===== */
   function fillActionMenu(){
     actionSel.innerHTML = "";
+    // Placeholder (no selection)
+    const ph = document.createElement("option");
+    ph.value = ""; ph.textContent = "(Select a motion…)";
+    actionSel.appendChild(ph);
+
     const list = (CURRENT===UPPER) ? UPPER : LOWER;
     const og = document.createElement("optgroup");
     og.label = (CURRENT===UPPER) ? "Cervical, Trunk, Shoulder & Arm" : "Hip, Leg & Foot";
@@ -587,12 +592,13 @@ function resolveBind(key,cfg){
       og.appendChild(opt);
     }
     actionSel.appendChild(og);
-    const first = actionSel.querySelector('option');
-    if (first) actionSel.value = first.value;
-    syncActionUI(true);
-  }
 
-  function cfgFromKey(k){
+    // Do not auto-select/apply a motion
+    actionSel.value = "";
+    pairLabel.textContent = "Angle (°)";
+    actionDeg.disabled = true;
+    zeroAction.disabled = true;
+  }  function cfgFromKey(k){
     const list = (CURRENT===UPPER) ? UPPER : LOWER;
     return list.find(x=>x.key===k) || null;
   }
@@ -600,16 +606,20 @@ function resolveBind(key,cfg){
   function syncActionUI(forceZero=false){
     const key = actionSel.value;
     const cfg = cfgFromKey(key);
-    if (!cfg) return;
+    if (!cfg){
+      actionDeg.disabled = true;
+      zeroAction.disabled = true;
+      pairLabel.textContent = "Angle (°)";
+      return;
+    }
     pairLabel.textContent = cfg.pair + " — Angle (°)";
     actionDeg.min = String(cfg.min);
     actionDeg.max = String(cfg.max);
     if (forceZero) actionDeg.value = "0";
-    // ensure neutral baseline applied immediately
-    applyPairAngle(key, cfg, parseFloat(actionDeg.value)||0);
-  }
-
-  /* ===== Postures ===== */
+    // Enable but DO NOT apply until user moves the slider
+    actionDeg.disabled = false;
+    zeroAction.disabled = false;
+  }  /* ===== Postures ===== */
   function rotateBoneDelta(b, x=0, y=0, z=0){
     const qb = (initialBoneRot.get(b) || b.quaternion.clone()).clone();
     const dq = new THREE.Quaternion().setFromEuler(new THREE.Euler(
@@ -675,7 +685,7 @@ function resolveBind(key,cfg){
   }
 
   /* ===== Wire UI ===== */
-  segUpper.onclick = ()=>{ CURRENT = UPPER; segUpper.classList.add('on'); segLower.classList.remove('on'); fillActionMenu(); };
+  segUpper.onclick = ()=>{ CURRENT = UPPER; segUpper.classList.add('on'); segLower.classList.remove('on'); fillActionMenu(); actionDeg.value='0'; actionDeg.disabled=true; zeroAction.disabled=true; };
   segLower.onclick = ()=>{ CURRENT = LOWER; segLower.classList.add('on'); segUpper.classList.remove('on'); fillActionMenu(); };
 
   actionSel.addEventListener("change", ()=>syncActionUI(true));
