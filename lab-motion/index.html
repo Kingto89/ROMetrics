@@ -75,8 +75,6 @@ optgroup{color:#9fb0c9;font-style:normal}
 
       <label><span id="pairLabel">Angle (°)</span></label>
       <input type="range" id="actionDeg" min="-90" max="150" step="1" value="0">
-      <div class="row" style="align-items:center;gap:12px"><label style="margin:0;min-width:140px">Hands (student)</label><label><input type="checkbox" id="toggleHands" checked> Show</label></div>
-      <div class="row"><span id="handStatus" style="font-weight:600"></span></div>
       <div class="row">
         <button id="zeroAction" class="mini">Zero Motion</button>
       </div>
@@ -440,35 +438,34 @@ optgroup{color:#9fb0c9;font-style:normal}
   }
 
   /* ===== Bind resolver with neutral shift (UPDATED) ===== */
-  function resolveBind(key,cfg){
+  
+function resolveBind(key,cfg){
     if (JOINT_BIND.has(key)) return JOINT_BIND.get(key);
-    const bone = findBoneBy(cfg);
+    let bone = findBoneBy(cfg);
+    // Fallbacks for trunk if generic search fails
+    if (!bone && /^trunk_/.test(key) && skeleton){
+      const names = skeleton.bones.map(b=>b.name.toLowerCase());
+      const idx = names.findIndex(n=>/spine02|spine_?02|upper.?spine|chest|thor/i.test(n));
+      bone = idx>=0 ? skeleton.bones[idx] : skeleton.bones.find(b=>/spine|chest|thor/i.test(b.name.toLowerCase()));
+    }
     if (!bone) { log(`No bind for ${key}`); return null; }
-
-    // Store bind (rest) orientation
     const qBind = (initialBoneRot.get(bone) || bone.quaternion.clone()).clone();
-
-    // Determine driving axis for this motion
     const baseAxis = ({sagittal:'x', frontal:'z', transverse:'y'})[cfg.plane] || 'x';
     const axis = axisFor(RIG_PROFILE, key, baseAxis);
-
-    // Compute relative bind rotation vs parent, then the twist angle around that axis.
     let neutralShiftDeg = 0;
     try{
       const parent = bone.parent && bone.parent.isBone ? bone.parent : null;
-      const qp = parent ? (initialBoneRot.get(parent) || parent.quaternion.clone()).clone()
-                        : new THREE.Quaternion(); // identity if no parent
-      const qRel = qp.clone().invert().multiply(qBind); // parent→child rotation at rest
-      const v = axisCharToVec(axis);
-      const ang = twistAngleAroundAxis(qRel, v); // radians (signed)
-      neutralShiftDeg = THREE.MathUtils.radToDeg(-ang); // negate to zero it out
+      const qRel = parent ? parent.quaternion.clone().invert().multiply(qBind) : qBind.clone();
+      const v = new THREE.Vector3(+(axis==='x'), +(axis==='y'), +(axis==='z')).normalize();
+      const ang = twistAngleAroundAxis(qRel, v);
+      neutralShiftDeg = THREE.MathUtils.radToDeg(-ang);
     }catch(e){ neutralShiftDeg = 0; }
-
     const obj = {bone, qBind, axis, neutralShiftDeg};
     JOINT_BIND.set(key,obj);
     log(`Bound ${key} → ${bone.name} (axis ${axis}, neutralShift ${neutralShiftDeg.toFixed(1)}°)`);
     return obj;
   }
+
 
   /* ===== Apply motion using calibrated neutral (UPDATED) ===== */
   function applyPairAngle(key,cfg,sliderDeg){
@@ -663,7 +660,6 @@ optgroup{color:#9fb0c9;font-style:normal}
     if (!model) return;
     model.position.set(parseFloat(mx.value), parseFloat(my.value), parseFloat(mz.value));
     model.scale.setScalar(parseInt(ms.value,10)/100);
-    model.scale.setScalar(0.60);
     model.rotation.y = THREE.MathUtils.degToRad(parseFloat(myaw.value));
   }));
   zeroBone.onclick = zeroSelectedBone;
@@ -690,77 +686,6 @@ optgroup{color:#9fb0c9;font-style:normal}
   };
   document.getElementById("romClose").onclick = ()=> romModal.classList.remove('on');
 
-
-  /* ===== Student Floating Hands (MMT placements) ===== */
-  let handStab = null, handForce = null;
-  let handsVisible = true;
-  const rayHF = new THREE.Raycaster();
-  const mouseHF = new THREE.Vector2();
-  let draggingHF = null;
-
-  function makeHand(label){
-    const g = new THREE.Group();
-    const pad = new THREE.Mesh(new THREE.CircleGeometry(0.055, 32),
-      new THREE.MeshStandardMaterial({color:0xffc08a, transparent:true, opacity:0.78, roughness:0.9}));
-    pad.rotateX(-Math.PI/2); g.add(pad);
-    const c = document.createElement('canvas'); c.width=256; c.height=96;
-    const ctx = c.getContext('2d'); ctx.fillStyle='rgba(0,0,0,0.8)'; ctx.fillRect(0,0,256,96);
-    ctx.fillStyle='#fff'; ctx.font='28px sans-serif'; ctx.textBaseline='middle';
-    ctx.fillText(label+' hand', 12, 48);
-    const tex = new THREE.CanvasTexture(c);
-    const spr = new THREE.Sprite(new THREE.SpriteMaterial({map:tex, depthTest:false}));
-    spr.scale.set(0.40,0.16,1); spr.position.set(0,0.10,0); g.add(spr);
-    g.userData.pad = pad; g.name = label+'_hand'; return g;
-  }
-  function ensureHands(){
-    if (!scene) return;
-    if (!handStab){ handStab = makeHand('Stabilize'); scene.add(handStab); handStab.position.set(0.0,1.10,0.15); }
-    if (!handForce){ handForce = makeHand('Force');     scene.add(handForce); handForce.position.set(0.25,1.00,0.20); }
-    handStab.visible = handsVisible; handForce.visible = handsVisible;
-  }
-  function setHandsVisible(v){ handsVisible = !!v; ensureHands(); }
-  function pickSurface(e){
-    const rect = renderer.domElement.getBoundingClientRect();
-    mouseHF.x = ((e.clientX-rect.left)/rect.width)*2-1;
-    mouseHF.y = -((e.clientY-rect.top)/rect.height)*2+1;
-    rayHF.setFromCamera(mouseHF, camera);
-    const meshes = []; if (model) model.traverse(o=>{ if (o.isMesh) meshes.push(o); });
-    return rayHF.intersectObjects(meshes, true)[0] || null;
-  }
-  function alignToNormal(group, normal){
-    const up = new THREE.Vector3(0,1,0);
-    const q = new THREE.Quaternion().setFromUnitVectors(up, normal.clone().normalize());
-    group.quaternion.copy(q);
-  }
-  function onHFDown(e){
-    if (!handsVisible) return;
-    ensureHands();
-    const hit = pickSurface(e); if (!hit) return;
-    const pSt = handStab ? handStab.position.clone().project(camera) : null;
-    const pFo = handForce ? handForce.position.clone().project(camera) : null;
-    const dxSt = pSt ? ((pSt.x-mouseHF.x)**2 + (pSt.y-mouseHF.y)**2) : 999;
-    const dxFo = pFo ? ((pFo.x-mouseHF.x)**2 + (pFo.y-mouseHF.y)**2) : 999;
-    draggingHF = dxSt < dxFo ? handStab : handForce;
-    draggingHF.position.copy(hit.point);
-    if (hit.face && hit.face.normal) alignToNormal(draggingHF, hit.face.normal);
-  }
-  function onHFMove(e){
-    if (!draggingHF) return;
-    const hit = pickSurface(e); if (!hit) return;
-    draggingHF.position.copy(hit.point);
-    if (hit.face && hit.face.normal) alignToNormal(draggingHF, hit.face.normal);
-  }
-  function onHFUp(){ draggingHF = null; }
-  function bindHF(){
-    const el = renderer && renderer.domElement; if (!el || el.__handsBound) return;
-    el.addEventListener('pointerdown', onHFDown);
-    el.addEventListener('pointermove', onHFMove);
-    window.addEventListener('pointerup', onHFUp);
-    el.__handsBound = true;
-  }
-  const toggleHands = document.getElementById('toggleHands');
-  if (toggleHands){ toggleHands.addEventListener('change', ()=> setHandsVisible(toggleHands.checked)); }
-
   /* ===== Load model ===== */
   function clearModel(){
     if (model) scene.remove(model);
@@ -780,11 +705,8 @@ optgroup{color:#9fb0c9;font-style:normal}
           if (o.isSkinnedMesh && !skeleton) skeleton = o.skeleton;
         });
         scene.add(model);
-        ensureHands();
-        bindHF();
         model.position.set(parseFloat(mx.value), parseFloat(my.value), parseFloat(mz.value));
         model.scale.setScalar(parseInt(ms.value,10)/100);
-    model.scale.setScalar(0.60);
         model.rotation.y = THREE.MathUtils.degToRad(parseFloat(myaw.value));
         groundSnap(); autoScaleToHeight(1.75); fitView();
         msg.textContent = "✅ Model loaded";
@@ -807,14 +729,7 @@ optgroup{color:#9fb0c9;font-style:normal}
   }
   loadModel();
 
-
-  function validateHandsFor(){
-    const ok = !!(handStab && handForce);
-    document.getElementById('handStatus').textContent = ok ? '✔ Hands ready' : '✖ Place both student hands';
-    return ok;
-  }
   /* ===== Render ===== */
-        
   addEventListener("resize", () => {
     camera.aspect = innerWidth/innerHeight;
     camera.updateProjectionMatrix();
@@ -830,4 +745,3 @@ optgroup{color:#9fb0c9;font-style:normal}
   </script>
 </body>
 </html>
-
