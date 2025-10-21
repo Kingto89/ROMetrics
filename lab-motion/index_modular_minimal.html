@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ROMetrics — Modular Minimal (Fixed Paths)</title>
+  <title>ROMetrics — Modular Minimal (SAFE)</title>
   <style>
     html,body {margin:0;height:100%;background:#0e1420;color:#dbe7ff;font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
     #app {position:fixed;inset:0;display:grid;grid-template-rows:auto 1fr}
@@ -44,7 +44,6 @@ import { GLTFLoader } from "https://unpkg.com/three@0.159.0/examples/jsm/loaders
 
 // Expose for add-ons
 window.THREE = THREE;
-
 const root = document.getElementById("stage");
 const msg  = document.getElementById("msg");
 const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
@@ -55,33 +54,19 @@ root.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x0e1420);
-
 const camera = new THREE.PerspectiveCamera(55, renderer.domElement.width/renderer.domElement.height, 0.1, 100);
 camera.position.set(1.8, 1.3, 2.1);
-
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.target.set(0, 1.0, 0);
-
 scene.add(new THREE.HemisphereLight(0xffffff, 0x334466, 0.6));
-const key = new THREE.DirectionalLight(0xffffff, 1.1);
-key.position.set(2, 4, 2);
-key.castShadow = true;
-key.shadow.mapSize.set(2048,2048);
-scene.add(key);
+const key = new THREE.DirectionalLight(0xffffff, 1.1); key.position.set(2,4,2); key.castShadow = true; key.shadow.mapSize.set(2048,2048); scene.add(key);
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(20,20), new THREE.MeshStandardMaterial({color:0x0c1326, roughness:0.9, metalness:0}));
+ground.rotation.x = -Math.PI/2; ground.position.y = 0; ground.receiveShadow = true; scene.add(ground);
 
-const ground = new THREE.Mesh(new THREE.PlaneGeometry(20,20),
-  new THREE.MeshStandardMaterial({color:0x0c1326, roughness:0.9, metalness:0}));
-ground.rotation.x = -Math.PI/2; ground.position.y = 0; ground.receiveShadow = true;
-scene.add(ground);
-
-window.scene = scene;
-window.camera = camera;
-window.renderer = renderer;
-window.controls = controls;
-window.model = null;
-
+window.scene = scene; window.camera = camera; window.renderer = renderer; window.controls = controls; window.model = null;
 const loader = new GLTFLoader();
+
 function fitView(target= window.model || scene){
   const box = new THREE.Box3().setFromObject(target);
   const size = box.getSize(new THREE.Vector3()).length();
@@ -114,7 +99,7 @@ async function loadModel(url){
 function getParam(name){ const u=new URL(location.href); return u.searchParams.get(name); }
 async function boot(){
   const q = getParam("model");
-  const url = q || "./Athletic_Grace_1006002620_texture.glb"; // change if needed
+  const url = q || "./Athletic_Grace_1006002620_texture.glb";
   try{ await loadModel(url); }catch{}
 }
 boot();
@@ -132,11 +117,17 @@ addEventListener("resize", ()=>{
 });
 
 renderer.setAnimationLoop(()=>{ controls.update(); renderer.render(scene, camera); });
-</script>
 
-<!-- Fixed paths to /addons/ -->
-<script src="./addons/hands_addon.js"></script>
-<script src="./addons/posture_addon.js"></script>
-<script src="./addons/regions_actions_addon.js"></script>
+// ---- SAFE ADD-ON LOADER ----
+// Tries to import each add-on; if missing (404), it won't break the page.
+(async () => {
+  const base = "./addons/";
+  const addons = ["hands_addon.js", "posture_addon.js", "regions_actions_addon.js"];
+  for (const f of addons) {
+    try { await import(base + f); }
+    catch(e) { console.info("Optional add-on not found:", f); }
+  }
+})();
+</script>
 </body>
 </html>
