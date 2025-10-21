@@ -1,133 +1,752 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ROMetrics — Modular Minimal (SAFE)</title>
-  <style>
-    html,body {margin:0;height:100%;background:#0e1420;color:#dbe7ff;font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
-    #app {position:fixed;inset:0;display:grid;grid-template-rows:auto 1fr}
-    header {display:flex;align-items:center;gap:8px;padding:8px 10px;background:#0b1020;border-bottom:1px solid #1e2a44}
-    header h1 {font-size:14px;margin:0;color:#b8ccff;font-weight:600}
-    button.mini {background:#1a2744;color:#cfe1ff;border:1px solid #2a3b63;border-radius:10px;padding:6px 10px;font-size:12px;cursor:pointer}
-    button.mini:hover{filter:brightness(1.1)}
-    .panel {position:fixed;right:12px;top:12px;width:300px;max-height:85vh;overflow:auto;background:#0b1020;border:1px solid #1e2a44;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.4)}
-    .panel header {position:sticky;top:0;z-index:2;background:#0b1020;border-bottom:1px solid #1e2a44}
-    .panel .content {padding:10px}
-    .row {display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
-    label {display:block;color:#a9b8d9;margin:8px 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:.06em}
-    #msg {margin-left:auto;color:#9fd3ff;font-size:12px}
-    canvas{display:block}
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>3D Motion Lab — Joint Trainer</title>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<style>
+:root{--bg:#0b1220;--panel:#0f172a;--line:#1f2937;--ctrl:#1e293b;--text:#e2e8f0;--muted:#cbd5e1}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);overflow:hidden;font-family:system-ui,Segoe UI,Roboto}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
+.panel{position:fixed;left:12px;top:12px;width:360px;max-height:90vh;z-index:20;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.4);display:flex;flex-direction:column;overflow:hidden}
+.dragbar{cursor:move;background:#0c1628;border-bottom:1px solid #162235;padding:8px 12px;font-weight:700;display:flex;align-items:center;gap:8px}
+.dragbar .hint{margin-left:auto;font-size:12px;color:#9fb0c9}
+.content{padding:12px;overflow:auto}
+label{display:block;font-size:12px;margin-top:8px;color:var(--muted)}
+select,button,input[type=range]{width:100%;margin:6px 0 8px 0;padding:8px 10px;border-radius:10px;background:var(--ctrl);border:1px solid #334155;color:var(--text)}
+.row{display:flex;gap:8px}.row>button{flex:1}
+.mini{padding:6px 10px;border-radius:8px;background:var(--ctrl);border:1px solid #334155}
+.seg{display:flex;gap:8px}
+.seg button{flex:1;padding:8px 10px;border-radius:10px;background:#142033;border:1px solid #334155;color:#cbd5e1}
+.seg button.on{background:#1f2c43;color:#fff;border-color:#47618e}
+details{border:1px solid #162235;border-radius:10px;padding:8px;background:#0b1426;margin-top:8px}
+summary{cursor:pointer;font-weight:600;color:#dbe7ff}
+#log{background:#0b1220;border:1px solid #1f2937;min-height:90px;max-height:130px;overflow:auto;border-radius:8px;padding:8px;font-size:12px;white-space:pre-wrap}
+#msg{position:fixed;bottom:10px;left:12px;background:rgba(15,23,42,.75);border:1px solid #334155;border-radius:8px;padding:6px 10px;font-size:12px;z-index:25}
+optgroup{color:#9fb0c9;font-style:normal}
+.modal{position:fixed;right:16px;bottom:16px;width:min(560px,92vw);max-height:78vh;z-index:30;background:rgba(8,13,26,.96);border:1px solid #334155;border-radius:12px;backdrop-filter:blur(6px);display:none;flex-direction:column;overflow:hidden}
+.modal.on{display:flex}
+.modal .top{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid #1f2a40;background:#0c1628}
+.modal .top h4{margin:0;font-size:14px}
+.modal .x{margin-left:auto;background:transparent;border:0;color:#9fb0c9;font-size:18px;cursor:pointer}
+.modal .body{padding:12px;overflow:auto}
+
+
+.handTag{ position:fixed; z-index:15; pointer-events:auto; user-select:none;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,.45)); cursor:grab; transform-origin:center center; }
+.handTag:active{ cursor:grabbing; }
+.handTag .badge{
+  position:absolute; right:-8px; bottom:-8px; font:700 10px/1 system-ui,Segoe UI,Roboto;
+  color:#0b1220; background:#f59e0b; border:1px solid rgba(0,0,0,.35);
+  border-radius:999px; padding:3px 6px; transform:translate(50%,50%); pointer-events:none;
+  box-shadow:0 2px 6px rgba(0,0,0,.45);
+}
+.handTag.stab .badge{ background:#14b8a6; } /* teal for Stabilize */
+.handTag.test .badge{ background:#f59e0b; } /* amber for Test */
+
+</style>
 </head>
 <body>
-<div id="app">
-  <header>
-    <h1>ROMetrics</h1>
-    <div class="row">
-      <button id="reload" class="mini">Reload Model</button>
+  <div class="panel" id="panel">
+    <div class="dragbar" id="dragbar">🧭 Joint Lab <span class="hint">drag me</span></div>
+    <div class="content" id="panelContent">
+      <div class="row">
+        <button id="reload" class="mini">Reload Model</button>
+      </div>
+      <!-- Add-ons inject here -->
     </div>
-    <div id="msg"></div>
-  </header>
-  <div id="stage"></div>
-</div>
+  </div>
 
-<div class="panel">
-  <header class="row"><strong>Controls</strong></header>
-  <div class="content"><!-- Add-ons inject here --></div>
-</div>
-
+  <div id="msg">Loading…</div>
+  <canvas id="c"></canvas>
 <script type="module">
-import * as THREE from "https://unpkg.com/three@0.159.0/build/three.module.js";
-import { OrbitControls } from "https://unpkg.com/three@0.159.0/examples/jsm/controls/OrbitControls.js";
-import { GLTFLoader } from "https://unpkg.com/three@0.159.0/examples/jsm/loaders/GLTFLoader.js";
+  import * as THREE from "three";
+  import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+  import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+  import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
+  import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
+  import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 
-// Expose for add-ons
-window.THREE = THREE;
-const root = document.getElementById("stage");
-const msg  = document.getElementById("msg");
-const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-renderer.setSize(innerWidth, innerHeight - document.querySelector("header").offsetHeight);
-renderer.shadowMap.enabled = true;
-root.appendChild(renderer.domElement);
+  /* ===== UI ===== */
+  const msg = document.getElementById("msg");
+  const logEl = document.getElementById("log");
+  const log = (t)=>{ logEl.textContent += t + "\n"; logEl.scrollTop = logEl.scrollHeight; };
 
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x0e1420);
-const camera = new THREE.PerspectiveCamera(55, renderer.domElement.width/renderer.domElement.height, 0.1, 100);
-camera.position.set(1.8, 1.3, 2.1);
-const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;
-controls.target.set(0, 1.0, 0);
-scene.add(new THREE.HemisphereLight(0xffffff, 0x334466, 0.6));
-const key = new THREE.DirectionalLight(0xffffff, 1.1); key.position.set(2,4,2); key.castShadow = true; key.shadow.mapSize.set(2048,2048); scene.add(key);
-const ground = new THREE.Mesh(new THREE.PlaneGeometry(20,20), new THREE.MeshStandardMaterial({color:0x0c1326, roughness:0.9, metalness:0}));
-ground.rotation.x = -Math.PI/2; ground.position.y = 0; ground.receiveShadow = true; scene.add(ground);
+  const panel = document.getElementById("panel");
+  const dragbar = document.getElementById("dragbar");
+  const reloadBtn = document.getElementById("reload");
+/* ===== Draggable panel ===== */
+  (function(){
+    let dragging=false, sx=0, sy=0, startLeft=0, startTop=0;
+    const onDown = (e)=>{ dragging=true; sx=e.clientX; sy=e.clientY;
+      const r = panel.getBoundingClientRect();
+      startLeft = r.left; startTop = r.top;
+      e.preventDefault();
+    };
+    const onMove = (e)=>{ if(!dragging) return;
+      const dx = e.clientX - sx, dy = e.clientY - sy;
+      panel.style.left = Math.max(8, startLeft + dx) + "px";
+      panel.style.top = Math.max(8, startTop + dy) + "px";
+    };
+    const onUp = ()=>{ dragging = false; };
+    dragbar.addEventListener("pointerdown", onDown);
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+  })();
 
-window.scene = scene; window.camera = camera; window.renderer = renderer; window.controls = controls; window.model = null;
-const loader = new GLTFLoader();
+  /* ===== Three setup ===== */
+  const canvas = document.getElementById("c");
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  renderer.setPixelRatio(devicePixelRatio);
+  renderer.setSize(innerWidth, innerHeight);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-function fitView(target= window.model || scene){
-  const box = new THREE.Box3().setFromObject(target);
-  const size = box.getSize(new THREE.Vector3()).length();
-  const center = box.getCenter(new THREE.Vector3());
-  const fitHeightDistance = size / (2 * Math.atan((Math.PI * camera.fov / 360)));
-  const fitWidthDistance = fitHeightDistance / camera.aspect;
-  const distance = Math.max(fitHeightDistance, fitWidthDistance);
-  const direction = new THREE.Vector3().subVectors(camera.position, controls.target).normalize();
-  controls.target.copy(center);
-  camera.position.copy(direction.multiplyScalar(distance).add(controls.target));
-  camera.near = distance / 100; camera.far = distance * 100; camera.updateProjectionMatrix();
-  controls.update();
-}
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0b1220);
 
-async function loadModel(url){
-  if (window.model){ scene.remove(window.model); window.model = null; }
-  msg.textContent = "Loading…";
-  return new Promise((resolve,reject)=>{
-    loader.load(url, (gltf)=>{
-      window.model = gltf.scene;
-      window.model.traverse(n=>{ if(n.isMesh){n.castShadow=true;n.receiveShadow=true;} });
-      scene.add(window.model);
-      msg.textContent = "✅ Model loaded";
-      fitView(window.model);
-      resolve(window.model);
-    }, undefined, (err)=>{ console.error(err); msg.textContent = "⚠️ Load failed"; reject(err); });
+  const camera = new THREE.PerspectiveCamera(45, innerWidth/innerHeight, 0.01, 100);
+  camera.position.set(1.6, 1.6, 2.8);
+
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true; controls.dampingFactor = 0.08;
+  controls.minDistance = 0.6; controls.maxDistance = 6;
+  controls.target.set(0,1.1,0);
+
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x333344, 0.7));
+  const key = new THREE.DirectionalLight(0xffffff, 1.2);
+  key.position.set(2.5,4,2.5);
+  key.castShadow = true;
+  key.shadow.mapSize.set(2048,2048);
+  key.shadow.camera.near = 0.1; key.shadow.camera.far = 15;
+  key.shadow.camera.left = -4; key.shadow.camera.right = 4; key.shadow.camera.top = 4; key.shadow.camera.bottom = -4;
+  scene.add(key);
+
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(20,20), new THREE.ShadowMaterial({ opacity: 0.45 }));
+  ground.rotation.x = -Math.PI/2; ground.receiveShadow = true; scene.add(ground);
+
+  /* ===== Loader ===== */
+  const loader = new GLTFLoader();
+  loader.setMeshoptDecoder(MeshoptDecoder);
+  const draco = new DRACOLoader(); draco.setDecoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/draco/"); loader.setDRACOLoader(draco);
+  const ktx2 = new KTX2Loader(); ktx2.setTranscoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/basis/"); ktx2.detectSupport(renderer); loader.setKTX2Loader(ktx2);
+
+  let model = null, skeleton = null;
+  const initialBoneRot = new Map();
+
+  function pickModelUrl(){
+    const u = new URL(location.href);
+    const q = u.searchParams.get("model");
+    if (q && /^https?:\/\//i.test(q)) return q;
+    if (q && q.trim()) return new URL(q, location.href).href;
+    return "./Athletic_Grace_1006002620_texture.glb";
+  }
+  let MODEL_URL = pickModelUrl();
+
+  function groundSnap(){
+    if (!model) return;
+    const box = new THREE.Box3().setFromObject(model);
+    const minY = box.min.y;
+    if (isFinite(minY)) model.position.y -= minY;
+  }
+  function autoScaleToHeight(target=1.75){
+    const box = new THREE.Box3().setFromObject(model);
+    const h = box.max.y - box.min.y;
+    if (!isFinite(h) || h <= 0) return;
+    const s = target / h;
+    if (s < 0.4 || s > 2.5) { model.scale.multiplyScalar(s); log(`Scaled ×${s.toFixed(2)}`); }
+  }
+  function fitView(){
+    const box = new THREE.Box3().setFromObject(model || scene);
+    const size = new THREE.Vector3(); box.getSize(size);
+    const center = new THREE.Vector3(); box.getCenter(center);
+    controls.target.copy(center);
+    const maxDim = Math.max(size.x, size.y, size.z);
+    const dist = maxDim / (2 * Math.tan((camera.fov * Math.PI/180)/2));
+    camera.position.copy(center).add(new THREE.Vector3(0.8*dist, 0.8*dist, 1.2*dist));
+    camera.lookAt(center);
+  }
+
+  /* ===== Populate bones ===== */
+  function populateBones(){
+    boneSel.innerHTML = "";
+    if (!skeleton) {
+      const o = document.createElement("option");
+      o.value = ""; o.textContent = "(No skeleton)";
+      boneSel.appendChild(o);
+      return;
+    }
+    skeleton.bones.forEach((b,i)=>{
+      const o = document.createElement("option");
+      o.value = String(i);
+      o.textContent = b.name || `Bone ${i}`;
+      boneSel.appendChild(o);
+      if (!initialBoneRot.has(b)) initialBoneRot.set(b, b.quaternion.clone());
+    });
+    if (skeleton.bones.length) boneSel.value = "0";
+    rx.value = "0"; ry.value = "0"; rz.value = "0";
+    setBoneRotationFromUI();
+  }
+  function setBoneRotationFromUI(){
+    const idx = parseInt(boneSel.value||"-1",10);
+    if (!skeleton || isNaN(idx) || !skeleton.bones[idx]) return;
+    const b = skeleton.bones[idx];
+    const ex = THREE.MathUtils.degToRad(parseFloat(rx.value)||0);
+    const ey = THREE.MathUtils.degToRad(parseFloat(ry.value)||0);
+    const ez = THREE.MathUtils.degToRad(parseFloat(rz.value)||0);
+    const qDelta = new THREE.Quaternion().setFromEuler(new THREE.Euler(ex,ey,ez,"XYZ"));
+    const qBase = initialBoneRot.get(b) || new THREE.Quaternion();
+    b.quaternion.copy(qBase).multiply(qDelta);
+  }
+  function zeroSelectedBone(){
+    const idx = parseInt(boneSel.value||"-1",10);
+    if (!skeleton || isNaN(idx) || !skeleton.bones[idx]) return;
+    const b = skeleton.bones[idx];
+    const qb = initialBoneRot.get(b);
+    if (qb) b.quaternion.copy(qb);
+    rx.value="0"; ry.value="0"; rz.value="0";
+  }
+
+  /* ===== Rig profile detection & axis map ===== */
+  let RIG_PROFILE = 'generic';
+  function detectRigProfile(){
+    const names = skeleton?.bones.map(b=>b.name.toLowerCase()).join(' ') || '';
+    if (/\bmixamorig\b/.test(names)) RIG_PROFILE = 'mixamo';
+    else RIG_PROFILE = 'generic';
+    log(`Rig profile: ${RIG_PROFILE}`);
+  }
+
+  // Return the local axis to drive for a given motion key under a profile
+  function axisFor(profile, motionKey, defaultAxis){
+    if (profile==='mixamo'){
+      // Corrected Mixamo local axes
+      const map = {
+        // Shoulder (GH)
+        sh_fe_l:'x', sh_fe_r:'x',           // flex / ext → sagittal
+        sh_aa_l:'z', sh_aa_r:'z',           // abd / add  → frontal
+        sh_irer_l:'y', sh_irer_r:'y',       // IR / ER    → transverse
+
+        // Elbow (humeroulnar)
+        el_fe_l:'x', el_fe_r:'x',           // flex / ext
+
+        // Forearm
+        fa_ps_l:'y', fa_ps_r:'y',           // pronation / supination
+
+        // Wrist
+        wr_fe_l:'x', wr_fe_r:'x',           // flex / ext
+        wr_ru_l:'z', wr_ru_r:'z',           // radial / ulnar deviation
+
+        // Hip
+        hip_fe_l:'x', hip_fe_r:'x',         // flex / ext
+        hip_aa_l:'z', hip_aa_r:'z',         // abd / add
+        hip_irer_l:'y', hip_irer_r:'y',     // IR / ER
+
+        // Knee
+        knee_fe_l:'x', knee_fe_r:'x',       // flex / ext
+
+        // Ankle / foot
+        ankle_dfpf_l:'x', ankle_dfpf_r:'x', // dorsi / plantarflex
+        foot_invev_l:'z', foot_invev_r:'z'  // inversion / eversion
+      };
+      if (motionKey in map) return map[motionKey];
+    }
+    // Generic fallback: use plane mapping
+    return defaultAxis;
+  }
+
+  /* ===== Side-aware bone finding (no wrong-side fallback) ===== */
+  const EXCLUDE = /(pelvis|root|spine|clavicle|scapula)/i;
+
+  function sideRegex(side){
+    if (!side) return [/.*/];
+    if (side==='l'){
+      return [
+        /\bleft\b/i, /\b_left\b/i, /\.l\b/i, /_l\b/i, /\bl\b(?![a-z])/i,
+        /\bleft(?=[A-Z_])/i, /mixamorig:.*left/i
+      ];
+    } else {
+      return [
+        /\bright\b/i, /\b_right\b/i, /\.r\b/i, /_r\b/i, /\br\b(?![a-z])/i,
+        /\bright(?=[A-Z_])/i, /mixamorig:.*right/i
+      ];
+    }
+  }
+
+  function findBoneBy(cfg){
+    if (!skeleton) return null;
+    const names = skeleton.bones.map(b=>b.name.toLowerCase());
+    const sideREs = sideRegex(cfg.side);
+    // First pass: must match side (if specified) AND hint
+    for (const cand of cfg.hints){
+      for (let i=0;i<names.length;i++){
+        if (EXCLUDE.test(names[i])) continue;
+        if (!sideREs.some(r=>r.test(names[i]))) continue;
+        if (cand.test(names[i])) return skeleton.bones[i];
+      }
+    }
+    // Second pass (only when no side specified): hint only
+    if (!cfg.side){
+      for (const cand of cfg.hints){
+        for (let i=0;i<names.length;i++){
+          if (EXCLUDE.test(names[i])) continue;
+          if (cand.test(names[i])) return skeleton.bones[i];
+        }
+      }
+    }
+    return null;
+  }
+
+  const JOINT_BIND = new Map();
+
+  /* ===== Neutral calibration helpers (NEW) ===== */
+  function axisCharToVec(axis){
+    if (axis==='x') return new THREE.Vector3(1,0,0);
+    if (axis==='y') return new THREE.Vector3(0,1,0);
+    return new THREE.Vector3(0,0,1);
+  }
+
+  // Extract signed twist angle of q around local axis v (swing-twist split)
+  function twistAngleAroundAxis(q, v){
+    // q must be unit quaternion; v must be normalized axis in local space
+    const vx = v.x, vy = v.y, vz = v.z;
+    const s = vx*q.x + vy*q.y + vz*q.z;             // projection of q’s vector part
+    // twist quaternion = normalize( [v*s, q.w] )
+    let tx = vx*s, ty = vy*s, tz = vz*s, tw = q.w;
+    const len = Math.hypot(tx,ty,tz,tw);
+    if (len > 0) { tx/=len; ty/=len; tz/=len; tw/=len; }
+    const sinHalf = Math.hypot(tx,ty,tz);
+    let angle = 2*Math.atan2(sinHalf, Math.max(-1, Math.min(1, tw)));
+    // sign based on direction along v
+    const dot = tx*vx + ty*vy + tz*vz;
+    if (dot < 0) angle = -angle;
+    return angle; // radians
+  }
+
+  /* ===== Bind resolver with neutral shift (UPDATED) ===== */
+  
+function resolveBind(key,cfg){
+    if (JOINT_BIND.has(key)) return JOINT_BIND.get(key);
+    let bone = findBoneBy(cfg);
+    // Fallbacks for trunk if generic search fails
+    if (!bone && /^trunk_/.test(key) && skeleton){
+      const names = skeleton.bones.map(b=>b.name.toLowerCase());
+      const idx = names.findIndex(n=>/spine02|spine_?02|upper.?spine|chest|thor/i.test(n));
+      bone = idx>=0 ? skeleton.bones[idx] : skeleton.bones.find(b=>/spine|chest|thor/i.test(b.name.toLowerCase()));
+    }
+    if (!bone) { log(`No bind for ${key}`); return null; }
+    const qBind = (initialBoneRot.get(bone) || bone.quaternion.clone()).clone();
+    const baseAxis = ({sagittal:'x', frontal:'z', transverse:'y'})[cfg.plane] || 'x';
+    const axis = axisFor(RIG_PROFILE, key, baseAxis);
+    let neutralShiftDeg = 0;
+    try{
+      const parent = bone.parent && bone.parent.isBone ? bone.parent : null;
+      const qRel = parent ? parent.quaternion.clone().invert().multiply(qBind) : qBind.clone();
+      const v = new THREE.Vector3(+(axis==='x'), +(axis==='y'), +(axis==='z')).normalize();
+      const ang = twistAngleAroundAxis(qRel, v);
+      neutralShiftDeg = THREE.MathUtils.radToDeg(-ang);
+    }catch(e){ neutralShiftDeg = 0; }
+    const obj = {bone, qBind, axis, neutralShiftDeg};
+    JOINT_BIND.set(key,obj);
+    log(`Bound ${key} → ${bone.name} (axis ${axis}, neutralShift ${neutralShiftDeg.toFixed(1)}°)`);
+    return obj;
+  }
+
+
+  /* ===== Apply motion using calibrated neutral (UPDATED) ===== */
+  function applyPairAngle(key,cfg,sliderDeg){
+    const bind = resolveBind(key,cfg);
+    if (!bind) return;
+    const {bone, qBind, axis, neutralShiftDeg} = bind;
+
+    const rad = THREE.MathUtils.degToRad(sliderDeg + (cfg.neutral||0) + (neutralShiftDeg||0));
+    const e = new THREE.Euler(0,0,0,"XYZ");
+    if (axis==='x') e.set(rad,0,0,"XYZ");
+    if (axis==='y') e.set(0,rad,0,"XYZ");
+    if (axis==='z') e.set(0,0,rad,"XYZ");
+
+    const qDelta = new THREE.Quaternion().setFromEuler(e);
+    bone.quaternion.copy(qBind).multiply(qDelta);
+  }
+
+  /* ===== Joint definitions (paired) ===== */
+  // Hints prefer specific limb bones (avoid scapula/clavicle for GH; avoid forearm for wrist)
+  const UPPER = [
+    // NEW trunk/thoracic motions
+    {key:'trunk_fe',  pair:'Trunk — Flex / Ext',            side:'', plane:'sagittal',   neutral:0, min:-60, max:80,  hints:[/spine|chest|thor/i]},
+    {key:'trunk_lat', pair:'Trunk — Lateral Bend (L / R)',  side:'', plane:'frontal',    neutral:0, min:-40, max:40,  hints:[/spine|chest|thor/i]},
+    {key:'trunk_rot', pair:'Trunk — Rotation (L / R)',      side:'', plane:'transverse', neutral:0, min:-45, max:45,  hints:[/spine|chest|thor/i]},
+
+    // Cervical
+    {key:'cerv_fe',   pair:'Cervical Flex / Ext',                side:'', plane:'sagittal',   neutral:0, min:-60,  max:70,  hints:[/neck|cspine|head/i]},
+    {key:'cerv_lat',  pair:'Cervical Lat Flex (L / R)',          side:'', plane:'frontal',    neutral:0, min:-45,  max:45,  hints:[/neck|cspine|head/i]},
+    {key:'cerv_rot',  pair:'Cervical Rotation (L / R)',          side:'', plane:'transverse', neutral:0, min:-80,  max:80,  hints:[/neck|cspine|head/i]},
+
+    // Shoulder
+    {key:'sh_fe_l',   pair:'Shoulder L — Flex / Ext',            side:'l', plane:'sagittal',  neutral:0, min:-180, max:60,  hints:[/upper.?arm|humerus|shoulder|arm(?!.*lower)/i]},
+    {key:'sh_fe_r',   pair:'Shoulder R — Flex / Ext',            side:'r', plane:'sagittal',  neutral:0, min:-180, max:60,  hints:[/upper.?arm|humerus|shoulder|arm(?!.*lower)/i]},
+    {key:'sh_aa_l',   pair:'Shoulder L — Abd / Add',             side:'l', plane:'frontal',   neutral:0, min:-180, max:40,  hints:[/upper.?arm|humerus|shoulder|arm(?!.*lower)/i]},
+    {key:'sh_aa_r',   pair:'Shoulder R — Abd / Add',             side:'r', plane:'frontal',   neutral:0, min:-180, max:40,  hints:[/upper.?arm|humerus|shoulder|arm(?!.*lower)/i]},
+    {key:'sh_irer_l', pair:'Shoulder L — Internal / External',   side:'l', plane:'transverse',neutral:0, min:-70,  max:90,  hints:[/upper.?arm|humerus|shoulder|arm(?!.*lower)/i]},
+    {key:'sh_irer_r', pair:'Shoulder R — Internal / External',   side:'r', plane:'transverse',neutral:0, min:-70,  max:90,  hints:[/upper.?arm|humerus|shoulder|arm(?!.*lower)/i]},
+
+    // Elbow / Forearm
+    {key:'el_fe_l',   pair:'Elbow L — Flex / Ext',               side:'l', plane:'sagittal',  neutral:0, min:-150, max:10,  hints:[/lower.?arm|forearm|ulna|radius/i]},
+    {key:'el_fe_r',   pair:'Elbow R — Flex / Ext',               side:'r', plane:'sagittal',  neutral:0, min:-150, max:10,  hints:[/lower.?arm|forearm|ulna|radius/i]},
+    {key:'fa_ps_l',   pair:'Forearm L — Pronation / Supination', side:'l', plane:'transverse',neutral:0, min:-85,  max:95,  hints:[/lower.?arm|forearm|ulna|radius/i]},
+    {key:'fa_ps_r',   pair:'Forearm R — Pronation / Supination', side:'r', plane:'transverse',neutral:0, min:-85,  max:95,  hints:[/lower.?arm|forearm|ulna|radius/i]},
+
+    // Wrist
+    {key:'wr_fe_l',   pair:'Wrist L — Flex / Ext',               side:'l', plane:'sagittal',  neutral:0, min:-80,  max:70,  hints:[/wrist|hand(?!.*thumb|.*index|.*middle|.*ring|.*pinky)/i]},
+    {key:'wr_fe_r',   pair:'Wrist R — Flex / Ext',               side:'r', plane:'sagittal',  neutral:0, min:-80,  max:70,  hints:[/wrist|hand(?!.*thumb|.*index|.*middle|.*ring|.*pinky)/i]},
+    {key:'wr_ru_l',   pair:'Wrist L — Radial / Ulnar Dev',       side:'l', plane:'frontal',   neutral:0, min:-20,  max:40,  hints:[/wrist|hand(?!.*thumb|.*index|.*middle|.*ring|.*pinky)/i]},
+    {key:'wr_ru_r',   pair:'Wrist R — Radial / Ulnar Dev',       side:'r', plane:'frontal',   neutral:0, min:-20,  max:40,  hints:[/wrist|hand(?!.*thumb|.*index|.*middle|.*ring|.*pinky)/i]},
+  ];
+
+  const LOWER = [
+    {key:'hip_fe_l',   pair:'Hip L — Flex / Ext',                side:'l', plane:'sagittal',  neutral:0, min:-120, max:30,  hints:[/upper.?leg|thigh|femur/i]},
+    {key:'hip_fe_r',   pair:'Hip R — Flex / Ext',                side:'r', plane:'sagittal',  neutral:0, min:-120, max:30,  hints:[/upper.?leg|thigh|femur/i]},
+    {key:'hip_aa_l',   pair:'Hip L — Abd / Add',                 side:'l', plane:'frontal',   neutral:0, min:-45,  max:30,  hints:[/upper.?leg|thigh|femur/i]},
+    {key:'hip_aa_r',   pair:'Hip R — Abd / Add',                 side:'r', plane:'frontal',   neutral:0, min:-45,  max:30,  hints:[/upper.?leg|thigh|femur/i]},
+    {key:'hip_irer_l', pair:'Hip L — Internal / External',       side:'l', plane:'transverse',neutral:0, min:-45,  max:45,  hints:[/upper.?leg|thigh|femur/i]},
+    {key:'hip_irer_r', pair:'Hip R — Internal / External',       side:'r', plane:'transverse',neutral:0, min:-45,  max:45,  hints:[/upper.?leg|thigh|femur/i]},
+
+    {key:'knee_fe_l',  pair:'Knee L — Flex / Ext',               side:'l', plane:'sagittal',  neutral:0, min:-150, max:5,   hints:[/lower.?leg|calf|shin|tibia|fibula/i]},
+    {key:'knee_fe_r',  pair:'Knee R — Flex / Ext',               side:'r', plane:'sagittal',  neutral:0, min:-150, max:5,   hints:[/lower.?leg|calf|shin|tibia|fibula/i]},
+
+    {key:'ankle_dfpf_l', pair:'Ankle L — Dorsi / Plantarflex',   side:'l', plane:'sagittal',  neutral:0, min:-20,  max:50,  hints:[/ankle|foot|talus|tarsal/i]},
+    {key:'ankle_dfpf_r', pair:'Ankle R — Dorsi / Plantarflex',   side:'r', plane:'sagittal',  neutral:0, min:-20,  max:50,  hints:[/ankle|foot|talus|tarsal/i]},
+    {key:'foot_invev_l', pair:'Foot L — Inversion / Eversion',   side:'l', plane:'frontal',   neutral:0, min:-20,  max:35,  hints:[/foot|calcaneus|heel|metatars/i]},
+    {key:'foot_invev_r', pair:'Foot R — Inversion / Eversion',   side:'r', plane:'frontal',   neutral:0, min:-20,  max:35,  hints:[/foot|calcaneus|heel|metatars/i]},
+  ];
+
+  let CURRENT = UPPER;
+
+  /* ===== UI: actions ===== */
+  function fillActionMenu(){
+    actionSel.innerHTML = "";
+    // Placeholder (no selection)
+    const ph = document.createElement("option");
+    ph.value = ""; ph.textContent = "(Select a motion…)";
+    actionSel.appendChild(ph);
+
+    const list = (CURRENT===UPPER) ? UPPER : LOWER;
+    const og = document.createElement("optgroup");
+    og.label = (CURRENT===UPPER) ? "Cervical, Trunk, Shoulder & Arm" : "Hip, Leg & Foot";
+    for (const item of list){
+      const opt = document.createElement("option");
+      opt.value = item.key;
+      opt.textContent = item.pair;
+      og.appendChild(opt);
+    }
+    actionSel.appendChild(og);
+
+    // Do not auto-select/apply a motion
+    actionSel.value = "";
+    pairLabel.textContent = "Angle (°)";
+    actionDeg.disabled = true;
+    zeroAction.disabled = true;
+  }  function cfgFromKey(k){
+    const list = (CURRENT===UPPER) ? UPPER : LOWER;
+    return list.find(x=>x.key===k) || null;
+  }
+
+  function syncActionUI(forceZero=false){
+    const key = actionSel.value;
+    const cfg = cfgFromKey(key);
+    if (!cfg){
+      actionDeg.disabled = true;
+      zeroAction.disabled = true;
+      pairLabel.textContent = "Angle (°)";
+      return;
+    }
+    pairLabel.textContent = cfg.pair + " — Angle (°)";
+    actionDeg.min = String(cfg.min);
+    actionDeg.max = String(cfg.max);
+    if (forceZero) actionDeg.value = "0";
+    // Enable but DO NOT apply until user moves the slider
+    actionDeg.disabled = false;
+    zeroAction.disabled = false;
+  }  /* ===== Postures ===== */
+  function rotateBoneDelta(b, x=0, y=0, z=0){
+    const qb = (initialBoneRot.get(b) || b.quaternion.clone()).clone();
+    const dq = new THREE.Quaternion().setFromEuler(new THREE.Euler(
+      THREE.MathUtils.degToRad(x),
+      THREE.MathUtils.degToRad(y),
+      THREE.MathUtils.degToRad(z),
+      "XYZ"
+    ));
+    b.quaternion.copy(qb).multiply(dq);
+  }
+  function findOne(reList){
+    if (!skeleton) return null;
+    const names = skeleton.bones.map(b=>b.name.toLowerCase());
+    for (const re of reList){
+      const i = names.findIndex(n => re.test(n));
+      if (i >= 0) return skeleton.bones[i];
+    }
+    return null;
+  }
+
+  function zeroAllJoints(){
+    for (const [,bind] of JOINT_BIND.entries()){
+      bind.bone.quaternion.copy(bind.qBind);
+    }
+    actionDeg.value = "0";
+    log("Zero all motions");
+  }
+
+  function applyPosturePreset(kind){
+    zeroAllJoints();
+
+    if (kind === "stand"){
+      model.rotation.x = 0;
+      groundSnap(); fitView(); return;
+    }
+    if (kind === "sit"){
+      // Mixamo-friendly names
+      const Lhip = findOne([/upper.?leg_l|thigh_l|femur_l|mixamorig:lefthip|mixamorig:leftupleg/i, /left upleg/i]);
+      const Rhip = findOne([/upper.?leg_r|thigh_r|femur_r|mixamorig:righthip|mixamorig:rightupleg/i, /right upleg/i]);
+      const Lk = findOne([/lower.?leg_l|tibia_l|shin_l|calf_l|mixamorig:leftleg/i]);
+      const Rk = findOne([/lower.?leg_r|tibia_r|shin_r|calf_r|mixamorig:rightleg/i]);
+      const Lank = findOne([/foot.*l|ankle.*l|talus.*l|tarsal.*l|mixamorig:leftfoot/i]);
+      const Rank = findOne([/foot.*r|ankle.*r|talus.*r|tarsal.*r|mixamorig:rightfoot/i]);
+
+      if (Lhip) rotateBoneDelta(Lhip, -90,0,0);
+      if (Rhip) rotateBoneDelta(Rhip, -90,0,0);
+      if (Lk) rotateBoneDelta(Lk, -90,0,0);
+      if (Rk) rotateBoneDelta(Rk, -90,0,0);
+      if (Lank) rotateBoneDelta(Lank, +5,0,0);
+      if (Rank) rotateBoneDelta(Rank, +5,0,0);
+
+      model.rotation.x = 0;
+      groundSnap(); fitView(); return;
+    }
+    if (kind === "supine"){
+      model.rotation.x = Math.PI/2;
+      groundSnap(); fitView(); return;
+    }
+    if (kind === "prone"){
+      model.rotation.x = -Math.PI/2;
+      groundSnap(); fitView(); return;
+    }
+  }
+
+  /* ===== Wire UI ===== */
+  segUpper.onclick = ()=>{ CURRENT = UPPER; segUpper.classList.add('on'); segLower.classList.remove('on'); fillActionMenu(); actionDeg.value='0'; actionDeg.disabled=true; zeroAction.disabled=true; };
+  segLower.onclick = ()=>{ CURRENT = LOWER; segLower.classList.add('on'); segUpper.classList.remove('on'); fillActionMenu(); };
+
+  actionSel.addEventListener("change", ()=>syncActionUI(true));
+  actionDeg.addEventListener("input", ()=>{
+    const key = actionSel.value; const cfg = cfgFromKey(key);
+    if (cfg) applyPairAngle(key,cfg, parseFloat(actionDeg.value)||0);
   });
-}
 
-function getParam(name){ const u=new URL(location.href); return u.searchParams.get(name); }
-async function boot(){
-  const q = getParam("model");
-  const url = q || "./Athletic_Grace_1006002620_texture.glb";
-  try{ await loadModel(url); }catch{}
-}
-boot();
+  zeroAction.onclick = ()=>{
+    const key = actionSel.value; const cfg = cfgFromKey(key);
+    if (!cfg) return;
+    actionDeg.value = "0";
+    applyPairAngle(key,cfg, 0);
+  };
 
-document.getElementById("reload").onclick = async ()=>{
-  const cur = getParam("model") || "./Athletic_Grace_1006002620_texture.glb";
-  const url = prompt("Enter GLB/GLTF URL", cur);
-  if (url){ await loadModel(url); history.replaceState(null, "", "?model="+encodeURIComponent(url)); }
-};
+  boneSel.onchange = ()=>{ rx.value="0"; ry.value="0"; rz.value="0"; setBoneRotationFromUI(); };
+  [rx,ry,rz].forEach(el=> el.addEventListener("input", setBoneRotationFromUI));
 
-addEventListener("resize", ()=>{
-  const h = innerHeight - document.querySelector("header").offsetHeight;
-  renderer.setSize(innerWidth, h); camera.aspect = renderer.domElement.width / renderer.domElement.height;
-  camera.updateProjectionMatrix();
-});
+  [mx,my,mz,ms,myaw].forEach(el => el.addEventListener("input", () => {
+    if (!model) return;
+    model.position.set(parseFloat(mx.value), parseFloat(my.value), parseFloat(mz.value));
+    model.scale.setScalar(parseInt(ms.value,10)/100);
+    model.rotation.y = THREE.MathUtils.degToRad(parseFloat(myaw.value));
+  }));
+  zeroBone.onclick = zeroSelectedBone;
+  resetModel.onclick = ()=>{
+    mx.value="0"; my.value="0"; mz.value="0.6"; ms.value="100"; myaw.value="0";
+    if (model){
+      model.position.set(0,0,0.6);
+      model.scale.setScalar(1);
+      model.rotation.y = 0;
+    }
+    groundSnap(); fitView();
+  };
+  document.getElementById('reload').onclick = ()=>{ MODEL_URL = pickModelUrl(); log(`Reload: ${MODEL_URL}`); loadModel(); };
+// ROM modal
+/* ===== Load model ===== */
+  function clearModel(){
+    if (model) scene.remove(model);
+    model = null; skeleton = null;
+    initialBoneRot.clear(); JOINT_BIND.clear();
+    boneSel.innerHTML = "";
+  }
+  function loadModel(){
+    msg.textContent = "Loading…"; log("Loading model...");
+    clearModel();
+    loader.load(
+      MODEL_URL,
+      (gltf) => {
+        model = gltf.scene;
+        model.traverse(o => {
+          if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; }
+          if (o.isSkinnedMesh && !skeleton) skeleton = o.skeleton;
+        });
+        scene.add(model);
+        model.position.set(0,0,0.6);
+        model.scale.setScalar(1);
+        model.rotation.y = 0;
+        groundSnap(); autoScaleToHeight(1.75); fitView();
+        msg.textContent = "✅ Model loaded";
+        log("Model load OK");
+        populateBones();
+        detectRigProfile();
+        CURRENT = UPPER;
+        segUpper.classList.add('on'); segLower.classList.remove('on');
+        // Force neutral start
+        try{ zeroAllJoints(); applyPosturePreset("stand"); }catch(e){}
+        fillActionMenu();
+},
+      (xhr) => {
+        msg.textContent = xhr.lengthComputable ? `Loading ${Math.round((xhr.loaded/xhr.total)*100)}%` : "Loading…";
+      },
+      (err) => {
+        console.error(err);
+        msg.textContent = "⚠️ Load error";
+        log(`Error: ${err?.message || err}`);
+      }
+    );
+  }
+  loadModel();
 
-renderer.setAnimationLoop(()=>{ controls.update(); renderer.render(scene, camera); });
+  /* ===== Render ===== */
+  addEventListener("resize", () => {
+    camera.aspect = innerWidth/innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth, innerHeight);
+  });
+  (function animate(){
+    controls.update();
+    renderer.render(scene, camera);
+    requestAnimationFrame(animate);
+  })();
 
-// ---- SAFE ADD-ON LOADER ----
-// Tries to import each add-on; if missing (404), it won't break the page.
+
+  /* ===== Emoji Hands Overlay (no GLB) ===== */
+  const handsBtn = document.getElementById("handsBtn");
+  const handsPanel = document.getElementById("handsPanel");
+  const pickStab = document.getElementById("pickStab");
+  const pickTest = document.getElementById("pickTest");
+  const handSize = document.getElementById("handSize");
+  const flipHand = document.getElementById("flipHand");
+  const toggleHands = document.getElementById("toggleHands");
+  const resetHands = document.getElementById("resetHands");
+  const removeHands = document.getElementById("removeHands");
+
+  let stab = null, test = null, active = "stab", handsShown = true, flipped = false;
+
+  function mkHand(char, id){
+    const div = document.createElement("div");
+    div.className = "handTag"; div.id = id;
+    // add badge label
+    const b = document.createElement("span"); b.className="badge"; b.textContent = (id==="hand_stab"?"S":"T");
+    div.appendChild(b);
+    // add role class for styling
+    if (id==="hand_stab") div.classList.add("stab"); else div.classList.add("test");
+    div.textContent = char;
+    div.style.fontSize = (parseInt(handSize?.value||120,10)) + "px";
+    // default placement: near upper screen center split left/right
+    const w = innerWidth, h = innerHeight;
+    const x = id==="hand_stab" ? (w*0.38) : (w*0.62);
+    const y = h*0.35;
+    div.style.left = x + "px";
+    div.style.top  = y + "px";
+    // simple drag
+    let dx=0, dy=0, dragging=false;
+    const onDown = (e)=>{ dragging=true; dx=e.clientX-parseFloat(div.style.left); dy=e.clientY-parseFloat(div.style.top); e.preventDefault(); };
+    const onMove = (e)=>{ if(!dragging) return; div.style.left = (e.clientX-dx)+"px"; div.style.top=(e.clientY-dy)+"px"; };
+    const onUp = ()=>{ dragging=false; };
+    div.addEventListener("pointerdown", onDown);
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    document.body.appendChild(div);
+    return div;
+  }
+
+  function ensureHands(){
+    if (stab && test) return;
+    // Medium skin-tone emoji hands
+    stab = mkHand("🤚🏽","hand_stab"); // Stabilize
+    test = mkHand("🤚🏽","hand_test"); // Test (back-of-hand)
+    handsPanel.style.display = "";
+    msg.textContent = "Emoji hands added — drag to place; use size/flip as needed.";
+  }
+
+  if (handsBtn){
+    handsBtn.addEventListener("click", ()=>{ ensureHands(); handsPanel.open = true; });
+  }
+  if (pickStab){
+    pickStab.addEventListener("click", ()=>{ active="stab"; msg.textContent="Active: Stabilize hand"; });
+  }
+  if (pickTest){
+    pickTest.addEventListener("click", ()=>{ active="test"; msg.textContent="Active: Test hand"; });
+  }
+  if (handSize){
+    handSize.addEventListener("input", ()=>{
+      const px = parseInt(handSize.value,10) || 120;
+      if (stab) stab.style.fontSize = px+"px";
+      if (test) test.style.fontSize = px+"px";
+    });
+  }
+  if (flipHand){
+    flipHand.addEventListener("click", ()=>{
+      flipped = !flipped;
+      const s = flipped ? "scaleX(-1)" : "scaleX(1)";
+      if (stab) stab.style.transform = s;
+      if (test) test.style.transform = s;
+    });
+  }
+  if (toggleHands){
+    toggleHands.addEventListener("click", ()=>{
+      handsShown = !handsShown;
+      if (stab) stab.style.display = handsShown ? "" : "none";
+      if (test) test.style.display = handsShown ? "" : "none";
+      msg.textContent = handsShown ? "Hands shown" : "Hands hidden";
+    });
+  }
+  if (resetHands){
+    resetHands.addEventListener("click", ()=>{
+      if (!stab || !test) return;
+      const w = innerWidth, h = innerHeight;
+      stab.style.left = (w*0.38) + "px"; stab.style.top = (h*0.35) + "px";
+      test.style.left = (w*0.62) + "px"; test.style.top = (h*0.35) + "px";
+      msg.textContent = "Hands reset to default positions";
+    });
+  }
+  if (removeHands){
+    removeHands.addEventListener("click", ()=>{
+      if (stab){ stab.remove(); stab=null; }
+      if (test){ test.remove(); test=null; }
+      msg.textContent = "Hands removed";
+      handsPanel.open = false;
+    });
+  }
+
+  window.addEventListener('error', e=>{ msg.textContent='❌ '+(e.message||'Script error'); console.error(e); });
+  
+// Optional Add-ons
 (async () => {
   const base = "./addons/";
-  const addons = ["hands_addon.js", "posture_addon.js", "regions_actions_addon.js"];
-  for (const f of addons) {
-    try { await import(base + f); }
-    catch(e) { console.info("Optional add-on not found:", f); }
+  const list = ["hands_addon.js", "posture_addon.js", "regions_actions_addon.js"];
+  for (const f of list) {
+    try { await import(base + f); } catch (e) { console.info("Add-on not found:", f); }
   }
 })();
 </script>
-</body>
-</html>
