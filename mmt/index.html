@@ -757,7 +757,13 @@ function setBodyMode(mode){
 
   // Re-apply global plantarflexion to both feet
   applyGlobalPF();
+
+  // If this test is using side-lying, also snap arms/legs to side-lying baseline
+  if (mode === "side_lying"){
+    applySideLyingLimbs();
+  }
 }
+
 
 
 
@@ -794,6 +800,40 @@ function seatPoseOnlyLegs(){
   if (calfL)  calfL.rotateX(rad(-90));
   if (calfR)  calfR.rotateX(rad(-90));
 }
+// Side-lying limb preset: legs fully adducted, arms adducted −52° and flexed 30°
+function applySideLyingLimbs(){
+  if (!skeleton) return;
+
+  const thighL = getBone("thigh_L");
+  const thighR = getBone("thigh_R");
+  const upperL = getBone("upperarm_L");
+  const upperR = getBone("upperarm_R");
+
+  // Reset these bones to stored baseline so we’re not stacking rotations
+  [thighL, thighR, upperL, upperR].forEach(b => {
+    if (!b) return;
+    const q0 = initialBoneRot.get(b);
+    if (q0) b.quaternion.copy(q0);
+  });
+
+  // Legs: baseline neutral position = fully adducted; no extra rotation needed.
+  // (We still reset thighs above to guarantee they’re not left abducted.)
+
+  // Arms: adduct and flex
+  const flexRad = degToRad(30);   // +30° shoulder flexion
+  const addL    = degToRad(-52);  // L shoulder adduction toward trunk
+  const addR    = degToRad(52);   // R shoulder adduction (mirror side)
+
+  if (upperL){
+    upperL.rotateZ(addL);   // adduction
+    upperL.rotateX(flexRad); // flexion
+  }
+  if (upperR){
+    upperR.rotateZ(addR);
+    upperR.rotateX(flexRad);
+  }
+}
+  
 
 /* ==== Load model ==== */
 function addModel(gltf){
