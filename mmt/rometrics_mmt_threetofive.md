@@ -575,6 +575,7 @@
 * **Grade 5:** holds position against max resistance
 * **Grade 4:** holds against moderate resistance
 * **Grade 3:** full ROM against gravity, no resistance
+
 ## Shoulder Flexion (Anterior Deltoid)
 
 **Plane: sagittal | End-Feel: firm**
@@ -582,11 +583,13 @@
 ### Muscles Tested
 
 * Anterior Deltoid
+* Clavicular portion of pectoralis major
+* Rotator Cuff 
 * Coracobrachialis
 
 ### Position
 
-* Short sitting, arm at side, elbow straight, forearm pronated
+* Short sitting, arm at side.
 
 ### Therapist
 
@@ -624,7 +627,7 @@
 
 ### Action
 
-* Extend arm; resist downward at **posterior humerus**
+* Extend arm; resist downward at **posterior humerus** just above elbow.
 
 ### Grades 3, 4, 5
 
@@ -663,6 +666,77 @@
 
 ---
 
+## Shoulder Horizontal Abduction (Posterior Deltoid)
+
+**Plane: transverse | End-Feel: firm**
+
+### Muscles Tested
+
+* Posterior deltoid (primary)
+* Middle deltoid, infraspinatus, teres minor (assist)
+
+### Position
+
+* Prone, shoulder **abducted to 90°**
+* Elbow **extended** 
+* Forearm off edge of table
+
+### Therapist
+
+* Stand at test side
+* Stabilize trunk/scapula as needed
+* Apply resistance over **posterior arm just above the elbow**
+
+### Action
+
+* Patient lifts elbow toward the ceiling into **horizontal abduction**
+
+### Grades 3, 4, 5
+
+* **Grade 5:** full ROM; holds end position against **maximal** resistance  
+* **Grade 4:** full ROM; holds against **moderate** resistance  
+* **Grade 3:** completes full ROM against gravity **without** resistance (elbow may be flexed)  
+
+## Shoulder Horizontal Adduction (Pectoralis Major)
+
+**Plane: transverse | End-Feel: firm**
+
+### Muscles Tested
+
+- Pectoralis Major — **clavicular & sternal heads**
+- (Assist: Anterior Deltoid)
+
+### Position (Grades 3–5)
+
+- **Supine**, shoulder **abducted to 90°**, elbow **flexed to 90°**.
+- Whole muscle: arm moves **straight across the chest** in the transverse plane.
+- To bias **clavicular head**: start ~60° abduction → move **up and in**.
+- To bias **sternal head**: start ~120° abduction → move **down and in** toward opposite hip.
+
+### Therapist
+
+- Stand at test side.
+- Support forearm as needed; apply resistance **just proximal to the elbow**.
+- For whole muscle: push **away from the chest** (horizontal abduction).
+- To isolate:
+  - **Clavicular head:** resist **downward and outward**.
+  - **Sternal head:** resist **upward and outward**.
+
+### Action
+
+- Patient brings the arm **across the chest in horizontal adduction**, maintaining the chosen path:
+  - Straight across for whole muscle.
+  - Slightly **up and in** (clavicular) or **down and in** (sternal).
+
+### Grades 3, 4, 5
+
+- **Grade 5:**  
+  Holds test position against **maximal** resistance (whole muscle and/or selected head).
+- **Grade 4:**  
+  Holds test position against **moderate** resistance with slight “give.”
+- **Grade 3:**  
+  Completes available **horizontal adduction ROM** against gravity with **no manual resistance**.
+
 ## Shoulder External Rotation (Infraspinatus, Teres Minor)
 
 **Plane: transverse | End-Feel: firm**
@@ -682,7 +756,7 @@
 
 ### Action
 
-* ER forearm; resist inward at **volar forearm**
+* Externally rotate forearm; resist inward at **volar forearm**
 
 ### Grades 3, 4, 5
 
@@ -692,7 +766,7 @@
 
 ---
 
-## Shoulder Internal Rotation (Subscapularis, others)
+## Shoulder Internal Rotation (Subscapularis)
 
 **Plane: transverse | End-Feel: firm**
 
