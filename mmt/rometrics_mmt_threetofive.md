@@ -451,7 +451,7 @@
 
 ### Action
 
-* Extend + adduct arm; resist at **medial forearm**
+* Extend + adduct arm; resist at **medial forearm** going out and down.
 
 ### Grades 3, 4, 5
 
