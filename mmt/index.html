@@ -816,16 +816,19 @@ function applySideLyingLimbs(){
     if (q0) b.quaternion.copy(q0);
   });
 
-  // Legs: baseline neutral position = fully adducted; no extra rotation needed.
-  // (We still reset thighs above to guarantee they’re not left abducted.)
+  // --- LEGS: add explicit adduction so they don't stay where the rest pose had them ---
+  // NOTE: If they move the wrong direction (further apart), just flip the signs.
+  const legAdd = degToRad(6);   // tweak this amount if you need more/less adduction
+  if (thighL) thighL.rotateZ(-legAdd);  // move L leg toward midline
+  if (thighR) thighR.rotateZ( legAdd);  // move R leg toward midline
 
-  // Arms: adduct and flex
+  // --- ARMS: adduct −52° and flex 30° (this part was already working for you) ---
   const flexRad = degToRad(30);   // +30° shoulder flexion
   const addL    = degToRad(-52);  // L shoulder adduction toward trunk
   const addR    = degToRad(52);   // R shoulder adduction (mirror side)
 
   if (upperL){
-    upperL.rotateZ(addL);   // adduction
+    upperL.rotateZ(addL);    // adduction
     upperL.rotateX(flexRad); // flexion
   }
   if (upperR){
@@ -833,7 +836,7 @@ function applySideLyingLimbs(){
     upperR.rotateX(flexRad);
   }
 }
-  
+
 
 /* ==== Load model ==== */
 function addModel(gltf){
