@@ -388,14 +388,12 @@ Ask the patient to **draw the shoulder blade “down and in” toward the spine*
 
 ## Latissimus Dorsi — Shoulder Extension/Adduction (Low‑Grade Version)
 ### Grade 2 — Gravity‑Minimized Position
-- **Side‑lying**, test arm **supported** through range (parallel to floor). Encourage combined **extension + adduction**.
+- **Partial** ROM observed. Patient remains prone, there is no specalized pose for grade 0-2.
 ### Grade 1 — Palpation
 - **Posterior axillary fold** and lateral border of scapula.
 - **Find‑it cue:** “Press your upper arm gently back toward me; I’m feeling at the back wall of the armpit.”
 ### Grade 0 — Observation
 - No activity at posterior axillary fold.
-### Therapist Cue
-- **G2/1/0:** “Try moving your arm back.”
 
 ---
 
