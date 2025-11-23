@@ -800,7 +800,11 @@ function seatPoseOnlyLegs(){
   if (calfL)  calfL.rotateX(rad(-90));
   if (calfR)  calfR.rotateX(rad(-90));
 }
-// Side-lying limb preset: legs fully adducted (absolute) + arms adducted −52° / flexed 30°
+// Side-lying limb preset:
+// - Hips: add_L = 12°, add_R = -12°
+// - Feet: R inversion 20°, L eversion 20° (Z axis, foot_R / foot_L)
+// - Neck: left lateral flexion 10° (Z axis, "neck")
+// - Arms: adduction ±52° + flexion 30° (this part was already working)
 function applySideLyingLimbs(){
   if (!skeleton) return;
 
@@ -808,35 +812,48 @@ function applySideLyingLimbs(){
   const thighR = getBone("thigh_R");
   const upperL = getBone("upperarm_L");
   const upperR = getBone("upperarm_R");
+  const footL  = getBone("foot_L");
+  const footR  = getBone("foot_R");
+  const neck   = getBone("neck");
 
-  // --- LEGS: explicit abduction/adduction angle (stacked) ---
-  // 0° here = fully adducted / neutral in the frontal plane.
-  // If your rig’s neutral is slightly abducted, you can change these to e.g. -5 / +5.
-  const SIDE_HIP_ADD_L_DEG = -12;   // Left hip adduction angle
-  const SIDE_HIP_ADD_R_DEG = 12;   // Right hip adduction angle
+  /* --- HIPS: explicit adduction angles from tuner --- */
+  const SIDE_HIP_ADD_L_DEG = 12;   // add_L = 12°
+  const SIDE_HIP_ADD_R_DEG = -12;  // add_R = -12°
 
-  // Use the same absolute-axis helper used everywhere else
+  // Z axis = abduction/adduction for thighs
   setDegAxis(thighL, "z", SIDE_HIP_ADD_L_DEG);
   setDegAxis(thighR, "z", SIDE_HIP_ADD_R_DEG);
 
-  // --- ARMS: keep the exact angles that were working ---
-  const SHO_FLEX_DEG = 30;  // shoulder flexion
-  const SHO_ADD_DEG  = 52;  // shoulder adduction magnitude
+  /* --- FEET: frontal plane (inversion/eversion) on Z axis --- */
+  // Right: inversion 20°, Left: eversion 20°
+  // If either goes the wrong way, just flip that sign.
+  const SIDE_FOOT_INV_R_DEG  = 20;   // right foot inversion
+  const SIDE_FOOT_EVER_L_DEG = -20;  // left foot eversion
 
-  // Reset shoulders to baseline so rotations are absolute, not stacked
+  setDegAxis(footR, "z", SIDE_FOOT_INV_R_DEG);
+  setDegAxis(footL, "z", SIDE_FOOT_EVER_L_DEG);
+
+  /* --- NECK: left lateral flexion 10° on Z axis --- */
+  const SIDE_NECK_LAT_L_DEG = 15;
+  setDegAxis(neck, "z", SIDE_NECK_LAT_L_DEG);
+
+  /* --- ARMS: keep your working values (adduction ±52° + flex 30°) --- */
+  // Reset shoulders to baseline so these are absolute, not stacked
   [upperL, upperR].forEach(b => {
     if (!b) return;
     const q0 = initialBoneRot.get(b);
     if (q0) b.quaternion.copy(q0);
   });
 
-  // Left arm: −52° adduction + 30° flexion
-  if (upperL){
-    upperL.rotateZ(degToRad(-SHO_ADD_DEG)); // toward trunk
-    upperL.rotateX(degToRad(SHO_FLEX_DEG)); // forward
-  }
+  const SHO_FLEX_DEG = 30;  // flexion
+  const SHO_ADD_DEG  = 52;  // adduction magnitude
 
-  // Right arm: +52° adduction + 30° flexion (mirror)
+  // Left arm: −52° add + 30° flex
+  if (upperL){
+    upperL.rotateZ(degToRad(-SHO_ADD_DEG));
+    upperL.rotateX(degToRad(SHO_FLEX_DEG));
+  }
+  // Right arm: +52° add + 30° flex (mirror)
   if (upperR){
     upperR.rotateZ(degToRad(SHO_ADD_DEG));
     upperR.rotateX(degToRad(SHO_FLEX_DEG));
