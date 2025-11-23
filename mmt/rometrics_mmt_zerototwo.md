@@ -399,45 +399,68 @@ Ask the patient to **draw the shoulder blade “down and in” toward the spine*
 
 ## Shoulder Flexion — Anterior Deltoid
 ### Grade 2 — Gravity‑Minimized Position
-- **Side‑lying**, test arm **uppermost**. Therapist **supports under the elbow**; arm moves forward **parallel to floor**. Use a towel/powder board under hand if needed.
+- **Side‑lying on non-test side**, test arm **on the upper side**. Therapist **supports under the elbow**; patient moves arm forward unaided **into flexion**. 
 - **Forearm:** **Neutral** unless otherwise specified.
 ### Grade 1 — Palpation
 - **Anterior/superior deltoid** just anterior to the GH joint.
-- **Find‑it cue:** “Try to start lifting the arm; I’m feeling the front of your shoulder.”
+- **Find‑it cue:** “Try to start lifting the arm”
 ### Grade 0 — Observation
 - No deltoid activity anteriorly.
-### Therapist Cue
-- **G2/1/0:** “Try to raise your arm forward.”
-
 ---
 
 ## Shoulder Extension — Posterior Deltoid, Teres Major
 ### Grade 2 — Gravity‑Minimized Position
-- **Side‑lying**, test arm **uppermost**, limb supported to move backward **parallel to floor**.
+- **side-lying**, or prone, elbow extended, limb supported to reduce weight, but PT should not aid the motion.
 ### Grade 1 — Palpation
 - **Posterior deltoid:** Posterior upper arm **just above the axilla**.
 - **Teres major:** **Lateral border of scapula** below the axilla.
-- **Find‑it cue:** “Push your arm gently back; I’m feeling the muscle behind your shoulder.”
+- **Find‑it cue:** “Push your arm back”
 ### Grade 0 — Observation
 - No posterior shoulder activity.
-### Therapist Cue
-- **G2:** “Move your arm back toward me.”
-- **G1/0:** “Try to lift your arm off the table.”
-
 ---
 
 ## Shoulder Abduction — Middle Deltoid
 ### Grade 2 — Gravity‑Minimized Position
-- **Supine**, arm **slides on table** into abduction **without rotation**; place towel/powder board to reduce friction.
+- **Supine**, arm **slides on table** into abduction **without rotation.**
 ### Grade 1 — Palpation
-- **Lateral deltoid** on upper third of humerus.
+- **Middle deltoid** on upper third/lateral aspect  of humerus.
 - **Find‑it cue:** “Slide your arm outward a little; I’m feeling on the outside of your shoulder.”
 ### Grade 0 — Observation
 - No lateral deltoid activity.
-### Therapist Cue
-- **G2/1/0:** “Bring your arm out to the side.”
 
 ---
+## Shoulder Horizontal Abduction — Posterior Deltoid (Grades 0–2)
+
+### Grade 2 — Gravity-Minimized Position
+- **Short sitting**, arm **supported on table** in ~90° abduction, elbow slightly flexed 
+- Patient **slides arm backward** into horizontal abduction. PT Stand just behind the patient, using one hand to steady the top of the shoulder and the other to support the scapula.
+### Grade 1 — Palpation
+- Palpate **posterior deltoid** just **below and lateral to spine of scapula** and on the **posterior proximal arm near the axilla**.  
+- **Find-it cue:** “Try to move your arm backward; I’m feeling behind your shoulder.”
+
+### Grade 0 — Observation
+- No palpable posterior deltoid activity; no horizontal abduction motion.  
+
+### Grades 0–2 — Gravity-Minimized (Short Sitting)
+
+**Position (Grade 2, 1, 0)**  
+- **Short sitting**, test arm supported at **shoulder height (~90° abduction)** on a smooth table or board.  
+- Elbow slightly flexed; forearm resting so the arm can **slide across the surface**.
+
+**Therapist**  
+- Stand behind or slightly to the side of the patient.  
+- One hand supports the arm/forearm on the table as needed.  
+- Palpate **pectoralis major** on the **anterior chest, just medial to the shoulder**.
+
+#### Grade 2 — Gravity-Eliminated Motion
+- Patient **slides the arm horizontally toward the chest** across the table.  
+
+#### Grade 1 — Trace
+- No visible motion, but a **palpable contraction** of pectoralis major is felt as the patient “tries to pull” the arm in.
+
+#### Grade 0 — No Contraction
+- No visible movement and **no palpable activity** in pectoralis major.
+
 
 ## Shoulder External Rotation — Infraspinatus, Teres Minor
 ### Grade 2 — Gravity‑Minimized Position
@@ -445,15 +468,11 @@ Ask the patient to **draw the shoulder blade “down and in” toward the spine*
 ### Grade 1 — Palpation
 - **Infraspinatus:** Just **below the scapular spine**.
 - **Teres minor:** **Lateral border** of scapula near the axilla.
-- **Find‑it cue:** “Gently push your forearm away from your stomach; I’m feeling on the back/outer shoulder.”
 ### Grade 0 — Observation
 - No posterior cuff activity.
-### Therapist Cue
-- **ER cue:** “Push your forearm away from your stomach.”
-
 ---
 
-## Shoulder Internal Rotation — Subscapularis (± T. Major, Pec Major, Lat as contributors)
+## Shoulder Internal Rotation — Subscapularis
 ### Grade 2 — Gravity‑Minimized Position
 - **Sitting**, **elbow 90°**, **forearm supported** on table in **neutral**. Slide forearm **toward the abdomen**.
 ### Grade 1 — Palpation
