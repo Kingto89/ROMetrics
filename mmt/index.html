@@ -817,8 +817,8 @@ function applySideLyingLimbs(){
   const neck   = getBone("neck");
 
   /* --- HIPS: explicit adduction angles from tuner --- */
-  const SIDE_HIP_ADD_L_DEG = 12;   // add_L = 12°
-  const SIDE_HIP_ADD_R_DEG = -12;  // add_R = -12°
+  const SIDE_HIP_ADD_L_DEG = -12;   // Left hip adduction angle
+  const SIDE_HIP_ADD_R_DEG = 12;   // Right hip adduction angle
 
   // Z axis = abduction/adduction for thighs
   setDegAxis(thighL, "z", SIDE_HIP_ADD_L_DEG);
@@ -828,13 +828,13 @@ function applySideLyingLimbs(){
   // Right: inversion 20°, Left: eversion 20°
   // If either goes the wrong way, just flip that sign.
   const SIDE_FOOT_INV_R_DEG  = 20;   // right foot inversion
-  const SIDE_FOOT_EVER_L_DEG = -20;  // left foot eversion
+  const SIDE_FOOT_EVER_L_DEG = 20;  // left foot eversion
 
   setDegAxis(footR, "z", SIDE_FOOT_INV_R_DEG);
   setDegAxis(footL, "z", SIDE_FOOT_EVER_L_DEG);
 
   /* --- NECK: left lateral flexion 10° on Z axis --- */
-  const SIDE_NECK_LAT_L_DEG = 15;
+  const SIDE_NECK_LAT_L_DEG = -15;
   setDegAxis(neck, "z", SIDE_NECK_LAT_L_DEG);
 
   /* --- ARMS: keep your working values (adduction ±52° + flex 30°) --- */
