@@ -79,6 +79,8 @@ select,button,input[type=range]{width:100%;margin:6px 0 8px 0;padding:8px 10px;b
         <option value="Anterior_Deltoid">Shoulder Flexion (Anterior Deltoid, Coracobrachialis)</option>
         <option value="Posterior_Deltoid">Shoulder Extension (Posterior Deltoid, Lat, Teres Major)</option>
         <option value="Middle_Deltoid">Shoulder Abduction (Middle Deltoid, Supraspinatus)</option>
+        <option value="Shoulder_Horiz_Abd">Shoulder Horizontal Abduction (Posterior Deltoid)</option>
+        <option value="Shoulder_Horiz_Add">Shoulder Horizontal Adduction (Pectoralis Major)</option>
         <option value="Infraspinatus">Shoulder External Rotation (Infraspinatus, Teres Minor)</option>
         <option value="Subscapularis">Shoulder Internal Rotation (Subscapularis, Teres Major, Pec Major, Lat)</option>
       </optgroup>
@@ -381,6 +383,9 @@ chairBack.position.set(
 chairBack.castShadow = true;
 chairBack.receiveShadow = true;
 room.add(chairBack);
+// Rotate chair ~45° around Y (turn slightly toward the room)
+chairSeat.rotation.y = THREE.MathUtils.degToRad(45);
+chairBack.rotation.y = THREE.MathUtils.degToRad(45);
 
 // Stool
 const stoolSeat = new THREE.Mesh(
@@ -529,6 +534,8 @@ const TEST_POSITION = {
   Anterior_Deltoid:    { high: "seated",     low: "side_lying"  },
   Posterior_Deltoid:   { high: "prone",      low: "side_lying"  },
   Middle_Deltoid:      { high: "seated",     low: "supine"      },
+  Shoulder_Horiz_Abd: { high: "prone",  low: "seated" }, 
+  Shoulder_Horiz_Add: { high: "supine", low: "seated" }, 
   Infraspinatus:       { high: "seated",     low: "seated"      }, // table-supported ER
   Subscapularis:       { high: "seated",     low: "seated"      },
 
@@ -886,6 +893,8 @@ const TEST_TO_HEADING = {
   Anterior_Deltoid: "Shoulder Flexion",
   Posterior_Deltoid: "Shoulder Extension",
   Middle_Deltoid: "Shoulder Abduction",
+  Shoulder_Horiz_Abd: "Shoulder Horizontal Abduction — Posterior Deltoid",
+  Shoulder_Horiz_Add: "Shoulder Horizontal Adduction — Pectoralis Major",
   Infraspinatus: "Shoulder External Rotation",
   Subscapularis: "Shoulder Internal Rotation",
   Biceps_Brachii: "Elbow Flexion — Biceps Brachii",
