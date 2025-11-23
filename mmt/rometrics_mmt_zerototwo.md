@@ -421,7 +421,7 @@ Ask the patient to **draw the shoulder blade “down and in” toward the spine*
 
 ## Shoulder Abduction — Middle Deltoid
 ### Grade 2 — Gravity‑Minimized Position
-- **Supine**, arm **slides on table** into abduction **without rotation.**
+- **Supine**, arm **slides on surface** into abduction **without rotation.**
 ### Grade 1 — Palpation
 - **Middle deltoid** on upper third/lateral aspect  of humerus.
 - **Find‑it cue:** “Slide your arm outward a little; I’m feeling on the outside of your shoulder.”
