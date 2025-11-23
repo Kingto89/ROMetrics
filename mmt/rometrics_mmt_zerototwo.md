@@ -443,20 +443,24 @@ Ask the patient to **draw the shoulder blade “down and in” toward the spine*
 
 ### Grades 0–2 — Gravity-Minimized (Short Sitting)
 
-**Position (Grade 2, 1, 0)**  
-- **Short sitting**, test arm supported at **shoulder height (~90° abduction)** on a smooth table or board.  
-- Elbow slightly flexed; forearm resting so the arm can **slide across the surface**.
+## Shoulder Horizontal Adduction — Pectoralis Major
+
+### Grades 0–2 — Gravity-Minimized (Short Sitting)
+
+**Position (Grades 2, 1, 0)**  
+- **Short sitting**, test arm supported at **~90° abduction** on a smooth table/board.  
+- Elbow slightly flexed; arm rests so it can **slide across the surface**.
 
 **Therapist**  
-- Stand behind or slightly to the side of the patient.  
-- One hand supports the arm/forearm on the table as needed.  
-- Palpate **pectoralis major** on the **anterior chest, just medial to the shoulder**.
+- Stand behind or just to the side of the patient.  
+- Support the arm/forearm on the table as needed.  
+- Palpate **pectoralis major** on the **front of the chest, just medial to the shoulder**.
 
 #### Grade 2 — Gravity-Eliminated Motion
 - Patient **slides the arm horizontally toward the chest** across the table.  
 
 #### Grade 1 — Trace
-- No visible motion, but a **palpable contraction** of pectoralis major is felt as the patient “tries to pull” the arm in.
+- No visible motion, but a **palpable contraction** of pectoralis major is felt as the patient tries to pull the arm inward.
 
 #### Grade 0 — No Contraction
 - No visible movement and **no palpable activity** in pectoralis major.
