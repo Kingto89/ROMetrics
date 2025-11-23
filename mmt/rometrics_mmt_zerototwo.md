@@ -217,10 +217,14 @@ Support the **weight of the arm/hand** in the test position; palpate along the *
 ### Action
 Ask the patient to **draw the shoulder blade “down and in” toward the spine** while keeping the hand on the low back and the arm relaxed in your support.
 
-### Grades 0–2
-### - Grade 2: Scapula clearly moves into **adduction and downward rotation** (partial to full range) with the limb supported in gravity-eliminated.  
-### - Grade 1: No visible motion, but a **trace contraction** is felt in the rhomboids along the medial border of the scapula.  
-### - Grade 0: No visible movement and **no palpable activity** in the rhomboid region.
+### Grade 2 — Movement (Gravity-Eliminated)
+- With the arm and hand supported on the low back, the **scapula moves clearly into adduction and downward rotation** (partial to full range) without having to lift the limb against gravity.
+
+### Grade 1 — Palpation
+- No obvious scapular motion, but a **faint contraction** is felt in the rhomboids along the **medial border of the scapula** as the patient attempts the motion.
+
+### Grade 0 — Observation
+- **No visible movement** of the scapula and **no palpable activity** in the rhomboid region.
 
 ---
 
@@ -237,11 +241,18 @@ Support the **weight of the arm** to keep the shoulder in the test line; with th
 
 ### Action
 Ask the patient to **draw the shoulder blade “down and in” toward the spine** while you keep the arm light and supported.
+### Grade 2 — Movement (Gravity-Eliminated)
+- With the arm supported in the test line, the **scapula glides downward and toward the spine** (partial to full range) without the limb having to lift against gravity.
 
-### Grades 0–2
-### - Grade 2: Clear scapular **depression and adduction** pattern (partial to full range) with the arm supported, no need to lift limb against gravity.  
-### - Grade 1: No visible motion, but a **faint contraction** is felt in the lower/middle trapezius area under the palpating fingers.  
-### - Grade 0: No visible movement and **no palpable activity** in the tested region.
+### Grade 1 — Palpation
+- No obvious scapular motion, but a **subtle tightening** is felt in the lower/middle trapezius region along the **medial border of the scapula** under the palpating hand.
+
+### Grade 0 — Observation
+- **No visible scapular movement** and **no palpable muscle activity** in the tested area.
+
+### Therapist Cue
+- **G2/1/0:** “Try to slide your shoulder blade down toward your back pocket and in toward your spine while I support your arm.”
+
 
 ---
 
