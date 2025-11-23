@@ -277,7 +277,7 @@
 
 ### Position
 
-* Prone, hand on low back (IR + adduction)
+* Prone, hand on low back (IR + adduction) - hand hooks behind back
 
 ### Therapist
 
@@ -443,7 +443,7 @@
 
 ### Position
 
-* Prone; arm at side, palm up (IR)
+* Prone; arm at side (straight), shoulder internally rotated
 
 ### Therapist
 
