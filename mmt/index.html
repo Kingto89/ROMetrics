@@ -800,7 +800,7 @@ function seatPoseOnlyLegs(){
   if (calfL)  calfL.rotateX(rad(-90));
   if (calfR)  calfR.rotateX(rad(-90));
 }
-// Side-lying limb preset: legs fully adducted, arms adducted −52° and flexed 30°
+// Side-lying limb preset: legs fully adducted (absolute) + arms adducted −52° / flexed 30°
 function applySideLyingLimbs(){
   if (!skeleton) return;
 
@@ -809,31 +809,37 @@ function applySideLyingLimbs(){
   const upperL = getBone("upperarm_L");
   const upperR = getBone("upperarm_R");
 
-  // Reset these bones to stored baseline so we’re not stacking rotations
-  [thighL, thighR, upperL, upperR].forEach(b => {
+  // --- LEGS: explicit abduction/adduction angle (stacked) ---
+  // 0° here = fully adducted / neutral in the frontal plane.
+  // If your rig’s neutral is slightly abducted, you can change these to e.g. -5 / +5.
+  const SIDE_HIP_ADD_L_DEG = 0;   // Left hip adduction angle
+  const SIDE_HIP_ADD_R_DEG = 0;   // Right hip adduction angle
+
+  // Use the same absolute-axis helper used everywhere else
+  setDegAxis(thighL, "z", SIDE_HIP_ADD_L_DEG);
+  setDegAxis(thighR, "z", SIDE_HIP_ADD_R_DEG);
+
+  // --- ARMS: keep the exact angles that were working ---
+  const SHO_FLEX_DEG = 30;  // shoulder flexion
+  const SHO_ADD_DEG  = 52;  // shoulder adduction magnitude
+
+  // Reset shoulders to baseline so rotations are absolute, not stacked
+  [upperL, upperR].forEach(b => {
     if (!b) return;
     const q0 = initialBoneRot.get(b);
     if (q0) b.quaternion.copy(q0);
   });
 
-  // --- LEGS: add explicit adduction so they don't stay where the rest pose had them ---
-  // NOTE: If they move the wrong direction (further apart), just flip the signs.
-  const legAdd = degToRad(6);   // tweak this amount if you need more/less adduction
-  if (thighL) thighL.rotateZ(-legAdd);  // move L leg toward midline
-  if (thighR) thighR.rotateZ( legAdd);  // move R leg toward midline
-
-  // --- ARMS: adduct −52° and flex 30° (this part was already working for you) ---
-  const flexRad = degToRad(30);   // +30° shoulder flexion
-  const addL    = degToRad(-72);  // L shoulder adduction toward trunk
-  const addR    = degToRad(72);   // R shoulder adduction (mirror side)
-
+  // Left arm: −52° adduction + 30° flexion
   if (upperL){
-    upperL.rotateZ(addL);    // adduction
-    upperL.rotateX(flexRad); // flexion
+    upperL.rotateZ(degToRad(-SHO_ADD_DEG)); // toward trunk
+    upperL.rotateX(degToRad(SHO_FLEX_DEG)); // forward
   }
+
+  // Right arm: +52° adduction + 30° flexion (mirror)
   if (upperR){
-    upperR.rotateZ(addR);
-    upperR.rotateX(flexRad);
+    upperR.rotateZ(degToRad(SHO_ADD_DEG));
+    upperR.rotateX(degToRad(SHO_FLEX_DEG));
   }
 }
 
