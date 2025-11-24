@@ -611,7 +611,7 @@ POSE_OVERRIDES["Rhomboids:low"] = { x:-0.620, y:-0.440, z:0.540, rx:0.000, ry:0.
 POSE_OVERRIDES["Latissimus_Dorsi:high"] = { x:-1.200, y:0.640, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0 };  
 POSE_OVERRIDES["Latissimus_Dorsi:low"] = { x:-1.200, y:0.640, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0 };  
 POSE_OVERRIDES["Anterior_Deltoid:high"] = { x:-0.620, y:-0.440, z:0.540, rx:0.000, ry:0.349, rz:0.000, pf:-10.0 };
-POSE_OVERRIDES["Anterior_Deltoid:low"] = { x:-1.200, y:0.580, z:0.530, rx:2.531, ry:-3.491, rz:1.833, pf:-25.0, neckLat: 10, evL: 20, invR:: 20 };
+POSE_OVERRIDES["Anterior_Deltoid:low"] = { x:-1.200, y:0.580, z:0.530, rx:2.531, ry:-3.491, rz:1.833, pf:-25.0 };
 POSE_OVERRIDES["Posterior_Deltoid:high"] = { x:-1.200, y:0.640, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0 };
 POSE_OVERRIDES["Middle_Deltoid:high"] = { x:-0.620, y:-0.440, z:0.540, rx:0.000, ry:0.349, rz:0.000, pf:-10.0 };
 POSE_OVERRIDES["Middle_Deltoid:low"]  = { x:-1.220, y:0.520, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 15 };  //supine
@@ -732,13 +732,13 @@ function setBodyMode(mode){
     rotZ = 0;
   }
 
-  // Apply any saved override for this test + family (high/low)
+ // Apply any saved override for this test + family (high/low)
   const key = CURRENT_BODY_TEST && CURRENT_BODY_BUCKET
     ? `${CURRENT_BODY_TEST}:${CURRENT_BODY_BUCKET}`
     : null;
 
-  const o = key ? POSE_OVERRIDES[key] : null;
-  if (o){
+  if (key && POSE_OVERRIDES[key]){
+    const o = POSE_OVERRIDES[key];
     posX = o.x;
     posY = o.y;
     posZ = o.z;
@@ -746,10 +746,10 @@ function setBodyMode(mode){
     rotY = o.ry;
     rotZ = o.rz;
 
-    // load saved plantarflexion (if present)
-    GLOBAL_PF_DEG = (typeof o.pf === "number") ? o.pf : 0;
-  } else {
-    GLOBAL_PF_DEG = 0;
+    // NEW: read plantarflexion from override if present
+    if (typeof o.pf === "number") {
+      GLOBAL_PF_DEG = o.pf;
+    }
   }
 
   model.position.set(posX, posY, posZ);
