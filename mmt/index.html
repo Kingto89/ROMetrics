@@ -329,7 +329,7 @@ room.add(base);
 
 // Cabinet
 const cabinet = new THREE.Mesh(
-  new THREE.BoxGeometry(1.0, 0.9, 0.25),
+  new THREE.BoxGeometry(1.0, 0.93, 0.33),
   new THREE.MeshStandardMaterial({ color: 0x9ca3af, roughness:0.8 })
 );
 cabinet.position.set(-1.6, 0.45, -0.6);
@@ -341,7 +341,7 @@ const chair = new THREE.Group();
 chair.position.set(
   cabinet.position.x,        // side-to-side aligned with cabinet
   0,                         // on floor
-  cabinet.position.z - 0.61  // in front of cabinet
+  cabinet.position.z - 0.51  // in front of cabinet
 );
 room.add(chair);
 
