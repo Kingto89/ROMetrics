@@ -349,6 +349,7 @@ Ask the patient to **draw the shoulder blade “down and in” toward the spine*
 
 ### Therapist
 
+* PT should assit by placing their hands beind the upper trunk and head, supporting the weight as the patient tries to rotate (test grade 1 for palpation).
 * Palpate external oblique on anterolateral abdomen **opposite** the rotation; palpate internal oblique **same** side as rotation near ASIS; monitor scapular motion
 
 ### Action
