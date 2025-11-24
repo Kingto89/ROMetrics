@@ -276,7 +276,7 @@ Ask the patient to **draw the shoulder blade “down and in” toward the spine*
 
 ### Grades 0–2
 
-### - Grade 2: partial ROM in gravity-minimized (lumbar lifts but trunk does not fully clear)
+### - Grade 2: partial ROM in gravity-minimized (trunk does not fully clear)
 ### - Grade 1: trace contraction palpable along lumbar/thoracic extensor muscles
 ### - Grade 0: no palpable activity
 
