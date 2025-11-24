@@ -525,31 +525,110 @@ Ask the patient to **draw the shoulder blade “down and in” toward the spine*
 
 ---
 
-## Wrist Flexion — Flexor Carpi Radialis (FCR)
-### Grade 2 — Gravity‑Minimized Position
-- Forearm **neutral** on table, **ulnar border resting**, wrist slides into **flexion with radial deviation**; towel to reduce friction.
-### Grade 1 — Palpation
-- **FCR tendon** at the **radial side** of palmar wrist (lateral to palmaris longus if present).
-- **Find‑it cue:** “Curl your wrist and angle toward your thumb; I’m feeling this tendon on the thumb side.”
-### Grade 0 — Observation
-- No FCR tendon activity.
-### Therapist Cue
-- **G2/1/0:** “Try to bend your wrist.”
+## Wrist Flexion — Flexor Carpi Radialis (FCR) — Grades 0–2
+
+### Muscle Tested
+
+* Flexor Carpi Radialis
+
+### Position — Grade 2
+
+* Sitting with **elbow supported on the table**
+* Forearm in **mid-position** (neutral), hand resting on **ulnar side**
+* Fingers and thumb relaxed
+
+### Therapist
+
+* Support the forearm **proximal to the wrist**
+* To bias **FCR**, keep the wrist **off the table** and guide motion into **wrist flexion with radial deviation**
+
+### Test — Grade 2
+
+* Patient **flexes the wrist**, allowing the ulnar border of the hand to glide lightly on or just clear the table  
+* For **FCR bias**: ask the patient to **flex and slightly radially deviate** the wrist in gravity-eliminated
+
+### Grade 2
+
+* Completes **available wrist flexion** in gravity-minimized position  
+* With FCR bias: completes wrist flexion with a **clear radial deviation component** (no resistance)
 
 ---
 
-## Wrist Flexion — Flexor Carpi Ulnaris (FCU)
-### Grade 2 — Gravity‑Minimized Position
-- Forearm **neutral** on table, **radial border resting**, wrist slides into **flexion with ulnar deviation**.
-### Grade 1 — Palpation
-- **FCU tendon** at **ulnar wrist** proximal to the **pisiform**.
-- **Find‑it cue:** “Curl your wrist toward the pinky side; I’m feeling this tendon near the little wrist bone.”
-### Grade 0 — Observation
-- No FCU activity.
-### Therapist Cue
-- **G2/1/0:** “Try to bend your wrist.”
+### Position — Grades 1 and 0
+
+* Forearm **supinated**, supported on the table  
+* Wrist in **slight flexion** to shorten the flexors
+
+### Therapist — Palpation
+
+* Support the wrist in **slight flexion**  
+* Palpate the **FCR tendon** on the **lateral palmar aspect** of the wrist, just **lateral to palmaris longus**
+
+### Test — Grades 1 and 0
+
+* Patient is asked to **“try to bend your wrist”** several times while you palpate for activity
+
+### Grade 1
+
+* **No visible motion**, but a **trace contraction** is felt in the FCR tendon
+
+### Grade 0
+
+* **No palpable or visible contractile activity** in the FCR tendon
 
 ---
+
+## Wrist Flexion — Flexor Carpi Ulnaris (FCU) — Grades 0–2
+
+### Muscle Tested
+
+* Flexor Carpi Ulnaris
+
+### Position — Grade 2
+
+* Sitting with **elbow supported on the table**
+* Forearm in **mid-position**, hand resting on **ulnar side**
+* Fingers and thumb relaxed
+
+### Therapist
+
+* Support the forearm **proximal to the wrist**
+* To bias **FCU**, hold the wrist **off the table** and guide into **wrist flexion with ulnar deviation**
+
+### Test — Grade 2
+
+* Patient **flexes the wrist** in gravity-minimized, ulnar border sliding on or just above the table  
+* For **FCU bias**: ask the patient to **flex and ulnar deviate** the wrist through available range
+
+### Grade 2
+
+* Completes **available wrist flexion** in gravity-minimized position  
+* With FCU bias: completes wrist flexion with a **clear ulnar deviation component** (no resistance)
+
+---
+
+### Position — Grades 1 and 0
+
+* Forearm **supinated**, supported on the table  
+* Wrist supported in **slight flexion**
+
+### Therapist — Palpation
+
+* Support the wrist in flexion  
+* Palpate the **FCU tendon** along the **medial palmar aspect** of the wrist, at the **base of the 5th metacarpal**
+
+### Test — Grades 1 and 0
+
+* Patient is cued to **“try to bend your wrist”**, repeated a few times while you palpate
+
+### Grade 1
+
+* **No visible movement**, but a **faint contraction** is felt in the FCU tendon
+
+### Grade 0
+
+* **No palpable or visible activity** in the FCU tendon
+
 
 ## Wrist Extension — ECRL, ECRB, ECU
 ### Grade 2 — Gravity‑Minimized Position
