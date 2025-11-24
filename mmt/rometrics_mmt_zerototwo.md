@@ -565,8 +565,6 @@ Ask the patient to **draw the shoulder blade “down and in” toward the spine*
 
 ---
 
-# LOWER EXTREMITY
-
 ## Hip Flexion — Iliopsoas
 ### Grade 2 — Gravity‑Minimized Position
 - **Side‑lying**, test limb **uppermost**; therapist supports under the **slightly flexed knee** to guide the thigh **forward parallel to the floor**.
