@@ -811,6 +811,20 @@ function setBodyMode(mode){
 
   // Re-apply global plantarflexion to both feet
   applyGlobalPF();
+  // Optional lower-arm Z rotation (shortcut from POSE_OVERRIDES)
+  if (key && POSE_OVERRIDES[key] && skeleton){
+    const o   = POSE_OVERRIDES[key];
+    const laL = getBone("lowerarm_L");
+    const laR = getBone("lowerarm_R");
+
+    // If present, these are interpreted as degrees around Z for each forearm
+    if (laL && typeof o.lowerArmLZ === "number"){
+      laL.rotateZ(degToRad(o.lowerArmLZ));
+    }
+    if (laR && typeof o.lowerArmRZ === "number"){
+      laR.rotateZ(degToRad(o.lowerArmRZ));
+    }
+  }
 
   // If this test is using side-lying, also snap arms/legs to side-lying baseline
   if (mode === "side_lying"){
