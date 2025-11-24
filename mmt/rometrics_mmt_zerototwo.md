@@ -376,7 +376,7 @@ Ask the patient to **draw the shoulder blade “down and in” toward the spine*
 
 ### Therapist
 
-* Support leg to reduce friction; hand at ankle only for guidance (no resistance for 0–2); palpate QL just above iliac crest between 12th rib and iliac crest
+* Support leg to reduce friction; hand at ankle only for guidance (no resistance for 0–2).
 
 ### Action
 
@@ -385,7 +385,7 @@ Ask the patient to **draw the shoulder blade “down and in” toward the spine*
 ### Grades 0–2
 
 * **Grade 2:** partial pelvic hike through available range without resistance
-* **Grade 1:** trace contraction palpable in QL with visible tautness at iliac crest
+* **Grade 1:** Palpation not recommended. QL lies deep
 * **Grade 0:** no palpable activity
 
 
