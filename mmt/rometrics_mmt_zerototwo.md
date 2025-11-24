@@ -540,7 +540,7 @@ Ask the patient to **draw the shoulder blade “down and in” toward the spine*
 ### Therapist
 
 * Support the forearm **proximal to the wrist**
-* To bias **FCR**, keep the wrist **off the table** and guide motion into **wrist flexion with radial deviation**
+* To bias **FCR**, keep the wrist **from touching the table** and let the patient move into **wrist flexion with radial deviation**
 
 ### Test — Grade 2
 
