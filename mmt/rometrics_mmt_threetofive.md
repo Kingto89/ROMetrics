@@ -560,11 +560,12 @@
 
 ### Position
 
-* Short sitting, shoulder flexed overhead, elbow slightly flexed
+* Prone, shoulder abducted to 90°, elbow  flexed 90° so that the hand hands off the exam table.
 
 ### Therapist
 
-* Support arm above elbow
+* The supporting hand should be placed inferior to the axilla (armpit), resting on the upper arm.
+* The resistance hand is positioned just above the wrist on the back (dorsal surface) of the extended forearm. Apply resistance downward.
 
 ### Action
 
