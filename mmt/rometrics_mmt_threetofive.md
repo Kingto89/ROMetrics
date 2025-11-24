@@ -941,6 +941,39 @@ The patient flexes, abducts, and externally rotates the hip while maintaining kn
 
 ---
 
+## Hip Extension — Gluteus Maximus (Isolated, Prone)
+
+Plane: sagittal | End-Feel: firm  
+
+### Muscle Tested
+- Gluteus Maximus
+
+### Position
+- Prone
+- Test hip **abducted and externally rotated**
+- Test knee flexed to **90°**
+
+> Note: If a patient is unable to lie prone due to fixed inability to straighten the hip, the therapist must substitute a modified test, such as  side-lying or gravity-eliminated position.
+
+### Therapist
+- Stand at the level of the pelvis on the test side
+- One hand **stabilizes the pelvis** at the iliac crest/PSIS to keep alignment
+- Other hand **applies resistance** over the **posterior thigh just above the knee**
+- For weaker patients (Grade 3), you may **support the flexed knee** (cradle at ankle) to reduce hamstring demand
+
+### Action
+- Patient **extends the hip** with the thigh lifted off the surface while keeping the **knee flexed** and the hip in **abduction + external rotation**
+- Resistance is applied **straight downward** (toward the floor) at the distal posterior thigh
+
+**Therapist cue:**  
+> “Lift your foot up off the table.keep your knee bent.”  > 
+
+### Grades 3–5
+- **Grade 5:** Completes available hip extension and **holds the test position against maximal resistance**.  
+- **Grade 4:** Completes available hip extension and **holds against strong to moderate resistance**.  
+- **Grade 3:** Completes available hip extension range and **can hold the test position with no resistance**.
+```
+
 ## Hip Abduction (Gluteus Medius, Gluteus Minimus)
 
 **Plane: frontal | End-Feel: firm**
@@ -960,7 +993,7 @@ The patient flexes, abducts, and externally rotates the hip while maintaining kn
 
 ### Action
 
-* Abduct leg; resist downward at **lateral leg**
+* Abduct leg; resist downward at **lateral leg** just above ankle **grades 4/5 based on resistance**. Above lateral knee **grade 4 only**
 
 ### Grades 3, 4, 5
 
@@ -970,13 +1003,81 @@ The patient flexes, abducts, and externally rotates the hip while maintaining kn
 
 ---
 
+## Hip Abduction from Flexed Position — Tensor Fasciae Latae (TFL)
+
+Plane: frontal (from a flexed hip) | End-Feel: firm  
+
+### Muscle Tested
+- Tensor Fasciae Latae (TFL)
+
+### Position
+- Patient in **side-lying**
+- **Bottom leg:** straight and comfortable for support  
+- **Top (test) leg:**  
+  - Thigh positioned across the lower leg with the **foot resting in front**
+
+### Therapist
+- Stand **behind the patient** near the pelvis  
+- **Stabilizing hand:** on the **iliac crest** of the test side to prevent pelvic tilt or rotation  
+- **Resistance hand:** on the **lateral thigh just above the knee** of the test limb
+
+### Action
+- Patient **lifts the top leg** away from the bottom leg  moving the leg back and up while:
+  - Keeping the hip flexed
+- Therapist applies resistance **downward toward the table/floor** over the distal lateral thigh
+
+**Therapist cue:**  
+> “Lift your top leg up and out, then hold it there. Don’t let me push it down.”
+
+### Grades 3–5
+- **Grade 5:** Reaches the test position and maintains it against maximal resistance
+- **Grade 4:** Holds against moderate 
+- **Grade 3:** Maintains the position without any resistance**.  
+
+## Hip Adduction — Adductor Group  
+*(Adductor Magnus, Adductor Longus, Adductor Brevis, Pectineus, Gracilis)*  
+
+**Plane:** frontal | **End-Feel:** firm  
+
+### Muscles Tested
+- Adductor magnus  
+- Adductor longus  
+- Adductor brevis  
+- Pectineus  
+- Gracilis  
+
+### Position
+- Side-lying with the **test leg on the bottom**.  
+- Bottom (test) limb straight, resting initially on the table.  
+- Top (non-test) limb slightly abducted and supported so it is out of the way.  
+
+### Therapist
+- Stand **behind** the patient at about knee level.  
+- **Support the top leg** (non-test limb) in abduction with your forearm/hand at the medial knee.  
+- Place your **resistance hand** on the medial distal thigh of the **bottom leg**, just above the knee.  
+
+### Action
+- Patient **lifts the bottom leg upward** to meet the top leg, keeping the hip neutral (no rotation).  
+
+### Grades 3–5
+- **Grade 5:** Reaches the adducted test position and maintains it against **maximal** downward resistance.  
+- **Grade 4:** Reaches the position and holds against **moderate** resistance.  
+- **Grade 3:** Brings the bottom leg fully up to the top leg and **holds the position without resistance**.  
+
+
 ## Hip External Rotation
 
 **Plane: transverse | End-Feel: firm**
 
 ### Muscles Tested
 
-* Deep external rotators
+* Deep external rotators:
+Piriformis
+Superior gemellus
+Inferior gemellus
+Obturator internus
+Obturator externus
+Quadratus femoris
 * Gluteus Maximus (posterior fibers)
 
 ### Position
@@ -985,11 +1086,12 @@ The patient flexes, abducts, and externally rotates the hip while maintaining kn
 
 ### Therapist
 
-* Stabilize lateral thigh
+* Sit or kneel next to the limb being tested.
+Stabilization Hand: Place your hand over the lateral thigh (above the knee) to apply inward counter-pressure.
+Resistance Hand: Place your other hand on the medial ankle (above the bone).
 
 ### Action
-
-* ER lower leg inward; resist outward at **medial ankle**
+* Tell the patient to slide their lower leg in (toward the other ankle), apply a force that attempts to rotate the leg out, opposing the patient's effort. This is still hip external rotation — we name it by how the thigh bone turns out at the hip, not by which way the foot slides
 
 ### Grades 3, 4, 5
 
@@ -1015,11 +1117,13 @@ The patient flexes, abducts, and externally rotates the hip while maintaining kn
 
 ### Therapist
 
-* Stabilize medial thigh
+* Sit or kneel beside the test leg.
+* Stabilizing hand: Rest your hand on the medial (inner) thigh just above the knee to keep the femur steady.
+* Resistance hand: Place your other hand on the lateral (outer) ankle just above the malleolus and push inward while the patient tries to move the lower leg outward (into hip internal rotation).
 
 ### Action
 
-* IR lower leg outward; resist inward at **lateral ankle**
+* Tell the patient to slide their lower leg out (away from the other ankle), while you push in the opposite direction, trying to bring the leg back in.
 
 ### Grades 3, 4, 5
 
