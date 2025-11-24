@@ -866,11 +866,11 @@ Patient extends the wrist against gravity in the chosen hand position:
 
 ### Therapist
 
-* Stabilize pelvis
+* The stabilization hand is placed on the ipsilateral (same side) shoulder or pelvis to prevent trunk substitution, and the resistance hand is positioned on the anterior distal thigh to apply a downward force against the patient's attempt to lift their thigh.
 
 ### Action
 
-* Lift thigh; resist downward at **anterior distal thigh**
+* Lift thigh, up and off the table; resist downward at **anterior distal thigh**
 
 ### Grades 3, 4, 5
 
@@ -879,6 +879,37 @@ Patient extends the wrist against gravity in the chosen hand position:
 * **Grade 3:** full ROM against gravity, no resistance
 
 ---
+
+# Sartorius (Hip Flexion, Abduction, and External Rotation with Knee Flexion)
+
+**Plane:** Multi-planar | **End-Feel:** soft/firm
+
+## Muscles Tested
+Sartorius
+
+## Position
+Short sitting, with thighs supported on the table and legs hanging over the side.
+
+## Therapist Hand Placement and Resistance
+The therapist stands lateral to the leg being tested.
+
+**Proximal Hand (Lateral Knee):** Applies resistance against hip flexion and abduction (force applied downward and inward).
+
+**Distal Hand (Medial-Anterior Distal Leg):** Applies resistance against hip external rotation and knee flexion (force applied upward and outward).
+
+## Action
+The patient flexes, abducts, and externally rotates the hip while maintaining knee flexion (the heel moves up and across toward the opposite knee).
+
+## Patient Instructions
+"Slide your heel up the shin of your other leg."
+
+"Hold it! Don't let me move your leg or straighten your knee."
+
+## Grades 3, 4, 5
+* **Grade 5 (Normal):** Holds test position against maximal resistance.
+* **Grade 4 (Good):** Tolerates moderate to strong resistance.
+* **Grade 3 (Fair):** Completes the full range of motion and holds the test position without resistance.
+
 
 ## Hip Extension (Gluteus Maximus, Hamstrings)
 
@@ -891,11 +922,12 @@ Patient extends the wrist against gravity in the chosen hand position:
 
 ### Position
 
-* Prone, leg straight
+* **Prone,** leg straight
 
 ### Therapist
 
-* Stabilize pelvis
+* The therapist stabilizes the pelvis near the PSIS with one hand to prevent substitution. The other hand provides downward resistance against the movement, applying force to the posterior leg **just above the ankle For a grade 4/5**.
+*  Alternatively the resistance hand can be placed on the posterior thigh just above the knee, but this alternate position is less demanding and means the highest possible grade is a **Grade 4**
 
 ### Action
 
