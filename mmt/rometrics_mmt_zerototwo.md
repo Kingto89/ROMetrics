@@ -260,7 +260,7 @@ Ask the patient to **draw the shoulder blade “down and in” toward the spine*
 
 ### Muscles Tested
 
-* Lumbar extensors (erector spinae, multifidi)
+* Lumbar & Thoracic are tested together for grades below 3 as muscles cannot be isolated
 
 ### Position
 
@@ -268,7 +268,7 @@ Ask the patient to **draw the shoulder blade “down and in” toward the spine*
 
 ### Therapist
 
-* Stabilize legs above ankles or across pelvis; cue “look at floor” to avoid cervical substitution; monitor lumbar spinous processes for lift
+* Stabilize legs above ankles or across pelvis if needed
 
 ### Action
 
@@ -277,7 +277,7 @@ Ask the patient to **draw the shoulder blade “down and in” toward the spine*
 ### Grades 0–2
 
 ### - Grade 2: partial ROM in gravity-minimized (lumbar lifts but trunk does not fully clear)
-### - Grade 1: trace contraction palpable along lumbar paraspinals lateral to spinous processes
+### - Grade 1: trace contraction palpable along lumbar/thoracic extensor muscles
 ### - Grade 0: no palpable activity
 
 ---
@@ -286,15 +286,15 @@ Ask the patient to **draw the shoulder blade “down and in” toward the spine*
 
 ### Muscles Tested
 
-* Thoracic extensors
+* Lumbar & Thoracic are tested together for grades below 3 as muscles cannot be isolated
 
 ### Position
 
-* Prone with upper trunk near edge of table to nipple line; arms at sides; head neutral
+* Prone; arms at sides; head neutral; legs on table (gravity minimized set-up)
 
 ### Therapist
 
-* Stabilize ankles; guard trunk at shoulders; prevent lumbar substitution
+* Stabilize legs above ankles or across pelvis if needed
 
 ### Action
 
@@ -303,7 +303,7 @@ Ask the patient to **draw the shoulder blade “down and in” toward the spine*
 ### Grades 0–2
 
 * **Grade 2:** partial ROM (upper trunk initiates lift but does not reach horizontal)
-* **Grade 1:** trace contraction palpable over thoracic paraspinals between scapulae
+* **Grade 1:** trace contraction palpable along lumbar/thoracic extensor muscles
 * **Grade 0:** no palpable activity
 
 ---
