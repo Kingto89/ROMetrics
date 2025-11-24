@@ -647,7 +647,8 @@ POSE_OVERRIDES["FCR:low"] = { x:0.620, y:-0.460, z:-2.080, rx:0.000, ry:0.349, r
 POSE_OVERRIDES["FCU:high"] = { x:-0.620, y:-0.440, z:0.540, rx:0.000, ry:0.349, rz:0.000, pf:-10.0 };  //seated on bed
 POSE_OVERRIDES["FCU:low"] = { x:0.620, y:-0.460, z:-2.080, rx:0.000, ry:0.349, rz:0.000, pf:-10.0 };  //seated on chair 
 POSE_OVERRIDES["ECRL:high"] = { x:0.420, y:-0.480, z:-2.000, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, footInvR:-0.5, footEvL:0.5, neckLatL:0.0 };
-  
+POSE_OVERRIDES["ECRL:low"] = { x:0.420, y:-0.480, z:-2.000, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, footInvR:-0.5, footEvL:0.5, neckLatL:0.0 };
+ 
 POSE_OVERRIDES["ECRB:high"] = { x:0.420, y:-0.480, z:-2.000, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, footInvR:-0.5, footEvL:0.5, neckLatL:0.0 };
   
 POSE_OVERRIDES["ECU:high"] = { x:0.420, y:-0.480, z:-2.000, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, footInvR:-0.5, footEvL:0.5, neckLatL:0.0 };
@@ -833,6 +834,22 @@ function setBodyMode(mode){
     if (lowerR) lowerR.rotateX(degToRad(25));  // ° elbow flexion
   }
  
+// Wrist tests: right-arm bias for NO-gravity (0–2) pose
+if (mode === "seatednogravity"){
+  const upperR = getBone("upperarm_R");
+  const lowerR = getBone("lowerarm_R");
+
+  // Reset just these bones to baseline so angles are absolute (not stacked)
+  [upperR, lowerR].forEach(b => {
+    if (!b) return;
+    const q0 = initialBoneRot.get(b);
+    if (q0) b.quaternion.copy(q0);
+  });
+
+  // Same shoulder, MORE elbow flexion for gravity-eliminated setup
+  if (upperR) upperR.rotateZ(degToRad(-16)); // shoulder abduction
+  if (lowerR) lowerR.rotateX(degToRad(45));  // more elbow flexion (tweak if needed)
+}
 }
 
 
