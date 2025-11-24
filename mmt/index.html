@@ -812,26 +812,51 @@ function setBodyMode(mode){
   // Re-apply global plantarflexion to both feet
   applyGlobalPF();
   
-  // Optional lower-arm Z / X rotation (shortcut from POSE_OVERRIDES)
+  // Optional arm/hand fine-tune rotations (shortcut from POSE_OVERRIDES) 
   if (key && POSE_OVERRIDES[key] && skeleton){
-    const o   = POSE_OVERRIDES[key];
-    const laL = getBone("lowerarm_L");
-    const laR = getBone("lowerarm_R");
+    const o = POSE_OVERRIDES[key];
 
-    // Z axis tweaks (e.g., pronation/supination-style swing)
-    if (laL && typeof o.lowerArmLZ === "number"){
-      laL.rotateZ(degToRad(o.lowerArmLZ));
+    const laL   = getBone("lowerarm_L");
+    const laR   = getBone("lowerarm_R");
+    const uaL   = getBone("upperarm_L");
+    const uaR   = getBone("upperarm_R");
+    const handL = getBone("hand_L");
+    const handR = getBone("hand_R");
+
+    // LOWER ARMS (L/R) — X, Y, Z
+    if (laL){
+      if (typeof o.lowerArmLX === "number") laL.rotateX(degToRad(o.lowerArmLX));
+      if (typeof o.lowerArmLY === "number") laL.rotateY(degToRad(o.lowerArmLY));
+      if (typeof o.lowerArmLZ === "number") laL.rotateZ(degToRad(o.lowerArmLZ));
     }
-    if (laR && typeof o.lowerArmRZ === "number"){
-      laR.rotateZ(degToRad(o.lowerArmRZ));
+    if (laR){
+      if (typeof o.lowerArmRX === "number") laR.rotateX(degToRad(o.lowerArmRX));
+      if (typeof o.lowerArmRY === "number") laR.rotateY(degToRad(o.lowerArmRY));
+      if (typeof o.lowerArmRZ === "number") laR.rotateZ(degToRad(o.lowerArmRZ));
     }
 
-    // X axis tweaks (extra flexion/extension)
-    if (laL && typeof o.lowerArmLX === "number"){
-      laL.rotateX(degToRad(o.lowerArmLX));
+    // UPPER ARMS (L/R) — X, Y, Z
+    if (uaL){
+      if (typeof o.upperArmLX === "number") uaL.rotateX(degToRad(o.upperArmLX));
+      if (typeof o.upperArmLY === "number") uaL.rotateY(degToRad(o.upperArmLY));
+      if (typeof o.upperArmLZ === "number") uaL.rotateZ(degToRad(o.upperArmLZ));
     }
-    if (laR && typeof o.lowerArmRX === "number"){
-      laR.rotateX(degToRad(o.lowerArmRX));
+    if (uaR){
+      if (typeof o.upperArmRX === "number") uaR.rotateX(degToRad(o.upperArmRX));
+      if (typeof o.upperArmRY === "number") uaR.rotateY(degToRad(o.upperArmRY));
+      if (typeof o.upperArmRZ === "number") uaR.rotateZ(degToRad(o.upperArmRZ));
+    }
+
+    // HANDS (L/R) — X, Y, Z
+    if (handL){
+      if (typeof o.handLX === "number") handL.rotateX(degToRad(o.handLX));
+      if (typeof o.handLY === "number") handL.rotateY(degToRad(o.handLY));
+      if (typeof o.handLZ === "number") handL.rotateZ(degToRad(o.handLZ));
+    }
+    if (handR){
+      if (typeof o.handRX === "number") handR.rotateX(degToRad(o.handRX));
+      if (typeof o.handRY === "number") handR.rotateY(degToRad(o.handRY));
+      if (typeof o.handRZ === "number") handR.rotateZ(degToRad(o.handRZ));
     }
   }
 
