@@ -811,18 +811,27 @@ function setBodyMode(mode){
 
   // Re-apply global plantarflexion to both feet
   applyGlobalPF();
-  // Optional lower-arm Z rotation (shortcut from POSE_OVERRIDES)
+  
+  // Optional lower-arm Z / X rotation (shortcut from POSE_OVERRIDES)
   if (key && POSE_OVERRIDES[key] && skeleton){
     const o   = POSE_OVERRIDES[key];
     const laL = getBone("lowerarm_L");
     const laR = getBone("lowerarm_R");
 
-    // If present, these are interpreted as degrees around Z for each forearm
+    // Z axis tweaks (e.g., pronation/supination-style swing)
     if (laL && typeof o.lowerArmLZ === "number"){
       laL.rotateZ(degToRad(o.lowerArmLZ));
     }
     if (laR && typeof o.lowerArmRZ === "number"){
       laR.rotateZ(degToRad(o.lowerArmRZ));
+    }
+
+    // X axis tweaks (extra flexion/extension)
+    if (laL && typeof o.lowerArmLX === "number"){
+      laL.rotateX(degToRad(o.lowerArmLX));
+    }
+    if (laR && typeof o.lowerArmRX === "number"){
+      laR.rotateX(degToRad(o.lowerArmRX));
     }
   }
 
