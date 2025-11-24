@@ -676,30 +676,40 @@ Ask the patient to **draw the shoulder blade “down and in” toward the spine*
 
 ## Hip Flexion — Iliopsoas
 ### Grade 2 — Gravity‑Minimized Position
-- **Side‑lying**, test limb **uppermost**; therapist supports under the **slightly flexed knee** to guide the thigh **forward parallel to the floor**.
+- **Side-lying** The stabilization hand is placed on the **pelvis** to prevent substitution.
+The testing hand cradles the leg, providing only enough support under the **knee** to hold the weight of the limb, allowing the patient's hip flexor to perform the movement independently through the range of motion.
 ### Grade 1 — Palpation
 - Just **distal to the inguinal ligament**, **medial** to the sartorius tendon.
-- **Find‑it cue:** “Bring your knee a little toward your chest; I’m feeling in the front groin crease.”
+- **Find‑it cue:** "Ask the patient to bring/flex their knee a little toward their chest (active slight hip flexion). Palpate in the front groin crease (inguinal crease) to ensure the iliopsoas is firing."
 ### Grade 0 — Observation
 - No palpable iliopsoas activity.
-### Therapist Cues
-- **G2:** “Bring your knee toward your chest.”
-- **G1/0:** “Try bringing your knee toward your nose.”
-
 ---
+
+## Hip Flexion, Abduction, External Rotation with Knee Flexion — Sartorius
+### Grade 2 — Gravity-Minimized Position
+- **Supine**, The heel of the limb being tested is placed on the contralateral (opposite side) shin. Test limb moves through hip **flexion, abduction, and external rotation** with **knee flexed** as the **heel slides up the shin toward the opposite knee.**
+### Grade 1 — Palpation
+-Support Hand: Cradles the test limb under the calf with a hand supporting the limb behind the knee.
+- **Sartorius** palpated just **distal and medial to the ASIS** as the patient attempts to slide the heel up the opposite shin; **no visible movement** occurs.
+- Therapist detects a **slight, palpable contraction** of the Sartorius muscle.
+
+### Grade 0 — Observation
+- No visible heel slide or hip motion; **no discernable palpable contraction** of the muscle.
+
+### Therapist Cues
+** “Try to slide your heel up to your knee.”
+
 
 ## Hip Extension — Gluteus Maximus, Hamstrings
 ### Grade 2 — Gravity‑Minimized Position
-- **Side‑lying**, limb **uppermost**, **knee straight**; therapist supports limb to move **backward parallel to floor**.
+- **Side‑lying**, limb **uppermost**, **knee straight**; therapist supports limb as the patient moves the entire leg **backward**.
 ### Grade 1 — Palpation
 - **Hamstrings** at **ischial tuberosity**; **gluteus maximus** over the **central buttock**.
 - **Find‑it cue:** “Gently push your leg back; I’m feeling along your sit‑bone and buttock.”
 ### Grade 0 — Observation
 - No glute/hamstring activity.
 ### Therapist Cues
-- **G2:** “Move your leg back toward me.”
-- **G1/0:** “Try to lift your leg” / “Squeeze your buttocks.”
-
+-  “Move your leg back toward me.”
 ---
 
 ## Hip Abduction — Gluteus Medius, Gluteus Minimus
