@@ -629,18 +629,48 @@ Ask the patient to **draw the shoulder blade “down and in” toward the spine*
 
 * **No palpable or visible activity** in the FCU tendon
 
+## Wrist Extension — ECRL, ECRB, ECU (Grades 0–2)
 
-## Wrist Extension — ECRL, ECRB, ECU
-### Grade 2 — Gravity‑Minimized Position
-- Forearm **neutral** on table; hand slides **backward** into extension; support distal forearm.
-### Grade 1 — Palpation
-- **ECRL/ECRB:** **Dorsal‑radial** wrist over 2nd–3rd metacarpals.
-- **ECU:** **Dorsal‑ulnar** wrist proximal to the **5th metacarpal**.
-- **Find‑it cue:** “Lift the back of your hand slightly; I’m feeling these tendons on the back/outer and back/inner wrist.”
-### Grade 0 — Observation
-- No extensor tendon activity.
-### Therapist Cue
-- **G2/1/0:** “Try to lift your hand.”
+**Grade 2 — Gravity-Minimized**
+
+- **Position:**  
+  - Forearm supported on the table in **neutral (thumb up)**.  
+  - Wrist and hand free to move (not resting flat on the table).
+
+- **Therapist:**  
+  - Support the wrist and distal forearm so the hand can move with **minimal friction**.
+
+- **Action:**  
+  - Patient “bends the hand back” into wrist extension.  
+  - For all extensors together: extend the wrist straight back.  
+  - To bias direction:  
+    - Lead with **thumb side** for a more radial pattern.  
+    - Lead with **little-finger side** for a more ulnar pattern.
+
+- **Grade 2:**  
+  - Completes available wrist extension range in gravity-minimized position.
+
+---
+
+**Grades 1 and 0 — Palpation**
+
+- **Position:**  
+  - Forearm pronated and supported on the table.  
+  - Wrist held in slight extension by the therapist.
+
+- **Therapist:**  
+  - One hand supports the wrist in slight extension.  
+  - The other hand palpates a single tendon at a time along the dorsal wrist while the patient tries to extend.
+
+- **Action:**  
+  - Patient is asked to gently “try to lift your hand back” several times while you palpate.
+
+- **Grade 1:**  
+  - A flicker or trace of tendon activity is felt, but no visible wrist motion.
+
+- **Grade 0:**  
+  - No palpable or visible tendon contraction.
+
 
 ---
 
