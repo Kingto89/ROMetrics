@@ -559,11 +559,11 @@ const TEST_POSITION = {
   Triceps_Brachii:     { high: "prone",     low: "seated"      },
 
   // Wrist
-  ECRL:                { high: "seated",     low: "seated"      },
-  ECRB:                { high: "seated",     low: "seated"      },
-  ECU:                 { high: "seated",     low: "seated"      },
-  FCR:                 { high: "seated",     low: "seated"      },
-  FCU:                 { high: "seated",     low: "seated"      },
+  ECRL:                { high: "seatedgravity",  low: "seatednogravity" },
+  ECRB:                { high: "seatedgravity",  low: "seatednogravity" },
+  ECU:                 { high: "seatedgravity",  low: "seatednogravity" },
+  FCR:                 { high: "seatedgravity",  low: "seatednogravity" },
+  FCU:                 { high: "seatedgravity",  low: "seatednogravity" },
 
   // Hip
   Iliopsoas:           { high: "seated",     low: "side_lying"  },
@@ -712,6 +712,25 @@ function setBodyMode(mode){
     rotX = 0;
     rotY = degToRad(POSE.ryDeg);
     seatPoseOnlyLegs();
+  } else if (mode === "seatedgravity"){
+    // Same base seated transform as "seated" (3–5: against gravity)
+    const edgeZ = tableTop.position.z + (TABLE_D / 2) - 0.25;
+    posX = 0;
+    posY = TABLE_HEIGHT + 0.02;
+    posZ = edgeZ;
+    rotX = 0;
+    rotY = degToRad(POSE.ryDeg);
+    seatPoseOnlyLegs();
+
+  } else if (mode === "seatednogravity"){
+    // Same base seated transform as "seated" (0–2: gravity eliminated)
+    const edgeZ = tableTop.position.z + (TABLE_D / 2) - 0.25;
+    posX = 0;
+    posY = TABLE_HEIGHT + 0.02;
+    posZ = edgeZ;
+    rotX = 0;
+    rotY = degToRad(POSE.ryDeg);
+    seatPoseOnlyLegs();
 
   } else if (mode === "supine"){
     // Supine on bed, centered
@@ -788,6 +807,22 @@ function setBodyMode(mode){
   if (mode === "side_lying"){
     applySideLyingLimbs();
   }
+   // Wrist tests: add right-arm bias (60° abd, 30° flex) in both seated modes
+  if (mode === "seatedgravity" || mode === "seatednogravity"){
+    const upperR = getBone("upperarm_R");
+    const lowerR = getBone("lowerarm_R");
+
+    // Reset just these bones to baseline so angles are absolute (not stacked)
+    [upperR, lowerR].forEach(b => {
+      if (!b) return;
+      const q0 = initialBoneRot.get(b);
+      if (q0) b.quaternion.copy(q0);
+    });
+
+    if (upperR) upperR.rotateZ(degToRad(60));  // 60° shoulder abduction
+    if (lowerR) lowerR.rotateX(degToRad(30));  // 30° elbow flexion
+  }
+ 
 }
 
 
