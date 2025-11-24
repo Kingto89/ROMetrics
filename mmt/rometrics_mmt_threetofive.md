@@ -816,88 +816,39 @@
 * **Grade 3 Both Flexors: Patient actively bends the wrist through full available range with no added radial or ulnar deviation and no resistance applied.
 
 
+## Wrist Extension — ECRL, ECRB, ECU  
 
-## Wrist Extension — ECRL
+Plane: sagittal | End-Feel: firm  
 
-**Plane: sagittal | End-Feel: firm**
-
-### Muscle Tested
-
-* Extensor Carpi Radialis Longus
-
-### Position
-
-* Forearm pronated, elbow slightly flexed
-
-### Therapist
-
-* Stabilization from table support
-
-### Action
-
-* Extend + radial deviate; resist at **dorsal 2nd metacarpal**
-
-### Grades 3, 4, 5
-
-* **Grade 5:** holds position against max resistance
-* **Grade 4:** holds against moderate resistance
-* **Grade 3:** full ROM against gravity, no resistance
-
----
-
-## Wrist Extension — ECRB
-
-**Plane: sagittal | End-Feel: firm**
-
-### Muscle Tested
-
-* Extensor Carpi Radialis Brevis
+### Muscles Tested
+- Extensor Carpi Radialis Longus (ECRL)  
+- Extensor Carpi Radialis Brevis (ECRB)  
+- Extensor Carpi Ulnaris (ECU)  
 
 ### Position
-
-* Forearm pronated, elbow fully flexed
-
-### Therapist
-
-* Stabilization from table support
-
-### Action
-
-* Extend wrist in neutral; resist at **dorsal 3rd metacarpal**
-
-### Grades 3, 4, 5
-
-* **Grade 5:** holds position against max resistance
-* **Grade 4:** holds against moderate resistance
-* **Grade 3:** full ROM against gravity, no resistance
-
----
-
-## Wrist Extension — ECU
-
-**Plane: sagittal | End-Feel: firm**
-
-### Muscle Tested
-
-* Extensor Carpi Ulnaris
-
-### Position
-
-* Forearm pronated
+- Short sitting  
+- Elbow flexed  
+- Forearm **pronated**, supported on a table. The hand/wrist are hanging off the edge of the table for grades 3-5.
+- Wrist in neutral (no radial or ulnar deviation), fingers relaxed  
+- Hand position varies by prime mover bias:  
+  - Neutral (no deviation) → **all three** working together  
+  - Radial deviation → **ECRL / ECRB** bias  
+  - Ulnar deviation → **ECU** bias  
 
 ### Therapist
-
-* Stabilization from table support
+- Support the distal forearm to block elbow and forearm substitution.  
 
 ### Action
-
-* Extend + ulnar deviate; resist at **dorsal 5th metacarpal**
+Patient extends the wrist against gravity in the chosen hand position:  
+- Neutral: extend wrist; apply resistance over **dorsum of 2nd–5th metacarpals** straight down into flexion.  
+- Radial deviation: extend wrist leading with the **thumb side**; resist over **2nd–3rd metacarpals** into flexion and ulnar deviation.  
+- Ulnar deviation: extend wrist leading with the **ulnar border**; resist over **5th metacarpal** into flexion and radial deviation.  
 
 ### Grades 3, 4, 5
+- **Grade 5:** Holds test position against **maximal** resistance.  
+- **Grade 4:** Holds against **moderate** resistance with slight give.  
+- **Grade 3:** Completes full available wrist extension **through range** against gravity with **no resistance**.  
 
-* **Grade 5:** holds position against max resistance
-* **Grade 4:** holds against moderate resistance
-* **Grade 3:** full ROM against gravity, no resistance
 
 
 ## Hip Flexion (Iliopsoas)
