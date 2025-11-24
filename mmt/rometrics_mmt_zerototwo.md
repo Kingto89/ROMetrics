@@ -514,7 +514,7 @@ Ask the patient to **draw the shoulder blade “down and in” toward the spine*
 
 ## Elbow Extension — Triceps Brachii
 ### Grade 2 — Gravity‑Minimized Position
-- **Short sitting**, **shoulder abducted to 90°**, **elbow ~45° flexed**; the limb is **horizontal** to the floor so extension is parallel to ground.
+- **Short sitting**, **shoulder abducted to 90°**, **elbow ~45° flexed**; weight supported under the elbow by the PT, the limb is **horizontal** to the floor so extension is parallel to ground.
 ### Grade 1 — Palpation
 - **Triceps tendon** just **proximal to the olecranon** or muscle belly on **posterior upper arm**.
 - **Find‑it cue:** “Try to straighten a little; I’m feeling just above your elbow.”
