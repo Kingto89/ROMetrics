@@ -764,6 +764,7 @@
 * Sit or stand in front of the patient  
 * Support distal forearm under the wrist  
 * Apply resistance over the **radial side of the hand** (1st–2nd metacarpals)
+* To test both wrist flexors together, apply a broad, even resistance over the palm into wrist extension; standard 4–5 grading applies here—strong/max resistance held
 
 ### Action
 
@@ -775,6 +776,7 @@
 * **Grade 5:** Holds wrist flexion with **radial deviation** against **maximal** resistance  
 * **Grade 4:** Holds wrist flexion with radial deviation against **strong–moderate** resistance  
 * **Grade 3:** Moves through **full wrist flexion in radial deviation** against gravity, **no resistance**
+* **Grade 3 Both Flexors: Patient actively bends the wrist through full available range with no added radial or ulnar deviation and no resistance applied.
 
 ---
 
@@ -798,6 +800,8 @@
 
 * Support distal forearm under the wrist  
 * Apply resistance over the **ulnar side of the hand** (5th metacarpal region)
+* To test both wrist flexors together, apply a broad, even resistance over the palm into wrist extension; standard 4–5 grading applies here—strong/max resistance held
+
 
 ### Action
 
@@ -809,6 +813,8 @@
 * **Grade 5:** Holds wrist flexion with **ulnar deviation** against **maximal** resistance  
 * **Grade 4:** Holds wrist flexion with ulnar deviation against **strong–moderate** resistance  
 * **Grade 3:** Moves through **full wrist flexion in ulnar deviation** against gravity, **no resistance**
+* **Grade 3 Both Flexors: Patient actively bends the wrist through full available range with no added radial or ulnar deviation and no resistance applied.
+
 
 
 ## Wrist Extension — ECRL
