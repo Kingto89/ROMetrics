@@ -754,7 +754,7 @@
 ### Position
 
 * Short sitting  
-* Forearm **supinated**, supported on the table  
+* Forearm **supinated**, supported on the table. The hand/wrist are hanging off the edge of the table for grades 3-5.  
 * Elbow flexed ~90°  
 * Wrist placed in **slight extension and radial deviation**  
 * Fingers and thumb relaxed (no gripping)
@@ -791,7 +791,7 @@
 ### Position
 
 * Short sitting  
-* Forearm **supinated**, supported on the table  
+* Forearm **supinated**, supported on the table. The hand/wrist are hanging off the edge of the table for grades 3-5.  
 * Elbow flexed ~90°  
 * Wrist placed in **slight extension and ulnar deviation**  
 * Fingers and thumb relaxed
