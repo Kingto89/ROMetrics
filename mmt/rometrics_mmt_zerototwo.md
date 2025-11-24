@@ -711,44 +711,111 @@ The testing hand cradles the leg, providing only enough support under the **knee
 ### Therapist Cues
 -  “Move your leg back toward me.”
 ---
+## Hip Extension — Gluteus Maximus (Isolated, Prone)
+
+- Grades 0-2 are not isolated but for general hip extension used with Gluteus Maximus, Hamstrings.
+
 
 ## Hip Abduction — Gluteus Medius, Gluteus Minimus
 ### Grade 2 — Gravity‑Minimized Position
-- **Supine**, limb **lightly lifted** to reduce friction; slide leg **laterally**.
+- **Supine**, limb **lightly lifted** by therapist (holding ankle) but not to assist movement. Patient slides leg **laterally**.
 ### Grade 1 — Palpation
 - **Gluteus medius** just **superior‑lateral** to the greater trochanter.
 - **Find‑it cue:** “Slide your leg out; I’m feeling at the outside of your hip.”
 ### Grade 0 — Observation
 - No lateral hip activity.
 ### Therapist Cue
-- **G2/1/0:** “Bring your leg out to the side.”
+- “Bring your leg out to the side.”
 
 ---
 
+## Hip Abduction from Flexed Position — Tensor Fasciae Latae (TFL) Grades 0-2
+
+#### Grade 2 — Gravity-Eliminated
+
+**Position**
+
+* Long sitting on the table  
+* Trunk leaned back with **hands placed behind** for support  
+* Test leg extended at the knee, relaxed on the surface  
+
+**Therapist**
+
+* Stand at the side of the test limb  
+* One hand **supports under the ankle** to reduce friction (does **not** lift or help the leg)  
+* Other hand **palpates the TFL** over the proximal anterolateral thigh where it blends into the iliotibial band  
+
+**Action**
+
+* Patient **slides the leg out to the side** 
+
+
+**Cue to patient**
+
+> “Slide your leg out to the side.”
+- **Grade 2:** Completes about 30° of hip abduction in the long-sitting, gravity-minimized position.  
+- **Grade 1:** No visible motion, but a faint contraction of the TFL is felt along the anterolateral thigh or near the IT band.  
+- **Grade 0:** No visible movement and no palpable TFL activity.  
+
+
+## Hip Adduction — Adductor Group
+
+### Grades 0–2
+
+### Position
+- **Supine.**  
+- **Non-test leg** placed in some abduction so it doesn’t block the test limb.  
+- **Test leg** straight, resting on the table in neutral (toes toward the ceiling).
+
+### Therapist
+- Stand on the **test side at knee level**.  
+- For **Grade 2**:
+  - Support the test limb **under the ankle**, lifting it just enough to **reduce friction** as it moves across the table (do **not** help the motion).  
+  - Use the other hand to **palpate the adductor mass** on the **proximal medial thigh**.  
+- For **Grades 1 and 0**:
+  - Keep the limb supported and relaxed while palpating the **adductor group** at the upper medial thigh to detect any contraction.
+
+### Action
+- **Grade 2:**  
+  - Patient **slides the test leg in toward the opposite leg**, keeping the hip neutral and toes pointing up.  
+  - Cue: *“Slide your leg in toward the other one.”*
+
+- **Grades 1 and 0:**  
+  - Patient is asked to “try to pull the leg in” while the therapist palpates for any adductor activity.  
+
+### Grade Definitions
+- **Grade 2:** Moves the leg through the **available adduction range** in this gravity-minimized position.  
+- **Grade 1:** No visible motion, but a **palpable contraction** is felt in the adductor mass.  
+- **Grade 0:** **No palpable or visible activity** in the adductors.  
+```
+
+
 ## Hip External Rotation — Deep Rotators (± Glute Max posterior fibers)
-### Grade 2 — Gravity‑Minimized Position
-- **Supine**, legs extended; **foot pivots outward** so the **hip rotates externally** while the limb stays **parallel to table**.
-- Support at the **ankle** to guide a smooth outward roll.
+### Grade 2 — Gravity-Minimized Position
+- Supine, legs straight. Start with the test leg slightly turned inward, then have the patient gently roll the whole leg outward (toes turn out) to show hip external rotation.
+
 ### Grade 1 — Palpation
 - Deep rotators are hard to isolate; look for subtle activity in the **posterior‑lateral hip**; glute max posterior fibers may show a small flicker.
 - **Find‑it cue:** “Roll your leg so your toes point outward; I’m feeling behind the outer hip.”
 ### Grade 0 — Observation
 - No detectable activity.
-### Therapist Cue
-- **G2/1/0:** “Try to turn your leg out.”
+
+**Why the Foot Moves In vs Out with Hip External Rotation**
+
+* **Short sitting:** the knee is bent, so when the **femur rolls outward** (external rotation), the lower leg swings and the **foot moves inward** toward midline.
+
+* **Supine, knee straight:** the whole leg is in line, so when the **femur rolls outward**, the **foot follows and rolls outward** too.
 
 ---
 
-## Hip Internal Rotation — Glute Med/Min (anterior), Tensor Fasciae Latae
+## Hip Internal Rotation — Glute Med/Min (anterior ), Tensor Fasciae Latae
 ### Grade 2 — Gravity‑Minimized Position
-- **Supine**, legs extended; **foot pivots inward** so the **hip rotates internally** with the limb **parallel to table**; support ankle to reduce friction.
+- **Supine**, legs extended; **foot rolls inward** so the **hip rotates internally** 
 ### Grade 1 — Palpation
 - **TFL** on the **anterior‑lateral** hip; **glute med/min anterior fibers** just anterior to greater trochanter.
 - **Find‑it cue:** “Roll your toes inward; I’m feeling on the front‑outside of the hip.”
 ### Grade 0 — Observation
 - No activity appreciated.
-### Therapist Cue
-- **G2/1/0:** “Try to turn your leg in.”
 
 ---
 
