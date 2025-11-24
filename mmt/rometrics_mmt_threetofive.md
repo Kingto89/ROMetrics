@@ -459,96 +459,43 @@
 * **Grade 4:** holds against moderate resistance
 * **Grade 3:** full ROM against gravity, no resistance
 
-## Elbow Flexion — Biceps Brachii
+## Elbow Flexion — Biceps, Brachialis, Brachioradialis
 
 **Plane: sagittal | End-Feel: soft/firm**
 
-### Muscle Tested
+### Muscles Tested
 
 * Biceps Brachii
-
-### Position
-
-* Short sitting
-* Arm at side
-* Forearm **supinated**
-* Elbow extended
-
-### Therapist
-
-* Stabilize anterior shoulder
-
-### Action
-
-* Flex elbow in supination; resist downward at **volar forearm**
-
-### Grades 3, 4, 5
-
-* **Grade 5:** holds position against max resistance
-* **Grade 4:** holds against moderate resistance
-* **Grade 3:** full ROM against gravity, no resistance
-
----
-
-## Elbow Flexion — Brachialis
-
-**Plane: sagittal | End-Feel: soft/firm**
-
-### Muscle Tested
-
 * Brachialis
-
-### Position
-
-* Short sitting
-* Arm at side
-* Forearm **pronated**
-* Elbow extended
-
-### Therapist
-
-* Stabilize anterior shoulder
-
-### Action
-
-* Flex elbow in pronation; resist downward at **dorsal forearm**
-
-### Grades 3, 4, 5
-
-* **Grade 5:** holds position against max resistance
-* **Grade 4:** holds against moderate resistance
-* **Grade 3:** full ROM against gravity, no resistance
-
----
-
-## Elbow Flexion — Brachioradialis
-
-**Plane: sagittal | End-Feel: soft/firm**
-
-### Muscle Tested
-
 * Brachioradialis
 
 ### Position
 
 * Short sitting
 * Arm at side
-* Forearm in **neutral (thumb up)**
 * Elbow extended
+* **Forearm position varies by prime mover:**
+  * **Supinated** → Biceps Brachii bias
+  * **Pronated** → Brachialis bias
+  * **Neutral (thumb up)** → Brachioradialis bias
 
 ### Therapist
 
-* Stabilize anterior shoulder
+* Stabilize anterior shoulder to prevent substitution or shoulder flexion.
 
 ### Action
 
-* Flex elbow in neutral; resist downward at **radial side of forearm**
+* Patient flexes the elbow against gravity in the chosen forearm position:
+  * **Supinated:** flex elbow; resist downward at **volar forearm**
+  * **Pronated:** flex elbow; resist downward at **dorsal forearm**
+  * **Neutral (thumb up):** flex elbow; resist downward at **radial side of forearm**
 
 ### Grades 3, 4, 5
 
-* **Grade 5:** holds position against max resistance
-* **Grade 4:** holds against moderate resistance
-* **Grade 3:** full ROM against gravity, no resistance
+* **Grade 5:** Holds test position against **maximal resistance**
+* **Grade 4:** Holds against **moderate resistance**
+* **Grade 3:** Completes full ROM against gravity with **no resistance**
+
 
 ## Elbow Extension (Triceps Brachii)
 
