@@ -316,7 +316,9 @@ Ask the patient to **draw the shoulder blade “down and in” toward the spine*
 
 ### Position
 
-* Supine; knees flexed (hooklying) to reduce hip flexor pull; arms at sides
+* Supine; knees flexed (hooklying) to reduce hip flexor pull; arms at sides, patient tries to lean forward. 
+* If the patient is still unable, PT should assit by placing their hands beind the upper trunk and head, supporting the weight as the patient tries to lean forward.
+* If the patient cannot lean forward with weight supported, ask them to cough and feel for abdominal contractions.
 
 ### Therapist
 
@@ -328,8 +330,8 @@ Ask the patient to **draw the shoulder blade “down and in” toward the spine*
 
 ### Grades 0–2
 
-* **Grade 2:** partial trunk curl (scapulae do not clear)
-* **Grade 1:** trace contraction palpable in RA with visible tension but no trunk movement
+* **Grade 2:** partial trunk curl (scapulae do not clear) / there is visible rib cage depression with weight supported as patient leans forward/cough
+* **Grade 1:** trace contraction palpable in RA with visible tension but no trunk movement/depression
 * **Grade 0:** no palpable activity
 
 ---
