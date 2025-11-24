@@ -753,24 +753,28 @@
 
 ### Position
 
-* Forearm **supinated**, supported on table
-* Wrist in neutral
-* Fingers relaxed
+* Short sitting  
+* Forearm **supinated**, supported on the table  
+* Elbow flexed ~90°  
+* Wrist placed in **slight extension and radial deviation**  
+* Fingers and thumb relaxed (no gripping)
 
 ### Therapist
 
-* Stabilize distal forearm
+* Sit or stand in front of the patient  
+* Support distal forearm under the wrist  
+* Apply resistance over the **radial side of the hand** (1st–2nd metacarpals)
 
 ### Action
 
-* Flex + **radial deviate** wrist
-* Resist at **thenar eminence / radial palm**
+* Patient **flexes the wrist in radial deviation**, keeping fingers relaxed  
+* Therapist pushes into **extension and ulnar deviation**
 
 ### Grades 3, 4, 5
 
-* **Grade 5:** holds position against max resistance
-* **Grade 4:** holds against moderate resistance
-* **Grade 3:** full ROM against gravity, no resistance
+* **Grade 5:** Holds wrist flexion with **radial deviation** against **maximal** resistance  
+* **Grade 4:** Holds wrist flexion with radial deviation against **strong–moderate** resistance  
+* **Grade 3:** Moves through **full wrist flexion in radial deviation** against gravity, **no resistance**
 
 ---
 
@@ -784,24 +788,27 @@
 
 ### Position
 
-* Forearm **supinated**, supported
-* Wrist in neutral
-* Fingers relaxed
+* Short sitting  
+* Forearm **supinated**, supported on the table  
+* Elbow flexed ~90°  
+* Wrist placed in **slight extension and ulnar deviation**  
+* Fingers and thumb relaxed
 
 ### Therapist
 
-* Stabilize distal forearm
+* Support distal forearm under the wrist  
+* Apply resistance over the **ulnar side of the hand** (5th metacarpal region)
 
 ### Action
 
-* Flex + **ulnar deviate** wrist
-* Resist at **hypothenar eminence / ulnar palm**
+* Patient **flexes the wrist in ulnar deviation**, keeping fingers relaxed  
+* Therapist pushes into **extension and radial deviation**
 
 ### Grades 3, 4, 5
 
-* **Grade 5:** holds position against max resistance
-* **Grade 4:** holds against moderate resistance
-* **Grade 3:** full ROM against gravity, no resistance
+* **Grade 5:** Holds wrist flexion with **ulnar deviation** against **maximal** resistance  
+* **Grade 4:** Holds wrist flexion with ulnar deviation against **strong–moderate** resistance  
+* **Grade 3:** Moves through **full wrist flexion in ulnar deviation** against gravity, **no resistance**
 
 
 ## Wrist Extension — ECRL
