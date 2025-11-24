@@ -494,7 +494,8 @@ Ask the patient to **draw the shoulder blade “down and in” toward the spine*
 
 ## Elbow Flexion — Biceps, Brachialis, Brachioradialis
 ### Grade 2 — Gravity‑Minimized Position
-- **Side‑lying** with the arm **supported at elbow and wrist**; elbow begins near **90° flexion** and moves **parallel to floor**.
+- **Short sitting** with the arm **supported by PT at elbow and wrist**; elbow begins near **90° flexion** with slight internal rotatation, and tries **bent elbow**.
+- Alternate test can be done in side-lying if patient cannot sit, elbow supported and flexed 45° (when supinated/pronated), midrange when in neutral.
 - Test each selectively by **forearm** position:
   - **Biceps:** **Supinated**.
   - **Brachialis:** **Pronated**.
