@@ -553,9 +553,9 @@ const TEST_POSITION = {
   Pelvic_Elevation:    { high: "supine",     low: "supine"      },
 
   // Elbow
-  Biceps_Brachii:      { high: "seated",     low: "side_lying"  },
-  Brachialis:          { high: "seated",     low: "side_lying"  },
-  Brachioradialis:     { high: "seated",     low: "side_lying"  },
+  Biceps_Brachii:      { high: "seated",     low: "seated"  },
+  Brachialis:          { high: "seated",     low: "seated"  },
+  Brachioradialis:     { high: "seated",     low: "seated"  },
   Triceps_Brachii:     { high: "seated",     low: "seated"      },
 
   // Wrist
@@ -634,8 +634,15 @@ POSE_OVERRIDES["Trunk_Rotation:high"]  = { x:-1.220, y:0.520, z:0.470, rx:-1.571
 POSE_OVERRIDES["Trunk_Rotation:low"]  = { x:-1.220, y:0.520, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 15 };  //supine
 POSE_OVERRIDES["Pelvic_Elevation:high"]  = { x:-1.220, y:0.520, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 15 };  //supine
 POSE_OVERRIDES["Pelvic_Elevation:low"]  = { x:-1.220, y:0.520, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 15 };  //supine 
+POSE_OVERRIDES["Biceps_Brachii:high"] = { x:-0.620, y:-0.440, z:0.540, rx:0.000, ry:0.349, rz:0.000, pf:-10.0 };  //seated on bed
+POSE_OVERRIDES["Biceps_Brachii:low"] = { x:-0.620, y:-0.440, z:0.540, rx:0.000, ry:0.349, rz:0.000, pf:-10.0 };  //seated on bed
+POSE_OVERRIDES["Brachialis:high"] = { x:-0.620, y:-0.440, z:0.540, rx:0.000, ry:0.349, rz:0.000, pf:-10.0 };  //seated on bed
+POSE_OVERRIDES["Brachialis:low"] = { x:-0.620, y:-0.440, z:0.540, rx:0.000, ry:0.349, rz:0.000, pf:-10.0 };  //seated on bed
+POSE_OVERRIDES["Brachioradialis:high"] = { x:-0.620, y:-0.440, z:0.540, rx:0.000, ry:0.349, rz:0.000, pf:-10.0 };  //seated on bed
+POSE_OVERRIDES["Brachioradialis:low"] = { x:-0.620, y:-0.440, z:0.540, rx:0.000, ry:0.349, rz:0.000, pf:-10.0 };  //seated on bed
 
-  
+
+            
 let CURRENT_BODY_TEST = null;
 let CURRENT_BODY_BUCKET = "high"; // "high" or "low"
   
@@ -993,9 +1000,9 @@ const TEST_TO_HEADING = {
   Shoulder_Horiz_Add: "Shoulder Horizontal Adduction — Pectoralis Major",
   Infraspinatus: "Shoulder External Rotation",
   Subscapularis: "Shoulder Internal Rotation",
-  Biceps_Brachii: "Elbow Flexion — Biceps Brachii",
-  Brachialis: "Elbow Flexion — Brachialis",
-  Brachioradialis: "Elbow Flexion — Brachioradialis",
+  Biceps_Brachii:    "Elbow Flexion — Biceps, Brachialis, Brachioradialis",
+  Brachialis:        "Elbow Flexion — Biceps, Brachialis, Brachioradialis",
+  Brachioradialis:   "Elbow Flexion — Biceps, Brachialis, Brachioradialis",
   Triceps_Brachii: "Elbow Extension",
   Trunk_Ext_Lumbar:   "Trunk Extension — Lumbar",
   Trunk_Ext_Thoracic: "Trunk Extension — Thoracic",
