@@ -821,30 +821,22 @@ The testing hand cradles the leg, providing only enough support under the **knee
 
 ## Knee Flexion — Hamstrings
 ### Grade 2 — Gravity‑Minimized Position
-- **Side‑lying**, test limb **uppermost**; therapist supports the **thigh and ankle**; knee flexes **parallel to floor**.
+- **Side‑lying**, test limb **uppermost**; therapist supports the **thigh and ankle**;  holding them in their hand(s) above the tabel/surface.
 ### Grade 1 — Palpation
 - **Medial and lateral hamstring tendons** just **above the posterior knee**.
 - **Find‑it cue:** “Start bending your knee; I’m feeling the tendons behind the knee.”
 ### Grade 0 — Observation
 - No hamstring activity.
-### Therapist Cues
-- **G2:** “Bend your knee.”
-- **G1/0:** “Try to bend it.”
-
 ---
 
 ## Knee Extension — Quadriceps Femoris
 ### Grade 2 — Gravity‑Minimized Position
-- **Side‑lying**, test limb **uppermost**; therapist supports limb so the **knee straightens parallel to floor**.
+- **Side‑lying**, test limb **uppermost**; therapist supports limb in their hands(s) so the **knee straightens/extends**.
 ### Grade 1 — Palpation
 - **Quadriceps tendon** above the patella or **patellar tendon** below the patella.
-- **Find‑it cue:** “Tighten the front of your thigh; I’m feeling your tendon above/below the kneecap.”
+- **Find‑it cue:** “Straighten your knee; I’m feeling your tendon above/below the kneecap.”
 ### Grade 0 — Observation
 - No quad activity.
-### Therapist Cues
-- **G2:** “Straighten your knee.”
-- **G1/0:** “Push the back of your knee down” / “Tighten your kneecap.”
-
 ---
 
 ## Foot Dorsiflexion + Inversion — Tibialis Anterior
