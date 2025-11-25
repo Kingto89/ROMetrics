@@ -678,6 +678,10 @@ POSE_OVERRIDES["Hip_ER:high"] = { x:-0.620, y:-0.440, z:0.540, rx:0.000, ry:0.34
 POSE_OVERRIDES["Hip_ER:low"]  = { x:-1.220, y:0.520, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 15 };  //supine 
 POSE_OVERRIDES["Hip_IR:high"] = { x:-0.620, y:-0.440, z:0.540, rx:0.000, ry:0.349, rz:0.000, pf:-10.0 };  //seated on bed
 POSE_OVERRIDES["Hip_IR:low"]  = { x:-1.220, y:0.520, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 15 };  //supine 
+POSE_OVERRIDES["Hamstrings:high"] = { x:-1.200, y:0.640, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0, calfLX: -90 };   //prone  
+POSE_OVERRIDES["Hamstrings:low"] = { x:-1.280, y:0.620, z:0.490, rx:2.705, ry:-3.491, rz:1.745, pf:-10.0, footInvR:10.5, footEvL:9.6, neckLatL:-17.0 }; //side lying  
+
+
 
   
 let CURRENT_BODY_TEST = null;
@@ -718,6 +722,44 @@ function applyGlobalPF(){
   if (footL) footL.rotateX(-r);
   if (footR) footR.rotateX(-r);
 }
+
+function applyLimbOverridesFromOverride(o){
+  if (!o || !skeleton) return;
+  const get = (n)=> skeleton.bones.find(b => b.name === n);
+  const rad = THREE.MathUtils.degToRad;
+
+  const thighL = get("thigh_L");
+  const thighR = get("thigh_R");
+  const calfL  = get("calf_L");
+  const calfR  = get("calf_R");
+
+  // Thigh L: X, Y, Z
+  if (thighL){
+    if (o.thighLX !== undefined) thighL.rotateX(rad(o.thighLX));
+    if (o.thighLY !== undefined) thighL.rotateY(rad(o.thighLY));
+    if (o.thighLZ !== undefined) thighL.rotateZ(rad(o.thighLZ));
+  }
+
+  // Thigh R: X, Y, Z
+  if (thighR){
+    if (o.thighRX !== undefined) thighR.rotateX(rad(o.thighRX));
+    if (o.thighRY !== undefined) thighR.rotateY(rad(o.thighRY));
+    if (o.thighRZ !== undefined) thighR.rotateZ(rad(o.thighRZ));
+  }
+
+  // Calf L: X, Z
+  if (calfL){
+    if (o.calfLX !== undefined) calfL.rotateX(rad(o.calfLX));
+    if (o.calfLZ !== undefined) calfL.rotateZ(rad(o.calfLZ));
+  }
+
+  // Calf R: X, Z
+  if (calfR){
+    if (o.calfRX !== undefined) calfR.rotateX(rad(o.calfRX));
+    if (o.calfRZ !== undefined) calfR.rotateZ(rad(o.calfRZ));
+  }
+}
+  
 
 // Coarse body-mode: align to bed/cabinet but don't set specific joint test angles
 function setBodyMode(mode){
@@ -846,6 +888,11 @@ function setBodyMode(mode){
 
   // Re-apply global plantarflexion to both feet
   applyGlobalPF();
+
+    // Apply any per-test thigh/calf overrides (if present)
+  if (key && POSE_OVERRIDES[key]){
+    applyLimbOverridesFromOverride(POSE_OVERRIDES[key]);
+  }
   
   // Optional arm/hand fine-tune rotations (shortcut from POSE_OVERRIDES) 
   if (key && POSE_OVERRIDES[key] && skeleton){
