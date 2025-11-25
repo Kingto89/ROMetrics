@@ -1199,7 +1199,7 @@ Resistance Hand: Place your other hand on the medial ankle (above the bone).
 ### Position
 
 * **Supine** with heel on table or short sitting, foot hanging off the edge of the test table.
-* Supine is often preferred because the heel is stably supported, keeping the patient relaxed while still allowing a clean, isolated tibialis anterior test.
+* Supine is often preferred because the heel is stably supported, keeping the patient relaxed while still allowing a clean, isolated tibialis anterior test. In supine slightly flex the knee to reduce gastrocnemius tension.
 
 ### Therapist
 
