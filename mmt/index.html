@@ -572,7 +572,7 @@ const TEST_POSITION = {
   Iliopsoas:           { high: "seated",     low: "side_lying"  },
   Glute_Max:           { high: "prone",      low: "side_lying"  },
   Glute_Med:           { high: "side_lying", low: "supine"      },
-  TFL:                 { high: "side_lying", low: "supine"      },
+  TFL:                 { high: "side_lying", low: "long_sit"    },
   Hip_Adduction:       { high: "side_lying", low: "supine"      },
   Sartorius:           { high: "seated",     low: "supine"      },
   Hip_ER:              { high: "seated",     low: "supine"      },
@@ -744,6 +744,18 @@ function setBodyMode(mode){
     rotX = 0;
     rotY = degToRad(POSE.ryDeg);
     seatPoseOnlyLegs();
+
+  } else if (mode === "long_sit"){
+  // Long sitting at edge of table: hips ~90°, knees ~0°
+  const edgeZ = tableTop.position.z + (TABLE_D / 2) - 0.25;
+  posX = 0;
+  posY = TABLE_HEIGHT + 0.02;
+  posZ = edgeZ;
+  rotX = 0;
+  rotY = degToRad(POSE.ryDeg);
+
+  longSitLegs(); // new helper below
+    
   } else if (mode === "seatedgravity"){
     // Same base seated transform as "seated" (3–5: against gravity)
     const edgeZ = tableTop.position.z + (TABLE_D / 2) - 0.25;
@@ -957,6 +969,34 @@ function seatPoseOnlyLegs(){
   if (calfL)  calfL.rotateX(rad(-90));
   if (calfR)  calfR.rotateX(rad(-90));
 }
+
+function longSitLegs(){
+  if (!skeleton) return;
+  const get = (n)=> skeleton.bones.find(b => b.name === n);
+
+  const thighL = get("thigh_L");
+  const thighR = get("thigh_R");
+  const calfL  = get("calf_L");
+  const calfR  = get("calf_R");
+
+  // Reset to baseline first
+  [thighL, thighR, calfL, calfR].forEach(b => {
+    if (!b) return;
+    const q0 = initialBoneRot.get(b);
+    if (q0) b.quaternion.copy(q0);
+  });
+
+  const r = THREE.MathUtils.degToRad;
+
+  // Hips flexed ~90°
+  if (thighL) thighL.rotateX(r(85));
+  if (thighR) thighR.rotateX(r(85));
+
+  // Knees almost straight (small flex so it doesn't lock/look weird)
+  if (calfL)  calfL.rotateX(r(-5));
+  if (calfR)  calfR.rotateX(r(-5));
+}
+  
 // Side-lying limb preset:
 // - Hips: add_L = 12°, add_R = -12°
 // - Feet: R inversion 20°, L eversion 20° (Z axis, foot_R / foot_L)
