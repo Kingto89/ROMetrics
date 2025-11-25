@@ -1198,11 +1198,14 @@ Resistance Hand: Place your other hand on the medial ankle (above the bone).
 
 ### Position
 
-* Short sitting, foot off edge
+* **Supine** with heel on table or short sitting, foot hanging off the edge of the test table.
+* Supine is often preferred because the heel is stably supported, keeping the patient relaxed while still allowing a clean, isolated tibialis anterior test.
 
 ### Therapist
 
-* Stabilize distal leg
+* Supine: Patient supine, heel on table. Stabilize the distal leg above the malleoli and apply resistance over the dorsomedial foot into plantarflexion/eversion (opposing dorsiflexion with inversion).
+
+* Short sitting: Patient short sitting, foot hanging over table edge (heel may rest on therapist’s thigh for added support). Stabilize the distal leg above the malleoli and apply resistance over the dorsomedial foot into plantarflexion/eversion (opposing dorsiflexion with inversion).
 
 ### Action
 
@@ -1213,6 +1216,14 @@ Resistance Hand: Place your other hand on the medial ankle (above the bone).
 * **Grade 5:** holds position against max resistance
 * **Grade 4:** holds against moderate resistance
 * **Grade 3:** full ROM against gravity, no resistance
+
+### Why Both Seated & Supine Positions Are Valid for Grades 3-5
+
+* Tibialis anterior is the prime mover (dorsiflexion + inversion).
+* The foot is not fully supported in a true gravity-eliminated plane.
+* The dorsum of the foot still has to lift against gravity.
+* You can apply standardized resistance in the correct line of pull (DF + inversion).
+
 
 ## Foot Inversion (Tibialis Posterior)
 
