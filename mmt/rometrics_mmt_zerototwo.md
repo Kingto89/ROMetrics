@@ -736,7 +736,7 @@ The testing hand cradles the leg, providing only enough support under the **knee
 **Position**
 
 * Long sitting on the table  
-* Trunk leaned back with **hands placed behind** for support  
+* Trunk leaned back with **hands holding test surface** for support  
 * Test leg extended at the knee, relaxed on the surface  
 
 **Therapist**
