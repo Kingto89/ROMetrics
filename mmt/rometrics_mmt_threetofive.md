@@ -1253,32 +1253,39 @@ Resistance Hand: Place your other hand on the medial ankle (above the bone).
 
 ---
 
-## Foot Eversion + Plantarflexion (Fibularis/Peroneus Longus & Brevis)
-
-**Plane: frontal + sagittal | End-Feel: firm**
+## Plantar Flexion + Foot Eversion — Fibularis Longus & Brevis
 
 ### Muscles Tested
 
-* Fibularis (Peroneus) Longus
-* Fibularis (Peroneus) Brevis
+* Fibularis longus
+* Fibularis brevis
 
 ### Position
 
-* Short sitting or supine, foot off edge
+* **Short sitting,** ankle in neutral (midway between dorsiflexion and plantar flexion); may also be tested supine with ankle in neutral.
+* *Short sitting is preferred because the foot moves freely in space without pressing into the table, avoiding friction and blocking of plantarflexion, and making eversion and first-metatarsal depression easier to see and resist than in supine.*
+
 
 ### Therapist
 
-* Stabilize distal leg above ankle
+* Sit or stand facing the patient.
+* Stabilize the distal leg just above the malleoli (avoid squeezing the distal tibia).
+* Place the other hand along the dorsum and lateral border of the forefoot and apply resistance into inversion with slight dorsiflexion (up and in).
 
-### Action
+### Test
 
-* Evert + slight plantarflex; resist **up/in** at lateral forefoot (5th ray)
+* Patient moves the foot **down and out** into eversion with plantar flexion, with depression of the first metatarsal head.
 
-### Grades 3, 4, 5
+### Instructions to Patient
 
-* **Grade 5:** holds position against max resistance
-* **Grade 4:** holds against moderate resistance
-* **Grade 3:** full ROM against gravity, no resistance
+* “Turn your foot down and out. Hold it. Don’t let me move it in.”
+
+### Grades 3–5
+
+* **Grade 5:** Full range of eversion with plantar flexion, holds end position against maximal resistance.
+* **Grade 4:** Full range of eversion with plantar flexion, holds against moderate resistance.
+* **Grade 3:** Completes full available range of eversion with plantar flexion without resistance.
+
 
 ## Ankle Dorsiflexion (Tibialis Anterior)
 
