@@ -880,10 +880,10 @@ Patient extends the wrist against gravity in the chosen hand position:
 
 ---
 
-### Hip Flexion, Abduction, External Rotation with Knee Flexion — Sartorius
+## Hip Flexion, Abduction, External Rotation with Knee Flexion — Sartorius
 **Plane:** Multi-planar | **End-Feel:** soft/firm
 
-## Muscles Tested
+### Muscles Tested
 Sartorius
 
 ### Position
