@@ -880,7 +880,7 @@ Patient extends the wrist against gravity in the chosen hand position:
 
 ---
 
-# Sartorius (Hip Flexion, Abduction, and External Rotation with Knee Flexion)
+## Sartorius (Hip Flexion, Abduction, and External Rotation with Knee Flexion)
 
 **Plane:** Multi-planar | **End-Feel:** soft/firm
 
