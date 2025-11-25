@@ -841,16 +841,40 @@ The testing hand cradles the leg, providing only enough support under the **knee
 
 ## Foot Dorsiflexion + Inversion — Tibialis Anterior
 ### Grade 2 — Gravity‑Minimized Position
-- **Supine or short sitting**, heel **slides** on a **low‑friction surface**; move into **dorsiflexion and inversion** parallel to table.
+- Supine or short sitting, **Completes only a partial range**
 ### Grade 1 — Palpation
 - **TA tendon** on the **anteromedial ankle** at the level of the malleoli.
 - **Find‑it cue:** “Pull your foot up and in; I’m feeling the tendon toward the inside front of your ankle.”
 ### Grade 0 — Observation
 - No TA tendon activity.
-### Therapist Cue
-- **G2/1/0:** “Try to bring your foot up and in.”
+### Note:
+Because the foot is light, clinicians keep the standard test position and label weakness as Grade 2 when only partial range is achieved.
 
 ---
+
+## Plantar Flexion + Foot Eversion — Fibularis Longus & Brevis
+
+### Grades 0–2
+
+### Grade 2 — Weak in Standard Test Position
+
+* **Position:** Short sitting or supine, ankle in neutral.
+* **Performance:** Attempts to turn the foot **down and out** with depression of the first metatarsal but completes **only part of the available range**.
+
+### Grade 1 — Palpation
+
+* **Position:** Short sitting or supine.
+* **Palpation:**
+
+  * **Fibularis longus:** Upper lateral leg just below the fibular head; tendon posterior to the lateral malleolus.
+  * **Fibularis brevis:** Distal lateral leg over the fibula; tendon anterior to the lateral malleolus toward the base of the fifth metatarsal.
+* **Finding:** **Trace contractile activity** or tendon prominence without visible foot motion.
+
+### Grade 0 — No Activity
+
+* **Position:** Short sitting or supine.
+* **Finding:** **No palpable contraction** and no tendon response during the test command.
+
 
 ## Ankle Plantar Flexion — Gastrocnemius, Soleus (Non‑Heel‑Raise Low‑Grades)
 ### Grade 2 — Gravity‑Minimized Position
