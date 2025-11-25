@@ -852,9 +852,7 @@ Because the foot is light, clinicians keep the standard test position and label 
 
 ---
 
-## Plantar Flexion + Foot Eversion — Fibularis Longus & Brevis
-
-### Grades 0–2
+## Plantar Flexion + Foot Eversion — Fibularis Longus & Brevis - Grades 0-2
 
 ### Grade 2 — Weak in Standard Test Position
 
