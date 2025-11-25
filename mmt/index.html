@@ -326,7 +326,7 @@ const base = new THREE.Mesh(
   new THREE.BoxGeometry(TABLE_W*0.6, TABLE_HEIGHT, TABLE_D*0.8),
   new THREE.MeshStandardMaterial({ color: 0x374151, roughness:0.9, metalness:0.05 })
 );
-base.position.set(0, TABLE_HEIGHT/2, 0.35);
+base.position.set(0, TABLE_HEIGHT/2, 0.55);
 base.castShadow = true; base.receiveShadow = true;
 room.add(base);
 
@@ -1250,7 +1250,7 @@ const TEST_TO_HEADING = {
   Hamstrings: "Knee Flexion (Hamstrings)",
   Quadriceps: "Knee Extension",
   Tibialis_Anterior: "Foot Dorsiflexion + Inversion",
-  Plantar_Flexion_Foot_Eversion: "Plantar Flexion + Foot Eversion — Fibularis Longus & Brevis",
+  Foot_Eversion_PF: "Plantar Flexion + Foot Eversion — Fibularis Longus & Brevis",
   Gastrocnemius: "Ankle Plantar Flexion"
 };
 
