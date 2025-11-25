@@ -880,31 +880,31 @@ Patient extends the wrist against gravity in the chosen hand position:
 
 ---
 
-## Hip Flexion, Abduction, External Rotation with Knee Flexion — Sartorius
+### Hip Flexion, Abduction, External Rotation with Knee Flexion — Sartorius
 **Plane:** Multi-planar | **End-Feel:** soft/firm
 
 ## Muscles Tested
 Sartorius
 
-## Position
+### Position
 Short sitting, with thighs supported on the table and legs hanging over the side.
 
-## Therapist Hand Placement and Resistance
+### Therapist Hand Placement and Resistance
 The therapist stands lateral to the leg being tested.
 
 **Proximal Hand (Lateral Knee):** Applies resistance against hip flexion and abduction (force applied downward and inward).
 
 **Distal Hand (Medial-Anterior Distal Leg):** Applies resistance against hip external rotation and knee flexion (force applied upward and outward).
 
-## Action
+### Action
 The patient flexes, abducts, and externally rotates the hip while maintaining knee flexion (the heel moves up and across toward the opposite knee).
 
-## Patient Instructions
+### Patient Instructions
 "Slide your heel up the shin of your other leg."
 
 "Hold it! Don't let me move your leg or straighten your knee."
 
-## Grades 3, 4, 5
+### Grades 3, 4, 5
 * **Grade 5 (Normal):** Holds test position against maximal resistance.
 * **Grade 4 (Good):** Tolerates moderate to strong resistance.
 * **Grade 3 (Fair):** Completes the full range of motion and holds the test position without resistance.
