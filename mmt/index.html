@@ -104,10 +104,13 @@ select,button,input[type=range]{width:100%;margin:6px 0 8px 0;padding:8px 10px;b
         <option value="FCR">Wrist Flexion — Flexor Carpi Radialis (FCR)</option>
         <option value="FCU">Wrist Flexion — Flexor Carpi Ulnaris (FCU)</option>
       </optgroup>
-      <optgroup label="Hip">
+         <optgroup label="Hip">
         <option value="Iliopsoas">Hip Flexion (Iliopsoas)</option>
-        <option value="Glute_Max">Hip Extension (Glute Max, Hamstrings)</option>
-        <option value="Glute_Med">Hip Abduction (Glute Med, Glute Min)</option>
+        <option value="Glute_Max">Hip Extension — Gluteus Maximus</option>
+        <option value="Glute_Med">Hip Abduction — Gluteus Medius/Minimus</option>
+        <option value="TFL">Hip Abduction from Flexed Position — Tensor Fasciae Latae (TFL)</option>
+        <option value="Hip_Adduction">Hip Adduction — Adductor Group</option>
+        <option value="Sartorius">Hip Flexion, Abduction, External Rotation with Knee Flexion — Sartorius</option>
         <option value="Hip_ER">Hip External Rotation</option>
         <option value="Hip_IR">Hip Internal Rotation</option>
       </optgroup>
@@ -565,10 +568,13 @@ const TEST_POSITION = {
   FCR:                 { high: "seatedgravity",  low: "seatednogravity" },
   FCU:                 { high: "seatedgravity",  low: "seatednogravity" },
 
-  // Hip
+   // Hip
   Iliopsoas:           { high: "seated",     low: "side_lying"  },
   Glute_Max:           { high: "prone",      low: "side_lying"  },
   Glute_Med:           { high: "side_lying", low: "supine"      },
+  TFL:                 { high: "side_lying", low: "supine"      },
+  Hip_Adduction:       { high: "side_lying", low: "supine"      },
+  Sartorius:           { high: "seated",     low: "supine"      },
   Hip_ER:              { high: "seated",     low: "supine"      },
   Hip_IR:              { high: "seated",     low: "supine"      },
 
@@ -1129,6 +1135,10 @@ const TEST_TO_HEADING = {
   Glute_Med: "Hip Abduction",
   Hip_ER: "Hip External Rotation",
   Hip_IR: "Hip Internal Rotation",
+  Glute_Max: "Hip Extension — Gluteus Maximus",
+  TFL: "Hip Abduction from Flexed Position — Tensor Fasciae Latae (TFL)",
+  Hip_Adduction: "Hip Adduction — Adductor Group",
+  Sartorius: "Hip Flexion, Abduction, External Rotation with Knee Flexion — Sartorius",
   Hamstrings: "Knee Flexion",
   Quadriceps: "Knee Extension",
   Tibialis_Anterior: "Foot Dorsiflexion + Inversion",
