@@ -1211,21 +1211,6 @@ function tryNextModelUrl(index){
 tryNextModelUrl(0);  
 
 /* ==== Wire UI ==== */
-$("lock3D").onclick = () => {
-  controls.enabled = !controls.enabled;
-  const btn = $("lock3D");
-  btn.textContent = (!controls.enabled ? "🔒 3D: Locked" : "🔓 3D: Unlocked");
-  btn.classList.toggle('lockOn', !controls.enabled);
-};
-$("zeroAll").onclick = () => {
-  // Reset bones and return to your original standing anatomic pose
-  resetAllBones();
-  applyAnatomicBaseline();
-  if (model){
-    model.position.set(POSE.x, POSE.y, POSE.z);
-    model.rotation.set(0, degToRad(POSE.ryDeg), 0);
-  }
-};
 
 // When the test changes, update which grade menu is active, then re-apply pose
 actionSel.addEventListener("change", () => {
