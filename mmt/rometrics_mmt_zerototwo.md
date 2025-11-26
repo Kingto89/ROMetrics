@@ -876,6 +876,7 @@ Because the foot is light, clinicians keep the standard test position and label 
 
 ## Ankle Plantar Flexion — Gastrocnemius, Soleus (Non‑Heel‑Raise Low‑Grades)
 ### Grade 2 — Gravity‑Minimized Position
+- **Supine** with the foot hanging off the edge of the table
 - **Holds against maximum resistance.** Stands at the foot and applies resistance at the plantar surface of the forefoot as the patient holds the plantar-flexed position. Because the gastrocnemius–soleus complex is functionally very powerful, this Grade 2 (prone) test is an exception in that resistance is applied
 ### Grade 1 — Palpation
 - *Partially completes range**
