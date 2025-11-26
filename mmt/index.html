@@ -1476,34 +1476,6 @@ function ensurePoseTuner(){
     return THREE.MathUtils.radToDeg(rad);
   }
 
-  // Extra hook: when you click "Save for Test", also store / log
-  // foot inversion/eversion + neck lateral flexion.
-  btnSave.addEventListener('click', () => {
-    const key = ensureOverrideFromCurrentPose();
-    if (!key) return;
-    const o = POSE_OVERRIDES[key];
-    if (!o) return;
-
-    // Right foot inversion (foot_R, Z axis)
-    const footInvR = extractAxisDeg("foot_R", "z");
-    // Left foot eversion (foot_L, Z axis)
-    const footEvL  = extractAxisDeg("foot_L", "z");
-    // Neck left lateral flexion (neck, Z axis)
-    const neckLatL = extractAxisDeg("neck",   "z");
-
-    // Store in the override object so this pose "remembers" them
-    o.footInvR = footInvR;
-    o.footEvL  = footEvL;
-    o.neckLatL = neckLatL;
-
-    // And show them in the console so you can see the exact numbers
-    console.log(
-      `[PoseTuner extra] ${key}: ` +
-      `footInvR=${footInvR.toFixed(1)}°, ` +
-      `footEvL=${footEvL.toFixed(1)}°, ` +
-      `neckLatL=${neckLatL.toFixed(1)}°`
-    );
-  });
 
   // Helper: get or create override object for current test+bucket
   function getCurrentOverrideKey(){
