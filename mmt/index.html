@@ -1258,24 +1258,32 @@ const MODEL_CANDIDATES = [
 ].filter(Boolean);
 
 function tryNextModelUrl(index){
-  if(index >= MODEL_CANDIDATES.length){
+  if (index >= MODEL_CANDIDATES.length){
     $("msg").textContent = "⚠️ Could not load model from any path.";
+    console.error("All model load attempts failed:", MODEL_CANDIDATES);
     return;
   }
+
   const url = MODEL_CANDIDATES[index];
   $("msg").textContent = "Loading model… " + url;
+  console.log("Attempting model load from:", url);
+
   loader.load(
     url,
-    (gltf)=> addModel(gltf),
-    (xhr)=>{
+    (gltf) => {
+      console.log("✅ Loaded model from", url);
+      addModel(gltf);
+    },
+    (xhr) => {
       const pct = xhr.lengthComputable ? Math.min(100, Math.round(100*xhr.loaded/xhr.total)) : null;
       $("msg").textContent = pct!==null ? `Loading ${pct}%` : "Loading…";
     },
-    ()=> tryNextModelUrl(index+1)
+    (err) => {
+      console.warn("❌ Failed loading from:", url, err);
+      setTimeout(()=> tryNextModelUrl(index+1), 200);
+    }
   );
 }
-
-tryNextModelUrl(0);  
 
 /* ==== Wire UI ==== */
 const toggleHandsBtn = $("toggleHandsBtn"); // Reference the new single button
