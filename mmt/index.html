@@ -536,6 +536,10 @@ let GLOBAL_PF_DEG = 0; // shared plantarflex angle for both feet
 // ADDED: Hands model loading variables
 const HANDS_MODEL_URL = "https://raw.githubusercontent.com/Kingto89/ROMetrics.com/main/assets/Hands.glb";
 let handsModel = null;
+let handLMesh = null;
+let handRMesh = null;
+const draggableHands = [];
+
   
 // Reset all bones back to stored baseline
 function resetAllBones(){
@@ -1046,17 +1050,24 @@ function loadHandsModel(){
     loader.load(
         HANDS_MODEL_URL,
         (gltf) => {
-            handsModel = gltf.scene;
-            handsModel.visible = false;
-            
-            // Set scale to match the patient model scale
-            handsModel.scale.set(POSE.s, POSE.s, POSE.s); 
-            // Initial position guess: centered in front of the patient
-            handsModel.position.set(0, 1.2, 0.5); 
-            
-            // Note: Hand.L and Hand.R meshes are inside handsModel, 
-            // their movement must be handled via the Pose Tuner or separate control logic later.
-            scene.add(handsModel);
+        handsModel = gltf.scene;
+handsModel.visible = false;
+
+// Make therapist hands smaller than the patient (0.6×)
+const handScale = POSE.s * 0.6;
+handsModel.scale.set(handScale, handScale, handScale);
+handsModel.position.set(0, 1.2, 0.5);
+
+// Grab each hand separately by name
+handLMesh = handsModel.getObjectByName("Hands.L") || handsModel.getObjectByName("Hand.L");
+handRMesh = handsModel.getObjectByName("Hands.R") || handsModel.getObjectByName("Hand.R");
+
+// Mark them as draggable
+if (handLMesh) draggableHands.push(handLMesh);
+if (handRMesh) draggableHands.push(handRMesh);
+
+scene.add(handsModel);
+
             $("msg").textContent = "✅ Hands model ready.";
         },
         (xhr) => {
@@ -1542,6 +1553,19 @@ function ensurePoseTuner(){
 
   function updatePFLabel(){
     if (pfLabel) pfLabel.textContent = `${GLOBAL_PF_DEG|0}°`;
+  // Simple drag support for therapist hands
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2();
+const dragPlane = new THREE.Plane();
+const dragOffset = new THREE.Vector3();
+let draggedHand = null;
+
+function setPointerFromEvent(event){
+  const rect = renderer.domElement.getBoundingClientRect();
+  pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+  pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+}
+  
   }
 
   function updateLabels(){
@@ -1740,7 +1764,59 @@ window.addEventListener("load", () => {
     console.error(e);
   }
 });
- 
+
+// Drag handlers for Hands.L / Hands.R (mouse + touch via pointer events)
+function onPointerDown(event){
+  if (!draggableHands.length) return;
+
+  setPointerFromEvent(event);
+  raycaster.setFromCamera(pointer, camera);
+
+  const hits = raycaster.intersectObjects(draggableHands, true);
+  if (!hits.length) return;
+
+  // Climb up so we move the whole hand, not just a child mesh
+  let picked = hits[0].object;
+  while (picked.parent && picked.parent !== handsModel) {
+    picked = picked.parent;
+  }
+
+  draggedHand = picked;
+
+  dragPlane.setFromNormalAndCoplanarPoint(
+    camera.getWorldDirection(dragPlane.normal),
+    hits[0].point
+  );
+  dragOffset.copy(hits[0].point).sub(draggedHand.position);
+
+  // Pause orbit while dragging
+  controls.enabled = false;
+}
+
+function onPointerMove(event){
+  if (!draggedHand) return;
+
+  setPointerFromEvent(event);
+  raycaster.setFromCamera(pointer, camera);
+
+  const hitPoint = new THREE.Vector3();
+  if (raycaster.ray.intersectPlane(dragPlane, hitPoint)) {
+    draggedHand.position.copy(hitPoint.sub(dragOffset));
+  }
+}
+
+function onPointerUp(){
+  if (draggedHand){
+    draggedHand = null;
+    controls.enabled = true;
+  }
+}
+
+// Pointer events work for both mouse and touch in modern browsers
+renderer.domElement.addEventListener("pointerdown", onPointerDown);
+renderer.domElement.addEventListener("pointermove", onPointerMove);
+window.addEventListener("pointerup", onPointerUp);
+  
 /* ==== Loop & resize ==== */
 addEventListener("resize", ()=>{
   camera.aspect = innerWidth/innerHeight;
