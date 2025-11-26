@@ -162,17 +162,14 @@ select,button,input[type=range]{width:100%;margin:6px 0 8px 0;padding:8px 10px;b
   <strong>“+ / –” in MMT</strong> — “+” = closer to the next higher grade; “−” = closer to the next lower grade; <strong>3− / 3 / 3+</strong> = less than full ROM → full ROM (no resistance) → full ROM with slight resistance; <strong>2 / 2−</strong> = full vs partial ROM in gravity-eliminated position.
 </p>
 
-<label>Therapist Hands</label>
-<div class="row">
-  <button id="stableHandBtn" class="mini" title="Toggle therapist’s stabilizing hand">
-    Stabilizing Hand
-  </button>
-  <button id="testHandBtn" class="mini" title="Toggle therapist’s resistance hand">
-    Resistance Hand
-  </button>
-</div>
 
-<p id="handError" style="margin:6px 0 0; font-size:12px; color:#b91c1c; display:none;"></p>
+    <label>Model Control</label>
+    <div class="row">
+      <button id="lock3D" class="mini">🔓 3D: Unlocked</button>
+      <button id="zeroAll" class="mini" title="Reset to anatomic baseline">Zero All</button>
+    </div>
+  </div>
+</div>
 
 <div id="msg">Loading…</div>
 <canvas id="c"></canvas>
@@ -1211,6 +1208,21 @@ function tryNextModelUrl(index){
 tryNextModelUrl(0);  
 
 /* ==== Wire UI ==== */
+$("lock3D").onclick = () => {
+  controls.enabled = !controls.enabled;
+  const btn = $("lock3D");
+  btn.textContent = (!controls.enabled ? "🔒 3D: Locked" : "🔓 3D: Unlocked");
+  btn.classList.toggle('lockOn', !controls.enabled);
+};
+$("zeroAll").onclick = () => {
+  // Reset bones and return to your original standing anatomic pose
+  resetAllBones();
+  applyAnatomicBaseline();
+  if (model){
+    model.position.set(POSE.x, POSE.y, POSE.z);
+    model.rotation.set(0, degToRad(POSE.ryDeg), 0);
+  }
+};
 
 // When the test changes, update which grade menu is active, then re-apply pose
 actionSel.addEventListener("change", () => {
