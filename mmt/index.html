@@ -200,7 +200,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
-import { DragControls } from "three/addons/controls/DragControls.js"; // <<< ADDED FOR DRAGGING  
+import { DragControls } from "three/addons/controls/DragControls.js"; 
 
 /* ==== Hard-wired numeric pose (edit these) ==== */
 const POSE = {
@@ -1066,26 +1066,25 @@ function initDragControls() {
         });
     }
 }
-// -----------------------------------------------------------
 
-/* ==== Therapist Hands: Availability Check & Disable Logic ==== */
+  /* ==== Therapist Hands: Availability Check & Disable Logic ==== */
 function updateHandButtonState(){
-    const toggleHandsBtn = $("toggleHandsBtn");
-    const testSelected = !!actionSel?.value;
+    const toggleHandsBtn = $("toggleHandsBtn");
+    const testSelected = !!actionSel?.value;
 
-    if (toggleHandsBtn) {
-        toggleHandsBtn.disabled = !testSelected;
-        
-        // If deselected, hide hands and reset button state
-        if (!testSelected && handL?.visible) {
-            handL.visible = false;
-            handR.visible = false;
-            toggleHandsBtn.classList.remove('lockOn');
-        }
-    }
+    if (toggleHandsBtn) {
+        toggleHandsBtn.disabled = !testSelected;
+        
+        // If deselected, hide hands and reset button state
+        if (!testSelected && handL?.visible) {
+            handL.visible = false;
+            handR.visible = false;
+            toggleHandsBtn.classList.remove('lockOn');
+        }
+    }
 }
 
-/* ==== Load, Separate, Scale, and Toggle Logic (FINAL VERSION) ==== */
+/* ==== Load, Separate, Scale, and Toggle Logic (FINAL FIX) ==== */
 function loadHandsModel(){
     // If already loaded, just toggle visibility (Fixes double-click)
     if (handL) { 
@@ -1170,21 +1169,48 @@ function toggleHands(){
 }
 
 function applyBodyPositionFromSelection(){
-  if (!model || !skeleton) return;
-  const key = actionSel?.value;
-  if (!key) return;
-
-  const family = TEST_POSITION[key] || { high:"anatomic", low:"anatomic" };
-  const bucket = getGradeBucketForTest(key); // "high" or "low"
-  const mode = bucket === "low" ? (family.low || "anatomic")
-                                : (family.high || "anatomic");
-
-  CURRENT_BODY_TEST = key;
-  CURRENT_BODY_BUCKET = bucket;
-
-  setBodyMode(mode);
+// ... (rest of applyBodyPositionFromSelection remains here)
 }
 
+// ... (rest of utility functions remain here)
+
+/* ==== Wire UI ==== */
+const toggleHandsBtn = $("toggleHandsBtn"); // Reference the new single button
+
+// Wire the new button to load/toggle the hands model
+if (toggleHandsBtn) toggleHandsBtn.addEventListener('click', toggleHands);
+
+// --- 2. Test Selection Listener (Includes Hand Availability Update) ---
+actionSel.addEventListener("change", () => {
+    updateGradeDropdownsForSelection();
+    applyBodyPositionFromSelection();
+    updateHandButtonState(); // <-- Disables/enables hands button based on selection
+    if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
+});
+
+// Normal Grade 3–0 menu: used for all NON-exception tests
+gradeMain.addEventListener("change", () => {
+    if (actionSel.value && !EXCEPTION_TESTS.has(actionSel.value)){
+        applyBodyPositionFromSelection();
+        if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
+    }
+});
+
+// Grading Exceptions 5–1 menu: used ONLY for exception tests (trunk + gastroc)
+if (gradeExceptions){
+    gradeExceptions.addEventListener("change", () => {
+        if (actionSel.value && EXCEPTION_TESTS.has(actionSel.value)){
+            applyBodyPositionFromSelection();
+            if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
+        }
+    });
+}
+
+// --- 3. Initial State Check ---
+// Initialize menus on first load
+updateGradeDropdownsForSelection();
+// Initialize hand button state (starts disabled if no test selected)
+updateHandButtonState();
 /* ==== Utilities ==== */
 function degToRad(d){ return d * Math.PI / 180; }
 function seatPoseOnlyLegs(){
