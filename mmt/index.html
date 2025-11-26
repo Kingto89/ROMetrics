@@ -543,7 +543,7 @@ const TEST_POSITION = {
   Anterior_Deltoid:    { high: "seated",     low: "side_lying"  },
   Posterior_Deltoid:   { high: "prone",      low: "side_lying"  },
   Middle_Deltoid:      { high: "seated",     low: "supine"      },
-  Shoulder_Horiz_Abd: { high: "prone",  low: "seated" }, 
+  Shoulder_Horiz_Abd: { high: "prone",  low: "seatednogravity" }, 
   Shoulder_Horiz_Add: { high: "supine", low: "seatednogravity" }, 
   Infraspinatus:       { high: "seated",     low: "seatednogravity"      }, // table-supported NG
   Subscapularis:       { high: "seated",     low: "seatednogravity"      },
@@ -623,7 +623,7 @@ POSE_OVERRIDES["Posterior_Deltoid:low"] = { x:-1.280, y:0.820, z:0.490, rx:2.705
 POSE_OVERRIDES["Middle_Deltoid:high"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  // seated on bed
 POSE_OVERRIDES["Middle_Deltoid:low"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };  //supine
 POSE_OVERRIDES["Shoulder_Horiz_Abd:high"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0 };  //prone
-POSE_OVERRIDES["Shoulder_Horiz_Abd:low"] = { x:0.340, y:-0.480, z:-1.860, rx:-0.087, ry:0.349, rz:0.000, pf:0.0, footInvR:0.0, footEvL:0.0, neckLatL:0.0 }; ///non gravity table
+POSE_OVERRIDES["Shoulder_Horiz_Abd:low"] = { x:0.500, y:-0.480, z:-1.860, rx:-0.087, ry:0.349, rz:0.000, pf:0.0, footInvR:0.0, footEvL:0.0, neckLatL:0.0 }; ///non gravity table
 POSE_OVERRIDES["Shoulder_Horiz_Add:high"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };  //supine
 POSE_OVERRIDES["Shoulder_Horiz_Add:low"] = { x:0.340, y:-0.480, z:-1.860, rx:-0.087, ry:0.349, rz:0.000, pf:0.0, footInvR:0.0, footEvL:0.0, neckLatL:0.0 }; ///non gravity table
 POSE_OVERRIDES["Infraspinatus:high"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  // seated on bed
