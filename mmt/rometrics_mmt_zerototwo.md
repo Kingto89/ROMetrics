@@ -876,18 +876,15 @@ Because the foot is light, clinicians keep the standard test position and label 
 
 ## Ankle Plantar Flexion — Gastrocnemius, Soleus (Non‑Heel‑Raise Low‑Grades)
 ### Grade 2 — Gravity‑Minimized Position
-- **Side‑lying** or **prone** with foot **sliding** into plantarflexion on a towel/powder board; motion remains **parallel to table**.
+- **Holds against maximum resistance.** Stands at the foot and applies resistance at the plantar surface of the forefoot as the patient holds the plantar-flexed position. Because the gastrocnemius–soleus complex is functionally very powerful, this Grade 2 (prone) test is an exception in that resistance is applied
 ### Grade 1 — Palpation
+- *Partially completes range**
 - **Gastrocnemius:** Posterior **calf** bulk.
 - **Soleus:** Deep to gastroc near the **Achilles**.
 - **Find‑it cue:** “Point your toes a little; I’m feeling the calf muscle and the tendon above the heel.”
 ### Grade 0 — Observation
 - No plantarflexor activity.
-### Therapist Cue
-- **G2/1/0:** “Try to point your toes.”
-
 ---
-
 
 
 
