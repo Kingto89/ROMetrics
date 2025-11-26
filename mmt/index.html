@@ -617,11 +617,11 @@ POSE_OVERRIDES["Rhomboids:low"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.0
 POSE_OVERRIDES["Latissimus_Dorsi:high"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0 };  
 POSE_OVERRIDES["Latissimus_Dorsi:low"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0 };  
 POSE_OVERRIDES["Anterior_Deltoid:high"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145}; //seated
-POSE_OVERRIDES["Anterior_Deltoid:low"] = { x:-1.280, y:0.800, z:0.490, rx:2.705, ry:-3.491, rz:1.745, pf:-10.0, footInvR:30.5, footEvL:55.6, neckLatL:-17.0 }; //side lying  
+POSE_OVERRIDES["Anterior_Deltoid:low"] = { x:-1.280, y:0.800, z:0.490, rx:2.705, ry:-3.491, rz:1.745, pf:-10.0, footInvR:30.5, footEvL: 55.6, neckLatL:-17.0 }; //side lying  
 POSE_OVERRIDES["Posterior_Deltoid:high"] = { x:-1.200, y:0.640, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0, upperArmLY: 90, lowerArmLY: -75, upperArmRY: -90, lowerArmRY: 75, handLY: 135, handRY: -135, handLZ: -17, handRZ: 17 };
-POSE_OVERRIDES["Posterior_Deltoid:low"] = { x:-1.280, y:0.800, z:0.490, rx:2.705, ry:-3.491, rz:1.745, pf:-10.0, footInvR:10.5, footEvL:9.6, neckLatL:-17.0 };
+POSE_OVERRIDES["Posterior_Deltoid:low"] = { x:-1.280, y:0.820, z:0.490, rx:2.705, ry:-3.491, rz:1.745, pf:-10.0, footInvR:10.5, footEvL:9.6, neckLatL:-17.0 };
 POSE_OVERRIDES["Middle_Deltoid:high"] = { x:-0.620, y:-0.440, z:0.540, rx:0.000, ry:0.349, rz:0.000, pf:-10.0 };
-POSE_OVERRIDES["Middle_Deltoid:low"]  = { x:-1.220, y:0.520, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 15 };  //supine
+POSE_OVERRIDES["Middle_Deltoid:low"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 15 };  //supine
 POSE_OVERRIDES["Shoulder_Horiz_Abd:high"] = { x:-1.200, y:0.640, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0 };   //prone
 POSE_OVERRIDES["Shoulder_Horiz_Abd:low"] = { x:0.620, y:-0.460, z:-2.080, rx:0.000, ry:0.349, rz:0.000, pf:-10.0 };  //seated on chair 
 POSE_OVERRIDES["Shoulder_Horiz_Add:high"]  = { x:-1.220, y:0.520, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 15 };  //supine
@@ -1476,6 +1476,34 @@ function ensurePoseTuner(){
     return THREE.MathUtils.radToDeg(rad);
   }
 
+  // Extra hook: when you click "Save for Test", also store / log
+  // foot inversion/eversion + neck lateral flexion.
+  btnSave.addEventListener('click', () => {
+    const key = ensureOverrideFromCurrentPose();
+    if (!key) return;
+    const o = POSE_OVERRIDES[key];
+    if (!o) return;
+
+    // Right foot inversion (foot_R, Z axis)
+    const footInvR = extractAxisDeg("foot_R", "z");
+    // Left foot eversion (foot_L, Z axis)
+    const footEvL  = extractAxisDeg("foot_L", "z");
+    // Neck left lateral flexion (neck, Z axis)
+    const neckLatL = extractAxisDeg("neck",   "z");
+
+    // Store in the override object so this pose "remembers" them
+    o.footInvR = footInvR;
+    o.footEvL  = footEvL;
+    o.neckLatL = neckLatL;
+
+    // And show them in the console so you can see the exact numbers
+    console.log(
+      `[PoseTuner extra] ${key}: ` +
+      `footInvR=${footInvR.toFixed(1)}°, ` +
+      `footEvL=${footEvL.toFixed(1)}°, ` +
+      `neckLatL=${neckLatL.toFixed(1)}°`
+    );
+  });
 
   // Helper: get or create override object for current test+bucket
   function getCurrentOverrideKey(){
@@ -1567,11 +1595,11 @@ function ensurePoseTuner(){
 
     // NEW: capture actual joint angles so the pose "remembers" them
     // Right foot inversion (foot_R, Z axis)
-    //o.footInvR = extractAxisDeg("foot_R", "z");
+    o.footInvR = extractAxisDeg("foot_R", "z");
     // Left foot eversion (foot_L, Z axis)
-   // o.footEvL  = extractAxisDeg("foot_L", "z");
+    o.footEvL  = extractAxisDeg("foot_L", "z");
     // Neck left lateral flexion (neck, Z axis)
-   // o.neckLatL = extractAxisDeg("neck",   "z");
+    o.neckLatL = extractAxisDeg("neck",   "z");
 
     console.log(
       `POSE_OVERRIDES["${key}"] = { ` +
