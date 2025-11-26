@@ -529,16 +529,26 @@ loader.setMeshoptDecoder(MeshoptDecoder);
 const draco = new DRACOLoader(); draco.setDecoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/draco/"); loader.setDRACOLoader(draco);
 const ktx2  = new KTX2Loader();  ktx2.setTranscoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/basis/"); ktx2.detectSupport(renderer); loader.setKTX2Loader(ktx2);
 
-let model=null, skeleton=null;
-const initialBoneRot = new Map();
-let GLOBAL_PF_DEG = 0; // shared plantarflex angle for both feet
-
-// ADDED: Hands model loading variables
+// Therapist hands globals
 const HANDS_MODEL_URL = "https://raw.githubusercontent.com/Kingto89/ROMetrics.com/main/assets/Hands.glb";
 let handsModel = null;
 let handLMesh = null;
 let handRMesh = null;
 const draggableHands = [];
+
+// Simple drag support for therapist hands
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2();
+const dragPlane = new THREE.Plane();
+const dragOffset = new THREE.Vector3();
+let draggedHand = null;
+
+function setPointerFromEvent(event){
+  const rect = renderer.domElement.getBoundingClientRect();
+  pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+  pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+}
+
 
   
 // Reset all bones back to stored baseline
@@ -1043,42 +1053,39 @@ if (mode === "seatednogravity"){
 
 /* ==== Therapist Hands Model Logic ==== */
 function loadHandsModel(){
-    if (handsModel) return;
-    $("msg").textContent = "Loading therapist hands model...";
-    
-    // Using the existing configured loader for consistency
-    loader.load(
-        HANDS_MODEL_URL,
-        (gltf) => {
-        handsModel = gltf.scene;
-handsModel.visible = false;
+  if (handsModel) return;
+  $("msg").textContent = "Loading therapist hands model...";
 
-// Make therapist hands smaller than the patient (0.6×)
-const handScale = POSE.s * 0.6;
-handsModel.scale.set(handScale, handScale, handScale);
-handsModel.position.set(0, 1.2, 0.5);
+  loader.load(
+    HANDS_MODEL_URL,
+    (gltf) => {
+      handsModel = gltf.scene;
+      handsModel.visible = false;
 
-// Grab each hand separately by name
-handLMesh = handsModel.getObjectByName("Hands.L") || handsModel.getObjectByName("Hand.L");
-handRMesh = handsModel.getObjectByName("Hands.R") || handsModel.getObjectByName("Hand.R");
+      // Make therapist hands MUCH smaller than the patient
+      const handScale = 0.35; // tweak 0.25–0.4 if needed
+      handsModel.scale.set(handScale, handScale, handScale);
+      handsModel.position.set(0, 1.2, 0.5);
 
-// Mark them as draggable
-if (handLMesh) draggableHands.push(handLMesh);
-if (handRMesh) draggableHands.push(handRMesh);
+      // Grab individual hands by name
+      handLMesh = handsModel.getObjectByName("Hands.L") || handsModel.getObjectByName("Hand.L");
+      handRMesh = handsModel.getObjectByName("Hands.R") || handsModel.getObjectByName("Hand.R");
 
-scene.add(handsModel);
+      if (handLMesh) draggableHands.push(handLMesh);
+      if (handRMesh) draggableHands.push(handRMesh);
 
-            $("msg").textContent = "✅ Hands model ready.";
-        },
-        (xhr) => {
-            const pct = xhr.lengthComputable ? Math.min(100, Math.round(100*xhr.loaded/xhr.total)) : null;
-            $("msg").textContent = pct!==null ? `Loading Hands ${pct}%` : "Loading Hands...";
-        },
-        (error) => {
-            console.error("Failed to load Hands model:", error);
-            $("msg").textContent = "⚠️ Failed to load therapist hands.";
-        }
-    );
+      scene.add(handsModel);
+      $("msg").textContent = "✅ Hands model ready.";
+    },
+    (xhr) => {
+      const pct = xhr.lengthComputable ? Math.min(100, Math.round(100*xhr.loaded/xhr.total)) : null;
+      $("msg").textContent = pct!==null ? `Loading Hands ${pct}%` : "Loading Hands...";
+    },
+    (error) => {
+      console.error("Failed to load Hands model:", error);
+      $("msg").textContent = "⚠️ Failed to load therapist hands.";
+    }
+  );
 }
 
 function toggleHands(){
@@ -1767,7 +1774,7 @@ window.addEventListener("load", () => {
 
 // Drag handlers for Hands.L / Hands.R (mouse + touch via pointer events)
 function onPointerDown(event){
-  if (!draggableHands.length) return;
+  if (!draggableHands.length || !handsModel) return;
 
   setPointerFromEvent(event);
   raycaster.setFromCamera(pointer, camera);
@@ -1775,7 +1782,7 @@ function onPointerDown(event){
   const hits = raycaster.intersectObjects(draggableHands, true);
   if (!hits.length) return;
 
-  // Climb up so we move the whole hand, not just a child mesh
+  // Move the whole hand group, not just a child mesh
   let picked = hits[0].object;
   while (picked.parent && picked.parent !== handsModel) {
     picked = picked.parent;
@@ -1789,7 +1796,6 @@ function onPointerDown(event){
   );
   dragOffset.copy(hits[0].point).sub(draggedHand.position);
 
-  // Pause orbit while dragging
   controls.enabled = false;
 }
 
@@ -1812,11 +1818,10 @@ function onPointerUp(){
   }
 }
 
-// Pointer events work for both mouse and touch in modern browsers
 renderer.domElement.addEventListener("pointerdown", onPointerDown);
 renderer.domElement.addEventListener("pointermove", onPointerMove);
 window.addEventListener("pointerup", onPointerUp);
-  
+
 /* ==== Loop & resize ==== */
 addEventListener("resize", ()=>{
   camera.aspect = innerWidth/innerHeight;
