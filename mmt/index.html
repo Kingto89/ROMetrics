@@ -1567,11 +1567,11 @@ function ensurePoseTuner(){
 
     // NEW: capture actual joint angles so the pose "remembers" them
     // Right foot inversion (foot_R, Z axis)
-    o.footInvR = extractAxisDeg("foot_R", "z");
+    //o.footInvR = extractAxisDeg("foot_R", "z");
     // Left foot eversion (foot_L, Z axis)
-    o.footEvL  = extractAxisDeg("foot_L", "z");
+   // o.footEvL  = extractAxisDeg("foot_L", "z");
     // Neck left lateral flexion (neck, Z axis)
-    o.neckLatL = extractAxisDeg("neck",   "z");
+   // o.neckLatL = extractAxisDeg("neck",   "z");
 
     console.log(
       `POSE_OVERRIDES["${key}"] = { ` +
