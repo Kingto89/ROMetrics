@@ -31,8 +31,6 @@ label{display:block;font-size:12px;margin-top:8px;color:var(--muted)}
 select,button,input[type=range]{width:100%;margin:6px 0 8px 0;padding:8px 10px;border-radius:10px;background:var(--ctrl);border:1px solid var(--line);color:var(--text)}
 .row{display:flex;gap:8px}.row>button,.row>select{flex:1}
 .mini{padding:6px 10px;border-radius:8px;background:var(--ctrl);border:1px solid var(--line)}
-.mini.glow-stable{ box-shadow:0 0 0 2px rgba(239,68,68,.25), inset 0 0 18px rgba(239,68,68,.35); }
-.mini.glow-test{   box-shadow:0 0 0 2px rgba(249,115,22,.25), inset 0 0 18px rgba(249,115,22,.35); }  
 .lockOn{background:#0b3a1f;border-color:#16a34a;color:#fff}
 #msg{position:fixed;bottom:10px;left:12px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:12px;z-index:25;color:var(--text)}
 #log{display:none;background:var(--ctrl);border:1px solid var(--line);min-height:90px;max-height:130px;overflow:auto;border-radius:8px;padding:8px;font-size:12px;white-space:pre-wrap;color:var(--text)}
@@ -165,16 +163,12 @@ select,button,input[type=range]{width:100%;margin:6px 0 8px 0;padding:8px 10px;b
 </p>
 
 
-<label>Therapist Hands</label>
-<div class="row">
-  <button id="stableHandBtn" class="mini" title="Toggle therapist’s stabilizing hand">
-    Stabilizing Hand
-  </button>
-  <button id="testHandBtn" class="mini" title="Toggle therapist’s resistance hand">
-    Resistance Hand
-  </button>
-</div>
-</div>
+    <label>Model Control</label>
+    <div class="row">
+      <button id="lock3D" class="mini">🔓 3D: Unlocked</button>
+      <button id="zeroAll" class="mini" title="Reset to anatomic baseline">Zero All</button>
+    </div>
+  </div>
 </div>
 
 <div id="msg">Loading…</div>
@@ -1193,75 +1187,6 @@ const MODEL_CANDIDATES = [
   new URL("assets/Roma_ROMetrics.glb", document.baseURI).href
 ].filter(Boolean);
 
- // === Therapist hand asset URLs (Step 2A) ===
-const HAND_STABLE_URL = "assets/therapist_hand_stable.glb";
-const HAND_TEST_URL   = "assets/therapist_hand_resist.glb";
-// === Step 2B: minimal hand loader & togglers ===
-let stableHand = null;
-let testHand   = null;
-
-function loadHandOnce(url){
-  return new Promise((resolve, reject) => {
-    loader.load(
-      url,
-      (gltf) => {
-        const g = gltf.scene || gltf.scenes?.[0];
-        g.traverse(o => { if (o.isMesh){ o.castShadow = true; o.receiveShadow = true; } });
-        scene.add(g);
-        resolve(g);
-      },
-      undefined,
-      (err) => reject(err)
-    );
-  });
-}
-
-async function toggleStableHand(btn){
-  try{
-    if (!stableHand){
-      // First time: load and place near the head area on the table (generic neutral)
-      stableHand = await loadHandOnce(HAND_STABLE_URL);
-      stableHand.position.set(-0.18, TABLE_HEIGHT + TABLE_THICK/2 + 0.94, tableTop.position.z + 0.06);
-      stableHand.rotation.set(-Math.PI/2, Math.PI, 0); // palm-down-ish
-      stableHand.scale.set(1,1,1);
-      btn.textContent = "Stabilizing Hand — On";
-      btn.classList.add('lockOn');
-    } else {
-      const vis = !stableHand.visible;
-      stableHand.visible = vis;
-      btn.textContent = vis ? "Stabilizing Hand — On" : "Stabilizing Hand — Off";
-      btn.classList.toggle('lockOn', vis);
-    }
-    $("msg").textContent = "✅ Stabilizing hand ready";
-  }catch(e){
-    $("msg").textContent = "⚠️ Failed to load stabilizing hand";
-    console.error(e);
-  }
-}
-
-async function toggleTestHand(btn){
-  try{
-    if (!testHand){
-      // First time: load and place on occiput side as a neutral starting point
-      testHand = await loadHandOnce(HAND_TEST_URL);
-      testHand.position.set(0.18, TABLE_HEIGHT + TABLE_THICK/2 + 0.92, tableTop.position.z + 0.02);
-      testHand.rotation.set(-Math.PI/2, 0, 0);
-      testHand.scale.set(1,1,1);
-      btn.textContent = "Resistance Hand — On";
-      btn.classList.add('lockOn');
-    } else {
-      const vis = !testHand.visible;
-      testHand.visible = vis;
-      btn.textContent = vis ? "Resistance Hand — On" : "Resistance Hand — Off";
-      btn.classList.toggle('lockOn', vis);
-    }
-    $("msg").textContent = "✅ Resistance hand ready";
-  }catch(e){
-    $("msg").textContent = "⚠️ Failed to load resistance hand";
-    console.error(e);
-  }
-}
- 
 function tryNextModelUrl(index){
   if(index >= MODEL_CANDIDATES.length){
     $("msg").textContent = "⚠️ Could not load model from any path.";
@@ -1283,34 +1208,28 @@ function tryNextModelUrl(index){
 tryNextModelUrl(0);  
 
 /* ==== Wire UI ==== */
-const stableHandBtn = $("stableHandBtn");
-const testHandBtn   = $("testHandBtn");
+$("lock3D").onclick = () => {
+  controls.enabled = !controls.enabled;
+  const btn = $("lock3D");
+  btn.textContent = (!controls.enabled ? "🔒 3D: Locked" : "🔓 3D: Unlocked");
+  btn.classList.toggle('lockOn', !controls.enabled);
+};
+$("zeroAll").onclick = () => {
+  // Reset bones and return to your original standing anatomic pose
+  resetAllBones();
+  applyAnatomicBaseline();
+  if (model){
+    model.position.set(POSE.x, POSE.y, POSE.z);
+    model.rotation.set(0, degToRad(POSE.ryDeg), 0);
+  }
+};
 
-if (stableHandBtn) stableHandBtn.disabled = true;
-if (testHandBtn)   testHandBtn.disabled   = true;
-
-// Real hand toggles (use actual GLB loaders)
-if (stableHandBtn) stableHandBtn.onclick = () => toggleStableHand(stableHandBtn);
-if (testHandBtn)   testHandBtn.onclick   = () => toggleTestHand(testHandBtn);
-
-if (actionSel){
-  actionSel.addEventListener("change", () => {
-    updateGradeDropdownsForSelection();
-    applyBodyPositionFromSelection();
-    if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
-
-    const hasTest = !!actionSel.value;
-    if (stableHandBtn) stableHandBtn.disabled = !hasTest;
-    if (testHandBtn)   testHandBtn.disabled   = !hasTest;
-
-    if (!hasTest){
-      if (stableHandBtn) stableHandBtn.classList.remove("glow-stable","lockOn");
-      if (testHandBtn)   testHandBtn.classList.remove("glow-test","lockOn");
-      if (stableHand) stableHand.visible = false;
-      if (testHand)   testHand.visible   = false;
-    }
-  });
-}
+// When the test changes, update which grade menu is active, then re-apply pose
+actionSel.addEventListener("change", () => {
+  updateGradeDropdownsForSelection();
+  applyBodyPositionFromSelection();
+  if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
+});
 
 // Normal Grade 3–0 menu: used for all NON-exception tests
 gradeMain.addEventListener("change", () => {
