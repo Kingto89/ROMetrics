@@ -31,8 +31,6 @@ label{display:block;font-size:12px;margin-top:8px;color:var(--muted)}
 select,button,input[type=range]{width:100%;margin:6px 0 8px 0;padding:8px 10px;border-radius:10px;background:var(--ctrl);border:1px solid var(--line);color:var(--text)}
 .row{display:flex;gap:8px}.row>button,.row>select{flex:1}
 .mini{padding:6px 10px;border-radius:8px;background:var(--ctrl);border:1px solid var(--line)}
-.mini.glow-stable{ box-shadow:0 0 0 2px rgba(239,68,68,.25), inset 0 0 18px rgba(239,68,68,.35); }
-.mini.glow-test{   box-shadow:0 0 0 2px rgba(249,115,22,.25), inset 0 0 18px rgba(249,115,22,.35); }  
 .lockOn{background:#0b3a1f;border-color:#16a34a;color:#fff}
 #msg{position:fixed;bottom:10px;left:12px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:12px;z-index:25;color:var(--text)}
 #log{display:none;background:var(--ctrl);border:1px solid var(--line);min-height:90px;max-height:130px;overflow:auto;border-radius:8px;padding:8px;font-size:12px;white-space:pre-wrap;color:var(--text)}
@@ -167,12 +165,9 @@ select,button,input[type=range]{width:100%;margin:6px 0 8px 0;padding:8px 10px;b
 
 <label>Therapist Hands</label>
 <div class="row">
-  <button id="stableHandBtn" class="mini" title="Toggle therapist’s stabilizing hand">
-    Stabilizing Hand
-  </button>
-  <button id="testHandBtn" class="mini" title="Toggle therapist’s resistance hand">
-    Resistance Hand
-  </button>
+  <button id="toggleHandsBtn" class="mini" title="Toggle therapist’s resistance and stabilizing hands">
+    Toggle Therapist Hands
+  </button>
 </div>
 </div>
 </div>
@@ -538,6 +533,10 @@ let model=null, skeleton=null;
 const initialBoneRot = new Map();
 let GLOBAL_PF_DEG = 0; // shared plantarflex angle for both feet
 
+// ADDED: Hands model loading variables
+const HANDS_MODEL_URL = "https://raw.githubusercontent.com/Kingto89/ROMetrics.com/main/assets/Hands.glb";
+let handsModel = null;
+  
 // Reset all bones back to stored baseline
 function resetAllBones(){
   if (!skeleton) return;
@@ -1038,8 +1037,55 @@ if (mode === "seatednogravity"){
 }
 }
 
+/* ==== Therapist Hands Model Logic ==== */
+function loadHandsModel(){
+    if (handsModel) return;
+    $("msg").textContent = "Loading therapist hands model...";
+    
+    // Using the existing configured loader for consistency
+    loader.load(
+        HANDS_MODEL_URL,
+        (gltf) => {
+            handsModel = gltf.scene;
+            handsModel.visible = false;
+            
+            // Set scale to match the patient model scale
+            handsModel.scale.set(POSE.s, POSE.s, POSE.s); 
+            // Initial position guess: centered in front of the patient
+            handsModel.position.set(0, 1.2, 0.5); 
+            
+            // Note: Hand.L and Hand.R meshes are inside handsModel, 
+            // their movement must be handled via the Pose Tuner or separate control logic later.
+            scene.add(handsModel);
+            $("msg").textContent = "✅ Hands model ready.";
+        },
+        (xhr) => {
+            const pct = xhr.lengthComputable ? Math.min(100, Math.round(100*xhr.loaded/xhr.total)) : null;
+            $("msg").textContent = pct!==null ? `Loading Hands ${pct}%` : "Loading Hands...";
+        },
+        (error) => {
+            console.error("Failed to load Hands model:", error);
+            $("msg").textContent = "⚠️ Failed to load therapist hands.";
+        }
+    );
+}
 
+function toggleHands(){
+    const btn = $("toggleHandsBtn");
+    
+    if (!handsModel) {
+        loadHandsModel();
+    } else {
+        handsModel.visible = !handsModel.visible;
+    }
 
+    // Update button style for visual feedback
+    if (handsModel?.visible) {
+         btn?.classList.add('lockOn');
+    } else {
+         btn?.classList.remove('lockOn');
+    }
+}
 
 function applyBodyPositionFromSelection(){
   if (!model || !skeleton) return;
@@ -1214,17 +1260,10 @@ function tryNextModelUrl(index){
 tryNextModelUrl(0);  
 
 /* ==== Wire UI ==== */
-const stableHandBtn = $("stableHandBtn");
-const testHandBtn   = $("testHandBtn");
+const toggleHandsBtn = $("toggleHandsBtn"); // Reference the new single button
 
-// Simple visual toggle for now (no meshes yet). Safe no-ops.
-if (stableHandBtn) stableHandBtn.onclick = () => {
-  stableHandBtn.classList.toggle("glow-stable");
-};
-if (testHandBtn) testHandBtn.onclick = () => {
-  testHandBtn.classList.toggle("glow-test");
-};
-
+// Wire the new button to load/toggle the hands model
+if (toggleHandsBtn) toggleHandsBtn.addEventListener('click', toggleHands);
 
 // When the test changes, update which grade menu is active, then re-apply pose
 actionSel.addEventListener("change", () => {
