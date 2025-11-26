@@ -1193,6 +1193,75 @@ const MODEL_CANDIDATES = [
   new URL("assets/Roma_ROMetrics.glb", document.baseURI).href
 ].filter(Boolean);
 
+ // === Therapist hand asset URLs (Step 2A) ===
+const HAND_STABLE_URL = "assets/therapist_hand_stable.glb";
+const HAND_TEST_URL   = "assets/therapist_hand_resist.glb";
+// === Step 2B: minimal hand loader & togglers ===
+let stableHand = null;
+let testHand   = null;
+
+function loadHandOnce(url){
+  return new Promise((resolve, reject) => {
+    loader.load(
+      url,
+      (gltf) => {
+        const g = gltf.scene || gltf.scenes?.[0];
+        g.traverse(o => { if (o.isMesh){ o.castShadow = true; o.receiveShadow = true; } });
+        scene.add(g);
+        resolve(g);
+      },
+      undefined,
+      (err) => reject(err)
+    );
+  });
+}
+
+async function toggleStableHand(btn){
+  try{
+    if (!stableHand){
+      // First time: load and place near the head area on the table (generic neutral)
+      stableHand = await loadHandOnce(HAND_STABLE_URL);
+      stableHand.position.set(-0.18, TABLE_HEIGHT + TABLE_THICK/2 + 0.94, tableTop.position.z + 0.06);
+      stableHand.rotation.set(-Math.PI/2, Math.PI, 0); // palm-down-ish
+      stableHand.scale.set(1,1,1);
+      btn.textContent = "Stabilizing Hand — On";
+      btn.classList.add('lockOn');
+    } else {
+      const vis = !stableHand.visible;
+      stableHand.visible = vis;
+      btn.textContent = vis ? "Stabilizing Hand — On" : "Stabilizing Hand — Off";
+      btn.classList.toggle('lockOn', vis);
+    }
+    $("msg").textContent = "✅ Stabilizing hand ready";
+  }catch(e){
+    $("msg").textContent = "⚠️ Failed to load stabilizing hand";
+    console.error(e);
+  }
+}
+
+async function toggleTestHand(btn){
+  try{
+    if (!testHand){
+      // First time: load and place on occiput side as a neutral starting point
+      testHand = await loadHandOnce(HAND_TEST_URL);
+      testHand.position.set(0.18, TABLE_HEIGHT + TABLE_THICK/2 + 0.92, tableTop.position.z + 0.02);
+      testHand.rotation.set(-Math.PI/2, 0, 0);
+      testHand.scale.set(1,1,1);
+      btn.textContent = "Resistance Hand — On";
+      btn.classList.add('lockOn');
+    } else {
+      const vis = !testHand.visible;
+      testHand.visible = vis;
+      btn.textContent = vis ? "Resistance Hand — On" : "Resistance Hand — Off";
+      btn.classList.toggle('lockOn', vis);
+    }
+    $("msg").textContent = "✅ Resistance hand ready";
+  }catch(e){
+    $("msg").textContent = "⚠️ Failed to load resistance hand";
+    console.error(e);
+  }
+}
+ 
 function tryNextModelUrl(index){
   if(index >= MODEL_CANDIDATES.length){
     $("msg").textContent = "⚠️ Could not load model from any path.";
@@ -1217,21 +1286,31 @@ tryNextModelUrl(0);
 const stableHandBtn = $("stableHandBtn");
 const testHandBtn   = $("testHandBtn");
 
-// Simple visual toggle for now (no meshes yet). Safe no-ops.
-if (stableHandBtn) stableHandBtn.onclick = () => {
-  stableHandBtn.classList.toggle("glow-stable");
-};
-if (testHandBtn) testHandBtn.onclick = () => {
-  testHandBtn.classList.toggle("glow-test");
-};
+if (stableHandBtn) stableHandBtn.disabled = true;
+if (testHandBtn)   testHandBtn.disabled   = true;
 
+// Real hand toggles (use actual GLB loaders)
+if (stableHandBtn) stableHandBtn.onclick = () => toggleStableHand(stableHandBtn);
+if (testHandBtn)   testHandBtn.onclick   = () => toggleTestHand(testHandBtn);
 
-// When the test changes, update which grade menu is active, then re-apply pose
-actionSel.addEventListener("change", () => {
-  updateGradeDropdownsForSelection();
-  applyBodyPositionFromSelection();
-  if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
-});
+if (actionSel){
+  actionSel.addEventListener("change", () => {
+    updateGradeDropdownsForSelection();
+    applyBodyPositionFromSelection();
+    if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
+
+    const hasTest = !!actionSel.value;
+    if (stableHandBtn) stableHandBtn.disabled = !hasTest;
+    if (testHandBtn)   testHandBtn.disabled   = !hasTest;
+
+    if (!hasTest){
+      if (stableHandBtn) stableHandBtn.classList.remove("glow-stable","lockOn");
+      if (testHandBtn)   testHandBtn.classList.remove("glow-test","lockOn");
+      if (stableHand) stableHand.visible = false;
+      if (testHand)   testHand.visible   = false;
+    }
+  });
+}
 
 // Normal Grade 3–0 menu: used for all NON-exception tests
 gradeMain.addEventListener("change", () => {
