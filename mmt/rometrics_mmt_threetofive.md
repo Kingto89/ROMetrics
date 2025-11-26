@@ -1224,33 +1224,6 @@ Resistance Hand: Place your other hand on the medial ankle (above the bone).
 * The dorsum of the foot still has to lift against gravity.
 * You can apply standardized resistance in the correct line of pull (DF + inversion).
 
-
-## Foot Inversion (Tibialis Posterior)
-
-**Plane: frontal + sagittal | End-Feel: firm**
-
-### Muscles Tested
-
-* Tibialis Posterior
-
-### Position
-
-* Short sitting or supine, foot off edge
-
-### Therapist
-
-* Stabilize distal leg above ankle
-
-### Action
-
-* Invert + slight plantarflex; resist **down/out** at medial forefoot (navicular/1st ray)
-
-### Grades 3, 4, 5
-
-* **Grade 5:** holds position against max resistance
-* **Grade 4:** holds against moderate resistance
-* **Grade 3:** full ROM against gravity, no resistance
-
 ---
 
 ## Plantar Flexion + Foot Eversion — Fibularis Longus & Brevis
@@ -1287,33 +1260,6 @@ Resistance Hand: Place your other hand on the medial ankle (above the bone).
 * **Grade 3:** Completes full available range of eversion with plantar flexion without resistance.
 
 
-## Ankle Dorsiflexion (Tibialis Anterior)
-
-**Plane: sagittal | End-Feel: firm**
-
-### Muscles Tested
-
-* Tibialis Anterior (primary); EDL/EHL assist
-
-### Position
-
-* Short sitting, foot off edge, ankle neutral (avoid inversion/eversion)
-
-### Therapist
-
-* Stabilize distal leg above ankle
-
-### Action
-
-* Dorsiflex to full range; resist **downward** at dorsal mid-forefoot (over metatarsals), keep foot neutral
-
-### Grades 3, 4, 5
-
-* **Grade 5:** holds position against max resistance
-* **Grade 4:** holds against moderate resistance
-* **Grade 3:** full ROM against gravity, no resistance
-
-
 ## Ankle Plantar Flexion (Gastrocnemius, Soleus)
 
 **Plane: sagittal | End-Feel: firm**
@@ -1325,7 +1271,7 @@ Resistance Hand: Place your other hand on the medial ankle (above the bone).
 
 ### Position
 
-* Standing single-leg heel raise
+* Standing single-leg heel raise (knee extended). Non test leg lifted and flexed
 
 ### Therapist
 
