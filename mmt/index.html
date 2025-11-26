@@ -232,6 +232,38 @@ const instructionText = $("instructionText");
 const gradeMain = $("grade-main");
 const gradeExceptions = $("GradingExceptions");  
 
+// Enable only the relevant grading menu for the selected test:
+// - EXCEPTION_TESTS (trunk + gastroc): use Grading Exceptions (5–1) only
+// - everything else: use normal Grade menu (3–0) only
+function updateGradeDropdownsForSelection(){
+  const testKey = actionSel?.value;
+
+  // No test selected → default: normal menu active, exceptions off
+  if (!testKey){
+    if (gradeMain) gradeMain.disabled = false;
+    if (gradeExceptions) gradeExceptions.disabled = true;
+    return;
+  }
+
+  const isException = EXCEPTION_TESTS.has(testKey);
+
+  if (isException){
+    // Trunk + Gastroc: ONLY Grading Exceptions menu is active
+    if (gradeMain) gradeMain.disabled = true;
+    if (gradeExceptions){
+      gradeExceptions.disabled = false;
+      if (!gradeExceptions.value) gradeExceptions.value = "5";
+    }
+  } else {
+    // All other tests: ONLY normal 3–0 Grade menu is active
+    if (gradeMain){
+      gradeMain.disabled = false;
+      if (!gradeMain.value) gradeMain.value = "3";
+    }
+    if (gradeExceptions) gradeExceptions.disabled = true;
+  }
+}
+  
 /* ==== Start Test Button Glow Fix ==== */
 startTestBtn.addEventListener('click', () => {
   startTestBtn.classList.add('lockOn');
@@ -509,15 +541,16 @@ function resetAllBones(){
   });
 }
 
-// Tests that use the GradingExceptions dropdown to decide high vs low family
+// Tests that use the GradingExceptions dropdown (5–1) instead of the normal 3–0 scale.
+// NOTE: Pelvic_Elevation is NOT an exception.
 const EXCEPTION_TESTS = new Set([
   "Trunk_Ext_Lumbar",
   "Trunk_Ext_Thoracic",
   "Trunk_Flexion",
   "Trunk_Rotation",
-  "Pelvic_Elevation",
   "Gastrocnemius"
 ]);
+
 
 // For each test: which coarse body position to use for high (3–5) vs low (0–2) grades
 // Modes: 'anatomic', 'seated', 'supine', 'prone', 'side_lying', 'gastroc'
@@ -691,19 +724,27 @@ POSE_OVERRIDES["Gastrocnemius:low"] = { x:-1.520, y:0.800, z:0.550, rx:1.571, ry
 let CURRENT_BODY_TEST = null;
 let CURRENT_BODY_BUCKET = "high"; // "high" or "low"
   
+// Decide which pose family to use ("high" = Grades 3–5 family, "low" = Grades 0–2 family)
 function getGradeBucketForTest(testKey){
-  // Trunk & gastroc use GradingExceptions dropdown
+  // 1) Trunk (except pelvis) + Gastroc use the Grading Exceptions menu (5–1 / 0)
   if (EXCEPTION_TESTS.has(testKey)){
     if (!gradeExceptions) return "high";
-    const g = Number(gradeExceptions.value || "3");
+    const g = Number(gradeExceptions.value || "5"); // 5,4,3,2,1,(0)
+
+    // 5,4,3 → "high" (3–5 family)
+    // 2,1,0 → "low"  (0–2 family)
     return (g >= 3 ? "high" : "low");
   }
 
-  // All other tests use grade-main (3–5 vs 0–2)
+  // 2) Everything else uses the normal 3–0 Grade menu
   if (!gradeMain) return "high";
-  const gm = Number(gradeMain.value || "3");
+  const gm = Number(gradeMain.value || "3"); // 3,2,1,0
+
+  // 3 → "high" (covers Grades 3–5)
+  // 2,1,0 → "low" (Grades 2–0)
   return (gm >= 3 ? "high" : "low");
 }
+
 
 /** Global plantarflexion for both feet */
 function applyGlobalPF(){
@@ -1183,27 +1224,34 @@ $("zeroAll").onclick = () => {
   }
 };
 
+// When the test changes, update which grade menu is active, then re-apply pose
 actionSel.addEventListener("change", () => {
+  updateGradeDropdownsForSelection();
   applyBodyPositionFromSelection();
   if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
 });
 
+// Normal Grade 3–0 menu: used for all NON-exception tests
 gradeMain.addEventListener("change", () => {
-  if (actionSel.value){
+  if (actionSel.value && !EXCEPTION_TESTS.has(actionSel.value)){
     applyBodyPositionFromSelection();
     if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
   }
 });
 
+// Grading Exceptions 5–1 menu: used ONLY for exception tests (trunk + gastroc)
 if (gradeExceptions){
   gradeExceptions.addEventListener("change", () => {
-    if (actionSel.value){
+    if (actionSel.value && EXCEPTION_TESTS.has(actionSel.value)){
       applyBodyPositionFromSelection();
       if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
     }
   });
 }
-  
+
+// Initialize menus on first load
+updateGradeDropdownsForSelection();
+
 
 
 /* ==== Side panel + Markdown loading ==== */
