@@ -165,7 +165,7 @@ select,button,input[type=range]{width:100%;margin:6px 0 8px 0;padding:8px 10px;b
 
 <label>Therapist Hands</label>
 <div class="row">
-<button id="toggleHandsBtn" class="mini" title="Toggle therapist’s resistance and stabilizing hands" disabled>
+  <button id="toggleHandsBtn" class="mini" title="Toggle therapist’s resistance and stabilizing hands">
     Toggle Therapist Hands
   </button>
 </div>
@@ -200,7 +200,6 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
-import { DragControls } from "three/addons/controls/DragControls.js"; 
 
 /* ==== Hard-wired numeric pose (edit these) ==== */
 const POSE = {
@@ -1038,102 +1037,27 @@ if (mode === "seatednogravity"){
 }
 }
 
-// ADDED: Hands model loading variables (MUST BE GLOBAL)
-const HANDS_MODEL_URL = "https://raw.githubusercontent.com/Kingto89/ROMetrics.com/main/assets/Hands.glb";
-let handL = null; // Global reference for Left Hand mesh
-let handR = null; // Global reference for Right Hand mesh
-let dragControls = null; // Stores the DragControls instance
-
-
-/* ==== Drag Controls Initialization (New Function) ==== */
-function initDragControls() {
-    if (dragControls) {
-        dragControls.dispose();
-    }
-
-    if (handL && handR) {
-        const objectsToDrag = [handL, handR];
-        dragControls = new DragControls(objectsToDrag, camera, renderer.domElement);
-        
-        // Disable OrbitControls while dragging
-        dragControls.addEventListener('dragstart', function (event) {
-            controls.enabled = false;
-        });
-
-        // Re-enable OrbitControls when dragging stops
-        dragControls.addEventListener('dragend', function (event) {
-            controls.enabled = true;
-        });
-    }
-}
-
-  /* ==== Therapist Hands: Availability Check & Disable Logic ==== */
-function updateHandButtonState(){
-    const toggleHandsBtn = $("toggleHandsBtn");
-    const testSelected = !!actionSel?.value;
-
-    if (toggleHandsBtn) {
-        toggleHandsBtn.disabled = !testSelected;
-        
-        // If deselected, hide hands and reset button state
-        if (!testSelected && handL?.visible) {
-            handL.visible = false;
-            handR.visible = false;
-            toggleHandsBtn.classList.remove('lockOn');
-        }
-    }
-}
-
-/* ==== Load, Separate, Scale, and Toggle Logic (FINAL FIX) ==== */
+/* ==== Therapist Hands Model Logic ==== */
 function loadHandsModel(){
-    // If already loaded, just toggle visibility (Fixes double-click)
-    if (handL) { 
-        toggleHands();
-        return;
-    }
-    
+    if (handsModel) return;
     $("msg").textContent = "Loading therapist hands model...";
     
+    // Using the existing configured loader for consistency
     loader.load(
         HANDS_MODEL_URL,
         (gltf) => {
-            const handsGroup = gltf.scene;
+            handsModel = gltf.scene;
+            handsModel.visible = false;
             
-            // --- 1. Find and Detach Individual Hands (CRITICAL FOR MOVEMENT) ---
-            handL = handsGroup.getObjectByName('Hand.L');
-            handR = handsGroup.getObjectByName('Hand.R');
-
-            if (!handL || !handR) {
-                $("msg").textContent = "⚠️ Hand meshes not found in GLB.";
-                return;
-            }
-
-            // Remove from original group
-            handL.removeFromParent();
-            handR.removeFromParent();
+            // Set scale to match the patient model scale
+            handsModel.scale.set(POSE.s, POSE.s, POSE.s); 
+            // Initial position guess: centered in front of the patient
+            handsModel.position.set(0, 1.2, 0.5); 
             
-            // --- 2. Scaling Fix (CRITICAL) ---
-            const handScale = 0.007; // Small fixed scale
-            handL.scale.set(handScale, handScale, handScale);
-            handR.scale.set(handScale, handScale, handScale);
-            
-            // Set initial position and rotation
-            handL.position.set(-0.5, 1.2, 0.3); 
-            handR.position.set(0.5, 1.2, 0.3);
-            handL.rotation.set(0, 0, 0); 
-            handR.rotation.set(0, 0, 0);
-
-            handL.visible = false;
-            handR.visible = false;
-
-            // Add to scene
-            scene.add(handL);
-            scene.add(handR);
-
-            initDragControls(); // CRITICAL: Enable drag movement now
-            $("msg").textContent = "✅ Hands model ready. Drag hands to move them.";
-            
-            toggleHands(); // Completes the one-click action
+            // Note: Hand.L and Hand.R meshes are inside handsModel, 
+            // their movement must be handled via the Pose Tuner or separate control logic later.
+            scene.add(handsModel);
+            $("msg").textContent = "✅ Hands model ready.";
         },
         (xhr) => {
             const pct = xhr.lengthComputable ? Math.min(100, Math.round(100*xhr.loaded/xhr.total)) : null;
@@ -1149,19 +1073,14 @@ function loadHandsModel(){
 function toggleHands(){
     const btn = $("toggleHandsBtn");
     
-    // Fix for Single Click: If not loaded, initiate load
-    if (!handL) { 
+    if (!handsModel) {
         loadHandsModel();
-        return;
-    } 
-    
-    // Toggle visibility for both separated hands
-    const newVisibility = !handL.visible;
-    handL.visible = newVisibility;
-    handR.visible = newVisibility;
-    
-    // Update button style
-    if (newVisibility) {
+    } else {
+        handsModel.visible = !handsModel.visible;
+    }
+
+    // Update button style for visual feedback
+    if (handsModel?.visible) {
          btn?.classList.add('lockOn');
     } else {
          btn?.classList.remove('lockOn');
@@ -1169,48 +1088,21 @@ function toggleHands(){
 }
 
 function applyBodyPositionFromSelection(){
-// ... (rest of applyBodyPositionFromSelection remains here)
+  if (!model || !skeleton) return;
+  const key = actionSel?.value;
+  if (!key) return;
+
+  const family = TEST_POSITION[key] || { high:"anatomic", low:"anatomic" };
+  const bucket = getGradeBucketForTest(key); // "high" or "low"
+  const mode = bucket === "low" ? (family.low || "anatomic")
+                                : (family.high || "anatomic");
+
+  CURRENT_BODY_TEST = key;
+  CURRENT_BODY_BUCKET = bucket;
+
+  setBodyMode(mode);
 }
 
-// ... (rest of utility functions remain here)
-
-/* ==== Wire UI ==== */
-const toggleHandsBtn = $("toggleHandsBtn"); // Reference the new single button
-
-// Wire the new button to load/toggle the hands model
-if (toggleHandsBtn) toggleHandsBtn.addEventListener('click', toggleHands);
-
-// --- 2. Test Selection Listener (Includes Hand Availability Update) ---
-actionSel.addEventListener("change", () => {
-    updateGradeDropdownsForSelection();
-    applyBodyPositionFromSelection();
-    updateHandButtonState(); // <-- Disables/enables hands button based on selection
-    if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
-});
-
-// Normal Grade 3–0 menu: used for all NON-exception tests
-gradeMain.addEventListener("change", () => {
-    if (actionSel.value && !EXCEPTION_TESTS.has(actionSel.value)){
-        applyBodyPositionFromSelection();
-        if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
-    }
-});
-
-// Grading Exceptions 5–1 menu: used ONLY for exception tests (trunk + gastroc)
-if (gradeExceptions){
-    gradeExceptions.addEventListener("change", () => {
-        if (actionSel.value && EXCEPTION_TESTS.has(actionSel.value)){
-            applyBodyPositionFromSelection();
-            if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
-        }
-    });
-}
-
-// --- 3. Initial State Check ---
-// Initialize menus on first load
-updateGradeDropdownsForSelection();
-// Initialize hand button state (starts disabled if no test selected)
-updateHandButtonState();
 /* ==== Utilities ==== */
 function degToRad(d){ return d * Math.PI / 180; }
 function seatPoseOnlyLegs(){
@@ -1373,37 +1265,35 @@ const toggleHandsBtn = $("toggleHandsBtn"); // Reference the new single button
 // Wire the new button to load/toggle the hands model
 if (toggleHandsBtn) toggleHandsBtn.addEventListener('click', toggleHands);
 
-// --- 2. Test Selection Listener (Includes Hand Availability Update) ---
+// When the test changes, update which grade menu is active, then re-apply pose
 actionSel.addEventListener("change", () => {
-    updateGradeDropdownsForSelection();
-    applyBodyPositionFromSelection();
-    updateHandButtonState(); // <-- Disables/enables hands button based on selection
-    if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
+  updateGradeDropdownsForSelection();
+  applyBodyPositionFromSelection();
+  if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
 });
 
 // Normal Grade 3–0 menu: used for all NON-exception tests
 gradeMain.addEventListener("change", () => {
-    if (actionSel.value && !EXCEPTION_TESTS.has(actionSel.value)){
-        applyBodyPositionFromSelection();
-        if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
-    }
+  if (actionSel.value && !EXCEPTION_TESTS.has(actionSel.value)){
+    applyBodyPositionFromSelection();
+    if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
+  }
 });
 
 // Grading Exceptions 5–1 menu: used ONLY for exception tests (trunk + gastroc)
 if (gradeExceptions){
-    gradeExceptions.addEventListener("change", () => {
-        if (actionSel.value && EXCEPTION_TESTS.has(actionSel.value)){
-            applyBodyPositionFromSelection();
-            if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
-        }
-    });
+  gradeExceptions.addEventListener("change", () => {
+    if (actionSel.value && EXCEPTION_TESTS.has(actionSel.value)){
+      applyBodyPositionFromSelection();
+      if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
+    }
+  });
 }
 
-// --- 3. Initial State Check ---
 // Initialize menus on first load
 updateGradeDropdownsForSelection();
-// Initialize hand button state (starts disabled if no test selected)
-updateHandButtonState();
+
+
 
 /* ==== Side panel + Markdown loading ==== */
 const notePanel = document.getElementById('notePanel');
