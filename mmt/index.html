@@ -1304,45 +1304,55 @@ document.querySelectorAll(".handStep").forEach(btn => {
     }
   });
 });
-// ============= SAVE HAND POSE TO CONSOLE =============
 document.getElementById("handSaveBtn").addEventListener("click", () => {
 
-  if (!rightHandModel || !leftHandModel) {
-    console.warn("Hands not loaded — cannot save.");
+  const test = window.currentMMTtest;
+  const bucket = window.CURRENT_BODY_BUCKET;  // "high" or "low"
+
+  if (!test || !bucket){
+    alert("No test or bucket — cannot save hand pose.");
     return;
   }
 
-  const out = {
-    R: {
-      pos: {
-        x: rightHandModel.position.x,
-        y: rightHandModel.position.y,
-        z: rightHandModel.position.z
-      },
-      rot: {
-        x: rightHandModel.rotation.x,
-        y: rightHandModel.rotation.y,
-        z: rightHandModel.rotation.z
-      }
-    },
-    L: {
-      pos: {
-        x: leftHandModel.position.x,
-        y: leftHandModel.position.y,
-        z: leftHandModel.position.z
-      },
-      rot: {
-        x: leftHandModel.rotation.x,
-        y: leftHandModel.rotation.y,
-        z: leftHandModel.rotation.z
-      }
-    }
-  };
+  if (!rightHandModel || !leftHandModel){
+    alert("Hands not loaded.");
+    return;
+  }
 
-  console.log("==== HAND POSE SAVE ====");
-  console.log(JSON.stringify(out, null, 2));
+  const key = `${test}:${bucket}`;
+
+  const base = POSE_OVERRIDES[key] || {};
+
+  base.handRX  = rightHandModel.position.x;
+  base.handRY  = rightHandModel.position.y;
+  base.handRZ  = rightHandModel.position.z;
+
+  base.handRRX = rightHandModel.rotation.x;
+  base.handRRY = rightHandModel.rotation.y;
+  base.handRRZ = rightHandModel.rotation.z;
+
+  base.handLX  = leftHandModel.position.x;
+  base.handLY  = leftHandModel.position.y;
+  base.handLZ  = leftHandModel.position.z;
+
+  base.handLRX = leftHandModel.rotation.x;
+  base.handLRY = leftHandModel.rotation.y;
+  base.handLRZ = leftHandModel.rotation.z;
+
+  POSE_OVERRIDES[key] = base;
+
+  let line = `POSE_OVERRIDES["${key}"] = { `;
+  for (const k in base){
+    line += `${k}:${Number(base[k]).toFixed(3)}, `;
+  }
+  line = line.replace(/, $/, " ");
+  line += "};";
+
+  console.log("==== HAND POSE SAVE (MERGED) ====");
+  console.log(line);
   alert("Saved! Check console.");
 });
+
 function applyBodyPositionFromSelection(){
   if (!model || !skeleton) return;
   const key = actionSel?.value;
