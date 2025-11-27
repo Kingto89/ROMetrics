@@ -1120,9 +1120,6 @@ function loadHandsModel(){
     HANDS_MODEL_URL,
     (gltf) => {
       handsModel = gltf.scene;
-rightHandModel = handsModel.getObjectByName("Hand.R");
-leftHandModel  = handsModel.getObjectByName("Hand.L");
-
 
       // Try to grab the skeleton from any SkinnedMesh in the hands rig
       handsModel.traverse(obj => {
@@ -1312,7 +1309,7 @@ function onPointerDownHands(event){
   screenToNDC(event);
   raycaster.setFromCamera(mouse, camera);
 
-  const hits = raycaster.intersectObjects([rightHandModel, leftHandModel], true);
+  const hits = raycaster.intersectObject(handsModel, true);
   if (!hits.length) return;
 
   const hitPoint = hits[0].point;
@@ -1347,10 +1344,8 @@ function onPointerMoveHands(event){
       raycaster.setFromCamera(mouse, camera);
 
       if (raycaster.ray.intersectPlane(dragPlane, dragIntersectPoint)){
-if (ACTIVE_HAND) {
-    ACTIVE_HAND.position.copy(dragIntersectPoint).add(dragOffset);
-}
-
+        handsModel.position.copy(dragIntersectPoint).add(dragOffset);
+      }
 
       lastTouchX = t.clientX;
       lastTouchY = t.clientY;
@@ -1372,11 +1367,8 @@ if (ACTIVE_HAND) {
       const dy = midY - lastTouchY;
 
       // rotate X/Y (tilt + turn)
-      if (ACTIVE_HAND) {
-    ACTIVE_HAND.rotation.y += dx * 0.01;
-    ACTIVE_HAND.rotation.x += dy * 0.01;
-}
-
+      handsModel.rotation.y += dx * 0.01;  // turn left/right
+      handsModel.rotation.x += dy * 0.01;  // tilt up/down
 
       lastTouchX = midX;
       lastTouchY = midY;
@@ -1391,32 +1383,26 @@ if (ACTIVE_HAND) {
         const delta = dist - lastPinchDist;
         const dir = new THREE.Vector3();
         camera.getWorldDirection(dir);
-        if (ACTIVE_HAND) {
-    ACTIVE_HAND.position.addScaledVector(dir, delta * 0.005);
-}
+        handsModel.position.addScaledVector(dir, delta * 0.005);
+      }
 
-      
-lastPinchDist = dist;
+      lastPinchDist = dist;
 
-      // === twist for Z rotation ===
-      const angle = Math.atan2(
-        t2.clientY - t1.clientY,
-        t2.clientX - t1.clientX
-      );
+      // === twist for Z rotation ===
+      const angle = Math.atan2(
+        t2.clientY - t1.clientY,
+        t2.clientX - t1.clientX
+      );
 
-      if (lastTwistAngle !== null){
-       if (ACTIVE_HAND) {
-    ACTIVE_HAND.rotation.z += (angle - lastTwistAngle);
-}
+      if (lastTwistAngle !== null){
+        handsModel.rotation.z += (angle - lastTwistAngle);
+      }
 
-      lastTwistAngle = angle;
+      lastTwistAngle = angle;
 
-      return;
-    } // Closes: if (lastTwistAngle !== null)
-
-  } // Closes: if (touches.length === 2)
-
-} // Closes: if (event.pointerType === "touch" && event.touches)
+      return;
+    }
+  }
 
   // === MOUSE BEHAVIOR ===
   if (!multiTouch){
@@ -2136,12 +2122,14 @@ addEventListener("resize", ()=>{
   renderer.setSize(innerWidth, innerHeight);
 });
 (function loop(){
-  controls.update();
-  renderer.render(scene, camera);
-  requestAnimationFrame(loop);
+  controls.update();
+  renderer.render(scene, camera);
+  requestAnimationFrame(loop);
 })();
-</script>
 
+  
+</script>
+ <!-- ================= HAND TUNER PANEL ================= -->
 <div id="handTuner" style="
   position:fixed; 
   right:10px; 
@@ -2178,6 +2166,6 @@ addEventListener("resize", ()=>{
   <button id="handFlipPalm" style="margin-top:10px;width:100%;">Flip Palm</button>
   <button id="handSaveBtn" style="margin-top:10px;width:100%;background:#10b981;color:white;">Save Hands</button>
 </div>
-  
+ 
 </body>
 </html>
