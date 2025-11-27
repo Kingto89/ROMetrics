@@ -1396,25 +1396,27 @@ if (ACTIVE_HAND) {
 }
 
       
+lastPinchDist = dist;
 
-      lastPinchDist = dist;
+      // === twist for Z rotation ===
+      const angle = Math.atan2(
+        t2.clientY - t1.clientY,
+        t2.clientX - t1.clientX
+      );
 
-      // === twist for Z rotation ===
-      const angle = Math.atan2(
-        t2.clientY - t1.clientY,
-        t2.clientX - t1.clientX
-      );
-
-      if (lastTwistAngle !== null){
-       if (ACTIVE_HAND) {
-    ACTIVE_HAND.rotation.z += (angle - lastTwistAngle);
+      if (lastTwistAngle !== null){
+       if (ACTIVE_HAND) {
+    ACTIVE_HAND.rotation.z += (angle - lastTwistAngle);
 }
 
-      lastTwistAngle = angle;
+      lastTwistAngle = angle;
 
-      return;
-    }
-  }
+      return;
+    } // Closes: if (lastTwistAngle !== null)
+
+  } // Closes: if (touches.length === 2)
+
+} // Closes: if (event.pointerType === "touch" && event.touches)
 
   // === MOUSE BEHAVIOR ===
   if (!multiTouch){
