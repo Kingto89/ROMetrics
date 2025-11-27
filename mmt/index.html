@@ -1185,13 +1185,34 @@ function toggleHands(){
     // === SHOW HAND TUNER WHEN HANDS ARE ON ===
     if (handsModel?.visible) {
         document.getElementById("handTuner").style.display = "block";
-        loadHandIntoSliders(getHandBySide("R"));
+// no sliders to load
     } else {
         document.getElementById("handTuner").style.display = "none";
     }
 }
 
+// ================= HAND TUNER (PLUS / MINUS) =================
+const handBtns = document.querySelectorAll('#handTuner .step');
+const handSideSel = document.getElementById("handSideSel");
 
+handBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const side = handSideSel.value;
+    const hand = (side === "R") ? rightHandModel : leftHandModel;
+    if (!hand) return;
+
+    const mode = btn.dataset.hand; // pos / rot
+    const ax   = btn.dataset.axis; // x y z
+    const dir  = (btn.dataset.dir === "+") ? 1 : -1;
+
+    const stepPos = 0.01;
+    const stepRot = 0.03;
+
+    if (mode === "pos") hand.position[ax] += dir * stepPos;
+    else hand.rotation[ax] += dir * stepRot;
+  });
+});
+  
 // Convert screen coordinates → normalized device coordinates
 function screenToNDC(event){
   const rect = renderer.domElement.getBoundingClientRect();
@@ -1205,57 +1226,11 @@ function getHandBySide(side){
   return side === "R" ? rightHandModel : leftHandModel;
 }
 
-function loadHandIntoSliders(hand){
-  // Position
-  $("hx").value = hand.position.x;
-  $("hy").value = hand.position.y;
-  $("hz").value = hand.position.z;
-
-  // Rotation (convert quaternion → Euler)
-  const e = new THREE.Euler().setFromQuaternion(hand.quaternion, "XYZ");
-  $("hrx").value = e.x;
-  $("hry").value = e.y;
-  $("hrz").value = e.z;
-}
-
-function applySlidersToHand(hand){
-  // Apply position
-  hand.position.set(
-    parseFloat($("hx").value),
-    parseFloat($("hy").value),
-    parseFloat($("hz").value)
-  );
-
-  // Apply rotation
-  hand.rotation.set(
-    parseFloat($("hrx").value),
-    parseFloat($("hry").value),
-    parseFloat($("hrz").value)
-  );
-}
-
 function flipPalm(hand){
   // 180-degree flip around X-axis
   hand.rotation.x += Math.PI;
   loadHandIntoSliders(hand);
 }
-
-/* ================= HAND SLIDER LIVE UPDATE ================= */
-
-["hx","hy","hz","hrx","hry","hrz"].forEach(id=>{
-  $(id).addEventListener("input", ()=>{
-    const side = $("handSideSel").value;
-    const hand = getHandBySide(side);
-    applySlidersToHand(hand);
-  });
-});
-
-// Change which hand the sliders control
-$("handSideSel").addEventListener("change", ()=>{
-  const side = $("handSideSel").value;
-  const hand = getHandBySide(side);
-  loadHandIntoSliders(hand);
-});
   
 /* ================= HAND SAVE → CONSOLE JSON ================= */
 
