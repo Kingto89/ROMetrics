@@ -823,6 +823,32 @@ function applyLimbOverridesFromOverride(o){
     if (o.spineZ !== undefined) spine.rotateZ(rad(o.spineZ));
   }  
 }
+// ==== APPLY THERAPIST HAND OVERRIDES IF PRESENT ====
+if (POSE_OVERRIDES[key]) {
+    const o = POSE_OVERRIDES[key];
+
+    // RIGHT therapist hand
+    if (rightHandModel) {
+        if ("handRX"  in o) rightHandModel.position.x = o.handRX;
+        if ("handRY"  in o) rightHandModel.position.y = o.handRY;
+        if ("handRZ"  in o) rightHandModel.position.z = o.handRZ;
+
+        if ("handRRX" in o) rightHandModel.rotation.x = o.handRRX;
+        if ("handRRY" in o) rightHandModel.rotation.y = o.handRRY;
+        if ("handRRZ" in o) rightHandModel.rotation.z = o.handRRZ;
+    }
+
+    // LEFT therapist hand
+    if (leftHandModel) {
+        if ("handLX"  in o) leftHandModel.position.x = o.handLX;
+        if ("handLY"  in o) leftHandModel.position.y = o.handLY;
+        if ("handLZ"  in o) leftHandModel.position.z = o.handLZ;
+
+        if ("handLRX" in o) leftHandModel.rotation.x = o.handLRX;
+        if ("handLRY" in o) leftHandModel.rotation.y = o.handLRY;
+        if ("handLRZ" in o) leftHandModel.rotation.z = o.handLRZ;
+    }
+}
   
 
 // Coarse body-mode: align to bed/cabinet but don't set specific joint test angles
