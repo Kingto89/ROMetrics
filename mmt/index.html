@@ -246,6 +246,13 @@ const gradeExceptions = $("GradingExceptions");
 const lockRoomBtn = $("lockRoomBtn");
 let isRoomLocked = false;
 
+/* ==== NEW: Practice Mode Variables (Enhanced) ==== */
+let isPracticeModeActive = false;
+let currentActiveHand = null; // Will store rightHandModel or leftHandModel
+let currentTransformMode = 'translate'; // Initial mode for the widget
+
+const practicePlacementBtn = $("practicePlacementBtn");  
+
 function toggleRoomLock() {
     isRoomLocked = !isRoomLocked;
 
@@ -323,31 +330,47 @@ camera.position.set(1.8,1.6,3.2);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true; controls.dampingFactor = .08;
 controls.minDistance=.6; controls.maxDistance=20;
-controls.target.set(0,1.05,0); 
+controls.target.set(0,1.05,0); 
+
 // --- START: 3D Manipulation Widget Setup ---
 let transformControls = null;
 
+// The missing setup function must be here:
 function setupTransformControls() {
     if (!transformControls) {
         transformControls = new TransformControls(camera, renderer.domElement);
         scene.add(transformControls);
 
-        // Crucial: The Scene Panning & Zooming Rig must pause when the widget is actively dragging.
         transformControls.addEventListener('dragging-changed', function (event) {
-            controls.enabled = !event.value;
+            controls.enabled = !event.value; // Disable camera orbit when dragging
         });
 
-        // Set the mode to translation (movement) and lock rotation.
-        transformControls.setMode("translate");
-
-        // The widget must only permit X (side-to-side) and Y (up-down) movement.
-        transformControls.showZ = false; 
+        // Set up for full 3D manipulation by default
+        transformControls.setSpace("local");
         
-        // Hide the widget until a hand is actively attached.
+        // Hide all axes and controls until Practice Mode is active
+        transformControls.showX = false;
+        transformControls.showY = false;
+        transformControls.showZ = false;
         transformControls.visible = false;
+        transformControls.detach();
+
+        // Attach the interaction logic here to the renderer's canvas
+        renderer.domElement.addEventListener('pointerdown', onPointerDownTransformControls);
     }
 }
-setupTransformControls();
+setupTransformControls(); // <-- Must call the setup function
+
+// The togglePracticeMode function comes AFTER setupTransformControls is defined
+function togglePracticeMode() {
+// ... (Your function logic here) ...
+}
+
+// Wire the existing Practice Placement button
+if (practicePlacementBtn) practicePlacementBtn.addEventListener('click', togglePracticeMode);  
+    
+// --- END: 3D Manipulation Widget Setup ---
+    
 // --- END: 3D Manipulation Widget Setup ---
 /* Lights */
 scene.add(new THREE.HemisphereLight(0xffffff, 0x8ca0b3, 0.8));
@@ -2005,6 +2028,56 @@ addEventListener("resize", ()=>{
   camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight);
 });
+
+// --- NEW: Interaction Logic for TransformControls (Hand Switch & Mode Toggle) ---
+function onPointerDownTransformControls(event) {
+    if (!isPracticeModeActive || !transformControls.visible || !currentActiveHand) return;
+    
+    // Better way: Check if the raycaster intersects the center sphere of TransformControls if possible,
+    // or use a custom "hit" area. For now, let's use a double-tap/single-tap on the controlled object.
+
+    const raycaster = new THREE.Raycaster();
+    const pointer = new THREE.Vector2();
+
+    // Calculate pointer position in normalized device coordinates (-1 to +1)
+    pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+    pointer.y = - (event.clientY / window.innerHeight) * 2 + 1;
+
+    raycaster.setFromCamera(pointer, camera);
+
+    const intersects = raycaster.intersectObjects([currentActiveHand], true);
+
+    if (intersects.length > 0 && intersects[0].object) {
+        // If we clicked on the hand model itself (not a transform control handle)
+
+        // --- Double-Tap Detection for Mode Toggle ---
+        const now = Date.now();
+        const lastTapTime = currentActiveHand.__lastTapTime || 0;
+        const DOUBLE_TAP_THRESHOLD = 300; // ms
+
+        if (now - lastTapTime < DOUBLE_TAP_THRESHOLD) {
+            // It's a double-tap: Toggle Mode
+            const newMode = (currentTransformMode === 'translate') ? 'rotate' : 'translate';
+            transformControls.setMode(newMode);
+            currentTransformMode = newMode;
+            console.log(`Mode toggled to: ${currentTransformMode}`);
+            currentActiveHand.__lastTapTime = 0; // Reset for next double tap
+        } else {
+            // It's a single tap: Switch Hand
+            const newHand = (currentActiveHand === rightHandModel) ? leftHandModel : rightHandModel;
+            if (newHand) {
+                currentActiveHand = newHand;
+                transformControls.attach(currentActiveHand);
+                transformControls.setMode(currentTransformMode); // Re-apply current mode
+                console.log(`Switched to: ${(currentActiveHand === rightHandModel) ? 'Right' : 'Left'} Hand`);
+            }
+            currentActiveHand.__lastTapTime = now;
+        }
+        event.preventDefault(); // Prevent OrbitControls from doing anything if it somehow re-enabled
+    }
+}
+// --- END: Interaction Logic ---
+  
 (function loop(){
   controls.update();
   renderer.render(scene, camera);
