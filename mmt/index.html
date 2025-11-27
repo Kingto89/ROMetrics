@@ -1120,7 +1120,13 @@ function loadHandsModel(){
     HANDS_MODEL_URL,
     (gltf) => {
       handsModel = gltf.scene;
-  handsModel.traverse(o => console.log(o.name));
+  // Identify left and right hands
+rightHandModel = handsModel.getObjectByName("Hand_Right");
+leftHandModel  = handsModel.getObjectByName("Hand_Left");
+
+if (!rightHandModel) console.warn("Right hand not found");
+if (!leftHandModel)  console.warn("Left hand not found");    
+handsModel.traverse(o => console.log(o.name));
 
       // Try to grab the skeleton from any SkinnedMesh in the hands rig
       handsModel.traverse(obj => {
@@ -1301,128 +1307,58 @@ $("handSaveBtn").addEventListener("click", ()=>{
   alert("Saved! Check console for JSON.");
 });
 
-// ==== NEW FULL 3D MOVE HANDLERS ====
+// ==== NEW INDEPENDENT HAND MOVEMENT ====
 
+let ACTIVE_HAND = null;
+
+// pointer down — detect which hand was clicked
 function onPointerDownHands(event){
-  if (!handsModel || !handsModel.visible) return;
+  if (!handsModel?.visible) return;
   if (event.target !== renderer.domElement) return;
 
   screenToNDC(event);
   raycaster.setFromCamera(mouse, camera);
 
-  const hits = raycaster.intersectObject(handsModel, true);
+  // we raycast BOTH hands independently
+  const hits = raycaster.intersectObjects(
+    [rightHandModel, leftHandModel],
+    true
+  );
   if (!hits.length) return;
 
+  // find the clicked hand's ROOT
+  ACTIVE_HAND = hits[0].object;
+  while (ACTIVE_HAND.parent && ACTIVE_HAND.parent !== handsModel){
+    ACTIVE_HAND = ACTIVE_HAND.parent;
+  }
+
+  // make a movement plane at the click point
   const hitPoint = hits[0].point;
+  const normal = camera.getWorldDirection(new THREE.Vector3()).negate();
+  dragPlane.setFromNormalAndCoplanarPoint(normal, hitPoint);
 
-// === FREE 3D MOVEMENT PLANE ===
-// vertical plane facing the camera → allows up/down/side movement
-const normal = new THREE.Vector3(0, 0, 1); 
-dragPlane.setFromNormalAndCoplanarPoint(normal, hitPoint);
-
-// offset between click point & hand origin
-dragOffset.copy(handsModel.position).sub(hitPoint);
-
-
-  draggingHands = true;
+  dragOffset.copy(ACTIVE_HAND.position).sub(hitPoint);
   controls.enabled = false;
 }
 
+// pointer move — move ONLY the ACTIVE hand
 function onPointerMoveHands(event){
-  if (!handsModel || !handsModel.visible) return;
+  if (!ACTIVE_HAND) return;
 
-  // === TOUCH BEHAVIOR ===
-  if (event.pointerType === "touch" && event.touches){
-    const touches = event.touches;
+  screenToNDC(event);
+  raycaster.setFromCamera(mouse, camera);
 
-    // === 1 FINGER = MOVE ===
-    if (touches.length === 1){
-      multiTouch = false;
-
-      const t = touches[0];
-
-      screenToNDC(event);
-      raycaster.setFromCamera(mouse, camera);
-
-      if (raycaster.ray.intersectPlane(dragPlane, dragIntersectPoint)){
-        handsModel.position.copy(dragIntersectPoint).add(dragOffset);
-      }
-
-      lastTouchX = t.clientX;
-      lastTouchY = t.clientY;
-      return;
-    }
-
-    // === 2 FINGERS = ROTATION + PINCH ===
-    if (touches.length === 2){
-      multiTouch = true;
-
-      const t1 = touches[0];
-      const t2 = touches[1];
-
-      // movement deltas for rotation
-      const midX = (t1.clientX + t2.clientX) / 2;
-      const midY = (t1.clientY + t2.clientY) / 2;
-
-      const dx = midX - lastTouchX;
-      const dy = midY - lastTouchY;
-
-      // rotate X/Y (tilt + turn)
-      handsModel.rotation.y += dx * 0.01;  // turn left/right
-      handsModel.rotation.x += dy * 0.01;  // tilt up/down
-
-      lastTouchX = midX;
-      lastTouchY = midY;
-
-      // === pinch for forward/back ===
-      const dist = Math.hypot(
-        t2.clientX - t1.clientX,
-        t2.clientY - t1.clientY
-      );
-
-      if (lastPinchDist !== null){
-        const delta = dist - lastPinchDist;
-        const dir = new THREE.Vector3();
-        camera.getWorldDirection(dir);
-        handsModel.position.addScaledVector(dir, delta * 0.005);
-      }
-
-      lastPinchDist = dist;
-
-      // === twist for Z rotation ===
-      const angle = Math.atan2(
-        t2.clientY - t1.clientY,
-        t2.clientX - t1.clientX
-      );
-
-      if (lastTwistAngle !== null){
-        handsModel.rotation.z += (angle - lastTwistAngle);
-      }
-
-      lastTwistAngle = angle;
-
-      return;
-    }
-  }
-
-  // === MOUSE BEHAVIOR ===
-  if (!multiTouch){
-    if (!draggingHands) return;
-
-    screenToNDC(event);
-    raycaster.setFromCamera(mouse, camera);
-
-    if (raycaster.ray.intersectPlane(dragPlane, dragIntersectPoint)){
-      handsModel.position.copy(dragIntersectPoint).add(dragOffset);
-    }
+  if (raycaster.ray.intersectPlane(dragPlane, dragPoint)){
+    ACTIVE_HAND.position.copy(dragPoint).add(dragOffset);
   }
 }
 
-
+// pointer up — release active hand
 function onPointerUpHands(){
-  draggingHands = false;
+  ACTIVE_HAND = null;
   controls.enabled = true;
 }
+
 
  
 function applyBodyPositionFromSelection(){
