@@ -255,7 +255,8 @@ let currentActiveHand = null; // Will store rightHandModel or leftHandModel
 let currentTransformMode = 'translate'; // Initial mode for the widget
 
 const practicePlacementBtn = $("practicePlacementBtn");  
-
+const handSwitchBtn = $("handSwitchBtn");
+const handSwitchText = $("handSwitchText");
 function toggleRoomLock() {
     isRoomLocked = !isRoomLocked;
 
@@ -276,7 +277,7 @@ function toggleRoomLock() {
 // Wire the new button
 if (lockRoomBtn) lockRoomBtn.addEventListener('click', toggleRoomLock);
 
-/* ==== NEW: Hand Switching Utility ==== */
+/* ==== NEW: Hand Switching Utility ==== */  
 function highlightActiveHand(activeHand) {
     if (!handsModel) return;
     
@@ -470,7 +471,6 @@ function togglePracticeMode() {
 // Wire the existing Practice Placement button
 if (practicePlacementBtn) practicePlacementBtn.addEventListener('click', togglePracticeMode);  
     
-// --- END: 3D Manipulation Widget Setup ---
     
 // --- END: 3D Manipulation Widget Setup ---
 /* Lights */
