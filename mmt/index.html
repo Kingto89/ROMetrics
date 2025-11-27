@@ -1134,7 +1134,7 @@ function loadHandsModel(){
       handsModel.rotation.x = Math.PI;
 
       // Therapist hands smaller than patient
-      handsModel.scale.set(0.28, 0.28, 0.28);   // ← adjust between 0.20–0.35
+      handsModel.scale.set(0.20, 0.20, 0.20);   // ← adjust between 0.20–0.35
       // Rough starting position in front of patient
       handsModel.position.set(0, 1.1, 0.35);
 
@@ -1170,6 +1170,14 @@ function toggleHands(){
          btn?.classList.add('lockOn');
     } else {
          btn?.classList.remove('lockOn');
+    }
+
+    // === SHOW HAND TUNER WHEN HANDS ARE ON ===
+    if (handsModel?.visible) {
+        document.getElementById("handTuner").style.display = "block";
+        loadHandIntoSliders(getHandBySide("R"));
+    } else {
+        document.getElementById("handTuner").style.display = "none";
     }
 }
 
