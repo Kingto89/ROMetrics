@@ -1094,10 +1094,10 @@ function loadHandsModel(){
 
       handsModel.visible = false;
 
-      // Match patient scale
-      handsModel.scale.set(POSE.s, POSE.s, POSE.s);
+      // Therapist hands smaller than patient
+      handsModel.scale.set(0.28, 0.28, 0.28);   // ← adjust between 0.20–0.35
       // Rough starting position in front of patient
-      handsModel.position.set(0, 1.2, 0.5);
+      handsModel.position.set(0, 1.1, 0.35);
 
       scene.add(handsModel);
       $("msg").textContent = "✅ Hands model ready.";
