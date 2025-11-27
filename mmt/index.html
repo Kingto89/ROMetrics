@@ -536,6 +536,33 @@ let GLOBAL_PF_DEG = 0; // shared plantarflex angle for both feet
 // ADDED: Hands model loading variables
 const HANDS_MODEL_URL = "https://raw.githubusercontent.com/Kingto89/ROMetrics.com/main/assets/Hands.glb";
 let handsModel = null;
+let handsSkeleton = null;   // <— NEW
+
+// Helper: log all therapist-hand bones to the console
+function logHandsBones(){
+  if (!handsModel){
+    console.warn("[Hands] Model not loaded yet.");
+    return;
+  }
+
+  // If we already captured the skeleton, just dump it
+  if (handsSkeleton){
+    console.group("[Hands] Therapist hand bones");
+    handsSkeleton.bones.forEach(b => console.log(b.name));
+    console.groupEnd();
+    return;
+  }
+
+  // Fallback: search for any SkinnedMesh and log its skeleton
+  handsModel.traverse(obj => {
+    if (obj.isSkinnedMesh && obj.skeleton){
+      console.group(`[Hands] Bones for mesh: ${obj.name}`);
+      obj.skeleton.bones.forEach(b => console.log(b.name));
+      console.groupEnd();
+    }
+  });
+}
+
   
 // Reset all bones back to stored baseline
 function resetAllBones(){
@@ -1039,36 +1066,45 @@ if (mode === "seatednogravity"){
 
 /* ==== Therapist Hands Model Logic ==== */
 function loadHandsModel(){
-    if (handsModel) return;
-    $("msg").textContent = "Loading therapist hands model...";
-    
-    // Using the existing configured loader for consistency
-    loader.load(
-        HANDS_MODEL_URL,
-        (gltf) => {
-            handsModel = gltf.scene;
-            handsModel.visible = false;
-            
-            // Set scale to match the patient model scale
-            handsModel.scale.set(POSE.s, POSE.s, POSE.s); 
-            // Initial position guess: centered in front of the patient
-            handsModel.position.set(0, 1.2, 0.5); 
-            
-            // Note: Hand.L and Hand.R meshes are inside handsModel, 
-            // their movement must be handled via the Pose Tuner or separate control logic later.
-            scene.add(handsModel);
-            $("msg").textContent = "✅ Hands model ready.";
-        },
-        (xhr) => {
-            const pct = xhr.lengthComputable ? Math.min(100, Math.round(100*xhr.loaded/xhr.total)) : null;
-            $("msg").textContent = pct!==null ? `Loading Hands ${pct}%` : "Loading Hands...";
-        },
-        (error) => {
-            console.error("Failed to load Hands model:", error);
-            $("msg").textContent = "⚠️ Failed to load therapist hands.";
+  if (handsModel) return;
+  $("msg").textContent = "Loading therapist hands model...";
+
+  loader.load(
+    HANDS_MODEL_URL,
+    (gltf) => {
+      handsModel = gltf.scene;
+
+      // Try to grab the skeleton from any SkinnedMesh in the hands rig
+      handsModel.traverse(obj => {
+        if (obj.isSkinnedMesh && obj.skeleton && !handsSkeleton){
+          handsSkeleton = obj.skeleton;
         }
-    );
+      });
+
+      handsModel.visible = false;
+
+      // Match patient scale
+      handsModel.scale.set(POSE.s, POSE.s, POSE.s);
+      // Rough starting position in front of patient
+      handsModel.position.set(0, 1.2, 0.5);
+
+      scene.add(handsModel);
+      $("msg").textContent = "✅ Hands model ready.";
+
+      // 🔎 Dump bone names in console so we can rig properly
+      logHandsBones();
+    },
+    (xhr) => {
+      const pct = xhr.lengthComputable ? Math.min(100, Math.round(100 * xhr.loaded / xhr.total)) : null;
+      $("msg").textContent = pct !== null ? `Loading Hands ${pct}%` : "Loading Hands...";
+    },
+    (error) => {
+      console.error("Failed to load Hands model:", error);
+      $("msg").textContent = "⚠️ Failed to load therapist hands.";
+    }
+  );
 }
+
 
 function toggleHands(){
     const btn = $("toggleHandsBtn");
