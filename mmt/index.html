@@ -1086,6 +1086,37 @@ function toggleHands(){
          btn?.classList.remove('lockOn');
     }
 }
+// ============= NEW CLEAN HAND TUNER LOGIC =============
+const handTunerPanel = document.getElementById("handTuner");
+const handSideSel = document.getElementById("handSideSel");
+
+function showHandTuner(){
+  handTunerPanel.style.display = "block";
+}
+function hideHandTuner(){
+  handTunerPanel.style.display = "none";
+}
+
+// Attach +/– button actions
+document.querySelectorAll(".handStep").forEach(btn => {
+  btn.addEventListener("click", () => {
+
+    const side = handSideSel.value;
+    const hand = (side === "R") ? rightHandModel : leftHandModel;
+    if (!hand) return;
+
+    const mode = btn.dataset.mode;     // pos | rot
+    const axis = btn.dataset.axis;     // x y z
+    const dir  = btn.dataset.dir === "+" ? 1 : -1;
+
+    if (mode === "pos") {
+      hand.position[axis] += 0.01 * dir;
+    } else {
+      hand.rotation[axis] += 0.03 * dir;
+    }
+  });
+});
+  
 
 function applyBodyPositionFromSelection(){
   if (!model || !skeleton) return;
@@ -1754,5 +1785,49 @@ addEventListener("resize", ()=>{
 })();
 
 </script>
+<!-- ================= HAND TUNER PANEL (NEW CLEAN VERSION) ================= -->
+<div id="handTuner" style="
+  position:fixed; right:12px; top:80px; width:240px;
+  background:#ffffffdd; padding:12px; border-radius:10px;
+  font-family:system-ui; display:none; z-index:9999; box-shadow:0 0 10px #0003;
+">
+  <div style="font-weight:600; margin-bottom:8px;">Therapist Hand Tuner</div>
+
+  <label>Side:</label>
+  <select id="handSideSel">
+    <option value="R">Right</option>
+    <option value="L">Left</option>
+  </select>
+
+  <div style="margin-top:10px; font-weight:600;">Position</div>
+  <div class="row"><span>X</span>
+    <button class="handStep" data-mode="pos" data-axis="x" data-dir="-">–</button>
+    <button class="handStep" data-mode="pos" data-axis="x" data-dir="+">+</button>
+  </div>
+  <div class="row"><span>Y</span>
+    <button class="handStep" data-mode="pos" data-axis="y" data-dir="-">–</button>
+    <button class="handStep" data-mode="pos" data-axis="y" data-dir="+">+</button>
+  </div>
+  <div class="row"><span>Z</span>
+    <button class="handStep" data-mode="pos" data-axis="z" data-dir="-">–</button>
+    <button class="handStep" data-mode="pos" data-axis="z" data-dir="+">+</button>
+  </div>
+
+  <div style="margin-top:10px; font-weight:600;">Rotation</div>
+  <div class="row"><span>RX</span>
+    <button class="handStep" data-mode="rot" data-axis="x" data-dir="-">–</button>
+    <button class="handStep" data-mode="rot" data-axis="x" data-dir="+">+</button>
+  </div>
+  <div class="row"><span>RY</span>
+    <button class="handStep" data-mode="rot" data-axis="y" data-dir="-">–</button>
+    <button class="handStep" data-mode="rot" data-axis="y" data-dir="+">+</button>
+  </div>
+  <div class="row"><span>RZ</span>
+    <button class="handStep" data-mode="rot" data-axis="z" data-dir="-">–</button>
+    <button class="handStep" data-mode="rot" data-axis="z" data-dir="+">+</button>
+  </div>
+</div>
+
+  
 </body>
 </html>
