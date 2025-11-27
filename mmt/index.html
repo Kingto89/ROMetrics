@@ -1306,8 +1306,9 @@ document.querySelectorAll(".handStep").forEach(btn => {
 });
 document.getElementById("handSaveBtn").addEventListener("click", () => {
 
-  const test = window.currentMMTtest;
-  const bucket = window.CURRENT_BODY_BUCKET;  // "high" or "low"
+ window.currentMMTtest   = actionSel.value;
+  window.CURRENT_BODY_BUCKET = getGradeBucketForTest(actionSel.value);
+
 
   if (!test || !bucket){
     alert("No test or bucket — cannot save hand pose.");
