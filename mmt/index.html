@@ -1120,8 +1120,9 @@ function loadHandsModel(){
     HANDS_MODEL_URL,
     (gltf) => {
       handsModel = gltf.scene;
-rightHandModel = handsModel.getObjectByName("Right");
-leftHandModel  = handsModel.getObjectByName("Left");
+rightHandModel = handsModel.getObjectByName("Hand.R");
+leftHandModel  = handsModel.getObjectByName("Hand.L");
+
 
       // Try to grab the skeleton from any SkinnedMesh in the hands rig
       handsModel.traverse(obj => {
