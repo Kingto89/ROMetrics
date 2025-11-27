@@ -729,6 +729,7 @@ POSE_OVERRIDES["Gastrocnemius:low"] = { x:-1.520, y:0.800, z:0.550, rx:1.571, ry
 
 //Hand Overrides
 
+POSE_OVERRIDES["Capital_Extension:high"] = { x:-0.800, y:0.820, z:0.330, rx:-1.571, ry:3.142, rz:1.222, pf:45.000, handRX:4.431, handRY:-2.690, handRZ:-4.836, handRRX:0.103, handRRY:0.310, handRRZ:-2.844, handLX:3.733, handLY:-2.365, handLZ:-4.377, handLRX:-0.531, handLRY:0.523, handLRZ:1.124 };  
 
   
   
@@ -822,6 +823,7 @@ function applyLimbOverridesFromOverride(o){
     if (o.spineZ !== undefined) spine.rotateZ(rad(o.spineZ));
   }  
 }
+  
 
 // Coarse body-mode: align to bed/cabinet but don't set specific joint test angles
 function setBodyMode(mode){
@@ -955,43 +957,7 @@ function setBodyMode(mode){
   if (key && POSE_OVERRIDES[key]){
     applyLimbOverridesFromOverride(POSE_OVERRIDES[key]);
   }
-     // Apply any per-test thigh/calf overrides (if present)
-  if (key && POSE_OVERRIDES[key]){
-    applyLimbOverridesFromOverride(POSE_OVERRIDES[key]);
-  }
-  // ==== APPLY THERAPIST HAND OVERRIDES IF PRESENT ====
-if (POSE_OVERRIDES[key]) {
-    const o = POSE_OVERRIDES[key];
-
-// === APPLY THERAPIST HAND OVERRIDES ===
-if (POSE_OVERRIDES[key]) {
-    const o = POSE_OVERRIDES[key];
-
-    // RIGHT therapist hand
-    if (rightHandModel) {
-        if ("thR_posX" in o) rightHandModel.position.x = o.thR_posX;
-        if ("thR_posY" in o) rightHandModel.position.y = o.thR_posY;
-        if ("thR_posZ" in o) rightHandModel.position.z = o.thR_posZ;
-
-        if ("thR_rotX" in o) rightHandModel.rotation.x = o.thR_rotX;
-        if ("thR_rotY" in o) rightHandModel.rotation.y = o.thR_rotY;
-        if ("thR_rotZ" in o) rightHandModel.rotation.z = o.thR_rotZ;
-    }
-
-    // LEFT therapist hand
-    if (leftHandModel) {
-        if ("thL_posX" in o) leftHandModel.position.x = o.thL_posX;
-        if ("thL_posY" in o) leftHandModel.position.y = o.thL_posY;
-        if ("thL_posZ" in o) leftHandModel.position.z = o.thL_posZ;
-
-        if ("thL_rotX" in o) leftHandModel.rotation.x = o.thL_rotX;
-        if ("thL_rotY" in o) leftHandModel.rotation.y = o.thL_rotY;
-        if ("thL_rotZ" in o) leftHandModel.rotation.z = o.thL_rotZ;
-    }
-}
-
   
-  // Optional arm/hand fine-tune rotations (shortcut from POSE_OVERRIDES) 
   // Optional arm/hand fine-tune rotations (shortcut from POSE_OVERRIDES) 
   if (key && POSE_OVERRIDES[key] && skeleton){
     const o = POSE_OVERRIDES[key];
@@ -1346,42 +1312,52 @@ document.querySelectorAll(".handStep").forEach(btn => {
   });
 });
 
-document.getElementById("handSaveBtn").addEventListener("click", () => {
+  document.getElementById("handSaveBtn").addEventListener("click", () => {
 
-    const test   = window.currentMMTtest;
-    const bucket = window.currentMMTgradeBucket; // "high" or "low"
+  const test = actionSel.value;                     // ← FIXED
+  const bucket = getGradeBucketForTest(test);       // ← FIXED
 
-    if (!test || !bucket){
-        console.warn("No test or bucket — cannot save hand pose.");
-        alert("⚠️ Select a test + grade first.");
-        return;
-    }
+  if (!test || !bucket){
+    alert("No test or bucket — cannot save hand pose.");
+    return;
+  }
 
-    if (!rightHandModel || !leftHandModel){
-        alert("⚠️ Hands not loaded.");
-        return;
-    }
+  if (!rightHandModel || !leftHandModel){
+    alert("Hands not loaded.");
+    return;
+  }
 
-    const key = `${test}:${bucket}`;
+  const key = `${test}:${bucket}`;
+  const base = POSE_OVERRIDES[key] || {};
 
-    const out = {
-        thR_posX: rightHandModel.position.x,
-        thR_posY: rightHandModel.position.y,
-        thR_posZ: rightHandModel.position.z,
-        thR_rotX: rightHandModel.rotation.x,
-        thR_rotY: rightHandModel.rotation.y,
-        thR_rotZ: rightHandModel.rotation.z,
+  base.handRX  = rightHandModel.position.x;
+  base.handRY  = rightHandModel.position.y;
+  base.handRZ  = rightHandModel.position.z;
 
-        thL_posX: leftHandModel.position.x,
-        thL_posY: leftHandModel.position.y,
-        thL_posZ: leftHandModel.position.z,
-        thL_rotX: leftHandModel.rotation.x,
-        thL_rotY: leftHandModel.rotation.y,
-        thL_rotZ: leftHandModel.rotation.z
-    };
+  base.handRRX = rightHandModel.rotation.x;
+  base.handRRY = rightHandModel.rotation.y;
+  base.handRRZ = rightHandModel.rotation.z;
 
-    console.log(`POSE_OVERRIDES["${key}"] = ${JSON.stringify(out)};`);
-    alert("Saved — check console.");
+  base.handLX  = leftHandModel.position.x;
+  base.handLY  = leftHandModel.position.y;
+  base.handLZ  = leftHandModel.position.z;
+
+  base.handLRX = leftHandModel.rotation.x;
+  base.handLRY = leftHandModel.rotation.y;
+  base.handLRZ = leftHandModel.rotation.z;
+
+  POSE_OVERRIDES[key] = base;
+
+  let line = `POSE_OVERRIDES["${key}"] = { `;
+  for (const k in base){
+    line += `${k}:${Number(base[k]).toFixed(3)}, `;
+  }
+  line = line.replace(/, $/, " ");
+  line += "};";
+
+  console.log("==== HAND POSE SAVE (MERGED) ====");
+  console.log(line);
+  alert("Saved! Check console.");
 });
 
 
@@ -1415,20 +1391,13 @@ if (toggleHandsBtn) toggleHandsBtn.addEventListener('click', toggleHands);
 // When the test changes, update which grade menu is active, then re-apply pose
 actionSel.addEventListener("change", () => {
   updateGradeDropdownsForSelection();
-  window.currentMMTtest = actionSel.value;
-  window.currentMMTgradeBucket = getGradeBucketForTest(actionSel.value);
-
   applyBodyPositionFromSelection();
-  
   if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
 });
 
 // Normal Grade 3–0 menu: used for all NON-exception tests
 gradeMain.addEventListener("change", () => {
   if (actionSel.value && !EXCEPTION_TESTS.has(actionSel.value)){
-
-    window.currentMMTgradeBucket = getGradeBucketForTest(actionSel.value);
-
     applyBodyPositionFromSelection();
     if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
   }
