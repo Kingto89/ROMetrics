@@ -176,9 +176,9 @@ select,button,input[type=range]{width:100%;margin:6px 0 8px 0;padding:8px 10px;b
     <button id="practicePlacementBtn" class="mini" style="flex-grow: 1; text-align: center;" title="Practice Hand Placement Mode">
         <span style="display: block; text-align: left; margin: 0 auto;">Practice <br> Placement</span>
     </button>
-    <button id="handSwitchBtn" class="mini" style="flex-grow: 1; text-align: center; margin-right: 4px; font-weight: bold; background: var(--accent); color: var(--text);" title="Switch between Left and Right active hands">
-        <span id="handSwitchText" style="display: block; text-align: center; margin: 0 auto;">R/L <br> Hands</span>
-    </button>
+    <button id="handSwitchBtn" class="mini" style="flex-grow: 1; text-align: center; margin-right: 4px; font-weight: bold;" title="Switch between Left and Right active hands">
+    <span id="handSwitchText" style="display: block; text-align: center; margin: 0 auto;">R/L <br> Hands</span>
+</button>
 </div>
 </div>
 </div>
@@ -421,11 +421,17 @@ setupTransformControls();
 
 // The togglePracticeMode function comes AFTER setupTransformControls is defined
 function togglePracticeMode() {
-    // Ensure hands are loaded before entering practice mode
-    if (!rightHandModel || !leftHandModel) {
-        alert("Please toggle 'Therapist Hands' on first.");
-        return;
-    }
+   // BEFORE:
+if (!rightHandModel || !leftHandModel) {
+    alert("Please toggle 'Therapist Hands' on first.");
+    return;
+}
+
+// AFTER: (Using handsModel check)
+if (!handsModel || !handsModel.visible) {
+    alert("Please toggle 'Therapist Hands' on first.");
+    return;
+}
 
     isPracticeModeActive = !isPracticeModeActive;
     
