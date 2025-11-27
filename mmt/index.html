@@ -1343,6 +1343,26 @@ document.getElementById("handSaveBtn").addEventListener("click", () => {
   console.log(JSON.stringify(out, null, 2));
   alert("Saved! Check console.");
 });
+function applyBodyPositionFromSelection(){
+  if (!model || !skeleton) return;
+  const key = actionSel?.value;
+  if (!key) return;
+
+  const family = TEST_POSITION[key] || { high:"anatomic", low:"anatomic" };
+  const bucket = getGradeBucketForTest(key); // "high" or "low"
+  const mode = bucket === "low" 
+      ? (family.low  || "anatomic")
+      : (family.high || "anatomic");
+
+  CURRENT_BODY_TEST = key;
+  CURRENT_BODY_BUCKET = bucket;
+
+  setBodyMode(mode);
+
+  if (poseTunerEl && poseTunerEl.updateLabels){
+    poseTunerEl.updateLabels();
+  }
+}
  
 /* ==== Wire UI ==== */
 const toggleHandsBtn = $("toggleHandsBtn"); // Reference the new single button
