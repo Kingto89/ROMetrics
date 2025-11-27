@@ -529,27 +529,13 @@ loader.setMeshoptDecoder(MeshoptDecoder);
 const draco = new DRACOLoader(); draco.setDecoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/draco/"); loader.setDRACOLoader(draco);
 const ktx2  = new KTX2Loader();  ktx2.setTranscoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/basis/"); ktx2.detectSupport(renderer); loader.setKTX2Loader(ktx2);
 
-// Therapist hands globals
+let model=null, skeleton=null;
+const initialBoneRot = new Map();
+let GLOBAL_PF_DEG = 0; // shared plantarflex angle for both feet
+
+// ADDED: Hands model loading variables
 const HANDS_MODEL_URL = "https://raw.githubusercontent.com/Kingto89/ROMetrics.com/main/assets/Hands.glb";
 let handsModel = null;
-let handLMesh = null;
-let handRMesh = null;
-const draggableHands = [];
-
-// Simple drag support for therapist hands
-const raycaster = new THREE.Raycaster();
-const pointer = new THREE.Vector2();
-const dragPlane = new THREE.Plane();
-const dragOffset = new THREE.Vector3();
-let draggedHand = null;
-
-function setPointerFromEvent(event){
-  const rect = renderer.domElement.getBoundingClientRect();
-  pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-  pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-}
-
-
   
 // Reset all bones back to stored baseline
 function resetAllBones(){
@@ -742,11 +728,9 @@ POSE_OVERRIDES["Gastrocnemius:low"] = { x:-1.520, y:0.800, z:0.550, rx:1.571, ry
   
 let CURRENT_BODY_TEST = null;
 let CURRENT_BODY_BUCKET = "high"; // "high" or "low"
-let GLOBAL_PF_DEG = 0;            // plantarflexion angle for both feet (default 0°)
   
 // Decide which pose family to use ("high" = Grades 3–5 family, "low" = Grades 0–2 family)
 function getGradeBucketForTest(testKey){
-
   // 1) Trunk (except pelvis) + Gastroc use the Grading Exceptions menu (5–1 / 0)
   if (EXCEPTION_TESTS.has(testKey)){
     if (!gradeExceptions) return "high";
@@ -1055,39 +1039,35 @@ if (mode === "seatednogravity"){
 
 /* ==== Therapist Hands Model Logic ==== */
 function loadHandsModel(){
-  if (handsModel) return;
-  $("msg").textContent = "Loading therapist hands model...";
-
-  loader.load(
-    HANDS_MODEL_URL,
-    (gltf) => {
-      handsModel = gltf.scene;
-      handsModel.visible = false;
-
-      // Make therapist hands MUCH smaller than the patient
-      const handScale = 0.35; // tweak 0.25–0.4 if needed
-      handsModel.scale.set(handScale, handScale, handScale);
-      handsModel.position.set(0, 1.2, 0.5);
-
-      // Grab individual hands by name
-      handLMesh = handsModel.getObjectByName("Hands.L") || handsModel.getObjectByName("Hand.L");
-      handRMesh = handsModel.getObjectByName("Hands.R") || handsModel.getObjectByName("Hand.R");
-
-      if (handLMesh) draggableHands.push(handLMesh);
-      if (handRMesh) draggableHands.push(handRMesh);
-
-      scene.add(handsModel);
-      $("msg").textContent = "✅ Hands model ready.";
-    },
-    (xhr) => {
-      const pct = xhr.lengthComputable ? Math.min(100, Math.round(100*xhr.loaded/xhr.total)) : null;
-      $("msg").textContent = pct!==null ? `Loading Hands ${pct}%` : "Loading Hands...";
-    },
-    (error) => {
-      console.error("Failed to load Hands model:", error);
-      $("msg").textContent = "⚠️ Failed to load therapist hands.";
-    }
-  );
+    if (handsModel) return;
+    $("msg").textContent = "Loading therapist hands model...";
+    
+    // Using the existing configured loader for consistency
+    loader.load(
+        HANDS_MODEL_URL,
+        (gltf) => {
+            handsModel = gltf.scene;
+            handsModel.visible = false;
+            
+            // Set scale to match the patient model scale
+            handsModel.scale.set(POSE.s, POSE.s, POSE.s); 
+            // Initial position guess: centered in front of the patient
+            handsModel.position.set(0, 1.2, 0.5); 
+            
+            // Note: Hand.L and Hand.R meshes are inside handsModel, 
+            // their movement must be handled via the Pose Tuner or separate control logic later.
+            scene.add(handsModel);
+            $("msg").textContent = "✅ Hands model ready.";
+        },
+        (xhr) => {
+            const pct = xhr.lengthComputable ? Math.min(100, Math.round(100*xhr.loaded/xhr.total)) : null;
+            $("msg").textContent = pct!==null ? `Loading Hands ${pct}%` : "Loading Hands...";
+        },
+        (error) => {
+            console.error("Failed to load Hands model:", error);
+            $("msg").textContent = "⚠️ Failed to load therapist hands.";
+        }
+    );
 }
 
 function toggleHands(){
@@ -1260,32 +1240,24 @@ const MODEL_CANDIDATES = [
 ].filter(Boolean);
 
 function tryNextModelUrl(index){
-  if (index >= MODEL_CANDIDATES.length){
+  if(index >= MODEL_CANDIDATES.length){
     $("msg").textContent = "⚠️ Could not load model from any path.";
-    console.error("All model load attempts failed:", MODEL_CANDIDATES);
     return;
   }
-
   const url = MODEL_CANDIDATES[index];
   $("msg").textContent = "Loading model… " + url;
-  console.log("Attempting model load from:", url);
-
   loader.load(
     url,
-    (gltf) => {
-      console.log("✅ Loaded model from", url);
-      addModel(gltf);
-    },
-    (xhr) => {
+    (gltf)=> addModel(gltf),
+    (xhr)=>{
       const pct = xhr.lengthComputable ? Math.min(100, Math.round(100*xhr.loaded/xhr.total)) : null;
       $("msg").textContent = pct!==null ? `Loading ${pct}%` : "Loading…";
     },
-    (err) => {
-      console.warn("❌ Failed loading from:", url, err);
-      setTimeout(()=> tryNextModelUrl(index+1), 200);
-    }
+    ()=> tryNextModelUrl(index+1)
   );
 }
+
+tryNextModelUrl(0);  
 
 /* ==== Wire UI ==== */
 const toggleHandsBtn = $("toggleHandsBtn"); // Reference the new single button
@@ -1570,19 +1542,6 @@ function ensurePoseTuner(){
 
   function updatePFLabel(){
     if (pfLabel) pfLabel.textContent = `${GLOBAL_PF_DEG|0}°`;
-  // Simple drag support for therapist hands
-const raycaster = new THREE.Raycaster();
-const pointer = new THREE.Vector2();
-const dragPlane = new THREE.Plane();
-const dragOffset = new THREE.Vector3();
-let draggedHand = null;
-
-function setPointerFromEvent(event){
-  const rect = renderer.domElement.getBoundingClientRect();
-  pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-  pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-}
-  
   }
 
   function updateLabels(){
@@ -1781,57 +1740,7 @@ window.addEventListener("load", () => {
     console.error(e);
   }
 });
-
-// Drag handlers for Hands.L / Hands.R (mouse + touch via pointer events)
-function onPointerDown(event){
-  if (!draggableHands.length || !handsModel) return;
-
-  setPointerFromEvent(event);
-  raycaster.setFromCamera(pointer, camera);
-
-  const hits = raycaster.intersectObjects(draggableHands, true);
-  if (!hits.length) return;
-
-  // Move the whole hand group, not just a child mesh
-  let picked = hits[0].object;
-  while (picked.parent && picked.parent !== handsModel) {
-    picked = picked.parent;
-  }
-
-  draggedHand = picked;
-
-  dragPlane.setFromNormalAndCoplanarPoint(
-    camera.getWorldDirection(dragPlane.normal),
-    hits[0].point
-  );
-  dragOffset.copy(hits[0].point).sub(draggedHand.position);
-
-  controls.enabled = false;
-}
-
-function onPointerMove(event){
-  if (!draggedHand) return;
-
-  setPointerFromEvent(event);
-  raycaster.setFromCamera(pointer, camera);
-
-  const hitPoint = new THREE.Vector3();
-  if (raycaster.ray.intersectPlane(dragPlane, hitPoint)) {
-    draggedHand.position.copy(hitPoint.sub(dragOffset));
-  }
-}
-
-function onPointerUp(){
-  if (draggedHand){
-    draggedHand = null;
-    controls.enabled = true;
-  }
-}
-
-renderer.domElement.addEventListener("pointerdown", onPointerDown);
-renderer.domElement.addEventListener("pointermove", onPointerMove);
-window.addEventListener("pointerup", onPointerUp);
-
+ 
 /* ==== Loop & resize ==== */
 addEventListener("resize", ()=>{
   camera.aspect = innerWidth/innerHeight;
