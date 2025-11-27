@@ -1038,6 +1038,8 @@ if (mode === "seatednogravity"){
 }
 
 /* ==== Therapist Hands Model Logic ==== */
+let rightHandModel = null;
+let leftHandModel = null;  
 function loadHandsModel(){
     if (handsModel) return;
     $("msg").textContent = "Loading therapist hands model...";
@@ -1047,6 +1049,34 @@ function loadHandsModel(){
         HANDS_MODEL_URL,
         (gltf) => {
             handsModel = gltf.scene;
+          // Identify individual hands
+          rightHandModel = handsModel.getObjectByName("Hand_R") || handsModel.getObjectByName("hand_R");
+          leftHandModel  = handsModel.getObjectByName("Hand_L") || handsModel.getObjectByName("hand_L");
+          // If names don't match, auto-detect by size (right hand = larger X position)
+if (!rightHandModel || !leftHandModel) {
+    const possible = [];
+    handsModel.traverse(o => {
+        if (o.isMesh && o.parent !== handsModel) {
+            // parent of hand mesh is the hand root
+            possible.push(o.parent);
+        }
+    });
+    // Remove duplicates
+    const roots = [...new Set(possible)];
+
+    if (roots.length === 2) {
+        // Decide left/right based on world X position
+        roots.sort((a,b) => {
+            a.updateWorldMatrix(true, false);
+            b.updateWorldMatrix(true, false);
+            return a.getWorldPosition(new THREE.Vector3()).x - 
+                   b.getWorldPosition(new THREE.Vector3()).x;
+        });
+        leftHandModel  = roots[0];
+        rightHandModel = roots[1];
+    }
+}
+
             handsModel.visible = false;
             
             // Set scale to match the patient model scale
@@ -1086,6 +1116,7 @@ function toggleHands(){
          btn?.classList.remove('lockOn');
     }
 }
+
 // ============= NEW CLEAN HAND TUNER LOGIC =============
 const handTunerPanel = document.getElementById("handTuner");
 const handSideSel = document.getElementById("handSideSel");
@@ -1097,7 +1128,6 @@ function hideHandTuner(){
   handTunerPanel.style.display = "none";
 }
 
-// Attach +/– button actions
 document.querySelectorAll(".handStep").forEach(btn => {
   btn.addEventListener("click", () => {
 
@@ -1105,9 +1135,9 @@ document.querySelectorAll(".handStep").forEach(btn => {
     const hand = (side === "R") ? rightHandModel : leftHandModel;
     if (!hand) return;
 
-    const mode = btn.dataset.mode;     // pos | rot
-    const axis = btn.dataset.axis;     // x y z
-    const dir  = btn.dataset.dir === "+" ? 1 : -1;
+    const mode = btn.dataset.mode;     // "pos" or "rot"
+    const axis = btn.dataset.axis;     // "x", "y", "z"
+    const dir  = (btn.dataset.dir === "+") ? 1 : -1;
 
     if (mode === "pos") {
       hand.position[axis] += 0.01 * dir;
@@ -1117,7 +1147,6 @@ document.querySelectorAll(".handStep").forEach(btn => {
   });
 });
   
-
 function applyBodyPositionFromSelection(){
   if (!model || !skeleton) return;
   const key = actionSel?.value;
