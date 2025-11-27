@@ -731,7 +731,14 @@ POSE_OVERRIDES["Gastrocnemius:low"] = { x:-1.520, y:0.800, z:0.550, rx:1.571, ry
 const HAND_OVERRIDES = {};
 HAND_OVERRIDES["Capital_Extension:high"] = {"handRX":4.48144135475158,"handRY":-2.339544000476599,"handRZ":-5.036240470409384,"handRRX":0.40314754466478475,"handRRY":0.31039168298945663,"handRRZ":-2.8439977855167187,"handLX":-0.7665857076644897,"handLY":-0.014649659395217896,"handLZ":-0.6266626119613647,"handLRX":0.06871087793963566,"handLRY":-0.37738109131488035,"handLRZ":2.773803871550762};
   
-  
+/* ==== NEUTRAL HAND POSITION (New Default) ==== */
+const HAND_NEUTRAL_POSE = {
+    // These coordinates place the hands in a neutral, out-of-the-way position
+    handRX: 0.15, handRY: 1.25, handRZ: 0.5, 
+    handRRX: 0, handRRY: 0, handRRZ: 0,   
+    handLX: -0.15, handLY: 1.25, handLZ: 0.5, 
+    handLRX: 0, handLRY: 0, handLRZ: 0  
+};  
 let CURRENT_BODY_TEST = null;
 let CURRENT_BODY_BUCKET = "high"; // "high" or "low"
   
@@ -957,28 +964,38 @@ function setBodyMode(mode){
     applyLimbOverridesFromOverride(POSE_OVERRIDES[key]);
   }
 
-  // === NEW: Therapist Hand Overrides (separate dictionary) ===
-if (HAND_OVERRIDES[key]) {
-    const h = HAND_OVERRIDES[key];
+// === NEW: Therapist Hand Overrides (separate dictionary) ===
+  // Determines the key for the currently selected test and grade bucket (e.g., "Capital_Extension:high")
+  const key = CURRENT_BODY_TEST && CURRENT_BODY_BUCKET
+    ? `${CURRENT_BODY_TEST}:${CURRENT_BODY_BUCKET}`
+    : null;
 
-    if (rightHandModel){
-        if (h.handRX  != null) rightHandModel.position.x = h.handRX;
-        if (h.handRY  != null) rightHandModel.position.y = h.handRY;
-        if (h.handRZ  != null) rightHandModel.position.z = h.handRZ;
-        if (h.handRRX != null) rightHandModel.rotation.x = h.handRRX;
-        if (h.handRRY != null) rightHandModel.rotation.y = h.handRRY;
-        if (h.handRRZ != null) rightHandModel.rotation.z = h.handRRZ;
-    }
+  // FIX: Choose the specific saved pose if it exists, otherwise use the neutral default position.
+  const poseToApply = key && HAND_OVERRIDES[key]
+    ? HAND_OVERRIDES[key]
+    : HAND_NEUTRAL_POSE;
 
-    if (leftHandModel){
-        if (h.handLX  != null) leftHandModel.position.x = h.handLX;
-        if (h.handLY  != null) leftHandModel.position.y = h.handLY;
-        if (h.handLZ  != null) leftHandModel.position.z = h.handLZ;
-        if (h.handLRX != null) leftHandModel.rotation.x = h.handLRX;
-        if (h.handLRY != null) leftHandModel.rotation.y = h.handLRY;
-        if (h.handLRZ != null) leftHandModel.rotation.z = h.handLRZ;
-    }
-}
+  if (poseToApply) {
+    const h = poseToApply;
+
+    if (rightHandModel){
+        if (h.handRX  != null) rightHandModel.position.x = h.handRX;
+        if (h.handRY  != null) rightHandModel.position.y = h.handRY;
+        if (h.handRZ  != null) rightHandModel.position.z = h.handRZ;
+        if (h.handRRX != null) rightHandModel.rotation.x = h.handRRX;
+        if (h.handRRY != null) rightHandModel.rotation.y = h.handRRY;
+        if (h.handRRZ != null) rightHandModel.rotation.z = h.handRRZ;
+    }
+
+    if (leftHandModel){
+        if (h.handLX  != null) leftHandModel.position.x = h.handLX;
+        if (h.handLY  != null) leftHandModel.position.y = h.handLY;
+        if (h.handLZ  != null) leftHandModel.position.z = h.handLZ;
+        if (h.handLRX != null) leftHandModel.rotation.x = h.handLRX;
+        if (h.handLRY != null) leftHandModel.rotation.y = h.handLRY;
+        if (h.handLRZ != null) leftHandModel.rotation.z = h.handLRZ;
+    }
+  }
 
   // Optional arm/hand fine-tune rotations (shortcut from POSE_OVERRIDES) 
   if (key && POSE_OVERRIDES[key] && skeleton){
