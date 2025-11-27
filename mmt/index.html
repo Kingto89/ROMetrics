@@ -423,7 +423,6 @@ function setupTransformControls() {
 }
 setupTransformControls();
 
-// The togglePracticeMode function comes AFTER setupTransformControls is defined
 function togglePracticeMode() {
     // Check 1: Has the hands model been loaded into the scene yet?
     if (!handsModel) {
@@ -454,27 +453,34 @@ function togglePracticeMode() {
         transformControls.showY = true;
         transformControls.showZ = true; 
         
-        // 2. ATTACH & VISUALIZE
+        // 2. ATTACH AXES TO THE ACTIVE HAND
         transformControls.attach(currentActiveHand); 
-        transformControls.visible = true; 
+        transformControls.visible = true; // Make the widget visible
         
         // 3. Apply visual and control locks
         highlightActiveHand(currentActiveHand);
-        controls.enabled = false; 
+        controls.enabled = false; // Disable camera orbit
+        
+        console.log("Entered Practice Mode: Right Hand, Translate");
 
     } else {
         // --- EXIT PRACTICE MODE ---
         practicePlacementBtn.classList.remove('lockOn');
         handSwitchBtn.classList.remove('lockOn'); // Remove glow from R/L Hand button
         
-        // 1. Hide movement widget
+        // 1. Reset TransformControls state
         transformControls.detach();
         transformControls.visible = false;
         
-        // 2. Reset controls and restore pose
+        // 2. Re-enable controls and restore pose
         highlightActiveHand(null);
         controls.enabled = true; 
+        currentActiveHand = null;
+
+        // 3. Restore the correct hand pose for the current MMT test selection
         applyBodyPositionFromSelection(); 
+
+        console.log("Exited Practice Mode.");
     }
 }
 // Wire the existing Practice Placement button
