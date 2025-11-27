@@ -363,7 +363,51 @@ setupTransformControls(); // <-- Must call the setup function
 
 // The togglePracticeMode function comes AFTER setupTransformControls is defined
 function togglePracticeMode() {
-// ... (Your function logic here) ...
+    // Ensure hands are loaded before entering practice mode
+    if (!rightHandModel || !leftHandModel) {
+        alert("Please toggle 'Therapist Hands' on first.");
+        return;
+    }
+
+    isPracticeModeActive = !isPracticeModeActive;
+    
+    if (isPracticeModeActive) {
+        // --- ENTER PRACTICE MODE ---
+        practicePlacementBtn.classList.add('lockOn'); // Visually indicate active mode
+        
+        // Initial state: Right Hand, Translate Mode
+        currentActiveHand = rightHandModel;
+        currentTransformMode = 'translate';
+        
+        // Configure TransformControls for active manipulation
+        transformControls.setMode(currentTransformMode);
+        transformControls.showX = true; // Show all axes for move/rotate
+        transformControls.showY = true;
+        transformControls.showZ = true; 
+        transformControls.attach(currentActiveHand); // Attach to the default hand
+        transformControls.visible = true; // Make the widget visible
+
+        // Disable OrbitControls while in practice mode
+        controls.enabled = false; 
+
+        console.log("Entered Practice Mode: Right Hand, Translate");
+
+    } else {
+        // --- EXIT PRACTICE MODE ---
+        practicePlacementBtn.classList.remove('lockOn');
+        
+        // Reset TransformControls state
+        transformControls.detach();
+        transformControls.visible = false;
+        transformControls.showX = false;
+        transformControls.showY = false;
+        transformControls.showZ = false;
+
+        // Re-enable OrbitControls
+        controls.enabled = true; 
+        currentActiveHand = null;
+        console.log("Exited Practice Mode.");
+    }
 }
 
 // Wire the existing Practice Placement button
