@@ -1149,6 +1149,46 @@ document.querySelectorAll(".handStep").forEach(btn => {
     }
   });
 });
+// ============= SAVE HAND POSE TO CONSOLE =============
+document.getElementById("handSaveBtn").addEventListener("click", () => {
+
+  if (!rightHandModel || !leftHandModel) {
+    console.warn("Hands not loaded — cannot save.");
+    return;
+  }
+
+  const out = {
+    R: {
+      pos: {
+        x: rightHandModel.position.x,
+        y: rightHandModel.position.y,
+        z: rightHandModel.position.z
+      },
+      rot: {
+        x: rightHandModel.rotation.x,
+        y: rightHandModel.rotation.y,
+        z: rightHandModel.rotation.z
+      }
+    },
+    L: {
+      pos: {
+        x: leftHandModel.position.x,
+        y: leftHandModel.position.y,
+        z: leftHandModel.position.z
+      },
+      rot: {
+        x: leftHandModel.rotation.x,
+        y: leftHandModel.rotation.y,
+        z: leftHandModel.rotation.z
+      }
+    }
+  };
+
+  console.log("==== HAND POSE SAVE ====");
+  console.log(JSON.stringify(out, null, 2));
+  alert("Saved! Check console.");
+});
+  
 
 function degToRad(d){ return d * Math.PI / 180; }
 function seatPoseOnlyLegs(){
@@ -1841,6 +1881,10 @@ addEventListener("resize", ()=>{
     <button class="handStep" data-mode="rot" data-axis="z" data-dir="-">–</button>
     <button class="handStep" data-mode="rot" data-axis="z" data-dir="+">+</button>
   </div>
+  <button id="handSaveBtn" style="margin-top:12px;width:100%;background:#10b981;color:white;">
+  Save Hand Pose
+</button>
+
 </div>
 
   
