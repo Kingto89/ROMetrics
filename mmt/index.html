@@ -742,9 +742,11 @@ POSE_OVERRIDES["Gastrocnemius:low"] = { x:-1.520, y:0.800, z:0.550, rx:1.571, ry
   
 let CURRENT_BODY_TEST = null;
 let CURRENT_BODY_BUCKET = "high"; // "high" or "low"
+let GLOBAL_PF_DEG = 0;            // plantarflexion angle for both feet (default 0°)
   
 // Decide which pose family to use ("high" = Grades 3–5 family, "low" = Grades 0–2 family)
 function getGradeBucketForTest(testKey){
+
   // 1) Trunk (except pelvis) + Gastroc use the Grading Exceptions menu (5–1 / 0)
   if (EXCEPTION_TESTS.has(testKey)){
     if (!gradeExceptions) return "high";
