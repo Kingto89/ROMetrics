@@ -173,6 +173,75 @@ select,button,input[type=range]{width:100%;margin:6px 0 8px 0;padding:8px 10px;b
 </div>
 
 <div id="msg">Loading…</div>
+
+<!-- ================= HAND TUNER PANEL ================= -->
+<div id="handTuner" style="
+  position:fixed;
+  right:16px;
+  bottom:16px;
+  width:260px;
+  background:#ffffffcc;
+  color:#111;
+  padding:14px;
+  border-radius:12px;
+  backdrop-filter:blur(6px);
+  box-shadow:0 0 12px #0003;
+  font-family:system-ui;
+  display:none;
+  z-index:9999;
+">
+  <div style="font-weight:600;margin-bottom:8px;">Therapist Hand Tuner</div>
+
+  <label>Side:</label>
+  <select id="handSideSel">
+    <option value="R">Right Hand</option>
+    <option value="L">Left Hand</option>
+  </select>
+
+  <div style="margin-top:12px;font-weight:600;">Position</div>
+
+  <div class="btnrow" style="display:flex;gap:8px;margin-top:4px;">
+    <span style="width:28px;">X</span>
+    <button class="step" data-hand="pos" data-axis="x" data-dir="-">–</button>
+    <button class="step" data-hand="pos" data-axis="x" data-dir="+">+</button>
+  </div>
+
+  <div class="btnrow" style="display:flex;gap:8px;margin-top:4px;">
+    <span style="width:28px;">Y</span>
+    <button class="step" data-hand="pos" data-axis="y" data-dir="-">–</button>
+    <button class="step" data-hand="pos" data-axis="y" data-dir="+">+</button>
+  </div>
+
+  <div class="btnrow" style="display:flex;gap:8px;margin-top:4px;">
+    <span style="width:28px;">Z</span>
+    <button class="step" data-hand="pos" data-axis="z" data-dir="-">–</button>
+    <button class="step" data-hand="pos" data-axis="z" data-dir="+">+</button>
+  </div>
+
+  <div style="margin-top:12px;font-weight:600;">Rotation</div>
+
+  <div class="btnrow" style="display:flex;gap:8px;margin-top:4px;">
+    <span style="width:28px;">RX</span>
+    <button class="step" data-hand="rot" data-axis="x" data-dir="-">–</button>
+    <button class="step" data-hand="rot" data-axis="x" data-dir="+">+</button>
+  </div>
+
+  <div class="btnrow" style="display:flex;gap:8px;margin-top:4px;">
+    <span style="width:28px;">RY</span>
+    <button class="step" data-hand="rot" data-axis="y" data-dir="-">–</button>
+    <button class="step" data-hand="rot" data-axis="y" data-dir="+">+</button>
+  </div>
+
+  <div class="btnrow" style="display:flex;gap:8px;margin-top:4px;">
+    <span style="width:28px;">RZ</span>
+    <button class="step" data-hand="rot" data-axis="z" data-dir="-">–</button>
+    <button class="step" data-hand="rot" data-axis="z" data-dir="+">+</button>
+  </div>
+
+  <button id="handFlipPalm" style="margin-top:10px;width:100%;">Flip Palm</button>
+  <button id="handSaveBtn" style="margin-top:10px;width:100%;background:#10b981;color:white;">Save Hands</button>
+</div>
+  
 <canvas id="c"></canvas>
 
 <!-- Right-side notes panel -->
@@ -1198,6 +1267,7 @@ function screenToNDC(event){
   mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
   mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 }
+
 /* ================= HAND HELPER FUNCTIONS ================= */
 
 function getHandBySide(side){
@@ -1953,6 +2023,38 @@ function ensurePoseTuner(){
       applyOverride(key);
     });
   });
+
+// ================== HAND TUNER BUTTON HANDLER ==================
+document.querySelectorAll('#handTuner .step[data-hand]').forEach(btn=>{
+  btn.addEventListener('click', () => {
+
+    const mode = btn.dataset.hand;  // "pos" or "rot"
+    const ax   = btn.dataset.axis;  // x, y, z
+    const dir  = btn.dataset.dir === '+' ? 1 : -1;
+
+    const stepPos = 0.01;   // small movement
+    const stepRot = 0.03;   // small rotation (radians)
+
+    // Which hand? (Right or Left)
+    const side = document.getElementById("handSideSel").value;
+    const base = side === "R" ? "hand_R" : "hand_L";
+
+    // Compose storage key
+    const key = mode === "pos"
+      ? `${base}_${ax}`     // hand_R_x, hand_L_y, etc.
+      : `${base}r${ax}`;    // hand_Rrx, hand_Lrz, etc.
+
+    // Ensure value exists
+    if(!(key in POSE_OVERRIDES)) POSE_OVERRIDES[key] = 0;
+
+    // Apply change
+    POSE_OVERRIDES[key] += (mode==="pos" ? stepPos : stepRot) * dir;
+
+    // Render new hand pose
+    applyPoseOverride();
+  });
+});
+  
 
 // ================== HAND TUNER BUTTON HANDLER ==================
 document.querySelectorAll('#handTuner .step[data-hand]').forEach(btn=>{
