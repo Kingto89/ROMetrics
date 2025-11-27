@@ -168,6 +168,13 @@ select,button,input[type=range]{width:100%;margin:6px 0 8px 0;padding:8px 10px;b
   <button id="toggleHandsBtn" class="mini" title="Toggle therapist’s resistance and stabilizing hands">
     Toggle Therapist Hands
   </button>
+  
+  <button id="lockRoomBtn" class="mini" title="Lock/Unlock the room environment">
+    🔒 Lock Room
+  </button>
+  <button id="practicePlacementBtn" class="mini" title="Practice Hand Placement Mode">
+    Practice Placement
+  </button>
 </div>
 </div>
 </div>
@@ -232,6 +239,31 @@ const resistanceText = $("resistanceText");
 const instructionText = $("instructionText");
 const gradeMain = $("grade-main");
 const gradeExceptions = $("GradingExceptions");  
+
+/* ==== NEW: Lock Room Toggle Logic ==== */
+const lockRoomBtn = $("lockRoomBtn");
+let isRoomLocked = false;
+
+function toggleRoomLock() {
+    isRoomLocked = !isRoomLocked;
+
+    if (isRoomLocked) {
+        // Lock the room: disable OrbitControls and update button visual/text
+        controls.enabled = false;
+        lockRoomBtn.classList.add('lockOn');
+        lockRoomBtn.innerHTML = '✅ Room Locked'; // or use 🔓/🔒 emoji logic
+
+    } else {
+        // Unlock the room: enable OrbitControls and update button visual/text
+        controls.enabled = true;
+        lockRoomBtn.classList.remove('lockOn');
+        lockRoomBtn.innerHTML = '🔒 Lock Room';
+    }
+}
+
+// Wire the new button
+if (lockRoomBtn) lockRoomBtn.addEventListener('click', toggleRoomLock);
+/* ==================================== */  
 
 // Enable only the relevant grading menu for the selected test:
 // - EXCEPTION_TESTS (trunk + gastroc): use Grading Exceptions (5–1) only
