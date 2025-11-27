@@ -1098,6 +1098,9 @@ function loadHandsModel(){
       });
 
       handsModel.visible = false;
+      // === Force palm-down orientation on load ===
+      // Rotate 180° around X axis to flip the palm downward
+      handsModel.rotation.x = Math.PI;
 
       // Therapist hands smaller than patient
       handsModel.scale.set(0.28, 0.28, 0.28);   // ← adjust between 0.20–0.35
