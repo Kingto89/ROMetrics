@@ -536,7 +536,14 @@ let GLOBAL_PF_DEG = 0; // shared plantarflex angle for both feet
 // ADDED: Hands model loading variables
 const HANDS_MODEL_URL = "https://raw.githubusercontent.com/Kingto89/ROMetrics.com/main/assets/Hands.glb";
 let handsModel = null;
-let handsSkeleton = null;   // <— NEW
+ // ==== Hands drag state ====
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+const dragPlane = new THREE.Plane();
+const dragOffset = new THREE.Vector3();
+const dragIntersectPoint = new THREE.Vector3();
+let draggingHands = false;
+ 
 
 // Helper: log all therapist-hand bones to the console
 function logHandsBones(){
@@ -1123,6 +1130,61 @@ function toggleHands(){
     }
 }
 
+ // ==== Hands drag handlers ====
+
+// Convert pointer position to normalized device coordinates
+function getMouseNDC(event){
+  const rect = canvas.getBoundingClientRect();
+  mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+}
+
+function onPointerDown(event){
+  // Only start drag when clicking on the 3D canvas, not the UI panels
+  if (event.target !== canvas) return;
+  if (!handsModel || !handsModel.visible) return;
+
+  getMouseNDC(event);
+  raycaster.setFromCamera(mouse, camera);
+
+  // Check if the ray hits the hands rig
+  const hits = raycaster.intersectObject(handsModel, true);
+  if (!hits.length) return;
+
+  const hit = hits[0];
+
+  // Define a horizontal drag plane through the hit point
+  const up = new THREE.Vector3(0, 1, 0);
+  dragPlane.setFromNormalAndCoplanarPoint(up, hit.point);
+
+  // Intersection point on plane is the hit point itself at start
+  dragIntersectPoint.copy(hit.point);
+
+  // Offset between the hands origin and the hit point on the plane
+  dragOffset.copy(handsModel.position).sub(dragIntersectPoint);
+
+  draggingHands = true;
+  if (controls) controls.enabled = false;
+}
+
+function onPointerMove(event){
+  if (!draggingHands || !handsModel) return;
+
+  getMouseNDC(event);
+  raycaster.setFromCamera(mouse, camera);
+
+  if (raycaster.ray.intersectPlane(dragPlane, dragIntersectPoint)){
+    // Move the hands so their origin follows the plane, plus the stored offset
+    handsModel.position.copy(dragIntersectPoint).add(dragOffset);
+  }
+}
+
+function onPointerUp(){
+  if (!draggingHands) return;
+  draggingHands = false;
+  if (controls) controls.enabled = true;
+}
+ 
 function applyBodyPositionFromSelection(){
   if (!model || !skeleton) return;
   const key = actionSel?.value;
@@ -1776,6 +1838,12 @@ window.addEventListener("load", () => {
     console.error(e);
   }
 });
+
+// ==== Hands drag events ====
+window.addEventListener('pointerdown', onPointerDown);
+window.addEventListener('pointermove', onPointerMove);
+window.addEventListener('pointerup',   onPointerUp);
+  
  
 /* ==== Loop & resize ==== */
 addEventListener("resize", ()=>{
