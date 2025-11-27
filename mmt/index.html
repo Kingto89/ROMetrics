@@ -547,6 +547,11 @@ const dragPlane = new THREE.Plane();
 const dragOffset = new THREE.Vector3();
 const dragIntersectPoint = new THREE.Vector3();
 let draggingHands = false;
+let handsRotateMode = false;   // false = move mode, true = rotate mode
+let multiTouch = false;
+let lastTouchX = 0, lastTouchY = 0;
+let lastPinchDist = null;
+let lastTwistAngle = null;
  
 
 // Helper: log all therapist-hand bones to the console
@@ -1143,51 +1148,130 @@ function getMouseNDC(event){
   mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 }
 
-function onPointerDown(event){
-  // Only start drag when clicking on the 3D canvas, not the UI panels
-  if (event.target !== canvas) return;
-  if (!handsModel || !handsModel.visible) return;
 
-  getMouseNDC(event);
+// ==== NEW FULL 3D MOVE HANDLERS ====
+
+function onPointerDownHands(event){
+  if (!handsModel || !handsModel.visible) return;
+  if (event.target !== renderer.domElement) return;
+
+  screenToNDC(event);
   raycaster.setFromCamera(mouse, camera);
 
-  // Check if the ray hits the hands rig
   const hits = raycaster.intersectObject(handsModel, true);
   if (!hits.length) return;
 
-  const hit = hits[0];
+  const hitPoint = hits[0].point;
 
-  // Define a horizontal drag plane through the hit point
-  const up = new THREE.Vector3(0, 1, 0);
-  dragPlane.setFromNormalAndCoplanarPoint(up, hit.point);
+// === FREE 3D MOVEMENT PLANE ===
+// vertical plane facing the camera → allows up/down/side movement
+const normal = new THREE.Vector3(0, 0, 1); 
+dragPlane.setFromNormalAndCoplanarPoint(normal, hitPoint);
 
-  // Intersection point on plane is the hit point itself at start
-  dragIntersectPoint.copy(hit.point);
+// offset between click point & hand origin
+dragOffset.copy(handsModel.position).sub(hitPoint);
 
-  // Offset between the hands origin and the hit point on the plane
-  dragOffset.copy(handsModel.position).sub(dragIntersectPoint);
 
   draggingHands = true;
-  if (controls) controls.enabled = false;
+  controls.enabled = false;
 }
 
-function onPointerMove(event){
-  if (!draggingHands || !handsModel) return;
+function onPointerMoveHands(event){
+  if (!handsModel || !handsModel.visible) return;
 
-  getMouseNDC(event);
-  raycaster.setFromCamera(mouse, camera);
+  // === TOUCH BEHAVIOR ===
+  if (event.pointerType === "touch" && event.touches){
+    const touches = event.touches;
 
-  if (raycaster.ray.intersectPlane(dragPlane, dragIntersectPoint)){
-    // Move the hands so their origin follows the plane, plus the stored offset
-    handsModel.position.copy(dragIntersectPoint).add(dragOffset);
+    // === 1 FINGER = MOVE ===
+    if (touches.length === 1){
+      multiTouch = false;
+
+      const t = touches[0];
+
+      screenToNDC(event);
+      raycaster.setFromCamera(mouse, camera);
+
+      if (raycaster.ray.intersectPlane(dragPlane, dragIntersectPoint)){
+        handsModel.position.copy(dragIntersectPoint).add(dragOffset);
+      }
+
+      lastTouchX = t.clientX;
+      lastTouchY = t.clientY;
+      return;
+    }
+
+    // === 2 FINGERS = ROTATION + PINCH ===
+    if (touches.length === 2){
+      multiTouch = true;
+
+      const t1 = touches[0];
+      const t2 = touches[1];
+
+      // movement deltas for rotation
+      const midX = (t1.clientX + t2.clientX) / 2;
+      const midY = (t1.clientY + t2.clientY) / 2;
+
+      const dx = midX - lastTouchX;
+      const dy = midY - lastTouchY;
+
+      // rotate X/Y (tilt + turn)
+      handsModel.rotation.y += dx * 0.01;  // turn left/right
+      handsModel.rotation.x += dy * 0.01;  // tilt up/down
+
+      lastTouchX = midX;
+      lastTouchY = midY;
+
+      // === pinch for forward/back ===
+      const dist = Math.hypot(
+        t2.clientX - t1.clientX,
+        t2.clientY - t1.clientY
+      );
+
+      if (lastPinchDist !== null){
+        const delta = dist - lastPinchDist;
+        const dir = new THREE.Vector3();
+        camera.getWorldDirection(dir);
+        handsModel.position.addScaledVector(dir, delta * 0.005);
+      }
+
+      lastPinchDist = dist;
+
+      // === twist for Z rotation ===
+      const angle = Math.atan2(
+        t2.clientY - t1.clientY,
+        t2.clientX - t1.clientX
+      );
+
+      if (lastTwistAngle !== null){
+        handsModel.rotation.z += (angle - lastTwistAngle);
+      }
+
+      lastTwistAngle = angle;
+
+      return;
+    }
+  }
+
+  // === MOUSE BEHAVIOR ===
+  if (!multiTouch){
+    if (!draggingHands) return;
+
+    screenToNDC(event);
+    raycaster.setFromCamera(mouse, camera);
+
+    if (raycaster.ray.intersectPlane(dragPlane, dragIntersectPoint)){
+      handsModel.position.copy(dragIntersectPoint).add(dragOffset);
+    }
   }
 }
 
-function onPointerUp(){
-  if (!draggingHands) return;
+
+function onPointerUpHands(){
   draggingHands = false;
-  if (controls) controls.enabled = true;
+  controls.enabled = true;
 }
+
  
 function applyBodyPositionFromSelection(){
   if (!model || !skeleton) return;
