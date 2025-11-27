@@ -1068,67 +1068,72 @@ if (mode === "seatednogravity"){
 
 /* ==== Therapist Hands Model Logic ==== */
 let rightHandModel = null;
-let leftHandModel = null;  
+let leftHandModel = null;  
 function loadHandsModel(){
-    if (handsModel) return;
-    $("msg").textContent = "Loading therapist hands model...";
-    
-    // Using the existing configured loader for consistency
-    loader.load(
-        HANDS_MODEL_URL,
-        (gltf) => {
-            handsModel = gltf.scene;
-          // Identify individual hands
-          rightHandModel = handsModel.getObjectByName("Hand_R") || handsModel.getObjectByName("hand_R");
-          leftHandModel  = handsModel.getObjectByName("Hand_L") || handsModel.getObjectByName("hand_L");
-          // If names don't match, auto-detect by size (right hand = larger X position)
+    if (handsModel) return;
+    $("msg").textContent = "Loading therapist hands model...";
+    
+    // Using the existing configured loader for consistency
+    loader.load(
+        HANDS_MODEL_URL,
+        (gltf) => {
+            handsModel = gltf.scene;
+          // Identify individual hands
+          rightHandModel = handsModel.getObjectByName("Hand_R") || handsModel.getObjectByName("hand_R");
+          leftHandModel  = handsModel.getObjectByName("Hand_L") || handsModel.getObjectByName("hand_L");
+          // If names don't match, auto-detect by size (right hand = larger X position)
 if (!rightHandModel || !leftHandModel) {
-    const possible = [];
-    handsModel.traverse(o => {
-        if (o.isMesh && o.parent !== handsModel) {
-            // parent of hand mesh is the hand root
-            possible.push(o.parent);
-        }
-    });
-    // Remove duplicates
-    const roots = [...new Set(possible)];
+    const possible = [];
+    handsModel.traverse(o => {
+        if (o.isMesh && o.parent !== handsModel) {
+            // parent of hand mesh is the hand root
+            possible.push(o.parent);
+        }
+    });
+    // Remove duplicates
+    const roots = [...new Set(possible)];
 
-    if (roots.length === 2) {
-        // Decide left/right based on world X position
-        roots.sort((a,b) => {
-            a.updateWorldMatrix(true, false);
-            b.updateWorldMatrix(true, false);
-            return a.getWorldPosition(new THREE.Vector3()).x - 
-                   b.getWorldPosition(new THREE.Vector3()).x;
-        });
-        leftHandModel  = roots[0];
-        rightHandModel = roots[1];
-    }
+    if (roots.length === 2) {
+        // Decide left/right based on world X position
+        roots.sort((a,b) => {
+            a.updateWorldMatrix(true, false);
+            b.updateWorldMatrix(true, false);
+            return a.getWorldPosition(new THREE.Vector3()).x - 
+                   b.getWorldPosition(new THREE.Vector3()).x;
+        });
+        leftHandModel  = roots[0];
+        rightHandModel = roots[1];
+    }
 }
 
-            handsModel.visible = false;
-            
-            // Set scale to match the patient model scale
-            handsModel.scale.set(0.20, 0.20, 0.20);
-            // Initial position guess: centered in front of the patient
-            handsModel.position.set(0, 1.2, 0.5); 
-            
-            // Note: Hand.L and Hand.R meshes are inside handsModel, 
-            // their movement must be handled via the Pose Tuner or separate control logic later.
-            scene.add(handsModel);
-            $("msg").textContent = "✅ Hands model ready.";
-        },
-        (xhr) => {
-            const pct = xhr.lengthComputable ? Math.min(100, Math.round(100*xhr.loaded/xhr.total)) : null;
-            $("msg").textContent = pct!==null ? `Loading Hands ${pct}%` : "Loading Hands...";
-        },
-        (error) => {
-            console.error("Failed to load Hands model:", error);
-            $("msg").textContent = "⚠️ Failed to load therapist hands.";
-        }
-    );
-}
+            // FIX 1: Set visibility to true immediately on load
+            handsModel.visible = true; 
+            
+            // Set scale to match the patient model scale
+            handsModel.scale.set(0.20, 0.20, 0.20);
+            // Initial position guess: centered in front of the patient
+            handsModel.position.set(0, 1.2, 0.5); 
+            
+            // Note: Hand.L and Hand.R meshes are inside handsModel, 
+            // their movement must be handled via the Pose Tuner or separate control logic later.
+            scene.add(handsModel);
 
+            // FIX 2: Call the function that applies the saved coordinates
+            // This reads the hard-coded HAND_OVERRIDES for the currently selected test/grade.
+            applyBodyPositionFromSelection(); 
+
+            $("msg").textContent = "✅ Hands model ready.";
+        },
+        (xhr) => {
+            const pct = xhr.lengthComputable ? Math.min(100, Math.round(100*xhr.loaded/xhr.total)) : null;
+            $("msg").textContent = pct!==null ? `Loading Hands ${pct}%` : "Loading Hands...";
+        },
+        (error) => {
+            console.error("Failed to load Hands model:", error);
+            $("msg").textContent = "⚠️ Failed to load therapist hands.";
+        }
+    );
+}
 function toggleHands(){
     const btn = $("toggleHandsBtn");
     
@@ -1890,14 +1895,18 @@ function showPoseTuner(show){
 }
 // Init the Pose Tuner once the module + DOM are ready
 window.addEventListener("load", () => {
-  try {
-    ensurePoseTuner();
-    showPoseTuner(true); // dev: show on first load
-  } catch (e) {
-    const m = document.getElementById("msg");
-    if (m) m.textContent = "⚠️ Pose tuner init failed: " + e.message;
-    console.error(e);
-  }
+  try {
+    ensurePoseTuner();
+    showPoseTuner(true); // dev: show on first load
+    
+    // FIX: Load the therapist hands model immediately on page load
+    loadHandsModel(); 
+    
+  } catch (e) {
+    const m = document.getElementById("msg");
+    if (m) m.textContent = "⚠️ Pose tuner init failed: " + e.message;
+    console.error(e);
+  }
 });
  
 /* ==== Loop & resize ==== */
