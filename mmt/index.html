@@ -1375,16 +1375,24 @@ document.getElementById("handSaveBtn").addEventListener("click", () => {
 
 function applyBodyPositionFromSelection(){
   if (!model || !skeleton) return;
-  const key = actionSel?.value;
-  if (!key) return;
 
-  const family = TEST_POSITION[key] || { high:"anatomic", low:"anatomic" };
-  const bucket = getGradeBucketForTest(key); // "high" or "low"
-  const mode = bucket === "low" 
+  const test = actionSel?.value;
+  if (!test) return;
+
+  const bucket = getGradeBucketForTest(test);
+
+  // ★ REQUIRED FOR HAND TUNER ★
+  window.currentMMTtest = test;
+  window.currentMMTgradeBucket = bucket;
+  const key = `${test}:${bucket}`;
+  // ★ END REQUIRED ★
+
+  const family = TEST_POSITION[test] || { high:"anatomic", low:"anatomic" };
+  const mode = bucket === "low"
       ? (family.low  || "anatomic")
       : (family.high || "anatomic");
 
-  CURRENT_BODY_TEST = key;
+  CURRENT_BODY_TEST = test;
   CURRENT_BODY_BUCKET = bucket;
 
   setBodyMode(mode);
@@ -1393,6 +1401,7 @@ function applyBodyPositionFromSelection(){
     poseTunerEl.updateLabels();
   }
 }
+
  
 /* ==== Wire UI ==== */
 const toggleHandsBtn = $("toggleHandsBtn"); // Reference the new single button
