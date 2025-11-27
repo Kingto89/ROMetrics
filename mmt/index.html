@@ -630,7 +630,7 @@ const TEST_POSITION = {
 // Per-test pose overrides (absolute position + rotation) keyed by "TestKey:high" / "TestKey:low"
 const POSE_OVERRIDES = {};
 POSE_OVERRIDES["Capital_Extension:high"] = { x:-0.800, y:0.820, z:0.330, rx:-1.571, ry:3.142, rz:1.222, pf: 45 }; //prone head off
-POSE_OVERRIDES["Capital_Extension:low"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35. headX: 20 }; //supine
+POSE_OVERRIDES["Capital_Extension:low"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35, headX: 20 }; //supine
 POSE_OVERRIDES["Cervical_Extension:high"]  = { x:-0.800, y:0.820, z:0.330, rx:-1.571, ry:3.142, rz:1.222, pf: 45 };
 POSE_OVERRIDES["Cervical_Extension:low"]   = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };
 POSE_OVERRIDES["Capital_Flexion:high"] = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };  
@@ -832,15 +832,14 @@ function applyLimbOverridesFromOverride(o){
     if (o.spineY !== undefined) spine.rotateY(rad(o.spineY));
     if (o.spineZ !== undefined) spine.rotateZ(rad(o.spineZ));
   }  
- //  Requested Manual Override for "head" bone ---
+// --- START: Requested Manual Override for "head" bone ---
   const head = get("head");
   if (head){
     if (o.headX !== undefined) head.rotateX(rad(o.headX));
     if (o.headY !== undefined) head.rotateY(rad(o.headY));
     if (o.headZ !== undefined) head.rotateZ(rad(o.headZ));
-  } 
-}
-  
+  }
+}  
 
 // Coarse body-mode: align to bed/cabinet but don't set specific joint test angles
 function setBodyMode(mode){
