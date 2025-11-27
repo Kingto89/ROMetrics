@@ -561,6 +561,9 @@ const draco = new DRACOLoader(); draco.setDecoderPath("https://unpkg.com/three@0
 const ktx2  = new KTX2Loader();  ktx2.setTranscoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/basis/"); ktx2.detectSupport(renderer); loader.setKTX2Loader(ktx2);
 
 let model=null, skeleton=null;
+let rightHandModel = null;
+let leftHandModel = null;
+ 
 const initialBoneRot = new Map();
 let GLOBAL_PF_DEG = 0; // shared plantarflex angle for both feet
 
@@ -1120,13 +1123,13 @@ function loadHandsModel(){
     HANDS_MODEL_URL,
     (gltf) => {
       handsModel = gltf.scene;
-  // Identify left and right hands
-rightHandModel = handsModel.getObjectByName("Hand_Right");
+
+      rightHandModel = handsModel.getObjectByName("Hand_Right");
 leftHandModel  = handsModel.getObjectByName("Hand_Left");
 
-if (!rightHandModel) console.warn("Right hand not found");
-if (!leftHandModel)  console.warn("Left hand not found");    
-handsModel.traverse(o => console.log(o.name));
+console.log("RIGHT:", rightHandModel);
+console.log("LEFT:", leftHandModel);
+
 
       // Try to grab the skeleton from any SkinnedMesh in the hands rig
       handsModel.traverse(obj => {
