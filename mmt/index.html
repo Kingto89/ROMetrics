@@ -204,6 +204,7 @@ select,button,input[type=range]{width:100%;margin:6px 0 8px 0;padding:8px 10px;b
 <script type="module">
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { TransformControls } from "three/addons/controls/TransformControls.js"; // <-- Add the 3D Manipulation Widget  
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
@@ -323,7 +324,31 @@ const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true; controls.dampingFactor = .08;
 controls.minDistance=.6; controls.maxDistance=20;
 controls.target.set(0,1.05,0); 
+// --- START: 3D Manipulation Widget Setup ---
+let transformControls = null;
 
+function setupTransformControls() {
+    if (!transformControls) {
+        transformControls = new TransformControls(camera, renderer.domElement);
+        scene.add(transformControls);
+
+        // Crucial: The Scene Panning & Zooming Rig must pause when the widget is actively dragging.
+        transformControls.addEventListener('dragging-changed', function (event) {
+            controls.enabled = !event.value;
+        });
+
+        // Set the mode to translation (movement) and lock rotation.
+        transformControls.setMode("translate");
+
+        // The widget must only permit X (side-to-side) and Y (up-down) movement.
+        transformControls.showZ = false; 
+        
+        // Hide the widget until a hand is actively attached.
+        transformControls.visible = false;
+    }
+}
+setupTransformControls();
+// --- END: 3D Manipulation Widget Setup ---
 /* Lights */
 scene.add(new THREE.HemisphereLight(0xffffff, 0x8ca0b3, 0.8));
 const key = new THREE.DirectionalLight(0xffffff, 1.1);
@@ -1173,15 +1198,24 @@ if (!rightHandModel || !leftHandModel) {
             // Set scale to match the patient model scale
             handsModel.scale.set(0.20, 0.20, 0.20);
             // Initial position guess: centered in front of the patient
-            handsModel.position.set(0, 1.7, 0.5); 
+            handsModel.position.set(0, 1.4, 0.5); // Adjusted Y to 1.4
             
             // Note: Hand.L and Hand.R meshes are inside handsModel, 
             // their movement must be handled via the Pose Tuner or separate control logic later.
             scene.add(handsModel);
 
-            // FIX 2: Call the function that applies the saved coordinates
-            // This reads the hard-coded HAND_OVERRIDES for the currently selected test/grade.
-            applyBodyPositionFromSelection(); 
+            // --- START: ACTIVATE DRAGGING CONTROL HERE (No Tuner Logic) ---
+            if (transformControls && rightHandModel) {
+                // Attach the right hand model to the widget for immediate dragging access
+                transformControls.attach(rightHandModel);
+                transformControls.visible = true; 
+            }
+            // --- END: ACTIVATE DRAGGING CONTROL HERE ---
+
+
+            // FIX 2: Call the function that applies the saved coordinates
+            // This reads the hard-coded HAND_OVERRIDES for the currently selected test/grade.
+            applyBodyPositionFromSelection(); 
 
             $("msg").textContent = "✅ Hands model ready.";
         },
