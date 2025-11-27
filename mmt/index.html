@@ -1404,14 +1404,25 @@ if (toggleHandsBtn) toggleHandsBtn.addEventListener('click', toggleHands);
 
 // When the test changes, update which grade menu is active, then re-apply pose
 actionSel.addEventListener("change", () => {
+
+  // ★ required for HAND TUNER save
+  window.currentMMTtest = actionSel.value;
+  window.currentMMTgradeBucket = getGradeBucketForTest(actionSel.value);
+
   updateGradeDropdownsForSelection();
   applyBodyPositionFromSelection();
+
   if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
 });
 
 // Normal Grade 3–0 menu: used for all NON-exception tests
 gradeMain.addEventListener("change", () => {
   if (actionSel.value && !EXCEPTION_TESTS.has(actionSel.value)){
+
+    // ★ required for HAND TUNER save
+    window.currentMMTtest = actionSel.value;
+    window.currentMMTgradeBucket = getGradeBucketForTest(actionSel.value);
+
     applyBodyPositionFromSelection();
     if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
   }
@@ -1421,6 +1432,11 @@ gradeMain.addEventListener("change", () => {
 if (gradeExceptions){
   gradeExceptions.addEventListener("change", () => {
     if (actionSel.value && EXCEPTION_TESTS.has(actionSel.value)){
+
+      // ★ required for HAND TUNER save
+      window.currentMMTtest = actionSel.value;
+      window.currentMMTgradeBucket = getGradeBucketForTest(actionSel.value);
+
       applyBodyPositionFromSelection();
       if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
     }
@@ -1429,7 +1445,6 @@ if (gradeExceptions){
 
 // Initialize menus on first load
 updateGradeDropdownsForSelection();
-
 
 
 /* ==== Side panel + Markdown loading ==== */
