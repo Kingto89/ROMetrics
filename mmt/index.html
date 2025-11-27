@@ -252,7 +252,6 @@ const instructionText = $("instructionText");
 
 /* ==== HAND TUNER UI refs ==== */
 const handTuner        = $("handTuner");
-const handSideSel      = $("handSideSel");
 const hxSlider         = $("hx");
 const hySlider         = $("hy");
 const hzSlider         = $("hz");
@@ -1374,14 +1373,6 @@ try {
       leftHandModel.position.set(data.L.pos.x, data.L.pos.y, data.L.pos.z);
       leftHandModel.quaternion.set(data.L.rot.x, data.L.rot.y, data.L.rot.z, data.L.rot.w);
     }
-
-    // Update sliders
-    const activeSide = $("handSideSel").value;
-    loadHandIntoSliders(getHandBySide(activeSide));
-  }
-} catch(e){
-  console.warn("Hand load failed:", e);
-}
   
 }
 
