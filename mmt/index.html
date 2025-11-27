@@ -964,12 +964,13 @@ function setBodyMode(mode){
     applyLimbOverridesFromOverride(POSE_OVERRIDES[key]);
   }
 
-// === NEW: Therapist Hand Overrides (separate dictionary) ===
-  // Determines the key for the currently selected test and grade bucket (e.g., "Capital_Extension:high")
-  const key = CURRENT_BODY_TEST && CURRENT_BODY_BUCKET
-    ? `${CURRENT_BODY_TEST}:${CURRENT_BODY_BUCKET}`
-    : null;
+  // Inside function setBodyMode(mode) { ... }
 
+// ... existing code for model.rotation.set() and applyLimbOverridesFromOverride() ...
+
+  // === NEW: Therapist Hand Overrides (separate dictionary) ===
+  // NOTE: The 'key' variable is already defined from the patient pose logic above.
+  
   // FIX: Choose the specific saved pose if it exists, otherwise use the neutral default position.
   const poseToApply = key && HAND_OVERRIDES[key]
     ? HAND_OVERRIDES[key]
@@ -1394,20 +1395,19 @@ document.getElementById("handSaveBtn").addEventListener("click", () => {
 });
 
 
-
 function applyBodyPositionFromSelection(){
-  if (!model || !skeleton) return;
+  if (!model || !skeleton) return;
+  
+  const test = actionSel?.value;
+  if (!test) return; // <<< THIS LINE MUST BE ADDED BACK
 
-  const test = actionSel?.value;
-  if (!test) return;
+  const bucket = getGradeBucketForTest(test);
 
-  const bucket = getGradeBucketForTest(test);
-
-  // ★ REQUIRED FOR HAND TUNER ★
-  window.currentMMTtest = test;
-  window.currentMMTgradeBucket = bucket;
-  const key = `${test}:${bucket}`;
-  // ★ END REQUIRED ★
+  // ★ REQUIRED FOR HAND TUNER ★
+  window.currentMMTtest = test;
+  window.currentMMTgradeBucket = bucket;
+  // NOTE: The key declaration inside setBodyMode will handle the key calculation.
+  // ★ END REQUIRED ★
 
   const family = TEST_POSITION[test] || { high:"anatomic", low:"anatomic" };
   const mode = bucket === "low"
@@ -1914,11 +1914,7 @@ function showPoseTuner(show){
 window.addEventListener("load", () => {
   try {
     ensurePoseTuner();
-    showPoseTuner(true); // dev: show on first load
-    
-    // FIX: Load the therapist hands model immediately on page load
-    loadHandsModel(); 
-    
+    showPoseTuner(true); // dev: show on first load  
   } catch (e) {
     const m = document.getElementById("msg");
     if (m) m.textContent = "⚠️ Pose tuner init failed: " + e.message;
