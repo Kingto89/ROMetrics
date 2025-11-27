@@ -224,6 +224,8 @@ const logEl = $("log");
 const log = (t) => { if(logEl){ logEl.textContent += t + "\\n"; logEl.scrollTop = logEl.scrollHeight; } };
 
 const actionSel = $("actionSel");
+ const gradeMain = $("grade-main");
+const gradeExceptions = $("GradingExceptions");   
 /* ================= AUTO-REFRESH BODY + HANDS WHEN TEST OR GRADE CHANGES ================= */
 
 function refreshMMTState(){
@@ -247,8 +249,7 @@ const testButton = $("testButton");
 const resistanceFill = $("resistanceFill");
 const resistanceText = $("resistanceText");
 const instructionText = $("instructionText");
-const gradeMain = $("grade-main");
-const gradeExceptions = $("GradingExceptions");  
+
 /* ==== HAND TUNER UI refs ==== */
 const handTuner        = $("handTuner");
 const handSideSel      = $("handSideSel");
