@@ -1117,78 +1117,7 @@ function toggleHands(){
          btn?.classList.remove('lockOn');
     }
 }
-
-// ============= NEW CLEAN HAND TUNER LOGIC =============
-const handTunerPanel = document.getElementById("handTuner");
-const handSideSel = document.getElementById("handSideSel");
-
-function showHandTuner(){
-  handTunerPanel.style.display = "block";
-}
-
-function hideHandTuner(){
-  handTunerPanel.style.display = "none";
-}
-
-// Attach +/– button actions
-document.querySelectorAll(".handStep").forEach(btn => {
-  btn.addEventListener("click", () => {
-
-    const side = handSideSel.value;  
-    const hand = (side === "R") ? rightHandModel : leftHandModel;
-    if (!hand) return;
-
-    const mode = btn.dataset.mode;     // pos | rot
-    const axis = btn.dataset.axis;     // x | y | z
-    const dir  = btn.dataset.dir === "+" ? 1 : -1;
-
-    if (mode === "pos") {
-      hand.position[axis] += 0.01 * dir;
-    } else {
-      hand.rotation[axis] += 0.03 * dir;
-    }
-  });
-});
-// ============= SAVE HAND POSE TO CONSOLE =============
-document.getElementById("handSaveBtn").addEventListener("click", () => {
-
-  if (!rightHandModel || !leftHandModel) {
-    console.warn("Hands not loaded — cannot save.");
-    return;
-  }
-
-  const out = {
-    R: {
-      pos: {
-        x: rightHandModel.position.x,
-        y: rightHandModel.position.y,
-        z: rightHandModel.position.z
-      },
-      rot: {
-        x: rightHandModel.rotation.x,
-        y: rightHandModel.rotation.y,
-        z: rightHandModel.rotation.z
-      }
-    },
-    L: {
-      pos: {
-        x: leftHandModel.position.x,
-        y: leftHandModel.position.y,
-        z: leftHandModel.position.z
-      },
-      rot: {
-        x: leftHandModel.rotation.x,
-        y: leftHandModel.rotation.y,
-        z: leftHandModel.rotation.z
-      }
-    }
-  };
-
-  console.log("==== HAND POSE SAVE ====");
-  console.log(JSON.stringify(out, null, 2));
-  alert("Saved! Check console.");
-});
-  
+ 
 
 function degToRad(d){ return d * Math.PI / 180; }
 function seatPoseOnlyLegs(){
@@ -1344,7 +1273,77 @@ function tryNextModelUrl(index){
 }
 
 tryNextModelUrl(0);  
+// ============= NEW CLEAN HAND TUNER LOGIC =============
+const handTunerPanel = document.getElementById("handTuner");
+const handSideSel = document.getElementById("handSideSel");
 
+function showHandTuner(){
+  handTunerPanel.style.display = "block";
+}
+
+function hideHandTuner(){
+  handTunerPanel.style.display = "none";
+}
+
+// Attach +/– button actions
+document.querySelectorAll(".handStep").forEach(btn => {
+  btn.addEventListener("click", () => {
+
+    const side = handSideSel.value;  
+    const hand = (side === "R") ? rightHandModel : leftHandModel;
+    if (!hand) return;
+
+    const mode = btn.dataset.mode;     // pos | rot
+    const axis = btn.dataset.axis;     // x | y | z
+    const dir  = btn.dataset.dir === "+" ? 1 : -1;
+
+    if (mode === "pos") {
+      hand.position[axis] += 0.01 * dir;
+    } else {
+      hand.rotation[axis] += 0.03 * dir;
+    }
+  });
+});
+// ============= SAVE HAND POSE TO CONSOLE =============
+document.getElementById("handSaveBtn").addEventListener("click", () => {
+
+  if (!rightHandModel || !leftHandModel) {
+    console.warn("Hands not loaded — cannot save.");
+    return;
+  }
+
+  const out = {
+    R: {
+      pos: {
+        x: rightHandModel.position.x,
+        y: rightHandModel.position.y,
+        z: rightHandModel.position.z
+      },
+      rot: {
+        x: rightHandModel.rotation.x,
+        y: rightHandModel.rotation.y,
+        z: rightHandModel.rotation.z
+      }
+    },
+    L: {
+      pos: {
+        x: leftHandModel.position.x,
+        y: leftHandModel.position.y,
+        z: leftHandModel.position.z
+      },
+      rot: {
+        x: leftHandModel.rotation.x,
+        y: leftHandModel.rotation.y,
+        z: leftHandModel.rotation.z
+      }
+    }
+  };
+
+  console.log("==== HAND POSE SAVE ====");
+  console.log(JSON.stringify(out, null, 2));
+  alert("Saved! Check console.");
+});
+ 
 /* ==== Wire UI ==== */
 const toggleHandsBtn = $("toggleHandsBtn"); // Reference the new single button
 
