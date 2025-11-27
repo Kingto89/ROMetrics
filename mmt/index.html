@@ -1139,15 +1139,13 @@ function toggleHands(){
     }
 }
 
- // ==== Hands drag handlers ====
 
-// Convert pointer position to normalized device coordinates
-function getMouseNDC(event){
-  const rect = canvas.getBoundingClientRect();
+// Convert screen coordinates → normalized device coordinates
+function screenToNDC(event){
+  const rect = renderer.domElement.getBoundingClientRect();
   mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
   mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 }
-
 
 // ==== NEW FULL 3D MOVE HANDLERS ====
 
