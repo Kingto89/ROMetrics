@@ -1954,6 +1954,34 @@ function ensurePoseTuner(){
     });
   });
 
+// ================== HAND TUNER BUTTON HANDLER ==================
+document.querySelectorAll('#handTuner .step[data-hand]').forEach(btn=>{
+  btn.addEventListener('click', () => {
+
+    const mode = btn.dataset.hand;  // "pos" or "rot"
+    const ax   = btn.dataset.axis;  // x, y, z
+    const dir  = btn.dataset.dir === '+' ? 1 : -1;
+
+    const stepPos = 0.01;  // same as your old sliders
+    const stepRot = 0.03;  // radian tweak
+
+    const side = document.getElementById("handSideSel").value; // R or L
+    const base = side === "R" ? "hand_R" : "hand_L";
+
+    // keys stored inside POSE_OVERRIDES
+    const key = mode === "pos" 
+        ? `${base}_${ax}` 
+        : `${base}r${ax}`;
+
+    if(!(key in POSE_OVERRIDES)) POSE_OVERRIDES[key] = 0;
+
+    POSE_OVERRIDES[key] += (mode==="pos" ? stepPos : stepRot) * dir;
+
+    applyPoseOverride(); // your existing method
+  });
+});
+  
+
   // Rotation buttons (deg)
   poseTunerEl.querySelectorAll('button[data-rot]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
@@ -2069,7 +2097,8 @@ addEventListener("resize", ()=>{
 
   
 </script>
- <!-- ================= HAND TUNER PANEL ================= -->
+
+<!-- ================= HAND TUNER PANEL ================= -->
 <div id="handTuner" style="
   position:fixed; 
   right:10px; 
@@ -2093,19 +2122,50 @@ addEventListener("resize", ()=>{
     <option value="L">Left Hand</option>
   </select>
 
-  <div style="margin-top:10px;font-weight:600;">Position (X/Y/Z)</div>
-  <input id="hx" type="range" min="-1" max="1" step="0.01">
-  <input id="hy" type="range" min="-1" max="1" step="0.01">
-  <input id="hz" type="range" min="-1" max="1" step="0.01">
+  <div style="margin-top:12px;font-weight:600;">Position (X/Y/Z)</div>
 
-  <div style="margin-top:10px;font-weight:600;">Rotation (Euler X/Y/Z)</div>
-  <input id="hrx" type="range" min="-3.14" max="3.14" step="0.01">
-  <input id="hry" type="range" min="-3.14" max="3.14" step="0.01">
-  <input id="hrz" type="range" min="-3.14" max="3.14" step="0.01">
+  <div class="btnrow" style="display:flex;align-items:center;gap:8px;margin:6px 0;">
+    <span style="width:30px;">X</span>
+    <button class="step" data-hand="pos" data-axis="x" data-dir="-" style="flex:1;">–</button>
+    <button class="step" data-hand="pos" data-axis="x" data-dir="+" style="flex:1;">+</button>
+  </div>
+
+  <div class="btnrow" style="display:flex;align-items:center;gap:8px;margin:6px 0;">
+    <span style="width:30px;">Y</span>
+    <button class="step" data-hand="pos" data-axis="y" data-dir="-" style="flex:1;">–</button>
+    <button class="step" data-hand="pos" data-axis="y" data-dir="+" style="flex:1;">+</button>
+  </div>
+
+  <div class="btnrow" style="display:flex;align-items:center;gap:8px;margin:6px 0;">
+    <span style="width:30px;">Z</span>
+    <button class="step" data-hand="pos" data-axis="z" data-dir="-" style="flex:1;">–</button>
+    <button class="step" data-hand="pos" data-axis="z" data-dir="+" style="flex:1;">+</button>
+  </div>
+
+  <div style="margin-top:12px;font-weight:600;">Rotation (Euler X/Y/Z)</div>
+
+  <div class="btnrow" style="display:flex;align-items:center;gap:8px;margin:6px 0;">
+    <span style="width:30px;">RX</span>
+    <button class="step" data-hand="rot" data-axis="x" data-dir="-" style="flex:1;">–</button>
+    <button class="step" data-hand="rot" data-axis="x" data-dir="+" style="flex:1;">+</button>
+  </div>
+
+  <div class="btnrow" style="display:flex;align-items:center;gap:8px;margin:6px 0;">
+    <span style="width:30px;">RY</span>
+    <button class="step" data-hand="rot" data-axis="y" data-dir="-" style="flex:1;">–</button>
+    <button class="step" data-hand="rot" data-axis="y" data-dir="+" style="flex:1;">+</button>
+  </div>
+
+  <div class="btnrow" style="display:flex;align-items:center;gap:8px;margin:6px 0;">
+    <span style="width:30px;">RZ</span>
+    <button class="step" data-hand="rot" data-axis="z" data-dir="-" style="flex:1;">–</button>
+    <button class="step" data-hand="rot" data-axis="z" data-dir="+" style="flex:1;">+</button>
+  </div>
 
   <button id="handFlipPalm" style="margin-top:10px;width:100%;">Flip Palm</button>
   <button id="handSaveBtn" style="margin-top:10px;width:100%;background:#10b981;color:white;">Save Hands</button>
 </div>
+  
  
 </body>
 </html>
