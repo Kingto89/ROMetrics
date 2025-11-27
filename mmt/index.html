@@ -1298,9 +1298,9 @@ document.querySelectorAll(".handStep").forEach(btn => {
     const dir  = btn.dataset.dir === "+" ? 1 : -1;
 
     if (mode === "pos") {
-      hand.position[axis] += 0.01 * dir;
+      hand.position[axis] += 0.05 * dir;
     } else {
-      hand.rotation[axis] += 0.03 * dir;
+      hand.rotation[axis] += 0.15 * dir;
     }
   });
 });
