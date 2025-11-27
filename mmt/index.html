@@ -1304,11 +1304,11 @@ document.querySelectorAll(".handStep").forEach(btn => {
     }
   });
 });
-document.getElementById("handSaveBtn").addEventListener("click", () => {
 
- window.currentMMTtest   = actionSel.value;
-  window.CURRENT_BODY_BUCKET = getGradeBucketForTest(actionSel.value);
+  document.getElementById("handSaveBtn").addEventListener("click", () => {
 
+  const test = actionSel.value;                     // ← FIXED
+  const bucket = getGradeBucketForTest(test);       // ← FIXED
 
   if (!test || !bucket){
     alert("No test or bucket — cannot save hand pose.");
@@ -1321,7 +1321,6 @@ document.getElementById("handSaveBtn").addEventListener("click", () => {
   }
 
   const key = `${test}:${bucket}`;
-
   const base = POSE_OVERRIDES[key] || {};
 
   base.handRX  = rightHandModel.position.x;
@@ -1353,6 +1352,7 @@ document.getElementById("handSaveBtn").addEventListener("click", () => {
   console.log(line);
   alert("Saved! Check console.");
 });
+
 
 function applyBodyPositionFromSelection(){
   if (!model || !skeleton) return;
