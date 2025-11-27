@@ -224,6 +224,23 @@ const logEl = $("log");
 const log = (t) => { if(logEl){ logEl.textContent += t + "\\n"; logEl.scrollTop = logEl.scrollHeight; } };
 
 const actionSel = $("actionSel");
+/* ================= AUTO-REFRESH BODY + HANDS WHEN TEST OR GRADE CHANGES ================= */
+
+function refreshMMTState(){
+  window.currentMMTtest  = actionSel?.value || null;
+  window.currentMMTgrade = gradeMain?.value || null;
+  applyBodyPositionFromSelection();
+}
+
+// When user changes test
+actionSel?.addEventListener("change", refreshMMTState);
+
+// When user changes grade (main dropdown)
+gradeMain?.addEventListener("change", refreshMMTState);
+
+// When user changes grading exceptions (optional)
+gradeExceptions?.addEventListener("change", refreshMMTState);
+  
 const startTestBtn = $("startTestBtn");
 const showMMT = $("showMMT");
 const testButton = $("testButton");
@@ -232,7 +249,20 @@ const resistanceText = $("resistanceText");
 const instructionText = $("instructionText");
 const gradeMain = $("grade-main");
 const gradeExceptions = $("GradingExceptions");  
+/* ==== HAND TUNER UI refs ==== */
+const handTuner        = $("handTuner");
+const handSideSel      = $("handSideSel");
+const hxSlider         = $("hx");
+const hySlider         = $("hy");
+const hzSlider         = $("hz");
+const hrxSlider        = $("hrx");
+const hrySlider        = $("hry");
+const hrzSlider        = $("hrz");
+const handFlipPalmBtn  = $("handFlipPalm");
+const handSaveBtn      = $("handSaveBtn");
 
+
+  
 // Enable only the relevant grading menu for the selected test:
 // - EXCEPTION_TESTS (trunk + gastroc): use Grading Exceptions (5–1) only
 // - everything else: use normal Grade menu (3–0) only
@@ -1149,6 +1179,117 @@ function screenToNDC(event){
   mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
   mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 }
+/* ================= HAND HELPER FUNCTIONS ================= */
+
+function getHandBySide(side){
+  // You already have rightHandModel and leftHandModel in your code
+  return side === "R" ? rightHandModel : leftHandModel;
+}
+
+function loadHandIntoSliders(hand){
+  // Position
+  $("hx").value = hand.position.x;
+  $("hy").value = hand.position.y;
+  $("hz").value = hand.position.z;
+
+  // Rotation (convert quaternion → Euler)
+  const e = new THREE.Euler().setFromQuaternion(hand.quaternion, "XYZ");
+  $("hrx").value = e.x;
+  $("hry").value = e.y;
+  $("hrz").value = e.z;
+}
+
+function applySlidersToHand(hand){
+  // Apply position
+  hand.position.set(
+    parseFloat($("hx").value),
+    parseFloat($("hy").value),
+    parseFloat($("hz").value)
+  );
+
+  // Apply rotation
+  hand.rotation.set(
+    parseFloat($("hrx").value),
+    parseFloat($("hry").value),
+    parseFloat($("hrz").value)
+  );
+}
+
+function flipPalm(hand){
+  // 180-degree flip around X-axis
+  hand.rotation.x += Math.PI;
+  loadHandIntoSliders(hand);
+}
+
+/* ================= HAND SLIDER LIVE UPDATE ================= */
+
+["hx","hy","hz","hrx","hry","hrz"].forEach(id=>{
+  $(id).addEventListener("input", ()=>{
+    const side = $("handSideSel").value;
+    const hand = getHandBySide(side);
+    applySlidersToHand(hand);
+  });
+});
+
+// Change which hand the sliders control
+$("handSideSel").addEventListener("change", ()=>{
+  const side = $("handSideSel").value;
+  const hand = getHandBySide(side);
+  loadHandIntoSliders(hand);
+});
+  
+/* ================= HAND SAVE → CONSOLE JSON ================= */
+
+$("handSaveBtn").addEventListener("click", ()=>{
+
+  const testName = window.currentMMTtest;
+  const grade    = window.currentMMTgrade;
+
+  if (!testName || !grade){
+    console.warn("⚠️ Cannot save hands — missing testName or grade.");
+    return;
+  }
+
+  const out = {
+    R: {
+      pos: {
+        x: rightHandModel.position.x,
+        y: rightHandModel.position.y,
+        z: rightHandModel.position.z
+      },
+      rot: {
+        x: rightHandModel.quaternion.x,
+        y: rightHandModel.quaternion.y,
+        z: rightHandModel.quaternion.z,
+        w: rightHandModel.quaternion.w
+      },
+      palm: Math.abs(rightHandModel.rotation.x % (Math.PI*2)) > 1.5 ? "down" : "up"
+    },
+    L: {
+      pos: {
+        x: leftHandModel.position.x,
+        y: leftHandModel.position.y,
+        z: leftHandModel.position.z
+      },
+      rot: {
+        x: leftHandModel.quaternion.x,
+        y: leftHandModel.quaternion.y,
+        z: leftHandModel.quaternion.z,
+        w: leftHandModel.quaternion.w
+      },
+      palm: Math.abs(leftHandModel.rotation.x % (Math.PI*2)) > 1.5 ? "down" : "up"
+    }
+  };
+
+  console.log(
+    `MMT_HAND_MAP["${testName}"] = MMT_HAND_MAP["${testName}"] || {};`
+  );
+  console.log(
+    `MMT_HAND_MAP["${testName}"]["${grade}"] = ${JSON.stringify(out, null, 2)};`
+  );
+
+  alert("Saved! Check console for JSON.");
+});
 
 // ==== NEW FULL 3D MOVE HANDLERS ====
 
@@ -1287,9 +1428,40 @@ function applyBodyPositionFromSelection(){
   CURRENT_BODY_TEST = key;
   CURRENT_BODY_BUCKET = bucket;
 
-  setBodyMode(mode);
+  setBodyMode(mode); 
+
+/* ===== AUTO-LOAD HAND POSE BASED ON TEST + GRADE ===== */
+try {
+  const testName = window.currentMMTtest;
+  const grade    = window.currentMMTgrade;
+
+  if (MMT_HAND_MAP[testName] && MMT_HAND_MAP[testName][grade]) {
+
+    const data = MMT_HAND_MAP[testName][grade];
+
+    // Right hand
+    if (rightHandModel && data.R) {
+      rightHandModel.position.set(data.R.pos.x, data.R.pos.y, data.R.pos.z);
+      rightHandModel.quaternion.set(data.R.rot.x, data.R.rot.y, data.R.rot.z, data.R.rot.w);
+    }
+
+    // Left hand
+    if (leftHandModel && data.L) {
+      leftHandModel.position.set(data.L.pos.x, data.L.pos.y, data.L.pos.z);
+      leftHandModel.quaternion.set(data.L.rot.x, data.L.rot.y, data.L.rot.z, data.L.rot.w);
+    }
+
+    // Update sliders
+    const activeSide = $("handSideSel").value;
+    loadHandIntoSliders(getHandBySide(activeSide));
+  }
+} catch(e){
+  console.warn("Hand load failed:", e);
+}
+  
 }
 
+  
 /* ==== Utilities ==== */
 function degToRad(d){ return d * Math.PI / 180; }
 function seatPoseOnlyLegs(){
@@ -1946,6 +2118,45 @@ addEventListener("resize", ()=>{
   requestAnimationFrame(loop);
 })();
 
+  
 </script>
+ <!-- ================= HAND TUNER PANEL ================= -->
+<div id="handTuner" style="
+  position:fixed; 
+  right:10px; 
+  top:80px;
+  width:260px;
+  background:#ffffffcc;
+  color:#111;
+  padding:14px;
+  border-radius:12px;
+  backdrop-filter:blur(6px);
+  box-shadow:0 0 12px #0003;
+  font-family:system-ui;
+  display:none;
+  z-index:9999;
+">
+  <div style="font-weight:600;margin-bottom:8px;">Therapist Hand Tuner</div>
+
+  <label>Side:</label>
+  <select id="handSideSel">
+    <option value="R">Right Hand</option>
+    <option value="L">Left Hand</option>
+  </select>
+
+  <div style="margin-top:10px;font-weight:600;">Position (X/Y/Z)</div>
+  <input id="hx" type="range" min="-1" max="1" step="0.01">
+  <input id="hy" type="range" min="-1" max="1" step="0.01">
+  <input id="hz" type="range" min="-1" max="1" step="0.01">
+
+  <div style="margin-top:10px;font-weight:600;">Rotation (Euler X/Y/Z)</div>
+  <input id="hrx" type="range" min="-3.14" max="3.14" step="0.01">
+  <input id="hry" type="range" min="-3.14" max="3.14" step="0.01">
+  <input id="hrz" type="range" min="-3.14" max="3.14" step="0.01">
+
+  <button id="handFlipPalm" style="margin-top:10px;width:100%;">Flip Palm</button>
+  <button id="handSaveBtn" style="margin-top:10px;width:100%;background:#10b981;color:white;">Save Hands</button>
+</div>
+ 
 </body>
 </html>
