@@ -277,24 +277,28 @@ function toggleRoomLock() {
 // Wire the new button
 if (lockRoomBtn) lockRoomBtn.addEventListener('click', toggleRoomLock);
 
-/* ==== NEW: Hand Switching Utility ==== */  
+/* ==== NEW: Hand Switching Utility ==== */
 function highlightActiveHand(activeHand) {
-    if (!handsModel) return;
+    // CRITICAL FIX: Ensure models are loaded and defined before proceeding
+    if (!handsModel || !rightHandModel || !leftHandModel) return;
     
-    // Reset colors for both hands
-    const materialR = rightHandModel.children[0].material;
-    const materialL = leftHandModel.children[0].material;
-    
-    materialR.color.setHex(0xffffff); // Default white/grey
-    materialL.color.setHex(0xffffff); // Default white/grey
+    // Check if the mesh objects are available (they are children of the hand root)
+    const meshR = rightHandModel.children[0];
+    const meshL = leftHandModel.children[0];
 
-    // Highlight the active hand in yellow
-    if (activeHand) {
-        // Assuming the mesh is the first child of the hand root object
-        activeHand.children[0].material.color.setHex(0xffff00); // Yellow
+    if (!meshR || !meshL || !meshR.material || !meshL.material) return;
+
+    // Reset colors for both hands (white/grey)
+    meshR.material.color.setHex(0xffffff); 
+    meshL.material.color.setHex(0xffffff); 
+
+    // Highlight the active hand in GREEN (0x00ff00)
+    if (activeHand === rightHandModel) {
+        meshR.material.color.setHex(0x00ff00); // <-- CHANGED TO GREEN
+    } else if (activeHand === leftHandModel) {
+        meshL.material.color.setHex(0x00ff00); // <-- CHANGED TO GREEN
     }
 }
-
 function toggleActiveHand() {
     if (!isPracticeModeActive) {
         alert("The hand switch only works when 'Practice Placement' is active.");
