@@ -1124,20 +1124,22 @@ const handSideSel = document.getElementById("handSideSel");
 function showHandTuner(){
   handTunerPanel.style.display = "block";
 }
+
 function hideHandTuner(){
   handTunerPanel.style.display = "none";
 }
 
+// Attach +/– button actions
 document.querySelectorAll(".handStep").forEach(btn => {
   btn.addEventListener("click", () => {
 
-    const side = handSideSel.value;
+    const side = handSideSel.value;  
     const hand = (side === "R") ? rightHandModel : leftHandModel;
     if (!hand) return;
 
-    const mode = btn.dataset.mode;     // "pos" or "rot"
-    const axis = btn.dataset.axis;     // "x", "y", "z"
-    const dir  = (btn.dataset.dir === "+") ? 1 : -1;
+    const mode = btn.dataset.mode;     // pos | rot
+    const axis = btn.dataset.axis;     // x | y | z
+    const dir  = btn.dataset.dir === "+" ? 1 : -1;
 
     if (mode === "pos") {
       hand.position[axis] += 0.01 * dir;
@@ -1146,24 +1148,7 @@ document.querySelectorAll(".handStep").forEach(btn => {
     }
   });
 });
-  
-function applyBodyPositionFromSelection(){
-  if (!model || !skeleton) return;
-  const key = actionSel?.value;
-  if (!key) return;
 
-  const family = TEST_POSITION[key] || { high:"anatomic", low:"anatomic" };
-  const bucket = getGradeBucketForTest(key); // "high" or "low"
-  const mode = bucket === "low" ? (family.low || "anatomic")
-                                : (family.high || "anatomic");
-
-  CURRENT_BODY_TEST = key;
-  CURRENT_BODY_BUCKET = bucket;
-
-  setBodyMode(mode);
-}
-
-/* ==== Utilities ==== */
 function degToRad(d){ return d * Math.PI / 180; }
 function seatPoseOnlyLegs(){
   if(!skeleton) return;
