@@ -224,45 +224,15 @@ const logEl = $("log");
 const log = (t) => { if(logEl){ logEl.textContent += t + "\\n"; logEl.scrollTop = logEl.scrollHeight; } };
 
 const actionSel = $("actionSel");
- const gradeMain = $("grade-main");
-const gradeExceptions = $("GradingExceptions");   
-/* ================= AUTO-REFRESH BODY + HANDS WHEN TEST OR GRADE CHANGES ================= */
-
-function refreshMMTState(){
-  window.currentMMTtest  = actionSel?.value || null;
-  window.currentMMTgrade = gradeMain?.value || null;
-  applyBodyPositionFromSelection();
-}
-
-// When user changes test
-actionSel?.addEventListener("change", refreshMMTState);
-
-// When user changes grade (main dropdown)
-gradeMain?.addEventListener("change", refreshMMTState);
-
-// When user changes grading exceptions (optional)
-gradeExceptions?.addEventListener("change", refreshMMTState);
-  
 const startTestBtn = $("startTestBtn");
 const showMMT = $("showMMT");
 const testButton = $("testButton");
 const resistanceFill = $("resistanceFill");
 const resistanceText = $("resistanceText");
 const instructionText = $("instructionText");
+const gradeMain = $("grade-main");
+const gradeExceptions = $("GradingExceptions");  
 
-/* ==== HAND TUNER UI refs ==== */
-const handTuner        = $("handTuner");
-const hxSlider         = $("hx");
-const hySlider         = $("hy");
-const hzSlider         = $("hz");
-const hrxSlider        = $("hrx");
-const hrySlider        = $("hry");
-const hrzSlider        = $("hrz");
-const handFlipPalmBtn  = $("handFlipPalm");
-const handSaveBtn      = $("handSaveBtn");
-
-
-  
 // Enable only the relevant grading menu for the selected test:
 // - EXCEPTION_TESTS (trunk + gastroc): use Grading Exceptions (5–1) only
 // - everything else: use normal Grade menu (3–0) only
@@ -560,58 +530,12 @@ const draco = new DRACOLoader(); draco.setDecoderPath("https://unpkg.com/three@0
 const ktx2  = new KTX2Loader();  ktx2.setTranscoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/basis/"); ktx2.detectSupport(renderer); loader.setKTX2Loader(ktx2);
 
 let model=null, skeleton=null;
-let rightHandModel = null;
-let leftHandModel = null;
- 
 const initialBoneRot = new Map();
 let GLOBAL_PF_DEG = 0; // shared plantarflex angle for both feet
 
 // ADDED: Hands model loading variables
-// ADDED: Hands model loading variables
-const HANDS_MODEL_URL = "https://kingto89.github.io/ROMetrics.com/assets/Hands.glb";
+const HANDS_MODEL_URL = "https://raw.githubusercontent.com/Kingto89/ROMetrics.com/main/assets/Hands.glb";
 let handsModel = null;
-let handsSkeleton = null;
-
-
- // ==== Hands drag state ====
-const raycaster = new THREE.Raycaster();
-const mouse = new THREE.Vector2();
-const dragPlane = new THREE.Plane();
-const dragOffset = new THREE.Vector3();
-const dragIntersectPoint = new THREE.Vector3();
-let draggingHands = false;
-let handsRotateMode = false;   // false = move mode, true = rotate mode
-let multiTouch = false;
-let lastTouchX = 0, lastTouchY = 0;
-let lastPinchDist = null;
-let lastTwistAngle = null;
- 
-
-// Helper: log all therapist-hand bones to the console
-function logHandsBones(){
-  if (!handsModel){
-    console.warn("[Hands] Model not loaded yet.");
-    return;
-  }
-
-  // If we already captured the skeleton, just dump it
-  if (handsSkeleton){
-    console.group("[Hands] Therapist hand bones");
-    handsSkeleton.bones.forEach(b => console.log(b.name));
-    console.groupEnd();
-    return;
-  }
-
-  // Fallback: search for any SkinnedMesh and log its skeleton
-  handsModel.traverse(obj => {
-    if (obj.isSkinnedMesh && obj.skeleton){
-      console.group(`[Hands] Bones for mesh: ${obj.name}`);
-      obj.skeleton.bones.forEach(b => console.log(b.name));
-      console.groupEnd();
-    }
-  });
-}
-
   
 // Reset all bones back to stored baseline
 function resetAllBones(){
@@ -1115,55 +1039,36 @@ if (mode === "seatednogravity"){
 
 /* ==== Therapist Hands Model Logic ==== */
 function loadHandsModel(){
-  if (handsModel) return;
-  $("msg").textContent = "Loading therapist hands model...";
-
-  loader.load(
-    HANDS_MODEL_URL,
-    (gltf) => {
-      handsModel = gltf.scene;
-
-      rightHandModel = handsModel.getObjectByName("Hand_Right");
-leftHandModel  = handsModel.getObjectByName("Hand_Left");
-
-console.log("RIGHT:", rightHandModel);
-console.log("LEFT:", leftHandModel);
-
-
-      // Try to grab the skeleton from any SkinnedMesh in the hands rig
-      handsModel.traverse(obj => {
-        if (obj.isSkinnedMesh && obj.skeleton && !handsSkeleton){
-          handsSkeleton = obj.skeleton;
+    if (handsModel) return;
+    $("msg").textContent = "Loading therapist hands model...";
+    
+    // Using the existing configured loader for consistency
+    loader.load(
+        HANDS_MODEL_URL,
+        (gltf) => {
+            handsModel = gltf.scene;
+            handsModel.visible = false;
+            
+            // Set scale to match the patient model scale
+            handsModel.scale.set(POSE.s, POSE.s, POSE.s); 
+            // Initial position guess: centered in front of the patient
+            handsModel.position.set(0, 1.2, 0.5); 
+            
+            // Note: Hand.L and Hand.R meshes are inside handsModel, 
+            // their movement must be handled via the Pose Tuner or separate control logic later.
+            scene.add(handsModel);
+            $("msg").textContent = "✅ Hands model ready.";
+        },
+        (xhr) => {
+            const pct = xhr.lengthComputable ? Math.min(100, Math.round(100*xhr.loaded/xhr.total)) : null;
+            $("msg").textContent = pct!==null ? `Loading Hands ${pct}%` : "Loading Hands...";
+        },
+        (error) => {
+            console.error("Failed to load Hands model:", error);
+            $("msg").textContent = "⚠️ Failed to load therapist hands.";
         }
-      });
-
-      handsModel.visible = false;
-      // === Force palm-down orientation on load ===
-      // Rotate 180° around X axis to flip the palm downward
-      handsModel.rotation.x = Math.PI;
-
-      // Therapist hands smaller than patient
-      handsModel.scale.set(0.20, 0.20, 0.20);   // ← adjust between 0.20–0.35
-      // Rough starting position in front of patient
-      handsModel.position.set(0, 1.1, 0.35);
-
-      scene.add(handsModel);
-      $("msg").textContent = "✅ Hands model ready.";
-
-      // 🔎 Dump bone names in console so we can rig properly
-      logHandsBones();
-    },
-    (xhr) => {
-      const pct = xhr.lengthComputable ? Math.min(100, Math.round(100 * xhr.loaded / xhr.total)) : null;
-      $("msg").textContent = pct !== null ? `Loading Hands ${pct}%` : "Loading Hands...";
-    },
-    (error) => {
-      console.error("Failed to load Hands model:", error);
-      $("msg").textContent = "⚠️ Failed to load therapist hands.";
-    }
-  );
+    );
 }
-
 
 function toggleHands(){
     const btn = $("toggleHandsBtn");
@@ -1180,164 +1085,8 @@ function toggleHands(){
     } else {
          btn?.classList.remove('lockOn');
     }
-
-    // === SHOW HAND TUNER WHEN HANDS ARE ON ===
-    if (handsModel?.visible) {
-        document.getElementById("handTuner").style.display = "block";
-// no sliders to load
-    } else {
-        document.getElementById("handTuner").style.display = "none";
-    }
 }
 
-// ================= HAND TUNER (PLUS / MINUS) =================
-const handBtns = document.querySelectorAll('#handTuner .step');
-const handSideSel = document.getElementById("handSideSel");
-
-handBtns.forEach(btn => {
-  btn.addEventListener('click', () => {
-    const side = handSideSel.value;
-    const hand = (side === "R") ? rightHandModel : leftHandModel;
-    if (!hand) return;
-
-    const mode = btn.dataset.hand; // pos / rot
-    const ax   = btn.dataset.axis; // x y z
-    const dir  = (btn.dataset.dir === "+") ? 1 : -1;
-
-    const stepPos = 0.01;
-    const stepRot = 0.03;
-
-    if (mode === "pos") hand.position[ax] += dir * stepPos;
-    else hand.rotation[ax] += dir * stepRot;
-  });
-});
-  
-// Convert screen coordinates → normalized device coordinates
-function screenToNDC(event){
-  const rect = renderer.domElement.getBoundingClientRect();
-  mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-  mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-}
-/* ================= HAND HELPER FUNCTIONS ================= */
-
-function getHandBySide(side){
-  // You already have rightHandModel and leftHandModel in your code
-  return side === "R" ? rightHandModel : leftHandModel;
-}
-
-function flipPalm(hand){
-  // 180-degree flip around X-axis
-  hand.rotation.x += Math.PI;
-  loadHandIntoSliders(hand);
-}
-  
-/* ================= HAND SAVE → CONSOLE JSON ================= */
-
-$("handSaveBtn").addEventListener("click", ()=>{
-
-  const testName = window.currentMMTtest;
-  const grade    = window.currentMMTgrade;
-
-  if (!testName || !grade){
-    console.warn("⚠️ Cannot save hands — missing testName or grade.");
-    return;
-  }
-
-  const out = {
-    R: {
-      pos: {
-        x: rightHandModel.position.x,
-        y: rightHandModel.position.y,
-        z: rightHandModel.position.z
-      },
-      rot: {
-        x: rightHandModel.quaternion.x,
-        y: rightHandModel.quaternion.y,
-        z: rightHandModel.quaternion.z,
-        w: rightHandModel.quaternion.w
-      },
-      palm: Math.abs(rightHandModel.rotation.x % (Math.PI*2)) > 1.5 ? "down" : "up"
-    },
-    L: {
-      pos: {
-        x: leftHandModel.position.x,
-        y: leftHandModel.position.y,
-        z: leftHandModel.position.z
-      },
-      rot: {
-        x: leftHandModel.quaternion.x,
-        y: leftHandModel.quaternion.y,
-        z: leftHandModel.quaternion.z,
-        w: leftHandModel.quaternion.w
-      },
-      palm: Math.abs(leftHandModel.rotation.x % (Math.PI*2)) > 1.5 ? "down" : "up"
-    }
-  };
-
-  console.log(
-    `MMT_HAND_MAP["${testName}"] = MMT_HAND_MAP["${testName}"] || {};`
-  );
-  console.log(
-    `MMT_HAND_MAP["${testName}"]["${grade}"] = ${JSON.stringify(out, null, 2)};`
-  );
-
-  alert("Saved! Check console for JSON.");
-});
-
-// ==== NEW INDEPENDENT HAND MOVEMENT ====
-
-let ACTIVE_HAND = null;
-
-// pointer down — detect which hand was clicked
-function onPointerDownHands(event){
-  if (!handsModel?.visible) return;
-  if (event.target !== renderer.domElement) return;
-
-  screenToNDC(event);
-  raycaster.setFromCamera(mouse, camera);
-
-  // we raycast BOTH hands independently
-  const hits = raycaster.intersectObjects(
-    [rightHandModel, leftHandModel],
-    true
-  );
-  if (!hits.length) return;
-
-  // find the clicked hand's ROOT
-  ACTIVE_HAND = hits[0].object;
-  while (ACTIVE_HAND.parent && ACTIVE_HAND.parent !== handsModel){
-    ACTIVE_HAND = ACTIVE_HAND.parent;
-  }
-
-  // make a movement plane at the click point
-  const hitPoint = hits[0].point;
-  const normal = camera.getWorldDirection(new THREE.Vector3()).negate();
-  dragPlane.setFromNormalAndCoplanarPoint(normal, hitPoint);
-
-  dragOffset.copy(ACTIVE_HAND.position).sub(hitPoint);
-  controls.enabled = false;
-}
-
-// pointer move — move ONLY the ACTIVE hand
-function onPointerMoveHands(event){
-  if (!ACTIVE_HAND) return;
-
-  screenToNDC(event);
-  raycaster.setFromCamera(mouse, camera);
-
-  if (raycaster.ray.intersectPlane(dragPlane, dragPoint)){
-    ACTIVE_HAND.position.copy(dragPoint).add(dragOffset);
-  }
-}
-
-// pointer up — release active hand
-function onPointerUpHands(){
-  ACTIVE_HAND = null;
-  controls.enabled = true;
-}
-
-
- 
 function applyBodyPositionFromSelection(){
   if (!model || !skeleton) return;
   const key = actionSel?.value;
@@ -1351,32 +1100,9 @@ function applyBodyPositionFromSelection(){
   CURRENT_BODY_TEST = key;
   CURRENT_BODY_BUCKET = bucket;
 
-  setBodyMode(mode); 
-
-/* ===== AUTO-LOAD HAND POSE BASED ON TEST + GRADE ===== */
-try {
-  const testName = window.currentMMTtest;
-  const grade    = window.currentMMTgrade;
-
-  if (MMT_HAND_MAP[testName] && MMT_HAND_MAP[testName][grade]) {
-
-    const data = MMT_HAND_MAP[testName][grade];
-
-    // Right hand
-    if (rightHandModel && data.R) {
-      rightHandModel.position.set(data.R.pos.x, data.R.pos.y, data.R.pos.z);
-      rightHandModel.quaternion.set(data.R.rot.x, data.R.rot.y, data.R.rot.z, data.R.rot.w);
-    }
-
-    // Left hand
-    if (leftHandModel && data.L) {
-      leftHandModel.position.set(data.L.pos.x, data.L.pos.y, data.L.pos.z);
-      leftHandModel.quaternion.set(data.L.rot.x, data.L.rot.y, data.L.rot.z, data.L.rot.w);
-    }
-  
+  setBodyMode(mode);
 }
 
-  
 /* ==== Utilities ==== */
 function degToRad(d){ return d * Math.PI / 180; }
 function seatPoseOnlyLegs(){
@@ -2014,12 +1740,6 @@ window.addEventListener("load", () => {
     console.error(e);
   }
 });
-
-// ==== Hands drag events ====
-window.addEventListener('pointerdown', onPointerDownHands);
-window.addEventListener('pointermove', onPointerMoveHands);
-window.addEventListener('pointerup',   onPointerUpHands);
-  
  
 /* ==== Loop & resize ==== */
 addEventListener("resize", ()=>{
@@ -2033,76 +1753,6 @@ addEventListener("resize", ()=>{
   requestAnimationFrame(loop);
 })();
 
-  
 </script>
-<!-- ================= HAND TUNER PANEL ================= -->
-<div id="handTuner" style="
-  position:fixed; 
-  right:10px; 
-  top:80px;
-  width:260px;
-  background:#ffffffcc;
-  color:#111;
-  padding:14px;
-  border-radius:12px;
-  backdrop-filter:blur(6px);
-  box-shadow:0 0 12px #0003;
-  font-family:system-ui;
-  display:none;
-  z-index:9999;
-">
-  <div style="font-weight:600;margin-bottom:8px;">Therapist Hand Tuner</div>
-
-  <label>Side:</label>
-  <select id="handSideSel">
-    <option value="R">Right Hand</option>
-    <option value="L">Left Hand</option>
-  </select>
-
-  <div style="margin-top:10px;font-weight:600;">Position (X/Y/Z)</div>
-
-  <div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
-    <span style="width:28px;">X</span>
-    <button class="step" data-hand="pos" data-axis="x" data-dir="-">–</button>
-    <button class="step" data-hand="pos" data-axis="x" data-dir="+">+</button>
-  </div>
-
-  <div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
-    <span style="width:28px;">Y</span>
-    <button class="step" data-hand="pos" data-axis="y" data-dir="-">–</button>
-    <button class="step" data-hand="pos" data-axis="y" data-dir="+">+</button>
-  </div>
-
-  <div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
-    <span style="width:28px;">Z</span>
-    <button class="step" data-hand="pos" data-axis="z" data-dir="-">–</button>
-    <button class="step" data-hand="pos" data-axis="z" data-dir="+">+</button>
-  </div>
-
-  <div style="margin-top:10px;font-weight:600;">Rotation (Euler X/Y/Z)</div>
-
-  <div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
-    <span style="width:28px;">RX</span>
-    <button class="step" data-hand="rot" data-axis="x" data-dir="-">–</button>
-    <button class="step" data-hand="rot" data-axis="x" data-dir="+">+</button>
-  </div>
-
-  <div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
-    <span style="width:28px;">RY</span>
-    <button class="step" data-hand="rot" data-axis="y" data-dir="-">–</button>
-    <button class="step" data-hand="rot" data-axis="y" data-dir="+">+</button>
-  </div>
-
-  <div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
-    <span style="width:28px;">RZ</span>
-    <button class="step" data-hand="rot" data-axis="z" data-dir="-">–</button>
-    <button class="step" data-hand="rot" data-axis="z" data-dir="+">+</button>
-  </div>
-
-  <button id="handFlipPalm" style="margin-top:10px;width:100%;">Flip Palm</button>
-  <button id="handSaveBtn" style="margin-top:10px;width:100%;background:#10b981;color:white;">Save Hands</button>
-</div>
-
- 
 </body>
 </html>
