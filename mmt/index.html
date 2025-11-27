@@ -1309,7 +1309,7 @@ function onPointerDownHands(event){
   screenToNDC(event);
   raycaster.setFromCamera(mouse, camera);
 
-  const hits = raycaster.intersectObject(handsModel, true);
+  const hits = raycaster.intersectObjects([rightHandModel, leftHandModel], true);
   if (!hits.length) return;
 
   const hitPoint = hits[0].point;
@@ -1344,8 +1344,10 @@ function onPointerMoveHands(event){
       raycaster.setFromCamera(mouse, camera);
 
       if (raycaster.ray.intersectPlane(dragPlane, dragIntersectPoint)){
-        handsModel.position.copy(dragIntersectPoint).add(dragOffset);
-      }
+if (ACTIVE_HAND) {
+    ACTIVE_HAND.position.copy(dragIntersectPoint).add(dragOffset);
+}
+
 
       lastTouchX = t.clientX;
       lastTouchY = t.clientY;
@@ -1367,8 +1369,11 @@ function onPointerMoveHands(event){
       const dy = midY - lastTouchY;
 
       // rotate X/Y (tilt + turn)
-      handsModel.rotation.y += dx * 0.01;  // turn left/right
-      handsModel.rotation.x += dy * 0.01;  // tilt up/down
+      if (ACTIVE_HAND) {
+    ACTIVE_HAND.rotation.y += dx * 0.01;
+    ACTIVE_HAND.rotation.x += dy * 0.01;
+}
+
 
       lastTouchX = midX;
       lastTouchY = midY;
@@ -1383,8 +1388,11 @@ function onPointerMoveHands(event){
         const delta = dist - lastPinchDist;
         const dir = new THREE.Vector3();
         camera.getWorldDirection(dir);
-        handsModel.position.addScaledVector(dir, delta * 0.005);
-      }
+        if (ACTIVE_HAND) {
+    ACTIVE_HAND.position.addScaledVector(dir, delta * 0.005);
+}
+
+      
 
       lastPinchDist = dist;
 
@@ -1395,8 +1403,9 @@ function onPointerMoveHands(event){
       );
 
       if (lastTwistAngle !== null){
-        handsModel.rotation.z += (angle - lastTwistAngle);
-      }
+       if (ACTIVE_HAND) {
+    ACTIVE_HAND.rotation.z += (angle - lastTwistAngle);
+}
 
       lastTwistAngle = angle;
 
