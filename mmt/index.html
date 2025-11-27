@@ -534,8 +534,12 @@ const initialBoneRot = new Map();
 let GLOBAL_PF_DEG = 0; // shared plantarflex angle for both feet
 
 // ADDED: Hands model loading variables
-const HANDS_MODEL_URL = "https://raw.githubusercontent.com/Kingto89/ROMetrics.com/main/assets/Hands.glb";
+// ADDED: Hands model loading variables
+const HANDS_MODEL_URL = "assets/Hands.glb";  // <- relative to this HTML in /mmt/
 let handsModel = null;
+let handsSkeleton = null;
+
+
  // ==== Hands drag state ====
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
