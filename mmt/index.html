@@ -421,23 +421,23 @@ setupTransformControls();
 
 // The togglePracticeMode function comes AFTER setupTransformControls is defined
 function togglePracticeMode() {
-   // BEFORE:
-if (!rightHandModel || !leftHandModel) {
-    alert("Please toggle 'Therapist Hands' on first.");
-    return;
-}
+    // Check 1: Has the hands model been loaded into the scene yet?
+    if (!handsModel) {
+        alert("Please toggle 'Therapist Hands' on first.");
+        return;
+    }
 
-// AFTER: (Using handsModel check)
-if (!handsModel || !handsModel.visible) {
-    alert("Please toggle 'Therapist Hands' on first.");
-    return;
-}
+    // Check 2: Are the hands visible? (If visible=false, it means the user toggled them off)
+    if (!handsModel.visible) {
+        alert("Please toggle 'Therapist Hands' ON first.");
+        return;
+    }
 
     isPracticeModeActive = !isPracticeModeActive;
     
     if (isPracticeModeActive) {
         // --- ENTER PRACTICE MODE ---
-        practicePlacementBtn.classList.add('lockOn'); // Visually indicate active mode
+        practicePlacementBtn.classList.add('lockOn');
         
         // Initial state: Right Hand, Translate Mode
         currentActiveHand = rightHandModel;
@@ -445,13 +445,14 @@ if (!handsModel || !handsModel.visible) {
         
         // Configure TransformControls for active manipulation
         transformControls.setMode(currentTransformMode);
-        transformControls.showX = true; // Show all axes for move/rotate
+        transformControls.showX = true;
         transformControls.showY = true;
         transformControls.showZ = true; 
-        transformControls.attach(currentActiveHand); // Attach to the default hand
-        transformControls.visible = true; // Make the widget visible
+        transformControls.attach(currentActiveHand);
+        transformControls.visible = true;
 
-        // Disable OrbitControls while in practice mode
+        // Apply visual and control locks
+        highlightActiveHand(currentActiveHand);
         controls.enabled = false; 
 
         console.log("Entered Practice Mode: Right Hand, Translate");
@@ -463,17 +464,18 @@ if (!handsModel || !handsModel.visible) {
         // Reset TransformControls state
         transformControls.detach();
         transformControls.visible = false;
-        transformControls.showX = false;
-        transformControls.showY = false;
-        transformControls.showZ = false;
-
-        // Re-enable OrbitControls
+        
+        // Re-enable controls and highlights
+        highlightActiveHand(null);
         controls.enabled = true; 
         currentActiveHand = null;
+
+        // Restore the correct hand pose for the current MMT test selection
+        applyBodyPositionFromSelection(); 
+
         console.log("Exited Practice Mode.");
     }
 }
-
 // Wire the existing Practice Placement button
 if (practicePlacementBtn) practicePlacementBtn.addEventListener('click', togglePracticeMode);  
     
