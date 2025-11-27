@@ -733,12 +733,13 @@ HAND_OVERRIDES["Capital_Extension:high"] = {"handRX":4.48144135475158,"handRY":-
   
 /* ==== NEUTRAL HAND POSITION (New Default) ==== */
 const HAND_NEUTRAL_POSE = {
-    // These coordinates place the hands in a neutral, out-of-the-way position
-    handRX: 0.15, handRY: 1.25, handRZ: 0.5, 
-    handRRX: 0, handRRY: 0, handRRZ: 0,   
-    handLX: -0.15, handLY: 1.25, handLZ: 0.5, 
-    handLRX: 0, handLRY: 0, handLRZ: 0  
-};  
+    // Widened X separation (0.45 vs -0.45) for side-by-side viewing
+    // Slight Z offset to keep them from overlapping in depth
+    handRX: 0.45, handRY: 1.25, handRZ: 0.45, 
+    handRRX: 0, handRRY: 0, handRRZ: 0,   
+    handLX: -0.45, handLY: 1.25, handLZ: 0.55,  
+    handLRX: 0, handLRY: 0, handLRZ: 0  
+};
 let CURRENT_BODY_TEST = null;
 let CURRENT_BODY_BUCKET = "high"; // "high" or "low"
   
