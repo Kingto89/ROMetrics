@@ -1313,6 +1313,18 @@ $("handSaveBtn").addEventListener("click", ()=>{
 // ==== NEW INDEPENDENT HAND MOVEMENT ====
 
 let ACTIVE_HAND = null;
+/* ===== HAND DRAG GLOBALS — MUST BE OUTSIDE ALL FUNCTIONS ===== */
+const dragPlane = new THREE.Plane();
+const dragOffset = new THREE.Vector3();
+const dragIntersectPoint = new THREE.Vector3();
+
+let draggingHands = false;
+let multiTouch = false;
+let lastTouchX = 0;
+let lastTouchY = 0;
+let lastPinchDist = null;
+let lastTwistAngle = null;
+  
 
 // pointer down — detect which hand was clicked
 function onPointerDownHands(event){
@@ -1330,10 +1342,15 @@ function onPointerDownHands(event){
   if (!hits.length) return;
 
   // find the clicked hand's ROOT
-  ACTIVE_HAND = hits[0].object;
-  while (ACTIVE_HAND.parent && ACTIVE_HAND.parent !== handsModel){
-    ACTIVE_HAND = ACTIVE_HAND.parent;
-  }
+// determine whether right or left hand was clicked
+let root = hits[0].object;
+
+while (root.parent && root !== rightHandModel && root !== leftHandModel) {
+    root = root.parent;
+}
+
+ACTIVE_HAND = root;
+
 
   // make a movement plane at the click point
   const hitPoint = hits[0].point;
