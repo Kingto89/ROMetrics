@@ -1326,29 +1326,21 @@ if (!rightHandModel || !leftHandModel) {
 
          // ... (Insert after if (lockRoomBtn) lockRoomBtn.addEventListener('click', toggleRoomLock);)
 
-// --- START: EXPLICIT HAND CONTROL ACTIVATION FUNCTIONS ---
-function activateRightHandControl() {
-    if (transformControls && rightHandModel) {
-        // Attach the right hand model to the widget
-        transformControls.attach(rightHandModel);
-        currentActiveHand = rightHandModel; // Set tracking variable
-        transformControls.setMode(currentTransformMode); // Ensure mode is set
-        transformControls.visible = true;
-        console.log("Control moved to Right Hand.");
-    }
-}
+            // --- START: ACTIVATE DRAGGING CONTROL HERE (No Tuner Logic) ---
+            if (transformControls && rightHandModel) {
+                // Attach the right hand model to the widget for immediate dragging access
+                transformControls.attach(rightHandModel);
+                transformControls.visible = true; 
+            }
+            // --- END: ACTIVATE DRAGGING CONTROL HERE ---
 
-function activateLeftHandControl() {
-    if (transformControls && leftHandModel) {
-        // Attach the left hand model to the widget
-        transformControls.attach(leftHandModel);
-        currentActiveHand = leftHandModel; // Set tracking variable
-        transformControls.setMode(currentTransformMode); // Ensure mode is set
-        transformControls.visible = true;
-        console.log("Control moved to Left Hand.");
-    }
-}
-
+           // --- START: ACTIVATE DRAGGING CONTROL HERE (No Tuner Logic) ---
+            if (transformControls && leftHandModel) {
+                // Attach the left hand model to the widget for immediate dragging access
+                transformControls.attach(leftHandModel);
+                transformControls.visible = true; 
+            }
+            // --- END: ACTIVATE DRAGGING CONTROL HERE ---
 /* ==================================== */
             // --- END: ACTIVATE DRAGGING CONTROL HERE ---
             // FIX 2: Call the function that applies the saved coordinates
