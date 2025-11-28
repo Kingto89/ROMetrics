@@ -262,9 +262,6 @@ let isRoomLocked = false;
 let isPracticeModeActive = false;
 let currentActiveHand = null; // Will store rightHandModel or leftHandModel
 let currentTransformMode = 'translate'; // Initial mode for the widget
-let HAND_DOTS = {};
-let DOT_EDITOR_MODE = false;
-let activeDot = null;
 
 const practicePlacementBtn = $("practicePlacementBtn");  
 
@@ -1616,20 +1613,6 @@ function tryNextModelUrl(index){
     ()=> tryNextModelUrl(index+1)
   );
 }
-  
-function createDot(name, pos) {
-    const dot = new THREE.Mesh(
-        new THREE.SphereGeometry(0.01),
-        new THREE.MeshBasicMaterial({ color: 0xff2222 })
-    );
-    dot.position.set(pos.x, pos.y, pos.z);
-    dot.userData.dotName = name;
-    scene.add(dot);
-    HAND_DOTS[name] = pos;
-    return dot;
-}
-// Load any saved dots into the scene
-Object.entries(HAND_DOTS).forEach(([name, pos]) => createDot(name, pos));
 
 tryNextModelUrl(0);  
 // ============= NEW CLEAN HAND TUNER LOGIC =============
@@ -1936,12 +1919,6 @@ showMMT.addEventListener('click', ()=> openNote('high'));
 tabHigh.addEventListener('click', ()=> openNote('high'));
 tabLow.addEventListener('click', ()=> openNote('low'));
 closeNote.addEventListener('click', ()=> notePanel.classList.add('hide'));
-window.addEventListener("keydown", e => {
-    if (e.key.toLowerCase() === "e") {
-        DOT_EDITOR_MODE = !DOT_EDITOR_MODE;
-        console.log("Dot Editor Mode:", DOT_EDITOR_MODE ? "ON" : "OFF");
-    }
-});
 
  /* ===== Pose Tuner (dev) — per-test high/low body transforms ===== */
 let poseTunerEl = null;
@@ -2289,34 +2266,7 @@ function onPointerDownTransformControls(event) {
     if (intersects.length > 0) {
         const intersection = intersects[0];
         // The center cube/sphere usually has a specific name or color (white/yellow in translate mode)
-     if (intersect.object.userData.dotName) {
-    const name = intersect.object.userData.dotName;
-
-    if (DOT_EDITOR_MODE) {
-        // Select dot for dragging
-        activeDot = intersect.object;
-        console.log("Editing dot:", name);
-    } else {
-        // Snap right hand to dot
-        const d = HAND_DOTS[name];
-        rightHandModel.position.set(d.x, d.y, d.z);
-        console.log("Snapped to:", d);
-    }
-
-    return; // Important: stop further click handling
-}
- 
-window.addEventListener("mousemove", () => {
-    if (DOT_EDITOR_MODE && activeDot) {
-        const p = raycastToModelSurface(); 
-        if (!p) return;
-        activeDot.position.copy(p);
-        HAND_DOTS[activeDot.userData.dotName] = { x:p.x, y:p.y, z:p.z };
-    }
-});
-window.addEventListener("mouseup", () => {
-    activeDot = null;
-});
+      
 
         // --- Simplified Hand Switch Logic (Checking Distance to Center) ---
         const centerPos = new THREE.Vector3();
