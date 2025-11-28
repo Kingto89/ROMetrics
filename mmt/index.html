@@ -39,6 +39,7 @@ select,button,input[type=range]{width:100%;margin:6px 0 8px 0;padding:8px 10px;b
 .multi-line-btn { flex-grow: 1; margin-right: 8px; text-align: center; font-size: 14px; line-height: 1.2; padding: 8px 6px; }
 .multi-line-btn:last-child { margin-right: 0; }
 #notePanel{position:fixed;top:16px;right:16px;width:min(420px,46vw);max-height:70vh;display:none;z-index:140;
+#toggleHandsBtn:disabled { opacity:0.45; pointer-events:none; filter:grayscale(1); }
   background:#e2e8f0;border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.25);
   display:flex;flex-direction:column;overflow:hidden}
 .note-head{display:flex;align-items:center;gap:8px;padding:10px 12px;background:#dbe4ee;border-bottom:1px solid var(--line)}
@@ -1728,6 +1729,11 @@ if (toggleHandsBtn) toggleHandsBtn.addEventListener('click', toggleHands);
 // When the test changes, update which grade menu is active, then re-apply pose
 actionSel.addEventListener("change", () => {
 
+// Enable only when a test is selected
+toggleHandsBtn.disabled = !actionSel.value;
+toggleHandsBtn.classList.toggle("lockOn", !toggleHandsBtn.disabled);
+
+
   // ★ required for HAND TUNER save
   window.currentMMTtest = actionSel.value;
   window.currentMMTgradeBucket = getGradeBucketForTest(actionSel.value);
@@ -1738,6 +1744,7 @@ actionSel.addEventListener("change", () => {
 
   if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
 });
+
 
 // Normal Grade 3–0 menu: used for all NON-exception tests
 gradeMain.addEventListener("change", () => {
