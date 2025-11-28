@@ -1723,6 +1723,9 @@ function applyBodyPositionFromSelection(){
 /* ==== Wire UI ==== */
 const toggleHandsBtn = $("toggleHandsBtn"); // Reference the new single button
 
+toggleHandsBtn.disabled = true;
+toggleHandsBtn.classList.add("lockOn"); 
+  
 // Wire the new button to load/toggle the hands model
 if (toggleHandsBtn) toggleHandsBtn.addEventListener('click', toggleHands);
 
