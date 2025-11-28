@@ -1324,7 +1324,33 @@ if (!rightHandModel || !leftHandModel) {
             // their movement must be handled via the Pose Tuner or separate control logic later.
             scene.add(handsModel);
 
+         // ... (Insert after if (lockRoomBtn) lockRoomBtn.addEventListener('click', toggleRoomLock);)
 
+// --- START: EXPLICIT HAND CONTROL ACTIVATION FUNCTIONS ---
+function activateRightHandControl() {
+    if (transformControls && rightHandModel) {
+        // Attach the right hand model to the widget
+        transformControls.attach(rightHandModel);
+        currentActiveHand = rightHandModel; // Set tracking variable
+        transformControls.setMode(currentTransformMode); // Ensure mode is set
+        transformControls.visible = true;
+        console.log("Control moved to Right Hand.");
+    }
+}
+
+function activateLeftHandControl() {
+    if (transformControls && leftHandModel) {
+        // Attach the left hand model to the widget
+        transformControls.attach(leftHandModel);
+        currentActiveHand = leftHandModel; // Set tracking variable
+        transformControls.setMode(currentTransformMode); // Ensure mode is set
+        transformControls.visible = true;
+        console.log("Control moved to Left Hand.");
+    }
+}
+
+/* ==================================== */
+            // --- END: ACTIVATE DRAGGING CONTROL HERE ---
             // FIX 2: Call the function that applies the saved coordinates
             // This reads the hard-coded HAND_OVERRIDES for the currently selected test/grade.
             applyBodyPositionFromSelection(); 
