@@ -1107,21 +1107,21 @@ function setBodyMode(mode){
   }
 
 // === NEW: Therapist Hand Overrides (separate dictionary) ===
-  // NOTE: The 'key' variable is already defined from the patient pose logic above.
+  // NOTE: The 'key' variable is already declared above for the patient pose.
   
   // 1. Determine the key and check if a pose is saved in HAND_OVERRIDES
-  const key = CURRENT_BODY_TEST && CURRENT_BODY_BUCKET ? `${CURRENT_BODY_TEST}:${CURRENT_BODY_BUCKET}` : null;
-  const useSavedPose = key && HAND_OVERRIDES[key];
+  // REMOVED 'const' from key and useSavedPose to fix the SyntaxError
+  let useSavedPose = key && HAND_OVERRIDES[key];
 
   // 2. Default to NEUTRAL pose.
-  let poseToApply = HAND_NEUTRAL_POSE; 
-  
+  let poseToApply = HAND_NEUTRAL_POSE; 
+  
   // 🔑 CRITICAL LOGIC: ONLY apply saved pose if Practice Mode is NOT active.
   // If Practice Mode is ON, poseToApply remains HAND_NEUTRAL_POSE, allowing the student to move it.
   if (!isPracticeModeActive && useSavedPose) {
       poseToApply = HAND_OVERRIDES[key];
   } 
-  
+  
   if (poseToApply) {
     const h = poseToApply;
 
