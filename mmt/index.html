@@ -1106,35 +1106,46 @@ function setBodyMode(mode){
     applyLimbOverridesFromOverride(POSE_OVERRIDES[key]);
   }
 
- // === NEW: Therapist Hand Overrides (separate dictionary) ===
-  // NOTE: The 'key' variable is already defined from the patient pose logic above.
-  
-  // FIX: Choose the specific saved pose if it exists, otherwise use the neutral default position.
-  const poseToApply = key && HAND_OVERRIDES[key]
-    ? HAND_OVERRIDES[key]
-    : HAND_NEUTRAL_POSE;
+// === NEW: Therapist Hand Overrides (separate dictionary) ===
+ 
+ // 1. Determine the key and check if a pose is saved in HAND_OVERRIDES
+ // NOTE: 'key' is already declared for the patient pose logic above.
+ let useSavedPose = key && HAND_OVERRIDES[key];
 
-  if (poseToApply) {
+ // 2. Default to NEUTRAL pose.
+ let poseToApply = HAND_NEUTRAL_POSE; 
+  
+ // 🔑 CRITICAL LOGIC: ONLY apply saved pose if Practice Mode is NOT active.
+ // If Practice Mode is ON, poseToApply remains HAND_NEUTRAL_POSE, allowing the student to move it.
+ if (!isPracticeModeActive && useSavedPose) {
+      poseToApply = HAND_OVERRIDES[key];
+ } 
+ 
+ if (poseToApply) {
     const h = poseToApply;
 
     if (rightHandModel){
+        // Apply position 
         if (h.handRX  != null) rightHandModel.position.x = h.handRX;
         if (h.handRY  != null) rightHandModel.position.y = h.handRY;
         if (h.handRZ  != null) rightHandModel.position.z = h.handRZ;
+        // Apply rotation
         if (h.handRRX != null) rightHandModel.rotation.x = h.handRRX;
         if (h.handRRY != null) rightHandModel.rotation.y = h.handRRY;
         if (h.handRRZ != null) rightHandModel.rotation.z = h.handRRZ;
     }
 
     if (leftHandModel){
+        // Apply position
         if (h.handLX  != null) leftHandModel.position.x = h.handLX;
         if (h.handLY  != null) leftHandModel.position.y = h.handLY;
         if (h.handLZ  != null) leftHandModel.position.z = h.handLZ;
+        // Apply rotation
         if (h.handLRX != null) leftHandModel.rotation.x = h.handLRX;
         if (h.handLRY != null) leftHandModel.rotation.y = h.handLRY;
         if (h.handLRZ != null) leftHandModel.rotation.z = h.handLRZ;
     }
-  }
+ }
 
 
   // Optional arm/hand fine-tune rotations (shortcut from POSE_OVERRIDES) 
