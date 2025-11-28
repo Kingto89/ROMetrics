@@ -1113,27 +1113,36 @@ function setBodyMode(mode){
  let poseToApply = HAND_NEUTRAL_POSE; 
   
 // ------------------------------------
+// ------------------------------------
 // HAND OVERRIDE LOGIC (FINAL VERSION)
 // ------------------------------------
-const handKey = CURRENT_BODY_TEST && CURRENT_BODY_BUCKET
+const handKey = (CURRENT_BODY_TEST && CURRENT_BODY_BUCKET)
   ? `${CURRENT_BODY_TEST}:${CURRENT_BODY_BUCKET}`
   : null;
 
 if (!handsModel || !rightHandModel || !leftHandModel) return;
 
-// If practice mode is ON → neutral
+// Practice mode → always neutral
 if (isPracticeModeActive) {
     resetHandsToNeutral();
 } 
 else {
-    // If override exists → apply it
-    if (HAND_OVERRIDES[key]) {
-        applyHandOverride(key);
-    } else {
-        // No override saved → neutral
+
+    // Apply override if we have it
+    if (handKey && HAND_OVERRIDES[handKey]) {
+        applyHandOverride(handKey);
+    } 
+    else {
+        // No override → neutral
         resetHandsToNeutral();
     }
+
+    // ⭐ Force override AFTER toggle if test already active
+    if (CURRENT_BODY_TEST) {
+        setTimeout(() => applyBodyPositionFromSelection(), 0);
+    }
 }
+
 
  
  if (poseToApply) {
