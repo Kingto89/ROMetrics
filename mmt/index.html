@@ -1121,30 +1121,22 @@ function setBodyMode(mode){
 // ------------------------------------
 // HAND OVERRIDE LOGIC (FINAL VERSION)
 // ------------------------------------
-const handKey = (CURRENT_BODY_TEST && CURRENT_BODY_BUCKET)
-  ? `${CURRENT_BODY_TEST}:${CURRENT_BODY_BUCKET}`
-  : null;
+const handKey = (CURRENT_BODY_TEST && CURRENT_BODY_BUCKET) ? `${CURRENT_BODY_TEST}:${CURRENT_BODY_BUCKET}` : null;
 
 if (!handsModel || !rightHandModel || !leftHandModel) return;
 
 // Practice mode → always neutral
 if (isPracticeModeActive) {
     resetHandsToNeutral();
-} 
-else {
-    // Apply override if exists
-    if (handKey && HAND_OVERRIDES[handKey]) {
-        applyHandOverride(handKey);
-    } else {
-        resetHandsToNeutral();
-    }
+} else {
+    // Override exists → apply it
+    if (handKey && HAND_OVERRIDES[handKey]) applyHandOverride(handKey);
+    else resetHandsToNeutral();
 }
 
-// ⭐ Force override on first toggle if test already active
-if (!isPracticeModeActive && CURRENT_BODY_TEST) {
-    forceApplyHandOverrideOnce();
+// ⭐ Guarantee override on first toggle if test already active
+if (!isPracticeModeActive && CURRENT_BODY_TEST) forceApplyHandOverrideOnce();
 }
-
  
  if (poseToApply) {
     const h = poseToApply;
@@ -1730,31 +1722,32 @@ function applyBodyPositionFromSelection(){
 
  
 /* ==== Wire UI ==== */
-const toggleHandsBtn = $("toggleHandsBtn"); // Reference the new single button
+const toggleHandsBtn = $("toggleHandsBtn");
 
+// Initial state: locked
 toggleHandsBtn.disabled = true;
-toggleHandsBtn.classList.add("lockOn"); 
-  
-// Wire the new button to load/toggle the hands model
+toggleHandsBtn.classList.add("lockOn");
+
+// Wire click
 if (toggleHandsBtn) toggleHandsBtn.addEventListener('click', toggleHands);
 
-// When the test changes, update which grade menu is active, then re-apply pose
+// When a test is selected, unlock button and apply pose
 actionSel.addEventListener("change", () => {
 
-// Enable only when a test is selected
-toggleHandsBtn.disabled = !actionSel.value;
-toggleHandsBtn.classList.toggle("lockOn", !toggleHandsBtn.disabled);
+    // Unlock / lock button
+    toggleHandsBtn.disabled = !actionSel.value;
+    toggleHandsBtn.classList.remove("lockOn");
+    if (!actionSel.value) toggleHandsBtn.classList.add("lockOn");
 
+    // ★ required for HAND TUNER save
+    window.currentMMTtest = actionSel.value;
+    window.currentMMTgradeBucket = getGradeBucketForTest(actionSel.value);
 
-  // ★ required for HAND TUNER save
-  window.currentMMTtest = actionSel.value;
-  window.currentMMTgradeBucket = getGradeBucketForTest(actionSel.value);
+    updateGradeDropdownsForSelection();
+    applyBodyPositionFromSelection();
+    forceApplyHandOverrideOnce();
 
-  updateGradeDropdownsForSelection();
-  applyBodyPositionFromSelection();
-  forceApplyHandOverrideOnce();
-
-  if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
+    if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
 });
 
 
