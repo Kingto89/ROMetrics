@@ -563,13 +563,6 @@ chair.add(chairBack);
 // Rotate whole chair around its own center
 chair.rotation.y = THREE.MathUtils.degToRad(90);
 
-function debugListNodes(root){
-  if(!root || !root.traverse) return;
-  root.traverse(o => {
-    if (o.name) console.log(o.name);
-  });
-}
-
 
 // Stool
 const stoolSeat = new THREE.Mesh(
@@ -769,11 +762,6 @@ const TEST_POSITION = {
   Gastrocnemius:       { high: "gastroc",    low: "prone"  }  //table stand
 };
 
-
-const HAND_TEST_POSITION = {
-  Cervical_Flexion: { high: null, low: "cerv_low_point" }
-};
-  
 // Decide if we're in the high (3–5) or low (0–2) family for a given test
 // Per-test pose overrides (absolute position + rotation) keyed by "TestKey:high" / "TestKey:low"
 const POSE_OVERRIDES = {};
@@ -1240,27 +1228,6 @@ if (!HAND_OVERRIDES[key] && poseToApply) {
   if (mode === "side_lying"){
     applySideLyingLimbs();
   }
-
-function cervicalLow_RightHand_IndexPoint(){
-    if (!rightHandModel) return;
-
-    const get = name => rightHandModel.getObjectByName(name);
-
-    const index = get("index_control");
-    const major = get("Major_control");
-    const ring  = get("Ring_control");
-    const pinky = get("Pinky_control");
-
-    // Index = straight
-    if (index) index.rotation.x = 0;
-
-    // Others = curled
-    if (major) major.rotation.x = -0.6;
-    if (ring)  ring.rotation.x = -0.6;
-    if (pinky) pinky.rotation.x = -0.6;
-}
-
-
    // Wrist tests: add right-arm bias (0° abd, 0° flex) in both seated modes
   if (mode === "seatedgravity" || mode === "seatednogravity"){
     const upperR = getBone("upperarm_R");
@@ -1633,15 +1600,6 @@ function addModel(gltf){
   scene.add(model);
   $("msg").textContent = "✅ Model loaded";
 }
-setTimeout(()=>{
-  console.clear();
-  console.log("RIGHT HAND NODES:");
-  if (rightHandModel){
-    rightHandModel.traverse(o=>console.log(o.name));
-  } else {
-    console.log("rightHandModel not loaded");
-  }
-},2000);
 
 const MODEL_CANDIDATES = [
   window.ROMETRICS_MODEL_URL,
@@ -1745,12 +1703,12 @@ const out = {
 
 
 function applyBodyPositionFromSelection(){
-  if (!model || !skeleton) return;
+  if (!model || !skeleton) return;
+  
+  const test = actionSel?.value;
+  if (!test) return; // <<< THIS LINE MUST BE ADDED BACK
 
-  const test = actionSel?.value;
-  if (!test) return;
-
-  const bucket = getGradeBucketForTest(test);
+  const bucket = getGradeBucketForTest(test);
 
   // ★ REQUIRED FOR HAND TUNER ★
   window.currentMMTtest = test;
@@ -2174,17 +2132,6 @@ function ensurePoseTuner(){
     model.position.set(o.x, o.y, o.z);
     model.rotation.set(o.rx, o.ry, o.rz);
   }
-
-  // === HAND POSE SELECTOR ===
-const handMode = HAND_TEST_POSITION?.[CURRENT_BODY_TEST]?.[CURRENT_BODY_BUCKET];
-if (handMode){
-    switch(handMode){
-        case "cerv_low_point":
-            cervicalLow_RightHand_IndexPoint();
-            break;
-    }
-}
-
 
   // Position buttons
   poseTunerEl.querySelectorAll('button[data-axis]').forEach(btn=>{
