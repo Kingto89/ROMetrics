@@ -563,11 +563,13 @@ chair.add(chairBack);
 // Rotate whole chair around its own center
 chair.rotation.y = THREE.MathUtils.degToRad(90);
 
-// DEBUG — LIST ALL RIGHT-HAND NODE NAMES
-(function(){
-    if (!rightHandModel) return;
-    rightHandModel.traverse(o => console.log(o.name));
-})();
+function debugListNodes(root){
+  if(!root || !root.traverse) return;
+  root.traverse(o => {
+    if (o.name) console.log(o.name);
+  });
+}
+
 
 // Stool
 const stoolSeat = new THREE.Mesh(
