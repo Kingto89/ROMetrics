@@ -1287,9 +1287,13 @@ if (!rightHandModel || !leftHandModel) {
             // --- END: ACTIVATE DRAGGING CONTROL HERE ---
 
 
-            // FIX 2: Call the function that applies the saved coordinates
-            // This reads the hard-coded HAND_OVERRIDES for the currently selected test/grade.
-            applyBodyPositionFromSelection(); 
+            // FIX 2: Call the new reset function for the initial load state,
+// ensuring hands start at the correct neutral position.
+resetHandsToNeutral();
+
+// CRUCIAL: Must call applyBodyPositionFromSelection *after* reset, 
+// so the patient's body pose is set for the current selection.
+applyBodyPositionFromSelection();
 
             $("msg").textContent = "✅ Hands model ready.";
         },
@@ -1307,17 +1311,26 @@ function toggleHands(){
     const btn = $("toggleHandsBtn");
     
     if (!handsModel) {
-        loadHandsModel();
+        // Loads the hands model for the first time
+        loadHandsModel(); 
     } else {
         handsModel.visible = !handsModel.visible;
-    }
-
-    // Update button style for visual feedback
-    if (handsModel?.visible) {
-         btn?.classList.add('lockOn');
-     showHandTuner(); 
-    } else {
-         btn?.classList.remove('lockOn');
+        
+        if (handsModel.visible) {
+            // FIX: Only reset the therapist hands' position/rotation, 
+            // ensuring they reappear visibly at a neutral location.
+            resetHandsToNeutral(); 
+        }
+        
+        // Update button style
+        if (handsModel.visible) {
+            btn?.classList.add('lockOn');
+        } else {
+            btn?.classList.remove('lockOn');
+            // Ensure controls are detached when hands are hidden
+            transformControls.detach();
+            transformControls.visible = false;
+        }
     }
 }
 
@@ -1353,6 +1366,31 @@ function switchActiveHand() {
 // Wire the new button
 if (switchActiveHandBtn) {
     switchActiveHandBtn.addEventListener('click', switchActiveHand);
+}
+
+// Function to snap the hands back to the defined neutral position
+function resetHandsToNeutral() {
+    if (!rightHandModel || !leftHandModel) return;
+
+    // HAND_NEUTRAL_POSE is defined earlier in the script
+    const h = HAND_NEUTRAL_POSE;
+
+    // Apply neutral position and rotation to the right hand
+    if (rightHandModel) {
+        rightHandModel.position.set(h.handRX, h.handRY, h.handRZ);
+        rightHandModel.rotation.set(h.handRRX, h.handRRY, h.handRRZ);
+    }
+
+    // Apply neutral position and rotation to the left hand
+    if (leftHandModel) {
+        leftHandModel.position.set(h.handLX, h.handLY, h.handLZ);
+        leftHandModel.rotation.set(h.handLRX, h.handLRY, h.handLRZ);
+    }
+    
+    // Detach TransformControls if it's currently attached to a hand
+    if (transformControls.object === rightHandModel || transformControls.object === leftHandModel) {
+        transformControls.detach();
+    }
 }
 // ========================================================== 
 
