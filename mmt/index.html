@@ -1574,20 +1574,6 @@ function applySideLyingLimbs(){
     upperR.rotateZ(degToRad(SHO_ADD_DEG));
     upperR.rotateX(degToRad(SHO_FLEX_DEG));
   }
-function cervicalLow_RightHand_IndexPoint(){
-  const hand = rightHandModel;
-  if (!hand) return;
-
-  const indexBone = hand.getObjectByName("index control");
-  const midBone   = hand.getObjectByName("Major control");
-  const ringBone  = hand.getObjectByName("Ring control");
-  const pinkyBone = hand.getObjectByName("Pinky control");
-
-  if (indexBone) indexBone.rotation.x = 0;
-  if (midBone)   midBone.rotation.x = -0.6;
-  if (ringBone)  ringBone.rotation.x = -0.6;
-  if (pinkyBone) pinkyBone.rotation.x = -0.6;
-}  
 }
 
 
@@ -2146,9 +2132,6 @@ function ensurePoseTuner(){
     model.position.set(o.x, o.y, o.z);
     model.rotation.set(o.rx, o.ry, o.rz);
   }
-if (test === "Cervical_Flexion" && bucket === "low") {
-    cervicalLow_RightHand_IndexPoint();
-}
 
   // Position buttons
   poseTunerEl.querySelectorAll('button[data-axis]').forEach(btn=>{
