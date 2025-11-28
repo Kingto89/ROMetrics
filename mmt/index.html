@@ -1364,6 +1364,41 @@ function forceApplyHandOverrideOnce() {
     const bucket = getGradeBucketForTest(test);
     const key = `${test}:${bucket}`;
 
+  
+function forceApplyHandOverrideOnce() {
+    if (!actionSel?.value) return;
+    if (!handsModel || !rightHandModel || !leftHandModel) return;
+
+    const test = actionSel.value;
+    const bucket = getGradeBucketForTest(test);
+    const key = `${test}:${bucket}`;
+// --- SIMPLE HAND POSE FOR LOW CERVICAL FLEXION --- 
+if (testKey === "Cervical_Flexion" && bucket === "low") {
+    const hand = scene.getObjectByName("Hand_Right");
+    if (hand) {
+        const indexBone = hand.getObjectByName("index control");
+        const midBone   = hand.getObjectByName("Major control");
+        const ringBone  = hand.getObjectByName("Ring control");
+        const pinkyBone = hand.getObjectByName("Pinky control");
+
+        // index finger straight
+        if (indexBone) indexBone.rotation.x = 0;
+
+        // curl all other fingers (small gentle curl)
+        if (midBone)   midBone.rotation.x = -0.6;
+        if (ringBone)  ringBone.rotation.x = -0.6;
+        if (pinkyBone) pinkyBone.rotation.x = -0.6;
+    }
+}
+
+    if (HAND_OVERRIDES[key]) {
+        applyHandOverride(key);
+    } else {
+        resetHandsToNeutral();
+    }
+}
+
+function toggleHands(){
     if (HAND_OVERRIDES[key]) {
         applyHandOverride(key);
     } else {
