@@ -1362,15 +1362,16 @@ function toggleHands(){
     // ▼ Only use saved override if practice mode is OFF
     const test = actionSel?.value;
     const bucket = getGradeBucketForTest(test);
-    const key = test && bucket ? `${test}:${bucket}` : null;
+    const handKey = `${test}:${bucket}`;
 
-    if (!isPracticeModeActive && key && HAND_OVERRIDES[key]) {
-        // Apply saved override immediately on toggle ON
-        applyHandOverride(key);
-    } else {
-        // Practice mode ON → keep neutral
-        resetHandsToNeutral();
-    }
+  if (!handsModel || !rightHandModel || !leftHandModel) return;
+
+if (HAND_OVERRIDES[handKey]) {
+    applyHandOverride(handKey);
+} else {
+    resetHandsToNeutral();
+}
+
 }
   
         
