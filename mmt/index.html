@@ -1308,6 +1308,7 @@ applyBodyPositionFromSelection();
         }
     );
 }
+
 function toggleHands(){
     const btn = $("toggleHandsBtn");
     
@@ -1318,9 +1319,11 @@ function toggleHands(){
         handsModel.visible = !handsModel.visible;
         
         if (handsModel.visible) {
-            // FIX: Only reset the therapist hands' position/rotation, 
-            // ensuring they reappear visibly at a neutral location.
+            // 1. Reset hands to neutral (ensures they reappear visibly)
             resetHandsToNeutral(); 
+            // 2. Load the patient body pose AND, crucially, load the saved HAND_OVERRIDES
+            //    (This loads your custom placement if Practice Mode is OFF)
+            applyBodyPositionFromSelection(); 
         }
         
         // Update button style
@@ -1328,12 +1331,11 @@ function toggleHands(){
             btn?.classList.add('lockOn');
         } else {
             btn?.classList.remove('lockOn');
-            // Ensure controls are detached when hands are hidden
             transformControls.detach();
             transformControls.visible = false;
         }
     }
-}
+}  
 
  // ============= NEW: Switch Active Hand Logic =============
 const switchActiveHandBtn = $("switchActiveHandBtn");
