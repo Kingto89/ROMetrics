@@ -1115,11 +1115,27 @@ function setBodyMode(mode){
  // 2. Default to NEUTRAL pose.
  let poseToApply = HAND_NEUTRAL_POSE; 
   
- // 🔑 CRITICAL LOGIC: ONLY apply saved pose if Practice Mode is NOT active.
- // If Practice Mode is ON, poseToApply remains HAND_NEUTRAL_POSE, allowing the student to move it.
- if (!isPracticeModeActive && useSavedPose) {
-      poseToApply = HAND_OVERRIDES[key];
- } 
+// ------------------------------------
+// HAND OVERRIDE LOGIC (FINAL VERSION)
+// ------------------------------------
+const key = `${test}:${bucket}`;
+
+if (!handsModel || !rightHandModel || !leftHandModel) return;
+
+// If practice mode is ON → neutral
+if (isPracticeModeActive) {
+    resetHandsToNeutral();
+} 
+else {
+    // If override exists → apply it
+    if (HAND_OVERRIDES[key]) {
+        applyHandOverride(key);
+    } else {
+        // No override saved → neutral
+        resetHandsToNeutral();
+    }
+}
+
  
  if (poseToApply) {
     const h = poseToApply;
@@ -1315,6 +1331,19 @@ applyBodyPositionFromSelection();
         }
     );
 }
+function applyHandOverride(key){
+    const h = HAND_OVERRIDES[key];
+    if (!h) return;
+
+    if (rightHandModel){
+        rightHandModel.position.set(h.handRX, h.handRY, h.handRZ);
+        rightHandModel.rotation.set(h.handRRX, h.handRRY, h.handRRZ);
+    }
+    if (leftHandModel){
+        leftHandModel.position.set(h.handLX, h.handLY, h.handLZ);
+        leftHandModel.rotation.set(h.handLRX, h.handLRY, h.handLRZ);
+    }
+}
 
 function toggleHands(){
     const btn = $("toggleHandsBtn");
@@ -1325,16 +1354,25 @@ function toggleHands(){
     } else {
         handsModel.visible = !handsModel.visible;
         
-        if (handsModel.visible) {
-            // 1. Reset hands to neutral (ensures they reappear visibly after toggle)
-            resetHandsToNeutral(); 
-            
-            // 🔑 CRITICAL FIX: Only apply the saved MMT pose if Practice Mode is OFF.
-            if (!isPracticeModeActive) {
-                applyBodyPositionFromSelection(); 
-            }
-            // If Practice Mode IS active, they stay at the neutral reset position (ready for practice).
-        }
+    if (handsModel.visible) {
+
+    // ▼ ALWAYS clear, then apply correct pose
+    resetHandsToNeutral();
+
+    // ▼ Only use saved override if practice mode is OFF
+    const test = actionSel?.value;
+    const bucket = getGradeBucketForTest(test);
+    const key = test && bucket ? `${test}:${bucket}` : null;
+
+    if (!isPracticeModeActive && key && HAND_OVERRIDES[key]) {
+        // Apply saved override immediately on toggle ON
+        applyHandOverride(key);
+    } else {
+        // Practice mode ON → keep neutral
+        resetHandsToNeutral();
+    }
+}
+  
         
         // Update button style
         if (handsModel.visible) {
