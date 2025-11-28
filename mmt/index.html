@@ -1116,7 +1116,9 @@ function setBodyMode(mode){
 // ------------------------------------
 // HAND OVERRIDE LOGIC (FINAL VERSION)
 // ------------------------------------
-const handkey = `${test}:${bucket}`;
+const handKey = CURRENT_BODY_TEST && CURRENT_BODY_BUCKET
+  ? `${CURRENT_BODY_TEST}:${CURRENT_BODY_BUCKET}`
+  : null;
 
 if (!handsModel || !rightHandModel || !leftHandModel) return;
 
