@@ -1709,14 +1709,18 @@ function applyBodyPositionFromSelection(){
   if (!test) return;
 
   const bucket = getGradeBucketForTest(test);
+// SIMPLE POINTING RULE — LOW Cervical Flexion → Right index points
+if (test === "Cervical_Flexion" && bucket === "low") {
+    if (rightHandModel) {
+        // move hand near face
+        rightHandModel.position.set(0.45, 1.25, 0.45);
 
-  // SIMPLE: Right-hand pointing for LOW Cervical Flexion
-  if (test === "Cervical_Flexion" && bucket === "low") {
-      if (rightHandModel) {
-          rightHandModel.position.set(0.45, 1.25, 0.45);
-          rightHandModel.rotation.set(-0.6, 0.3, 0);
-      }
-  }
+        // orient the entire hand like pointing
+        rightHandModel.rotation.set(-0.6, 0.3, 0);
+
+        console.log("→ Applied LOW Cervical Flexion pointing pose");
+    }
+}
 
 
   // ★ REQUIRED FOR HAND TUNER ★
