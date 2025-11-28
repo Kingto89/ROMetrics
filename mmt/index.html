@@ -1363,15 +1363,6 @@ function forceApplyHandOverrideOnce() {
     const test = actionSel.value;
     const bucket = getGradeBucketForTest(test);
     const key = `${test}:${bucket}`;
-
-  
-function forceApplyHandOverrideOnce() {
-    if (!actionSel?.value) return;
-    if (!handsModel || !rightHandModel || !leftHandModel) return;
-
-    const test = actionSel.value;
-    const bucket = getGradeBucketForTest(test);
-    const key = `${test}:${bucket}`;
 // --- SIMPLE HAND POSE FOR LOW CERVICAL FLEXION --- 
 if (testKey === "Cervical_Flexion" && bucket === "low") {
     const hand = scene.getObjectByName("Hand_Right");
@@ -1390,6 +1381,15 @@ if (testKey === "Cervical_Flexion" && bucket === "low") {
         if (pinkyBone) pinkyBone.rotation.x = -0.6;
     }
 }
+  
+function forceApplyHandOverrideOnce() {
+    if (!actionSel?.value) return;
+    if (!handsModel || !rightHandModel || !leftHandModel) return;
+
+    const test = actionSel.value;
+    const bucket = getGradeBucketForTest(test);
+    const key = `${test}:${bucket}`;
+
 
     if (HAND_OVERRIDES[key]) {
         applyHandOverride(key);
