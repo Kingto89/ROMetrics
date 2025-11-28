@@ -1106,18 +1106,19 @@ function setBodyMode(mode){
     applyLimbOverridesFromOverride(POSE_OVERRIDES[key]);
   }
 
-  // Inside function setBodyMode(mode) { ... }
-
-// ... existing code for model.rotation.set() and applyLimbOverridesFromOverride() ...
-
-  // === NEW: Therapist Hand Overrides (separate dictionary) ===
+// === NEW: Therapist Hand Overrides (separate dictionary) ===
   // NOTE: The 'key' variable is already defined from the patient pose logic above.
-  
-  // FIX: Choose the specific saved pose if it exists, otherwise use the neutral default position.
-  const poseToApply = key && HAND_OVERRIDES[key]
-    ? HAND_OVERRIDES[key]
-    : HAND_NEUTRAL_POSE;
+  
+  // Determine if we should load the saved pose or force the neutral pose.
+  const useSavedPose = key && HAND_OVERRIDES[key];
 
+  let poseToApply = HAND_NEUTRAL_POSE; // Default to neutral position/rotation
+
+  // Only apply saved pose if Practice Mode is NOT active.
+  if (!isPracticeModeActive && useSavedPose) {
+      poseToApply = HAND_OVERRIDES[key];
+  } 
+  
   if (poseToApply) {
     const h = poseToApply;
 
