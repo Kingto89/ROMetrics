@@ -661,13 +661,24 @@ loader.setMeshoptDecoder(MeshoptDecoder);
 const draco = new DRACOLoader(); draco.setDecoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/draco/"); loader.setDRACOLoader(draco);
 const ktx2  = new KTX2Loader();  ktx2.setTranscoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/basis/"); ktx2.detectSupport(renderer); loader.setKTX2Loader(ktx2);
 
-let model=null, skeleton=null;
+// --- Global Model Variables ---
+let model=null;
+let skeleton=null; // Patient model skeleton
 const initialBoneRot = new Map();
 let GLOBAL_PF_DEG = 0; // shared plantarflex angle for both feet
 
-// ADDED: Hands model loading variables
+
+ // --- Global Hand Model Variables ---
 const HANDS_MODEL_URL = "https://raw.githubusercontent.com/Kingto89/ROMetrics.com/main/assets/Hands.glb";
 let handsModel = null;
+let rightHandModel = null; // CRITICAL: Global Hand Model Reference
+let leftHandModel = null;  // CRITICAL: Global Hand Model Reference
+
+// --- Global Practice Variables ---
+let MMT_HAND_MAP = {}; // Placeholder map for hand pose data (to prevent crash)
+// NOTE: window.currentMMTgrade should be set elsewhere (e.g., event listener)
+// We only need the variable to exist globally for the initial checks:
+window.currentMMTgrade = null; 
   
 // Reset all bones back to stored baseline
 function resetAllBones(){
@@ -1106,11 +1117,6 @@ function setBodyMode(mode){
     applyLimbOverridesFromOverride(POSE_OVERRIDES[key]);
   }
 
-  // 4. Therapist Hand Overrides:
-  //    This logic block is entirely replaced by the existing, correct
-  //    AUTO-LOAD HAND POSE section that follows setBodyMode in the script,
-  //    which ensures the model is loaded using the Quaternion values from MMT_HAND_MAP.
-
   // 5. Apply optional arm fine-tune rotations (shortcut from POSE_OVERRIDES)
   if (key && POSE_OVERRIDES[key] && skeleton){
     const o = POSE_OVERRIDES[key];
@@ -1362,28 +1368,41 @@ function applySideLyingLimbs(){
 }
 
 
-/* ==== Load model ==== */
+/* ==== Load model (FINAL CORRECTION) ==== */
 function addModel(gltf){
-  model = gltf.scene;
-  model.traverse(o=>{
-    if (o.isMesh){ o.castShadow=true; o.receiveShadow=true; }
-    if (o.isSkinnedMesh && !skeleton) skeleton = o.skeleton;
-  });
+  model = gltf.scene;
+  skeleton = null; // Ensure fresh start
 
-  // store baseline bone rotations
-  if (skeleton){
-    skeleton.bones.forEach(b => initialBoneRot.set(b, b.quaternion.clone()));
-    applyAnatomicBaseline();
-  }
+  // 1. Find the main body SkinnedMesh and assign its skeleton
+  model.traverse(o=>{
+    if (o.isMesh){ 
+      o.castShadow=true; 
+      o.receiveShadow=true; 
+    }
+    // Set the first found skeleton as the main one
+    if (o.isSkinnedMesh && o.skeleton && !skeleton) {
+        skeleton = o.skeleton;
+    }
+  });
 
-  // Apply hard-wired numeric transform (no saving, no snapping)
-  model.scale.set(POSE.s, POSE.s, POSE.s);
-  model.position.set(POSE.x, POSE.y, POSE.z);
-  model.rotation.set(0, degToRad(POSE.ryDeg), 0);
-  if (POSE.seated) seatPoseOnlyLegs();
+  // store baseline bone rotations
+  if (skeleton){
+    skeleton.bones.forEach(b => initialBoneRot.set(b, b.quaternion.clone()));
+    applyAnatomicBaseline();
+  } else {
+      console.error("⚠️ Failed to find skeleton after loading model. Posing disabled.");
+      $("msg").textContent = "⚠️ Model loaded, but skeleton not found. Posing will fail.";
+      return;
+  }
 
-  scene.add(model);
-  $("msg").textContent = "✅ Model loaded";
+  // 2. Apply Model Transform
+  model.scale.set(POSE.s, POSE.s, POSE.s);
+  model.position.set(POSE.x, POSE.y, POSE.z);
+  model.rotation.set(0, degToRad(POSE.ryDeg), 0);
+  if (POSE.seated) seatPoseOnlyLegs();
+
+  scene.add(model);
+  $("msg").textContent = "✅ Model loaded";
 }
 
 const MODEL_CANDIDATES = [
@@ -1517,8 +1536,6 @@ try {
   // Recalculate key here for clarity/safety, but relies on accurate getGradeBucketForTest
   const key = `${testName}:${getGradeBucketForTest(testName)}`; 
 
-  // CRITICAL LOGIC: ONLY load if hands are visible AND Practice Mode is OFF.
-  // Note: 'isPracticeModeActive' must be globally defined for this check to work.
   if (handsModel?.visible && typeof isPracticeModeActive !== 'undefined' && !isPracticeModeActive && MMT_HAND_MAP[testName] && MMT_HAND_MAP[testName][grade]) {
 
     const data = MMT_HAND_MAP[testName][grade];
