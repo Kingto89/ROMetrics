@@ -1343,6 +1343,20 @@ function applyHandOverride(key){
         leftHandModel.rotation.set(h.handLRX, h.handLRY, h.handLRZ);
     }
 }
+function forceApplyHandOverrideOnce() {
+    if (!actionSel?.value) return;
+    if (!handsModel || !rightHandModel || !leftHandModel) return;
+
+    const test = actionSel.value;
+    const bucket = getGradeBucketForTest(test);
+    const key = `${test}:${bucket}`;
+
+    if (HAND_OVERRIDES[key]) {
+        applyHandOverride(key);
+    } else {
+        resetHandsToNeutral();
+    }
+}
 
 function toggleHands(){
     const btn = $("toggleHandsBtn");
@@ -1720,6 +1734,7 @@ actionSel.addEventListener("change", () => {
 
   updateGradeDropdownsForSelection();
   applyBodyPositionFromSelection();
+  forceApplyHandOverrideOnce();
 
   if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
 });
@@ -2239,24 +2254,7 @@ function onPointerDownTransformControls(event) {
     if (intersects.length > 0) {
         const intersection = intersects[0];
         // The center cube/sphere usually has a specific name or color (white/yellow in translate mode)
-        // Check if the distance to the control is very close (implying the center handle was hit)
-        // A simpler way is to check the *mode* while the control is active.
-
-        // We will assume any click on the widget area that isn't a drag event is meant to switch modes
-        // or switch hands. Let's make the center sphere the dedicated switch button.
-        
-        // This is complex due to internal TransformControls API. Let's use the simplest logic:
-        // Any click on a handle that is NOT the current mode (Translate/Rotate handles) will switch mode.
-        
-        // Simplified Goal: Single click on the center control switches hand.
-        // We will use the custom center object that TransformControls uses for raycasting if possible. 
-        
-        // Let's use the raycaster and check if the intersected handle is the translation sphere (the center point).
-        // Since TransformControls does not expose the center sphere's mesh readily, we rely on checking all children.
-
-        // If the intersected handle is one of the translation arrows (name: "Arrow_...") or the rotation ring (name: "Circle_...")
-        // we do nothing (the user drags). 
-        // We need a specific raycast target for the center sphere.
+      
 
         // --- Simplified Hand Switch Logic (Checking Distance to Center) ---
         const centerPos = new THREE.Vector3();
