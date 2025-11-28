@@ -1324,14 +1324,6 @@ if (!rightHandModel || !leftHandModel) {
             // their movement must be handled via the Pose Tuner or separate control logic later.
             scene.add(handsModel);
 
-            // --- START: ACTIVATE DRAGGING CONTROL HERE (No Tuner Logic) ---
-            if (transformControls && rightHandModel) {
-                // Attach the right hand model to the widget for immediate dragging access
-                transformControls.attach(rightHandModel);
-                transformControls.visible = true; 
-            }
-            // --- END: ACTIVATE DRAGGING CONTROL HERE ---
-
 
             // FIX 2: Call the function that applies the saved coordinates
             // This reads the hard-coded HAND_OVERRIDES for the currently selected test/grade.
