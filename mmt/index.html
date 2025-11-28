@@ -661,24 +661,13 @@ loader.setMeshoptDecoder(MeshoptDecoder);
 const draco = new DRACOLoader(); draco.setDecoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/draco/"); loader.setDRACOLoader(draco);
 const ktx2  = new KTX2Loader();  ktx2.setTranscoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/basis/"); ktx2.detectSupport(renderer); loader.setKTX2Loader(ktx2);
 
-// --- Global Model Variables ---
-let model=null;
-let skeleton=null; // Patient model skeleton
+let model=null, skeleton=null;
 const initialBoneRot = new Map();
 let GLOBAL_PF_DEG = 0; // shared plantarflex angle for both feet
 
-
- // --- Global Hand Model Variables ---
+// ADDED: Hands model loading variables
 const HANDS_MODEL_URL = "https://raw.githubusercontent.com/Kingto89/ROMetrics.com/main/assets/Hands.glb";
 let handsModel = null;
-let rightHandModel = null; // CRITICAL: Global Hand Model Reference
-let leftHandModel = null;  // CRITICAL: Global Hand Model Reference
-
-// --- Global Practice Variables ---
-let MMT_HAND_MAP = {}; // Placeholder map for hand pose data (to prevent crash)
-// NOTE: window.currentMMTgrade should be set elsewhere (e.g., event listener)
-// We only need the variable to exist globally for the initial checks:
-window.currentMMTgrade = null; 
   
 // Reset all bones back to stored baseline
 function resetAllBones(){
@@ -1085,7 +1074,7 @@ function setBodyMode(mode){
     rotZ = 0;
   }
 
-  // Apply any saved body pose override for this test + grade family (high/low)
+  // Apply any saved override for this test + family (high/low)
   const key = CURRENT_BODY_TEST && CURRENT_BODY_BUCKET
     ? `${CURRENT_BODY_TEST}:${CURRENT_BODY_BUCKET}`
     : null;
@@ -1099,25 +1088,67 @@ function setBodyMode(mode){
     rotY = o.ry;
     rotZ = o.rz;
 
-    // Read global planarflexion from override if present
+    // NEW: read plantarflexion from override if present
     if (typeof o.pf === "number") {
       GLOBAL_PF_DEG = o.pf;
     }
   }
 
-  // 1. Apply Model Position & Rotation
+
   model.position.set(posX, posY, posZ);
   model.rotation.set(rotX, rotY, rotZ);
 
-  // 2. Re-apply global plantarflexion to both feet
+  // Re-apply global plantarflexion to both feet
   applyGlobalPF();
 
-  // 3. Apply any custom limb overrides (thigh/calf/spine/neck)
+    // Apply any per-test thigh/calf overrides (if present)
   if (key && POSE_OVERRIDES[key]){
     applyLimbOverridesFromOverride(POSE_OVERRIDES[key]);
   }
 
-  // 5. Apply optional arm fine-tune rotations (shortcut from POSE_OVERRIDES)
+// === NEW: Therapist Hand Overrides (separate dictionary) ===
+ 
+ // 1. Determine the key and check if a pose is saved in HAND_OVERRIDES
+ // NOTE: 'key' is already declared for the patient pose logic above.
+ let useSavedPose = key && HAND_OVERRIDES[key];
+
+ // 2. Default to NEUTRAL pose.
+ let poseToApply = HAND_NEUTRAL_POSE; 
+  
+ // 🔑 CRITICAL LOGIC: ONLY apply saved pose if Practice Mode is NOT active.
+ // If Practice Mode is ON, poseToApply remains HAND_NEUTRAL_POSE, allowing the student to move it.
+ if (!isPracticeModeActive && useSavedPose) {
+      poseToApply = HAND_OVERRIDES[key];
+ } 
+ 
+ if (poseToApply) {
+    const h = poseToApply;
+
+    if (rightHandModel){
+        // Apply position 
+        if (h.handRX  != null) rightHandModel.position.x = h.handRX;
+        if (h.handRY  != null) rightHandModel.position.y = h.handRY;
+        if (h.handRZ  != null) rightHandModel.position.z = h.handRZ;
+        // Apply rotation
+        if (h.handRRX != null) rightHandModel.rotation.x = h.handRRX;
+        if (h.handRRY != null) rightHandModel.rotation.y = h.handRRY;
+        if (h.handRRZ != null) rightHandModel.rotation.z = h.handRRZ;
+    }
+
+    if (leftHandModel){
+        // Apply position
+        if (h.handLX  != null) leftHandModel.position.x = h.handLX;
+        if (h.handLY  != null) leftHandModel.position.y = h.handLY;
+        if (h.handLZ  != null) leftHandModel.position.z = h.handLZ;
+        // Apply rotation
+        if (h.handLRX != null) leftHandModel.rotation.x = h.handLRX;
+        if (h.handLRY != null) leftHandModel.rotation.y = h.handLRY;
+        if (h.handLRZ != null) leftHandModel.rotation.z = h.handLRZ;
+    }
+ }
+
+
+  // Optional arm/hand fine-tune rotations (shortcut from POSE_OVERRIDES) 
   if (key && POSE_OVERRIDES[key] && skeleton){
     const o = POSE_OVERRIDES[key];
 
@@ -1169,8 +1200,7 @@ function setBodyMode(mode){
   if (mode === "side_lying"){
     applySideLyingLimbs();
   }
-
-  // Wrist tests: add right-arm bias (0° abd, 0° flex) in both seated modes
+   // Wrist tests: add right-arm bias (0° abd, 0° flex) in both seated modes
   if (mode === "seatedgravity" || mode === "seatednogravity"){
     const upperR = getBone("upperarm_R");
     const lowerR = getBone("lowerarm_R");
@@ -1182,27 +1212,141 @@ function setBodyMode(mode){
       if (q0) b.quaternion.copy(q0);
     });
 
-    if (upperR) upperR.rotateZ(degToRad(-16)); // ° shoulder abduction
-    if (lowerR) lowerR.rotateX(degToRad(25)); // ° elbow flexion
+    if (upperR) upperR.rotateZ(degToRad(-16));  // ° shoulder abduction
+    if (lowerR) lowerR.rotateX(degToRad(25));  // ° elbow flexion
   }
+ 
+// Wrist tests: right-arm bias for NO-gravity (0–2) pose
+if (mode === "seatednogravity"){
+  const upperR = getBone("upperarm_R");
+  const lowerR = getBone("lowerarm_R");
 
-  // Wrist tests: right-arm bias for NO-gravity (0–2) pose
-  if (mode === "seatednogravity"){
-    const upperR = getBone("upperarm_R");
-    const lowerR = getBone("lowerarm_R");
+  // Reset just these bones to baseline so angles are absolute (not stacked)
+  [upperR, lowerR].forEach(b => {
+    if (!b) return;
+    const q0 = initialBoneRot.get(b);
+    if (q0) b.quaternion.copy(q0);
+  });
 
-    // Reset just these bones to baseline so angles are absolute (not stacked)
-    [upperR, lowerR].forEach(b => {
-      if (!b) return;
-      const q0 = initialBoneRot.get(b);
-      if (q0) b.quaternion.copy(q0);
-    });
-
-    // Same shoulder, MORE elbow flexion for gravity-eliminated setup
-    if (upperR) upperR.rotateZ(degToRad(-12)); // shoulder abduction
-    if (lowerR) lowerR.rotateX(degToRad(75)); // more elbow flexion (tweak if needed)
-  }
+  // Same shoulder, MORE elbow flexion for gravity-eliminated setup
+  if (upperR) upperR.rotateZ(degToRad(-12)); // shoulder abduction
+  if (lowerR) lowerR.rotateX(degToRad(75));  // more elbow flexion (tweak if needed)
 }
+}
+
+/* ==== Therapist Hands Model Logic ==== */
+let rightHandModel = null;
+let leftHandModel = null;  
+function loadHandsModel(){
+    if (handsModel) return;
+    $("msg").textContent = "Loading therapist hands model...";
+    
+    // Using the existing configured loader for consistency
+    loader.load(
+        HANDS_MODEL_URL,
+        (gltf) => {
+            handsModel = gltf.scene;
+          // Identify individual hands
+          rightHandModel = handsModel.getObjectByName("Hand_R") || handsModel.getObjectByName("hand_R");
+          leftHandModel  = handsModel.getObjectByName("Hand_L") || handsModel.getObjectByName("hand_L");
+          // If names don't match, auto-detect by size (right hand = larger X position)
+if (!rightHandModel || !leftHandModel) {
+    const possible = [];
+    handsModel.traverse(o => {
+        if (o.isMesh && o.parent !== handsModel) {
+            // parent of hand mesh is the hand root
+            possible.push(o.parent);
+        }
+    });
+    // Remove duplicates
+    const roots = [...new Set(possible)];
+
+    if (roots.length === 2) {
+        // Decide left/right based on world X position
+        roots.sort((a,b) => {
+            a.updateWorldMatrix(true, false);
+            b.updateWorldMatrix(true, false);
+            return a.getWorldPosition(new THREE.Vector3()).x - 
+                   b.getWorldPosition(new THREE.Vector3()).x;
+        });
+        leftHandModel  = roots[0];
+        rightHandModel = roots[1];
+    }
+}
+
+            // FIX 1: Set visibility to true immediately on load
+            handsModel.visible = true; 
+            
+            // Set scale to match the patient model scale
+            handsModel.scale.set(0.20, 0.20, 0.20);
+            // Initial position guess: centered in front of the patient
+            handsModel.position.set(0, 1.7, 0.5); // Adjusted Y to 1.4
+            
+            // Note: Hand.L and Hand.R meshes are inside handsModel, 
+            // their movement must be handled via the Pose Tuner or separate control logic later.
+            scene.add(handsModel);
+
+            // --- START: ACTIVATE DRAGGING CONTROL HERE (No Tuner Logic) ---
+            if (transformControls && rightHandModel) {
+                // Attach the right hand model to the widget for immediate dragging access
+                transformControls.attach(rightHandModel);
+                transformControls.visible = true; 
+            }
+            // --- END: ACTIVATE DRAGGING CONTROL HERE ---
+
+
+            // FIX 2: Call the new reset function for the initial load state,
+// ensuring hands start at the correct neutral position.
+resetHandsToNeutral();
+
+// CRUCIAL: Must call applyBodyPositionFromSelection *after* reset, 
+// so the patient's body pose is set for the current selection.
+applyBodyPositionFromSelection();
+
+            $("msg").textContent = "✅ Hands model ready.";
+        },
+        (xhr) => {
+            const pct = xhr.lengthComputable ? Math.min(100, Math.round(100*xhr.loaded/xhr.total)) : null;
+            $("msg").textContent = pct!==null ? `Loading Hands ${pct}%` : "Loading Hands...";
+        },
+        (error) => {
+            console.error("Failed to load Hands model:", error);
+            $("msg").textContent = "⚠️ Failed to load therapist hands.";
+        }
+    );
+}
+
+function toggleHands(){
+    const btn = $("toggleHandsBtn");
+    
+    if (!handsModel) {
+        // Loads the hands model for the first time
+        loadHandsModel(); 
+    } else {
+        handsModel.visible = !handsModel.visible;
+        
+        if (handsModel.visible) {
+            // 1. Reset hands to neutral (ensures they reappear visibly after toggle)
+            resetHandsToNeutral(); 
+            
+            // 🔑 CRITICAL FIX: Only apply the saved MMT pose if Practice Mode is OFF.
+            if (!isPracticeModeActive) {
+                applyBodyPositionFromSelection(); 
+            }
+            // If Practice Mode IS active, they stay at the neutral reset position (ready for practice).
+        }
+        
+        // Update button style
+        if (handsModel.visible) {
+            btn?.classList.add('lockOn');
+        } else {
+            btn?.classList.remove('lockOn');
+            transformControls.detach();
+            transformControls.visible = false;
+        }
+    }
+}
+
  // ============= NEW: Switch Active Hand Logic =============
 const switchActiveHandBtn = $("switchActiveHandBtn");
 
@@ -1368,41 +1512,28 @@ function applySideLyingLimbs(){
 }
 
 
-/* ==== Load model (FINAL CORRECTION) ==== */
+/* ==== Load model ==== */
 function addModel(gltf){
-  model = gltf.scene;
-  skeleton = null; // Ensure fresh start
+  model = gltf.scene;
+  model.traverse(o=>{
+    if (o.isMesh){ o.castShadow=true; o.receiveShadow=true; }
+    if (o.isSkinnedMesh && !skeleton) skeleton = o.skeleton;
+  });
 
-  // 1. Find the main body SkinnedMesh and assign its skeleton
-  model.traverse(o=>{
-    if (o.isMesh){ 
-      o.castShadow=true; 
-      o.receiveShadow=true; 
-    }
-    // Set the first found skeleton as the main one
-    if (o.isSkinnedMesh && o.skeleton && !skeleton) {
-        skeleton = o.skeleton;
-    }
-  });
+  // store baseline bone rotations
+  if (skeleton){
+    skeleton.bones.forEach(b => initialBoneRot.set(b, b.quaternion.clone()));
+    applyAnatomicBaseline();
+  }
 
-  // store baseline bone rotations
-  if (skeleton){
-    skeleton.bones.forEach(b => initialBoneRot.set(b, b.quaternion.clone()));
-    applyAnatomicBaseline();
-  } else {
-      console.error("⚠️ Failed to find skeleton after loading model. Posing disabled.");
-      $("msg").textContent = "⚠️ Model loaded, but skeleton not found. Posing will fail.";
-      return;
-  }
+  // Apply hard-wired numeric transform (no saving, no snapping)
+  model.scale.set(POSE.s, POSE.s, POSE.s);
+  model.position.set(POSE.x, POSE.y, POSE.z);
+  model.rotation.set(0, degToRad(POSE.ryDeg), 0);
+  if (POSE.seated) seatPoseOnlyLegs();
 
-  // 2. Apply Model Transform
-  model.scale.set(POSE.s, POSE.s, POSE.s);
-  model.position.set(POSE.x, POSE.y, POSE.z);
-  model.rotation.set(0, degToRad(POSE.ryDeg), 0);
-  if (POSE.seated) seatPoseOnlyLegs();
-
-  scene.add(model);
-  $("msg").textContent = "✅ Model loaded";
+  scene.add(model);
+  $("msg").textContent = "✅ Model loaded";
 }
 
 const MODEL_CANDIDATES = [
@@ -1529,36 +1660,7 @@ function applyBodyPositionFromSelection(){
   CURRENT_BODY_BUCKET = bucket;
 
   setBodyMode(mode);
-/* ===== AUTO-LOAD HAND POSE BASED ON TEST + GRADE ===== */
-try {
-  const testName = window.currentMMTtest;
-  const grade    = window.currentMMTgrade;
-  // Recalculate key here for clarity/safety, but relies on accurate getGradeBucketForTest
-  const key = `${testName}:${getGradeBucketForTest(testName)}`; 
 
-  if (handsModel?.visible && typeof isPracticeModeActive !== 'undefined' && !isPracticeModeActive && MMT_HAND_MAP[testName] && MMT_HAND_MAP[testName][grade]) {
-
-    const data = MMT_HAND_MAP[testName][grade];
-
-    // Right hand
-    if (rightHandModel && data.R) {
-      rightHandModel.position.set(data.R.pos.x, data.R.pos.y, data.R.pos.z);
-      rightHandModel.quaternion.set(data.R.rot.x, data.R.rot.y, data.R.rot.z, data.R.rot.w);
-    }
-
-    // Left hand
-    if (leftHandModel && data.L) {
-      leftHandModel.position.set(data.L.pos.x, data.L.pos.y, data.L.pos.z);
-      leftHandModel.quaternion.set(data.L.rot.x, data.L.rot.y, data.L.rot.z, data.L.rot.w);
-    }
-
-    // Update sliders
-    const activeSide = $("handSideSel").value;
-    loadHandIntoSliders(getHandBySide(activeSide));
-  }
-} catch(e){
-  console.warn("Hand load failed:", e);
-}
   if (poseTunerEl && poseTunerEl.updateLabels){
     poseTunerEl.updateLabels();
   }
