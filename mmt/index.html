@@ -1633,6 +1633,15 @@ function addModel(gltf){
   scene.add(model);
   $("msg").textContent = "✅ Model loaded";
 }
+setTimeout(()=>{
+  console.clear();
+  console.log("RIGHT HAND NODES:");
+  if (rightHandModel){
+    rightHandModel.traverse(o=>console.log(o.name));
+  } else {
+    console.log("rightHandModel not loaded");
+  }
+},2000);
 
 const MODEL_CANDIDATES = [
   window.ROMETRICS_MODEL_URL,
