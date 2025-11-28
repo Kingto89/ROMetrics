@@ -1922,7 +1922,10 @@ function openNote(which='high'){
   loadNoteFile(which);
 }
 
-showMMT.addEventListener('click', ()=> openNote('high'));
+showMMT.addEventListener('click', () => {
+  const gm = Number(gradeMain.value || "3");
+  openNote(gm >= 3 ? 'high' : 'low');
+});
 tabHigh.addEventListener('click', ()=> openNote('high'));
 tabLow.addEventListener('click', ()=> openNote('low'));
 closeNote.addEventListener('click', ()=> notePanel.classList.add('hide'));
