@@ -135,7 +135,7 @@ select,button,input[type=range]{width:100%;margin:6px 0 8px 0;padding:8px 10px;b
     </select>
 
     <div class="row" style="margin-top:10px;">
-      <button id="startTestBtn" class="mini">▶️ Start Test </button>
+      <button id="vectorOverlayBtn" class="mini">⌖ Vector Overlay</button>
       <button id="showMMT" class="mini">📌 MMT Placement</button>
     </div>
 
@@ -243,7 +243,7 @@ const logEl = $("log");
 const log = (t) => { if(logEl){ logEl.textContent += t + "\\n"; logEl.scrollTop = logEl.scrollHeight; } };
 
 const actionSel = $("actionSel");
-const startTestBtn = $("startTestBtn");
+const vectorOverlayBtn = $("vectorOverlayBtn");
 const showMMT = $("showMMT");
 const testButton = $("testButton");
 const resistanceFill = $("resistanceFill");
@@ -316,10 +316,11 @@ function updateGradeDropdownsForSelection(){
   }
 }
   
-/* ==== Start Test Button Glow Fix ==== */
-startTestBtn.addEventListener('click', () => {
-  startTestBtn.classList.add('lockOn');
-  setTimeout(() => startTestBtn.classList.remove('lockOn'), 300);
+/* ==== Vector Overlay Button Glow Fix (Click Feedback Only) ==== */
+vectorOverlayBtn.addEventListener('click', () => {
+  // Simple click feedback: add the glow instantly and remove it after 300ms
+  vectorOverlayBtn.classList.add('lockOn');
+  setTimeout(() => vectorOverlayBtn.classList.remove('lockOn'), 300);
 });
 
 /* ==== THREE setup ==== */
