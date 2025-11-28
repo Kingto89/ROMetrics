@@ -1145,36 +1145,6 @@ if (isPracticeModeActive) {
     else resetHandsToNeutral();
 }
 
-* ```javascript
-function applyFingerPose(testKey, gradeBucket) {
-    if (!rightHandModel) return;
-
-    // Define the rotation in radians for a strong curl (approx -86 degrees)
-    const CURL_RAD = -1.5; 
-    const NEUTRAL = 0.0;
-
-    // Get the finger control objects from the right hand model
-    const indexControl = rightHandModel.getObjectByName("index control");
-    const majorControl = rightHandModel.getObjectByName("Major control");
-    const ringControl  = rightHandModel.getObjectByName("Ring control");
-    const pinkyControl = rightHandModel.getObjectByName("Pinky control");
-    
-    const allControls = [indexControl, majorControl, ringControl, pinkyControl].filter(Boolean);
-
-    // Default: Reset all controls to a neutral X rotation (straight)
-    allControls.forEach(c => c.rotation.x = NEUTRAL);
-
-    // Apply the specific pose for Cervical Flexion low (Grades 0-2)
-    if (testKey === "Cervical_Flexion" && gradeBucket === "low") {
-        if (indexControl) indexControl.rotation.x = NEUTRAL; // Index points (straight)
-        
-        // Other fingers curl (flex)
-        if (majorControl) majorControl.rotation.x = CURL_RAD;
-        if (ringControl)  ringControl.rotation.x = CURL_RAD;
-        if (pinkyControl) pinkyControl.rotation.x = CURL_RAD;
-    }
-}
-  
 // ⭐ Guarantee override on first toggle if test already active
 if (!isPracticeModeActive && CURRENT_BODY_TEST) forceApplyHandOverrideOnce();
 
@@ -1427,20 +1397,7 @@ if (HAND_OVERRIDES[handKey]) {
 } else {
     resetHandsToNeutral();
 }
-* ```javascript
-if (handsModel.visible) {
-    // ... [Code continues here getting test and bucket] ...
 
-    if (HAND_OVERRIDES[handKey]) {
-        applyHandOverride(handKey);
-    } else {
-        resetHandsToNeutral();
-    }
-
-    // === INSERT NEW FINGER POSE LOGIC HERE ===
-    applyFingerPose(test, bucket); 
-
-}
 }
   
         
@@ -1454,21 +1411,7 @@ if (handsModel.visible) {
         }
     }
 }
-* ```javascript
-function applyHandOverride(key){
-    const h = HAND_OVERRIDES[key];
-    // ... [Code continues here setting hand position and rotation] ...
 
-    if (leftHandModel){
-        leftHandModel.position.set(h.handLX, h.handLY, h.handLZ);
-        leftHandModel.rotation.set(h.handLRX, h.handLRY, h.handLRZ);
-    }
-
-    // === INSERT NEW FINGER POSE LOGIC HERE ===
-    const test = actionSel?.value;
-    const bucket = getGradeBucketForTest(test);
-    applyFingerPose(test, bucket); 
-}
  // ============= NEW: Switch Active Hand Logic =============
 const switchActiveHandBtn = $("switchActiveHandBtn");
 
