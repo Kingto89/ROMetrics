@@ -7,23 +7,23 @@
 
 <script type="importmap">
 {
-  "imports": {
-    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-  }
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
 }
 </script>
 
 <style>
 :root{
-  --bg:#f1f5f9; --panel:#ffffff; --line:#cbd5e1; --ctrl:#e2e8f0;
-  --text:#0f172a; --muted:#64748b; --primary:#0d9488; --accent:#facc15;
+  --bg:#f1f5f9; --panel:#ffffff; --line:#cbd5e1; --ctrl:#e2e8f0;
+  --text:#0f172a; --muted:#64748b; --primary:#0d9488; --accent:#facc15;
 }
 html,body{margin:0;height:100%;background:var(--bg);color:var(--text);overflow:hidden;font-family:system-ui,Segoe UI,Roboto}
 canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 
 .panel{position:fixed;left:25px;top:12px;width:380px;max-height:92vh;z-index:100;background:var(--panel);
-  border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.15);display:flex;flex-direction:column;overflow:hidden}
+  border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.15);display:flex;flex-direction:column;overflow:hidden}
 .dragbar{cursor:move;background:var(--ctrl);border-bottom:1px solid var(--line);padding:8px 12px;font-weight:700;display:flex;align-items:center;gap:8px}
 .dragbar .hint{margin-left:auto;font-size:12px;color:var(--muted)}
 .content{padding:12px;overflow:auto}
@@ -38,8 +38,8 @@ select,button,input[type=range]{width:100%;margin:6px 0 8px 0;padding:8px 10px;b
 .multi-line-btn { flex-grow: 1; margin-right: 8px; text-align: center; font-size: 14px; line-height: 1.2; padding: 8px 6px; }
 .multi-line-btn:last-child { margin-right: 0; }
 #notePanel{position:fixed;top:16px;right:16px;width:min(420px,46vw);max-height:70vh;display:none;z-index:140;
-  background:#e2e8f0;border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.25);
-  display:flex;flex-direction:column;overflow:hidden}
+  background:#e2e8f0;border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.25);
+  display:flex;flex-direction:column;overflow:hidden}
 .note-head{display:flex;align-items:center;gap:8px;padding:10px 12px;background:#dbe4ee;border-bottom:1px solid var(--line)}
 .note-head h3{margin:0;font-size:16px;font-weight:800;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .note-tabs{display:flex;gap:8px}
@@ -48,7 +48,7 @@ select,button,input[type=range]{width:100%;margin:6px 0 8px 0;padding:8px 10px;b
 .note-body{padding:12px;overflow:auto;background:#fff}
 .note-close{border-radius:8px;border:1px solid var(--line);padding:6px 10px;background:#fff}
 @media (max-width: 720px){
-  #notePanel{right:8px;left:8px;width:auto;max-height:60vh}
+  #notePanel{right:8px;left:8px;width:auto;max-height:60vh}
 }
 .hide{display:none !important;}
 </style>
@@ -56,133 +56,126 @@ select,button,input[type=range]{width:100%;margin:6px 0 8px 0;padding:8px 10px;b
 <body>
 
 <div class="panel" id="panel">
-  <div class="dragbar" id="dragbar">💪 MMT Trainer <span class="hint">drag me</span></div>
-  <div class="content">
-    <label>MMT Test & Muscle</label>
-    <select id="actionSel">
-      <option value="">(Select a test to begin…)</option>
-      <optgroup label="Cervical & Capital">
-        <option value="Capital_Extension">Capital Extension (Rectus Capitis Posterior Major, Obliquus Capitis Superior, Splenius Capitis)</option>
-        <option value="Cervical_Extension">Cervical Extension (Semispinalis Cervicis, Splenius Cervicis, Longissimus Cervicis)</option>
-        <option value="Capital_Flexion">Capital Flexion — Chin Tuck (Longus Capitis, Rectus Capitis Anterior, Anterior Scalene)</option>
-        <option value="Cervical_Flexion">Cervical Flexion (Sternocleidomastoid, Longus Colli, Anterior Scalene)</option>
-        <option value="Single_SCM">Single SCM — Anterolateral Flexion (SCM, Longus Capitis, Longus Colli)</option>
-        <option value="Cervical_Rotation">Cervical Rotation (SCM—contralateral; Splenius Capitis—ipsilateral; Longissimus Capitis—ipsilateral)</option>
-      </optgroup>
-      <optgroup label="Scapula">
-        <option value="Serratus_Anterior">Scapular Abduction & Upward Rotation (Serratus Anterior)</option>
-        <option value="Upper_Trapezius">Scapular Elevation (Upper Trapezius, Levator Scapulae)</option>
-        <option value="Middle_Trapezius">Scapular Adduction / Retraction (Middle Trapezius)</option>
-        <option value="Scap_Depression_Adduction">Scapular Depression + Adduction (Lower Trapezius)</option>
-        <option value="Rhomboids">Scapular Adduction + Downward Rotation (Rhomboids)</option>
-        <option value="Latissimus_Dorsi">Latissimus Dorsi (shoulder depression/extension pattern)</option>
-      </optgroup>
-      <optgroup label="Shoulder">
-        <option value="Anterior_Deltoid">Shoulder Flexion (Anterior Deltoid, Coracobrachialis)</option>
-        <option value="Posterior_Deltoid">Shoulder Extension (Posterior Deltoid, Lat, Teres Major)</option>
-        <option value="Middle_Deltoid">Shoulder Abduction (Middle Deltoid, Supraspinatus)</option>
-        <option value="Shoulder_Horiz_Abd">Shoulder Horizontal Abduction (Posterior Deltoid)</option>
-        <option value="Shoulder_Horiz_Add">Shoulder Horizontal Adduction (Pectoralis Major)</option>
-        <option value="Infraspinatus">Shoulder External Rotation (Infraspinatus, Teres Minor)</option>
-        <option value="Subscapularis">Shoulder Internal Rotation (Subscapularis, Teres Major, Pec Major, Lat)</option>
-      </optgroup>
-      <optgroup label="Trunk & Pelvis - Grading Exception">
-        <option value="Trunk_Ext_Lumbar">Trunk Extension — Lumbar (Erector Spinae)</option>
-        <option value="Trunk_Ext_Thoracic">Trunk Extension — Thoracic (Erector Spinae)</option>
-        <option value="Trunk_Flexion">Trunk Flexion — Rectus Abdominis</option>
-        <option value="Trunk_Rotation">Trunk Rotation — External & Internal Obliques</option>
-        <option value="Pelvic_Elevation">Pelvic Elevation (Hip Hike) — Quadratus Lumborum</option>
-      </optgroup>
-      <optgroup label="Elbow">
-        <option value="Biceps_Brachii">Elbow Flexion — Biceps Brachii (supinated)</option>
-        <option value="Brachialis">Elbow Flexion — Brachialis (pronated)</option>
-        <option value="Brachioradialis">Elbow Flexion — Brachioradialis (neutral)</option>
-        <option value="Triceps_Brachii">Elbow Extension — Triceps Brachii</option>
-      </optgroup>
-      <optgroup label="Wrist">
-        <option value="ECRL">Wrist Extension — Extensor Carpi Radialis Longus (ECRL)</option>
-        <option value="ECRB">Wrist Extension — Extensor Carpi Radialis Brevis (ECRB)</option>
-        <option value="ECU">Wrist Extension — Extensor Carpi Ulnaris (ECU)</option>
-        <option value="FCR">Wrist Flexion — Flexor Carpi Radialis (FCR)</option>
-        <option value="FCU">Wrist Flexion — Flexor Carpi Ulnaris (FCU)</option>
-      </optgroup>
-         <optgroup label="Hip">
-        <option value="Iliopsoas">Hip Flexion (Iliopsoas)</option>
-        <option value="Glute_Max">Hip Extension — Gluteus Maximus</option>
-        <option value="Glute_Med">Hip Abduction — Gluteus Medius/Minimus</option>
-        <option value="TFL">Hip Abduction from Flexed Position — Tensor Fasciae Latae (TFL)</option>
-        <option value="Hip_Adduction">Hip Adduction — Adductor Group</option>
-        <option value="Sartorius">Hip Flexion, Abduction, External Rotation with Knee Flexion — Sartorius</option>
-        <option value="Hip_ER">Hip External Rotation</option>
-        <option value="Hip_IR">Hip Internal Rotation</option>
-      </optgroup>
-      <optgroup label="Knee">
-        <option value="Hamstrings">Knee Flexion (Hamstrings)</option>
-        <option value="Quadriceps">Knee Extension (Quadriceps)</option>
-      </optgroup>
-      <optgroup label="Ankle & Foot -  Grading Exception for Gastroc">
-        <option value="Tibialis_Anterior">Dorsiflexion + Inversion (Tibialis Anterior)</option>
-        <option value="Foot_Eversion_PF"> Plantarflexion + Eversion(Fibularis Longus, Fibularis Brevis)</option>
-        <option value="Gastrocnemius">Plantar Flexion (Gastrocnemius, Soleus)</option>
-      </optgroup>
-    </select>
+  <div class="dragbar" id="dragbar">💪 MMT Trainer <span class="hint">drag me</span></div>
+  <div class="content">
+    <label>MMT Test & Muscle</label>
+    <select id="actionSel">
+      <option value="">(Select a test to begin…)</option>
+      <optgroup label="Cervical & Capital">
+        <option value="Capital_Extension">Capital Extension (Rectus Capitis Posterior Major, Obliquus Capitis Superior, Splenius Capitis)</option>
+        <option value="Cervical_Extension">Cervical Extension (Semispinalis Cervicis, Splenius Cervicis, Longissimus Cervicis)</option>
+        <option value="Capital_Flexion">Capital Flexion — Chin Tuck (Longus Capitis, Rectus Capitis Anterior, Anterior Scalene)</option>
+        <option value="Cervical_Flexion">Cervical Flexion (Sternocleidomastoid, Longus Colli, Anterior Scalene)</option>
+        <option value="Single_SCM">Single SCM — Anterolateral Flexion (SCM, Longus Capitis, Longus Colli)</option>
+        <option value="Cervical_Rotation">Cervical Rotation (SCM—contralateral; Splenius Capitis—ipsilateral; Longissimus Capitis—ipsilateral)</option>
+      </optgroup>
+      <optgroup label="Scapula">
+        <option value="Serratus_Anterior">Scapular Abduction & Upward Rotation (Serratus Anterior)</option>
+        <option value="Upper_Trapezius">Scapular Elevation (Upper Trapezius, Levator Scapulae)</option>
+        <option value="Middle_Trapezius">Scapular Adduction / Retraction (Middle Trapezius)</option>
+        <option value="Scap_Depression_Adduction">Scapular Depression + Adduction (Lower Trapezius)</option>
+        <option value="Rhomboids">Scapular Adduction + Downward Rotation (Rhomboids)</option>
+        <option value="Latissimus_Dorsi">Latissimus Dorsi (shoulder depression/extension pattern)</option>
+      </optgroup>
+      <optgroup label="Shoulder">
+        <option value="Anterior_Deltoid">Shoulder Flexion (Anterior Deltoid, Coracobrachialis)</option>
+        <option value="Posterior_Deltoid">Shoulder Extension (Posterior Deltoid, Lat, Teres Major)</option>
+        <option value="Middle_Deltoid">Shoulder Abduction (Middle Deltoid, Supraspinatus)</option>
+        <option value="Shoulder_Horiz_Abd">Shoulder Horizontal Abduction (Posterior Deltoid)</option>
+        <option value="Shoulder_Horiz_Add">Shoulder Horizontal Adduction (Pectoralis Major)</option>
+        <option value="Infraspinatus">Shoulder External Rotation (Infraspinatus, Teres Minor)</option>
+        <option value="Subscapularis">Shoulder Internal Rotation (Subscapularis, Teres Major, Pec Major, Lat)</option>
+      </optgroup>
+      <optgroup label="Trunk & Pelvis - Grading Exception">
+        <option value="Trunk_Ext_Lumbar">Trunk Extension — Lumbar (Erector Spinae)</option>
+        <option value="Trunk_Ext_Thoracic">Trunk Extension — Thoracic (Erector Spinae)</option>
+        <option value="Trunk_Flexion">Trunk Flexion — Rectus Abdominis</option>
+        <option value="Trunk_Rotation">Trunk Rotation — External & Internal Obliques</option>
+        <option value="Pelvic_Elevation">Pelvic Elevation (Hip Hike) — Quadratus Lumborum</option>
+      </optgroup>
+      <optgroup label="Elbow">
+        <option value="Biceps_Brachii">Elbow Flexion — Biceps Brachii (supinated)</option>
+        <option value="Brachialis">Elbow Flexion — Brachialis (pronated)</option>
+        <option value="Brachioradialis">Elbow Flexion — Brachioradialis (neutral)</option>
+        <option value="Triceps_Brachii">Elbow Extension — Triceps Brachii</option>
+      </optgroup>
+      <optgroup label="Wrist">
+        <option value="ECRL">Wrist Extension — Extensor Carpi Radialis Longus (ECRL)</option>
+        <option value="ECRB">Wrist Extension — Extensor Carpi Radialis Brevis (ECRB)</option>
+        <option value="ECU">Wrist Extension — Extensor Carpi Ulnaris (ECU)</option>
+        <option value="FCR">Wrist Flexion — Flexor Carpi Radialis (FCR)</option>
+        <option value="FCU">Wrist Flexion — Flexor Carpi Ulnaris (FCU)</option>
+      </optgroup>
+         <optgroup label="Hip">
+        <option value="Iliopsoas">Hip Flexion (Iliopsoas)</option>
+        <option value="Glute_Max">Hip Extension — Gluteus Maximus</option>
+        <option value="Glute_Med">Hip Abduction — Gluteus Medius/Minimus</option>
+        <option value="TFL">Hip Abduction from Flexed Position — Tensor Fasciae Latae (TFL)</option>
+        <option value="Hip_Adduction">Hip Adduction — Adductor Group</option>
+        <option value="Sartorius">Hip Flexion, Abduction, External Rotation with Knee Flexion — Sartorius</option>
+        <option value="Hip_ER">Hip External Rotation</option>
+        <option value="Hip_IR">Hip Internal Rotation</option>
+      </optgroup>
+      <optgroup label="Knee">
+        <option value="Hamstrings">Knee Flexion (Hamstrings)</option>
+        <option value="Quadriceps">Knee Extension (Quadriceps)</option>
+      </optgroup>
+      <optgroup label="Ankle & Foot -  Grading Exception for Gastroc">
+        <option value="Tibialis_Anterior">Dorsiflexion + Inversion (Tibialis Anterior)</option>
+        <option value="Foot_Eversion_PF"> Plantarflexion + Eversion(Fibularis Longus, Fibularis Brevis)</option>
+        <option value="Gastrocnemius">Plantar Flexion (Gastrocnemius, Soleus)</option>
+      </optgroup>
+    </select>
 
-    <div class="row" style="margin-top:10px;">
-      <button id="startTestBtn" class="mini">▶️ Start Test </button>
-      <button id="showMMT" class="mini">📌 MMT Placement</button>
-    </div>
+    <div class="row" style="margin-top:10px;">
+      <button id="startTestBtn" class="mini">▶️ Start Test </button>
+      <button id="showMMT" class="mini">📌 MMT Placement</button>
+    </div>
 
-    <div class="row" style="align-items:center; margin-top:10px;">
-      <div style="flex:1;">
-        <label>Test Grade Selection</label>
-        <select id="grade-main" name="grade-main">
-          <option value="3">Grade 3 - 5 (Full ROM / Resistance: none, Mod, Max)</option>
-          <option value="2">Grade 2 (Partial/Full ROM - Gravity Eliminated)</option>
-          <option value="1">Grade 1 (Trace Contraction)</option>
-          <option value="0">Grade 0 (No Contraction)</option>
-        </select>
-      </div>
-      <div style="flex:1;">
-        <label>Grading Exceptions</label>
-        <select id="GradingExceptions" name="GradingExceptions">
-          <option value="5">Grade 5 (Full ROM / Maximum Resistance)</option>
-          <option value="4">Grade 4 (Full ROM / Moderate Resistance)</option>
-          <option value="3">Grade 3 (Full ROM / No Resistance)</option>
-          <option value="2">Grade 2 (Partial/Full ROM - Gravity Eliminated)</option>
-          <option value="1">Grade 1 (Trace Contraction)</option>
-        </select>
-      </div>
-    </div>
+    <div class="row" style="align-items:center; margin-top:10px;">
+      <div style="flex:1;">
+        <label>Test Grade Selection</label>
+        <select id="grade-main" name="grade-main">
+          <option value="3">Grade 3 - 5 (Full ROM / Resistance: none, Mod, Max)</option>
+          <option value="2">Grade 2 (Partial/Full ROM - Gravity Eliminated)</option>
+          <option value="1">Grade 1 (Trace Contraction)</option>
+          <option value="0">Grade 0 (No Contraction)</option>
+        </select>
+      </div>
+      <div style="flex:1;">
+        <label>Grading Exceptions</label>
+        <select id="GradingExceptions" name="GradingExceptions">
+          <option value="5">Grade 5 (Full ROM / Maximum Resistance)</option>
+          <option value="4">Grade 4 (Full ROM / Moderate Resistance)</option>
+          <option value="3">Grade 3 (Full ROM / No Resistance)</option>
+          <option value="2">Grade 2 (Partial/Full ROM - Gravity Eliminated)</option>
+          <option value="1">Grade 1 (Trace Contraction)</option>
+        </select>
+      </div>
+    </div>
 
-    <div class="row" style="margin-top:10px;">
-      <button id="testButton" disabled>
-        <div id="resistanceFill"></div>
-        <span id="resistanceText">Hold to Apply Resistance (4/5)</span>
-      </button>
-    </div>
+    <div class="row" style="margin-top:10px;">
+      <button id="testButton" disabled>
+        <div id="resistanceFill"></div>
+        <span id="resistanceText">Hold to Apply Resistance (4/5)</span>
+      </button>
+    </div>
 <p id="instructionText" style="font-size:8px; line-height:1.3; color:var(--muted);">
-  <strong>“+ / –” in MMT</strong> — “+” = closer to the next higher grade; “−” = closer to the next lower grade; <strong>3− / 3 / 3+</strong> = less than full ROM → full ROM (no resistance) → full ROM with slight resistance; <strong>2 / 2−</strong> = full vs partial ROM in gravity-eliminated position.
+  <strong>“+ / –” in MMT</strong> — “+” = closer to the next higher grade; “−” = closer to the next lower grade; <strong>3− / 3 / 3+</strong> = less than full ROM → full ROM (no resistance) → full ROM with slight resistance; <strong>2 / 2−</strong> = full vs partial ROM in gravity-eliminated position.
 </p>
 
 
 <label>Therapist Hands</label>
 <div class="row" style="justify-content: space-between;">
-  <button id="toggleHandsBtn" class="mini" style="flex-grow: 1; text-align: center;" title="Toggle therapist’s resistance and stabilizing hands">
+  <button id="toggleHandsBtn" class="mini" style="flex-grow: 1; text-align: center; margin-right: 8px;" title="Toggle therapist’s resistance and stabilizing hands">
     <span style="display: block; text-align: left; margin: 0 auto;">Toggle <br> Therapist Hands</span>
   </button>
-
-  <button id="lockRoomBtn" class="mini" style="flex-grow: 1; text-align: center;" title="Lock/Unlock the room environment">
+  <button id="lockRoomBtn" class="mini" style="flex-grow: 1; text-align: center; margin-right: 8px;" title="Lock/Unlock the room environment">
     <span style="display: block; text-align: left; margin: 0 auto;">Lock <br> Room🔒 </span>
   </button>
-
-  <button id="toggleHandControlBtn" class="mini" style="flex-grow: 1; text-align: center;" title="Switch the 3D widget control between Left and Right hands" disabled>
-    <span id="controlHandText" style="display: block; text-align: left; margin: 0 auto;">Switch <br> Hand</span>
-  </button>
-
   <button id="practicePlacementBtn" class="mini" style="flex-grow: 1; text-align: center;" title="Practice Hand Placement Mode">
     <span style="display: block; text-align: left; margin: 0 auto;">Practice <br> Placement</span>
   </button>
-</div>
 </div>
 </div>
 </div>
@@ -190,27 +183,28 @@ select,button,input[type=range]{width:100%;margin:6px 0 8px 0;padding:8px 10px;b
 <div id="msg">Loading…</div>
 <canvas id="c"></canvas>
 
+<!-- Right-side notes panel -->
 <div id="notePanel" class="hide">
-  <div class="note-head">
-    <h3 id="noteTitle">MMT Instructions</h3>
-    <div class="note-tabs">
-      <button id="tabHigh" class="active">Grades 3–5</button>
-      <button id="tabLow">Grades 0–2</button>
-    </div>
-    <button class="note-close" id="closeNote">Close ✕</button>
-  </div>
-  <div class="note-body" id="noteBody">Loading…</div>
+  <div class="note-head">
+    <h3 id="noteTitle">MMT Instructions</h3>
+    <div class="note-tabs">
+      <button id="tabHigh" class="active">Grades 3–5</button>
+      <button id="tabLow">Grades 0–2</button>
+    </div>
+    <button class="note-close" id="closeNote">Close ✕</button>
+  </div>
+  <div class="note-body" id="noteBody">Loading…</div>
 </div>
 
 <script>
-  // Use your live model path (uploaded in your repo)
-  window.ROMETRICS_MODEL_URL = "https://kingto89.github.io/ROMetrics.com/assets/Roma_ROMetrics.glb";
+  // Use your live model path (uploaded in your repo)
+  window.ROMETRICS_MODEL_URL = "https://kingto89.github.io/ROMetrics.com/assets/Roma_ROMetrics.glb";
 </script>
 
 <script type="module">
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import { TransformControls } from "three/addons/controls/TransformControls.js"; // <-- Add the 3D Manipulation Widget  
+import { TransformControls } from "three/addons/controls/TransformControls.js"; // <-- Add the 3D Manipulation Widget  
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
@@ -218,18 +212,18 @@ import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 
 /* ==== Hard-wired numeric pose (edit these) ==== */
 const POSE = {
-  x: -0.10,   // left(-) / right(+)
-  y: 0.00,   // down(-) / up(+)
-  z: 0.70,  // back(-) / front(+)
-  ryDeg: 30,  // rotation 0–360
-  s: 1.15,   // scale
-  seated: false // true = sit legs
+  x: -0.10,   // left(-) / right(+)
+  y: 0.00,   // down(-) / up(+)
+  z: 0.70,  // back(-) / front(+)
+  ryDeg: 30,  // rotation 0–360
+  s: 1.15,   // scale
+  seated: false // true = sit legs
 };
 
 /* ==== Error surfacing ==== */
 window.addEventListener('error', (e) => {
-  const m = document.getElementById("msg");
-  if (m) m.textContent = `⚠️ ${e.message}`;
+  const m = document.getElementById("msg");
+  if (m) m.textContent = `⚠️ ${e.message}`;
 });
 
 /* ==== UI refs ==== */
@@ -246,8 +240,7 @@ const resistanceFill = $("resistanceFill");
 const resistanceText = $("resistanceText");
 const instructionText = $("instructionText");
 const gradeMain = $("grade-main");
-const gradeExceptions = $("GradingExceptions");  
-const toggleHandControlBtn = $("toggleHandControlBtn");
+const gradeExceptions = $("GradingExceptions");  
 
 /* ==== NEW: Lock Room Toggle Logic ==== */
 const lockRoomBtn = $("lockRoomBtn");
@@ -258,106 +251,65 @@ let isPracticeModeActive = false;
 let currentActiveHand = null; // Will store rightHandModel or leftHandModel
 let currentTransformMode = 'translate'; // Initial mode for the widget
 
-const practicePlacementBtn = $("practicePlacementBtn");  
+const practicePlacementBtn = $("practicePlacementBtn");  
 
 function toggleRoomLock() {
-    isRoomLocked = !isRoomLocked;
+    isRoomLocked = !isRoomLocked;
 
-    if (isRoomLocked) {
-        // Lock the room: disable OrbitControls and update button visual/text
-        controls.enabled = false;
-        lockRoomBtn.classList.add('lockOn');
-        lockRoomBtn.innerHTML = '✅ Room Locked'; // or use 🔓/🔒 emoji logic
+    if (isRoomLocked) {
+        // Lock the room: disable OrbitControls and update button visual/text
+        controls.enabled = false;
+        lockRoomBtn.classList.add('lockOn');
+        lockRoomBtn.innerHTML = '✅ Room Locked'; // or use 🔓/🔒 emoji logic
 
-    } else {
-        // Unlock the room: enable OrbitControls and update button visual/text
-        controls.enabled = true;
-        lockRoomBtn.classList.remove('lockOn');
-        lockRoomBtn.innerHTML = '🔒 Lock Room';
-    }
+    } else {
+        // Unlock the room: enable OrbitControls and update button visual/text
+        controls.enabled = true;
+        lockRoomBtn.classList.remove('lockOn');
+        lockRoomBtn.innerHTML = '🔒 Lock Room';
+    }
 }
 
 // Wire the new button
 if (lockRoomBtn) lockRoomBtn.addEventListener('click', toggleRoomLock);
-// --- START: HAND CONTROL ACTIVATION FUNCTION (Step 1) ---
-function activateHandControl(handModel) {
-    if (transformControls && handModel) {
-        // 1. Attach the widget to the selected hand (this detaches it from the previous object automatically)
-        transformControls.attach(handModel);
-        
-        // 2. Update the global state variable (CRITICAL for tracking)
-        currentActiveHand = handModel; 
-        
-        // 3. Ensure visual parameters are set
-        transformControls.setMode(currentTransformMode); 
-        transformControls.visible = isPracticeModeActive; // Only show if practice mode is active
-        console.log(`Control attached to: ${handModel === rightHandModel ? 'Right' : 'Left'} Hand.`);
-    }
-}
-// --- END: HAND CONTROL ACTIVATION FUNCTION ---
-
-// --- START: SWITCH HANDS LOGIC (Step 3) ---
-function switchActiveHand() {
-    // Check if models are loaded and we are in practice mode
-    if (!isPracticeModeActive || !rightHandModel || !leftHandModel || !transformControls) {
-        console.warn("Cannot switch hand: Practice Mode is inactive or hands not loaded.");
-        return;
-    }
-    
-    // Check which hand is currently active and switch the control to the other one
-    if (currentActiveHand === rightHandModel) {
-        activateHandControl(leftHandModel); // Switch to Left
-    } else {
-        // If currentActiveHand is Left Hand or null/undefined, switch to Right
-        activateHandControl(rightHandModel); // Switch to Right
-    }
-}
-
-// Wire the new button
-if (toggleHandControlBtn) toggleHandControlBtn.addEventListener('click', switchActiveHand);
-// --- END: SWITCH HANDS LOGIC ---
-/* ==================================== */  
-
-// Enable only the relevant grading menu for the selected test:
-// ... (rest of the script)  
-/* ==================================== */  
+/* ==================================== */  
 
 // Enable only the relevant grading menu for the selected test:
 // - EXCEPTION_TESTS (trunk + gastroc): use Grading Exceptions (5–1) only
 // - everything else: use normal Grade menu (3–0) only
 function updateGradeDropdownsForSelection(){
-  const testKey = actionSel?.value;
+  const testKey = actionSel?.value;
 
-  // No test selected → default: normal menu active, exceptions off
-  if (!testKey){
-    if (gradeMain) gradeMain.disabled = false;
-    if (gradeExceptions) gradeExceptions.disabled = true;
-    return;
-  }
+  // No test selected → default: normal menu active, exceptions off
+  if (!testKey){
+    if (gradeMain) gradeMain.disabled = false;
+    if (gradeExceptions) gradeExceptions.disabled = true;
+    return;
+  }
 
-  const isException = EXCEPTION_TESTS.has(testKey);
+  const isException = EXCEPTION_TESTS.has(testKey);
 
-  if (isException){
-    // Trunk + Gastroc: ONLY Grading Exceptions menu is active
-    if (gradeMain) gradeMain.disabled = true;
-    if (gradeExceptions){
-      gradeExceptions.disabled = false;
-      if (!gradeExceptions.value) gradeExceptions.value = "5";
-    }
-  } else {
-    // All other tests: ONLY normal 3–0 Grade menu is active
-    if (gradeMain){
-      gradeMain.disabled = false;
-      if (!gradeMain.value) gradeMain.value = "3";
-    }
-    if (gradeExceptions) gradeExceptions.disabled = true;
-  }
+  if (isException){
+    // Trunk + Gastroc: ONLY Grading Exceptions menu is active
+    if (gradeMain) gradeMain.disabled = true;
+    if (gradeExceptions){
+      gradeExceptions.disabled = false;
+      if (!gradeExceptions.value) gradeExceptions.value = "5";
+    }
+  } else {
+    // All other tests: ONLY normal 3–0 Grade menu is active
+    if (gradeMain){
+      gradeMain.disabled = false;
+      if (!gradeMain.value) gradeMain.value = "3";
+    }
+    if (gradeExceptions) gradeExceptions.disabled = true;
+  }
 }
-  
+  
 /* ==== Start Test Button Glow Fix ==== */
 startTestBtn.addEventListener('click', () => {
-  startTestBtn.classList.add('lockOn');
-  setTimeout(() => startTestBtn.classList.remove('lockOn'), 300);
+  startTestBtn.classList.add('lockOn');
+  setTimeout(() => startTestBtn.classList.remove('lockOn'), 300);
 });
 
 /* ==== THREE setup ==== */
@@ -384,82 +336,88 @@ controls.target.set(0,1.05,0); 
 let transformControls = null;
 
 function setupTransformControls() {
-    if (!transformControls) {
-        transformControls = new TransformControls(camera, renderer.domElement);
-        scene.add(transformControls);
+    if (!transformControls) {
+        transformControls = new TransformControls(camera, renderer.domElement);
+        scene.add(transformControls);
 
-        transformControls.addEventListener('dragging-changed', function (event) {
-            controls.enabled = !event.value; // Disable camera orbit when dragging
-        });
-        
-        // --- Full Access Configuration ---
-        transformControls.setSpace("local");
-        transformControls.setMode("translate"); // Default mode is translate (arrows)
-        transformControls.showScale = false;    // Hide scaling handles
-        
-        // Ensure all axes are visible for both move and rotate for user clarity
-        transformControls.showX = true;
-        transformControls.showY = true;
-        transformControls.showZ = true; 
-        
-        // Initial state is detached/hidden
-        transformControls.visible = false;
-        transformControls.detach(); 
+        transformControls.addEventListener('dragging-changed', function (event) {
+            controls.enabled = !event.value; // Disable camera orbit when dragging
+        });
+        
+        // --- Full Access Configuration ---
+        transformControls.setSpace("local");
+        transformControls.setMode("translate"); // Default mode is translate (arrows)
+        transformControls.showScale = false;    // Hide scaling handles
+        
+        // Ensure all axes are visible for both move and rotate for user clarity
+        transformControls.showX = true;
+        transformControls.showY = true;
+        transformControls.showZ = true; 
+        
+        // Initial state is detached/hidden
+        transformControls.visible = false;
+        transformControls.detach(); 
 
-        // Attach the interaction logic here to the renderer's canvas
-        renderer.domElement.addEventListener('pointerdown', onPointerDownTransformControls);
-    }
+        // Attach the interaction logic here to the renderer's canvas
+        renderer.domElement.addEventListener('pointerdown', onPointerDownTransformControls);
+    }
 }
 setupTransformControls();
 
+// The togglePracticeMode function comes AFTER setupTransformControls is defined
 function togglePracticeMode() {
-    // Ensure hands are loaded before entering practice mode
-    if (!rightHandModel || !leftHandModel) {
-        alert("Please toggle 'Therapist Hands' on first.");
-        return;
-    }
+    // Ensure hands are loaded before entering practice mode
+    if (!rightHandModel || !leftHandModel) {
+        alert("Please toggle 'Therapist Hands' on first.");
+        return;
+    }
 
-    isPracticeModeActive = !isPracticeModeActive;
-    
-    if (isPracticeModeActive) {
-        // --- ENTER PRACTICE MODE ---
-        practicePlacementBtn.classList.add('lockOn'); // Visually indicate active mode
-        toggleHandControlBtn.disabled = false; // <<< NEW: Enable Switch Hand button
-        
-        // Initial state: Attach control to the currently tracked hand, defaulting to Right
-        // We rely on loadHandsModel having set currentActiveHand initially.
-        if (!currentActiveHand) currentActiveHand = rightHandModel;
+    isPracticeModeActive = !isPracticeModeActive;
+    
+    if (isPracticeModeActive) {
+        // --- ENTER PRACTICE MODE ---
+        practicePlacementBtn.classList.add('lockOn'); // Visually indicate active mode
         
-        activateHandControl(currentActiveHand); // Attach control and set visibility
-        
-        // Disable OrbitControls while in practice mode
-        controls.enabled = false; 
+        // Initial state: Right Hand, Translate Mode
+        currentActiveHand = rightHandModel;
+        currentTransformMode = 'translate';
+        
+        // Configure TransformControls for active manipulation
+        transformControls.setMode(currentTransformMode);
+        transformControls.showX = true; // Show all axes for move/rotate
+        transformControls.showY = true;
+        transformControls.showZ = true; 
+        transformControls.attach(currentActiveHand); // Attach to the default hand
+        transformControls.visible = true; // Make the widget visible
 
-        console.log("Entered Practice Mode: Right Hand, Translate");
+        // Disable OrbitControls while in practice mode
+        controls.enabled = false; 
 
-    } else {
-        // --- EXIT PRACTICE MODE ---
-        practicePlacementBtn.classList.remove('lockOn');
-        toggleHandControlBtn.disabled = true; // <<< NEW: Disable Switch Hand button
-        
-        // Reset TransformControls state
-        transformControls.detach();
-        transformControls.visible = false;
-        transformControls.showX = false;
-        transformControls.showY = false;
-        transformControls.showZ = false;
+        console.log("Entered Practice Mode: Right Hand, Translate");
 
-        // Re-enable OrbitControls
-        controls.enabled = true; 
-        console.log("Exited Practice Mode.");
-    }
+    } else {
+        // --- EXIT PRACTICE MODE ---
+        practicePlacementBtn.classList.remove('lockOn');
+        
+        // Reset TransformControls state
+        transformControls.detach();
+        transformControls.visible = false;
+        transformControls.showX = false;
+        transformControls.showY = false;
+        transformControls.showZ = false;
+
+        // Re-enable OrbitControls
+        controls.enabled = true; 
+        currentActiveHand = null;
+        console.log("Exited Practice Mode.");
+    }
 }
 
 // Wire the existing Practice Placement button
 if (practicePlacementBtn) practicePlacementBtn.addEventListener('click', togglePracticeMode);  
     
 // --- END: 3D Manipulation Widget Setup ---
-    
+    
 // --- END: 3D Manipulation Widget Setup ---
 /* Lights */
 scene.add(new THREE.HemisphereLight(0xffffff, 0x8ca0b3, 0.8));
@@ -478,8 +436,8 @@ scene.add(room);
 
 // Floor (vinyl)
 const floor = new THREE.Mesh(
-  new THREE.PlaneGeometry(12, 12),
-  new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness:0.9, metalness:0 })
+  new THREE.PlaneGeometry(12, 12),
+  new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness:0.9, metalness:0 })
 );
 floor.rotation.x = -Math.PI/2;
 floor.receiveShadow = true;
@@ -501,8 +459,8 @@ const TABLE_THICK = 0.08;
 const TABLE_W = 0.7;
 const TABLE_D = 2.2; // Long enough
 const tableTop = new THREE.Mesh(
-  new THREE.BoxGeometry(TABLE_W, TABLE_THICK, TABLE_D),
-  new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness:0.85, metalness:0.05 }) // deep blue
+  new THREE.BoxGeometry(TABLE_W, TABLE_THICK, TABLE_D),
+  new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness:0.85, metalness:0.05 }) // deep blue
 );
 tableTop.position.set(0, TABLE_HEIGHT, 0.35);
 tableTop.castShadow = true; tableTop.receiveShadow = true;
@@ -510,14 +468,14 @@ room.add(tableTop);
 
 // Face cutout (visual only, centered on midline near head end)
 const faceCutout = new THREE.Mesh(
-  new THREE.CylinderGeometry(0.16, 0.16, 0.01, 32),
-  new THREE.MeshStandardMaterial({ color: 0x111827, roughness:0.9, metalness:0 })
+  new THREE.CylinderGeometry(0.16, 0.16, 0.01, 32),
+  new THREE.MeshStandardMaterial({ color: 0x111827, roughness:0.9, metalness:0 })
 );
 // no rotation – lies flat on table
 faceCutout.position.set(
-  0,                                              // midline (left/right)
-  TABLE_HEIGHT + TABLE_THICK / 2 + 0.003,        // just on top surface
-  tableTop.position.z - TABLE_D / 2 + 0.30       // opposite end of table
+  0,                                              // midline (left/right)
+  TABLE_HEIGHT + TABLE_THICK / 2 + 0.003,        // just on top surface
+  tableTop.position.z - TABLE_D / 2 + 0.30       // opposite end of table
 );
 faceCutout.receiveShadow = true;
 room.add(faceCutout);
@@ -525,8 +483,8 @@ room.add(faceCutout);
 
 // Table base (simple box legs)
 const base = new THREE.Mesh(
-  new THREE.BoxGeometry(TABLE_W*0.6, TABLE_HEIGHT, TABLE_D*0.8),
-  new THREE.MeshStandardMaterial({ color: 0x374151, roughness:0.9, metalness:0.05 })
+  new THREE.BoxGeometry(TABLE_W*0.6, TABLE_HEIGHT, TABLE_D*0.8),
+  new THREE.MeshStandardMaterial({ color: 0x374151, roughness:0.9, metalness:0.05 })
 );
 base.position.set(0, TABLE_HEIGHT/2, 0.35);
 base.castShadow = true; base.receiveShadow = true;
@@ -534,25 +492,25 @@ room.add(base);
 
 // Cabinet
 const cabinet = new THREE.Mesh(
-  new THREE.BoxGeometry(1.0, 0.96, 0.33),
-  new THREE.MeshStandardMaterial({ color: 0x9ca3af, roughness:0.8 })
+  new THREE.BoxGeometry(1.0, 0.96, 0.33),
+  new THREE.MeshStandardMaterial({ color: 0x9ca3af, roughness:0.8 })
 );
 cabinet.position.set(-1.6, 0.45, -0.6);
 cabinet.castShadow = true; cabinet.receiveShadow = true;
 room.add(cabinet);
-  
+  
 // High-back chair ~0.25m (~10 in) in front of the cabinet
 const chair = new THREE.Group();
 chair.position.set(
-  cabinet.position.x,        // side-to-side aligned with cabinet
-  0,                         // on floor
-  cabinet.position.z - 0.51  // in front of cabinet
+  cabinet.position.x,        // side-to-side aligned with cabinet
+  0,                         // on floor
+  cabinet.position.z - 0.51  // in front of cabinet
 );
 room.add(chair);
 
 const chairSeat = new THREE.Mesh(
-  new THREE.BoxGeometry(0.5, 0.05, 0.5),
-  new THREE.MeshStandardMaterial({ color: 0x6b7280, roughness: 0.8 })
+  new THREE.BoxGeometry(0.5, 0.05, 0.5),
+  new THREE.MeshStandardMaterial({ color: 0x6b7280, roughness: 0.8 })
 );
 // LOCAL to chair
 chairSeat.position.set(0, 0.45, 0);
@@ -564,31 +522,31 @@ chair.add(chairSeat);
 const chairLegMat = new THREE.MeshStandardMaterial({ color: 0x4b5563, roughness: 0.9 });
 const legGeom = new THREE.CylinderGeometry(0.03, 0.03, 0.45, 12);
 [
-  [-0.20, -0.20],
-  [ 0.20, -0.20],
-  [-0.20,  0.20],
-  [ 0.20,  0.20],
+  [-0.20, -0.20],
+  [ 0.20, -0.20],
+  [-0.20,  0.20],
+  [ 0.20,  0.20],
 ].forEach(([dx, dz]) => {
-  const leg = new THREE.Mesh(legGeom, chairLegMat);
-  leg.position.set(
-    dx,
-    0.45 / 2,   // half seat height → on floor
-    dz
-  );
-  leg.castShadow = true;
-  leg.receiveShadow = true;
-  chair.add(leg);
+  const leg = new THREE.Mesh(legGeom, chairLegMat);
+  leg.position.set(
+    dx,
+    0.45 / 2,   // half seat height → on floor
+    dz
+  );
+  leg.castShadow = true;
+  leg.receiveShadow = true;
+  chair.add(leg);
 });
 
 // High backrest (LOCAL to chair)
 const chairBack = new THREE.Mesh(
-  new THREE.BoxGeometry(0.5, 0.9, 0.06), // width, height, thickness
-  new THREE.MeshStandardMaterial({ color: 0x4b5563, roughness: 0.9 })
+  new THREE.BoxGeometry(0.5, 0.9, 0.06), // width, height, thickness
+  new THREE.MeshStandardMaterial({ color: 0x4b5563, roughness: 0.9 })
 );
 chairBack.position.set(
-  0,
-  0.45 + 0.9 / 2 + 0.03,  // centered above seat
-  -0.22                   // behind seat
+  0,
+  0.45 + 0.9 / 2 + 0.03,  // centered above seat
+  -0.22                   // behind seat
 );
 chairBack.castShadow = true;
 chairBack.receiveShadow = true;
@@ -600,15 +558,15 @@ chair.rotation.y = THREE.MathUtils.degToRad(90);
 
 // Stool
 const stoolSeat = new THREE.Mesh(
-  new THREE.CylinderGeometry(0.18, 0.18, 0.06, 24),
-  new THREE.MeshStandardMaterial({ color: 0x6b7280, roughness:0.8 })
+  new THREE.CylinderGeometry(0.18, 0.18, 0.06, 24),
+  new THREE.MeshStandardMaterial({ color: 0x6b7280, roughness:0.8 })
 );
 stoolSeat.position.set(0.95, 0.52, -0.2);
 stoolSeat.castShadow = true; stoolSeat.receiveShadow = true;
 room.add(stoolSeat);
 const stoolLeg = new THREE.Mesh(
-  new THREE.CylinderGeometry(0.03, 0.03, 0.5, 16),
-  new THREE.MeshStandardMaterial({ color: 0x4b5563, roughness:0.8 })
+  new THREE.CylinderGeometry(0.03, 0.03, 0.5, 16),
+  new THREE.MeshStandardMaterial({ color: 0x4b5563, roughness:0.8 })
 );
 stoolLeg.position.set(0.95, 0.25, -0.2);
 stoolLeg.castShadow = true; stoolLeg.receiveShadow = true;
@@ -620,84 +578,84 @@ shadowCatch.rotation.x = -Math.PI/2;
 shadowCatch.position.y = 0.001;
 shadowCatch.receiveShadow = true;
 room.add(shadowCatch);
- // ---- View preset: room yaw + camera distance (ONE BLOCK) ----
+ // ---- View preset: room yaw + camera distance (ONE BLOCK) ----
 (() => {
-  // Turn the whole room left/right (negative = left, positive = right)
-  const ROOM_YAW_DEG = -70;
-  room.rotation.y = degToRad(ROOM_YAW_DEG);
+  // Turn the whole room left/right (negative = left, positive = right)
+  const ROOM_YAW_DEG = -70;
+  room.rotation.y = degToRad(ROOM_YAW_DEG);
 
-  // Zoom preset: set camera distance from the controls target
-  function setCameraDistance(d){
-    const dir = new THREE.Vector3()
-      .subVectors(camera.position, controls.target)
-      .normalize();
-    camera.position.copy(controls.target).addScaledVector(dir, d);
-  }
-  setCameraDistance(4.8); // bigger = farther, smaller = closer
+  // Zoom preset: set camera distance from the controls target
+  function setCameraDistance(d){
+    const dir = new THREE.Vector3()
+      .subVectors(camera.position, controls.target)
+      .normalize();
+    camera.position.copy(controls.target).addScaledVector(dir, d);
+  }
+  setCameraDistance(4.8); // bigger = farther, smaller = closer
 })();
 
 /* === Anatomic preset — simple like goniometer index === */
 const ANAT = { add:-42, ps:-2, wps:-73 };
 const AXIS_MAP = {
-  sh_fe_l:      'x',  sh_fe_r:      'x',
-  sh_aa_l:      'z',  sh_aa_r:     '-z',
-  sh_irer_l:    'y',  sh_irer_r:    'y',
-  el_fe_l:      'x',  el_fe_r:      'x',
-  fa_ps_l:      'y',  fa_ps_r:      'y',
-  wr_ps_l:      'y',  wr_ps_r:      'y',
-  wr_fe_l:      'x',  wr_fe_r:      'x',
-  wr_ru_l:      'z',  wr_ru_r:      'z',
-  hip_fe_l:     'x',  hip_fe_r:     'x',
-  hip_aa_l:     'z',  hip_aa_r:     'z',
-  hip_irer_l:   'y',  hip_irer_r:   'y',
-  knee_fe_l:    'x',  knee_fe_r:    'x',
-  ankle_dfpf_l: 'x',  ankle_dfpf_r: 'x',
-  foot_invev_l: 'z',  foot_invev_r: 'z',
-  trunk_fe:     'x',
-  trunk_lat:    'z',
-  trunk_rot:    'y',
-  cerv_fe:      'x',
-  cerv_lat:     'z',
-  cerv_rot:     'y',
-  clavicle_L:   'z',
-  clavicle_R:  '-z'
+  sh_fe_l:      'x',  sh_fe_r:      'x',
+  sh_aa_l:      'z',  sh_aa_r:     '-z',
+  sh_irer_l:    'y',  sh_irer_r:    'y',
+  el_fe_l:      'x',  el_fe_r:      'x',
+  fa_ps_l:      'y',  fa_ps_r:      'y',
+  wr_ps_l:      'y',  wr_ps_r:      'y',
+  wr_fe_l:      'x',  wr_fe_r:      'x',
+  wr_ru_l:      'z',  wr_ru_r:      'z',
+  hip_fe_l:     'x',  hip_fe_r:     'x',
+  hip_aa_l:     'z',  hip_aa_r:     'z',
+  hip_irer_l:   'y',  hip_irer_r:   'y',
+  knee_fe_l:    'x',  knee_fe_r:    'x',
+  ankle_dfpf_l: 'x',  ankle_dfpf_r: 'x',
+  foot_invev_l: 'z',  foot_invev_r: 'z',
+  trunk_fe:     'x',
+  trunk_lat:    'z',
+  trunk_rot:    'y',
+  cerv_fe:      'x',
+  cerv_lat:     'z',
+  cerv_rot:     'y',
+  clavicle_L:   'z',
+  clavicle_R:  '-z'
 };
-  
+  
 
 function getBone(name){
-  return skeleton?.bones.find(b => b.name === name) || null;
+  return skeleton?.bones.find(b => b.name === name) || null;
 }
 function setDegAxis(bone, axis, deg){
-  if(!bone) return;
-  const q0 = initialBoneRot.get(bone);
-  if(q0) bone.quaternion.copy(q0);        // reset to baseline
-  const r = THREE.MathUtils.degToRad(deg);
-  if(axis==='x') bone.rotateX(r);
-  else if(axis==='y') bone.rotateY(r);
-  else bone.rotateZ(r);
+  if(!bone) return;
+  const q0 = initialBoneRot.get(bone);
+  if(q0) bone.quaternion.copy(q0);        // reset to baseline
+  const r = THREE.MathUtils.degToRad(deg);
+  if(axis==='x') bone.rotateX(r);
+  else if(axis==='y') bone.rotateY(r);
+  else bone.rotateZ(r);
 }
 
 // ONE simple function that sets both sides (like your gonio index)
 // NOTE: this assumes arm bone names like "upperarm_L/R", "forearm_L/R", "hand_L/R".
 // If your rig uses "wrist_L/R" instead of "hand_L/R", change those two names below.
 function applyAnatomicBaseline(){
-  const shL = getBone('upperarm_L'), shR = getBone('upperarm_R'); // shoulder ab/ad on Z
-  const faL = getBone('forearm_L'),  faR = getBone('forearm_R');  // forearm PS on Y
-  const wrL = getBone('hand_L'),     wrR = getBone('hand_R');     // wrist PS on Y (use 'wrist_*' if needed)
+  const shL = getBone('upperarm_L'), shR = getBone('upperarm_R'); // shoulder ab/ad on Z
+  const faL = getBone('forearm_L'),  faR = getBone('forearm_R');  // forearm PS on Y
+  const wrL = getBone('hand_L'),     wrR = getBone('hand_R');     // wrist PS on Y (use 'wrist_*' if needed)
 
-  setDegAxis(shL, 'z', ANAT.add);
-  setDegAxis(shR, 'z', -ANAT.add);
+  setDegAxis(shL, 'z', ANAT.add);
+  setDegAxis(shR, 'z', -ANAT.add);
 
-  setDegAxis(wrL, 'y', ANAT.wps);
-  setDegAxis(wrR, 'y', -ANAT.wps);   
+  setDegAxis(wrL, 'y', ANAT.wps);
+  setDegAxis(wrR, 'y', -ANAT.wps);   
 }
-  
-  
+  
+  
 /* ==== Loader ==== */
 const loader = new GLTFLoader();
 loader.setMeshoptDecoder(MeshoptDecoder);
 const draco = new DRACOLoader(); draco.setDecoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/draco/"); loader.setDRACOLoader(draco);
-const ktx2  = new KTX2Loader();  ktx2.setTranscoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/basis/"); ktx2.detectSupport(renderer); loader.setKTX2Loader(ktx2);
+const ktx2  = new KTX2Loader();  ktx2.setTranscoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/basis/"); ktx2.detectSupport(renderer); loader.setKTX2Loader(ktx2);
 
 let model=null, skeleton=null;
 const initialBoneRot = new Map();
@@ -706,195 +664,195 @@ let GLOBAL_PF_DEG = 0; // shared plantarflex angle for both feet
 // ADDED: Hands model loading variables
 const HANDS_MODEL_URL = "https://raw.githubusercontent.com/Kingto89/ROMetrics.com/main/assets/Hands.glb";
 let handsModel = null;
-  
+  
 // Reset all bones back to stored baseline
 function resetAllBones(){
-  if (!skeleton) return;
-  skeleton.bones.forEach(b=>{
-    const q0 = initialBoneRot.get(b);
-    if (q0) b.quaternion.copy(q0);
-  });
+  if (!skeleton) return;
+  skeleton.bones.forEach(b=>{
+    const q0 = initialBoneRot.get(b);
+    if (q0) b.quaternion.copy(q0);
+  });
 }
 
 // Tests that use the GradingExceptions dropdown (5–1) instead of the normal 3–0 scale.
 // NOTE: Pelvic_Elevation is NOT an exception.
 const EXCEPTION_TESTS = new Set([
-  "Trunk_Ext_Lumbar",
-  "Trunk_Ext_Thoracic",
-  "Trunk_Flexion",
-  "Trunk_Rotation",
-  "Gastrocnemius"
+  "Trunk_Ext_Lumbar",
+  "Trunk_Ext_Thoracic",
+  "Trunk_Flexion",
+  "Trunk_Rotation",
+  "Gastrocnemius"
 ]);
 
 
 // For each test: which coarse body position to use for high (3–5) vs low (0–2) grades
 // Modes: 'anatomic', 'seated', 'supine', 'prone', 'side_lying', 'gastroc'
 const TEST_POSITION = {
-  // Cervical & Capital
-  Capital_Extension:   { high: "prone",      low: "supine"      },
-  Cervical_Extension:  { high: "prone",      low: "supine"      },
-  Capital_Flexion:     { high: "supine",     low: "supine"      },
-  Cervical_Flexion:    { high: "supine",     low: "supine"  },
-  Single_SCM:          { high: "supine",     low: "supine"      },
-  Cervical_Rotation:   { high: "supine",     low: "seated"      },
+  // Cervical & Capital
+  Capital_Extension:   { high: "prone",      low: "supine"      },
+  Cervical_Extension:  { high: "prone",      low: "supine"      },
+  Capital_Flexion:     { high: "supine",     low: "supine"      },
+  Cervical_Flexion:    { high: "supine",     low: "supine"  },
+  Single_SCM:          { high: "supine",     low: "supine"      },
+  Cervical_Rotation:   { high: "supine",     low: "seated"      },
 
-  // Scapula
-  Serratus_Anterior:   { high: "seated",     low: "seated"      },
-  Upper_Trapezius:     { high: "seated",     low: "prone"       },
-  Middle_Trapezius:    { high: "prone",      low: "prone"       },
-  Scap_Depression_Adduction: { high: "prone", low: "seated" },
-  Rhomboids:           { high: "prone",      low: "prone"       },
-  Latissimus_Dorsi:    { high: "prone",      low: "prone"  },
+  // Scapula
+  Serratus_Anterior:   { high: "seated",     low: "seated"      },
+  Upper_Trapezius:     { high: "seated",     low: "prone"       },
+  Middle_Trapezius:    { high: "prone",      low: "prone"       },
+  Scap_Depression_Adduction: { high: "prone", low: "seated" },
+  Rhomboids:           { high: "prone",      low: "prone"       },
+  Latissimus_Dorsi:    { high: "prone",      low: "prone"  },
 
-  // Shoulder
-  Anterior_Deltoid:    { high: "seated",     low: "side_lying"  },
-  Posterior_Deltoid:   { high: "prone",      low: "side_lying"  },
-  Middle_Deltoid:      { high: "seated",     low: "supine"      },
-  Shoulder_Horiz_Abd: { high: "prone",  low: "seatednogravity" }, 
-  Shoulder_Horiz_Add: { high: "supine", low: "seatednogravity" }, 
-  Infraspinatus:       { high: "seated",     low: "seatednogravity"      }, // table-supported NG
-  Subscapularis:       { high: "seated",     low: "seatednogravity"      },
+  // Shoulder
+  Anterior_Deltoid:    { high: "seated",     low: "side_lying"  },
+  Posterior_Deltoid:   { high: "prone",      low: "side_lying"  },
+  Middle_Deltoid:      { high: "seated",     low: "supine"      },
+  Shoulder_Horiz_Abd: { high: "prone",  low: "seatednogravity" }, 
+  Shoulder_Horiz_Add: { high: "supine", low: "seatednogravity" }, 
+  Infraspinatus:       { high: "seated",     low: "seatednogravity"      }, // table-supported NG
+  Subscapularis:       { high: "seated",     low: "seatednogravity"      },
 
-  // Trunk & Pelvis (grading exceptions)
-  Trunk_Ext_Lumbar:    { high: "prone",      low: "prone"       },
-  Trunk_Ext_Thoracic:  { high: "prone",      low: "prone"       },
-  Trunk_Flexion:       { high: "supine",     low: "supine"      },
-  Trunk_Rotation:      { high: "supine",     low: "supine"      },
-  Pelvic_Elevation:    { high: "supine",     low: "supine"      },
+  // Trunk & Pelvis (grading exceptions)
+  Trunk_Ext_Lumbar:    { high: "prone",      low: "prone"       },
+  Trunk_Ext_Thoracic:  { high: "prone",      low: "prone"       },
+  Trunk_Flexion:       { high: "supine",     low: "supine"      },
+  Trunk_Rotation:      { high: "supine",     low: "supine"      },
+  Pelvic_Elevation:    { high: "supine",     low: "supine"      },
 
-  // Elbow
-  Biceps_Brachii:      { high: "seated",     low: "seated"  },
-  Brachialis:          { high: "seated",     low: "seated"  },
-  Brachioradialis:     { high: "seated",     low: "seated"  },
-  Triceps_Brachii:     { high: "prone",     low: "seated"      },
+  // Elbow
+  Biceps_Brachii:      { high: "seated",     low: "seated"  },
+  Brachialis:          { high: "seated",     low: "seated"  },
+  Brachioradialis:     { high: "seated",     low: "seated"  },
+  Triceps_Brachii:     { high: "prone",     low: "seated"      },
 
-  // Wrist
-  ECRL:                { high: "seatedgravity",  low: "seatednogravity" },
-  ECRB:                { high: "seatedgravity",  low: "seatednogravity" },
-  ECU:                 { high: "seatedgravity",  low: "seatednogravity" },
-  FCR:                 { high: "seatedgravity",  low: "seatednogravity" },
-  FCU:                 { high: "seatedgravity",  low: "seatednogravity" },
+  // Wrist
+  ECRL:                { high: "seatedgravity",  low: "seatednogravity" },
+  ECRB:                { high: "seatedgravity",  low: "seatednogravity" },
+  ECU:                 { high: "seatedgravity",  low: "seatednogravity" },
+  FCR:                 { high: "seatedgravity",  low: "seatednogravity" },
+  FCU:                 { high: "seatedgravity",  low: "seatednogravity" },
 
-   // Hip
-  Iliopsoas:           { high: "seated",     low: "side_lying"  },
-  Glute_Max:           { high: "prone",      low: "side_lying"  },
-  Glute_Med:           { high: "side_lying", low: "supine"      },
-  TFL:                 { high: "side_lying", low: "long_sit"    },
-  Hip_Adduction:       { high: "side_lying", low: "supine"      },
-  Sartorius:           { high: "seated",     low: "supine"      },
-  Hip_ER:              { high: "seated",     low: "supine"      },
-  Hip_IR:              { high: "seated",     low: "supine"      },
+   // Hip
+  Iliopsoas:           { high: "seated",     low: "side_lying"  },
+  Glute_Max:           { high: "prone",      low: "side_lying"  },
+  Glute_Med:           { high: "side_lying", low: "supine"      },
+  TFL:                 { high: "side_lying", low: "long_sit"    },
+  Hip_Adduction:       { high: "side_lying", low: "supine"      },
+  Sartorius:           { high: "seated",     low: "supine"      },
+  Hip_ER:              { high: "seated",     low: "supine"      },
+  Hip_IR:              { high: "seated",     low: "supine"      },
 
-  // Knee
-  Hamstrings:          { high: "prone",      low: "side_lying"  },
-  Quadriceps:          { high: "seated",     low: "side_lying"  },
+  // Knee
+  Hamstrings:          { high: "prone",      low: "side_lying"  },
+  Quadriceps:          { high: "seated",     low: "side_lying"  },
 
-  // Ankle & Foot
-  Tibialis_Anterior:   { high: "supine",     low: "supine"      }, // dorsiflex+inv
-  Foot_Eversion_PF:    { high: "seated",     low: "seated"      }, //platar+ev
-  Ankle_Dorsiflexion:  { high: "seated",     low: "supine"      },
-  Gastrocnemius:       { high: "gastroc",    low: "prone"  }  //table stand
+  // Ankle & Foot
+  Tibialis_Anterior:   { high: "supine",     low: "supine"      }, // dorsiflex+inv
+  Foot_Eversion_PF:    { high: "seated",     low: "seated"      }, //platar+ev
+  Ankle_Dorsiflexion:  { high: "seated",     low: "supine"      },
+  Gastrocnemius:       { high: "gastroc",    low: "prone"  }  //table stand
 };
 
 // Decide if we're in the high (3–5) or low (0–2) family for a given test
 // Per-test pose overrides (absolute position + rotation) keyed by "TestKey:high" / "TestKey:low"
 const POSE_OVERRIDES = {};
 POSE_OVERRIDES["Capital_Extension:high"] = { x:-0.800, y:0.820, z:0.330, rx:-1.571, ry:3.142, rz:1.222, pf: 45 }; //prone head off
-POSE_OVERRIDES["Capital_Extension:low"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35, headX: 20 }; //supine
-POSE_OVERRIDES["Cervical_Extension:high"]  = { x:-0.800, y:0.820, z:0.330, rx:-1.571, ry:3.142, rz:1.222, pf: 45 };
-POSE_OVERRIDES["Cervical_Extension:low"]   = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };
-POSE_OVERRIDES["Capital_Flexion:high"] = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };  
-POSE_OVERRIDES["Capital_Flexion:low"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };
+POSE_OVERRIDES["Capital_Extension:low"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35, headX: 20 }; //supine
+POSE_OVERRIDES["Cervical_Extension:high"]  = { x:-0.800, y:0.820, z:0.330, rx:-1.571, ry:3.142, rz:1.222, pf: 45 };
+POSE_OVERRIDES["Cervical_Extension:low"]   = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };
+POSE_OVERRIDES["Capital_Flexion:high"] = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };  
+POSE_OVERRIDES["Capital_Flexion:low"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };
 POSE_OVERRIDES["Cervical_Flexion:high"] = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };
-POSE_OVERRIDES["Cervical_Flexion:low"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };
+POSE_OVERRIDES["Cervical_Flexion:low"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };
 POSE_OVERRIDES["Single_SCM:high"] = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };
-POSE_OVERRIDES["Single_SCM:low"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };
+POSE_OVERRIDES["Single_SCM:low"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };
 POSE_OVERRIDES["Cervical_Rotation:high"] = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };
-POSE_OVERRIDES["Cervical_Rotation:low"] = { x:0.440, y:-0.460, z:-2.020, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, upperArmRY: -19.0, lowerArmRX: 45.0, upperArmLY: 19.0, lowerArmLX: 45.0 };  //seated on chair arm ZX
-POSE_OVERRIDES["Serratus_Anterior:high"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  //seated on bed
-POSE_OVERRIDES["Serratus_Anterior:low"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  // seated on bed
-POSE_OVERRIDES["Upper_Trapezius:high"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  // seated on bed
+POSE_OVERRIDES["Cervical_Rotation:low"] = { x:0.440, y:-0.460, z:-2.020, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, upperArmRY: -19.0, lowerArmRX: 45.0, upperArmLY: 19.0, lowerArmLX: 45.0 };  //seated on chair arm ZX
+POSE_OVERRIDES["Serratus_Anterior:high"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  //seated on bed
+POSE_OVERRIDES["Serratus_Anterior:low"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  // seated on bed
+POSE_OVERRIDES["Upper_Trapezius:high"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  // seated on bed
 POSE_OVERRIDES["Upper_Trapezius:low"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0 }; //normal prone
 POSE_OVERRIDES["Middle_Trapezius:high"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0 };
 POSE_OVERRIDES["Middle_Trapezius:low"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0 };
-POSE_OVERRIDES["Scap_Depression_Adduction:high"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0 };  //prone
-POSE_OVERRIDES["Scap_Depression_Adduction:low"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  //seated
-POSE_OVERRIDES["Rhomboids:high"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0 };  
+POSE_OVERRIDES["Scap_Depression_Adduction:high"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0 };  //prone
+POSE_OVERRIDES["Scap_Depression_Adduction:low"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  //seated
+POSE_OVERRIDES["Rhomboids:high"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0 };  
 POSE_OVERRIDES["Rhomboids:low"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0 };
-POSE_OVERRIDES["Latissimus_Dorsi:high"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0 };  //prone
-POSE_OVERRIDES["Latissimus_Dorsi:low"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0 };  
+POSE_OVERRIDES["Latissimus_Dorsi:high"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0 };  
+POSE_OVERRIDES["Latissimus_Dorsi:low"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0 };  
 POSE_OVERRIDES["Anterior_Deltoid:high"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145}; //seated
-POSE_OVERRIDES["Anterior_Deltoid:low"] = { x:-1.280, y:0.800, z:0.490, rx:2.705, ry:-3.491, rz:1.745, pf:-10.0, footInvR:30.5, footEvL: 55.6, neckLatL:-17.0 }; //side lying  
+POSE_OVERRIDES["Anterior_Deltoid:low"] = { x:-1.280, y:0.800, z:0.490, rx:2.705, ry:-3.491, rz:1.745, pf:-10.0, footInvR:30.5, footEvL: 55.6, neckLatL:-17.0 }; //side lying  
 POSE_OVERRIDES["Posterior_Deltoid:high"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0, upperArmLY: 90, lowerArmLY: -75, upperArmRY: -90, lowerArmRY: 75, handLY: 135, handRY: -135, handLZ: -17, handRZ: 17 };
 POSE_OVERRIDES["Posterior_Deltoid:low"] = { x:-1.280, y:0.820, z:0.490, rx:2.705, ry:-3.491, rz:1.745, pf:-10.0, footInvR:10.5, footEvL:9.6, neckLatL:-17.0 };
-POSE_OVERRIDES["Middle_Deltoid:high"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  // seated on bed
-POSE_OVERRIDES["Middle_Deltoid:low"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };  //supine
-POSE_OVERRIDES["Shoulder_Horiz_Abd:high"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0 };  //prone
+POSE_OVERRIDES["Middle_Deltoid:high"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  // seated on bed
+POSE_OVERRIDES["Middle_Deltoid:low"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };  //supine
+POSE_OVERRIDES["Shoulder_Horiz_Abd:high"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0 };  //prone
 POSE_OVERRIDES["Shoulder_Horiz_Abd:low"] = { x:0.500, y:-0.480, z:-1.860, rx:-0.087, ry:0.349, rz:0.000, pf:0.0, footInvR:0.0, footEvL:0.0, neckLatL:0.0 }; ///non gravity table
-POSE_OVERRIDES["Shoulder_Horiz_Add:high"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };  //supine
+POSE_OVERRIDES["Shoulder_Horiz_Add:high"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };  //supine
 POSE_OVERRIDES["Shoulder_Horiz_Add:low"] = { x:0.340, y:-0.480, z:-1.860, rx:-0.087, ry:0.349, rz:0.000, pf:0.0, footInvR:0.0, footEvL:0.0, neckLatL:0.0 }; ///non gravity table
-POSE_OVERRIDES["Infraspinatus:high"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  // seated on bed
-POSE_OVERRIDES["Infraspinatus:low"] = { x:0.540, y:-0.480, z:-1.860, rx:-0.087, ry:0.349, rz:0.000, pf:-10.0, footInvR:-0.5, footEvL:0.5, neckLatL:0.0 };  
-POSE_OVERRIDES["Subscapularis:high"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  // seated on bed
+POSE_OVERRIDES["Infraspinatus:high"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  // seated on bed
+POSE_OVERRIDES["Infraspinatus:low"] = { x:0.540, y:-0.480, z:-1.860, rx:-0.087, ry:0.349, rz:0.000, pf:-10.0, footInvR:-0.5, footEvL:0.5, neckLatL:0.0 };  
+POSE_OVERRIDES["Subscapularis:high"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  // seated on bed
 POSE_OVERRIDES["Subscapularis:low"] = { x:0.360, y:-0.480, z:-1.860, rx:-0.087, ry:0.349, rz:0.000, pf:-10.0, footInvR:-0.5, footEvL:0.5, neckLatL:0.0 };
-POSE_OVERRIDES["Trunk_Ext_Lumbar:high"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0 };  //prone
-POSE_OVERRIDES["Trunk_Ext_Lumbar:low"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0 };  //prone
+POSE_OVERRIDES["Trunk_Ext_Lumbar:high"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0 };  //prone
+POSE_OVERRIDES["Trunk_Ext_Lumbar:low"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0 };  //prone
 POSE_OVERRIDES["Trunk_Ext_Thoracic:high"] = { x:-0.600, y:0.800, z:0.250, rx:1.571, ry:0.000, rz:-1.920, pf:45.0, footInvR:-0.7, footEvL:0.7, neckLatL:0.0 };
-POSE_OVERRIDES["Trunk_Ext_Thoracic:low"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0 };  //prone
-POSE_OVERRIDES["Trunk_Flexion:high"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };  //supine
-POSE_OVERRIDES["Trunk_Flexion:low"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };  //supine
-POSE_OVERRIDES["Trunk_Rotation:high"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };  //supine
-POSE_OVERRIDES["Trunk_Rotation:low"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };  //supine
-POSE_OVERRIDES["Pelvic_Elevation:high"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };  //supine
-POSE_OVERRIDES["Pelvic_Elevation:low"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 55 };  //supine 
-POSE_OVERRIDES["Biceps_Brachii:high"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  // seated on bed
-POSE_OVERRIDES["Biceps_Brachii:low"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  // seated on bed
-POSE_OVERRIDES["Brachialis:high"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  // seated on bed
-POSE_OVERRIDES["Brachialis:low"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  // seated on bed
-POSE_OVERRIDES["Brachioradialis:high"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  // seated on bed
-POSE_OVERRIDES["Brachioradialis:low"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  // seated on bed
-POSE_OVERRIDES["Triceps_Brachii:high"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0 };  //prone
-POSE_OVERRIDES["Triceps_Brachii:low"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  // seated on bed
-POSE_OVERRIDES["FCR:high"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  // seated on bed
-POSE_OVERRIDES["FCR:low"] = { x:0.620, y:-0.460, z:-2.080, rx:0.000, ry:0.349, rz:0.000, pf:-10.0 };  //seated on chair 
-POSE_OVERRIDES["FCU:high"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  // seated on bed
-POSE_OVERRIDES["FCU:low"] = { x:0.620, y:-0.460, z:-2.080, rx:0.000, ry:0.349, rz:0.000, pf:-10.0 };  //seated on chair 
+POSE_OVERRIDES["Trunk_Ext_Thoracic:low"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0 };  //prone
+POSE_OVERRIDES["Trunk_Flexion:high"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };  //supine
+POSE_OVERRIDES["Trunk_Flexion:low"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };  //supine
+POSE_OVERRIDES["Trunk_Rotation:high"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };  //supine
+POSE_OVERRIDES["Trunk_Rotation:low"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };  //supine
+POSE_OVERRIDES["Pelvic_Elevation:high"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };  //supine
+POSE_OVERRIDES["Pelvic_Elevation:low"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 55 };  //supine 
+POSE_OVERRIDES["Biceps_Brachii:high"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  // seated on bed
+POSE_OVERRIDES["Biceps_Brachii:low"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  // seated on bed
+POSE_OVERRIDES["Brachialis:high"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  // seated on bed
+POSE_OVERRIDES["Brachialis:low"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  // seated on bed
+POSE_OVERRIDES["Brachioradialis:high"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  // seated on bed
+POSE_OVERRIDES["Brachioradialis:low"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  // seated on bed
+POSE_OVERRIDES["Triceps_Brachii:high"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0 };  //prone
+POSE_OVERRIDES["Triceps_Brachii:low"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  // seated on bed
+POSE_OVERRIDES["FCR:high"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  // seated on bed
+POSE_OVERRIDES["FCR:low"] = { x:0.620, y:-0.460, z:-2.080, rx:0.000, ry:0.349, rz:0.000, pf:-10.0 };  //seated on chair 
+POSE_OVERRIDES["FCU:high"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  // seated on bed
+POSE_OVERRIDES["FCU:low"] = { x:0.620, y:-0.460, z:-2.080, rx:0.000, ry:0.349, rz:0.000, pf:-10.0 };  //seated on chair 
 POSE_OVERRIDES["ECRL:high"] = { x:0.420, y:-0.480, z:-2.000, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, footInvR:-0.5, footEvL:0.5, neckLatL:0.0 }; // gravity table
 POSE_OVERRIDES["ECRL:low"] = { x:0.480, y:-0.480, z:-1.860, rx:-0.087, ry:0.349, rz:0.000, pf:0.0, footInvR:0.0, footEvL:0.0, neckLatL:0.0 }; ///non gravity table
 POSE_OVERRIDES["ECRB:high"] = { x:0.420, y:-0.480, z:-2.000, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, footInvR:-0.5, footEvL:0.5, neckLatL:0.0 };
-POSE_OVERRIDES["ECRB:low"] = { x:0.480, y:-0.480, z:-1.860, rx:-0.087, ry:0.349, rz:0.000, pf:0.0, footInvR:0.0, footEvL:0.0, neckLatL:0.0 };  
+POSE_OVERRIDES["ECRB:low"] = { x:0.480, y:-0.480, z:-1.860, rx:-0.087, ry:0.349, rz:0.000, pf:0.0, footInvR:0.0, footEvL:0.0, neckLatL:0.0 };  
 POSE_OVERRIDES["ECU:high"] = { x:0.420, y:-0.480, z:-2.000, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, footInvR:-0.5, footEvL:0.5, neckLatL:0.0 };
-POSE_OVERRIDES["ECU:low"] = { x:0.480, y:-0.480, z:-1.860, rx:-0.087, ry:0.349, rz:0.000, pf:0.0, footInvR:0.0, footEvL:0.0, neckLatL:0.0 };  
+POSE_OVERRIDES["ECU:low"] = { x:0.480, y:-0.480, z:-1.860, rx:-0.087, ry:0.349, rz:0.000, pf:0.0, footInvR:0.0, footEvL:0.0, neckLatL:0.0 };  
 POSE_OVERRIDES["FCR:high"] = { x:0.420, y:-0.480, z:-2.000, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, footInvR:-0.5, footEvL:0.5, neckLatL:0.0 };
-POSE_OVERRIDES["FCR:low"] = { x:0.480, y:-0.480, z:-1.860, rx:-0.087, ry:0.349, rz:0.000, pf:0.0, footInvR:0.0, footEvL:0.0, neckLatL:0.0 };  
-POSE_OVERRIDES["FCU:high"] = { x:0.420, y:-0.480, z:-2.000, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, footInvR:-0.5, footEvL:0.5, neckLatL:0.0 };  
-POSE_OVERRIDES["FCU:low"] = { x:0.480, y:-0.480, z:-1.860, rx:-0.087, ry:0.349, rz:0.000, pf:0.0, footInvR:0.0, footEvL:0.0, neckLatL:0.0 };  
-POSE_OVERRIDES["Iliopsoas:high"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  // seated on bed
-POSE_OVERRIDES["Iliopsoas:low"] = { x:-1.280, y:0.813, z:0.490, rx:2.705, ry:-3.491, rz:1.745, pf:-10.0, footInvR:10.5, footEvL:9.6, neckLatL:-17.0 }; //side lying  
-POSE_OVERRIDES["Glute_Max:high"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0 };  //prone
-POSE_OVERRIDES["Glute_Max:low"] = { x:-1.280, y:0.813, z:0.490, rx:2.705, ry:-3.491, rz:1.745, pf:-10.0, footInvR:10.5, footEvL:9.6, neckLatL:-17.0 }; //side lying  
-POSE_OVERRIDES["Glute_Med:high"] = { x:-1.280, y:0.813, z:0.490, rx:2.705, ry:-3.491, rz:1.745, pf:-10.0, footInvR:10.5, footEvL:9.6, neckLatL:-17.0 }; //side lying  
-POSE_OVERRIDES["Glute_Med:low"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };  //supine 
-POSE_OVERRIDES["TFL:high"] = { x:-1.280, y:0.815, z:0.490, rx:2.705, ry:-3.491, rz:1.745, pf:-10.0, footInvR:10.5, footEvL:9.6, neckLatL:-17.0 }; //side lying  
+POSE_OVERRIDES["FCR:low"] = { x:0.480, y:-0.480, z:-1.860, rx:-0.087, ry:0.349, rz:0.000, pf:0.0, footInvR:0.0, footEvL:0.0, neckLatL:0.0 };  
+POSE_OVERRIDES["FCU:high"] = { x:0.420, y:-0.480, z:-2.000, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, footInvR:-0.5, footEvL:0.5, neckLatL:0.0 };  
+POSE_OVERRIDES["FCU:low"] = { x:0.480, y:-0.480, z:-1.860, rx:-0.087, ry:0.349, rz:0.000, pf:0.0, footInvR:0.0, footEvL:0.0, neckLatL:0.0 };  
+POSE_OVERRIDES["Iliopsoas:high"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  // seated on bed
+POSE_OVERRIDES["Iliopsoas:low"] = { x:-1.280, y:0.813, z:0.490, rx:2.705, ry:-3.491, rz:1.745, pf:-10.0, footInvR:10.5, footEvL:9.6, neckLatL:-17.0 }; //side lying  
+POSE_OVERRIDES["Glute_Max:high"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0 };  //prone
+POSE_OVERRIDES["Glute_Max:low"] = { x:-1.280, y:0.813, z:0.490, rx:2.705, ry:-3.491, rz:1.745, pf:-10.0, footInvR:10.5, footEvL:9.6, neckLatL:-17.0 }; //side lying  
+POSE_OVERRIDES["Glute_Med:high"] = { x:-1.280, y:0.813, z:0.490, rx:2.705, ry:-3.491, rz:1.745, pf:-10.0, footInvR:10.5, footEvL:9.6, neckLatL:-17.0 }; //side lying  
+POSE_OVERRIDES["Glute_Med:low"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };  //supine 
+POSE_OVERRIDES["TFL:high"] = { x:-1.280, y:0.815, z:0.490, rx:2.705, ry:-3.491, rz:1.745, pf:-10.0, footInvR:10.5, footEvL:9.6, neckLatL:-17.0 }; //side lying  
 POSE_OVERRIDES["TFL:low"] = { x:-0.280, y:-0.260, z:0.110, rx:-0.524, ry:-1.222, rz:-0.524, pf:0.0, footInvR:-0.4, footEvL:0.4, neckLatL:0.0, upperArmLY: 33, upperArmRY: -33.0, upperArmLZ: -8.0, upperArmRZ: 10.0, handLZ: 20, handRZ: -20, handLX: -85, handRX: -85, lowerArmLZ: 15.0, lowerArmRZ: -15.0, lowerArmLX: 17, lowerArmRX: -17 }; //long sit
-POSE_OVERRIDES["Hip_Adduction:high"] = { x:-1.280, y:0.815, z:0.490, rx:2.705, ry:-3.491, rz:1.745, pf:-10.0, footInvR:10.5, footEvL:9.6, neckLatL:-17.0 }; //side lying  
-POSE_OVERRIDES["Hip_Adduction:low"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };  //supine 
-POSE_OVERRIDES["Sartorius:high"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  // seated on bed
-POSE_OVERRIDES["Sartorius:low"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };  //supine 
-POSE_OVERRIDES["Hip_ER:high"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  // seated on bed
-POSE_OVERRIDES["Hip_ER:low"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };  //supine 
-POSE_OVERRIDES["Hip_IR:high"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  // seated on bed
-POSE_OVERRIDES["Hip_IR:low"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };  //supine 
-POSE_OVERRIDES["Hamstrings:high"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0, calfLX: -45 };   //prone  special
-POSE_OVERRIDES["Hamstrings:low"] = { x:-1.280, y:0.815, z:0.490, rx:2.705, ry:-3.491, rz:1.745, pf:-10.0, footInvR:10.5, footEvL:9.6, neckLatL:-17.0 }; //side lying  
-POSE_OVERRIDES["Quadriceps:high"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  // seated on bed
-POSE_OVERRIDES["Quadriceps:low"] = { x:-1.280, y:0.815, z:0.490, rx:2.705, ry:-3.491, rz:1.745, pf:-10.0, footInvR:10.5, footEvL:9.6, neckLatL:-17.0 }; //side lying  
-POSE_OVERRIDES["Tibialis_Anterior:high"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };  //supine 
-POSE_OVERRIDES["Tibialis_Anterior:low"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };  //supine 
-POSE_OVERRIDES["Foot_Eversion_PF:high"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  // seated on bed
-POSE_OVERRIDES["Foot_Eversion_PF:low"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  // seated on bed
-POSE_OVERRIDES["Gastrocnemius:high"] = { x:-0.500, y:0.000, z:-1.600, rx:0.000, ry:1.920, rz:0.000, pf:-10.0, footInvR:-0.5, footEvL:0.5, neckLatL:0.0, upperArmRX: 7, upperArmLX: 7, lowerArmRX: 30, lowerArmLX: 30, calfLX: -60, handLY: 130, handRY: -130, handLX: -7   }; 
-POSE_OVERRIDES["Gastrocnemius:low"] = { x:-1.520, y:0.800, z:0.550, rx:1.571, ry:0.000, rz:-1.920, pf:0.0, spineX: -33, lowerArmRX: 80, lowerArmLX: 80, upperArmRX: 55, upperArmLX: 55, handLY: 130, handRY: -130, handLX: 17, handRX: 17 };  //prone
+POSE_OVERRIDES["Hip_Adduction:high"] = { x:-1.280, y:0.815, z:0.490, rx:2.705, ry:-3.491, rz:1.745, pf:-10.0, footInvR:10.5, footEvL:9.6, neckLatL:-17.0 }; //side lying  
+POSE_OVERRIDES["Hip_Adduction:low"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };  //supine 
+POSE_OVERRIDES["Sartorius:high"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  // seated on bed
+POSE_OVERRIDES["Sartorius:low"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };  //supine 
+POSE_OVERRIDES["Hip_ER:high"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  // seated on bed
+POSE_OVERRIDES["Hip_ER:low"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };  //supine 
+POSE_OVERRIDES["Hip_IR:high"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  // seated on bed
+POSE_OVERRIDES["Hip_IR:low"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };  //supine 
+POSE_OVERRIDES["Hamstrings:high"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0, calfLX: -45 };   //prone  special
+POSE_OVERRIDES["Hamstrings:low"] = { x:-1.280, y:0.815, z:0.490, rx:2.705, ry:-3.491, rz:1.745, pf:-10.0, footInvR:10.5, footEvL:9.6, neckLatL:-17.0 }; //side lying  
+POSE_OVERRIDES["Quadriceps:high"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  // seated on bed
+POSE_OVERRIDES["Quadriceps:low"] = { x:-1.280, y:0.815, z:0.490, rx:2.705, ry:-3.491, rz:1.745, pf:-10.0, footInvR:10.5, footEvL:9.6, neckLatL:-17.0 }; //side lying  
+POSE_OVERRIDES["Tibialis_Anterior:high"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };  //supine 
+POSE_OVERRIDES["Tibialis_Anterior:low"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };  //supine 
+POSE_OVERRIDES["Foot_Eversion_PF:high"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  // seated on bed
+POSE_OVERRIDES["Foot_Eversion_PF:low"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  // seated on bed
+POSE_OVERRIDES["Gastrocnemius:high"] = { x:-0.500, y:0.000, z:-1.600, rx:0.000, ry:1.920, rz:0.000, pf:-10.0, footInvR:-0.5, footEvL:0.5, neckLatL:0.0, upperArmRX: 7, upperArmLX: 7, lowerArmRX: 30, lowerArmLX: 30, calfLX: -60, handLY: 130, handRY: -130, handLX: -7   }; 
+POSE_OVERRIDES["Gastrocnemius:low"] = { x:-1.520, y:0.800, z:0.550, rx:1.571, ry:0.000, rz:-1.920, pf:0.0, spineX: -33, lowerArmRX: 80, lowerArmLX: 80, upperArmRX: 55, upperArmLX: 55, handLY: 130, handRY: -130, handLX: 17, handRX: 17 };  //prone
 
 
 /* ==== HAND OVERRIDES (new, separate from pose) ==== */
@@ -903,105 +861,105 @@ HAND_OVERRIDES["Capital_Extension:high"] = {"handRX":3.781441354751583,"handRY":
 HAND_OVERRIDES["Capital_Extension:low"] = {"handRX":3.249999999999997,"handRY":-2.45,"handRZ":-3.099999999999997,"handRRX":5.551115123125783e-17,"handRRY":-1.6499999999999997,"handRRZ":-3.149999999999999,"handLX":3.2499999999999964,"handLY":-2.5999999999999996,"handLZ":-3.649999999999995,"handLRX":0,"handLRY":-1.05,"handLRZ":2.5499999999999994};
 
 
-  
+  
 /* ==== NEUTRAL HAND POSITION (New Default) ==== */
 const HAND_NEUTRAL_POSE = {
-    // Widened X separation (0.45 vs -0.45) for side-by-side viewing
-    // Slight Z offset to keep them from overlapping in depth
-    handRX: 0.45, handRY: 1.25, handRZ: 0.45, 
-    handRRX: 0, handRRY: 0, handRRZ: 0,   
-    handLX: -0.45, handLY: 1.25, handLZ: 0.55,  
-    handLRX: 0, handLRY: 0, handLRZ: 0  
+    // Widened X separation (0.45 vs -0.45) for side-by-side viewing
+    // Slight Z offset to keep them from overlapping in depth
+    handRX: 0.45, handRY: 1.25, handRZ: 0.45, 
+    handRRX: 0, handRRY: 0, handRRZ: 0,   
+    handLX: -0.45, handLY: 1.25, handLZ: 0.55,  
+    handLRX: 0, handLRY: 0, handLRZ: 0  
 };
 let CURRENT_BODY_TEST = null;
 let CURRENT_BODY_BUCKET = "high"; // "high" or "low"
-  
+  
 // Decide which pose family to use ("high" = Grades 3–5 family, "low" = Grades 0–2 family)
 function getGradeBucketForTest(testKey){
-  // 1) Trunk (except pelvis) + Gastroc use the Grading Exceptions menu (5–1 / 0)
-  if (EXCEPTION_TESTS.has(testKey)){
-    if (!gradeExceptions) return "high";
-    const g = Number(gradeExceptions.value || "5"); // 5,4,3,2,1,(0)
+  // 1) Trunk (except pelvis) + Gastroc use the Grading Exceptions menu (5–1 / 0)
+  if (EXCEPTION_TESTS.has(testKey)){
+    if (!gradeExceptions) return "high";
+    const g = Number(gradeExceptions.value || "5"); // 5,4,3,2,1,(0)
 
-    // 5,4,3 → "high" (3–5 family)
-    // 2,1,0 → "low"  (0–2 family)
-    return (g >= 3 ? "high" : "low");
-  }
+    // 5,4,3 → "high" (3–5 family)
+    // 2,1,0 → "low"  (0–2 family)
+    return (g >= 3 ? "high" : "low");
+  }
 
-  // 2) Everything else uses the normal 3–0 Grade menu
-  if (!gradeMain) return "high";
-  const gm = Number(gradeMain.value || "3"); // 3,2,1,0
+  // 2) Everything else uses the normal 3–0 Grade menu
+  if (!gradeMain) return "high";
+  const gm = Number(gradeMain.value || "3"); // 3,2,1,0
 
-  // 3 → "high" (covers Grades 3–5)
-  // 2,1,0 → "low" (Grades 2–0)
-  return (gm >= 3 ? "high" : "low");
+  // 3 → "high" (covers Grades 3–5)
+  // 2,1,0 → "low" (Grades 2–0)
+  return (gm >= 3 ? "high" : "low");
 }
 
 
 /** Global plantarflexion for both feet */
 function applyGlobalPF(){
-  if (!skeleton) return;
+  if (!skeleton) return;
 
-  const footL = getBone("foot_L");
-  const footR = getBone("foot_R");
+  const footL = getBone("foot_L");
+  const footR = getBone("foot_R");
 
-  // Reset feet to their baseline before applying PF
-  [footL, footR].forEach(b => {
-    if (!b) return;
-    const q0 = initialBoneRot.get(b);
-    if (q0) b.quaternion.copy(q0);
-  });
+  // Reset feet to their baseline before applying PF
+  [footL, footR].forEach(b => {
+    if (!b) return;
+    const q0 = initialBoneRot.get(b);
+    if (q0) b.quaternion.copy(q0);
+  });
 
-  if (!GLOBAL_PF_DEG) return; // nothing to do if 0°
+  if (!GLOBAL_PF_DEG) return; // nothing to do if 0°
 
-  const r = degToRad(GLOBAL_PF_DEG);
-  // If toes go the wrong way, flip sign here
-  if (footL) footL.rotateX(-r);
-  if (footR) footR.rotateX(-r);
+  const r = degToRad(GLOBAL_PF_DEG);
+  // If toes go the wrong way, flip sign here
+  if (footL) footL.rotateX(-r);
+  if (footR) footR.rotateX(-r);
 }
 
 function applyLimbOverridesFromOverride(o){
-  if (!o || !skeleton) return;
-  const get = (n)=> skeleton.bones.find(b => b.name === n);
-  const rad = THREE.MathUtils.degToRad;
+  if (!o || !skeleton) return;
+  const get = (n)=> skeleton.bones.find(b => b.name === n);
+  const rad = THREE.MathUtils.degToRad;
 
-  const thighL = get("thigh_L");
-  const thighR = get("thigh_R");
-  const calfL  = get("calf_L");
-  const calfR  = get("calf_R");
-  
-  // Thigh L: X, Y, Z
-  if (thighL){
-    if (o.thighLX !== undefined) thighL.rotateX(rad(o.thighLX));
-    if (o.thighLY !== undefined) thighL.rotateY(rad(o.thighLY));
-    if (o.thighLZ !== undefined) thighL.rotateZ(rad(o.thighLZ));
-  }
+  const thighL = get("thigh_L");
+  const thighR = get("thigh_R");
+  const calfL  = get("calf_L");
+  const calfR  = get("calf_R");
+  
+  // Thigh L: X, Y, Z
+  if (thighL){
+    if (o.thighLX !== undefined) thighL.rotateX(rad(o.thighLX));
+    if (o.thighLY !== undefined) thighL.rotateY(rad(o.thighLY));
+    if (o.thighLZ !== undefined) thighL.rotateZ(rad(o.thighLZ));
+  }
 
-  // Thigh R: X, Y, Z
-  if (thighR){
-    if (o.thighRX !== undefined) thighR.rotateX(rad(o.thighRX));
-    if (o.thighRY !== undefined) thighR.rotateY(rad(o.thighRY));
-    if (o.thighRZ !== undefined) thighR.rotateZ(rad(o.thighRZ));
-  }
+  // Thigh R: X, Y, Z
+  if (thighR){
+    if (o.thighRX !== undefined) thighR.rotateX(rad(o.thighRX));
+    if (o.thighRY !== undefined) thighR.rotateY(rad(o.thighRY));
+    if (o.thighRZ !== undefined) thighR.rotateZ(rad(o.thighRZ));
+  }
 
-  // Calf L: X, Z
-  if (calfL){
-    if (o.calfLX !== undefined) calfL.rotateX(rad(o.calfLX));
-    if (o.calfLZ !== undefined) calfL.rotateZ(rad(o.calfLZ));
-  }
+  // Calf L: X, Z
+  if (calfL){
+    if (o.calfLX !== undefined) calfL.rotateX(rad(o.calfLX));
+    if (o.calfLZ !== undefined) calfL.rotateZ(rad(o.calfLZ));
+  }
 
-  // Calf R: X, Z
-  if (calfR){
-    if (o.calfRX !== undefined) calfR.rotateX(rad(o.calfRX));
-    if (o.calfRZ !== undefined) calfR.rotateZ(rad(o.calfRZ));
-  }
-  // Spine (trunk) — X, Y, Z for "spine01"
-  const spine = get("spine01");
-  if (spine){
-    if (o.spineX !== undefined) spine.rotateX(rad(o.spineX));
-    if (o.spineY !== undefined) spine.rotateY(rad(o.spineY));
-    if (o.spineZ !== undefined) spine.rotateZ(rad(o.spineZ));
-  }  
+  // Calf R: X, Z
+  if (calfR){
+    if (o.calfRX !== undefined) calfR.rotateX(rad(o.calfRX));
+    if (o.calfRZ !== undefined) calfR.rotateZ(rad(o.calfRZ));
+  }
+  // Spine (trunk) — X, Y, Z for "spine01"
+  const spine = get("spine01");
+  if (spine){
+    if (o.spineX !== undefined) spine.rotateX(rad(o.spineX));
+    if (o.spineY !== undefined) spine.rotateY(rad(o.spineY));
+    if (o.spineZ !== undefined) spine.rotateZ(rad(o.spineZ));
+  }  
 // --- START: Requested Manual Override for "head" bone ---
   const head = get("head");
   if (head){
@@ -1009,148 +967,148 @@ function applyLimbOverridesFromOverride(o){
     if (o.headY !== undefined) head.rotateY(rad(o.headY));
     if (o.headZ !== undefined) head.rotateZ(rad(o.headZ));
   }
-}  
+}  
 
 // Coarse body-mode: align to bed/cabinet but don't set specific joint test angles
 function setBodyMode(mode){
-  if (!model || !skeleton) return;
+  if (!model || !skeleton) return;
 
-  // Always start from your standing anatomic baseline
-  resetAllBones();
-  applyAnatomicBaseline();
+  // Always start from your standing anatomic baseline
+  resetAllBones();
+  applyAnatomicBaseline();
 
-  // Defaults: your original standing pose in front of bed
-  let posX = POSE.x;
-  let posY = POSE.y;
-  let posZ = POSE.z;
-  let rotX = 0;
-  let rotY = degToRad(POSE.ryDeg);
-  let rotZ = 0;
+  // Defaults: your original standing pose in front of bed
+  let posX = POSE.x;
+  let posY = POSE.y;
+  let posZ = POSE.z;
+  let rotX = 0;
+  let rotY = degToRad(POSE.ryDeg);
+  let rotZ = 0;
 
-  if (mode === "seated"){
-    // Short sitting at edge of blue table
-    const edgeZ = tableTop.position.z + (TABLE_D / 2) - 0.25;
-    posX = 0;
-    posY = TABLE_HEIGHT + 0.02;
-    posZ = edgeZ;
-    rotX = 0;
-    rotY = degToRad(POSE.ryDeg);
-    seatPoseOnlyLegs();
+  if (mode === "seated"){
+    // Short sitting at edge of blue table
+    const edgeZ = tableTop.position.z + (TABLE_D / 2) - 0.25;
+    posX = 0;
+    posY = TABLE_HEIGHT + 0.02;
+    posZ = edgeZ;
+    rotX = 0;
+    rotY = degToRad(POSE.ryDeg);
+    seatPoseOnlyLegs();
 
-  } else if (mode === "long_sit"){
-  // Long sitting at edge of table: hips ~0°, knees ~0°
-  const edgeZ = tableTop.position.z + (TABLE_D / 2) - 0.25;
-  posX = 0;
-  posY = TABLE_HEIGHT + 0.02;
-  posZ = edgeZ;
-  rotX = 0;
-  rotY = degToRad(POSE.ryDeg);
+  } else if (mode === "long_sit"){
+  // Long sitting at edge of table: hips ~0°, knees ~0°
+  const edgeZ = tableTop.position.z + (TABLE_D / 2) - 0.25;
+  posX = 0;
+  posY = TABLE_HEIGHT + 0.02;
+  posZ = edgeZ;
+  rotX = 0;
+  rotY = degToRad(POSE.ryDeg);
 
-  longSitLegs(); // new helper below
-    
-  } else if (mode === "seatedgravity"){
-    // Same base seated transform as "seated" (3–5: against gravity)
-    const edgeZ = tableTop.position.z + (TABLE_D / 2) - 0.25;
-    posX = 0;
-    posY = TABLE_HEIGHT + 0.02;
-    posZ = edgeZ;
-    rotX = 0;
-    rotY = degToRad(POSE.ryDeg);
-    seatPoseOnlyLegs();
+  longSitLegs(); // new helper below
+    
+  } else if (mode === "seatedgravity"){
+    // Same base seated transform as "seated" (3–5: against gravity)
+    const edgeZ = tableTop.position.z + (TABLE_D / 2) - 0.25;
+    posX = 0;
+    posY = TABLE_HEIGHT + 0.02;
+    posZ = edgeZ;
+    rotX = 0;
+    rotY = degToRad(POSE.ryDeg);
+    seatPoseOnlyLegs();
 
-  } else if (mode === "seatednogravity"){
-    // Same base seated transform as "seated" (0–2: gravity eliminated)
-    const edgeZ = tableTop.position.z + (TABLE_D / 2) - 0.25;
-    posX = 0;
-    posY = TABLE_HEIGHT + 0.02;
-    posZ = edgeZ;
-    rotX = 0;
-    rotY = degToRad(POSE.ryDeg);
-    seatPoseOnlyLegs();
+  } else if (mode === "seatednogravity"){
+    // Same base seated transform as "seated" (0–2: gravity eliminated)
+    const edgeZ = tableTop.position.z + (TABLE_D / 2) - 0.25;
+    posX = 0;
+    posY = TABLE_HEIGHT + 0.02;
+    posZ = edgeZ;
+    rotX = 0;
+    rotY = degToRad(POSE.ryDeg);
+    seatPoseOnlyLegs();
 
-  } else if (mode === "supine"){
-    // Supine on bed, centered
-    posX = 0;
-    posY = TABLE_HEIGHT + TABLE_THICK / 2 + 0.04;
-    posZ = tableTop.position.z;
-    rotX = Math.PI / 2;
-    rotY = degToRad(POSE.ryDeg);
+  } else if (mode === "supine"){
+    // Supine on bed, centered
+    posX = 0;
+    posY = TABLE_HEIGHT + TABLE_THICK / 2 + 0.04;
+    posZ = tableTop.position.z;
+    rotX = Math.PI / 2;
+    rotY = degToRad(POSE.ryDeg);
 
-  } else if (mode === "prone"){
-    // Prone on bed, centered
-    posX = 0;
-    posY = TABLE_HEIGHT + TABLE_THICK / 2 + 0.04;
-    posZ = tableTop.position.z;
-    rotX = Math.PI / 2;
-    rotY = degToRad(POSE.ryDeg + 180);
+  } else if (mode === "prone"){
+    // Prone on bed, centered
+    posX = 0;
+    posY = TABLE_HEIGHT + TABLE_THICK / 2 + 0.04;
+    posZ = tableTop.position.z;
+    rotX = Math.PI / 2;
+    rotY = degToRad(POSE.ryDeg + 180);
 
-  } else if (mode === "side_lying"){
-    // Side-lying on bed (rough: lying with trunk rotated)
-    posX = 0;
-    posY = TABLE_HEIGHT + TABLE_THICK / 2 + 0.04;
-    posZ = tableTop.position.z;
-    rotX = Math.PI / 2;
-    rotY = degToRad(POSE.ryDeg);
-    rotZ = Math.PI / 2; // roll onto side
+  } else if (mode === "side_lying"){
+    // Side-lying on bed (rough: lying with trunk rotated)
+    posX = 0;
+    posY = TABLE_HEIGHT + TABLE_THICK / 2 + 0.04;
+    posZ = tableTop.position.z;
+    rotX = Math.PI / 2;
+    rotY = degToRad(POSE.ryDeg);
+    rotZ = Math.PI / 2; // roll onto side
 
-  } else if (mode === "gastroc"){
-    // Standing by cabinet for heel raises
-    const standZ = cabinet.position.z - 0.5;
-    posX = cabinet.position.x;
-    posY = 0;    // floor
-    posZ = standZ;
-    rotX = 0;
-    rotY = 0;    // face cabinet
+  } else if (mode === "gastroc"){
+    // Standing by cabinet for heel raises
+    const standZ = cabinet.position.z - 0.5;
+    posX = cabinet.position.x;
+    posY = 0;    // floor
+    posZ = standZ;
+    rotX = 0;
+    rotY = 0;    // face cabinet
 
-  } else {
-    // 'anatomic' or unknown → your original standing pose
-    posX = POSE.x;
-    posY = POSE.y;
-    posZ = POSE.z;
-    rotX = 0;
-    rotY = degToRad(POSE.ryDeg);
-    rotZ = 0;
-  }
+  } else {
+    // 'anatomic' or unknown → your original standing pose
+    posX = POSE.x;
+    posY = POSE.y;
+    posZ = POSE.z;
+    rotX = 0;
+    rotY = degToRad(POSE.ryDeg);
+    rotZ = 0;
+  }
 
-  // Apply any saved override for this test + family (high/low)
-  const key = CURRENT_BODY_TEST && CURRENT_BODY_BUCKET
-    ? `${CURRENT_BODY_TEST}:${CURRENT_BODY_BUCKET}`
-    : null;
+  // Apply any saved override for this test + family (high/low)
+  const key = CURRENT_BODY_TEST && CURRENT_BODY_BUCKET
+    ? `${CURRENT_BODY_TEST}:${CURRENT_BODY_BUCKET}`
+    : null;
 
-  if (key && POSE_OVERRIDES[key]){
-    const o = POSE_OVERRIDES[key];
-    posX = o.x;
-    posY = o.y;
-    posZ = o.z;
-    rotX = o.rx;
-    rotY = o.ry;
-    rotZ = o.rz;
+  if (key && POSE_OVERRIDES[key]){
+    const o = POSE_OVERRIDES[key];
+    posX = o.x;
+    posY = o.y;
+    posZ = o.z;
+    rotX = o.rx;
+    rotY = o.ry;
+    rotZ = o.rz;
 
-    // NEW: read plantarflexion from override if present
-    if (typeof o.pf === "number") {
-      GLOBAL_PF_DEG = o.pf;
-    }
-  }
+    // NEW: read plantarflexion from override if present
+    if (typeof o.pf === "number") {
+      GLOBAL_PF_DEG = o.pf;
+    }
+  }
 
 
-  model.position.set(posX, posY, posZ);
-  model.rotation.set(rotX, rotY, rotZ);
+  model.position.set(posX, posY, posZ);
+  model.rotation.set(rotX, rotY, rotZ);
 
-  // Re-apply global plantarflexion to both feet
-  applyGlobalPF();
+  // Re-apply global plantarflexion to both feet
+  applyGlobalPF();
 
-    // Apply any per-test thigh/calf overrides (if present)
-  if (key && POSE_OVERRIDES[key]){
-    applyLimbOverridesFromOverride(POSE_OVERRIDES[key]);
-  }
+    // Apply any per-test thigh/calf overrides (if present)
+  if (key && POSE_OVERRIDES[key]){
+    applyLimbOverridesFromOverride(POSE_OVERRIDES[key]);
+  }
 
-  // Inside function setBodyMode(mode) { ... }
+  // Inside function setBodyMode(mode) { ... }
 
 // ... existing code for model.rotation.set() and applyLimbOverridesFromOverride() ...
 
   // === NEW: Therapist Hand Overrides (separate dictionary) ===
   // NOTE: The 'key' variable is already defined from the patient pose logic above.
-  
+  
   // FIX: Choose the specific saved pose if it exists, otherwise use the neutral default position.
   const poseToApply = key && HAND_OVERRIDES[key]
     ? HAND_OVERRIDES[key]
@@ -1178,89 +1136,89 @@ function setBodyMode(mode){
     }
   }
 
-  // Optional arm/hand fine-tune rotations (shortcut from POSE_OVERRIDES) 
-  if (key && POSE_OVERRIDES[key] && skeleton){
-    const o = POSE_OVERRIDES[key];
+  // Optional arm/hand fine-tune rotations (shortcut from POSE_OVERRIDES) 
+  if (key && POSE_OVERRIDES[key] && skeleton){
+    const o = POSE_OVERRIDES[key];
 
-    const laL   = getBone("lowerarm_L");
-    const laR   = getBone("lowerarm_R");
-    const uaL   = getBone("upperarm_L");
-    const uaR   = getBone("upperarm_R");
-    const handL = getBone("hand_L");
-    const handR = getBone("hand_R");
+    const laL   = getBone("lowerarm_L");
+    const laR   = getBone("lowerarm_R");
+    const uaL   = getBone("upperarm_L");
+    const uaR   = getBone("upperarm_R");
+    const handL = getBone("hand_L");
+    const handR = getBone("hand_R");
 
-    // LOWER ARMS (L/R) — X, Y, Z
-    if (laL){
-      if (typeof o.lowerArmLX === "number") laL.rotateX(degToRad(o.lowerArmLX));
-      if (typeof o.lowerArmLY === "number") laL.rotateY(degToRad(o.lowerArmLY));
-      if (typeof o.lowerArmLZ === "number") laL.rotateZ(degToRad(o.lowerArmLZ));
-    }
-    if (laR){
-      if (typeof o.lowerArmRX === "number") laR.rotateX(degToRad(o.lowerArmRX));
-      if (typeof o.lowerArmRY === "number") laR.rotateY(degToRad(o.lowerArmRY));
-      if (typeof o.lowerArmRZ === "number") laR.rotateZ(degToRad(o.lowerArmRZ));
-    }
+    // LOWER ARMS (L/R) — X, Y, Z
+    if (laL){
+      if (typeof o.lowerArmLX === "number") laL.rotateX(degToRad(o.lowerArmLX));
+      if (typeof o.lowerArmLY === "number") laL.rotateY(degToRad(o.lowerArmLY));
+      if (typeof o.lowerArmLZ === "number") laL.rotateZ(degToRad(o.lowerArmLZ));
+    }
+    if (laR){
+      if (typeof o.lowerArmRX === "number") laR.rotateX(degToRad(o.lowerArmRX));
+      if (typeof o.lowerArmRY === "number") laR.rotateY(degToRad(o.lowerArmRY));
+      if (typeof o.lowerArmRZ === "number") laR.rotateZ(degToRad(o.lowerArmRZ));
+    }
 
-    // UPPER ARMS (L/R) — X, Y, Z
-    if (uaL){
-      if (typeof o.upperArmLX === "number") uaL.rotateX(degToRad(o.upperArmLX));
-      if (typeof o.upperArmLY === "number") uaL.rotateY(degToRad(o.upperArmLY));
-      if (typeof o.upperArmLZ === "number") uaL.rotateZ(degToRad(o.upperArmLZ));
-    }
-    if (uaR){
-      if (typeof o.upperArmRX === "number") uaR.rotateX(degToRad(o.upperArmRX));
-      if (typeof o.upperArmRY === "number") uaR.rotateY(degToRad(o.upperArmRY));
-      if (typeof o.upperArmRZ === "number") uaR.rotateZ(degToRad(o.upperArmRZ));
-    }
+    // UPPER ARMS (L/R) — X, Y, Z
+    if (uaL){
+      if (typeof o.upperArmLX === "number") uaL.rotateX(degToRad(o.upperArmLX));
+      if (typeof o.upperArmLY === "number") uaL.rotateY(degToRad(o.upperArmLY));
+      if (typeof o.upperArmLZ === "number") uaL.rotateZ(degToRad(o.upperArmLZ));
+    }
+    if (uaR){
+      if (typeof o.upperArmRX === "number") uaR.rotateX(degToRad(o.upperArmRX));
+      if (typeof o.upperArmRY === "number") uaR.rotateY(degToRad(o.upperArmRY));
+      if (typeof o.upperArmRZ === "number") uaR.rotateZ(degToRad(o.upperArmRZ));
+    }
 
-    // HANDS (L/R) — X, Y, Z
-    if (handL){
-      if (typeof o.handLX === "number") handL.rotateX(degToRad(o.handLX));
-      if (typeof o.handLY === "number") handL.rotateY(degToRad(o.handLY));
-      if (typeof o.handLZ === "number") handL.rotateZ(degToRad(o.handLZ));
-    }
-    if (handR){
-      if (typeof o.handRX === "number") handR.rotateX(degToRad(o.handRX));
-      if (typeof o.handRY === "number") handR.rotateY(degToRad(o.handRY));
-      if (typeof o.handRZ === "number") handR.rotateZ(degToRad(o.handRZ));
-    }
-  }
+    // HANDS (L/R) — X, Y, Z
+    if (handL){
+      if (typeof o.handLX === "number") handL.rotateX(degToRad(o.handLX));
+      if (typeof o.handLY === "number") handL.rotateY(degToRad(o.handLY));
+      if (typeof o.handLZ === "number") handL.rotateZ(degToRad(o.handLZ));
+    }
+    if (handR){
+      if (typeof o.handRX === "number") handR.rotateX(degToRad(o.handRX));
+      if (typeof o.handRY === "number") handR.rotateY(degToRad(o.handRY));
+      if (typeof o.handRZ === "number") handR.rotateZ(degToRad(o.handRZ));
+    }
+  }
 
-  // If this test is using side-lying, also snap arms/legs to side-lying baseline
-  if (mode === "side_lying"){
-    applySideLyingLimbs();
-  }
-   // Wrist tests: add right-arm bias (0° abd, 0° flex) in both seated modes
-  if (mode === "seatedgravity" || mode === "seatednogravity"){
-    const upperR = getBone("upperarm_R");
-    const lowerR = getBone("lowerarm_R");
+  // If this test is using side-lying, also snap arms/legs to side-lying baseline
+  if (mode === "side_lying"){
+    applySideLyingLimbs();
+  }
+   // Wrist tests: add right-arm bias (0° abd, 0° flex) in both seated modes
+  if (mode === "seatedgravity" || mode === "seatednogravity"){
+    const upperR = getBone("upperarm_R");
+    const lowerR = getBone("lowerarm_R");
 
-    // Reset just these bones to baseline so angles are absolute (not stacked)
-    [upperR, lowerR].forEach(b => {
-      if (!b) return;
-      const q0 = initialBoneRot.get(b);
-      if (q0) b.quaternion.copy(q0);
-    });
+    // Reset just these bones to baseline so angles are absolute (not stacked)
+    [upperR, lowerR].forEach(b => {
+      if (!b) return;
+      const q0 = initialBoneRot.get(b);
+      if (q0) b.quaternion.copy(q0);
+    });
 
-    if (upperR) upperR.rotateZ(degToRad(-16));  // ° shoulder abduction
-    if (lowerR) lowerR.rotateX(degToRad(25));  // ° elbow flexion
-  }
- 
+    if (upperR) upperR.rotateZ(degToRad(-16));  // ° shoulder abduction
+    if (lowerR) lowerR.rotateX(degToRad(25));  // ° elbow flexion
+  }
+ 
 // Wrist tests: right-arm bias for NO-gravity (0–2) pose
 if (mode === "seatednogravity"){
-  const upperR = getBone("upperarm_R");
-  const lowerR = getBone("lowerarm_R");
+  const upperR = getBone("upperarm_R");
+  const lowerR = getBone("lowerarm_R");
 
-  // Reset just these bones to baseline so angles are absolute (not stacked)
-  [upperR, lowerR].forEach(b => {
-    if (!b) return;
-    const q0 = initialBoneRot.get(b);
-    if (q0) b.quaternion.copy(q0);
-  });
+  // Reset just these bones to baseline so angles are absolute (not stacked)
+  [upperR, lowerR].forEach(b => {
+    if (!b) return;
+    const q0 = initialBoneRot.get(b);
+    if (q0) b.quaternion.copy(q0);
+  });
 
-  // Same shoulder, MORE elbow flexion for gravity-eliminated setup
-  if (upperR) upperR.rotateZ(degToRad(-12)); // shoulder abduction
-  if (lowerR) lowerR.rotateX(degToRad(75));  // more elbow flexion (tweak if needed)
+  // Same shoulder, MORE elbow flexion for gravity-eliminated setup
+  if (upperR) upperR.rotateZ(degToRad(-12)); // shoulder abduction
+  if (lowerR) lowerR.rotateX(degToRad(75));  // more elbow flexion (tweak if needed)
 }
 }
 
@@ -1316,14 +1274,16 @@ if (!rightHandModel || !leftHandModel) {
             // their movement must be handled via the Pose Tuner or separate control logic later.
             scene.add(handsModel);
 
-            // --- START: INITIAL CONTROL ATTACHMENT (Step 2) ---
+            // --- START: ACTIVATE DRAGGING CONTROL HERE (No Tuner Logic) ---
             if (transformControls && rightHandModel) {
-                // Initialize control on Right Hand using the new state-aware function
-                activateHandControl(rightHandModel); 
-                toggleHandControlBtn.disabled = false; // Enable the switch button now that control is live
+                // Attach the right hand model to the widget for immediate dragging access
+                transformControls.attach(rightHandModel);
+                transformControls.visible = true; 
             }
-            // --- END: INITIAL CONTROL ATTACHMENT ---
+            // --- END: ACTIVATE DRAGGING CONTROL HERE ---
 
+
+            // FIX 2: Call the function that applies the saved coordinates
             // This reads the hard-coded HAND_OVERRIDES for the currently selected test/grade.
             applyBodyPositionFromSelection(); 
 
@@ -1340,251 +1300,251 @@ if (!rightHandModel || !leftHandModel) {
     );
 }
 function toggleHands(){
-    const btn = $("toggleHandsBtn");
-    
-    if (!handsModel) {
-        loadHandsModel();
-    } else {
-        handsModel.visible = !handsModel.visible;
-    }
+    const btn = $("toggleHandsBtn");
+    
+    if (!handsModel) {
+        loadHandsModel();
+    } else {
+        handsModel.visible = !handsModel.visible;
+    }
 
-    // Update button style for visual feedback
-    if (handsModel?.visible) {
-         btn?.classList.add('lockOn');
-     showHandTuner(); 
-    } else {
-         btn?.classList.remove('lockOn');
-    }
+    // Update button style for visual feedback
+    if (handsModel?.visible) {
+         btn?.classList.add('lockOn');
+     showHandTuner(); 
+    } else {
+         btn?.classList.remove('lockOn');
+    }
 }
- 
+ 
 
 function degToRad(d){ return d * Math.PI / 180; }
 function seatPoseOnlyLegs(){
-  if(!skeleton) return;
-  const get = (n)=> skeleton.bones.find(b => b.name === n);
-  const thighL = get("thigh_L"), thighR = get("thigh_R"), calfL = get("calf_L"), calfR = get("calf_R");
-  [thighL,thighR,calfL,calfR].forEach(b=>{
-    if(!b) return;
-    const q0 = initialBoneRot.get(b);
-    if (q0) b.quaternion.copy(q0);
-  });
-  const rad = THREE.MathUtils.degToRad;
-  if (thighL) thighL.rotateX(rad(85));
-  if (thighR) thighR.rotateX(rad(85));
-  if (calfL)  calfL.rotateX(rad(-90));
-  if (calfR)  calfR.rotateX(rad(-90));
+  if(!skeleton) return;
+  const get = (n)=> skeleton.bones.find(b => b.name === n);
+  const thighL = get("thigh_L"), thighR = get("thigh_R"), calfL = get("calf_L"), calfR = get("calf_R");
+  [thighL,thighR,calfL,calfR].forEach(b=>{
+    if(!b) return;
+    const q0 = initialBoneRot.get(b);
+    if (q0) b.quaternion.copy(q0);
+  });
+  const rad = THREE.MathUtils.degToRad;
+  if (thighL) thighL.rotateX(rad(85));
+  if (thighR) thighR.rotateX(rad(85));
+  if (calfL)  calfL.rotateX(rad(-90));
+  if (calfR)  calfR.rotateX(rad(-90));
 }
 
 function longSitLegs(){
-  if (!skeleton) return;
-  const get = (n)=> skeleton.bones.find(b => b.name === n);
+  if (!skeleton) return;
+  const get = (n)=> skeleton.bones.find(b => b.name === n);
 
-  const thighL = get("thigh_L");
-  const thighR = get("thigh_R");
-  const calfL  = get("calf_L");
-  const calfR  = get("calf_R");
+  const thighL = get("thigh_L");
+  const thighR = get("thigh_R");
+  const calfL  = get("calf_L");
+  const calfR  = get("calf_R");
 
-  // Reset to baseline first
-  [thighL, thighR, calfL, calfR].forEach(b => {
-    if (!b) return;
-    const q0 = initialBoneRot.get(b);
-    if (q0) b.quaternion.copy(q0);
-  });
+  // Reset to baseline first
+  [thighL, thighR, calfL, calfR].forEach(b => {
+    if (!b) return;
+    const q0 = initialBoneRot.get(b);
+    if (q0) b.quaternion.copy(q0);
+  });
 
-  const r = THREE.MathUtils.degToRad;
+  const r = THREE.MathUtils.degToRad;
 
-  // Hips flexed ~0°
-  if (thighL) thighL.rotateX(r(80));
-  if (thighR) thighR.rotateX(r(80));
+  // Hips flexed ~0°
+  if (thighL) thighL.rotateX(r(80));
+  if (thighR) thighR.rotateX(r(80));
 
-  // Knees almost straight (small flex so it doesn't lock/look weird)
-  if (calfL)  calfL.rotateX(r(-5));
-  if (calfR)  calfR.rotateX(r(-5));
+  // Knees almost straight (small flex so it doesn't lock/look weird)
+  if (calfL)  calfL.rotateX(r(-5));
+  if (calfR)  calfR.rotateX(r(-5));
 }
-  
+  
 // Side-lying limb preset:
 // - Hips: add_L = 12°, add_R = -12°
 // - Feet: R inversion 20°, L eversion 20° (Z axis, foot_R / foot_L)
 // - Neck: left lateral flexion 10° (Z axis, "neck")
 // - Arms: adduction ±52° + flexion 30° (this part was already working)
 function applySideLyingLimbs(){
-  if (!skeleton) return;
+  if (!skeleton) return;
 
-  const thighL = getBone("thigh_L");
-  const thighR = getBone("thigh_R");
-  const upperL = getBone("upperarm_L");
-  const upperR = getBone("upperarm_R");
-  const footL  = getBone("foot_L");
-  const footR  = getBone("foot_R");
-  const neck   = getBone("neck");
+  const thighL = getBone("thigh_L");
+  const thighR = getBone("thigh_R");
+  const upperL = getBone("upperarm_L");
+  const upperR = getBone("upperarm_R");
+  const footL  = getBone("foot_L");
+  const footR  = getBone("foot_R");
+  const neck   = getBone("neck");
 
-  /* --- HIPS: explicit adduction angles from tuner --- */
-  const SIDE_HIP_ADD_L_DEG = -12;   // Left hip adduction angle
-  const SIDE_HIP_ADD_R_DEG = 12;   // Right hip adduction angle
+  /* --- HIPS: explicit adduction angles from tuner --- */
+  const SIDE_HIP_ADD_L_DEG = -12;   // Left hip adduction angle
+  const SIDE_HIP_ADD_R_DEG = 12;   // Right hip adduction angle
 
-  // Z axis = abduction/adduction for thighs
-  setDegAxis(thighL, "z", SIDE_HIP_ADD_L_DEG);
-  setDegAxis(thighR, "z", SIDE_HIP_ADD_R_DEG);
+  // Z axis = abduction/adduction for thighs
+  setDegAxis(thighL, "z", SIDE_HIP_ADD_L_DEG);
+  setDegAxis(thighR, "z", SIDE_HIP_ADD_R_DEG);
 
-  /* --- FEET: frontal plane (inversion/eversion) on Z axis --- */
-  // Right: inversion 20°, Left: eversion 20°
-  // If either goes the wrong way, just flip that sign.
-  const SIDE_FOOT_INV_R_DEG  = 20;   // right foot inversion
-  const SIDE_FOOT_EVER_L_DEG = 20;  // left foot eversion
+  /* --- FEET: frontal plane (inversion/eversion) on Z axis --- */
+  // Right: inversion 20°, Left: eversion 20°
+  // If either goes the wrong way, just flip that sign.
+  const SIDE_FOOT_INV_R_DEG  = 20;   // right foot inversion
+  const SIDE_FOOT_EVER_L_DEG = 20;  // left foot eversion
 
-  setDegAxis(footR, "z", SIDE_FOOT_INV_R_DEG);
-  setDegAxis(footL, "z", SIDE_FOOT_EVER_L_DEG);
+  setDegAxis(footR, "z", SIDE_FOOT_INV_R_DEG);
+  setDegAxis(footL, "z", SIDE_FOOT_EVER_L_DEG);
 
-  /* --- NECK: left lateral flexion 10° on Z axis --- */
-  const SIDE_NECK_LAT_L_DEG = -20;
-  setDegAxis(neck, "z", SIDE_NECK_LAT_L_DEG);
+  /* --- NECK: left lateral flexion 10° on Z axis --- */
+  const SIDE_NECK_LAT_L_DEG = -20;
+  setDegAxis(neck, "z", SIDE_NECK_LAT_L_DEG);
 
-  /* --- ARMS: keep your working values (adduction ±52° + flex 30°) --- */
-  // Reset shoulders to baseline so these are absolute, not stacked
-  [upperL, upperR].forEach(b => {
-    if (!b) return;
-    const q0 = initialBoneRot.get(b);
-    if (q0) b.quaternion.copy(q0);
-  });
+  /* --- ARMS: keep your working values (adduction ±52° + flex 30°) --- */
+  // Reset shoulders to baseline so these are absolute, not stacked
+  [upperL, upperR].forEach(b => {
+    if (!b) return;
+    const q0 = initialBoneRot.get(b);
+    if (q0) b.quaternion.copy(q0);
+  });
 
-  const SHO_FLEX_DEG = 30;  // flexion
-  const SHO_ADD_DEG  = 52;  // adduction magnitude
+  const SHO_FLEX_DEG = 30;  // flexion
+  const SHO_ADD_DEG  = 52;  // adduction magnitude
 
-  // Left arm: −52° add + 30° flex
-  if (upperL){
-    upperL.rotateZ(degToRad(-SHO_ADD_DEG));
-    upperL.rotateX(degToRad(SHO_FLEX_DEG));
-  }
-  // Right arm: +52° add + 30° flex (mirror)
-  if (upperR){
-    upperR.rotateZ(degToRad(SHO_ADD_DEG));
-    upperR.rotateX(degToRad(SHO_FLEX_DEG));
-  }
+  // Left arm: −52° add + 30° flex
+  if (upperL){
+    upperL.rotateZ(degToRad(-SHO_ADD_DEG));
+    upperL.rotateX(degToRad(SHO_FLEX_DEG));
+  }
+  // Right arm: +52° add + 30° flex (mirror)
+  if (upperR){
+    upperR.rotateZ(degToRad(SHO_ADD_DEG));
+    upperR.rotateX(degToRad(SHO_FLEX_DEG));
+  }
 }
 
 
 /* ==== Load model ==== */
 function addModel(gltf){
-  model = gltf.scene;
-  model.traverse(o=>{
-    if (o.isMesh){ o.castShadow=true; o.receiveShadow=true; }
-    if (o.isSkinnedMesh && !skeleton) skeleton = o.skeleton;
-  });
+  model = gltf.scene;
+  model.traverse(o=>{
+    if (o.isMesh){ o.castShadow=true; o.receiveShadow=true; }
+    if (o.isSkinnedMesh && !skeleton) skeleton = o.skeleton;
+  });
 
-  // store baseline bone rotations
-  if (skeleton){
-    skeleton.bones.forEach(b => initialBoneRot.set(b, b.quaternion.clone()));
-    applyAnatomicBaseline();
-  }
+  // store baseline bone rotations
+  if (skeleton){
+    skeleton.bones.forEach(b => initialBoneRot.set(b, b.quaternion.clone()));
+    applyAnatomicBaseline();
+  }
 
-  // Apply hard-wired numeric transform (no saving, no snapping)
-  model.scale.set(POSE.s, POSE.s, POSE.s);
-  model.position.set(POSE.x, POSE.y, POSE.z);
-  model.rotation.set(0, degToRad(POSE.ryDeg), 0);
-  if (POSE.seated) seatPoseOnlyLegs();
+  // Apply hard-wired numeric transform (no saving, no snapping)
+  model.scale.set(POSE.s, POSE.s, POSE.s);
+  model.position.set(POSE.x, POSE.y, POSE.z);
+  model.rotation.set(0, degToRad(POSE.ryDeg), 0);
+  if (POSE.seated) seatPoseOnlyLegs();
 
-  scene.add(model);
-  $("msg").textContent = "✅ Model loaded";
+  scene.add(model);
+  $("msg").textContent = "✅ Model loaded";
 }
 
 const MODEL_CANDIDATES = [
-  window.ROMETRICS_MODEL_URL,
-  "assets/Roma_ROMetrics.glb",
-  new URL("assets/Roma_ROMetrics.glb", document.baseURI).href
+  window.ROMETRICS_MODEL_URL,
+  "assets/Roma_ROMetrics.glb",
+  new URL("assets/Roma_ROMetrics.glb", document.baseURI).href
 ].filter(Boolean);
 
 function tryNextModelUrl(index){
-  if(index >= MODEL_CANDIDATES.length){
-    $("msg").textContent = "⚠️ Could not load model from any path.";
-    return;
-  }
-  const url = MODEL_CANDIDATES[index];
-  $("msg").textContent = "Loading model… " + url;
-  loader.load(
-    url,
-    (gltf)=> addModel(gltf),
-    (xhr)=>{
-      const pct = xhr.lengthComputable ? Math.min(100, Math.round(100*xhr.loaded/xhr.total)) : null;
-      $("msg").textContent = pct!==null ? `Loading ${pct}%` : "Loading…";
-    },
-    ()=> tryNextModelUrl(index+1)
-  );
+  if(index >= MODEL_CANDIDATES.length){
+    $("msg").textContent = "⚠️ Could not load model from any path.";
+    return;
+  }
+  const url = MODEL_CANDIDATES[index];
+  $("msg").textContent = "Loading model… " + url;
+  loader.load(
+    url,
+    (gltf)=> addModel(gltf),
+    (xhr)=>{
+      const pct = xhr.lengthComputable ? Math.min(100, Math.round(100*xhr.loaded/xhr.total)) : null;
+      $("msg").textContent = pct!==null ? `Loading ${pct}%` : "Loading…";
+    },
+    ()=> tryNextModelUrl(index+1)
+  );
 }
 
-tryNextModelUrl(0);  
+tryNextModelUrl(0);  
 // ============= NEW CLEAN HAND TUNER LOGIC =============
 const handTunerPanel = document.getElementById("handTuner");
 const handSideSel = document.getElementById("handSideSel");
 
 function showHandTuner(){
-  handTunerPanel.style.display = "block";
+  handTunerPanel.style.display = "block";
 }
 
 function hideHandTuner(){
-  handTunerPanel.style.display = "none";
+  handTunerPanel.style.display = "none";
 }
 
 // Attach +/– button actions
 document.querySelectorAll(".handStep").forEach(btn => {
-  btn.addEventListener("click", () => {
+  btn.addEventListener("click", () => {
 
-    const side = handSideSel.value;  
-    const hand = (side === "R") ? rightHandModel : leftHandModel;
-    if (!hand) return;
+    const side = handSideSel.value;  
+    const hand = (side === "R") ? rightHandModel : leftHandModel;
+    if (!hand) return;
 
-    const mode = btn.dataset.mode;     // pos | rot
-    const axis = btn.dataset.axis;     // x | y | z
-    const dir  = btn.dataset.dir === "+" ? 1 : -1;
+    const mode = btn.dataset.mode;     // pos | rot
+    const axis = btn.dataset.axis;     // x | y | z
+    const dir  = btn.dataset.dir === "+" ? 1 : -1;
 
-    if (mode === "pos") {
-      hand.position[axis] += 0.05 * dir;
-    } else {
-      hand.rotation[axis] += 0.15 * dir;
-    }
-  });
+    if (mode === "pos") {
+      hand.position[axis] += 0.05 * dir;
+    } else {
+      hand.rotation[axis] += 0.15 * dir;
+    }
+  });
 });
 
 document.getElementById("handSaveBtn").addEventListener("click", () => {
 
-    const test   = window.currentMMTtest;
-    const bucket = window.currentMMTgradeBucket; // "high" or "low"
+    const test   = window.currentMMTtest;
+    const bucket = window.currentMMTgradeBucket; // "high" or "low"
 
-    if (!test || !bucket){
-        alert("⚠️ Select a test + grade first.");
-        return;
-    }
+    if (!test || !bucket){
+        alert("⚠️ Select a test + grade first.");
+        return;
+    }
 
-    if (!rightHandModel || !leftHandModel){
-        alert("⚠️ Hands not loaded.");
-        return;
-    }
+    if (!rightHandModel || !leftHandModel){
+        alert("⚠️ Hands not loaded.");
+        return;
+    }
 
-    const key = `${test}:${bucket}`;
+    const key = `${test}:${bucket}`;
 
-    const out = {
-        handRX:  rightHandModel.position.x,
-        handRY:  rightHandModel.position.y,
-        handRZ:  rightHandModel.position.z,
-        handRRX: rightHandModel.rotation.x,
-        handRRY: rightHandModel.rotation.y,
-        handRRZ: rightHandModel.rotation.z,
+    const out = {
+        handRX:  rightHandModel.position.x,
+        handRY:  rightHandModel.position.y,
+        handRZ:  rightHandModel.position.z,
+        handRRX: rightHandModel.rotation.x,
+        handRRY: rightHandModel.rotation.y,
+        handRRZ: rightHandModel.rotation.z,
 
-        handLX:  leftHandModel.position.x,
-        handLY:  leftHandModel.position.y,
-        handLZ:  leftHandModel.position.z,
-        handLRX: leftHandModel.rotation.x,
-        handLRY: leftHandModel.rotation.y,
-        handLRZ: leftHandModel.rotation.z
-    };
+        handLX:  leftHandModel.position.x,
+        handLY:  leftHandModel.position.y,
+        handLZ:  leftHandModel.position.z,
+        handLRX: leftHandModel.rotation.x,
+        handLRY: leftHandModel.rotation.y,
+        handLRZ: leftHandModel.rotation.z
+    };
 
-    console.log(`HAND_OVERRIDES["${key}"] = ${JSON.stringify(out)};`);
-    alert("Hand pose saved — check console.");
+    console.log(`HAND_OVERRIDES["${key}"] = ${JSON.stringify(out)};`);
+    alert("Hand pose saved — check console.");
 });
 
 
 function applyBodyPositionFromSelection(){
   if (!model || !skeleton) return;
-  
+  
   const test = actionSel?.value;
   if (!test) return; // <<< THIS LINE MUST BE ADDED BACK
 
@@ -1596,22 +1556,22 @@ function applyBodyPositionFromSelection(){
   // NOTE: The key declaration inside setBodyMode will handle the key calculation.
   // ★ END REQUIRED ★
 
-  const family = TEST_POSITION[test] || { high:"anatomic", low:"anatomic" };
-  const mode = bucket === "low"
-      ? (family.low  || "anatomic")
-      : (family.high || "anatomic");
+  const family = TEST_POSITION[test] || { high:"anatomic", low:"anatomic" };
+  const mode = bucket === "low"
+      ? (family.low  || "anatomic")
+      : (family.high || "anatomic");
 
-  CURRENT_BODY_TEST = test;
-  CURRENT_BODY_BUCKET = bucket;
+  CURRENT_BODY_TEST = test;
+  CURRENT_BODY_BUCKET = bucket;
 
-  setBodyMode(mode);
+  setBodyMode(mode);
 
-  if (poseTunerEl && poseTunerEl.updateLabels){
-    poseTunerEl.updateLabels();
-  }
+  if (poseTunerEl && poseTunerEl.updateLabels){
+    poseTunerEl.updateLabels();
+  }
 }
 
- 
+ 
 /* ==== Wire UI ==== */
 const toggleHandsBtn = $("toggleHandsBtn"); // Reference the new single button
 
@@ -1621,42 +1581,42 @@ if (toggleHandsBtn) toggleHandsBtn.addEventListener('click', toggleHands);
 // When the test changes, update which grade menu is active, then re-apply pose
 actionSel.addEventListener("change", () => {
 
-  // ★ required for HAND TUNER save
-  window.currentMMTtest = actionSel.value;
-  window.currentMMTgradeBucket = getGradeBucketForTest(actionSel.value);
+  // ★ required for HAND TUNER save
+  window.currentMMTtest = actionSel.value;
+  window.currentMMTgradeBucket = getGradeBucketForTest(actionSel.value);
 
-  updateGradeDropdownsForSelection();
-  applyBodyPositionFromSelection();
+  updateGradeDropdownsForSelection();
+  applyBodyPositionFromSelection();
 
-  if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
+  if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
 });
 
 // Normal Grade 3–0 menu: used for all NON-exception tests
 gradeMain.addEventListener("change", () => {
-  if (actionSel.value && !EXCEPTION_TESTS.has(actionSel.value)){
+  if (actionSel.value && !EXCEPTION_TESTS.has(actionSel.value)){
 
-    // ★ required for HAND TUNER save
-    window.currentMMTtest = actionSel.value;
-    window.currentMMTgradeBucket = getGradeBucketForTest(actionSel.value);
+    // ★ required for HAND TUNER save
+    window.currentMMTtest = actionSel.value;
+    window.currentMMTgradeBucket = getGradeBucketForTest(actionSel.value);
 
-    applyBodyPositionFromSelection();
-    if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
-  }
+    applyBodyPositionFromSelection();
+    if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
+  }
 });
 
 // Grading Exceptions 5–1 menu: used ONLY for exception tests (trunk + gastroc)
 if (gradeExceptions){
-  gradeExceptions.addEventListener("change", () => {
-    if (actionSel.value && EXCEPTION_TESTS.has(actionSel.value)){
+  gradeExceptions.addEventListener("change", () => {
+    if (actionSel.value && EXCEPTION_TESTS.has(actionSel.value)){
 
-      // ★ required for HAND TUNER save
-      window.currentMMTtest = actionSel.value;
-      window.currentMMTgradeBucket = getGradeBucketForTest(actionSel.value);
+      // ★ required for HAND TUNER save
+      window.currentMMTtest = actionSel.value;
+      window.currentMMTgradeBucket = getGradeBucketForTest(actionSel.value);
 
-      applyBodyPositionFromSelection();
-      if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
-    }
-  });
+      applyBodyPositionFromSelection();
+      if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
+    }
+  });
 }
 
 // Initialize menus on first load
@@ -1666,133 +1626,133 @@ updateGradeDropdownsForSelection();
 /* ==== Side panel + Markdown loading ==== */
 const notePanel = document.getElementById('notePanel');
 const noteTitle = document.getElementById('noteTitle');
-const noteBody  = document.getElementById('noteBody');
-const tabHigh   = document.getElementById('tabHigh'); // 3–5
-const tabLow    = document.getElementById('tabLow');  // 0–2
+const noteBody  = document.getElementById('noteBody');
+const tabHigh   = document.getElementById('tabHigh'); // 3–5
+const tabLow    = document.getElementById('tabLow');  // 0–2
 const closeNote = document.getElementById('closeNote');
 
 // GitHub RAW URLs for the two docs
 const MD_HIGH = "https://raw.githubusercontent.com/Kingto89/ROMetrics.com/main/mmt/rometrics_mmt_threetofive.md";
-const MD_LOW  = "https://raw.githubusercontent.com/Kingto89/ROMetrics.com/main/mmt/rometrics_mmt_zerototwo.md";
+const MD_LOW  = "https://raw.githubusercontent.com/Kingto89/ROMetrics.com/main/mmt/rometrics_mmt_zerototwo.md";
 
 // Map select values to readable headings to find in MD
 const TEST_TO_HEADING = {
-  Single_SCM: "Anterolateral Flexion",  // Single SCM — Anterolateral Flexion
-  Serratus_Anterior: "Scapular Abduction & Upward Rotation",
-  Upper_Trapezius: "Scapular Elevation",
-  Middle_Trapezius: "Scapular Adduction / Retraction",
-  Scap_Depression_Adduction: "Scapular Depression + Adduction",
-  Rhomboids: "Scapular Adduction + Downward Rotation",
-  Latissimus_Dorsi: "Latissimus Dorsi",
-  Anterior_Deltoid: "Shoulder Flexion",
-  Posterior_Deltoid: "Shoulder Extension — Posterior Deltoid",
-  Middle_Deltoid: "Shoulder Abduction",
-  Shoulder_Horiz_Abd: "Shoulder Horizontal Abduction — Posterior Deltoid",
-  Shoulder_Horiz_Add: "Shoulder Horizontal Adduction — Pectoralis Major",
-  Infraspinatus: "Shoulder External Rotation",
-  Subscapularis: "Shoulder Internal Rotation",
-  Biceps_Brachii:    "Elbow Flexion",
-  Brachialis:        "Elbow Flexion",
-  Brachioradialis:   "Elbow Flexion",
-  Triceps_Brachii: "Elbow Extension",
-  Trunk_Ext_Lumbar:   "Trunk Extension — Lumbar",
-  Trunk_Ext_Thoracic: "Trunk Extension — Thoracic",
-  ECRL: "Wrist Extension — ECRL, ECRB, ECU",
-  ECRB: "Wrist Extension — ECRL, ECRB, ECU",
-  ECU:  "Wrist Extension — ECRL, ECRB, ECU",
-  FCR: "Wrist Flexion — Flexor Carpi Radialis",
-  FCU: "Wrist Flexion — Flexor Carpi Ulnaris",
-  Iliopsoas: "Hip Flexion",
-  Glute_Max: "Hip Extension",
-  Glute_Med: "Hip Abduction",
-  Hip_ER: "Hip External Rotation",
-  Hip_IR: "Hip Internal Rotation",
-  Glute_Max: "Hip Extension — Gluteus Maximus",
-  TFL: "Hip Abduction from Flexed Position — Tensor Fasciae Latae (TFL)",
-  Hip_Adduction: "Hip Adduction — Adductor Group",
-  Sartorius: "Hip Flexion, Abduction, External Rotation with Knee Flexion — Sartorius",
-  Hamstrings: "Knee Flexion (Hamstrings)",
-  Quadriceps: "Knee Extension",
-  Tibialis_Anterior: "Foot Dorsiflexion + Inversion",
-  Foot_Eversion_PF: "Plantar Flexion + Foot Eversion — Fibularis Longus & Brevis",
-  Gastrocnemius: "Ankle Plantar Flexion"
+  Single_SCM: "Anterolateral Flexion",  // Single SCM — Anterolateral Flexion
+  Serratus_Anterior: "Scapular Abduction & Upward Rotation",
+  Upper_Trapezius: "Scapular Elevation",
+  Middle_Trapezius: "Scapular Adduction / Retraction",
+  Scap_Depression_Adduction: "Scapular Depression + Adduction",
+  Rhomboids: "Scapular Adduction + Downward Rotation",
+  Latissimus_Dorsi: "Latissimus Dorsi",
+  Anterior_Deltoid: "Shoulder Flexion",
+  Posterior_Deltoid: "Shoulder Extension — Posterior Deltoid",
+  Middle_Deltoid: "Shoulder Abduction",
+  Shoulder_Horiz_Abd: "Shoulder Horizontal Abduction — Posterior Deltoid",
+  Shoulder_Horiz_Add: "Shoulder Horizontal Adduction — Pectoralis Major",
+  Infraspinatus: "Shoulder External Rotation",
+  Subscapularis: "Shoulder Internal Rotation",
+  Biceps_Brachii:    "Elbow Flexion",
+  Brachialis:        "Elbow Flexion",
+  Brachioradialis:   "Elbow Flexion",
+  Triceps_Brachii: "Elbow Extension",
+  Trunk_Ext_Lumbar:   "Trunk Extension — Lumbar",
+  Trunk_Ext_Thoracic: "Trunk Extension — Thoracic",
+  ECRL: "Wrist Extension — ECRL, ECRB, ECU",
+  ECRB: "Wrist Extension — ECRL, ECRB, ECU",
+  ECU:  "Wrist Extension — ECRL, ECRB, ECU",
+  FCR: "Wrist Flexion — Flexor Carpi Radialis",
+  FCU: "Wrist Flexion — Flexor Carpi Ulnaris",
+  Iliopsoas: "Hip Flexion",
+  Glute_Max: "Hip Extension",
+  Glute_Med: "Hip Abduction",
+  Hip_ER: "Hip External Rotation",
+  Hip_IR: "Hip Internal Rotation",
+  Glute_Max: "Hip Extension — Gluteus Maximus",
+  TFL: "Hip Abduction from Flexed Position — Tensor Fasciae Latae (TFL)",
+  Hip_Adduction: "Hip Adduction — Adductor Group",
+  Sartorius: "Hip Flexion, Abduction, External Rotation with Knee Flexion — Sartorius",
+  Hamstrings: "Knee Flexion (Hamstrings)",
+  Quadriceps: "Knee Extension",
+  Tibialis_Anterior: "Foot Dorsiflexion + Inversion",
+  Foot_Eversion_PF: "Plantar Flexion + Foot Eversion — Fibularis Longus & Brevis",
+  Gastrocnemius: "Ankle Plantar Flexion"
 };
 
 function mdToHtml(md){
-  // Tiny converter for headings/lists/bold/paragraphs
-  return md
-    .replace(/^### (.*)$/gm, "<h3>$1</h3>")
-    .replace(/^## (.*)$/gm, "<h2>$1</h2>")
-    .replace(/^\* (.*)$/gm, "<li>$1</li>")
-    .replace(/^- (.*)$/gm, "<li>$1</li>")
-    .replace(/(\n<li>.*<\/li>)+/g, m => `<ul>${m}</ul>`)
-    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-    .replace(/\n{2,}/g, "</p><p>")
-    .replace(/^([^<\n].*)$/gm, "<p>$1</p>");
+  // Tiny converter for headings/lists/bold/paragraphs
+  return md
+    .replace(/^### (.*)$/gm, "<h3>$1</h3>")
+    .replace(/^## (.*)$/gm, "<h2>$1</h2>")
+    .replace(/^\* (.*)$/gm, "<li>$1</li>")
+    .replace(/^- (.*)$/gm, "<li>$1</li>")
+    .replace(/(\n<li>.*<\/li>)+/g, m => `<ul>${m}</ul>`)
+    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\n{2,}/g, "</p><p>")
+    .replace(/^([^<\n].*)$/gm, "<p>$1</p>");
 }
 
 function extractSection(md, queryHeading){
-  const norm = s => s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
-  const target = norm(queryHeading);
+  const norm = s => s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  const target = norm(queryHeading);
 
-  const lines = md.split(/\r?\n/);
-  let start = -1;
+  const lines = md.split(/\r?\n/);
+  let start = -1;
 
-  // Find the matching "## ..." test heading
-  for (let i = 0; i < lines.length; i++){
-    const line = lines[i];
-    if (line.startsWith("## ") && norm(line).includes(target)){
-      start = i;
-      break;
-    }
-  }
+  // Find the matching "## ..." test heading
+  for (let i = 0; i < lines.length; i++){
+    const line = lines[i];
+    if (line.startsWith("## ") && norm(line).includes(target)){
+      start = i;
+      break;
+    }
+  }
 
-  if (start === -1){
-    return md; // fallback: whole doc if we can't find it
-  }
+  if (start === -1){
+    return md; // fallback: whole doc if we can't find it
+  }
 
-  // End at the next "## ..." (ignore ###, #### etc. so sub-headings stay inside)
-  let end = lines.length;
-  for (let j = start + 1; j < lines.length; j++){
-    const line = lines[j];
-    if (line.startsWith("## ")){
-      end = j;
-      break;
-    }
-  }
+  // End at the next "## ..." (ignore ###, #### etc. so sub-headings stay inside)
+  let end = lines.length;
+  for (let j = start + 1; j < lines.length; j++){
+    const line = lines[j];
+    if (line.startsWith("## ")){
+      end = j;
+      break;
+    }
+  }
 
-  return lines.slice(start, end).join("\n");
+  return lines.slice(start, end).join("\n");
 }
 
 
 
 async function loadNoteFile(which){
-  const muscleKey = actionSel.value;
-  if (!muscleKey){
-    noteBody.innerHTML = "<p>Select a test first.</p>";
-    return;
-  }
-  const heading = TEST_TO_HEADING[muscleKey] || muscleKey.replaceAll("_"," ");
-  noteTitle.textContent = heading + " — MMT Instructions";
-  const url = (which === 'high') ? MD_HIGH : MD_LOW;
-  noteBody.innerHTML = "Loading…";
-  try{
-    const res = await fetch(url);
-    if (!res.ok) throw new Error("HTTP " + res.status);
-    const text = await res.text();
-    const section = extractSection(text, heading);
-    noteBody.innerHTML = mdToHtml(section);
-  }catch(e){
-    noteBody.textContent = "Failed to load instructions.";
-  }
+  const muscleKey = actionSel.value;
+  if (!muscleKey){
+    noteBody.innerHTML = "<p>Select a test first.</p>";
+    return;
+  }
+  const heading = TEST_TO_HEADING[muscleKey] || muscleKey.replaceAll("_"," ");
+  noteTitle.textContent = heading + " — MMT Instructions";
+  const url = (which === 'high') ? MD_HIGH : MD_LOW;
+  noteBody.innerHTML = "Loading…";
+  try{
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const text = await res.text();
+    const section = extractSection(text, heading);
+    noteBody.innerHTML = mdToHtml(section);
+  }catch(e){
+    noteBody.textContent = "Failed to load instructions.";
+  }
 }
 
 function openNote(which='high'){
-  tabHigh.classList.toggle('active', which==='high');
-  tabLow.classList.toggle('active', which!=='high');
-  notePanel.classList.remove('hide');
-  notePanel.style.display = "flex";
-  loadNoteFile(which);
+  tabHigh.classList.toggle('active', which==='high');
+  tabLow.classList.toggle('active', which!=='high');
+  notePanel.classList.remove('hide');
+  notePanel.style.display = "flex";
+  loadNoteFile(which);
 }
 
 showMMT.addEventListener('click', ()=> openNote('high'));
@@ -1800,414 +1760,470 @@ tabHigh.addEventListener('click', ()=> openNote('high'));
 tabLow.addEventListener('click', ()=> openNote('low'));
 closeNote.addEventListener('click', ()=> notePanel.classList.add('hide'));
 
- /* ===== Pose Tuner (dev) — per-test high/low body transforms ===== */
+ /* ===== Pose Tuner (dev) — per-test high/low body transforms ===== */
 let poseTunerEl = null;
 let poseTunerVisible = true; // show on load so you can tune positions
 
 function ensurePoseTuner(){
-  if (poseTunerEl) return poseTunerEl;
+  if (poseTunerEl) return poseTunerEl;
 
-  poseTunerEl = document.createElement('div');
-  Object.assign(poseTunerEl.style, {
-    position: 'fixed',
-    right: '16px',
-    top: '16px',
-    zIndex: 50,
-    background: 'rgba(8,13,26,.96)',
-    border: '1px solid #334155',
-    borderRadius: '12px',
-    padding: '10px',
-    width: '300px',
-    color: '#e2e8f0',
-    font: '12px/1.3 system-ui,Segoe UI,Roboto',
-    boxShadow: '0 8px 28px rgba(0,0,0,.4)',
-    display: 'none'
-  });
+  poseTunerEl = document.createElement('div');
+  Object.assign(poseTunerEl.style, {
+    position: 'fixed',
+    right: '16px',
+    top: '16px',
+    zIndex: 50,
+    background: 'rgba(8,13,26,.96)',
+    border: '1px solid #334155',
+    borderRadius: '12px',
+    padding: '10px',
+    width: '300px',
+    color: '#e2e8f0',
+    font: '12px/1.3 system-ui,Segoe UI,Roboto',
+    boxShadow: '0 8px 28px rgba(0,0,0,.4)',
+    display: 'none'
+  });
 
-  poseTunerEl.innerHTML = `
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-      <strong style="font-size:13px;">Pose Tuner (High / Low)</strong>
-      <button id="poseTunerClose" title="Close" style="margin-left:auto;background:transparent;border:0;color:#9fb0c9;font-size:16px;cursor:pointer;">✕</button>
-    </div>
-    <div style="font-size:11px;margin-bottom:6px;">
-      <div><strong>Test:</strong> <span id="poseTunerTestLabel">(none)</span></div>
-      <div><strong>Family:</strong> <span id="poseTunerBucketLabel">high</span></div>
-    </div>
+  poseTunerEl.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+      <strong style="font-size:13px;">Pose Tuner (High / Low)</strong>
+      <button id="poseTunerClose" title="Close" style="margin-left:auto;background:transparent;border:0;color:#9fb0c9;font-size:16px;cursor:pointer;">✕</button>
+    </div>
+    <div style="font-size:11px;margin-bottom:6px;">
+      <div><strong>Test:</strong> <span id="poseTunerTestLabel">(none)</span></div>
+      <div><strong>Family:</strong> <span id="poseTunerBucketLabel">high</span></div>
+    </div>
 
-    <div style="border-top:1px solid #1f2933;margin:6px 0 8px 0;"></div>
+    <div style="border-top:1px solid #1f2933;margin:6px 0 8px 0;"></div>
 
-    <label style="display:block;opacity:.85;">Position (meters)</label>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:4px;">
-      <div>
-        <div style="opacity:.7;">X (left/right)</div>
-        <div style="display:flex;gap:4px;">
-          <button data-axis="x" data-delta="-0.02" class="mini">−</button>
-          <button data-axis="x" data-delta="0.02" class="mini">+</button>
-        </div>
-      </div>
-      <div>
-        <div style="opacity:.7;">Y (up/down)</div>
-        <div style="display:flex;gap:4px;">
-          <button data-axis="y" data-delta="-0.02" class="mini">−</button>
-          <button data-axis="y" data-delta="0.02" class="mini">+</button>
-        </div>
-      </div>
-      <div>
-        <div style="opacity:.7;">Z (front/back)</div>
-        <div style="display:flex;gap:4px;">
-          <button data-axis="z" data-delta="-0.02" class="mini">−</button>
-          <button data-axis="z" data-delta="0.02" class="mini">+</button>
-        </div>
-      </div>
-    </div>
+    <label style="display:block;opacity:.85;">Position (meters)</label>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:4px;">
+      <div>
+        <div style="opacity:.7;">X (left/right)</div>
+        <div style="display:flex;gap:4px;">
+          <button data-axis="x" data-delta="-0.02" class="mini">−</button>
+          <button data-axis="x" data-delta="0.02" class="mini">+</button>
+        </div>
+      </div>
+      <div>
+        <div style="opacity:.7;">Y (up/down)</div>
+        <div style="display:flex;gap:4px;">
+          <button data-axis="y" data-delta="-0.02" class="mini">−</button>
+          <button data-axis="y" data-delta="0.02" class="mini">+</button>
+        </div>
+      </div>
+      <div>
+        <div style="opacity:.7;">Z (front/back)</div>
+        <div style="display:flex;gap:4px;">
+          <button data-axis="z" data-delta="-0.02" class="mini">−</button>
+          <button data-axis="z" data-delta="0.02" class="mini">+</button>
+        </div>
+      </div>
+    </div>
 
-    <label style="display:block;opacity:.85;margin-top:4px;">Rotation (degrees)</label>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:4px;">
-      <div>
-        <div style="opacity:.7;">Yaw (turn left/right)</div>
-        <div style="display:flex;gap:4px;">
-          <button data-rot="y" data-delta="-5" class="mini">⟲</button>
-          <button data-rot="y" data-delta="5" class="mini">⟳</button>
-        </div>
-      </div>
-      <div>
-        <div style="opacity:.7;">Pitch/Roll (face up/down/side)</div>
-        <div style="display:flex;gap:4px;flex-wrap:wrap;">
-          <button data-rot="x" data-delta="-5" class="mini">Pitch −</button>
-          <button data-rot="x" data-delta="5" class="mini">Pitch +</button>
-          <button data-rot="z" data-delta="-5" class="mini">Roll −</button>
-          <button data-rot="z" data-delta="5" class="mini">Roll +</button>
-        </div>
-      </div>
-    </div>
+    <label style="display:block;opacity:.85;margin-top:4px;">Rotation (degrees)</label>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:4px;">
+      <div>
+        <div style="opacity:.7;">Yaw (turn left/right)</div>
+        <div style="display:flex;gap:4px;">
+          <button data-rot="y" data-delta="-5" class="mini">⟲</button>
+          <button data-rot="y" data-delta="5" class="mini">⟳</button>
+        </div>
+      </div>
+      <div>
+        <div style="opacity:.7;">Pitch/Roll (face up/down/side)</div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;">
+          <button data-rot="x" data-delta="-5" class="mini">Pitch −</button>
+          <button data-rot="x" data-delta="5" class="mini">Pitch +</button>
+          <button data-rot="z" data-delta="-5" class="mini">Roll −</button>
+          <button data-rot="z" data-delta="5" class="mini">Roll +</button>
+        </div>
+      </div>
+    </div>
 
-        <label style="display:block;opacity:.85;margin-top:4px;">Ankle Plantarflexion (both feet)</label>
-    <div style="display:flex;gap:4px;margin-bottom:4px;align-items:center;">
-      <button data-pf="-5" class="mini">Less PF</button>
-      <button data-pf="5" class="mini">More PF</button>
-      <span id="pfLabel" style="margin-left:auto;opacity:.7;">0°</span>
-    </div>
-
-
-    <div style="display:flex;gap:8px;margin-top:8px;">
-      <button id="poseTunerSnapBase" class="mini" style="flex:1;">Reset to Base Mode</button>
-      <button id="poseTunerSave" class="mini" style="flex:1;background:#0f766e;border-color:#0f766e;color:#fff;">Save for Test</button>
-    </div>
-
-    <div style="margin-top:6px;font-size:10px;opacity:.7;">
-      Uses current dropdown + grade to decide <em>which</em> pose (high vs low) you’re tuning.
-    </div>
-  `;
-
-  document.body.appendChild(poseTunerEl);
-
-  const labelTest   = poseTunerEl.querySelector('#poseTunerTestLabel');
-  const labelBucket = poseTunerEl.querySelector('#poseTunerBucketLabel');
-  const btnClose    = poseTunerEl.querySelector('#poseTunerClose');
-  const btnSave     = poseTunerEl.querySelector('#poseTunerSave');
-  const btnSnapBase = poseTunerEl.querySelector('#poseTunerSnapBase');
-  const pfLabel = poseTunerEl.querySelector('#pfLabel');
-
-  function updatePFLabel(){
-    if (pfLabel) pfLabel.textContent = `${GLOBAL_PF_DEG|0}°`;
-  }
-
-  function updateLabels(){
-    if (!actionSel) return;
-    const opt = actionSel.selectedOptions?.[0];
-    labelTest.textContent = opt ? opt.textContent.trim() : '(none)';
-    labelBucket.textContent = CURRENT_BODY_BUCKET || 'high';
-    updatePFLabel();
-  }
-
-  // Helper: read rotation in degrees vs baseline, around a single axis
-  function extractAxisDeg(boneName, axis) {
-    if (!skeleton) return 0;
-    const bone = getBone(boneName);
-    if (!bone) return 0;
-    const base = initialBoneRot.get(bone);
-    if (!base) return 0;
-
-    // delta = current * inverse(base)
-    const qDelta = bone.quaternion.clone().multiply(base.clone().invert());
-    const e = new THREE.Euler().setFromQuaternion(qDelta, 'XYZ');
-
-    let rad = 0;
-    if (axis === 'x') rad = e.x;
-    else if (axis === 'y') rad = e.y;
-    else rad = e.z;
-
-    return THREE.MathUtils.radToDeg(rad);
-  }
-
-  // Extra hook: when you click "Save for Test", also store / log
-  // foot inversion/eversion + neck lateral flexion.
-  btnSave.addEventListener('click', () => {
-    const key = ensureOverrideFromCurrentPose();
-    if (!key) return;
-    const o = POSE_OVERRIDES[key];
-    if (!o) return;
-
-    // Right foot inversion (foot_R, Z axis)
-    const footInvR = extractAxisDeg("foot_R", "z");
-    // Left foot eversion (foot_L, Z axis)
-    const footEvL  = extractAxisDeg("foot_L", "z");
-    // Neck left lateral flexion (neck, Z axis)
-    const neckLatL = extractAxisDeg("neck",   "z");
-
-    // Store in the override object so this pose "remembers" them
-    o.footInvR = footInvR;
-    o.footEvL  = footEvL;
-    o.neckLatL = neckLatL;
-
-    // And show them in the console so you can see the exact numbers
-    console.log(
-      `[PoseTuner extra] ${key}: ` +
-      `footInvR=${footInvR.toFixed(1)}°, ` +
-      `footEvL=${footEvL.toFixed(1)}°, ` +
-      `neckLatL=${neckLatL.toFixed(1)}°`
-    );
-  });
-
-  // Helper: get or create override object for current test+bucket
-  function getCurrentOverrideKey(){
-    if (!CURRENT_BODY_TEST || !CURRENT_BODY_BUCKET) return null;
-    return `${CURRENT_BODY_TEST}:${CURRENT_BODY_BUCKET}`;
-  }
-
-  function ensureOverrideFromCurrentPose(){
-    const key = getCurrentOverrideKey();
-    if (!key || !model) return null;
-    if (!POSE_OVERRIDES[key]){
-      const euler = new THREE.Euler().copy(model.rotation);
-      POSE_OVERRIDES[key] = {
-        x: model.position.x,
-        y: model.position.y,
-        z: model.position.z,
-        rx: euler.x,
-        ry: euler.y,
-        rz: euler.z
-      };
-    }
-    return key;
-  }
-
-  function applyOverride(key){
-    const o = key && POSE_OVERRIDES[key];
-    if (!o || !model) return;
-    model.position.set(o.x, o.y, o.z);
-    model.rotation.set(o.rx, o.ry, o.rz);
-  }
-
-  // Position buttons
-  poseTunerEl.querySelectorAll('button[data-axis]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const key = ensureOverrideFromCurrentPose();
-      if (!key) return;
-      const axis = btn.getAttribute('data-axis');
-      const delta = parseFloat(btn.getAttribute('data-delta') || '0');
-      const o = POSE_OVERRIDES[key];
-      if (axis === 'x') o.x += delta;
-      if (axis === 'y') o.y += delta;
-      if (axis === 'z') o.z += delta;
-      applyOverride(key);
-    });
-  });
-
-  // Rotation buttons (deg)
-  poseTunerEl.querySelectorAll('button[data-rot]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const key = ensureOverrideFromCurrentPose();
-      if (!key) return;
-      const axis = btn.getAttribute('data-rot');
-      const deltaDeg = parseFloat(btn.getAttribute('data-delta') || '0');
-      const deltaRad = THREE.MathUtils.degToRad(deltaDeg);
-      const o = POSE_OVERRIDES[key];
-      if (axis === 'x') o.rx += deltaRad;
-      if (axis === 'y') o.ry += deltaRad;
-      if (axis === 'z') o.rz += deltaRad;
-      applyOverride(key);
-    });
-  });
-  // Plantarflexion buttons
-  poseTunerEl.querySelectorAll('button[data-pf]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const delta = parseFloat(btn.getAttribute('data-pf') || '0');
-      // Clamp so you don't break ankles
-      GLOBAL_PF_DEG = Math.max(-45, Math.min(45, GLOBAL_PF_DEG + delta));
-      applyGlobalPF();
-      updatePFLabel();
-    });
-  });
-
-  // Reset to base (throw away override & re-apply base mode)
-  btnSnapBase.onclick = () => {
-    const key = getCurrentOverrideKey();
-    if (key && POSE_OVERRIDES[key]) delete POSE_OVERRIDES[key];
-    applyBodyPositionFromSelection();
-    updateLabels();
-  };
-
-  // Save button logs config INCLUDING plantarflexion + side-lying angles
-  btnSave.onclick = () => {
-    const key = ensureOverrideFromCurrentPose();
-    if (!key) return;
-    const o = POSE_OVERRIDES[key];
-
-    // store current global PF into this override
-    o.pf = GLOBAL_PF_DEG || 0;
-
-    // NEW: capture actual joint angles so the pose "remembers" them
-    // Right foot inversion (foot_R, Z axis)
-    o.footInvR = extractAxisDeg("foot_R", "z");
-    // Left foot eversion (foot_L, Z axis)
-    o.footEvL  = extractAxisDeg("foot_L", "z");
-    // Neck left lateral flexion (neck, Z axis)
-    o.neckLatL = extractAxisDeg("neck",   "z");
-
-    console.log(
-      `POSE_OVERRIDES["${key}"] = { ` +
-      `x:${o.x.toFixed(3)}, y:${o.y.toFixed(3)}, z:${o.z.toFixed(3)}, ` +
-      `rx:${o.rx.toFixed(3)}, ry:${o.ry.toFixed(3)}, rz:${o.rz.toFixed(3)}, ` +
-      `pf:${o.pf.toFixed(1)}, ` +
-      `footInvR:${o.footInvR.toFixed(1)}, footEvL:${o.footEvL.toFixed(1)}, neckLatL:${o.neckLatL.toFixed(1)} };`
-    );
-
-    labelTest.style.color = '#22c55e';
-    setTimeout(()=>labelTest.style.color='#e2e8f0', 600);
-  };
+        <label style="display:block;opacity:.85;margin-top:4px;">Ankle Plantarflexion (both feet)</label>
+    <div style="display:flex;gap:4px;margin-bottom:4px;align-items:center;">
+      <button data-pf="-5" class="mini">Less PF</button>
+      <button data-pf="5" class="mini">More PF</button>
+      <span id="pfLabel" style="margin-left:auto;opacity:.7;">0°</span>
+    </div>
 
 
+    <div style="display:flex;gap:8px;margin-top:8px;">
+      <button id="poseTunerSnapBase" class="mini" style="flex:1;">Reset to Base Mode</button>
+      <button id="poseTunerSave" class="mini" style="flex:1;background:#0f766e;border-color:#0f766e;color:#fff;">Save for Test</button>
+    </div>
 
-  // Close
-  btnClose.onclick = () => {
-    poseTunerVisible = false;
-    poseTunerEl.style.display = 'none';
-  };
+    <div style="margin-top:6px;font-size:10px;opacity:.7;">
+      Uses current dropdown + grade to decide <em>which</em> pose (high vs low) you’re tuning.
+    </div>
+  `;
 
-  // Public helper so other code can refresh labels when test/grade changes
-  poseTunerEl.updateLabels = updateLabels;
+  document.body.appendChild(poseTunerEl);
 
-  return poseTunerEl;
+  const labelTest   = poseTunerEl.querySelector('#poseTunerTestLabel');
+  const labelBucket = poseTunerEl.querySelector('#poseTunerBucketLabel');
+  const btnClose    = poseTunerEl.querySelector('#poseTunerClose');
+  const btnSave     = poseTunerEl.querySelector('#poseTunerSave');
+  const btnSnapBase = poseTunerEl.querySelector('#poseTunerSnapBase');
+  const pfLabel = poseTunerEl.querySelector('#pfLabel');
+
+  function updatePFLabel(){
+    if (pfLabel) pfLabel.textContent = `${GLOBAL_PF_DEG|0}°`;
+  }
+
+  function updateLabels(){
+    if (!actionSel) return;
+    const opt = actionSel.selectedOptions?.[0];
+    labelTest.textContent = opt ? opt.textContent.trim() : '(none)';
+    labelBucket.textContent = CURRENT_BODY_BUCKET || 'high';
+    updatePFLabel();
+  }
+
+  // Helper: read rotation in degrees vs baseline, around a single axis
+  function extractAxisDeg(boneName, axis) {
+    if (!skeleton) return 0;
+    const bone = getBone(boneName);
+    if (!bone) return 0;
+    const base = initialBoneRot.get(bone);
+    if (!base) return 0;
+
+    // delta = current * inverse(base)
+    const qDelta = bone.quaternion.clone().multiply(base.clone().invert());
+    const e = new THREE.Euler().setFromQuaternion(qDelta, 'XYZ');
+
+    let rad = 0;
+    if (axis === 'x') rad = e.x;
+    else if (axis === 'y') rad = e.y;
+    else rad = e.z;
+
+    return THREE.MathUtils.radToDeg(rad);
+  }
+
+  // Extra hook: when you click "Save for Test", also store / log
+  // foot inversion/eversion + neck lateral flexion.
+  btnSave.addEventListener('click', () => {
+    const key = ensureOverrideFromCurrentPose();
+    if (!key) return;
+    const o = POSE_OVERRIDES[key];
+    if (!o) return;
+
+    // Right foot inversion (foot_R, Z axis)
+    const footInvR = extractAxisDeg("foot_R", "z");
+    // Left foot eversion (foot_L, Z axis)
+    const footEvL  = extractAxisDeg("foot_L", "z");
+    // Neck left lateral flexion (neck, Z axis)
+    const neckLatL = extractAxisDeg("neck",   "z");
+
+    // Store in the override object so this pose "remembers" them
+    o.footInvR = footInvR;
+    o.footEvL  = footEvL;
+    o.neckLatL = neckLatL;
+
+    // And show them in the console so you can see the exact numbers
+    console.log(
+      `[PoseTuner extra] ${key}: ` +
+      `footInvR=${footInvR.toFixed(1)}°, ` +
+      `footEvL=${footEvL.toFixed(1)}°, ` +
+      `neckLatL=${neckLatL.toFixed(1)}°`
+    );
+  });
+
+  // Helper: get or create override object for current test+bucket
+  function getCurrentOverrideKey(){
+    if (!CURRENT_BODY_TEST || !CURRENT_BODY_BUCKET) return null;
+    return `${CURRENT_BODY_TEST}:${CURRENT_BODY_BUCKET}`;
+  }
+
+  function ensureOverrideFromCurrentPose(){
+    const key = getCurrentOverrideKey();
+    if (!key || !model) return null;
+    if (!POSE_OVERRIDES[key]){
+      const euler = new THREE.Euler().copy(model.rotation);
+      POSE_OVERRIDES[key] = {
+        x: model.position.x,
+        y: model.position.y,
+        z: model.position.z,
+        rx: euler.x,
+        ry: euler.y,
+        rz: euler.z
+      };
+    }
+    return key;
+  }
+
+  function applyOverride(key){
+    const o = key && POSE_OVERRIDES[key];
+    if (!o || !model) return;
+    model.position.set(o.x, o.y, o.z);
+    model.rotation.set(o.rx, o.ry, o.rz);
+  }
+
+  // Position buttons
+  poseTunerEl.querySelectorAll('button[data-axis]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const key = ensureOverrideFromCurrentPose();
+      if (!key) return;
+      const axis = btn.getAttribute('data-axis');
+      const delta = parseFloat(btn.getAttribute('data-delta') || '0');
+      const o = POSE_OVERRIDES[key];
+      if (axis === 'x') o.x += delta;
+      if (axis === 'y') o.y += delta;
+      if (axis === 'z') o.z += delta;
+      applyOverride(key);
+    });
+  });
+
+  // Rotation buttons (deg)
+  poseTunerEl.querySelectorAll('button[data-rot]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const key = ensureOverrideFromCurrentPose();
+      if (!key) return;
+      const axis = btn.getAttribute('data-rot');
+      const deltaDeg = parseFloat(btn.getAttribute('data-delta') || '0');
+      const deltaRad = THREE.MathUtils.degToRad(deltaDeg);
+      const o = POSE_OVERRIDES[key];
+      if (axis === 'x') o.rx += deltaRad;
+      if (axis === 'y') o.ry += deltaRad;
+      if (axis === 'z') o.rz += deltaRad;
+      applyOverride(key);
+    });
+  });
+  // Plantarflexion buttons
+  poseTunerEl.querySelectorAll('button[data-pf]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const delta = parseFloat(btn.getAttribute('data-pf') || '0');
+      // Clamp so you don't break ankles
+      GLOBAL_PF_DEG = Math.max(-45, Math.min(45, GLOBAL_PF_DEG + delta));
+      applyGlobalPF();
+      updatePFLabel();
+    });
+  });
+
+  // Reset to base (throw away override & re-apply base mode)
+  btnSnapBase.onclick = () => {
+    const key = getCurrentOverrideKey();
+    if (key && POSE_OVERRIDES[key]) delete POSE_OVERRIDES[key];
+    applyBodyPositionFromSelection();
+    updateLabels();
+  };
+
+  // Save button logs config INCLUDING plantarflexion + side-lying angles
+  btnSave.onclick = () => {
+    const key = ensureOverrideFromCurrentPose();
+    if (!key) return;
+    const o = POSE_OVERRIDES[key];
+
+    // store current global PF into this override
+    o.pf = GLOBAL_PF_DEG || 0;
+
+    // NEW: capture actual joint angles so the pose "remembers" them
+    // Right foot inversion (foot_R, Z axis)
+    o.footInvR = extractAxisDeg("foot_R", "z");
+    // Left foot eversion (foot_L, Z axis)
+    o.footEvL  = extractAxisDeg("foot_L", "z");
+    // Neck left lateral flexion (neck, Z axis)
+    o.neckLatL = extractAxisDeg("neck",   "z");
+
+    console.log(
+      `POSE_OVERRIDES["${key}"] = { ` +
+      `x:${o.x.toFixed(3)}, y:${o.y.toFixed(3)}, z:${o.z.toFixed(3)}, ` +
+      `rx:${o.rx.toFixed(3)}, ry:${o.ry.toFixed(3)}, rz:${o.rz.toFixed(3)}, ` +
+      `pf:${o.pf.toFixed(1)}, ` +
+      `footInvR:${o.footInvR.toFixed(1)}, footEvL:${o.footEvL.toFixed(1)}, neckLatL:${o.neckLatL.toFixed(1)} };`
+    );
+
+    labelTest.style.color = '#22c55e';
+    setTimeout(()=>labelTest.style.color='#e2e8f0', 600);
+  };
+
+
+
+  // Close
+  btnClose.onclick = () => {
+    poseTunerVisible = false;
+    poseTunerEl.style.display = 'none';
+  };
+
+  // Public helper so other code can refresh labels when test/grade changes
+  poseTunerEl.updateLabels = updateLabels;
+
+  return poseTunerEl;
 }
 
 function showPoseTuner(show){
-  ensurePoseTuner();
-  poseTunerVisible = (show === undefined) ? !poseTunerVisible : !!show;
-  poseTunerEl.style.display = poseTunerVisible ? 'block' : 'none';
-  if (poseTunerVisible && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
+  ensurePoseTuner();
+  poseTunerVisible = (show === undefined) ? !poseTunerVisible : !!show;
+  poseTunerEl.style.display = poseTunerVisible ? 'block' : 'none';
+  if (poseTunerVisible && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
 }
 // Init the Pose Tuner once the module + DOM are ready
 window.addEventListener("load", () => {
   try {
     ensurePoseTuner();
-    showPoseTuner(true); // dev: show on first load  
+    showPoseTuner(true); // dev: show on first load  
   } catch (e) {
     const m = document.getElementById("msg");
     if (m) m.textContent = "⚠️ Pose tuner init failed: " + e.message;
     console.error(e);
   }
 });
- 
+ 
 /* ==== Loop & resize ==== */
 addEventListener("resize", ()=>{
-  camera.aspect = innerWidth/innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth, innerHeight);
+  camera.aspect = innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
 });
 
 // --- NEW: Simplified Interaction Logic (Click Center to Switch Hand) ---
 function onPointerDownTransformControls(event) {
-    if (!isPracticeModeActive || !transformControls.visible || !currentActiveHand) return;
+    if (!isPracticeModeActive || !transformControls.visible || !currentActiveHand) return;
+    
+    // Check if the raycaster hits the center control of the TransformControls.
+    // The TransformControls has an internal method to check if a control handle was picked.
+    
+    // We only execute our custom logic IF a transform control handle was clicked AND
+    // IF the control is currently in translate mode (which has a central sphere handle).
+    
+    // NOTE: This relies on the internal TransformControls event handling which is usually reliable.
+    
+    // If we click on the center control while in translate mode (default), we switch hands.
+    // We rely on the TransformControls picking logic being internal for the double-tap.
 
-    const raycaster = new THREE.Raycaster();
-    const pointer = new THREE.Vector2();
+    const raycaster = new THREE.Raycaster();
+    const pointer = new THREE.Vector2();
 
-    pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
-    pointer.y = - (event.clientY / window.innerHeight) * 2 + 1;
+    pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+    pointer.y = - (event.clientY / window.innerHeight) * 2 + 1;
 
-    raycaster.setFromCamera(pointer, camera);
+    raycaster.setFromCamera(pointer, camera);
 
-    // Get the list of handles intersected by the raycaster
-    const handles = transformControls.children[0].children; // Accesses the visual handles group
-    const intersects = raycaster.intersectObjects(handles, true);
+    // Get the list of handles intersected by the raycaster
+    const handles = transformControls.children[0].children; // Accesses the visual handles group
+    const intersects = raycaster.intersectObjects(handles, true);
 
-    if (intersects.length > 0) {
-        const intersection = intersects[0];
-      
-        // Double tap on the hand model itself (original logic)
-        const now = Date.now();
-        const lastTapTime = currentActiveHand.__lastTapTime || 0;
-        const DOUBLE_TAP_THRESHOLD = 300; // ms
+    if (intersects.length > 0) {
+        const intersection = intersects[0];
+        // The center cube/sphere usually has a specific name or color (white/yellow in translate mode)
+        // Check if the distance to the control is very close (implying the center handle was hit)
+        // A simpler way is to check the *mode* while the control is active.
 
-        if (now - lastTapTime < DOUBLE_TAP_THRESHOLD) {
-            // Double-tap: Toggle Mode
-            const newMode = (currentTransformMode === 'translate') ? 'rotate' : 'translate';
-            transformControls.setMode(newMode);
-            currentTransformMode = newMode;
-            console.log(`Mode toggled to: ${currentTransformMode}`);
-            currentActiveHand.__lastTapTime = 0; // Reset for next double tap
-            event.preventDefault(); 
-            return;
-        }
-        currentActiveHand.__lastTapTime = now;
-    }
+        // We will assume any click on the widget area that isn't a drag event is meant to switch modes
+        // or switch hands. Let's make the center sphere the dedicated switch button.
+        
+        // This is complex due to internal TransformControls API. Let's use the simplest logic:
+        // Any click on a handle that is NOT the current mode (Translate/Rotate handles) will switch mode.
+        
+        // Simplified Goal: Single click on the center control switches hand.
+        // We will use the custom center object that TransformControls uses for raycasting if possible. 
+        
+        // Let's use the raycaster and check if the intersected handle is the translation sphere (the center point).
+        // Since TransformControls does not expose the center sphere's mesh readily, we rely on checking all children.
+
+        // If the intersected handle is one of the translation arrows (name: "Arrow_...") or the rotation ring (name: "Circle_...")
+        // we do nothing (the user drags). 
+        // We need a specific raycast target for the center sphere.
+
+        // --- Simplified Hand Switch Logic (Checking Distance to Center) ---
+        const centerPos = new THREE.Vector3();
+        transformControls.getWorldPosition(centerPos);
+        
+        const pointerPos = intersects[0].point;
+        
+        if (pointerPos.distanceTo(centerPos) < 0.05) { // Check if the hit is near the center
+            event.preventDefault(); // Stop controls from dragging
+            
+            // 1. Switch the hand model
+            const newHand = (currentActiveHand === rightHandModel) ? leftHandModel : rightHandModel;
+            
+            // 2. Detach from current, attach to new
+            currentActiveHand = newHand;
+            transformControls.attach(currentActiveHand);
+            
+            // 3. Re-apply current mode and highlight
+            transformControls.setMode(currentTransformMode);
+            highlightActiveHand(currentActiveHand);
+            
+            console.log(`Switched Hand via Center Click to: ${(currentActiveHand === rightHandModel) ? 'Right' : 'Left'} Hand`);
+            return;
+        }
+
+        // --- Mode Toggle Logic ---
+        // Double tap on the hand model itself (original logic)
+        const now = Date.now();
+        const lastTapTime = currentActiveHand.__lastTapTime || 0;
+        const DOUBLE_TAP_THRESHOLD = 300; // ms
+
+        if (now - lastTapTime < DOUBLE_TAP_THRESHOLD) {
+            // Double-tap: Toggle Mode
+            const newMode = (currentTransformMode === 'translate') ? 'rotate' : 'translate';
+            transformControls.setMode(newMode);
+            currentTransformMode = newMode;
+            console.log(`Mode toggled to: ${currentTransformMode}`);
+            currentActiveHand.__lastTapTime = 0; // Reset for next double tap
+            event.preventDefault(); 
+            return;
+        }
+        currentActiveHand.__lastTapTime = now;
+    }
 }
 // --- END: Interaction Logic ---
-  
+  
 (function loop(){
-  controls.update();
-  renderer.render(scene, camera);
-  requestAnimationFrame(loop);
+  controls.update();
+  renderer.render(scene, camera);
+  requestAnimationFrame(loop);
 })();
 
 </script>
+<!-- ================= HAND TUNER PANEL (NEW CLEAN VERSION) ================= -->
 <div id="handTuner" style="
-  position:fixed; right:12px; top:80px; width:240px;
-  background:#ffffffdd; padding:12px; border-radius:10px;
-  font-family:system-ui; display:none; z-index:9999; box-shadow:0 0 10px #0003;
+  position:fixed; right:12px; top:80px; width:240px;
+  background:#ffffffdd; padding:12px; border-radius:10px;
+  font-family:system-ui; display:none; z-index:9999; box-shadow:0 0 10px #0003;
 ">
-  <div style="font-weight:600; margin-bottom:8px;">Therapist Hand Tuner</div>
+  <div style="font-weight:600; margin-bottom:8px;">Therapist Hand Tuner</div>
 
-  <label>Side:</label>
-  <select id="handSideSel">
-    <option value="R">Right</option>
-    <option value="L">Left</option>
-  </select>
+  <label>Side:</label>
+  <select id="handSideSel">
+    <option value="R">Right</option>
+    <option value="L">Left</option>
+  </select>
 
-  <div style="margin-top:10px; font-weight:600;">Position</div>
-  <div class="row"><span>X</span>
-    <button class="handStep" data-mode="pos" data-axis="x" data-dir="-">–</button>
-    <button class="handStep" data-mode="pos" data-axis="x" data-dir="+">+</button>
-  </div>
-  <div class="row"><span>Y</span>
-    <button class="handStep" data-mode="pos" data-axis="y" data-dir="-">–</button>
-    <button class="handStep" data-mode="pos" data-axis="y" data-dir="+">+</button>
-  </div>
-  <div class="row"><span>Z</span>
-    <button class="handStep" data-mode="pos" data-axis="z" data-dir="-">–</button>
-    <button class="handStep" data-mode="pos" data-axis="z" data-dir="+">+</button>
-  </div>
+  <div style="margin-top:10px; font-weight:600;">Position</div>
+  <div class="row"><span>X</span>
+    <button class="handStep" data-mode="pos" data-axis="x" data-dir="-">–</button>
+    <button class="handStep" data-mode="pos" data-axis="x" data-dir="+">+</button>
+  </div>
+  <div class="row"><span>Y</span>
+    <button class="handStep" data-mode="pos" data-axis="y" data-dir="-">–</button>
+    <button class="handStep" data-mode="pos" data-axis="y" data-dir="+">+</button>
+  </div>
+  <div class="row"><span>Z</span>
+    <button class="handStep" data-mode="pos" data-axis="z" data-dir="-">–</button>
+    <button class="handStep" data-mode="pos" data-axis="z" data-dir="+">+</button>
+  </div>
 
-  <div style="margin-top:10px; font-weight:600;">Rotation</div>
-  <div class="row"><span>RX</span>
-    <button class="handStep" data-mode="rot" data-axis="x" data-dir="-">–</button>
-    <button class="handStep" data-mode="rot" data-axis="x" data-dir="+">+</button>
-  </div>
-  <div class="row"><span>RY</span>
-    <button class="handStep" data-mode="rot" data-axis="y" data-dir="-">–</button>
-    <button class="handStep" data-mode="rot" data-axis="y" data-dir="+">+</button>
-  </div>
-  <div class="row"><span>RZ</span>
-    <button class="handStep" data-mode="rot" data-axis="z" data-dir="-">–</button>
-    <button class="handStep" data-mode="rot" data-axis="z" data-dir="+">+</button>
-  </div>
-  <button id="handSaveBtn" style="margin-top:12px;width:100%;background:#10b981;color:white;">
-  Save Hand Pose
+  <div style="margin-top:10px; font-weight:600;">Rotation</div>
+  <div class="row"><span>RX</span>
+    <button class="handStep" data-mode="rot" data-axis="x" data-dir="-">–</button>
+    <button class="handStep" data-mode="rot" data-axis="x" data-dir="+">+</button>
+  </div>
+  <div class="row"><span>RY</span>
+    <button class="handStep" data-mode="rot" data-axis="y" data-dir="-">–</button>
+    <button class="handStep" data-mode="rot" data-axis="y" data-dir="+">+</button>
+  </div>
+  <div class="row"><span>RZ</span>
+    <button class="handStep" data-mode="rot" data-axis="z" data-dir="-">–</button>
+    <button class="handStep" data-mode="rot" data-axis="z" data-dir="+">+</button>
+  </div>
+  <button id="handSaveBtn" style="margin-top:12px;width:100%;background:#10b981;color:white;">
+  Save Hand Pose
 </button>
 
 </div>
 
-  
+  
 </body>
 </html>
