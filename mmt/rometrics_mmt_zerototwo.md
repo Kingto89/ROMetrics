@@ -64,7 +64,7 @@
 
 ### Therapist
 
-* One hand across **mandible** to monitor motion line; other hand stabilizes upper chest/SC area
+* No hands required on patient for grade 2 test, observe motion only. Palapate anterior necck for grade 1. 
 
 ### Action
 
@@ -72,7 +72,7 @@
 
 ### Grades 0–2
 
-* **Grade 2:** full chin-tuck range in gravity-eliminated
+* **Grade 2:** Partial chin-tuck range in gravity-eliminated
 * **Grade 1:** trace contraction palpated **deep to SCM in anterior triangle** (difficult; feel subtle deep tension)
 * **Grade 0:** no palpable contraction
 
