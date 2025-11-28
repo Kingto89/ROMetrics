@@ -421,9 +421,7 @@ function togglePracticeMode() {
 
 // Wire the existing Practice Placement button
 if (practicePlacementBtn) practicePlacementBtn.addEventListener('click', togglePracticeMode);  
-    
-// --- END: 3D Manipulation Widget Setup ---
-    
+        
 // --- END: 3D Manipulation Widget Setup ---
 /* Lights */
 scene.add(new THREE.HemisphereLight(0xffffff, 0x8ca0b3, 0.8));
@@ -1274,7 +1272,7 @@ if (!rightHandModel || !leftHandModel) {
             // Set scale to match the patient model scale
             handsModel.scale.set(0.20, 0.20, 0.20);
             // Initial position guess: centered in front of the patient
-            handsModel.position.set(0, 1.4, 0.5); // Adjusted Y to 1.4
+            handsModel.position.set(0, 1.7, 0.5); // Adjusted Y to 1.4
             
             // Note: Hand.L and Hand.R meshes are inside handsModel, 
             // their movement must be handled via the Pose Tuner or separate control logic later.
