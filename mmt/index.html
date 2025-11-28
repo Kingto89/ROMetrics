@@ -39,7 +39,7 @@ select,button,input[type=range]{width:100%;margin:6px 0 8px 0;padding:8px 10px;b
 .multi-line-btn { flex-grow: 1; margin-right: 8px; text-align: center; font-size: 14px; line-height: 1.2; padding: 8px 6px; }
 .multi-line-btn:last-child { margin-right: 0; }
 #notePanel{position:fixed;top:16px;right:16px;width:min(420px,46vw);max-height:70vh;display:none;z-index:140;
-#toggleHandsBtn:disabled { opacity:0.45; pointer-events:none; filter:grayscale(1); }
+#toggleHandsBtn.lockOn,#toggleHandsBtn:disabled{background:#e2e8f0!important;color:#64748b!important;border-color:#cbd5e1!important;opacity:.65;filter:grayscale(1);pointer-events:none;}
   background:#e2e8f0;border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.25);
   display:flex;flex-direction:column;overflow:hidden}
 .note-head{display:flex;align-items:center;gap:8px;padding:10px 12px;background:#dbe4ee;border-bottom:1px solid var(--line)}
@@ -1116,24 +1116,28 @@ function setBodyMode(mode){
 // ------------------------------------
 // HAND OVERRIDE LOGIC (FINAL VERSION)
 // ------------------------------------
-const handKey = CURRENT_BODY_TEST && CURRENT_BODY_BUCKET
+const handKey = (CURRENT_BODY_TEST && CURRENT_BODY_BUCKET)
   ? `${CURRENT_BODY_TEST}:${CURRENT_BODY_BUCKET}`
   : null;
 
 if (!handsModel || !rightHandModel || !leftHandModel) return;
 
-// If practice mode is ON → neutral
+// Practice mode → always neutral
 if (isPracticeModeActive) {
     resetHandsToNeutral();
 } 
 else {
-    // If override exists → apply it
-    if (HAND_OVERRIDES[key]) {
-        applyHandOverride(key);
+    // Apply override if exists
+    if (handKey && HAND_OVERRIDES[handKey]) {
+        applyHandOverride(handKey);
     } else {
-        // No override saved → neutral
         resetHandsToNeutral();
     }
+}
+
+// ⭐ Force override on first toggle if test already active
+if (!isPracticeModeActive && CURRENT_BODY_TEST) {
+    forceApplyHandOverrideOnce();
 }
 
  
