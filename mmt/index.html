@@ -1234,11 +1234,25 @@ if (!HAND_OVERRIDES[key] && poseToApply) {
     applySideLyingLimbs();
   }
 
-  function cervicalLow_RightHand_IndexPoint(){
+function cervicalLow_RightHand_IndexPoint(){
     if (!rightHandModel) return;
-    rightHandModel.position.set(0.45, 1.25, 0.45);
-    rightHandModel.rotation.set(-0.6, 0.3, 0);
+
+    const get = name => rightHandModel.getObjectByName(name);
+
+    const index = get("index control");
+    const major = get("Major control");
+    const ring  = get("Ring control");
+    const pinky = get("Pinky control");
+
+    // Index = straight
+    if (index) index.rotation.x = 0;
+
+    // Others = curled
+    if (major) major.rotation.x = -0.6;
+    if (ring)  ring.rotation.x = -0.6;
+    if (pinky) pinky.rotation.x = -0.6;
 }
+
 
    // Wrist tests: add right-arm bias (0° abd, 0° flex) in both seated modes
   if (mode === "seatedgravity" || mode === "seatednogravity"){
