@@ -1326,11 +1326,14 @@ function toggleHands(){
         handsModel.visible = !handsModel.visible;
         
         if (handsModel.visible) {
-            // 1. Reset hands to neutral (ensures they reappear visibly)
+            // 1. Reset hands to neutral (ensures they reappear visibly after toggle)
             resetHandsToNeutral(); 
-            // 2. Load the patient body pose AND, crucially, load the saved HAND_OVERRIDES
-            //    (This loads your custom placement if Practice Mode is OFF)
-            applyBodyPositionFromSelection(); 
+            
+            // 🔑 CRITICAL FIX: Only apply the saved MMT pose if Practice Mode is OFF.
+            if (!isPracticeModeActive) {
+                applyBodyPositionFromSelection(); 
+            }
+            // If Practice Mode IS active, they stay at the neutral reset position (ready for practice).
         }
         
         // Update button style
@@ -1342,7 +1345,7 @@ function toggleHands(){
             transformControls.visible = false;
         }
     }
-}  
+}
 
  // ============= NEW: Switch Active Hand Logic =============
 const switchActiveHandBtn = $("switchActiveHandBtn");
