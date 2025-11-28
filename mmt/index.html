@@ -762,6 +762,11 @@ const TEST_POSITION = {
   Gastrocnemius:       { high: "gastroc",    low: "prone"  }  //table stand
 };
 
+
+const HAND_TEST_POSITION = {
+  Cervical_Flexion: { high: null, low: "cerv_low_point" }
+};
+  
 // Decide if we're in the high (3–5) or low (0–2) family for a given test
 // Per-test pose overrides (absolute position + rotation) keyed by "TestKey:high" / "TestKey:low"
 const POSE_OVERRIDES = {};
@@ -1228,6 +1233,13 @@ if (!HAND_OVERRIDES[key] && poseToApply) {
   if (mode === "side_lying"){
     applySideLyingLimbs();
   }
+
+  function cervicalLow_RightHand_IndexPoint(){
+    if (!rightHandModel) return;
+    rightHandModel.position.set(0.45, 1.25, 0.45);
+    rightHandModel.rotation.set(-0.6, 0.3, 0);
+}
+
    // Wrist tests: add right-arm bias (0° abd, 0° flex) in both seated modes
   if (mode === "seatedgravity" || mode === "seatednogravity"){
     const upperR = getBone("upperarm_R");
@@ -2132,6 +2144,17 @@ function ensurePoseTuner(){
     model.position.set(o.x, o.y, o.z);
     model.rotation.set(o.rx, o.ry, o.rz);
   }
+
+  // === HAND POSE SELECTOR ===
+const handMode = HAND_TEST_POSITION?.[CURRENT_BODY_TEST]?.[CURRENT_BODY_BUCKET];
+if (handMode){
+    switch(handMode){
+        case "cerv_low_point":
+            cervicalLow_RightHand_IndexPoint();
+            break;
+    }
+}
+
 
   // Position buttons
   poseTunerEl.querySelectorAll('button[data-axis]').forEach(btn=>{
