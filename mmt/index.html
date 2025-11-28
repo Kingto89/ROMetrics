@@ -167,22 +167,15 @@ select,button,input[type=range]{width:100%;margin:6px 0 8px 0;padding:8px 10px;b
 
 <label>Therapist Hands</label>
 <div class="row" style="justify-content: space-between;">
-  <button id="toggleHandsBtn" class="mini" style="flex-grow: 1; text-align: center;" title="Toggle therapist’s resistance and stabilizing hands">
+  <button id="toggleHandsBtn" class="mini" style="flex-grow: 1; text-align: center; margin-right: 8px;" title="Toggle therapist’s resistance and stabilizing hands">
     <span style="display: block; text-align: left; margin: 0 auto;">Toggle <br> Therapist Hands</span>
   </button>
-
-  <button id="lockRoomBtn" class="mini" style="flex-grow: 1; text-align: center;" title="Lock/Unlock the room environment">
+  <button id="lockRoomBtn" class="mini" style="flex-grow: 1; text-align: center; margin-right: 8px;" title="Lock/Unlock the room environment">
     <span style="display: block; text-align: left; margin: 0 auto;">Lock <br> Room🔒 </span>
   </button>
-
-  <button id="toggleHandControlBtn" class="mini" style="flex-grow: 1; text-align: center;" title="Switch the 3D widget control between Left and Right hands" disabled>
-    <span id="controlHandText" style="display: block; text-align: left; margin: 0 auto;">Switch <br> Hand</span>
-  </button>
-
   <button id="practicePlacementBtn" class="mini" style="flex-grow: 1; text-align: center;" title="Practice Hand Placement Mode">
     <span style="display: block; text-align: left; margin: 0 auto;">Practice <br> Placement</span>
   </button>
-</div>
 </div>
 </div>
 </div>
@@ -248,7 +241,6 @@ const resistanceText = $("resistanceText");
 const instructionText = $("instructionText");
 const gradeMain = $("grade-main");
 const gradeExceptions = $("GradingExceptions");  
-const toggleHandControlBtn = $("toggleHandControlBtn");
 
 /* ==== NEW: Lock Room Toggle Logic ==== */
 const lockRoomBtn = $("lockRoomBtn");
@@ -280,47 +272,6 @@ function toggleRoomLock() {
 
 // Wire the new button
 if (lockRoomBtn) lockRoomBtn.addEventListener('click', toggleRoomLock);
-
-// --- START: NEW HAND SWITCHING LOGIC ---
-function switchActiveHand() {
-    // Check if models are loaded and we are in practice mode
-    if (!isPracticeModeActive || !rightHandModel || !leftHandModel) {
-        console.warn("Cannot switch hand: Practice Mode is inactive or hands not loaded.");
-        return;
-    }
-
-    let newHand = null;
-
-    // Determine the current active hand and switch to the other one
-    if (currentActiveHand === rightHandModel) {
-        newHand = leftHandModel;
-    } else if (currentActiveHand === leftHandModel) {
-        newHand = rightHandModel;
-    } else {
-        // Fallback: If neither is active, default to the right hand
-        newHand = rightHandModel;
-    }
-    
-    // 1. Update the tracking variable
-    currentActiveHand = newHand;
-    
-    // 2. Detach TransformControls from the old hand and attach to the new hand
-    transformControls.attach(currentActiveHand);
-    
-    // 3. Re-apply current mode (translate or rotate)
-    transformControls.setMode(currentTransformMode);
-
-    console.log(`Switched Control to: ${(currentActiveHand === rightHandModel) ? 'Right' : 'Left'} Hand`);
-}
-
-// Wire the new button
-if (toggleHandControlBtn) toggleHandControlBtn.addEventListener('click', switchActiveHand);
-// --- END: NEW HAND SWITCHING LOGIC ---
-
-/* ==================================== */  
-
-// Enable only the relevant grading menu for the selected test:
-// ... (rest of the script)  
 /* ==================================== */  
 
 // Enable only the relevant grading menu for the selected test:
@@ -413,54 +364,53 @@ function setupTransformControls() {
 }
 setupTransformControls();
 
+// The togglePracticeMode function comes AFTER setupTransformControls is defined
 function togglePracticeMode() {
-    // Ensure hands are loaded before entering practice mode
-    if (!rightHandModel || !leftHandModel) {
-        alert("Please toggle 'Therapist Hands' on first.");
-        return;
-    }
+    // Ensure hands are loaded before entering practice mode
+    if (!rightHandModel || !leftHandModel) {
+        alert("Please toggle 'Therapist Hands' on first.");
+        return;
+    }
 
-    isPracticeModeActive = !isPracticeModeActive;
-    
-    if (isPracticeModeActive) {
-        // --- ENTER PRACTICE MODE ---
-        practicePlacementBtn.classList.add('lockOn'); // Visually indicate active mode
-        toggleHandControlBtn.disabled = false; // <<< NEW: Enable Switch Hand button
-        
-        // Initial state: Right Hand, Translate Mode
-        currentActiveHand = rightHandModel;
-        currentTransformMode = 'translate';
-        
-        // Configure TransformControls for active manipulation
-        transformControls.setMode(currentTransformMode);
-        transformControls.showX = true; // Show all axes for move/rotate
-        transformControls.showY = true;
-        transformControls.showZ = true; 
-        transformControls.attach(currentActiveHand); // Attach to the default hand
-        transformControls.visible = true; // Make the widget visible
+    isPracticeModeActive = !isPracticeModeActive;
+    
+    if (isPracticeModeActive) {
+        // --- ENTER PRACTICE MODE ---
+        practicePlacementBtn.classList.add('lockOn'); // Visually indicate active mode
+        
+        // Initial state: Right Hand, Translate Mode
+        currentActiveHand = rightHandModel;
+        currentTransformMode = 'translate';
+        
+        // Configure TransformControls for active manipulation
+        transformControls.setMode(currentTransformMode);
+        transformControls.showX = true; // Show all axes for move/rotate
+        transformControls.showY = true;
+        transformControls.showZ = true; 
+        transformControls.attach(currentActiveHand); // Attach to the default hand
+        transformControls.visible = true; // Make the widget visible
 
-        // Disable OrbitControls while in practice mode
-        controls.enabled = false; 
+        // Disable OrbitControls while in practice mode
+        controls.enabled = false; 
 
-        console.log("Entered Practice Mode: Right Hand, Translate");
+        console.log("Entered Practice Mode: Right Hand, Translate");
 
-    } else {
-        // --- EXIT PRACTICE MODE ---
-        practicePlacementBtn.classList.remove('lockOn');
-        toggleHandControlBtn.disabled = true; // <<< NEW: Disable Switch Hand button
-        
-        // Reset TransformControls state
-        transformControls.detach();
-        transformControls.visible = false;
-        transformControls.showX = false;
-        transformControls.showY = false;
-        transformControls.showZ = false;
+    } else {
+        // --- EXIT PRACTICE MODE ---
+        practicePlacementBtn.classList.remove('lockOn');
+        
+        // Reset TransformControls state
+        transformControls.detach();
+        transformControls.visible = false;
+        transformControls.showX = false;
+        transformControls.showY = false;
+        transformControls.showZ = false;
 
-        // Re-enable OrbitControls
-        controls.enabled = true; 
-        currentActiveHand = null;
-        console.log("Exited Practice Mode.");
-    }
+        // Re-enable OrbitControls
+        controls.enabled = true; 
+        currentActiveHand = null;
+        console.log("Exited Practice Mode.");
+    }
 }
 
 // Wire the existing Practice Placement button
@@ -1324,8 +1274,6 @@ if (!rightHandModel || !leftHandModel) {
             // their movement must be handled via the Pose Tuner or separate control logic later.
             scene.add(handsModel);
 
-         // ... (Insert after if (lockRoomBtn) lockRoomBtn.addEventListener('click', toggleRoomLock);)
-
             // --- START: ACTIVATE DRAGGING CONTROL HERE (No Tuner Logic) ---
             if (transformControls && rightHandModel) {
                 // Attach the right hand model to the widget for immediate dragging access
@@ -1334,15 +1282,7 @@ if (!rightHandModel || !leftHandModel) {
             }
             // --- END: ACTIVATE DRAGGING CONTROL HERE ---
 
-           // --- START: ACTIVATE DRAGGING CONTROL HERE (No Tuner Logic) ---
-            if (transformControls && leftHandModel) {
-                // Attach the left hand model to the widget for immediate dragging access
-                transformControls.attach(leftHandModel);
-                transformControls.visible = true; 
-            }
-            // --- END: ACTIVATE DRAGGING CONTROL HERE ---
-/* ==================================== */
-            // --- END: ACTIVATE DRAGGING CONTROL HERE ---
+
             // FIX 2: Call the function that applies the saved coordinates
             // This reads the hard-coded HAND_OVERRIDES for the currently selected test/grade.
             applyBodyPositionFromSelection(); 
@@ -2139,6 +2079,17 @@ addEventListener("resize", ()=>{
 // --- NEW: Simplified Interaction Logic (Click Center to Switch Hand) ---
 function onPointerDownTransformControls(event) {
     if (!isPracticeModeActive || !transformControls.visible || !currentActiveHand) return;
+    
+    // Check if the raycaster hits the center control of the TransformControls.
+    // The TransformControls has an internal method to check if a control handle was picked.
+    
+    // We only execute our custom logic IF a transform control handle was clicked AND
+    // IF the control is currently in translate mode (which has a central sphere handle).
+    
+    // NOTE: This relies on the internal TransformControls event handling which is usually reliable.
+    
+    // If we click on the center control while in translate mode (default), we switch hands.
+    // We rely on the TransformControls picking logic being internal for the double-tap.
 
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
@@ -2154,7 +2105,51 @@ function onPointerDownTransformControls(event) {
 
     if (intersects.length > 0) {
         const intersection = intersects[0];
-      
+        // The center cube/sphere usually has a specific name or color (white/yellow in translate mode)
+        // Check if the distance to the control is very close (implying the center handle was hit)
+        // A simpler way is to check the *mode* while the control is active.
+
+        // We will assume any click on the widget area that isn't a drag event is meant to switch modes
+        // or switch hands. Let's make the center sphere the dedicated switch button.
+        
+        // This is complex due to internal TransformControls API. Let's use the simplest logic:
+        // Any click on a handle that is NOT the current mode (Translate/Rotate handles) will switch mode.
+        
+        // Simplified Goal: Single click on the center control switches hand.
+        // We will use the custom center object that TransformControls uses for raycasting if possible. 
+        
+        // Let's use the raycaster and check if the intersected handle is the translation sphere (the center point).
+        // Since TransformControls does not expose the center sphere's mesh readily, we rely on checking all children.
+
+        // If the intersected handle is one of the translation arrows (name: "Arrow_...") or the rotation ring (name: "Circle_...")
+        // we do nothing (the user drags). 
+        // We need a specific raycast target for the center sphere.
+
+        // --- Simplified Hand Switch Logic (Checking Distance to Center) ---
+        const centerPos = new THREE.Vector3();
+        transformControls.getWorldPosition(centerPos);
+        
+        const pointerPos = intersects[0].point;
+        
+        if (pointerPos.distanceTo(centerPos) < 0.05) { // Check if the hit is near the center
+            event.preventDefault(); // Stop controls from dragging
+            
+            // 1. Switch the hand model
+            const newHand = (currentActiveHand === rightHandModel) ? leftHandModel : rightHandModel;
+            
+            // 2. Detach from current, attach to new
+            currentActiveHand = newHand;
+            transformControls.attach(currentActiveHand);
+            
+            // 3. Re-apply current mode and highlight
+            transformControls.setMode(currentTransformMode);
+            highlightActiveHand(currentActiveHand);
+            
+            console.log(`Switched Hand via Center Click to: ${(currentActiveHand === rightHandModel) ? 'Right' : 'Left'} Hand`);
+            return;
+        }
+
+        // --- Mode Toggle Logic ---
         // Double tap on the hand model itself (original logic)
         const now = Date.now();
         const lastTapTime = currentActiveHand.__lastTapTime || 0;
