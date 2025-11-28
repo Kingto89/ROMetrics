@@ -1322,7 +1322,41 @@ function toggleHands(){
          btn?.classList.remove('lockOn');
     }
 }
- 
+
+ // ============= NEW: Switch Active Hand Logic =============
+const switchActiveHandBtn = $("switchActiveHandBtn");
+
+function switchActiveHand() {
+    if (!isPracticeModeActive) {
+        alert("Please start 'Practice Placement' mode first.");
+        return;
+    }
+    if (!rightHandModel || !leftHandModel || !handsModel.visible) {
+        alert("Therapist hands are not loaded or visible. Please toggle hands on first.");
+        return;
+    }
+
+    // 1. Determine the new active hand
+    const newHand = (currentActiveHand === rightHandModel) ? leftHandModel : rightHandModel;
+    
+    // 2. Detach from current, attach to new
+    transformControls.detach();
+    currentActiveHand = newHand;
+    transformControls.attach(currentActiveHand);
+
+    // 3. Update button text for user feedback
+    const btnSpan = $("switchActiveHandBtn").querySelector('span');
+    const handName = (currentActiveHand === rightHandModel) ? 'Right' : 'Left';
+    btnSpan.innerHTML = `Switch <br> Hands (${handName})`;
+    
+    console.log(`Switched active hand to: ${handName}`);
+}
+
+// Wire the new button
+if (switchActiveHandBtn) {
+    switchActiveHandBtn.addEventListener('click', switchActiveHand);
+}
+// ========================================================== 
 
 function degToRad(d){ return d * Math.PI / 180; }
 function seatPoseOnlyLegs(){
