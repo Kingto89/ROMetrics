@@ -2129,17 +2129,6 @@ addEventListener("resize", ()=>{
 // --- NEW: Simplified Interaction Logic (Click Center to Switch Hand) ---
 function onPointerDownTransformControls(event) {
     if (!isPracticeModeActive || !transformControls.visible || !currentActiveHand) return;
-    
-    // Check if the raycaster hits the center control of the TransformControls.
-    // The TransformControls has an internal method to check if a control handle was picked.
-    
-    // We only execute our custom logic IF a transform control handle was clicked AND
-    // IF the control is currently in translate mode (which has a central sphere handle).
-    
-    // NOTE: This relies on the internal TransformControls event handling which is usually reliable.
-    
-    // If we click on the center control while in translate mode (default), we switch hands.
-    // We rely on the TransformControls picking logic being internal for the double-tap.
 
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
@@ -2155,51 +2144,7 @@ function onPointerDownTransformControls(event) {
 
     if (intersects.length > 0) {
         const intersection = intersects[0];
-        // The center cube/sphere usually has a specific name or color (white/yellow in translate mode)
-        // Check if the distance to the control is very close (implying the center handle was hit)
-        // A simpler way is to check the *mode* while the control is active.
-
-        // We will assume any click on the widget area that isn't a drag event is meant to switch modes
-        // or switch hands. Let's make the center sphere the dedicated switch button.
-        
-        // This is complex due to internal TransformControls API. Let's use the simplest logic:
-        // Any click on a handle that is NOT the current mode (Translate/Rotate handles) will switch mode.
-        
-        // Simplified Goal: Single click on the center control switches hand.
-        // We will use the custom center object that TransformControls uses for raycasting if possible. 
-        
-        // Let's use the raycaster and check if the intersected handle is the translation sphere (the center point).
-        // Since TransformControls does not expose the center sphere's mesh readily, we rely on checking all children.
-
-        // If the intersected handle is one of the translation arrows (name: "Arrow_...") or the rotation ring (name: "Circle_...")
-        // we do nothing (the user drags). 
-        // We need a specific raycast target for the center sphere.
-
-        // --- Simplified Hand Switch Logic (Checking Distance to Center) ---
-        const centerPos = new THREE.Vector3();
-        transformControls.getWorldPosition(centerPos);
-        
-        const pointerPos = intersects[0].point;
-        
-        if (pointerPos.distanceTo(centerPos) < 0.05) { // Check if the hit is near the center
-            event.preventDefault(); // Stop controls from dragging
-            
-            // 1. Switch the hand model
-            const newHand = (currentActiveHand === rightHandModel) ? leftHandModel : rightHandModel;
-            
-            // 2. Detach from current, attach to new
-            currentActiveHand = newHand;
-            transformControls.attach(currentActiveHand);
-            
-            // 3. Re-apply current mode and highlight
-            transformControls.setMode(currentTransformMode);
-            highlightActiveHand(currentActiveHand);
-            
-            console.log(`Switched Hand via Center Click to: ${(currentActiveHand === rightHandModel) ? 'Right' : 'Left'} Hand`);
-            return;
-        }
-
-        // --- Mode Toggle Logic ---
+      
         // Double tap on the hand model itself (original logic)
         const now = Date.now();
         const lastTapTime = currentActiveHand.__lastTapTime || 0;
