@@ -38,7 +38,12 @@ select,button,input[type=range]{width:100%;margin:6px 0 8px 0;padding:8px 10px;b
 .flex-btn-group { display: flex; justify-content: space-between; align-items: stretch; gap: 4px; } .multi-line-btn { flex-grow: 1; margin-right: 0; text-align: center; font-size: 11px; line-height: 1.1; padding: 4px 6px; }  
 .multi-line-btn { flex-grow: 1; margin-right: 8px; text-align: center; font-size: 14px; line-height: 1.2; padding: 8px 6px; }
 .multi-line-btn:last-child { margin-right: 0; }
-#notePanel{position:fixed;top:16px;right:16px;width:min(420px,46vw);max-height:70vh;display:none;z-index:140;
+#notePanel{
+  position:fixed;top:16px;right:16px;width:min(420px,46vw);max-height:70vh;display:none;z-index:140;
+  background:#e2e8f0;border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.25);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+
 #toggleHandsBtn.lockOn,#toggleHandsBtn:disabled{background:#cbd5e1!important;color:#475569!important;border-color:#94a3b8!important;box-shadow:none!important;filter:grayscale(1)!important;opacity:.55!important;pointer-events:none!important;}
   background:#e2e8f0;border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.25);
   display:flex;flex-direction:column;overflow:hidden}
