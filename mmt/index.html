@@ -1703,12 +1703,21 @@ const out = {
 
 
 function applyBodyPositionFromSelection(){
-  if (!model || !skeleton) return;
-  
-  const test = actionSel?.value;
-  if (!test) return; // <<< THIS LINE MUST BE ADDED BACK
+  if (!model || !skeleton) return;
 
-  const bucket = getGradeBucketForTest(test);
+  const test = actionSel?.value;
+  if (!test) return;
+
+  const bucket = getGradeBucketForTest(test);
+
+  // SIMPLE: Right-hand pointing for LOW Cervical Flexion
+  if (test === "Cervical_Flexion" && bucket === "low") {
+      if (rightHandModel) {
+          rightHandModel.position.set(0.45, 1.25, 0.45);
+          rightHandModel.rotation.set(-0.6, 0.3, 0);
+      }
+  }
+
 
   // ★ REQUIRED FOR HAND TUNER ★
   window.currentMMTtest = test;
