@@ -986,7 +986,7 @@ function applyHoldMovement() {
   setDegAxis(bone, axis, totalRotation);
 // 2. ⭐ NEW: Hand Tremor Logic (only if hands are loaded and visible)
   // -------------------------------------------------------------
-  if (rightHandModel && handsModel?.visible) {
+  if (leftHandModel && handsModel?.visible) {
     const d = MAX_TREMOR_DISPLACEMENT;
 
     // Generate a new small, random offset vector for X, Y, Z
@@ -996,9 +996,9 @@ function applyHoldMovement() {
     const tremorZ = (Math.random() * 2 * d) - d;
 
     // Apply the offset to the current position (relative to its parent/scene)
-    rightHandModel.position.x += tremorX;
-    rightHandModel.position.y += tremorY;
-    rightHandModel.position.z += tremorZ;
+    leftHandModel.position.x += tremorX;
+    leftHandModel.position.y += tremorY;
+    leftHandModel.position.z += tremorZ;
     
     // Safety clamp (optional but good practice to keep it near its general area)
     // We rely mostly on the next step (3. Reset/Anchor) to fix drift.
