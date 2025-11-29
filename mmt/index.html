@@ -622,8 +622,6 @@ controls.target.set(0,1.05,0); 
 
 // --- START: 3D Manipulation Widget Setup ---
 let transformControls = null;
-// fixes UI freeze: provide the missing handler used inside setupTransformControls()
-const onPointerDownTransformControls = (e)=>{};
 
 function setupTransformControls() {
     if (!transformControls) {
@@ -661,6 +659,126 @@ function togglePracticeMode() {
         alert("Please toggle 'Therapist Hands' on first.");
         return;
     }
+/* ===== PRACTICE HUD (onscreen floating control; replaces arrows in Practice Mode) ===== */
+(function(){
+  // Build HUD
+  const hud = document.createElement('div');
+  hud.id = 'practiceHUD';
+  Object.assign(hud.style, {
+    position:'fixed', right:'16px', bottom:'16px', zIndex:'150',
+    background:'rgba(255,255,255,.95)', border:'1px solid #cbd5e1',
+    borderRadius:'12px', boxShadow:'0 8px 24px rgba(0,0,0,.18)',
+    padding:'10px', width:'220px', font:'13px/1.2 system-ui,Segoe UI,Roboto', color:'#0f172a', display:'none'
+  });
+
+  hud.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+      <strong style="font-weight:800;">Practice Controls</strong>
+      <span id="hudHand" style="margin-left:auto;font-size:12px;color:#64748b;">Right</span>
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:8px;">
+      <button id="hudMode" class="mini" style="flex:1;border:1px solid #cbd5e1;border-radius:8px;background:#e2e8f0;padding:6px 8px;">Move</button>
+      <button id="hudSwitch" class="mini" style="flex:1;border:1px solid #cbd5e1;border-radius:8px;background:#e2e8f0;padding:6px 8px;">Switch Hand</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;">
+      <button data-axis="x" data-dir="1"  class="mini">+X</button>
+      <button data-axis="x" data-dir="-1" class="mini">−X</button>
+      <button data-axis="y" data-dir="1"  class="mini">+Y</button>
+      <button data-axis="y" data-dir="-1" class="mini">−Y</button>
+      <button data-axis="z" data-dir="1"  class="mini">+Z</button>
+      <button data-axis="z" data-dir="-1" class="mini">−Z</button>
+    </div>
+    <div style="display:flex;gap:6px;margin-top:8px;">
+      <button id="hudClose" class="mini" style="flex:1;border:1px solid #cbd5e1;border-radius:8px;background:#e2e8f0;padding:6px 8px;">Close</button>
+      <span id="hudHint" style="flex:1;text-align:right;font-size:12px;color:#64748b;align-self:center;">Step: 0.02m / 6°</span>
+    </div>
+  `;
+  document.body.appendChild(hud);
+
+  // State
+  let hudMode = 'translate'; // 'translate' | 'rotate'
+  const stepPos = 0.02;      // meters per click
+  const stepRot = THREE.MathUtils.degToRad(6); // 6° per click
+
+  // Helpers
+  const hudHand = document.getElementById('hudHand');
+  const hudModeBtn = document.getElementById('hudMode');
+  const hudSwitchBtn = document.getElementById('hudSwitch');
+  const hudClose = document.getElementById('hudClose');
+  const hudHint = document.getElementById('hudHint');
+
+  function activeHand(){
+    // Uses your existing state
+    return (currentActiveHand === leftHandModel) ? leftHandModel : rightHandModel;
+  }
+  function updateHandLabel(){
+    const name = (currentActiveHand === leftHandModel) ? 'Left' : 'Right';
+    hudHand.textContent = name;
+  }
+  function nudge(axis, dir){
+    if (!isPracticeModeActive || !handsModel || !handsModel.visible) return;
+    const h = activeHand(); if (!h) return;
+
+    if (hudMode === 'translate'){
+      h.position[axis] += stepPos * dir;
+    } else {
+      h.rotation[axis] += stepRot * dir;
+    }
+  }
+
+  // Wire buttons
+  hudModeBtn.addEventListener('click', () => {
+    hudMode = (hudMode === 'translate') ? 'rotate' : 'translate';
+    hudModeBtn.textContent = (hudMode === 'translate') ? 'Move' : 'Rotate';
+    hudHint.textContent = (hudMode === 'translate') ? 'Step: 0.02m / 6°' : 'Step: 0.02m / 6°';
+  });
+  hudSwitchBtn.addEventListener('click', () => {
+    // reuse your existing switchActiveHand()
+    if (typeof switchActiveHand === 'function') switchActiveHand();
+    updateHandLabel();
+  });
+  hudClose.addEventListener('click', () => {
+    // exit practice mode via your existing toggle
+    if (typeof togglePracticeMode === 'function' && isPracticeModeActive) togglePracticeMode();
+  });
+  hud.querySelectorAll('button[data-axis]').forEach(btn=>{
+    btn.addEventListener('click', () => {
+      const axis = btn.getAttribute('data-axis');
+      const dir  = parseFloat(btn.getAttribute('data-dir'));
+      nudge(axis, dir);
+    });
+  });
+
+  // Hook into your existing togglePracticeMode to show/hide HUD and hide arrow gizmo
+  const __origToggle = togglePracticeMode;
+  window.togglePracticeMode = function(){
+    __origToggle();
+    // hide TransformControls arrows while practicing
+    if (transformControls){
+      transformControls.visible = false;
+      transformControls.detach();
+    }
+    // HUD visibility + hand label
+    hud.style.display = isPracticeModeActive ? 'block' : 'none';
+    updateHandLabel();
+    // ensure hands are visible when entering practice
+    if (isPracticeModeActive && (!handsModel || !handsModel.visible)){
+      const btn = document.getElementById('toggleHandsBtn');
+      if (btn) btn.click();
+    }
+    // default to right hand if none selected
+    if (isPracticeModeActive && !currentActiveHand && rightHandModel){
+      currentActiveHand = rightHandModel;
+      updateHandLabel();
+    }
+  };
+
+  // Also keep the label in sync if user switches hands from the other button
+  const switchBtn = document.getElementById('switchActiveHandBtn');
+  if (switchBtn){
+    switchBtn.addEventListener('click', updateHandLabel);
+  }
+})();
 
     isPracticeModeActive = !isPracticeModeActive;
     
@@ -705,93 +823,7 @@ function togglePracticeMode() {
 
 // Wire the existing Practice Placement button
 if (practicePlacementBtn) practicePlacementBtn.addEventListener('click', togglePracticeMode);  
-// 1) Hide transform arrows but keep your double-tap rotation sphere logic intact
-if (window.transformControls) { transformControls.enabled = false; transformControls.visible = false; }
-
-// 2) Build/show on-screen movement controller (no rotation)
-let ctr = document.getElementById('hand-move-pad');
-if (!ctr) {
-  ctr = document.createElement('div');
-  ctr.id = 'hand-move-pad';
-  Object.assign(ctr.style, {
-    position:'fixed', right:'16px', bottom:'16px', zIndex:9999,
-    background:'rgba(15,23,42,.9)', border:'1px solid #334155',
-    borderRadius:'16px', padding:'12px', backdropFilter:'blur(6px)',
-    display:'grid', gridTemplateColumns:'repeat(3,48px)', gap:'8px',
-    userSelect:'none', touchAction:'none', boxShadow:'0 8px 24px rgba(0,0,0,.35)'
-  });
-  const mk = (label, axis, dir)=> {
-    const b = document.createElement('button');
-    b.textContent = label;
-    Object.assign(b.style,{
-      width:'48px', height:'48px', borderRadius:'12px', border:'1px solid #475569',
-      background:'#0ea5e9', color:'#fff', fontWeight:600, cursor:'pointer'
-    });
-    b.dataset.axis = axis; b.dataset.dir = dir;
-    return b;
-  };
-  // layout:   ↑y
-  //         ←x   →x
-  //           ↓y
-  // and depth: +z (out), -z (in)
-  const blank = ()=>{ const s=document.createElement('div'); s.style.width='48px'; s.style.height='48px'; return s; };
-  const up    = mk('▲','y', +1);
-  const left  = mk('◀','x', -1);
-  const right = mk('▶','x', +1);
-  const down  = mk('▼','y', -1);
-  const outZ  = mk('Z+','z', +1);
-  const inZ   = mk('Z-','z', -1);
-
-  // grid cells
-  ctr.appendChild(blank()); ctr.appendChild(up);    ctr.appendChild(blank());
-  ctr.appendChild(left);    ctr.appendChild(blank()); ctr.appendChild(right);
-  ctr.appendChild(blank()); ctr.appendChild(down);  ctr.appendChild(blank());
-  // depth row
-  const rail = document.createElement('div');
-  Object.assign(rail.style,{gridColumn:'1 / span 3', display:'flex', gap:'8px', justifyContent:'center', marginTop:'6px'});
-  rail.appendChild(inZ); rail.appendChild(outZ);
-  ctr.appendChild(rail);
-
-  document.body.appendChild(ctr);
-
-  // 3) Hold-to-move with acceleration
-  const getActiveHand = ()=> window.activeHand || window.hand_R || window.handL || window.hand_left || window.handRight || window.hand_right;
-  let holdTimer=null, speed=0.002, maxSpeed=0.02, accel=1.12, rafId=null, pressing=false, axis='x', dir=+1;
-
-  const step = ()=>{
-    const h = getActiveHand();
-    if (!h) return;
-    h.position[axis] += dir * speed;
-    speed = Math.min(maxSpeed, speed * accel);
-    if (window.requestRender) requestRender(); // use your renderer hook if present
-    rafId = requestAnimationFrame(step);
-  };
-  const start = (a,d)=>{
-    axis=a; dir=d; pressing=true; speed=0.004; // initial nudge
-    // Desktop: prevent repeated key-like clicks
-    step();
-  };
-  const stop = ()=>{
-    pressing=false;
-    if (rafId) cancelAnimationFrame(rafId);
-    rafId=null; speed=0.004;
-  };
-
-  const bind = (el)=>{
-    const onDown = (ev)=>{ ev.preventDefault(); start(el.dataset.axis, parseFloat(el.dataset.dir)); };
-    const onUp   = (ev)=>{ ev.preventDefault(); stop(); };
-    el.addEventListener('mousedown', onDown);
-    window.addEventListener('mouseup', onUp);
-    el.addEventListener('touchstart', onDown, {passive:false});
-    window.addEventListener('touchend', onUp);
-    window.addEventListener('touchcancel', onUp);
-    // Long-press continues; no repeat clicks needed
-  };
-  [...ctr.querySelectorAll('button')].forEach(bind);
-}
-// ensure controller is visible each time practice mode is entered
-ctr.style.display = 'grid';
-  
+        
 // --- END: 3D Manipulation Widget Setup ---
 /* Lights */
 scene.add(new THREE.HemisphereLight(0xffffff, 0x8ca0b3, 0.8));
@@ -2773,7 +2805,7 @@ addEventListener("resize", ()=>{
 });
 
 // --- NEW: Simplified Interaction Logic (Click Center to Switch Hand) ---
-//function onPointerDownTransformControls(event) {
+function onPointerDownTransformControls(event) {
     if (!isPracticeModeActive || !transformControls.visible || !currentActiveHand) return;
     
     // Check if the raycaster hits the center control of the TransformControls.
