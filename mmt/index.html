@@ -482,6 +482,15 @@ function stopResistanceTest() {
     clearInterval(resistanceTimer);
     resistanceTimer = null;
     
+    // ⭐ NEW: Reset scale of Head and Neck bones to normal (1, 1, 1)
+    const headBone = getBone('head');
+    const neckBone = getBone('neck');
+    if (headBone) headBone.scale.set(1, 1, 1);
+    if (neckBone) neckBone.scale.set(1, 1, 1);
+    
+    // Reset bone rotation back to anatomical position after hold is released
+    applyBodyPositionFromSelection(); 
+        
     resistanceFill.style.transition = 'width 0.3s ease-in, background-color 0.3s';
     resistanceFill.style.width = '0%'; 
     
@@ -960,22 +969,30 @@ function applyHoldMovement() {
   const mapping = CERVICAL_MMT_MAP[testKey];
   if (!mapping) return; // Not a targeted MMT test (e.g., Elbow, Hip), so skip
 
-  const [boneName, axis, direction] = mapping;
-  const bone = getBone(boneName);
-  if (!bone) return;
+  const [boneName, axis, direction] = mapping;
+  const bone = getBone(boneName);
+  if (!bone) return;
 
-  const MAX_HOLD_ANGLE = 5; // Maximum visible movement (degrees) - greatly reduced ROM
-  const STEP_INCREMENT = 0.15; // Speed (degrees per tick/100ms) - slow enough for visual hold
+  const MAX_HOLD_ANGLE = 5; // Maximum visible movement (degrees) - greatly reduced ROM
+  const STEP_INCREMENT = 0.15; // Speed (degrees per tick/100ms) - slow enough for visual hold
 
-  // 1. Increment the hold angle slowly
-  currentHoldAngle = Math.min(MAX_HOLD_ANGLE, currentHoldAngle + STEP_INCREMENT);
+  // 1. Increment the hold angle slowly
+  currentHoldAngle = Math.min(MAX_HOLD_ANGLE, currentHoldAngle + STEP_INCREMENT);
 
-  // 2. Calculate the total rotation (direction is 1 or -1)
-  const totalRotation = currentHoldAngle * direction;
+  // ⭐ NEW: Exaggerated Scaling Logic
+  // Scale factor interpolates from 1.0 (start) to 1.5 (max strain)
+  const MAX_SCALE = 1.5;
+  const normalizedStrain = currentHoldAngle / MAX_HOLD_ANGLE;
+  const currentScale = 1.0 + (MAX_SCALE - 1.0) * normalizedStrain;
+  
+  bone.scale.set(currentScale, currentScale, currentScale); // Apply scale to the bone
 
-  // 3. Apply the rotation
-  setDegAxis(bone, axis, totalRotation);
-}  
+  // 2. Calculate the total rotation (direction is 1 or -1)
+  const totalRotation = currentHoldAngle * direction;
+
+  // 3. Apply the rotation
+  setDegAxis(bone, axis, totalRotation);
+}
 /* ==== Loader ==== */
 const loader = new GLTFLoader();
 loader.setMeshoptDecoder(MeshoptDecoder);
