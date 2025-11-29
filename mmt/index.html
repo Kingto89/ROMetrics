@@ -1032,11 +1032,6 @@ let currentHoldAngle = 0; // NEW: Tracks rotation during MMT resistance hold
 // ADDED: Hands model loading variables
 const HANDS_MODEL_URL = "https://raw.githubusercontent.com/Kingto89/ROMetrics.com/main/assets/Hands.glb";
 let handsModel = null;
-let handL = null, handR = null;
-const __leash = {
-  L: { home: new THREE.Vector3(), r: 0.6 },
-  R: { home: new THREE.Vector3(), r: 0.6 }
-};
   
 // Reset all bones back to stored baseline
 function resetAllBones(){
@@ -1685,12 +1680,6 @@ function loadHandsModel(){
           // Identify individual hands
           rightHandModel = handsModel.getObjectByName("Hand_R") || handsModel.getObjectByName("hand_R");
           leftHandModel  = handsModel.getObjectByName("Hand_L") || handsModel.getObjectByName("hand_L");
-         handL = leftHandModel || null;
-handR = rightHandModel || null;
-if (handL) __leash.L.home.copy(handL.position);
-if (handR) __leash.R.home.copy(handR.position);
-
-
           // If names don't match, auto-detect by size (right hand = larger X position)
 if (!rightHandModel || !leftHandModel) {
     const possible = [];
@@ -1769,10 +1758,6 @@ function applyHandOverride(key){
         leftHandModel.position.set(h.handLX, h.handLY, h.handLZ);
         leftHandModel.rotation.set(h.handLRX, h.handLRY, h.handLRZ);
     }
-  const __leash = {
-  L: { home: handL.position.clone(), r: 0.6 },
-  R: { home: handR.position.clone(), r: 0.6 }
-};
 }
 function forceApplyHandOverrideOnce() {
     if (!actionSel?.value) return;
@@ -2777,22 +2762,9 @@ function onPointerDownTransformControls(event) {
     }
 }
 // --- END: Interaction Logic ---
-// Hands + leash state (must be defined before the loop uses them)
-let handL = null, handR = null;
-const __leash = {
-  L: { home: new THREE.Vector3(), r: 0.25 },  // 25 cm leash
-  R: { home: new THREE.Vector3(), r: 0.25 }
-};
   
 (function loop(){
   controls.update();
-  ["L","R"].forEach(k=>{
-  const h = k==="L" ? handL : handR;
-  const cfg = __leash[k];
-  const d = h.position.distanceTo(cfg.home);
-  if (d > cfg.r) h.position.sub(cfg.home).setLength(cfg.r).add(cfg.home);
-});
-
   renderer.render(scene, camera);
   requestAnimationFrame(loop);
 })();
