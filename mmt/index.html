@@ -1669,82 +1669,81 @@ if (mode === "seatednogravity"){
 let rightHandModel = null;
 let leftHandModel = null;  
 function loadHandsModel(){
-    if (handsModel) return;
-    $("msg").textContent = "Loading therapist hands model...";
-    
-    // Using the existing configured loader for consistency
-    loader.load(
-        HANDS_MODEL_URL,
-        (gltf) => {
-            handsModel = gltf.scene;
-          // Identify individual hands
-          rightHandModel = handsModel.getObjectByName("Hand_R") || handsModel.getObjectByName("hand_R");
-          leftHandModel  = handsModel.getObjectByName("Hand_L") || handsModel.getObjectByName("hand_L");
-          // If names don't match, auto-detect by size (right hand = larger X position)
-if (!rightHandModel || !leftHandModel) {
-    const possible = [];
-    handsModel.traverse(o => {
-        if (o.isMesh && o.parent !== handsModel) {
-            // parent of hand mesh is the hand root
-            possible.push(o.parent);
-        }
-    });
-    // Remove duplicates
-    const roots = [...new Set(possible)];
-
-    if (roots.length === 2) {
-        // Decide left/right based on world X position
-        roots.sort((a,b) => {
-            a.updateWorldMatrix(true, false);
-            b.updateWorldMatrix(true, false);
-            return a.getWorldPosition(new THREE.Vector3()).x - 
-                   b.getWorldPosition(new THREE.Vector3()).x;
-        });
-        leftHandModel  = roots[0];
-        rightHandModel = roots[1];
-    }
-}
-
-            // FIX 1: Set visibility to true immediately on load
-            handsModel.visible = true; 
-            
-            // Set scale to match the patient model scale
-            handsModel.scale.set(0.20, 0.20, 0.20);
-            // Initial position guess: centered in front of the patient
-            handsModel.position.set(0.9, 0.9, -0.5); // Adjusted Y to 1.4
-            
-            // Note: Hand.L and Hand.R meshes are inside handsModel, 
-            // their movement must be handled via the Pose Tuner or separate control logic later.
-            scene.add(handsModel);
-
-            // --- START: ACTIVATE DRAGGING CONTROL HERE (No Tuner Logic) ---
-            if (transformControls && rightHandModel) {
-                // Attach the right hand model to the widget for immediate dragging access
-                transformControls.attach(rightHandModel);
-                transformControls.visible = true; 
+    if (handsModel) return;
+    $("msg").textContent = "Loading therapist hands model...";
+    
+    // Using the existing configured loader for consistency
+    loader.load(
+        HANDS_MODEL_URL,
+        (gltf) => {
+            handsModel = gltf.scene;
+            // Identify individual hands (Your existing complex logic remains here for robustness)
+            rightHandModel = handsModel.getObjectByName("Hand_R") || handsModel.getObjectByName("hand_R");
+            leftHandModel  = handsModel.getObjectByName("Hand_L") || handsModel.getObjectByName("hand_L");
+            
+            // ... (your existing logic to auto-detect right/left hand based on position if names fail)
+            if (!rightHandModel || !leftHandModel) {
+                const possible = [];
+                handsModel.traverse(o => {
+                    if (o.isMesh && o.parent !== handsModel) {
+                        possible.push(o.parent);
+                    }
+                });
+                const roots = [...new Set(possible)];
+                if (roots.length === 2) {
+                    roots.sort((a,b) => {
+                        a.updateWorldMatrix(true, false);
+                        b.updateWorldMatrix(true, false);
+                        return a.getWorldPosition(new THREE.Vector3()).x - b.getWorldPosition(new THREE.Vector3()).x;
+                    });
+                    leftHandModel  = roots[0];
+                    rightHandModel = roots[1];
+                }
             }
-            // --- END: ACTIVATE DRAGGING CONTROL HERE ---
+            // ... (end of auto-detect logic)
 
+            // FIX 1: Set visibility to true immediately on load
+            handsModel.visible = true; 
+            
+            // Set scale to match the patient model scale
+            handsModel.scale.set(0.20, 0.20, 0.20);
+            
+            // FIX 2: Apply YOUR REQUESTED initial position to the handsModel parent group
+            // Original: handsModel.position.set(0.9, 0.9, -0.5); 
+            // Tweak: Further back (Z+), Lower (Y-), Sideway (X+ for neutral separation)
+            handsModel.position.set(0.3, 1.0, 0.8); 
+            
+            scene.add(handsModel);
 
-            // FIX 2: Call the new reset function for the initial load state,
-// ensuring hands start at the correct neutral position.
-resetHandsToNeutral();
+            // FIX 3: ONLY attach TransformControls if practice mode is already active.
+            // When hands are first loaded via the 'Toggle Hands' button, practice mode is OFF.
+            if (isPracticeModeActive && transformControls && rightHandModel) {
+                transformControls.attach(rightHandModel);
+                transformControls.visible = true; 
+            } else {
+                // IMPORTANT: Ensure TransformControls is detached/hidden if not in practice mode
+                transformControls.detach();
+                transformControls.visible = false;
+            }
 
-// CRUCIAL: Must call applyBodyPositionFromSelection *after* reset, 
-// so the patient's body pose is set for the current selection.
-applyBodyPositionFromSelection();
+            // CRUCIAL: Call the reset function for the initial load state,
+            // ensuring hands start at the correct neutral position relative to the handsModel parent.
+            resetHandsToNeutral();
 
-            $("msg").textContent = "✅ Hands model ready.";
-        },
-        (xhr) => {
-            const pct = xhr.lengthComputable ? Math.min(100, Math.round(100*xhr.loaded/xhr.total)) : null;
-            $("msg").textContent = pct!==null ? `Loading Hands ${pct}%` : "Loading Hands...";
-        },
-        (error) => {
-            console.error("Failed to load Hands model:", error);
-            $("msg").textContent = "⚠️ Failed to load therapist hands.";
-        }
-    );
+            // Apply the current pose/override immediately after loading
+            applyBodyPositionFromSelection();
+
+            $("msg").textContent = "✅ Hands model ready.";
+        },
+        (xhr) => {
+            const pct = xhr.lengthComputable ? Math.min(100, Math.round(100*xhr.loaded/xhr.total)) : null;
+            $("msg").textContent = pct!==null ? `Loading Hands ${pct}%` : "Loading Hands...";
+        },
+        (error) => {
+            console.error("Failed to load Hands model:", error);
+            $("msg").textContent = "⚠️ Failed to load therapist hands.";
+        }
+    );
 }
 function applyHandOverride(key){
     const h = HAND_OVERRIDES[key];
@@ -1783,31 +1782,25 @@ function toggleHands(){
     } else {
         handsModel.visible = !handsModel.visible;
         
-    if (handsModel.visible) {
-
-    // ▼ ALWAYS clear, then apply correct pose
-    resetHandsToNeutral();
-
-    // ▼ Only use saved override if practice mode is OFF
-    const test = actionSel?.value;
-    const bucket = getGradeBucketForTest(test);
-    const handKey = `${test}:${bucket}`;
-
-  if (!handsModel || !rightHandModel || !leftHandModel) return;
-
-if (HAND_OVERRIDES[handKey]) {
-    applyHandOverride(handKey);
-} else {
-    resetHandsToNeutral();
-}
-
-}
-  
-        
-        // Update button style
         if (handsModel.visible) {
+            // ▼ NOW ONLY CONCERNED WITH THE THERAPIST HANDS MODEL ▼
+            
+            // 1. Reset to neutral as a baseline
+            resetHandsToNeutral(); // This is the floating hands model
+    
+            // 2. Apply saved override if one exists for the current test
+            const test = actionSel?.value;
+            const bucket = getGradeBucketForTest(test);
+            const handKey = `${test}:${bucket}`;
+            
+            if (!isPracticeModeActive && HAND_OVERRIDES[handKey]) { // <-- Only apply if not in practice mode
+                applyHandOverride(handKey);
+            }
+            
+            // Update button style
             btn?.classList.add('lockOn');
         } else {
+            // Update button style
             btn?.classList.remove('lockOn');
             transformControls.detach();
             transformControls.visible = false;
@@ -2106,33 +2099,40 @@ const out = {
 
 
 function applyBodyPositionFromSelection(){
-  if (!model || !skeleton) return;
-  
-  const test = actionSel?.value;
-  if (!test) return;
+    if (!model || !skeleton) return;
+    
+    const test = actionSel?.value;
+    if (!test) return;
 
-  const bucket = getGradeBucketForTest(test);
+    const bucket = getGradeBucketForTest(test);
 
-  // ★ REQUIRED FOR HAND TUNER ★
-  window.currentMMTtest = test;
-  window.currentMMTgradeBucket = bucket;
-  // ★ END REQUIRED ★
+    // ★ REQUIRED FOR HAND TUNER ★
+    window.currentMMTtest = test;
+    window.currentMMTgradeBucket = bucket;
+    // ★ END REQUIRED ★
 
-  const family = TEST_POSITION[test] || { high:"anatomic", low:"anatomic" };
-  const mode = bucket === "low"
-      ? (family.low  || "anatomic")
-      : (family.high || "anatomic");
+    const family = TEST_POSITION[test] || { high:"anatomic", low:"anatomic" };
+    const mode = bucket === "low"
+          ? (family.low  || "anatomic")
+          : (family.high || "anatomic");
 
-  CURRENT_BODY_TEST = test;
-  CURRENT_BODY_BUCKET = bucket;
+    CURRENT_BODY_TEST = test;
+    CURRENT_BODY_BUCKET = bucket;
 
-  // Pass the current timer state to setBodyMode
-  const isResistanceActive = !!resistanceTimer; 
-  setBodyMode(mode, isResistanceActive); 
+    // Pass the current timer state to setBodyMode
+    const isResistanceActive = !!resistanceTimer; 
+    // STEP 1: Apply patient body position (which includes its own hands/arms)
+    setBodyMode(mode, isResistanceActive); 
 
-  if (poseTunerEl && poseTunerEl.updateLabels){
-    poseTunerEl.updateLabels();
-  }
+    // STEP 2: CRUCIAL SEPARATION. Only apply the floating hands' position 
+    // if the floating hands model is currently visible.
+    if (handsModel?.visible && !isPracticeModeActive) {
+        forceApplyHandOverrideOnce();
+    }
+    
+    if (poseTunerEl && poseTunerEl.updateLabels){
+        poseTunerEl.updateLabels();
+    }
 }
 /* ==== Wire UI ==== */
 const toggleHandsBtn = $("toggleHandsBtn");
@@ -2174,7 +2174,6 @@ actionSel.addEventListener("change", () => {
     window.currentMMTgradeBucket = getGradeBucketForTest(actionSel.value);
     updateGradeDropdownsForSelection();
     applyBodyPositionFromSelection();
-    forceApplyHandOverrideOnce();
 
     if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
 });
