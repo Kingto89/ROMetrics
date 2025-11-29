@@ -957,51 +957,68 @@ function applyAnatomicBaseline(){
   setDegAxis(wrR, 'y', -ANAT.wps);   
 }
   
-/**
- * Applies a small, slow, incremental movement to the bone being tested.
- * Simulates the patient straining against resistance.
+
+ * Applies a small, slow, incremental movement to the bone being tested, 
+ * and applies a visual rotational tremor to the specific cervical bones.
  */
 function applyHoldMovement() {
   const testKey = actionSel.value;
   if (!testKey || isPracticeModeActive) return;
 
   const mapping = CERVICAL_MMT_MAP[testKey];
-  if (!mapping) return; // Not a targeted MMT test (e.g., Elbow, Hip), so skip
-
-  const [boneName, axis, direction] = mapping;
-  const bone = getBone(boneName);
-  if (!bone) return;
-
-  const MAX_HOLD_ANGLE = 5; // Maximum visible movement (degrees) - greatly reduced ROM
-  const STEP_INCREMENT = 0.15; // Speed (degrees per tick/100ms) - slow enough for visual hold
-  const MAX_TREMOR_DISPLACEMENT = 0.003; // 3 mm maximum random shift for hand tremor (in meters)
+  const targetBoneName = mapping ? mapping[0] : null;
+  const bone = getBone(targetBoneName);
   
-  // 1. Increment the hold angle slowly
-  currentHoldAngle = Math.min(MAX_HOLD_ANGLE, currentHoldAngle + STEP_INCREMENT);
+  if (!bone) return; // Not a targeted MMT test (e.g., Elbow, Hip), so skip motion/tremor
 
-  // 2. Calculate the total rotation (direction is 1 or -1)
+  const MAX_HOLD_ANGLE = 5;    // Max visible movement (degrees)
+  const STEP_INCREMENT = 0.15; // Speed (degrees per tick/100ms)
+  
+  // ⭐ ROTATIONAL TREMOR PARAMETERS (Degrees)
+  const MAX_TREMOR_DEG = 0.4;  // Max rotational shift of 0.4 degrees
+  const rad = THREE.MathUtils.degToRad;
+  
+  // 1. Patient Bone Movement Logic (Slow, Straining Rotation)
+  // --------------------------------------------------------
+  const direction = mapping[2];
+  currentHoldAngle = Math.min(MAX_HOLD_ANGLE, currentHoldAngle + STEP_INCREMENT);
   const totalRotation = currentHoldAngle * direction;
 
-  // 3. Apply the rotation
-  setDegAxis(bone, axis, totalRotation);
-// 2. ⭐ NEW: Hand Tremor Logic (only if hands are loaded and visible)
-  // -------------------------------------------------------------
-  if (leftHandModel && handsModel?.visible) {
-    const d = MAX_TREMOR_DISPLACEMENT;
+  // Apply the base slow rotation (resets to Q0, then applies rotation)
+  setDegAxis(bone, mapping[1], totalRotation);
 
-    // Generate a new small, random offset vector for X, Y, Z
-    // Random number between -d and d
+
+  // 2. ⭐ NEW: Apply Rotational Tremor to the Head bone (simulating strain)
+  // ---------------------------------------------------------------------
+  const headBone = getBone('head');
+  if (headBone) {
+    // Generate small random offsets for X, Y, and Z rotation (Pitch, Yaw, Roll)
+    const tremorDegX = (Math.random() * 2 * MAX_TREMOR_DEG) - MAX_TREMOR_DEG;
+    const tremorDegY = (Math.random() * 2 * MAX_TREMOR_DEG) - MAX_TREMOR_DEG;
+    const tremorDegZ = (Math.random() * 2 * MAX_TREMOR_DEG) - MAX_TREMOR_DEG;
+    
+    // Apply the small, rapid, *additive* rotation directly to the bone's current quaternion.
+    // This allows the tremor to stack on the patient's slow movement.
+    const tremorQ = new THREE.Quaternion().setFromEuler(
+      new THREE.Euler(rad(tremorDegX), rad(tremorDegY), rad(tremorDegZ), 'XYZ')
+    );
+    headBone.quaternion.multiply(tremorQ);
+  }
+  
+  // 3. Hand Tremor Logic (Left Hand - Positional Tremor)
+  // ---------------------------------------------------
+  // We keep the positional tremor for the hand to make the hold look shaky.
+  const MAX_HAND_TREMOR = 0.003; // 3 mm displacement for the hand
+  if (leftHandModel && handsModel?.visible) {
+    const d = MAX_HAND_TREMOR;
     const tremorX = (Math.random() * 2 * d) - d;
     const tremorY = (Math.random() * 2 * d) - d;
     const tremorZ = (Math.random() * 2 * d) - d;
 
-    // Apply the offset to the current position (relative to its parent/scene)
+    // Apply the offset to the Left Hand position
     leftHandModel.position.x += tremorX;
     leftHandModel.position.y += tremorY;
     leftHandModel.position.z += tremorZ;
-    
-    // Safety clamp (optional but good practice to keep it near its general area)
-    // We rely mostly on the next step (3. Reset/Anchor) to fix drift.
   }
 }
 /* ==== Loader ==== */
