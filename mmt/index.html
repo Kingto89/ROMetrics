@@ -1776,43 +1776,54 @@ function forceApplyHandOverrideOnce() {
 
 function toggleHands(){
     const btn = $("toggleHandsBtn");
-    
+
     if (!handsModel) {
-        // Loads the hands model for the first time
-        loadHandsModel(); 
-    } else {
-        handsModel.visible = !handsModel.visible;
-        
+        // Load the hands model if not present, then return. 
+        // Initial visibility and pose application are handled within loadHandsModel().
+        loadHandsModel();
+        return;
+    }
+
+    // Toggle hands model visibility
+    handsModel.visible = !handsModel.visible;
+
     if (handsModel.visible) {
-
-    // ▼ ALWAYS clear, then apply correct pose
-    resetHandsToNeutral();
-
-    // ▼ Only use saved override if practice mode is OFF
-    const test = actionSel?.value;
-    const bucket = getGradeBucketForTest(test);
-    const handKey = `${test}:${bucket}`;
-
-  if (!handsModel || !rightHandModel || !leftHandModel) return;
-
-if (HAND_OVERRIDES[handKey]) {
-    applyHandOverride(handKey);
-} else {
-    resetHandsToNeutral();
-}
-
-}
-  
+        // --- ON SHOW HANDS ---
         
-        // Update button style
-        if (handsModel.visible) {
-            btn?.classList.add('lockOn');
-        } else {
-            btn?.classList.remove('lockOn');
+        // Reset hands to the default neutral position first
+        resetHandsToNeutral();
+
+        const test = actionSel?.value;
+        if (test) {
+            // Compute the unique key for the therapist hand pose
+            const bucket = getGradeBucketForTest(test);
+            const handKey = `${test}:${bucket}`;
+
+            // Apply override if a saved pose exists for this MMT test and grade family
+            if (HAND_OVERRIDES[handKey]) {
+                // This applies the position and rotation to both rightHandModel and leftHandModel
+                applyHandOverride(handKey);
+            }
+            // If no override exists, they remain at neutral (set above).
+        }
+        
+        // Update UI
+        btn?.classList.add('lockOn');
+
+    } else {
+        // --- ON HIDE HANDS ---
+        
+        // Detach and hide the 3D manipulation widget (TransformControls) if visible
+        if (typeof transformControls !== 'undefined') {
             transformControls.detach();
             transformControls.visible = false;
         }
+
+        // Update UI
+        btn?.classList.remove('lockOn');
     }
+    // IMPORTANT: This function must NOT call applyBodyPositionFromSelection 
+    // or modify patient pose/bones (POSE_OVERRIDES).
 }
 
  // ============= NEW: Switch Active Hand Logic =============
