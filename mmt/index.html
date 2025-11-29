@@ -482,6 +482,14 @@ function stopResistanceTest() {
     clearInterval(resistanceTimer);
     resistanceTimer = null;
     
+    // ⭐ NEW: Stop Hand Trembling by forcing hand models to reset their position.
+    // We call forceApplyHandOverrideOnce() to instantly snap the hands 
+    // back to the stationary, pre-tuned position.
+    forceApplyHandOverrideOnce(); 
+
+    // Reset patient pose and bone rotation
+    applyBodyPositionFromSelection(); 
+    
     resistanceFill.style.transition = 'width 0.3s ease-in, background-color 0.3s';
     resistanceFill.style.width = '0%'; 
     
@@ -495,7 +503,7 @@ if (testButton) {
     testButton.addEventListener('pointerdown', startResistanceTest);
     testButton.addEventListener('pointerup', stopResistanceTest);
     testButton.addEventListener('pointerleave', stopResistanceTest);
-}  
+}
 /* ==================================== */  
 
 // Enable only the relevant grading menu for the selected test:
@@ -966,7 +974,8 @@ function applyHoldMovement() {
 
   const MAX_HOLD_ANGLE = 5; // Maximum visible movement (degrees) - greatly reduced ROM
   const STEP_INCREMENT = 0.15; // Speed (degrees per tick/100ms) - slow enough for visual hold
-
+  const MAX_TREMOR_DISPLACEMENT = 0.003; // 3 mm maximum random shift for hand tremor (in meters)
+  
   // 1. Increment the hold angle slowly
   currentHoldAngle = Math.min(MAX_HOLD_ANGLE, currentHoldAngle + STEP_INCREMENT);
 
@@ -975,7 +984,26 @@ function applyHoldMovement() {
 
   // 3. Apply the rotation
   setDegAxis(bone, axis, totalRotation);
-}  
+// 2. ⭐ NEW: Hand Tremor Logic (only if hands are loaded and visible)
+  // -------------------------------------------------------------
+  if (rightHandModel && handsModel?.visible) {
+    const d = MAX_TREMOR_DISPLACEMENT;
+
+    // Generate a new small, random offset vector for X, Y, Z
+    // Random number between -d and d
+    const tremorX = (Math.random() * 2 * d) - d;
+    const tremorY = (Math.random() * 2 * d) - d;
+    const tremorZ = (Math.random() * 2 * d) - d;
+
+    // Apply the offset to the current position (relative to its parent/scene)
+    rightHandModel.position.x += tremorX;
+    rightHandModel.position.y += tremorY;
+    rightHandModel.position.z += tremorZ;
+    
+    // Safety clamp (optional but good practice to keep it near its general area)
+    // We rely mostly on the next step (3. Reset/Anchor) to fix drift.
+  }
+}
 /* ==== Loader ==== */
 const loader = new GLTFLoader();
 loader.setMeshoptDecoder(MeshoptDecoder);
