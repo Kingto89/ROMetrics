@@ -624,98 +624,81 @@ controls.target.set(0,1.05,0); 
 let transformControls = null;
 
 function setupTransformControls() {
-    if (!transformControls) {
-        transformControls = new TransformControls(camera, renderer.domElement);
-      // --- TransformControls gizmo hard-kill patch ---
-const __origTC_attach = transformControls.attach.bind(transformControls);
-let __tcSuppressed = false;
-transformControls.attach = (obj) => { if (__tcSuppressed) return; __origTC_attach(obj); };
-function __hideTCGizmo(hide){
-  __tcSuppressed = !!hide;
-  transformControls.visible = !hide;
-  if (hide) transformControls.detach();
-}
+    if (!transformControls) {
+        transformControls = new TransformControls(camera, renderer.domElement);
+        scene.add(transformControls);
 
-        scene.add(transformControls);
+        transformControls.addEventListener('dragging-changed', function (event) {
+            controls.enabled = !event.value; // Disable camera orbit when dragging
+        });
+        
+        // --- Configuration: Translate Mode Only ---
+        transformControls.setSpace("local");
+        transformControls.setMode("translate"); // Default mode is translate (positional arrows)
+        transformControls.showScale = false;    // Hide scaling handles
+        
+        // Hide the rotation handles by making them invisible initially
+        transformControls.showX = false;
+        transformControls.showY = false;
+        transformControls.showZ = false; 
+        
+        // Initial state is detached/hidden
+        transformControls.visible = false;
+        transformControls.detach(); 
 
-        transformControls.addEventListener('dragging-changed', function (event) {
-            controls.enabled = !event.value; // Disable camera orbit when dragging
-        });
-        
-        // --- Full Access Configuration ---
-        transformControls.setSpace("local");
-        transformControls.setMode("translate"); // Default mode is translate (arrows)
-        transformControls.showScale = false;    // Hide scaling handles
-        
-        // Ensure all axes are visible for both move and rotate for user clarity
-        transformControls.showX = true;
-        transformControls.showY = true;
-        transformControls.showZ = true; 
-        
-        // Initial state is detached/hidden
-         __hideTCGizmo(true);
-        transformControls.visible = false;
-        transformControls.detach(); 
-
-        // Attach the interaction logic here to the renderer's canvas
-        renderer.domElement.addEventListener('pointerdown', onPointerDownTransformControls);
-    }
+        // Attach the interaction logic here to the renderer's canvas
+        renderer.domElement.addEventListener('pointerdown', onPointerDownTransformControls);
+    }
 }
 setupTransformControls();
-
-// The togglePracticeMode function comes AFTER setupTransformControls is defined
 function togglePracticeMode() {
-    // Ensure hands are loaded before entering practice mode
-    if (!rightHandModel || !leftHandModel) {
-        alert("Please toggle 'Therapist Hands' on first.");
-        return;
-    }
+    // Ensure hands are loaded before entering practice mode
+    if (!rightHandModel || !leftHandModel) {
+        alert("Please toggle 'Therapist Hands' on first.");
+        return;
+    }
 
-    isPracticeModeActive = !isPracticeModeActive;
-    // inside togglePracticeMode()
-if (isPracticeModeActive){
-  __hideTCGizmo(true);   // keep gizmo hidden in Practice
-} else {
-  __hideTCGizmo(false);  // show gizmo when Practice ends (or leave true to always hide)
-}
+    isPracticeModeActive = !isPracticeModeActive;
+    
+    if (isPracticeModeActive) {
+        // --- ENTER PRACTICE MODE ---
+        practicePlacementBtn.classList.add('lockOn'); // Visually indicate active mode
+        
+        // Initial state: Right Hand, Translate Mode
+        currentActiveHand = rightHandModel;
+        currentTransformMode = 'translate';
+        
+        // Configure TransformControls for active manipulation
+        transformControls.setMode(currentTransformMode);
+        transformControls.attach(currentActiveHand); // Attach to the default hand
+        
+        // Show ONLY the translate axes/gizmo
+        transformControls.showX = true;
+        transformControls.showY = true;
+        transformControls.showZ = true; 
+        transformControls.visible = true; // Make the widget visible
 
-    if (isPracticeModeActive) {
-        // --- ENTER PRACTICE MODE ---
-        practicePlacementBtn.classList.add('lockOn'); // Visually indicate active mode
-        
-        // Initial state: Right Hand, Translate Mode
-        currentActiveHand = rightHandModel;
-        currentTransformMode = 'translate';
-        
-        // Configure TransformControls for active manipulation
-        transformControls.setMode(currentTransformMode);
-        transformControls.showX = true; // Show all axes for move/rotate
-        transformControls.showY = true;
-        transformControls.showZ = true; 
-        transformControls.attach(currentActiveHand); // Attach to the default hand
-        transformControls.visible = true; // Make the widget visible
+        // Disable OrbitControls while in practice mode
+        controls.enabled = false; 
 
-        // Disable OrbitControls while in practice mode
-        controls.enabled = false; 
+        console.log("Entered Practice Mode: Right Hand, Translate");
 
-        console.log("Entered Practice Mode: Right Hand, Translate");
+    } else {
+        // --- EXIT PRACTICE MODE ---
+        practicePlacementBtn.classList.remove('lockOn');
+        
+        // Reset TransformControls state
+        transformControls.detach();
+        transformControls.visible = false;
+        transformControls.showX = false;
+        transformControls.showY = false;
+        transformControls.showZ = false;
 
-    } else {
-        // --- EXIT PRACTICE MODE ---
-        practicePlacementBtn.classList.remove('lockOn');
-        
-        // Reset TransformControls state
-        transformControls.detach();
-        transformControls.visible = false;
-        transformControls.showX = false;
-        transformControls.showY = false;
-        transformControls.showZ = false;
-
-        // Re-enable OrbitControls
-        controls.enabled = true; 
-        currentActiveHand = null;
-        console.log("Exited Practice Mode.");
-    }
+        // Re-enable OrbitControls
+        controls.enabled = true; 
+        currentActiveHand = null;
+        console.log("Exited Practice Mode.");
+    }
 }
 
 // Wire the existing Practice Placement button
@@ -2701,61 +2684,61 @@ addEventListener("resize", ()=>{
   renderer.setSize(innerWidth, innerHeight);
 });
 
-// --- NEW: Simplified Interaction Logic (Click Center to Switch Hand) ---
+// --- NEW: Simplified Interaction Logic (Click Center to Switch Hand & Double-Click for Camera Rotate) ---
+let __lastTapTimeForRotate = 0; // Declare this outside the function if it's not already global
+
 function onPointerDownTransformControls(event) {
-    if (!isPracticeModeActive || !transformControls.visible || !currentActiveHand) return;
-    
-    // Check if the raycaster hits the center control of the TransformControls.
-    // The TransformControls has an internal method to check if a control handle was picked.
-    
-    // We only execute our custom logic IF a transform control handle was clicked AND
-    // IF the control is currently in translate mode (which has a central sphere handle).
-    
-    // NOTE: This relies on the internal TransformControls event handling which is usually reliable.
-    
-    // If we click on the center control while in translate mode (default), we switch hands.
-    // We rely on the TransformControls picking logic being internal for the double-tap.
+    if (!isPracticeModeActive || !transformControls.visible || !currentActiveHand) return;
+    
+    const raycaster = new THREE.Raycaster();
+    const pointer = new THREE.Vector2();
 
-    const raycaster = new THREE.Raycaster();
-    const pointer = new THREE.Vector2();
+    pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+    pointer.y = - (event.clientY / window.innerHeight) * 2 + 1;
 
-    pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
-    pointer.y = - (event.clientY / window.innerHeight) * 2 + 1;
+    raycaster.setFromCamera(pointer, camera);
 
-    raycaster.setFromCamera(pointer, camera);
+    // Check if we hit the hand model (for double-click logic)
+    const intersects = raycaster.intersectObject(handsModel, true);
 
-    // Get the list of handles intersected by the raycaster
-    const handles = transformControls.children[0].children; // Accesses the visual handles group
-    const intersects = raycaster.intersectObjects(handles, true);
+    if (intersects.length > 0) {
+        // --- Double-Tap Logic (for camera rotate) ---
+        const now = Date.now();
+        const DOUBLE_TAP_THRESHOLD = 300; // ms
 
-    if (intersects.length > 0) {
-        const intersection = intersects[0];
-        // The center cube/sphere usually has a specific name or color (white/yellow in translate mode)
-      
+        if (now - __lastTapTimeForRotate < DOUBLE_TAP_THRESHOLD) {
+            // Double-tap: Toggle OrbitControls (your camera rotation toggle)
+            controls.enabled = !controls.enabled;
+            
+            // If OrbitControls is re-enabled, detach TransformControls and exit practice mode.
+            if (controls.enabled) {
+                // Call togglePracticeMode() to clean up the gizmo
+                if (isPracticeModeActive) togglePracticeMode(); 
+                console.log("Camera Orbit Toggled ON via Double-Tap.");
+            } else {
+                console.log("Camera Orbit Toggled OFF via Double-Tap.");
+            }
+            __lastTapTimeForRotate = 0; // Reset for next double tap
+            event.preventDefault(); 
+            return;
+        }
+        __lastTapTimeForRotate = now;
 
-        // --- Simplified Hand Switch Logic (Checking Distance to Center) ---
-        const centerPos = new THREE.Vector3();
-        transformControls.getWorldPosition(centerPos);
-        
-        const pointerPos = intersects[0].point;
-        
-        if (pointerPos.distanceTo(centerPos) < 0.05) { // Check if the hit is near the center
-            event.preventDefault(); // Stop controls from dragging
-            
-            // 1. Switch the hand model
-            const newHand = (currentActiveHand === rightHandModel) ? leftHandModel : rightHandModel;
-            
-            // 2. Detach from current, attach to new
-            currentActiveHand = newHand;
-            transformControls.attach(currentActiveHand);
-            
-            // 3. Re-apply current mode and highlight
-            transformControls.setMode(currentTransformMode);
-            highlightActiveHand(currentActiveHand);
-            
-            console.log(`Switched Hand via Center Click to: ${(currentActiveHand === rightHandModel) ? 'Right' : 'Left'} Hand`);
-            return;
-        }
+
+        // --- Hand Switch Logic: Check if the hit is near the center control.
+        // If the click point is close to the widget's center, switch the active hand.
+        const centerPos = new THREE.Vector3();
+        transformControls.getWorldPosition(centerPos);
+        
+        const pointerPos = intersects[0].point;
+        
+        // If the user clicked on the hand model and is close to the TransformControls center (within 10cm)
+        if (pointerPos.distanceTo(centerPos) < 0.1) {
+            switchActiveHand(); // Use the existing function
+            event.preventDefault(); // Stop controls from dragging/OrbitControls
+        }
+    }
+}
 
         // --- Mode Toggle Logic ---
         // Double tap on the hand model itself (original logic)
@@ -2777,7 +2760,17 @@ function onPointerDownTransformControls(event) {
     }
 }
 // --- END: Interaction Logic ---
-  
+// --- NEW: Key Listener for 'x' to remove TransformControls ---
+document.addEventListener('keydown', (event) => {
+    // Check for 'x' or 'X' keypress
+    if (event.key === 'x' || event.key === 'X') {
+        if (isPracticeModeActive) {
+            // This handles the requested cleanup: detaches/hides gizmo and re-enables camera
+            togglePracticeMode(); 
+            $("msg").textContent = "Practice Placement Mode exited via 'X' key. Camera controls are active.";
+        }
+    }
+});  
 (function loop(){
   controls.update();
   renderer.render(scene, camera);
