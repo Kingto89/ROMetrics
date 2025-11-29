@@ -429,7 +429,8 @@ function updateResistanceFill() {
 
     resistanceFill.style.transition = 'width 0.1s linear, background-color 0.4s';
     resistanceFill.style.backgroundColor = status.color;
-    
+    applyHoldMovement();
+  
     const normalizedWidth = Math.min(100, (elapsed / maxTime) * 100);
     resistanceFill.style.width = `${normalizedWidth}%`;
 
@@ -441,6 +442,7 @@ function updateResistanceFill() {
     if (elapsed >= maxTime) {
         clearInterval(resistanceTimer);
         resistanceTimer = null;
+        applyBodyPositionFromSelection();
         $("msg").textContent = `Test finished. Recorded score: Grade 5!`;
         testButton.disabled = false;
         vectorOverlayBtn.disabled = false;
@@ -463,7 +465,8 @@ function startResistanceTest(event) {
     if (testButton.disabled || resistanceTimer) return;
     
     executeVoluntaryMovement();
-
+    currentHoldAngle = 0;
+  
     currentGrade = 0;
     pressStartTime = Date.now();
     resistanceFill.style.width = '0%';
@@ -900,18 +903,39 @@ const AXIS_MAP = {
 function getBone(name){
   return skeleton?.bones.find(b => b.name === name) || null;
 }
+// Function to reset bone to baseline and apply new rotation
 function setDegAxis(bone, axis, deg){
   if(!bone) return;
   const q0 = initialBoneRot.get(bone);
   if(q0) bone.quaternion.copy(q0);        // reset to baseline
   const r = THREE.MathUtils.degToRad(deg);
-  if(axis==='x') bone.rotateX(r);
-  else if(axis==='y') bone.rotateY(r);
-  else bone.rotateZ(r);
+  
+  // Use a temporary Euler to apply rotation for consistency
+  const euler = new THREE.Euler(0, 0, 0, 'XYZ');
+  if(axis==='x') euler.x = r;
+  else if(axis==='y') euler.y = r;
+  else euler.z = r;
+
+  // Create delta quaternion and multiply with base
+  const qDelta = new THREE.Quaternion().setFromEuler(euler);
+  if(q0) bone.quaternion.copy(q0).multiply(qDelta);
+  else bone.quaternion.copy(qDelta); // fallback if no initial rot
 }
 
 // ONE simple function that sets both sides (like your gonio index)
 // NOTE: this assumes arm bone names like "upperarm_L/R", "forearm_L/R", "hand_L/R".
+
+// NEW: MAPPING MMT TEST KEYS to BONE, AXIS, and DIRECTION
+// [ Bone Name, Axis ('x', 'y', 'z'), Direction (1 or -1) ]
+const CERVICAL_MMT_MAP = {
+  // Movement direction: 1 = Flexion/Left/Internal; -1 = Extension/Right/External (General)
+  Capital_Extension:   ['head', 'x', -1],   // Prone: Extends head (Pitch down)
+  Cervical_Extension:  ['neck', 'x', -1],   // Prone: Extends neck (Pitch down)
+  Capital_Flexion:     ['head', 'x', 1],    // Supine: Flexes head (Pitch up)
+  Cervical_Flexion:    ['neck', 'x', 1],    // Supine: Flexes neck (Pitch up)
+  Single_SCM:          ['head', 'y', 1],    // Single SCM (Rotation)
+  Cervical_Rotation:   ['head', 'y', 1]     // Rotation (Y is rotation)
+};  
 // If your rig uses "wrist_L/R" instead of "hand_L/R", change those two names below.
 function applyAnatomicBaseline(){
   const shL = getBone('upperarm_L'), shR = getBone('upperarm_R'); // shoulder ab/ad on Z
@@ -925,7 +949,33 @@ function applyAnatomicBaseline(){
   setDegAxis(wrR, 'y', -ANAT.wps);   
 }
   
-  
+/**
+ * Applies a small, slow, incremental movement to the bone being tested.
+ * Simulates the patient straining against resistance.
+ */
+function applyHoldMovement() {
+  const testKey = actionSel.value;
+  if (!testKey || isPracticeModeActive) return;
+
+  const mapping = CERVICAL_MMT_MAP[testKey];
+  if (!mapping) return; // Not a targeted MMT test (e.g., Elbow, Hip), so skip
+
+  const [boneName, axis, direction] = mapping;
+  const bone = getBone(boneName);
+  if (!bone) return;
+
+  const MAX_HOLD_ANGLE = 5; // Maximum visible movement (degrees) - greatly reduced ROM
+  const STEP_INCREMENT = 0.15; // Speed (degrees per tick/100ms) - slow enough for visual hold
+
+  // 1. Increment the hold angle slowly
+  currentHoldAngle = Math.min(MAX_HOLD_ANGLE, currentHoldAngle + STEP_INCREMENT);
+
+  // 2. Calculate the total rotation (direction is 1 or -1)
+  const totalRotation = currentHoldAngle * direction;
+
+  // 3. Apply the rotation
+  setDegAxis(bone, axis, totalRotation);
+}  
 /* ==== Loader ==== */
 const loader = new GLTFLoader();
 loader.setMeshoptDecoder(MeshoptDecoder);
@@ -935,7 +985,8 @@ const ktx2  = new KTX2Loader();  ktx2.setTranscoderPath("https://unpkg.com/three
 let model=null, skeleton=null;
 const initialBoneRot = new Map();
 let GLOBAL_PF_DEG = 0; // shared plantarflex angle for both feet
-
+let currentHoldAngle = 0; // NEW: Tracks rotation during MMT resistance hold
+  
 // ADDED: Hands model loading variables
 const HANDS_MODEL_URL = "https://raw.githubusercontent.com/Kingto89/ROMetrics.com/main/assets/Hands.glb";
 let handsModel = null;
