@@ -32,6 +32,27 @@ select,button,input[type=range]{width:100%;margin:6px 0 8px 0;padding:8px 10px;b
 .row{display:flex;gap:8px}.row>button,.row>select{flex:1}
 .mini{padding:6px 10px;border-radius:8px;background:var(--ctrl);border:1px solid var(--line)}
 .lockOn{background:#0b3a1f;border-color:#16a34a;color:#fff}
+/* --- NEW CSS for the Resistance Fill Bar --- */
+#testButton {
+  /* This is necessary for #resistanceFill to position relative to the button */
+  position: relative; 
+  overflow: hidden; /* Ensures the fill bar stays within the button edges */
+}
+
+#resistanceFill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%; /* Must fill the button's height */
+  width: 0%;   /* Starts at 0% width */
+  z-index: 1;  /* Keeps the fill behind the text */
+  pointer-events: none; /* Allows click events to pass through to the button */
+}
+
+#resistanceText {
+  position: relative; /* Brings the text forward, above the fill bar */
+  z-index: 2; 
+}  
 #msg{position:fixed;bottom:10px;left:12px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:12px;z-index:25;color:var(--text)}
 #log{display:none;background:var(--ctrl);border:1px solid var(--line);min-height:90px;max-height:130px;overflow:auto;border-radius:8px;padding:8px;font-size:12px;white-space:pre-wrap;color:var(--text)}
 .flex-btn-group { display: flex; justify-content: space-between; align-items: stretch; }
@@ -161,7 +182,7 @@ select,button,input[type=range]{width:100%;margin:6px 0 8px 0;padding:8px 10px;b
 
     <div class="row" style="margin-top:10px;">
       <button id="testButton" disabled>
-        <div id="resistanceFill"></div>
+        <div id=""></div>
         <span id="resistanceText">Hold to Apply Resistance (4/5)</span>
       </button>
     </div>
