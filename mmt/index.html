@@ -261,6 +261,36 @@ let isPracticeModeActive = false;
 let currentActiveHand = null; // Will store rightHandModel or leftHandModel
 let currentTransformMode = 'translate'; // Initial mode for the widget
 
+/* ==== MMT Resistance Timing & Vector State Variables ==== */
+let resistanceTimer = null;
+let pressStartTime = 0;
+let currentGrade = 0;
+let isMMTMoving = false; // Tracks if the patient model is performing voluntary movement
+
+let areVectorsVisible = false;
+let effortVectorMesh = null; // Blue Effort Tunnel
+let resistanceVectorMesh = null; // Green Resistance Tunnel
+
+/* ==== VECTOR GUIDES: Origin (Pos) and Direction (Dir) for Effort (E) and Resistance (R) ==== */
+const VECTOR_GUIDES = {
+    // Capital Extension: Patient is Prone (Head off the table, facing the floor)
+    Capital_Extension: { 
+        E_startPos: { x: 0.0, y: 1.05, z: 0.0 }, 
+        E_direction: { x: 0, y: 0.7, z: 0.0 },  
+        R_startPos: { x: 0.05, y: 1.15, z: 0.0 }, 
+        R_direction: { x: 0, y: -0.7, z: 0.0 }  
+    },
+    
+    // Anterior Deltoid (Shoulder Flexion): Patient is Seated, Arm at side
+    Anterior_Deltoid: {
+        E_startPos: { x: -0.3, y: 0.3, z: 0.1 }, 
+        E_direction: { x: 0, y: 0.7, z: 0.0 }, 
+        R_startPos: { x: -0.3, y: 0.4, z: 0.1 }, 
+        R_direction: { x: 0, y: -0.7, z: 0.0 }
+    }
+    // ... Add more MMT tests here as needed ...
+};
+  
 const practicePlacementBtn = $("practicePlacementBtn");  
 
 function toggleRoomLock() {
@@ -282,6 +312,166 @@ function toggleRoomLock() {
 
 // Wire the new button
 if (lockRoomBtn) lockRoomBtn.addEventListener('click', toggleRoomLock);
+
+/* ==== Vector Overlay and 3D Tunnel Logic (MMT Guidance) ==== */
+
+// Utility function to create the energy tunnel mesh
+function createEnergyTunnel(color) {
+    const geometry = new THREE.CylinderGeometry(0.04, 0.04, 0.7, 16); 
+    const material = new THREE.MeshBasicMaterial({ 
+        color: color, 
+        transparent: true, 
+        opacity: 0.6,
+        side: THREE.DoubleSide
+    });
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.matrixAutoUpdate = false;
+    mesh.visible = false;
+    scene.add(mesh);
+    return mesh;
+}
+
+// Function to calculate position and rotation for the tunnel
+const _up = new THREE.Vector3(0, 1, 0); 
+function positionVector(mesh, startPos, direction) {
+    const dir = new THREE.Vector3().set(direction.x, direction.y, direction.z).normalize();
+    const midPoint = new THREE.Vector3().set(startPos.x, startPos.y, startPos.z).addScaledVector(dir, 0.7 / 2);
+    
+    mesh.position.copy(midPoint);
+    
+    const rotationQuaternion = new THREE.Quaternion().setFromUnitVectors(_up, dir);
+    mesh.rotation.setFromQuaternion(rotationQuaternion);
+    
+    mesh.updateMatrix();
+}
+
+function toggleVectorOverlay() {
+    const testKey = actionSel.value;
+    
+    if (!testKey) return; 
+    
+    const guide = VECTOR_GUIDES[testKey];
+    if (!guide) {
+        $("msg").textContent = `No Vector Guide data found for ${testKey}.`;
+        return;
+    }
+
+    if (!effortVectorMesh) effortVectorMesh = createEnergyTunnel(0x0066FF); // Blue (Effort)
+    if (!resistanceVectorMesh) resistanceVectorMesh = createEnergyTunnel(0x00AA00); // Green (Resistance)
+
+    areVectorsVisible = !areVectorsVisible;
+
+    if (areVectorsVisible) {
+        // --- SHOW VECTORS ---
+        positionVector(effortVectorMesh, guide.E_startPos, guide.E_direction);
+        model.add(effortVectorMesh); 
+        effortVectorMesh.visible = true;
+
+        positionVector(resistanceVectorMesh, guide.R_startPos, guide.R_direction);
+        (rightHandModel ? rightHandModel : scene).add(resistanceVectorMesh); 
+        resistanceVectorMesh.visible = true;
+
+        vectorOverlayBtn.classList.add('lockOn'); // Activate glow
+        $("msg").textContent = "Vector Overlay Active: Blue (Effort) vs. Green (Resistance).";
+
+    } else {
+        // --- HIDE VECTORS ---
+        effortVectorMesh.visible = false;
+        resistanceVectorMesh.visible = false;
+        vectorOverlayBtn.classList.remove('lockOn'); // Deactivate glow
+        $("msg").textContent = "Vector Overlay Off.";
+    }
+}
+
+// Wire the new toggle function to the button (click to toggle glow/visibility)
+if (vectorOverlayBtn) vectorOverlayBtn.addEventListener('click', toggleVectorOverlay);
+
+
+/* ==== MMT Resistance Timing & Execution Logic (Core Test Loop) ==== */
+function getGradeStatus(elapsedSeconds) {
+    if (elapsedSeconds >= 7.0) { 
+        return { grade: 5, color: '#10b981', text: 'Grade 5 (Max Resistance)' };
+    } else if (elapsedSeconds >= 4.0) { 
+        return { grade: 4, color: '#f97316', text: 'Grade 4 (Moderate Resistance)' };
+    } else if (elapsedSeconds >= 2.0) { 
+        return { grade: 3, color: '#facc15', text: 'Grade 3 (Slight Resistance Hold)' };
+    }
+    return { grade: 0, color: 'transparent', text: 'Hold to Apply Resistance (Grade 3, 4, 5)' };
+}
+
+function updateResistanceFill() {
+    if (!resistanceTimer) return;
+
+    const elapsed = (Date.now() - pressStartTime) / 1000;
+    const status = getGradeStatus(elapsed);
+    const maxTime = 7.0; 
+
+    resistanceFill.style.transition = 'width 0.1s linear, background-color 0.4s';
+    resistanceFill.style.backgroundColor = status.color;
+    
+    const normalizedWidth = Math.min(100, (elapsed / maxTime) * 100);
+    resistanceFill.style.width = `${normalizedWidth}%`;
+
+    if (status.grade > 0) {
+        resistanceText.textContent = status.text;
+        currentGrade = status.grade;
+    }
+
+    if (elapsed >= maxTime) {
+        clearInterval(resistanceTimer);
+        resistanceTimer = null;
+        $("msg").textContent = `Test finished. Recorded score: Grade 5!`;
+        testButton.disabled = false;
+        vectorOverlayBtn.disabled = false;
+    }
+}
+
+function executeVoluntaryMovement() {
+    isMMTMoving = true;
+    testButton.disabled = true; 
+    $("msg").textContent = "Patient is executing voluntary movement (0.5s)...";
+    
+    setTimeout(() => {
+        isMMTMoving = false;
+        testButton.disabled = false; 
+        $("msg").textContent = "Movement complete. Hold the resistance button to apply pressure.";
+    }, 500); 
+}
+
+function startResistanceTest(event) {
+    if (testButton.disabled || resistanceTimer) return;
+    
+    executeVoluntaryMovement();
+
+    currentGrade = 0;
+    pressStartTime = Date.now();
+    resistanceFill.style.width = '0%';
+    resistanceFill.style.transition = 'none'; 
+
+    resistanceTimer = setInterval(updateResistanceFill, 100);
+    event.preventDefault(); 
+}
+
+function stopResistanceTest() {
+    if (!resistanceTimer) return;
+    
+    clearInterval(resistanceTimer);
+    resistanceTimer = null;
+    
+    resistanceFill.style.transition = 'width 0.3s ease-in, background-color 0.3s';
+    resistanceFill.style.width = '0%'; 
+    
+    const finalGradeText = currentGrade > 0 ? `Grade ${currentGrade} achieved.` : "Hold was too short for Grade 3.";
+    $("msg").textContent = `Test finished. Recorded score: ${finalGradeText}`;
+    resistanceText.textContent = 'Hold to Apply Resistance (Grade 3, 4, 5)';
+}
+
+// Wire the Resistance Button for Press-and-Hold
+if (testButton) {
+    testButton.addEventListener('pointerdown', startResistanceTest);
+    testButton.addEventListener('pointerup', stopResistanceTest);
+    testButton.addEventListener('pointerleave', stopResistanceTest);
+}  
 /* ==================================== */  
 
 // Enable only the relevant grading menu for the selected test:
@@ -1747,23 +1937,37 @@ if (toggleHandsBtn) toggleHandsBtn.addEventListener('click', toggleHands);
 
 // When a test is selected, unlock button and apply pose
 actionSel.addEventListener("change", () => {
+    
+    const isTestSelected = !!actionSel.value;
 
-    // Unlock / lock button
-    toggleHandsBtn.disabled = !actionSel.value;
+    // 1. Hands Toggle Button control
+    toggleHandsBtn.disabled = !isTestSelected;
     toggleHandsBtn.classList.remove("lockOn");
-    if (!actionSel.value) toggleHandsBtn.classList.add("lockOn");
+    if (!isTestSelected) toggleHandsBtn.classList.add("lockOn");
 
-    // ★ required for HAND TUNER save
+    // 2. Vector Overlay Button Control (enables/disables button & resets vectors)
+    vectorOverlayBtn.disabled = !isTestSelected;
+    if (areVectorsVisible) toggleVectorOverlay(); // Hide vectors when test selection changes
+
+    // 3. Resistance Button Control (enables/disables button and resets UI)
+    testButton.disabled = !isTestSelected;
+    if (isTestSelected) {
+        resistanceText.textContent = 'Hold to Apply Resistance (Grade 3, 4, 5)';
+        $("msg").textContent = "Test selected. **Hold resistance button to execute MMT.**";
+    } else {
+        resistanceText.textContent = 'Hold to Apply Resistance (4/5)';
+        $("msg").textContent = "Select a test to begin...";
+    }
+    
+    // 4. Model Setup (Pose and Hand Placement)
     window.currentMMTtest = actionSel.value;
     window.currentMMTgradeBucket = getGradeBucketForTest(actionSel.value);
-
     updateGradeDropdownsForSelection();
     applyBodyPositionFromSelection();
     forceApplyHandOverrideOnce();
 
     if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
 });
-
 
 // Normal Grade 3–0 menu: used for all NON-exception tests
 gradeMain.addEventListener("change", () => {
