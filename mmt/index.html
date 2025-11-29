@@ -2062,17 +2062,35 @@ const out = {
 });
 
 
-CURRENT_BODY_TEST = test;
-  CURRENT_BODY_BUCKET = bucket;
+function applyBodyPositionFromSelection(){
+  if (!model || !skeleton) return;
+  
+  const test = actionSel?.value;
+  if (!test) return;
 
-  // Pass the current timer state to setBodyMode
-  const isResistanceActive = !!resistanceTimer; 
-  setBodyMode(mode, isResistanceActive); 
+  const bucket = getGradeBucketForTest(test);
 
-  if (poseTunerEl && poseTunerEl.updateLabels){
-// ...
+  // ★ REQUIRED FOR HAND TUNER ★
+  window.currentMMTtest = test;
+  window.currentMMTgradeBucket = bucket;
+  // ★ END REQUIRED ★
 
- 
+  const family = TEST_POSITION[test] || { high:"anatomic", low:"anatomic" };
+  const mode = bucket === "low"
+      ? (family.low  || "anatomic")
+      : (family.high || "anatomic");
+
+  CURRENT_BODY_TEST = test;
+  CURRENT_BODY_BUCKET = bucket;
+
+  // Pass the current timer state to setBodyMode
+  const isResistanceActive = !!resistanceTimer; 
+  setBodyMode(mode, isResistanceActive); 
+
+  if (poseTunerEl && poseTunerEl.updateLabels){
+    poseTunerEl.updateLabels();
+  }
+}
 /* ==== Wire UI ==== */
 const toggleHandsBtn = $("toggleHandsBtn");
 
