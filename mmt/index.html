@@ -703,7 +703,93 @@ function togglePracticeMode() {
 
 // Wire the existing Practice Placement button
 if (practicePlacementBtn) practicePlacementBtn.addEventListener('click', togglePracticeMode);  
-        
+// 1) Hide transform arrows but keep your double-tap rotation sphere logic intact
+if (window.transformControls) { transformControls.enabled = false; transformControls.visible = false; }
+
+// 2) Build/show on-screen movement controller (no rotation)
+let ctr = document.getElementById('hand-move-pad');
+if (!ctr) {
+  ctr = document.createElement('div');
+  ctr.id = 'hand-move-pad';
+  Object.assign(ctr.style, {
+    position:'fixed', right:'16px', bottom:'16px', zIndex:9999,
+    background:'rgba(15,23,42,.9)', border:'1px solid #334155',
+    borderRadius:'16px', padding:'12px', backdropFilter:'blur(6px)',
+    display:'grid', gridTemplateColumns:'repeat(3,48px)', gap:'8px',
+    userSelect:'none', touchAction:'none', boxShadow:'0 8px 24px rgba(0,0,0,.35)'
+  });
+  const mk = (label, axis, dir)=> {
+    const b = document.createElement('button');
+    b.textContent = label;
+    Object.assign(b.style,{
+      width:'48px', height:'48px', borderRadius:'12px', border:'1px solid #475569',
+      background:'#0ea5e9', color:'#fff', fontWeight:600, cursor:'pointer'
+    });
+    b.dataset.axis = axis; b.dataset.dir = dir;
+    return b;
+  };
+  // layout:   ↑y
+  //         ←x   →x
+  //           ↓y
+  // and depth: +z (out), -z (in)
+  const blank = ()=>{ const s=document.createElement('div'); s.style.width='48px'; s.style.height='48px'; return s; };
+  const up    = mk('▲','y', +1);
+  const left  = mk('◀','x', -1);
+  const right = mk('▶','x', +1);
+  const down  = mk('▼','y', -1);
+  const outZ  = mk('Z+','z', +1);
+  const inZ   = mk('Z-','z', -1);
+
+  // grid cells
+  ctr.appendChild(blank()); ctr.appendChild(up);    ctr.appendChild(blank());
+  ctr.appendChild(left);    ctr.appendChild(blank()); ctr.appendChild(right);
+  ctr.appendChild(blank()); ctr.appendChild(down);  ctr.appendChild(blank());
+  // depth row
+  const rail = document.createElement('div');
+  Object.assign(rail.style,{gridColumn:'1 / span 3', display:'flex', gap:'8px', justifyContent:'center', marginTop:'6px'});
+  rail.appendChild(inZ); rail.appendChild(outZ);
+  ctr.appendChild(rail);
+
+  document.body.appendChild(ctr);
+
+  // 3) Hold-to-move with acceleration
+  const getActiveHand = ()=> window.activeHand || window.hand_R || window.handL || window.hand_left || window.handRight || window.hand_right;
+  let holdTimer=null, speed=0.002, maxSpeed=0.02, accel=1.12, rafId=null, pressing=false, axis='x', dir=+1;
+
+  const step = ()=>{
+    const h = getActiveHand();
+    if (!h) return;
+    h.position[axis] += dir * speed;
+    speed = Math.min(maxSpeed, speed * accel);
+    if (window.requestRender) requestRender(); // use your renderer hook if present
+    rafId = requestAnimationFrame(step);
+  };
+  const start = (a,d)=>{
+    axis=a; dir=d; pressing=true; speed=0.004; // initial nudge
+    // Desktop: prevent repeated key-like clicks
+    step();
+  };
+  const stop = ()=>{
+    pressing=false;
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId=null; speed=0.004;
+  };
+
+  const bind = (el)=>{
+    const onDown = (ev)=>{ ev.preventDefault(); start(el.dataset.axis, parseFloat(el.dataset.dir)); };
+    const onUp   = (ev)=>{ ev.preventDefault(); stop(); };
+    el.addEventListener('mousedown', onDown);
+    window.addEventListener('mouseup', onUp);
+    el.addEventListener('touchstart', onDown, {passive:false});
+    window.addEventListener('touchend', onUp);
+    window.addEventListener('touchcancel', onUp);
+    // Long-press continues; no repeat clicks needed
+  };
+  [...ctr.querySelectorAll('button')].forEach(bind);
+}
+// ensure controller is visible each time practice mode is entered
+ctr.style.display = 'grid';
+  
 // --- END: 3D Manipulation Widget Setup ---
 /* Lights */
 scene.add(new THREE.HemisphereLight(0xffffff, 0x8ca0b3, 0.8));
