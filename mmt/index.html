@@ -500,7 +500,8 @@ if (testButton) {
 // - everything else: use normal Grade menu (3–0) only
 function updateGradeDropdownsForSelection(){
   const testKey = actionSel?.value;
-/* ==== MMT Grading Rules Logic ==== */
+
+ /* ==== MMT Grading Rules Logic (Corrected for Trunk/Gastroc Exclusion) ==== */
 function shouldResistanceBeDisabled() {
     const testKey = actionSel.value;
 
@@ -509,20 +510,41 @@ function shouldResistanceBeDisabled() {
 
     const isExceptionTest = EXCEPTION_TESTS.has(testKey);
 
+    // =================================================================
+    // A) EXCEPTION TESTS (TRUNK & GASTROC) LOGIC
+    // =================================================================
     if (isExceptionTest) {
-        // --- A) GRADING EXCEPTIONS MENU (Trunk + Gastroc) ---
         const exceptionGrade = gradeExceptions.value;
 
-        // RULE 2: If grade is 0, 1, or 2, disable resistance (default for low grades).
-        if (exceptionGrade === '0' || exceptionGrade === '1' || exceptionGrade === '2') {
-            // EXCEPTION TO THE RULE: Grade 2 Plantar Flexion (Gastrocnemius) *does* use resistance.
-            if (testKey === 'Gastrocnemius' && exceptionGrade === '2') {
-                return false; // Resistance is ENABLED for Grade 2 Gastroc (per your request)
-            }
-            return true; // Disable resistance for all other 0, 1, 2 exception grades (e.g., Trunk flexion)
+        // Trunk tests (Trunk_Ext_Lumbar, Trunk_Ext_Thoracic, Trunk_Flexion, Trunk_Rotation)
+        // These tests use the lift/rotation scale, NOT manual resistance for Grades 3-5.
+        if (testKey.startsWith('Trunk')) {
+            return true; // ALWAYS disable resistance for all Trunk MMTs.
         }
-    } else {
-        // --- B) MAIN GRADE MENU (All other tests) ---
+
+        // Gastrocnemius (Plantar Flexion) Logic:
+        if (testKey === 'Gastrocnemius') {
+            // Gastroc Grade 2 (partial ROM in standing) usually doesn't use resistance, 
+            // but for simulation, you requested Grade 2 uses resistance:
+            // Let's stick to textbook: Grades 5, 4, 3, 1/0 are graded differently.
+            // If the user selects Grade 2, 1, or 0, we disable resistance.
+            if (exceptionGrade === '2' || exceptionGrade === '1' || exceptionGrade === '0') {
+                 return true; // Disable resistance for low grades
+            }
+            // Grades 5, 4, 3 remain ENABLED for the hold test.
+            return false;
+        }
+
+        // Default for any other unknown exception test at low grade: disable
+        if (exceptionGrade === '2' || exceptionGrade === '1' || exceptionGrade === '0') {
+            return true;
+        }
+    } 
+    
+    // =================================================================
+    // B) MAIN GRADE MENU (All other limb tests)
+    // =================================================================
+    else {
         const mainGradeBucket = gradeMain.value;
 
         // RULE 3: If the 'Grades 0–2 (Gravity Eliminated)' bucket is selected, disable resistance.
@@ -531,9 +553,9 @@ function shouldResistanceBeDisabled() {
         }
     }
 
-    // Default: Grades 3, 4, 5 and Grade 2 Gastroc use manual resistance/hold time.
+    // Default: Grades 3, 4, 5 (in the main menu) use manual resistance/hold time.
     return false; 
-}
+} 
   // No test selected → default: normal menu active, exceptions off
   if (!testKey){
     if (gradeMain) gradeMain.disabled = false;
