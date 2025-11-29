@@ -2686,6 +2686,8 @@ addEventListener("resize", ()=>{
 
 // --- NEW: Simplified Interaction Logic (Click Center to Switch Hand & Double-Click for Camera Rotate) ---
 let __lastTapTimeForRotate = 0; // Declare this outside the function if it's not already global
+// --- NEW: Simplified Interaction Logic (Click Center to Switch Hand & Double-Click for Camera Rotate) ---
+let __lastTapTimeForRotate = 0; // Global tracker for double-tap/double-click
 
 function onPointerDownTransformControls(event) {
     if (!isPracticeModeActive || !transformControls.visible || !currentActiveHand) return;
@@ -2713,10 +2715,10 @@ function onPointerDownTransformControls(event) {
             // If OrbitControls is re-enabled, detach TransformControls and exit practice mode.
             if (controls.enabled) {
                 // Call togglePracticeMode() to clean up the gizmo
-                if (isPracticeModeActive) togglePracticeMode(); 
-                console.log("Camera Orbit Toggled ON via Double-Tap.");
+                if (isPracticeModeActive) togglePracticeMode(); 
+                $("msg").textContent = "Camera Orbit Toggled ON via Double-Click.";
             } else {
-                console.log("Camera Orbit Toggled OFF via Double-Tap.");
+                $("msg").textContent = "Camera Orbit Toggled OFF via Double-Click.";
             }
             __lastTapTimeForRotate = 0; // Reset for next double tap
             event.preventDefault(); 
@@ -2726,7 +2728,6 @@ function onPointerDownTransformControls(event) {
 
 
         // --- Hand Switch Logic: Check if the hit is near the center control.
-        // If the click point is close to the widget's center, switch the active hand.
         const centerPos = new THREE.Vector3();
         transformControls.getWorldPosition(centerPos);
         
@@ -2739,7 +2740,6 @@ function onPointerDownTransformControls(event) {
         }
     }
 }
-
         // --- Mode Toggle Logic ---
         // Double tap on the hand model itself (original logic)
         const now = Date.now();
