@@ -1758,6 +1758,10 @@ function applyHandOverride(key){
         leftHandModel.position.set(h.handLX, h.handLY, h.handLZ);
         leftHandModel.rotation.set(h.handLRX, h.handLRY, h.handLRZ);
     }
+  const __leash = {
+  L: { home: handL.position.clone(), r: 0.6 },
+  R: { home: handR.position.clone(), r: 0.6 }
+};
 }
 function forceApplyHandOverrideOnce() {
     if (!actionSel?.value) return;
@@ -2765,6 +2769,13 @@ function onPointerDownTransformControls(event) {
   
 (function loop(){
   controls.update();
+  ["L","R"].forEach(k=>{
+  const h = k==="L" ? handL : handR;
+  const cfg = __leash[k];
+  const d = h.position.distanceTo(cfg.home);
+  if (d > cfg.r) h.position.sub(cfg.home).setLength(cfg.r).add(cfg.home);
+});
+
   renderer.render(scene, camera);
   requestAnimationFrame(loop);
 })();
