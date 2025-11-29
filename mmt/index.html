@@ -2064,28 +2064,28 @@ document.getElementById("handSaveBtn").addEventListener("click", () => {
     const key = `${test}:${bucket}`;
 
 const out = {
-        // --- POSITION (X, Y, Z) ---
-        handRX:  rightHandModel.position.x,
-        handRY:  rightHandModel.position.y,
-        handRZ:  rightHandModel.position.z,
+    // --- POSITION (X, Y, Z) ---
+    handRX:  rightHandModel.position.x.toFixed(3), // <-- ADDED .toFixed(3)
+    handRY:  rightHandModel.position.y.toFixed(3), // <-- ADDED .toFixed(3)
+    handRZ:  rightHandModel.position.z.toFixed(3), // <-- ADDED .toFixed(3)
 
-        // --- ROTATION (RRX, RRY, RRZ) ---
-        handRRX: rightHandModel.rotation.x,
-        handRRY: rightHandModel.rotation.y,
-        handRRZ: rightHandModel.rotation.z,
+    // --- ROTATION (RRX, RRY, RRZ) ---
+    handRRX: rightHandModel.rotation.x.toFixed(3), // <-- ADDED .toFixed(3)
+    handRRY: rightHandModel.rotation.y.toFixed(3), // <-- ADDED .toFixed(3)
+    handRRZ: rightHandModel.rotation.z.toFixed(3), // <-- ADDED .toFixed(3)
 
-        // --- POSITION (X, Y, Z) ---
-        handLX:  leftHandModel.position.x,
-        handLY:  leftHandModel.position.y,
-        handLZ:  leftHandModel.position.z,
+    // --- POSITION (X, Y, Z) ---
+    handLX:  leftHandModel.position.x.toFixed(3),  // <-- ADDED .toFixed(3)
+    handLY:  leftHandModel.position.y.toFixed(3),  // <-- ADDED .toFixed(3)
+    handLZ:  leftHandModel.position.z.toFixed(3),  // <-- ADDED .toFixed(3)
 
-        // --- ROTATION (LRX, LRY, LRZ) ---
-        handLRX: leftHandModel.rotation.x,
-        handLRY: leftHandModel.rotation.y,
-        handLRZ: leftHandModel.rotation.z
-    };
+    // --- ROTATION (LRX, LRY, LRZ) ---
+    handLRX: leftHandModel.rotation.x.toFixed(3),  // <-- ADDED .toFixed(3)
+    handLRY: leftHandModel.rotation.y.toFixed(3),  // <-- ADDED .toFixed(3)
+    handLRZ: leftHandModel.rotation.z.toFixed(3)   // <-- ADDED .toFixed(3)
+};
 
-    console.log(`HAND_OVERRIDES["${key}"] = ${JSON.stringify(out)};`);
+console.log(`HAND_OVERRIDES["${key}"] = ${JSON.stringify(out)};`);
     alert("Hand pose saved — check console.");
 });
 
