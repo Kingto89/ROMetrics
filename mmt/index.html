@@ -622,6 +622,8 @@ controls.target.set(0,1.05,0); 
 
 // --- START: 3D Manipulation Widget Setup ---
 let transformControls = null;
+// fixes UI freeze: provide the missing handler used inside setupTransformControls()
+const onPointerDownTransformControls = (e)=>{};
 
 function setupTransformControls() {
     if (!transformControls) {
