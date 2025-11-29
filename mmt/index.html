@@ -1341,11 +1341,11 @@ function applyLimbOverridesFromOverride(o){
 }  
 
 // Coarse body-mode: align to bed/cabinet but don't set specific joint test angles
-function setBodyMode(mode){
-  if (!model || !skeleton) return;
+function setBodyMode(mode, isResistanceActive = false){ // <-- ADDED isResistanceActive = false
+  if (!model || !skeleton) return;
 
-  // Always start from your standing anatomic baseline
-  resetAllBones();
+  // Always start from your standing anatomic baseline
+  resetAllBones();
   applyAnatomicBaseline();
 
   // Defaults: your original standing pose in front of bed
@@ -1468,10 +1468,17 @@ function setBodyMode(mode){
   // Re-apply global plantarflexion to both feet
   applyGlobalPF();
 
-    // Apply any per-test thigh/calf overrides (if present)
-  if (key && POSE_OVERRIDES[key]){
-    applyLimbOverridesFromOverride(POSE_OVERRIDES[key]);
-  }
+ // Apply any per-test thigh/calf overrides (if present)
+  if (key && POSE_OVERRIDES[key]){
+    // ⭐ NEW CHECK: ONLY apply overrides if resistance is NOT active
+    if (!isResistanceActive) { 
+      applyLimbOverridesFromOverride(POSE_OVERRIDES[key]);
+    } else {
+      // If resistance is active, we must still apply the base pose 
+      // but skip the head/neck specific rotations, which are handled by applyHoldMovement()
+      // We rely on applyHoldMovement() calling setDegAxis, which uses q0 as its base.
+    }
+  }
 
 // === NEW: Therapist Hand Overrides (separate dictionary) ===
  
@@ -2055,34 +2062,15 @@ const out = {
 });
 
 
-function applyBodyPositionFromSelection(){
-  if (!model || !skeleton) return;
-  
-  const test = actionSel?.value;
-  if (!test) return; // <<< THIS LINE MUST BE ADDED BACK
+CURRENT_BODY_TEST = test;
+  CURRENT_BODY_BUCKET = bucket;
 
-  const bucket = getGradeBucketForTest(test);
+  // Pass the current timer state to setBodyMode
+  const isResistanceActive = !!resistanceTimer; 
+  setBodyMode(mode, isResistanceActive); 
 
-  // ★ REQUIRED FOR HAND TUNER ★
-  window.currentMMTtest = test;
-  window.currentMMTgradeBucket = bucket;
-  // NOTE: The key declaration inside setBodyMode will handle the key calculation.
-  // ★ END REQUIRED ★
-
-  const family = TEST_POSITION[test] || { high:"anatomic", low:"anatomic" };
-  const mode = bucket === "low"
-      ? (family.low  || "anatomic")
-      : (family.high || "anatomic");
-
-  CURRENT_BODY_TEST = test;
-  CURRENT_BODY_BUCKET = bucket;
-
-  setBodyMode(mode);
-
-  if (poseTunerEl && poseTunerEl.updateLabels){
-    poseTunerEl.updateLabels();
-  }
-}
+  if (poseTunerEl && poseTunerEl.updateLabels){
+// ...
 
  
 /* ==== Wire UI ==== */
