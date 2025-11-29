@@ -1032,6 +1032,11 @@ let currentHoldAngle = 0; // NEW: Tracks rotation during MMT resistance hold
 // ADDED: Hands model loading variables
 const HANDS_MODEL_URL = "https://raw.githubusercontent.com/Kingto89/ROMetrics.com/main/assets/Hands.glb";
 let handsModel = null;
+let handL = null, handR = null;
+const __leash = {
+  L: { home: new THREE.Vector3(), r: 0.6 },
+  R: { home: new THREE.Vector3(), r: 0.6 }
+};
   
 // Reset all bones back to stored baseline
 function resetAllBones(){
@@ -1680,11 +1685,11 @@ function loadHandsModel(){
           // Identify individual hands
           rightHandModel = handsModel.getObjectByName("Hand_R") || handsModel.getObjectByName("hand_R");
           leftHandModel  = handsModel.getObjectByName("Hand_L") || handsModel.getObjectByName("hand_L");
-          // --- Leash hookup (use these in the clamp loop) ---
-handL = leftHandModel;
-handR = rightHandModel;
+         handL = leftHandModel || null;
+handR = rightHandModel || null;
 if (handL) __leash.L.home.copy(handL.position);
 if (handR) __leash.R.home.copy(handR.position);
+
 
           // If names don't match, auto-detect by size (right hand = larger X position)
 if (!rightHandModel || !leftHandModel) {
