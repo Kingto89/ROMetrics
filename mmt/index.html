@@ -279,7 +279,7 @@ let isRoomLocked = false;
 
 /* ==== NEW: Practice Mode Variables (Enhanced) ==== */
 let isPracticeModeActive = false;
-let currentActiveHand = null; // Will store rightHandModel or leftHandModel
+let currentActiveHand = null; // Will store rightTHandModel or leftTHandModel
 let currentTransformMode = 'translate'; // Initial mode for the widget
 
 /* ==== MMT Resistance Timing & Vector State Variables ==== */
@@ -389,7 +389,7 @@ function toggleVectorOverlay() {
         effortVectorMesh.visible = true;
 
         positionVector(resistanceVectorMesh, guide.R_startPos, guide.R_direction);
-        (rightHandModel ? rightHandModel : scene).add(resistanceVectorMesh); 
+        (rightTHandModel ? rightTHandModel : scene).add(resistanceVectorMesh); 
         resistanceVectorMesh.visible = true;
 
         vectorOverlayBtn.classList.add('lockOn'); // Activate glow
@@ -655,7 +655,7 @@ setupTransformControls();
 // The togglePracticeMode function comes AFTER setupTransformControls is defined
 function togglePracticeMode() {
     // Ensure hands are loaded before entering practice mode
-    if (!rightHandModel || !leftHandModel) {
+    if (!rightTHandModel || !leftTHandModel) {
         alert("Please toggle 'Therapist Hands' on first.");
         return;
     }
@@ -667,7 +667,7 @@ function togglePracticeMode() {
         practicePlacementBtn.classList.add('lockOn'); // Visually indicate active mode
         
         // Initial state: Right Hand, Translate Mode
-        currentActiveHand = rightHandModel;
+        currentActiveHand = rightTHandModel;
         currentTransformMode = 'translate';
         
         // Configure TransformControls for active manipulation
@@ -681,7 +681,7 @@ function togglePracticeMode() {
         // Disable OrbitControls while in practice mode
         controls.enabled = false; 
 
-        console.log("Entered Practice Mode: Right Hand, Translate");
+        console.log("Entered Practice Mode: Right THand, Translate");
 
     } else {
         // --- EXIT PRACTICE MODE ---
@@ -1000,7 +1000,7 @@ function applyHoldMovement() {
 
 // 2. ⭐ NEW: Hand Tremor Logic (only if hands are loaded and visible)
   // -------------------------------------------------------------
-  if (leftHandModel && handsModel?.visible) {
+  if (leftTHandModel && handsModel?.visible) {
     const d = MAX_TREMOR_DISPLACEMENT;
 
     // Generate a new small, random offset vector for X, Y, Z
@@ -1010,9 +1010,9 @@ function applyHoldMovement() {
     const tremorZ = (Math.random() * 2 * d) - d;
 
     // Apply the offset to the current position (relative to its parent/scene)
-    leftHandModel.position.x += tremorX;
-    leftHandModel.position.y += tremorY;
-    leftHandModel.position.z += tremorZ;
+    leftTHandModel.position.x += tremorX;
+    leftTHandModel.position.y += tremorY;
+    leftTHandModel.position.z += tremorZ;
     
     // Safety clamp (optional but good practice to keep it near its general area)
     // We rely mostly on the next step (3. Reset/Anchor) to fix drift.
@@ -1224,29 +1224,29 @@ POSE_OVERRIDES["Gastrocnemius:low"] = { x:-1.520, y:0.800, z:0.550, rx:1.571, ry
 
 
 /* ==== HAND OVERRIDES (new, separate from pose- must remove orride here first to reset) ==== */
-const HAND_OVERRIDES = {};
-HAND_OVERRIDES["Capital_Extension:high"] = {"handRX":3.7084705208004003,"handRY":-5.1987606148409595,"handRZ":-4.6035542788667625,"handRRX":3.1683205406154173,"handRRY":-3.344445299653452,"handRRZ":-0.9229091699147043,"handLX":3.733414292335506,"handLY":-4.564649659395211,"handLZ":-4.626662611961357,"handLRX":-0.23128912206036426,"handLRY":0.3726189086851196,"handLRZ":0.8238038715507627};
-HAND_OVERRIDES["Capital_Extension:low"] = {"handRX":3.299999999999998,"handRY":-4.849999999999992,"handRZ":-3.7499999999999947,"handRRX":4.65,"handRRY":-1.4999999999999998,"handRRZ":0.7500000000000002,"handLX":3.399999999999996,"handLY":-4.949999999999992,"handLZ":-2.9499999999999975,"handLRX":5.551115123125783e-17,"handLRY":-1.2,"handLRZ":3.449999999999999};
-HAND_OVERRIDES["Cervical_Extension:high"] = {"handRX":3.7084705208004003,"handRY":-5.1987606148409595,"handRZ":-4.6035542788667625,"handRRX":3.1683205406154173,"handRRY":-3.344445299653452,"handRRZ":-0.9229091699147043,"handLX":4.333414292335504,"handLY":-3.914649659395213,"handLZ":-4.576662611961357,"handLRX":-0.08128912206036426,"handLRY":0.3726189086851196,"handLRZ":-0.8261961284492374};
-HAND_OVERRIDES["Cervical_Extension:low"] = {"handRX":3.299999999999998,"handRY":-4.8999999999999915,"handRZ":-3.7999999999999945,"handRRX":4.65,"handRRY":-1.4999999999999998,"handRRZ":0.30000000000000016,"handLX":3.399999999999996,"handLY":-4.749999999999992,"handLZ":-2.7499999999999982,"handLRX":5.551115123125783e-17,"handLRY":-1.2,"handLRZ":3.449999999999999};
-HAND_OVERRIDES["Capital_Flexion:high"] = {"handRX":2.3000000000000003,"handRY":-4.149999999999994,"handRZ":-2.1000000000000005,"handRRX":-5.551115123125783e-17,"handRRY":-2.5499999999999994,"handRRZ":-1.2,"handLX":1.3000000000000005,"handLY":-4.549999999999993,"handLZ":-4.099999999999993,"handLRX":0,"handLRY":0.3,"handLRZ":1.2};
-HAND_OVERRIDES["Capital_Flexion:low"] = {"handRX":2.4366607096519464,"handRY":-5.134163299337729,"handRZ":-2.378371050121847,"handRRX":-2.0000166592430553,"handRRY":-0.7510895572089885,"handRRZ":-2.5574762811691976,"handLX":1.0596022397803093,"handLY":-4.8822640230731045,"handLZ":-4.135524403146678,"handLRX":-0.3,"handLRY":0.15,"handLRZ":0.15};
+const THAND_OVERRIDES = {};
+THAND_OVERRIDES["Capital_Extension:high"] = {"handRX":3.7084705208004003,"handRY":-5.1987606148409595,"handRZ":-4.6035542788667625,"handRRX":3.1683205406154173,"handRRY":-3.344445299653452,"handRRZ":-0.9229091699147043,"handLX":3.733414292335506,"handLY":-4.564649659395211,"handLZ":-4.626662611961357,"handLRX":-0.23128912206036426,"handLRY":0.3726189086851196,"handLRZ":0.8238038715507627};
+THAND_OVERRIDES["Capital_Extension:low"] = {"handRX":3.299999999999998,"handRY":-4.849999999999992,"handRZ":-3.7499999999999947,"handRRX":4.65,"handRRY":-1.4999999999999998,"handRRZ":0.7500000000000002,"handLX":3.399999999999996,"handLY":-4.949999999999992,"handLZ":-2.9499999999999975,"handLRX":5.551115123125783e-17,"handLRY":-1.2,"handLRZ":3.449999999999999};
+THAND_OVERRIDES["Cervical_Extension:high"] = {"handRX":3.7084705208004003,"handRY":-5.1987606148409595,"handRZ":-4.6035542788667625,"handRRX":3.1683205406154173,"handRRY":-3.344445299653452,"handRRZ":-0.9229091699147043,"handLX":4.333414292335504,"handLY":-3.914649659395213,"handLZ":-4.576662611961357,"handLRX":-0.08128912206036426,"handLRY":0.3726189086851196,"handLRZ":-0.8261961284492374};
+THAND_OVERRIDES["Cervical_Extension:low"] = {"handRX":3.299999999999998,"handRY":-4.8999999999999915,"handRZ":-3.7999999999999945,"handRRX":4.65,"handRRY":-1.4999999999999998,"handRRZ":0.30000000000000016,"handLX":3.399999999999996,"handLY":-4.749999999999992,"handLZ":-2.7499999999999982,"handLRX":5.551115123125783e-17,"handLRY":-1.2,"handLRZ":3.449999999999999};
+THAND_OVERRIDES["Capital_Flexion:high"] = {"handRX":2.3000000000000003,"handRY":-4.149999999999994,"handRZ":-2.1000000000000005,"handRRX":-5.551115123125783e-17,"handRRY":-2.5499999999999994,"handRRZ":-1.2,"handLX":1.3000000000000005,"handLY":-4.549999999999993,"handLZ":-4.099999999999993,"handLRX":0,"handLRY":0.3,"handLRZ":1.2};
+THAND_OVERRIDES["Capital_Flexion:low"] = {"handRX":2.4366607096519464,"handRY":-5.134163299337729,"handRZ":-2.378371050121847,"handRRX":-2.0000166592430553,"handRRY":-0.7510895572089885,"handRRZ":-2.5574762811691976,"handLX":1.0596022397803093,"handLY":-4.8822640230731045,"handLZ":-4.135524403146678,"handLRX":-0.3,"handLRY":0.15,"handLRZ":0.15};
 
-HAND_OVERRIDES["Cervical_Flexion:low"] = {"handRX":2.3984328107860895,"handRY":-4.506607836412489,"handRZ":-1.814492408165255,"handRRX":3.149999999999999,"handRRY":-0.6,"handRRZ":2.6999999999999993,"handLX":1.1220504874828894,"handLY":-4.865783890408162,"handLZ":-4.19722912343906,"handLRX":-0.15,"handLRY":0.15000000000000005,"handLRZ":0.45000000000000007};
-HAND_OVERRIDES["Single_SCM:high"] = {"handRX":3.2835587966634714,"handRY":-4.825346688143314,"handRZ":-3.6887990472163033,"handRRX":-0.15000000000000005,"handRRY":-0.75,"handRRZ":-2.5499999999999994,"handLX":1.9792747331228238,"handLY":-4.228476485371765,"handLZ":-3.8499999999999943,"handLRX":-0.15000000000000005,"handLRY":6.450000000000005,"handLRZ":7.050000000000006};
-HAND_OVERRIDES["Single_SCM:low"] = {"handRX":2.29843281078609,"handRY":-4.506607836412489,"handRZ":-1.7644924081652549,"handRRX":3.149999999999999,"handRRY":-0.6,"handRRZ":2.6999999999999993,"handLX":1.1220504874828894,"handLY":-4.865783890408162,"handLZ":-4.19722912343906,"handLRX":-0.15,"handLRY":0.15000000000000005,"handLRZ":0.45000000000000007};
-HAND_OVERRIDES["Cervical_Rotation:high"] = {"handRX":3.3950177016911813,"handRY":-4.228815656717408,"handRZ":-3.154092946149615,"handRRX":0,"handRRY":-1.2,"handRRZ":-1.4999999999999998,"handLX":2.7287945899747084,"handLY":-4.97180437603087,"handLZ":-3.8761825812379165,"handLRX":-0.9,"handLRY":-0.9,"handLRZ":0.6};  
-HAND_OVERRIDES["Cervical_Rotation:low"] = {"handRX":2.002046370115527,"handRY":-2.8738991654704167,"handRZ":-11.248623580618029,"handRRX":0.3,"handRRY":3.149999999999999,"handRRZ":-1.6499999999999997,"handLX":2.8066499482026206,"handLY":-3.1803327115407654,"handLZ":-11.747197366311715,"handLRX":0.3,"handLRY":-2.6999999999999993,"handLRZ":1.9499999999999997}; 
+THAND_OVERRIDES["Cervical_Flexion:low"] = {"handRX":2.3984328107860895,"handRY":-4.506607836412489,"handRZ":-1.814492408165255,"handRRX":3.149999999999999,"handRRY":-0.6,"handRRZ":2.6999999999999993,"handLX":1.1220504874828894,"handLY":-4.865783890408162,"handLZ":-4.19722912343906,"handLRX":-0.15,"handLRY":0.15000000000000005,"handLRZ":0.45000000000000007};
+THAND_OVERRIDES["Single_SCM:high"] = {"handRX":3.2835587966634714,"handRY":-4.825346688143314,"handRZ":-3.6887990472163033,"handRRX":-0.15000000000000005,"handRRY":-0.75,"handRRZ":-2.5499999999999994,"handLX":1.9792747331228238,"handLY":-4.228476485371765,"handLZ":-3.8499999999999943,"handLRX":-0.15000000000000005,"handLRY":6.450000000000005,"handLRZ":7.050000000000006};
+THAND_OVERRIDES["Single_SCM:low"] = {"handRX":2.29843281078609,"handRY":-4.506607836412489,"handRZ":-1.7644924081652549,"handRRX":3.149999999999999,"handRRY":-0.6,"handRRZ":2.6999999999999993,"handLX":1.1220504874828894,"handLY":-4.865783890408162,"handLZ":-4.19722912343906,"handLRX":-0.15,"handLRY":0.15000000000000005,"handLRZ":0.45000000000000007};
+THAND_OVERRIDES["Cervical_Rotation:high"] = {"handRX":3.3950177016911813,"handRY":-4.228815656717408,"handRZ":-3.154092946149615,"handRRX":0,"handRRY":-1.2,"handRRZ":-1.4999999999999998,"handLX":2.7287945899747084,"handLY":-4.97180437603087,"handLZ":-3.8761825812379165,"handLRX":-0.9,"handLRY":-0.9,"handLRZ":0.6};  
+THAND_OVERRIDES["Cervical_Rotation:low"] = {"handRX":2.002046370115527,"handRY":-2.8738991654704167,"handRZ":-11.248623580618029,"handRRX":0.3,"handRRY":3.149999999999999,"handRRZ":-1.6499999999999997,"handLX":2.8066499482026206,"handLY":-3.1803327115407654,"handLZ":-11.747197366311715,"handLRX":0.3,"handLRY":-2.6999999999999993,"handLRZ":1.9499999999999997}; 
 
   
 /* ==== NEUTRAL HAND POSITION (New Default) ==== */
-const HAND_NEUTRAL_POSE = {
+const THAND_NEUTRAL_POSE = {
     // Widened X separation (0.45 vs -0.45) for side-by-side viewing
     // Slight Z offset to keep them from overlapping in depth
-    handRX: 0.45, handRY: 1.25, handRZ: 0.45, 
-    handRRX: 0, handRRY: 0, handRRZ: 0,   
-    handLX: -0.45, handLY: 1.25, handLZ: 0.55,  
-    handLRX: 0, handLRY: 0, handLRZ: 0  
+    thandRX: 0.45, thandRY: 1.25, thandRZ: 0.45, 
+    thandRRX: 0, thandRRY: 0, thandRRZ: 0,   
+    thandLX: -0.45, thandLY: 1.25, thandLZ: 0.55,  
+    thandLRX: 0, thandLRY: 0, thandLRZ: 0  
 };
 let CURRENT_BODY_TEST = null;
 let CURRENT_BODY_BUCKET = "high"; // "high" or "low"
@@ -1527,17 +1527,17 @@ function setBodyMode(mode, isResistanceActive = false){ // <-- ADDED isResistanc
  
  // 1. Determine the key and check if a pose is saved in HAND_OVERRIDES
  // NOTE: 'key' is already declared for the patient pose logic above.
- let useSavedPose = key && HAND_OVERRIDES[key];
+ let useSavedPose = key && THAND_OVERRIDES[key];
 
  // 2. Default to NEUTRAL pose.
- let poseToApply = HAND_NEUTRAL_POSE; 
+ let poseToApply = THAND_NEUTRAL_POSE; 
   
 // ------------------------------------
 // HAND OVERRIDE LOGIC (FINAL VERSION)
 // ------------------------------------
 const handKey = (CURRENT_BODY_TEST && CURRENT_BODY_BUCKET) ? `${CURRENT_BODY_TEST}:${CURRENT_BODY_BUCKET}` : null;
 
-if (!handsModel || !rightHandModel || !leftHandModel) return;
+if (!handsModel || !rightTHandModel || !leftTHandModel) return;
 
 // Practice mode → always neutral
 if (isPracticeModeActive) {
@@ -1555,26 +1555,26 @@ if (!HAND_OVERRIDES[key] && poseToApply) {
     const h = poseToApply;
 
 
-    if (rightHandModel){
+    if (rightTHandModel){
         // Apply position 
-        if (h.handRX  != null) rightHandModel.position.x = h.handRX;
-        if (h.handRY  != null) rightHandModel.position.y = h.handRY;
-        if (h.handRZ  != null) rightHandModel.position.z = h.handRZ;
+        if (h.handRX  != null) rightTHandModel.position.x = h.handRX;
+        if (h.handRY  != null) rightTHandModel.position.y = h.handRY;
+        if (h.handRZ  != null) rightTHandModel.position.z = h.handRZ;
         // Apply rotation
-        if (h.handRRX != null) rightHandModel.rotation.x = h.handRRX;
-        if (h.handRRY != null) rightHandModel.rotation.y = h.handRRY;
-        if (h.handRRZ != null) rightHandModel.rotation.z = h.handRRZ;
+        if (h.handRRX != null) rightTHandModel.rotation.x = h.handRRX;
+        if (h.handRRY != null) rightTHandModel.rotation.y = h.handRRY;
+        if (h.handRRZ != null) rightTHandModel.rotation.z = h.handRRZ;
     }
 
-    if (leftHandModel){
+    if (leftTHandModel){
         // Apply position
-        if (h.handLX  != null) leftHandModel.position.x = h.handLX;
-        if (h.handLY  != null) leftHandModel.position.y = h.handLY;
-        if (h.handLZ  != null) leftHandModel.position.z = h.handLZ;
+        if (h.handLX  != null) leftTHandModel.position.x = h.handLX;
+        if (h.handLY  != null) leftTHandModel.position.y = h.handLY;
+        if (h.handLZ  != null) leftTHandModel.position.z = h.handLZ;
         // Apply rotation
-        if (h.handLRX != null) leftHandModel.rotation.x = h.handLRX;
-        if (h.handLRY != null) leftHandModel.rotation.y = h.handLRY;
-        if (h.handLRZ != null) leftHandModel.rotation.z = h.handLRZ;
+        if (h.handLRX != null) leftTHandModel.rotation.x = h.handLRX;
+        if (h.handLRY != null) leftTHandModel.rotation.y = h.handLRY;
+        if (h.handLRZ != null) leftTHandModel.rotation.z = h.handLRZ;
     }
  }
 
@@ -1666,8 +1666,8 @@ if (mode === "seatednogravity"){
 }
 
 /* ==== Therapist Hands Model Logic ==== */
-let rightHandModel = null;
-let leftHandModel = null;  
+let rightTHandModel = null;
+let leftTHandModel = null;  
 function loadHandsModel(){
     if (handsModel) return;
     $("msg").textContent = "Loading therapist hands model...";
@@ -1678,8 +1678,8 @@ function loadHandsModel(){
         (gltf) => {
             handsModel = gltf.scene;
           // Identify individual hands
-          rightHandModel = handsModel.getObjectByName("Hand_R") || handsModel.getObjectByName("hand_R");
-          leftHandModel  = handsModel.getObjectByName("Hand_L") || handsModel.getObjectByName("hand_L");
+          rightTHandModel = handsModel.getObjectByName("THand_R") || handsModel.getObjectByName("thand_R");
+          leftTHandModel  = handsModel.getObjectByName("THand_L") || handsModel.getObjectByName("thand_L");
           // If names don't match, auto-detect by size (right hand = larger X position)
 if (!rightHandModel || !leftHandModel) {
     const possible = [];
@@ -1700,8 +1700,8 @@ if (!rightHandModel || !leftHandModel) {
             return a.getWorldPosition(new THREE.Vector3()).x - 
                    b.getWorldPosition(new THREE.Vector3()).x;
         });
-        leftHandModel  = roots[0];
-        rightHandModel = roots[1];
+        leftTHandModel  = roots[0];
+        rightTHandModel = roots[1];
     }
 }
 
@@ -1718,9 +1718,9 @@ if (!rightHandModel || !leftHandModel) {
             scene.add(handsModel);
 
             // --- START: ACTIVATE DRAGGING CONTROL HERE (No Tuner Logic) ---
-            if (transformControls && rightHandModel) {
+            if (transformControls && rightTHandModel) {
                 // Attach the right hand model to the widget for immediate dragging access
-                transformControls.attach(rightHandModel);
+                transformControls.attach(rightTHandModel);
                 transformControls.visible = true; 
             }
             // --- END: ACTIVATE DRAGGING CONTROL HERE ---
@@ -1750,18 +1750,18 @@ function applyHandOverride(key){
     const h = HAND_OVERRIDES[key];
     if (!h) return;
 
-    if (rightHandModel){
-        rightHandModel.position.set(h.handRX, h.handRY, h.handRZ);
-        rightHandModel.rotation.set(h.handRRX, h.handRRY, h.handRRZ);
+    if (rightTHandModel){
+        rightTHandModel.position.set(h.handRX, h.handRY, h.handRZ);
+        rightTHandModel.rotation.set(h.handRRX, h.handRRY, h.handRRZ);
     }
-    if (leftHandModel){
-        leftHandModel.position.set(h.handLX, h.handLY, h.handLZ);
-        leftHandModel.rotation.set(h.handLRX, h.handLRY, h.handLRZ);
+    if (leftTHandModel){
+        leftTHandModel.position.set(h.handLX, h.handLY, h.handLZ);
+        leftTHandModel.rotation.set(h.handLRX, h.handLRY, h.handLRZ);
     }
 }
 function forceApplyHandOverrideOnce() {
     if (!actionSel?.value) return;
-    if (!handsModel || !rightHandModel || !leftHandModel) return;
+    if (!handsModel || !rightTHandModel || !leftTHandModel) return;
 
     const test = actionSel.value;
     const bucket = getGradeBucketForTest(test);
@@ -1793,7 +1793,7 @@ function toggleHands(){
     const bucket = getGradeBucketForTest(test);
     const handKey = `${test}:${bucket}`;
 
-  if (!handsModel || !rightHandModel || !leftHandModel) return;
+  if (!handsModel || !rightTHandModel || !leftTHandModel) return;
 
 if (HAND_OVERRIDES[handKey]) {
     applyHandOverride(handKey);
@@ -1851,25 +1851,25 @@ if (switchActiveHandBtn) {
 
 // Function to snap the hands back to the defined neutral position
 function resetHandsToNeutral() {
-    if (!rightHandModel || !leftHandModel) return;
+    if (!rightTHandModel || !leftTHandModel) return;
 
     // HAND_NEUTRAL_POSE is defined earlier in the script
     const h = HAND_NEUTRAL_POSE;
 
     // Apply neutral position and rotation to the right hand
-    if (rightHandModel) {
-        rightHandModel.position.set(h.handRX, h.handRY, h.handRZ);
-        rightHandModel.rotation.set(h.handRRX, h.handRRY, h.handRRZ);
+    if (rightTHandModel) {
+        rightTHandModel.position.set(h.handRX, h.handRY, h.handRZ);
+        rightTHandModel.rotation.set(h.handRRX, h.handRRY, h.handRRZ);
     }
 
     // Apply neutral position and rotation to the left hand
-    if (leftHandModel) {
-        leftHandModel.position.set(h.handLX, h.handLY, h.handLZ);
-        leftHandModel.rotation.set(h.handLRX, h.handLRY, h.handLRZ);
+    if (leftTHandModel) {
+        leftTHandModel.position.set(h.handLX, h.handLY, h.handLZ);
+        leftTHandModel.rotation.set(h.handLRX, h.handLRY, h.handLRZ);
     }
     
     // Detach TransformControls if it's currently attached to a hand
-    if (transformControls.object === rightHandModel || transformControls.object === leftHandModel) {
+    if (transformControls.object === rightTHandModel || transformControls.object === leftHandModel) {
         transformControls.detach();
     }
 }
@@ -2080,24 +2080,24 @@ document.getElementById("handSaveBtn").addEventListener("click", () => {
 
 const out = {
         // --- POSITION (X, Y, Z) ---
-        handRX:  rightHandModel.position.x,
-        handRY:  rightHandModel.position.y,
+        handRX:  rightTHandModel.position.x,
+        handRY:  rightTHandModel.position.y,
         handRZ:  rightHandModel.position.z,
 
         // --- ROTATION (RRX, RRY, RRZ) ---
-        handRRX: rightHandModel.rotation.x,
-        handRRY: rightHandModel.rotation.y,
-        handRRZ: rightHandModel.rotation.z,
+        handRRX: rightTHandModel.rotation.x,
+        handRRY: rightTHandModel.rotation.y,
+        handRRZ: rightTHandModel.rotation.z,
 
         // --- POSITION (X, Y, Z) ---
-        handLX:  leftHandModel.position.x,
-        handLY:  leftHandModel.position.y,
-        handLZ:  leftHandModel.position.z,
+        handLX:  leftTHandModel.position.x,
+        handLY:  leftTHandModel.position.y,
+        handLZ:  leftTHandModel.position.z,
 
         // --- ROTATION (LRX, LRY, LRZ) ---
-        handLRX: leftHandModel.rotation.x,
-        handLRY: leftHandModel.rotation.y,
-        handLRZ: leftHandModel.rotation.z
+        handLRX: leftTHandModel.rotation.x,
+        handLRY: leftTHandModel.rotation.y,
+        handLRZ: leftTHandModel.rotation.z
     };
 
     console.log(`HAND_OVERRIDES["${key}"] = ${JSON.stringify(out)};`);
