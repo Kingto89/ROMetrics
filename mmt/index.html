@@ -458,43 +458,7 @@ function executeVoluntaryMovement() {
         $("msg").textContent = "Movement complete. Hold the resistance button to apply pressure.";
     }, 500); 
 }
-/* ==== 3D Movement: Simulating Hold Against Resistance ==== */
-function simulateResistanceHold(testKey, elapsedSeconds) {
-    if (!skeleton || !testKey) return;
-    
-    // We only simulate movement if the hold is Grade 3 or higher (elapsed >= 2s)
-    if (elapsedSeconds < 2.0) return;
 
-    // --- Example: Anterior Deltoid (Shoulder Flexion) ---
-    // MMT Action: Flexion (Arm moves forward/up)
-    // Resistance Action: Extension (Force pushes arm backward/down)
-    
-    if (testKey === 'Anterior_Deltoid') {
-        const bone = getBone('upperarm_R'); // Right shoulder bone for manipulation
-        if (!bone) return;
-
-        // The goal is to move the arm slightly into EXTENSION (backward).
-        // Since setBodyMode resets the pose, we apply rotation relative to its current state.
-        
-        // Use a small, increasing rotation to simulate the 'give' or struggle.
-        // We calculate rotation based on the time elapsed since the start of the hold.
-        // Rotation goes from 0 degrees (Grade 3/start of hold) up to max 15 degrees (Grade 5/7s).
-        const maxGiveDeg = 15; // Max simulated drop/give against resistance
-        const rotationMagnitude = Math.min(maxGiveDeg, 
-            (elapsedSeconds - 2.0) * (maxGiveDeg / 5.0)); // From 2s to 7s (5 seconds total hold time)
-
-        // Apply negative X rotation (simulates downward/backward movement = extension)
-        // Note: You must ensure the bone is reset to its correct starting pose in the loop first.
-        
-        // To safely apply rotation *on top* of the current pose, we reset and re-apply the base pose first:
-        applyAnatomicBaseline(); // Reset all bones
-        setBodyMode(CURRENT_BODY_TEST, CURRENT_BODY_BUCKET); // Re-apply the initial test pose
-
-        // Now apply the simulated 'give'
-        bone.rotateX(THREE.MathUtils.degToRad(-rotationMagnitude));
-    }
-    // TODO: Add logic for Capital_Extension (e.g., rotate head bone into flexion)
-}
 function startResistanceTest(event) {
     if (testButton.disabled || resistanceTimer) return;
     
@@ -508,24 +472,7 @@ function startResistanceTest(event) {
     resistanceTimer = setInterval(updateResistanceFill, 100);
     event.preventDefault(); 
 }
-function updateResistanceFill() {
-    if (!resistanceTimer) return;
 
-    const elapsed = (Date.now() - pressStartTime) / 1000;
-    const status = getGradeStatus(elapsed);
-    const maxTime = 7.0; 
-
-    // [Omitted: UI color/width update code]
-
-    if (status.grade > 0) {
-        resistanceText.textContent = status.text;
-        currentGrade = status.grade;
-        
-        // ⭐ NEW LINE: CALL THE 3D MOVEMENT SIMULATION ⭐
-        simulateResistanceHold(actionSel.value, elapsed);
-    }
-    // [Omitted: max time check code]
-}
 function stopResistanceTest() {
     if (!resistanceTimer) return;
     
