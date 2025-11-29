@@ -941,7 +941,7 @@ const CERVICAL_MMT_MAP = {
   Cervical_Extension:  ['neck', 'x', -1],   // Prone: Extends neck (Pitch down)
   Capital_Flexion:     ['head', 'x', 1],    // Supine: Flexes head (Pitch up)
   Cervical_Flexion:    ['neck', 'x', 1],    // Supine: Flexes neck (Pitch up)
-  Single_SCM: ['head','ry',1], 
+  Single_SCM: ['head','ry',0,'add'] // keep posed orientation; tremor jitters around it
   Cervical_Rotation:   ['head', 'y', 1]     // Rotation (Y is rotation)
 };  
 // If your rig uses "wrist_L/R" instead of "hand_L/R", change those two names below.
