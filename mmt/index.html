@@ -291,51 +291,6 @@ let isMMTMoving = false; // Tracks if the patient model is performing voluntary 
 let areVectorsVisible = false;
 let effortVectorMesh = null; // Blue Effort Tunnel
 let resistanceVectorMesh = null; // Green Resistance Tunnel
-// === Resistance micro-motion (makes test look "live") ===
-const RESIST_JOINT = {
-  Anterior_Deltoid: { bone: 'upperarm_R', axis: 'x', dir: +1 },
-  Posterior_Deltoid:{ bone: 'upperarm_R', axis: 'x', dir: -1 },
-  Middle_Deltoid:   { bone: 'upperarm_R', axis: 'z', dir: +1 },
-  Infraspinatus:    { bone: 'forearm_R',  axis: 'y', dir: +1 },
-  Subscapularis:    { bone: 'forearm_R',  axis: 'y', dir: -1 },
-  Hamstrings:       { bone: 'calf_R',     axis: 'x', dir: -1 },
-  Quadriceps:       { bone: 'calf_R',     axis: 'x', dir: +1 },
-  Tibialis_Anterior:{ bone: 'foot_R',     axis: 'x', dir: +1 },
-  Gastrocnemius:    { bone: 'foot_R',     axis: 'x', dir: -1 }
-};
-
-let resistCache = []; // [{ bone, q0, axis, dir }]
-
-function cacheResistBaseline(){
-  resistCache.length = 0;
-  if (!skeleton) return;
-  const spec = RESIST_JOINT[actionSel.value];
-  if (!spec) return;
-  const b = getBone(spec.bone);
-  if (!b) return;
-  resistCache.push({ bone: b, q0: b.quaternion.clone(), axis: spec.axis, dir: spec.dir });
-}
-
-function applyResistanceMicroMotion(elapsed){
-  if (!resistCache.length) return;
-  // amplitude ramps with time (→ up to ~6°) + 1.2 Hz wobble
-  const ampDeg = Math.min(1, elapsed / 7) * 6;
-  const wobbleDeg = ampDeg * Math.sin(elapsed * 2 * Math.PI * 1.2);
-  const r = THREE.MathUtils.degToRad(wobbleDeg);
-
-  resistCache.forEach(({ bone, q0, axis, dir }) => {
-    bone.quaternion.copy(q0);
-    const rr = r * dir;
-    if (axis === 'x') bone.rotateX(rr);
-    else if (axis === 'y') bone.rotateY(rr);
-    else bone.rotateZ(rr);
-  });
-}
-
-function restoreResistBaseline(){
-  resistCache.forEach(({ bone, q0 }) => bone.quaternion.copy(q0));
-  resistCache.length = 0;
-}
 
 /* ==== VECTOR GUIDES: Origin (Pos) and Direction (Dir) for Effort (E) and Resistance (R) ==== */
 const VECTOR_GUIDES = {
@@ -493,33 +448,21 @@ function updateResistanceFill() {
 }
 
 function executeVoluntaryMovement() {
-  return new Promise((resolve) => {
     isMMTMoving = true;
-    testButton.disabled = true;
+    testButton.disabled = true; 
     $("msg").textContent = "Patient is executing voluntary movement (0.5s)...";
+    
     setTimeout(() => {
-      isMMTMoving = false;
-      testButton.disabled = false;
-      $("msg").textContent = "Movement complete. Hold the resistance button to apply pressure.";
-      resolve();
-    }, 500);
-  });
+        isMMTMoving = false;
+        testButton.disabled = false; 
+        $("msg").textContent = "Movement complete. Hold the resistance button to apply pressure.";
+    }, 500); 
 }
 
-
-async function startResistanceTest(event) {
+function startResistanceTest(event) {
     if (testButton.disabled || resistanceTimer) return;
     
-await executeVoluntaryMovement();
-currentGrade = 0;
-pressStartTime = Date.now();
-resistanceFill.style.width = "0%";
-resistanceFill.style.transition = "none";
-$("msg").textContent = "Hold the resistance…";
-resistanceTimer = setInterval(updateResistanceFill, 100);
-
-  
-cacheResistBaseline();
+    executeVoluntaryMovement();
 
     currentGrade = 0;
     pressStartTime = Date.now();
