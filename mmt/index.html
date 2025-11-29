@@ -1680,6 +1680,12 @@ function loadHandsModel(){
           // Identify individual hands
           rightHandModel = handsModel.getObjectByName("Hand_R") || handsModel.getObjectByName("hand_R");
           leftHandModel  = handsModel.getObjectByName("Hand_L") || handsModel.getObjectByName("hand_L");
+          // --- Leash hookup (use these in the clamp loop) ---
+handL = leftHandModel;
+handR = rightHandModel;
+if (handL) __leash.L.home.copy(handL.position);
+if (handR) __leash.R.home.copy(handR.position);
+
           // If names don't match, auto-detect by size (right hand = larger X position)
 if (!rightHandModel || !leftHandModel) {
     const possible = [];
@@ -2766,6 +2772,12 @@ function onPointerDownTransformControls(event) {
     }
 }
 // --- END: Interaction Logic ---
+// Hands + leash state (must be defined before the loop uses them)
+let handL = null, handR = null;
+const __leash = {
+  L: { home: new THREE.Vector3(), r: 0.25 },  // 25 cm leash
+  R: { home: new THREE.Vector3(), r: 0.25 }
+};
   
 (function loop(){
   controls.update();
