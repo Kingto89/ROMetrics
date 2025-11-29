@@ -240,7 +240,6 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
-let isTherapistHandUpdate = false;
 
 /* ==== Hard-wired numeric pose (edit these) ==== */
 const POSE = {
@@ -1748,13 +1747,8 @@ applyBodyPositionFromSelection();
     );
 }
 function applyHandOverride(key){
-    isTherapistHandUpdate = true;
-
     const h = HAND_OVERRIDES[key];
-    if (!h) { 
-        isTherapistHandUpdate = false;
-        return;
-    }
+    if (!h) return;
 
     if (rightHandModel){
         rightHandModel.position.set(h.handRX, h.handRY, h.handRZ);
@@ -1764,11 +1758,7 @@ function applyHandOverride(key){
         leftHandModel.position.set(h.handLX, h.handLY, h.handLZ);
         leftHandModel.rotation.set(h.handLRX, h.handLRY, h.handLRZ);
     }
-
-    isTherapistHandUpdate = false;
 }
-
-  
 function forceApplyHandOverrideOnce() {
     if (!actionSel?.value) return;
     if (!handsModel || !rightHandModel || !leftHandModel) return;
@@ -1784,7 +1774,7 @@ function forceApplyHandOverrideOnce() {
     }
 }
 
-function toggleHands(){  
+function toggleHands(){
     const btn = $("toggleHandsBtn");
     
     if (!handsModel) {
@@ -1806,15 +1796,13 @@ function toggleHands(){
   if (!handsModel || !rightHandModel || !leftHandModel) return;
 
 if (HAND_OVERRIDES[handKey]) {
-    if (isTherapistHandUpdate) {
-        applyHandOverride(handKey);
-    }
+    applyHandOverride(handKey);
 } else {
-    if (isTherapistHandUpdate) {
-        resetHandsToNeutral();
-    }
+    resetHandsToNeutral();
 }
 
+}
+  
         
         // Update button style
         if (handsModel.visible) {
