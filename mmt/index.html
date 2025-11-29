@@ -938,7 +938,7 @@ function setDegAxis(bone, axis, deg){
 const CERVICAL_MMT_MAP = {
   // Movement direction: 1 = Flexion/Left/Internal; -1 = Extension/Right/External (General)
   Capital_Extension:   ['head', 'x', -1],   // Prone: Extends head (Pitch down)
-  Cervical_Extension:  ['neck', 'x', -1],   // Prone: Extends neck (Pitch down)
+  Cervical_Extension:  ['neck', 'x', 0],   // Prone: Extends neck (Pitch down)
   Capital_Flexion:     ['head', 'x', 1],    // Supine: Flexes head (Pitch up)
   Cervical_Flexion:    ['neck', 'x', 1],    // Supine: Flexes neck (Pitch up)
   Single_SCM:         ['neck','ry', 0], // keep posed orientation; tremor jitters around it
