@@ -1581,6 +1581,21 @@ if (!HAND_OVERRIDES[key] && poseToApply) {
         if (h.handLRY != null) leftHandModel.rotation.y = h.handLRY;
         if (h.handLRZ != null) leftHandModel.rotation.z = h.handLRZ;
     }
+  // === NEW: CLAVICLE (Manual Override target) ===
+  const clavL = get("clavicle_L");
+  const clavR = get("clavicle_R");
+
+  if (clavL){
+    if (o.clavicleLX !== undefined) clavL.rotateX(rad(o.clavicleLX));
+    if (o.clavicleLY !== undefined) clavL.rotateY(rad(o.clavicleLY));
+    if (o.clavicleLZ !== undefined) clavL.rotateZ(rad(o.clavicleLZ));
+  }
+
+  if (clavR){
+    if (o.clavicleRX !== undefined) clavR.rotateX(rad(o.clavicleRX));
+    if (o.clavicleRY !== undefined) clavR.rotateY(rad(o.clavicleRY));
+    if (o.clavicleRZ !== undefined) clavR.rotateZ(rad(o.clavicleRZ));
+  }
  }
 
 
