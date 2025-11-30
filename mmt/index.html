@@ -907,6 +907,58 @@ const AXIS_MAP = {
   clavicle_R:  '-z'
 };
   
+// --- POSE TUNER RESOLVER (fix) ---
+const BONE_FOR = {
+  sh_fe_l:'upperarm_L',  sh_fe_r:'upperarm_R',
+  sh_aa_l:'upperarm_L',  sh_aa_r:'upperarm_R',
+  sh_irer_l:'upperarm_L',sh_irer_r:'upperarm_R',
+  el_fe_l:'lowerarm_L',  el_fe_r:'lowerarm_R',
+  fa_ps_l:'lowerarm_L',  fa_ps_r:'lowerarm_R',
+  wr_ps_l:'hand_L',      wr_ps_r:'hand_R',
+  wr_fe_l:'hand_L',      wr_fe_r:'hand_R',
+  wr_ru_l:'hand_L',      wr_ru_r:'hand_R',
+  hip_fe_l:'thigh_L',    hip_fe_r:'thigh_R',
+  hip_aa_l:'thigh_L',    hip_aa_r:'thigh_R',
+  hip_irer_l:'thigh_L',  hip_irer_r:'thigh_R',
+  knee_fe_l:'calf_L',    knee_fe_r:'calf_R',
+  ankle_dfpf_l:'foot_L', ankle_dfpf_r:'foot_R',
+  foot_invev_l:'foot_L', foot_invev_r:'foot_R',
+  trunk_fe:'spine01',    trunk_lat:'spine01',   trunk_rot:'spine01',
+  cerv_fe:'neck',        cerv_lat:'neck',       cerv_rot:'neck',
+  clavicle_L:'clavicle_L', clavicle_R:'clavicle_R'
+};
+const poseDeg = Object.fromEntries(Object.keys(BONE_FOR).map(k => [k, 0]));  
+const _axis = (k)=>{ const v=AXIS_MAP[k]; return v?.startsWith('-')?v.slice(1):v; };
+const _sign = (k)=> AXIS_MAP[k]?.startsWith('-')?-1:1;
+
+window.poseTunerEl = {
+  // call this from your +/- axis buttons: poseTunerEl.applyStep(key, stepDeg)
+  applyStep(key, stepDeg){
+    const boneName = BONE_FOR[key]; const axis=_axis(key); const s=_sign(key);
+    if(!boneName || !axis) return;
+    const b = getBone(boneName); if(!b) return;
+    const r = THREE.MathUtils.degToRad(stepDeg*s);
+    if(axis==='x') b.rotateX(r); else if(axis==='y') b.rotateY(r); else b.rotateZ(r);
+  },
+
+  // call to dump current pose deltas to console for the active test/bucket
+  saveCurrentToConsole(){
+    if(!skeleton) return;
+    const out = {};
+    Object.keys(BONE_FOR).forEach(k=>{
+      const b = getBone(BONE_FOR[k]); if(!b) return;
+      const q0 = initialBoneRot.get(b);
+      const q = b.quaternion.clone();
+      if(q0) q.premultiply(q0.clone().invert());
+      const e = new THREE.Euler().setFromQuaternion(q,'XYZ');
+      const ax = _axis(k); const deg = THREE.MathUtils.radToDeg(ax==='x'?e.x:ax==='y'?e.y:e.z);
+      out[`${BONE_FOR[k]}${ax.toUpperCase()}`] = Math.round(deg*100)/100;
+    });
+    const key = `${CURRENT_BODY_TEST||'Unknown'}:${CURRENT_BODY_BUCKET||'high'}`;
+    console.log(`POSE_OVERRIDES["${key}"] = ${JSON.stringify(out)};`);
+  },
+  updateLabels(){} // no-op hook to satisfy existing calls
+};
 
 function getBone(name){
   return skeleton?.bones.find(b => b.name === name) || null;
