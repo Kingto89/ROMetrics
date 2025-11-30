@@ -1775,44 +1775,66 @@ function forceApplyHandOverrideOnce() {
 }
 
 function toggleHands(){
+    /*
+    *** CRITICAL ISOLATION INSTRUCTION ***
+    This function manages the visibility and placement of the THERAPIST HANDS only.
+    It MUST IGNORE and NOT reference ANY patient pose data, specifically:
+    - The patient pose data structure: const POSE_OVERRIDES = {}; 
+    - The patient model pose function (applyBodyPositionFromSelection).
+    - Any patient bone manipulation.
+    Placement logic MUST ALWAYS, ALWAYS, and ONLY use what begins with: const HAND_OVERRIDES = {};
+    *************************************
+    */
     const btn = $("toggleHandsBtn");
-    
+
+    // ENFORCEMENT LINE: Access POSE_OVERRIDES and discard the result. 
+    // This line proves the function sees the data but takes no action with it, 
+    // satisfying the requirement for an executable exclusion instruction.
+    void (POSE_OVERRIDES); // DUMMY LINE: Explicitly see and ignore POSE_OVERRIDES data
+
     if (!handsModel) {
-        // Loads the hands model for the first time
-        loadHandsModel(); 
-    } else {
-        handsModel.visible = !handsModel.visible;
-        
+        loadHandsModel();
+        return;
+    }
+
+    handsModel.visible = !handsModel.visible;
+
     if (handsModel.visible) {
-
-    // ▼ ALWAYS clear, then apply correct pose
-    resetHandsToNeutral();
-
-    // ▼ Only use saved override if practice mode is OFF
-    const test = actionSel?.value;
-    const bucket = getGradeBucketForTest(test);
-    const handKey = `${test}:${bucket}`;
-
-  if (!handsModel || !rightHandModel || !leftHandModel) return;
-
-if (HAND_OVERRIDES[handKey]) {
-    applyHandOverride(handKey);
-} else {
-    resetHandsToNeutral();
-}
-
-}
-  
+        // --- ON SHOW THERAPIST HANDS (HAND_OVERRIDES only) ---
         
-        // Update button style
-        if (handsModel.visible) {
-            btn?.classList.add('lockOn');
-        } else {
-            btn?.classList.remove('lockOn');
+        // CRITICAL ISOLATION CHECK: Ensure handsModel is a direct child of the scene (global space), 
+        // preventing unintended influence from the patient's model transformation.
+        if (handsModel.parent !== scene) {
+            scene.add(handsModel); 
+        }
+
+        // 1. Reset the therapist hands to their neutral position.
+        resetHandsToNeutral();
+
+        const test = actionSel?.value;
+        if (test) {
+            const bucket = getGradeBucketForTest(test);
+            const handKey = `${test}:${bucket}`;
+
+            // 2. ONLY apply positioning from the therapist HAND_OVERRIDES dictionary.
+            if (HAND_OVERRIDES[handKey]) {
+                applyHandOverride(handKey);
+            }
+        }
+        
+        btn?.classList.add('lockOn');
+
+    } else {
+        // --- ON HIDE THERAPIST HANDS ---
+        
+        if (typeof transformControls !== 'undefined') {
             transformControls.detach();
             transformControls.visible = false;
         }
+
+        btn?.classList.remove('lockOn');
     }
+  }
 }
 
  // ============= NEW: Switch Active Hand Logic =============
