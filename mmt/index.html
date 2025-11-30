@@ -2145,10 +2145,7 @@ toggleHandsBtn.classList.add("lockOn");
 if (toggleHandsBtn) toggleHandsBtn.addEventListener('click', toggleHands);
 
 // When a test is selected, unlock buttons and apply pose
-actionSel.addEventListener("change", () => {
-    
-actionSel.addEventListener("change", () => {
-    
+actionSel.addEventListener("change", () => {    
     const isTestSelected = !!actionSel.value;
     const isDisabled = shouldResistanceBeDisabled(); // CHECK NEW RULE
 
