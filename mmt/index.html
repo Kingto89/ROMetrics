@@ -1343,26 +1343,26 @@ function applyGlobalPF(){
 
 // A comprehensive list of all bones that can be manually tuned/overridden (NEW GLOBAL LIST)
 const ALL_TUNABLE_BONES = [
-  "spine01", "spine02", "spine03", "neck", "head", "breast_l", "breast_r",
-  "clavicle_l", "upperarm_l", "upperarm_twist_l", "lowerarm_l", "lowerarm_twist_l",
-  "hand_l", "thumb01_l", "thumb02_l", "thumb03_l",
-  "index00_l", "index01_l", "index02_l", "index03_l",
-  "middle00_l", "middle01_l", "middle02_l", "middle03_l",
-  "ring00_l", "ring01_l", "ring02_l", "ring03_l",
-  "pinky00_l", "pinky01_l", "pinky02_l", "pinky03_l",
-  "clavicle_r", "upperarm_r", "upperarm_twist_r", "lowerarm_r", "lowerarm_twist_r",
-  "hand_r", "thumb01_r", "thumb02_r", "thumb03_r",
-  "index00_r", "index01_r", "index02_r", "index03_r",
-  "middle00_r", "middle01_r", "middle02_r", "middle03_r",
-  "ring00_r", "ring01_r", "ring02_r", "ring03_r",
-  "pinky00_r", "pinky01_r", "pinky02_r", "pinky03_r",
-  "thigh_l", "thigh_twist_l", "calf_l", "calf_twist_l", "foot_l", "toes_l",
-  "thigh_r", "thigh_twist_r", "calf_r", "calf_twist_r", "foot_r", "toes_r"
+  "spine01", "spine02", "spine03", "neck", "head", "breast_L", "breast_R", // Corrected case for breast
+  "clavicle_L", "upperarm_L", "upperarm_twist_L", "lowerarm_L", "lowerarm_twist_L",
+  "hand_L", "thumb01_L", "thumb02_L", "thumb03_L",
+  "index00_L", "index01_L", "index02_L", "index03_L",
+  "middle00_L", "middle01_L", "middle02_L", "middle03_L",
+  "ring00_L", "ring01_L", "ring02_L", "ring03_L",
+  "pinky00_L", "pinky01_L", "pinky02_L", "pinky03_L",
+  "clavicle_R", "upperarm_R", "upperarm_twist_R", "lowerarm_R", "lowerarm_twist_R",
+  "hand_R", "thumb01_R", "thumb02_R", "thumb03_R",
+  "index00_R", "index01_R", "index02_R", "index03_R",
+  "middle00_R", "middle01_R", "middle02_R", "middle03_R",
+  "ring00_R", "ring01_R", "ring02_R", "ring03_R",
+  "pinky00_R", "pinky01_R", "pinky02_R", "pinky03_R",
+  "thigh_L", "thigh_twist_L", "calf_L", "calf_twist_L", "foot_L", "toes_L",
+  "thigh_R", "thigh_twist_R", "calf_R", "calf_twist_R", "foot_R", "toes_R"
 ];
 
 /**
  * Applies all stored bone rotations from the pose override object 'o'.
- * This replaces the old manual checks and ensures clavicle, upper arm, etc., are read.
+ * This uses the dynamic list and the generic setDegAxis helper.
  */
 function applyLimbOverridesFromOverride(o){
   if (!o || !skeleton) return;
@@ -1374,6 +1374,7 @@ function applyLimbOverridesFromOverride(o){
     const bone = get(boneName);
     if (!bone) return;
     
+    // Check for X, Y, Z rotation overrides (e.g., o["clavicle_LX"])
     ['X', 'Y', 'Z'].forEach(axis => {
       const key = `${boneName}${axis}`;
       if (o[key] !== undefined) {
