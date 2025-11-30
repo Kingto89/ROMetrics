@@ -1341,71 +1341,53 @@ function applyGlobalPF(){
   if (footR) footR.rotateX(-r);
 }
 
+// A comprehensive list of all bones that can be manually tuned/overridden (NEW GLOBAL LIST)
+const ALL_TUNABLE_BONES = [
+  "spine01", "spine02", "spine03", "neck", "head", "breast_l", "breast_r",
+  "clavicle_l", "upperarm_l", "upperarm_twist_l", "lowerarm_l", "lowerarm_twist_l",
+  "hand_l", "thumb01_l", "thumb02_l", "thumb03_l",
+  "index00_l", "index01_l", "index02_l", "index03_l",
+  "middle00_l", "middle01_l", "middle02_l", "middle03_l",
+  "ring00_l", "ring01_l", "ring02_l", "ring03_l",
+  "pinky00_l", "pinky01_l", "pinky02_l", "pinky03_l",
+  "clavicle_r", "upperarm_r", "upperarm_twist_r", "lowerarm_r", "lowerarm_twist_r",
+  "hand_r", "thumb01_r", "thumb02_r", "thumb03_r",
+  "index00_r", "index01_r", "index02_r", "index03_r",
+  "middle00_r", "middle01_r", "middle02_r", "middle03_r",
+  "ring00_r", "ring01_r", "ring02_r", "ring03_r",
+  "pinky00_r", "pinky01_r", "pinky02_r", "pinky03_r",
+  "thigh_l", "thigh_twist_l", "calf_l", "calf_twist_l", "foot_l", "toes_l",
+  "thigh_r", "thigh_twist_r", "calf_r", "calf_twist_r", "foot_r", "toes_r"
+];
+
+/**
+ * Applies all stored bone rotations from the pose override object 'o'.
+ * This replaces the old manual checks and ensures clavicle, upper arm, etc., are read.
+ */
 function applyLimbOverridesFromOverride(o){
   if (!o || !skeleton) return;
   const get = (n)=> skeleton.bones.find(b => b.name === n);
   const rad = THREE.MathUtils.degToRad;
 
-  const thighL = get("thigh_L");
-  const thighR = get("thigh_R");
-  const calfL  = get("calf_L");
-  const calfR  = get("calf_R");
+  // Apply rotations for all tunable bones based on saved overrides (e.g., o.clavicle_lX)
+  ALL_TUNABLE_BONES.forEach(boneName => {
+    const bone = get(boneName);
+    if (!bone) return;
+    
+    ['X', 'Y', 'Z'].forEach(axis => {
+      const key = `${boneName}${axis}`;
+      if (o[key] !== undefined) {
+        // Use setDegAxis to reset the bone and apply the override angle (in degrees)
+        setDegAxis(bone, axis.toLowerCase(), o[key]);
+      }
+    });
+  });
   
-  // Thigh L: X, Y, Z
-  if (thighL){
-    if (o.thighLX !== undefined) thighL.rotateX(rad(o.thighLX));
-    if (o.thighLY !== undefined) thighL.rotateY(rad(o.thighLY));
-    if (o.thighLZ !== undefined) thighL.rotateZ(rad(o.thighLZ));
-  }
-
-  // Thigh R: X, Y, Z
-  if (thighR){
-    if (o.thighRX !== undefined) thighR.rotateX(rad(o.thighRX));
-    if (o.thighRY !== undefined) thighR.rotateY(rad(o.thighRY));
-    if (o.thighRZ !== undefined) thighR.rotateZ(rad(o.thighRZ));
-  }
-
-  // Calf L: X, Z
-  if (calfL){
-    if (o.calfLX !== undefined) calfL.rotateX(rad(o.calfLX));
-    if (o.calfLZ !== undefined) calfL.rotateZ(rad(o.calfLZ));
-  }
-
-  // Calf R: X, Z
-  if (calfR){
-    if (o.calfRX !== undefined) calfR.rotateX(rad(o.calfRX));
-    if (o.calfRZ !== undefined) calfR.rotateZ(rad(o.calfRZ));
-  }
-  // Spine (trunk) — X, Y, Z for "spine01"
-  const spine = get("spine01");
-  if (spine){
-    if (o.spineX !== undefined) spine.rotateX(rad(o.spineX));
-    if (o.spineY !== undefined) spine.rotateY(rad(o.spineY));
-    if (o.spineZ !== undefined) spine.rotateZ(rad(o.spineZ));
-  }  
-// --- START: Requested Manual Override for "head" bone ---
-  const head = get("head");
-  if (head){
-    if (o.headX !== undefined) head.rotateX(rad(o.headX));
-    if (o.headY !== undefined) head.rotateY(rad(o.headY));
-    if (o.headZ !== undefined) head.rotateZ(rad(o.headZ));
-  }
- // === NEW: CLAVICLE (Manual Override target) ===
-  const clavL = get("clavicle_L");
-  const clavR = get("clavicle_R");
-
-  if (clavL){
-    if (o.clavicleLX !== undefined) clavL.rotateX(rad(o.clavicleLX));
-    if (o.clavicleLY !== undefined) clavL.rotateY(rad(o.clavicleLY));
-    if (o.clavicleLZ !== undefined) clavL.rotateZ(rad(o.clavicleLZ));
-  }
-
-  if (clavR){
-    if (o.clavicleRX !== undefined) clavR.rotateX(rad(o.clavicleRX));
-    if (o.clavicleRY !== undefined) clavR.rotateY(rad(o.clavicleRY));
-    if (o.clavicleRZ !== undefined) clavR.rotateZ(rad(o.clavicleRZ));
-  }
-}  
+  // Re-apply specific side-lying overrides which are separate from general bone overrides
+  if (o.footInvR !== undefined) setDegAxis(get("foot_R"), "z", o.footInvR);
+  if (o.footEvL !== undefined) setDegAxis(get("foot_L"), "z", o.footEvL);
+  if (o.neckLatL !== undefined) setDegAxis(get("neck"), "z", o.neckLatL);
+}
 
 // Coarse body-mode: align to bed/cabinet but don't set specific joint test angles
 function setBodyMode(mode, isResistanceActive = false){ // <-- ADDED isResistanceActive = false
@@ -2695,178 +2677,162 @@ function ensurePoseTuner(){
     return key;
   }
 
-  function applyOverride(key){
-    const o = key && POSE_OVERRIDES[key];
-    if (!o || !model) return;
-    model.position.set(o.x, o.y, o.z);
-    model.rotation.set(o.rx, o.ry, o.rz);
-  }
+function applyOverride(key){
+    const o = key && POSE_OVERRIDES[key];
+    if (!o || !model) return;
+    model.position.set(o.x, o.y, o.z);
+    model.rotation.set(o.rx, o.ry, o.rz);
+  }
 
 const boneTunerSelect = poseTunerEl.querySelector('#boneTunerSelect');
 
-  // Helper to get the currently selected bone object
-  function getSelectedBone(){
-      const boneName = boneTunerSelect.value;
-      if (!boneName || boneName === "") return null;
-      return getBone(boneName);
-  }
+  // Helper to get the currently selected bone object
+  function getSelectedBone(){
+      const boneName = boneTunerSelect.value;
+      if (!boneName || boneName === "") return null;
+      return getBone(boneName);
+  }
 
-  // 1. Root Model Position buttons (data-axis - top row)
-  poseTunerEl.querySelectorAll('button[data-axis]:not([data-mode])').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const key = ensureOverrideFromCurrentPose();
-      if (!key) return;
-      const axis = btn.getAttribute('data-axis');
-      const delta = parseFloat(btn.getAttribute('data-delta') || '0');
-      const o = POSE_OVERRIDES[key];
-      if (axis === 'x') o.x += delta;
-      if (axis === 'y') o.y += delta;
-      if (axis === 'z') o.z += delta;
-      applyOverride(key);
-    });
-  });
+  // Helper to extract rotation data for a specific bone for logging
+  function getBoneRotationData(boneName, boneLog) {
+      const bone = getBone(boneName);
+      if (bone) {
+          const rx = extractAxisDeg(boneName, "x");
+          const ry = extractAxisDeg(boneName, "y");
+          const rz = extractAxisDeg(boneName, "z");
 
+          // Check if rotation is significant (threshold 0.1 degree)
+          if (Math.abs(rx) > 0.1 || Math.abs(ry) > 0.1 || Math.abs(rz) > 0.1) {
+              // Log to a temporary object for the console output
+              if (Math.abs(rx) > 0.1) boneLog[`${boneName}X`] = rx.toFixed(1);
+              if (Math.abs(ry) > 0.1) boneLog[`${boneName}Y`] = ry.toFixed(1);
+              if (Math.abs(rz) > 0.1) boneLog[`${boneName}Z`] = rz.toFixed(1);
+          }
+      }
+  }
 
-  // 2. Bone Position/Rotation (data-mode) AND Root Model Yaw (data-rot="y")
-  poseTunerEl.querySelectorAll('button[data-mode], button[data-rot]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const mode = btn.getAttribute('data-mode'); // 'bpos' or 'brot' (for bone)
-      const rotAxis = btn.getAttribute('data-rot'); // 'y' (for root yaw)
-      const axis = btn.getAttribute('data-axis');   // x, y, z (for bpos/brot)
-      const delta = parseFloat(btn.getAttribute('data-delta') || '0');
-      const deltaRad = THREE.MathUtils.degToRad(delta);
-
-      const bone = getSelectedBone();
-      const key = getCurrentOverrideKey();
-
-      // A) Bone Position Adjustment (bpos) - ONLY TARGETS SELECTED BONE
-      if (mode === 'bpos'){
-          if (!bone) {
-              console.warn("Select a bone to adjust its local position.");
-              return; 
-          }
-          // *** FIXED: Moves the selected bone only ***
-          bone.position[axis] += delta; 
-          return; 
-      } 
-      
-      // B) Bone Rotation Adjustment (brot) - ONLY TARGETS SELECTED BONE
-      else if (mode === 'brot') {
-          if (!bone) {
-              console.warn("Select a bone to adjust its rotation.");
-              return;
-          }
-          // Rotates the selected bone only
-          bone.rotation[axis] += deltaRad;
-      }
-
-      // C) Root Model Yaw Rotation (data-rot="y")
-      else if (rotAxis === 'y' && key) {
-          ensureOverrideFromCurrentPose(); 
-          const o = POSE_OVERRIDES[key];
-          o.ry += deltaRad;
-          applyOverride(key);
-      }
-    });
-  });
-
-  // Reset to base (throw away override & re-apply base mode)
-  btnSnapBase.onclick = () => {
-    const key = getCurrentOverrideKey();
-    if (key && POSE_OVERRIDES[key]) delete POSE_OVERRIDES[key];
-    applyBodyPositionFromSelection();
-    updateLabels();
-  };
-// Helper to extract rotation data for a specific bone for logging
-  function getBoneRotationData(boneName, boneLog) {
-      const bone = getBone(boneName);
-      if (bone) {
-          const rx = extractAxisDeg(boneName, "x");
-          const ry = extractAxisDeg(boneName, "y");
-          const rz = extractAxisDeg(boneName, "z");
-
-          // Check if rotation is significant (threshold 0.1 degree)
-          if (Math.abs(rx) > 0.1 || Math.abs(ry) > 0.1 || Math.abs(rz) > 0.1) {
-              // Log to a temporary object for the console output
-              if (Math.abs(rx) > 0.1) boneLog[`${boneName}X`] = rx.toFixed(1);
-              if (Math.abs(ry) > 0.1) boneLog[`${boneName}Y`] = ry.toFixed(1);
-              if (Math.abs(rz) > 0.1) boneLog[`${boneName}Z`] = rz.toFixed(1);
-          }
-      }
-  }
-// Save button logs config INCLUDING all bone rotations
-  btnSave.onclick = () => {
-    const key = ensureOverrideFromCurrentPose();
-    if (!key) return;
-    const o = POSE_OVERRIDES[key];
-
-    // --- 1. Root Model & Hardcoded Saves ---
-    // Note: GLOBAL_PF_DEG is now unused but retained for legacy override structure
-    o.pf = GLOBAL_PF_DEG || 0; 
-    o.footInvR = extractAxisDeg("foot_R", "z");
-    o.footEvL  = extractAxisDeg("foot_L", "z");
-    o.neckLatL = extractAxisDeg("neck",   "z");
-
-    // --- 2. Bone Rotation Saving (NEW Logic) ---
-    const allBones = [
-      "spine01", "spine02", "spine03", "neck", "head", "breast_l", "breast_r",
-      "clavicle_l", "upperarm_l", "upperarm_twist_l", "lowerarm_l", "lowerarm_twist_l",
-      "hand_l", "thumb01_l", "thumb02_l", "thumb03_l",
-      "index00_l", "index01_l", "index02_l", "index03_l",
-      "middle00_l", "middle01_l", "middle02_l", "middle03_l",
-      "ring00_l", "ring01_l", "ring02_l", "ring03_l",
-      "pinky00_l", "pinky01_l", "pinky02_l", "pinky03_l",
-      "clavicle_r", "upperarm_r", "upperarm_twist_r", "lowerarm_r", "lowerarm_twist_r",
-      "hand_r", "thumb01_r", "thumb02_r", "thumb03_r",
-      "index00_r", "index01_r", "index02_r", "index03_r",
-      "middle00_r", "middle01_r", "middle02_r", "middle03_r",
-      "ring00_r", "ring01_r", "ring02_r", "ring03_r",
-      "pinky00_r", "pinky01_r", "pinky02_r", "pinky03_r",
-      "thigh_l", "thigh_twist_l", "calf_l", "calf_twist_l", "foot_l", "toes_l",
-      "thigh_r", "thigh_twist_r", "calf_r", "calf_twist_r", "foot_r", "toes_r"
-    ];
-
-    const boneRotations = {}; // Collects all non-zero rotations
-    allBones.forEach(boneName => getBoneRotationData(boneName, boneRotations));
-    
-    // --- 3. Final Console Log ---
-    
-    // Log Model Root Pose
-    console.log(
-      `POSE_OVERRIDES["${key}"] = { ` +
-      `x:${o.x.toFixed(3)}, y:${o.y.toFixed(3)}, z:${o.z.toFixed(3)}, ` +
-      `rx:${o.rx.toFixed(3)}, ry:${o.ry.toFixed(3)}, rz:${o.rz.toFixed(3)}, ` +
-      `pf:${o.pf.toFixed(1)}, ` +
-      `footInvR:${o.footInvR.toFixed(1)}, footEvL:${o.footEvL.toFixed(1)}, neckLatL:${o.neckLatL.toFixed(1)} };`
-    );
-    
-    // Log detailed bone rotations separately
-    if (Object.keys(boneRotations).length > 0) {
-        // Output bone rotations in a format for easy manual copy/paste as joint angle overrides
-        console.log(`\n// --- MANUAL JOINT ANGLE OVERRIDES FOR: ${key} ---`);
-        const boneString = Object.entries(boneRotations)
-          .map(([k, v]) => `${k}:${v}`)
-          .join(', ');
-        console.log(boneString);
-        console.log(`// --------------------------------------------------\n`);
-    }
-
-    labelTest.style.color = '#22c55e';
-    setTimeout(()=>labelTest.style.color='#e2e8f0', 600);
-  };
+  // 1. Root Model Position buttons (data-axis - top row)
+  poseTunerEl.querySelectorAll('button[data-axis]:not([data-mode])').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const key = ensureOverrideFromCurrentPose();
+      if (!key) return;
+      const axis = btn.getAttribute('data-axis');
+      const delta = parseFloat(btn.getAttribute('data-delta') || '0');
+      const o = POSE_OVERRIDES[key];
+      if (axis === 'x') o.x += delta;
+      if (axis === 'y') o.y += delta;
+      if (axis === 'z') o.z += delta;
+      applyOverride(key);
+    });
+  });
 
 
+  // 2. Bone Position/Rotation (data-mode) AND Root Model Yaw (data-rot="y")
+  poseTunerEl.querySelectorAll('button[data-mode], button[data-rot]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const mode = btn.getAttribute('data-mode'); // 'bpos' or 'brot' (for bone)
+      const rotAxis = btn.getAttribute('data-rot'); // 'y' (for root yaw)
+      const axis = btn.getAttribute('data-axis');   // x, y, z (for bpos/brot)
+      const delta = parseFloat(btn.getAttribute('data-delta') || '0');
+      const deltaRad = THREE.MathUtils.degToRad(delta);
 
-  // Close
-  btnClose.onclick = () => {
-    poseTunerVisible = false;
-    poseTunerEl.style.display = 'none';
-  };
+      const bone = getSelectedBone();
+      const key = getCurrentOverrideKey();
 
-  // Public helper so other code can refresh labels when test/grade changes
-  poseTunerEl.updateLabels = updateLabels;
+      // A) Bone Position Adjustment (bpos) - ONLY TARGETS SELECTED BONE
+      if (mode === 'bpos'){
+          if (!bone) {
+              console.warn("Select a bone to adjust its local position.");
+              return; 
+          }
+          // *** FIXED: Moves the selected bone only (Position is local to parent) ***
+          bone.position[axis] += delta; 
+          return; 
+      } 
+      
+      // B) Bone Rotation Adjustment (brot) - ONLY TARGETS SELECTED BONE
+      else if (mode === 'brot') {
+          if (!bone) {
+              console.warn("Select a bone to adjust its rotation.");
+              return;
+          }
+          // Rotates the selected bone only
+          bone.rotation[axis] += deltaRad;
+      }
 
-  return poseTunerEl;
+      // C) Root Model Yaw Rotation (data-rot="y")
+      else if (rotAxis === 'y' && key) {
+          ensureOverrideFromCurrentPose(); 
+          const o = POSE_OVERRIDES[key];
+          o.ry += deltaRad;
+          applyOverride(key);
+      }
+    });
+  });
+
+  // Reset to base (throw away override & re-apply base mode)
+  btnSnapBase.onclick = () => {
+    const key = getCurrentOverrideKey();
+    if (key && POSE_OVERRIDES[key]) delete POSE_OVERRIDES[key];
+    applyBodyPositionFromSelection();
+    updateLabels();
+  };
+
+  // Save button logs config INCLUDING all bone rotations
+  btnSave.onclick = () => {
+    const key = ensureOverrideFromCurrentPose();
+    if (!key) return;
+    const o = POSE_OVERRIDES[key];
+
+    // --- 1. Root Model & Hardcoded Saves ---
+    o.pf = GLOBAL_PF_DEG || 0; 
+    o.footInvR = extractAxisDeg("foot_R", "z");
+    o.footEvL  = extractAxisDeg("foot_L", "z");
+    o.neckLatL = extractAxisDeg("neck",   "z");
+
+    // --- 2. Bone Rotation Saving (NEW Logic) ---
+    const allBones = ALL_TUNABLE_BONES; 
+
+    const boneRotations = {}; // Collects all non-zero rotations
+    allBones.forEach(boneName => getBoneRotationData(boneName, boneRotations));
+    
+    // --- 3. Final Console Log ---
+    
+    // Log Model Root Pose
+    console.log(
+      `POSE_OVERRIDES["${key}"] = { ` +
+      `x:${o.x.toFixed(3)}, y:${o.y.toFixed(3)}, z:${o.z.toFixed(3)}, ` +
+      `rx:${o.rx.toFixed(3)}, ry:${o.ry.toFixed(3)}, rz:${o.rz.toFixed(3)}, ` +
+      `pf:${o.pf.toFixed(1)}, ` +
+      `footInvR:${o.footInvR.toFixed(1)}, footEvL:${o.footEvL.toFixed(1)}, neckLatL:${o.neckLatL.toFixed(1)} };`
+    );
+    
+    // Log detailed bone rotations separately
+    if (Object.keys(boneRotations).length > 0) {
+        // Output bone rotations in a format for easy manual copy/paste as joint angle overrides
+        console.log(`\n// --- MANUAL JOINT ANGLE OVERRIDES FOR: ${key} ---`);
+        const boneString = Object.entries(boneRotations)
+          .map(([k, v]) => `${k}:${v}`)
+          .join(', ');
+        console.log(boneString);
+        console.log(`// --------------------------------------------------\n`);
+    }
+
+    labelTest.style.color = '#22c55e';
+    setTimeout(()=>labelTest.style.color='#e2e8f0', 600);
+  };
+
+
+  // Close
+  btnClose.onclick = () => {
+    poseTunerVisible = false;
+    poseTunerEl.style.display = 'none';
+  };
+
+  // Public helper so other code can refresh labels when test/grade changes
+  poseTunerEl.updateLabels = updateLabels;
+
+  return poseTunerEl;
 }
 
 function showPoseTuner(show){
