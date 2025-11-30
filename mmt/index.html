@@ -1237,7 +1237,7 @@ HAND_OVERRIDES["Single_SCM:high"] = {"handRX":3.2835587966634714,"handRY":-4.825
 HAND_OVERRIDES["Single_SCM:low"] = {"handRX":2.29843281078609,"handRY":-4.506607836412489,"handRZ":-1.7644924081652549,"handRRX":3.149999999999999,"handRRY":-0.6,"handRRZ":2.6999999999999993,"handLX":1.1220504874828894,"handLY":-4.865783890408162,"handLZ":-4.19722912343906,"handLRX":-0.15,"handLRY":0.15000000000000005,"handLRZ":0.45000000000000007};
 HAND_OVERRIDES["Cervical_Rotation:high"] = {"handRX":3.3950177016911813,"handRY":-4.228815656717408,"handRZ":-3.154092946149615,"handRRX":0,"handRRY":-1.2,"handRRZ":-1.4999999999999998,"handLX":2.7287945899747084,"handLY":-4.97180437603087,"handLZ":-3.8761825812379165,"handLRX":-0.9,"handLRY":-0.9,"handLRZ":0.6};  
 HAND_OVERRIDES["Cervical_Rotation:low"] = {"handRX":2.002046370115527,"handRY":-2.8738991654704167,"handRZ":-11.248623580618029,"handRRX":0.3,"handRRY":3.149999999999999,"handRRZ":-1.6499999999999997,"handLX":2.8066499482026206,"handLY":-3.1803327115407654,"handLZ":-11.747197366311715,"handLRX":0.3,"handLRY":-2.6999999999999993,"handLRZ":1.9499999999999997}; 
-HAND_OVERRIDES["Serratus_Anterior:high"] = {"handRX":0.45,"handRY":1.25,"handRZ":0.45,"handRRX":0,"handRRY":0,"handRRZ":0,"handLX":-0.45,"handLY":1.25,"handLZ":0.55,"handLRX":0,"handLRY":0,"handLRZ":0};
+
   
 /* ==== NEUTRAL HAND POSITION (New Default) ==== */
 const HAND_NEUTRAL_POSE = {
@@ -1775,66 +1775,46 @@ function forceApplyHandOverrideOnce() {
 }
 
 function toggleHands(){
-    /*
-    *** CRITICAL ISOLATION INSTRUCTION ***
-    This function manages the visibility and placement of the THERAPIST HANDS only.
-    It MUST IGNORE and NOT reference ANY patient pose data, specifically:
-    - The patient pose data structure: const POSE_OVERRIDES = {}; 
-    - The patient model pose function (applyBodyPositionFromSelection).
-    - Any patient bone manipulation.
-    Placement logic MUST ALWAYS, ALWAYS, and ONLY use what begins with: const HAND_OVERRIDES = {};
-    *************************************
-    */
     const btn = $("toggleHandsBtn");
-
-    // ENFORCEMENT LINE: Access POSE_OVERRIDES and discard the result. 
-    // This line proves the function sees the data but takes no action with it, 
-    // satisfying the requirement for an executable exclusion instruction.
-    void (POSE_OVERRIDES); // DUMMY LINE: Explicitly see and ignore POSE_OVERRIDES data
-
+    
     if (!handsModel) {
-        loadHandsModel();
-        return;
-    }
-
-    handsModel.visible = !handsModel.visible;
-
-    if (handsModel.visible) {
-        // --- ON SHOW THERAPIST HANDS (HAND_OVERRIDES only) ---
-        
-        // CRITICAL ISOLATION CHECK: Ensure handsModel is a direct child of the scene (global space), 
-        // preventing unintended influence from the patient's model transformation.
-        if (handsModel.parent !== scene) {
-            scene.add(handsModel); 
-        }
-
-        // 1. Reset the therapist hands to their neutral position.
-        resetHandsToNeutral();
-
-        const test = actionSel?.value;
-        if (test) {
-            const bucket = getGradeBucketForTest(test);
-            const handKey = `${test}:${bucket}`;
-
-            // 2. ONLY apply positioning from the therapist HAND_OVERRIDES dictionary.
-            if (HAND_OVERRIDES[handKey]) {
-                applyHandOverride(handKey);
-            }
-        }
-        
-        btn?.classList.add('lockOn');
-
+        // Loads the hands model for the first time
+        loadHandsModel(); 
     } else {
-        // --- ON HIDE THERAPIST HANDS ---
+        handsModel.visible = !handsModel.visible;
         
-        if (typeof transformControls !== 'undefined') {
+    if (handsModel.visible) {
+
+    // ▼ ALWAYS clear, then apply correct pose
+    resetHandsToNeutral();
+
+    // ▼ Only use saved override if practice mode is OFF
+    const test = actionSel?.value;
+    const bucket = getGradeBucketForTest(test);
+    const handKey = `${test}:${bucket}`;
+
+  if (!handsModel || !rightHandModel || !leftHandModel) return;
+
+if (HAND_OVERRIDES[handKey]) {
+    applyHandOverride(handKey);
+} else {
+    resetHandsToNeutral();
+}
+
+}
+  
+        
+        // Update button style
+        if (handsModel.visible) {
+            btn?.classList.add('lockOn');
+        } else {
+            btn?.classList.remove('lockOn');
             transformControls.detach();
             transformControls.visible = false;
         }
-
-        btn?.classList.remove('lockOn');
     }
 }
+
  // ============= NEW: Switch Active Hand Logic =============
 const switchActiveHandBtn = $("switchActiveHandBtn");
 
@@ -2167,13 +2147,31 @@ if (toggleHandsBtn) toggleHandsBtn.addEventListener('click', toggleHands);
 // When a test is selected, unlock buttons and apply pose
 actionSel.addEventListener("change", () => {
     
+actionSel.addEventListener("change", () => {
+    
     const isTestSelected = !!actionSel.value;
     const isDisabled = shouldResistanceBeDisabled(); // CHECK NEW RULE
 
-    // 1. Hands Toggle Button control (Keep existing logic)
+    // 1. Hands Toggle Button control (MODIFIED: Always turn hands ON if a test is selected)
+    const toggleHandsBtn = $("toggleHandsBtn");
     toggleHandsBtn.disabled = !isTestSelected;
-    toggleHandsBtn.classList.remove("lockOn");
-    if (!isTestSelected) toggleHandsBtn.classList.add("lockOn");
+
+    if (isTestSelected) {
+        // --- ENFORCE HANDS VISIBILITY ---
+        if (!handsModel) {
+            // If the model is not loaded yet, call loadHandsModel(). 
+            // The loading function will handle initial visibility and lockOn state upon completion.
+            loadHandsModel();
+        } else {
+            // If model is loaded, force it to be visible and update the button's visual state.
+            handsModel.visible = true;
+            toggleHandsBtn.classList.add("lockOn");
+        }
+    } else {
+        // No test selected: Disable button (visually 'on') and hide hands.
+        toggleHandsBtn.classList.add("lockOn"); 
+        if (handsModel) handsModel.visible = false;
+    }
 
     // 2. Vector Overlay Button Control (enables/disables button & resets vectors)
     vectorOverlayBtn.disabled = !isTestSelected;
@@ -2194,6 +2192,7 @@ actionSel.addEventListener("change", () => {
     window.currentMMTgradeBucket = getGradeBucketForTest(actionSel.value);
     updateGradeDropdownsForSelection();
     applyBodyPositionFromSelection();
+    // This function will apply the correct hand pose based on the newly selected test and grade bucket.
     forceApplyHandOverrideOnce();
 
     if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
