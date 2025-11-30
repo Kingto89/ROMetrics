@@ -2713,22 +2713,23 @@ function ensurePoseTuner(){
     if (!CURRENT_BODY_TEST || !CURRENT_BODY_BUCKET) return null;
     return `${CURRENT_BODY_TEST}:${CURRENT_BODY_BUCKET}`;
   }
-function ensureOverrideFromCurrentPose(){
-    const key = getCurrentOverrideKey();
-    if (!key || !model) return null;
-    if (!POSE_OVERRIDES[key]){
-      const euler = new THREE.Euler().copy(model.rotation);
-      POSE_OVERRIDES[key] = {
-        x: model.position.x,
-        y: model.position.y,
-        z: model.position.z,
-        rx: euler.x,
-        ry: euler.y,
-        rz: euler.z
-      };
-    }
-    return key;
-  }
+
+  function ensureOverrideFromCurrentPose(){
+    const key = getCurrentOverrideKey();
+    if (!key || !model) return null;
+    if (!POSE_OVERRIDES[key]){
+      const euler = new THREE.Euler().copy(model.rotation);
+      POSE_OVERRIDES[key] = {
+        x: model.position.x,
+        y: model.position.y,
+        z: model.position.z,
+        rx: euler.x,
+        ry: euler.y,
+        rz: euler.z
+      };
+    }
+    return key;
+  }
 
 function applyOverride(key){
     const o = key && POSE_OVERRIDES[key];
@@ -2792,18 +2793,26 @@ const boneTunerSelect = poseTunerEl.querySelector('#boneTunerSelect');
       const bone = getSelectedBone();
       const key = getCurrentOverrideKey();
 
-      // A) Bone Position Adjustment (bpos) - THIS LOGIC IS NOW SKIPPED/REMOVED.
-      // The button handlers for 'bpos' will now do nothing, preventing stretching/compressing.
-
+// A) Bone Position Adjustment (bpos) - ONLY TARGETS SELECTED BONE
+      if (mode === 'bpos'){
+          if (!bone) {
+              console.warn("Select a bone to adjust its local position.");
+              return; 
+          }
+          // *** FIXED: Moves the selected bone only (Position is local to parent) ***
+          bone.position[axis] += delta; 
+          return; 
+      } 
+      
       // B) Bone Rotation Adjustment (brot) - ONLY TARGETS SELECTED BONE
-      if (mode === 'brot') {
+      else if (mode === 'brot') {
           if (!bone) {
               console.warn("Select a bone to adjust its rotation.");
               return;
           }
           const rotationAxis = bone.rotation;
 
-          // FIX: Swap Roll (Z) and Yaw (Y) for correct anatomical movement
+          // Assume Flex/Ext (X) is correct. Swap Roll (Z) and Yaw (Y).
           if (axis === 'x') {
               rotationAxis.x += deltaRad; // X button -> X axis (Flexion/Extension)
           } else if (axis === 'y') {
@@ -2844,7 +2853,7 @@ const boneTunerSelect = poseTunerEl.querySelector('#boneTunerSelect');
     o.neckLatL = extractAxisDeg("neck",   "z");
 
     // --- 2. Bone Rotation Saving (NEW Logic) ---
-    const allBones = ALL_TUNABLE_BONES; 
+    const allBones = ALL_TUNABLE_BONES; 
 
     const boneRotations = {}; // Collects all non-zero rotations
     allBones.forEach(boneName => getBoneRotationData(boneName, boneRotations));
@@ -2859,18 +2868,6 @@ const boneTunerSelect = poseTunerEl.querySelector('#boneTunerSelect');
       `pf:${o.pf.toFixed(1)}, ` +
       `footInvR:${o.footInvR.toFixed(1)}, footEvL:${o.footEvL.toFixed(1)}, neckLatL:${o.neckLatL.toFixed(1)} };`
     );
-    
-    // Log detailed bone rotations separately
-    if (Object.keys(boneRotations).length > 0) {
-        // Output bone rotations in a format for easy manual copy/paste as joint angle overrides
-        console.log(`\n// --- MANUAL JOINT ANGLE OVERRIDES FOR: ${key} ---`);
-        const boneString = Object.entries(boneRotations)
-          .map(([k, v]) => `${k}:${v}`)
-          .join(', ');
-        console.log(boneString);
-        console.log(`// --------------------------------------------------\n`);
-    }
-  };
     
     // Log detailed bone rotations separately
     if (Object.keys(boneRotations).length > 0) {
