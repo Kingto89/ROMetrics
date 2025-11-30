@@ -2592,14 +2592,7 @@ function ensurePoseTuner(){
       </div>
     </div>
 
-<label style="display:block;opacity:.85;margin-top:8px;">Global Plantarflexion/Dorsiflexion</label>
-    <div style="display:flex;gap:4px;margin-bottom:4px;align-items:center;">
-      <button data-pf="-5" class="mini">Dorsiflex (–)</button>
-      <button data-pf="5" class="mini">Plantarflex (+)</button>
-      <span id="pfLabel" style="margin-left:auto;opacity:.7;">0°</span>
-    </div>
-
-    <div style="display:flex;gap:8px;margin-top:8px;">
+<div style="display:flex;gap:8px;margin-top:8px;">
       <button id="poseTunerSnapBase" class="mini" style="flex:1;">Reset to Base Mode</button>
       <button id="poseTunerSave" class="mini" style="flex:1;background:#0f766e;border-color:#0f766e;color:#fff;">Save for Test</button>
     </div>
@@ -2607,7 +2600,7 @@ function ensurePoseTuner(){
     <div style="margin-top:6px;font-size:10px;opacity:.7;">
       Uses current dropdown + grade to decide <em>which</em> pose (high vs low) you’re tuning.
     </div>
-  `; // 
+  `; // IMPORTANT: Ensure the closing backtick and semicolon (`;) are included if this closes the innerHTML assignment.
 
   document.body.appendChild(poseTunerEl);
 
