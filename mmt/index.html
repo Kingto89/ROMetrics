@@ -1581,7 +1581,7 @@ if (!HAND_OVERRIDES[key] && poseToApply) {
         if (h.handLRY != null) leftHandModel.rotation.y = h.handLRY;
         if (h.handLRZ != null) leftHandModel.rotation.z = h.handLRZ;
     }
-  // === NEW: CLAVICLE (Manual Override target) ===
+// === NEW: CLAVICLE (Manual Override target) ===
   const clavL = get("clavicle_L");
   const clavR = get("clavicle_R");
 
@@ -1596,9 +1596,7 @@ if (!HAND_OVERRIDES[key] && poseToApply) {
     if (o.clavicleRY !== undefined) clavR.rotateY(rad(o.clavicleRY));
     if (o.clavicleRZ !== undefined) clavR.rotateZ(rad(o.clavicleRZ));
   }
- }
-
-
+// === END: CLAVICLE ===
   // Optional arm/hand fine-tune rotations (shortcut from POSE_OVERRIDES) 
   if (key && POSE_OVERRIDES[key] && skeleton){
     const o = POSE_OVERRIDES[key];
