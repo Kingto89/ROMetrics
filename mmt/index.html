@@ -2811,8 +2811,23 @@ const boneTunerSelect = poseTunerEl.querySelector('#boneTunerSelect');
               return;
           }
           // Rotates the selected bone only
-          bone.rotation[axis] += deltaRad;
-      }
+        // B) Bone Rotation Adjustment (brot) - ONLY TARGETS SELECTED BONE
+    else if (mode === 'brot') {
+        if (!bone) {
+            console.warn("Select a bone to adjust its rotation.");
+            return;
+        }
+        const rotationAxis = bone.rotation;
+
+        // Assume Flex/Ext (X) is correct. Swap Roll (Z) and Yaw (Y).
+        if (axis === 'x') {
+            rotationAxis.x += deltaRad;
+        } else if (axis === 'y') {
+            rotationAxis.z += deltaRad; // Y-button now rotates Z-axis (Internal/External Rotation)
+        } else if (axis === 'z') {
+            rotationAxis.y += deltaRad; // Z-button now rotates Y-axis (Abduction/Adduction)
+        }
+    }
 
       // C) Root Model Yaw Rotation (data-rot="y")
       else if (rotAxis === 'y' && key) {
