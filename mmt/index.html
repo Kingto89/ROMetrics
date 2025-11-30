@@ -1386,6 +1386,21 @@ function applyLimbOverridesFromOverride(o){
     if (o.headY !== undefined) head.rotateY(rad(o.headY));
     if (o.headZ !== undefined) head.rotateZ(rad(o.headZ));
   }
+ // === NEW: CLAVICLE (Manual Override target) ===
+  const clavL = get("clavicle_L");
+  const clavR = get("clavicle_R");
+
+  if (clavL){
+    if (o.clavicleLX !== undefined) clavL.rotateX(rad(o.clavicleLX));
+    if (o.clavicleLY !== undefined) clavL.rotateY(rad(o.clavicleLY));
+    if (o.clavicleLZ !== undefined) clavL.rotateZ(rad(o.clavicleLZ));
+  }
+
+  if (clavR){
+    if (o.clavicleRX !== undefined) clavR.rotateX(rad(o.clavicleRX));
+    if (o.clavicleRY !== undefined) clavR.rotateY(rad(o.clavicleRY));
+    if (o.clavicleRZ !== undefined) clavR.rotateZ(rad(o.clavicleRZ));
+  }
 }  
 
 // Coarse body-mode: align to bed/cabinet but don't set specific joint test angles
@@ -1581,23 +1596,9 @@ if (!HAND_OVERRIDES[key] && poseToApply) {
         if (h.handLRY != null) leftHandModel.rotation.y = h.handLRY;
         if (h.handLRZ != null) leftHandModel.rotation.z = h.handLRZ;
     }
-// === NEW: CLAVICLE (Manual Override target) ===
-  const clavL = get("clavicle_L");
-  const clavR = get("clavicle_R");
+ }
 
-  if (clavL){
-    if (o.clavicleLX !== undefined) clavL.rotateX(rad(o.clavicleLX));
-    if (o.clavicleLY !== undefined) clavL.rotateY(rad(o.clavicleLY));
-    if (o.clavicleLZ !== undefined) clavL.rotateZ(rad(o.clavicleLZ));
-  }
 
-  if (clavR){
-    if (o.clavicleRX !== undefined) clavR.rotateX(rad(o.clavicleRX));
-    if (o.clavicleRY !== undefined) clavR.rotateY(rad(o.clavicleRY));
-    if (o.clavicleRZ !== undefined) clavR.rotateZ(rad(o.clavicleRZ));
-    }
-  } 
-// === END: CLAVICLE ===
   // Optional arm/hand fine-tune rotations (shortcut from POSE_OVERRIDES) 
   if (key && POSE_OVERRIDES[key] && skeleton){
     const o = POSE_OVERRIDES[key];
