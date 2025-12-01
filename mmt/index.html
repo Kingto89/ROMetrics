@@ -945,7 +945,6 @@ const BONE_FOR = {
   model_root:'__model__'
 };
 
-};
  
 const poseDeg = Object.fromEntries(Object.keys(BONE_FOR).map(k => [k, 0]));  
 const _axis = (k)=>{ const v=AXIS_MAP[k]; return v?.startsWith('-')?v.slice(1):v; };
