@@ -2781,41 +2781,48 @@ const boneTunerSelect = poseTunerEl.querySelector('#boneTunerSelect');
   });
 
 
- poseTunerEl.querySelectorAll('button[data-mode], button[data-rot]').forEach(btn=>{
+poseTunerEl.querySelectorAll('button[data-mode], button[data-rot]').forEach(btn=>{
   btn.addEventListener('click', ()=>{
 
-    const mode = btn.getAttribute('data-mode');   // 'bpos' or 'brot'
-    const rotAxis = btn.getAttribute('data-rot'); // 'y' (root yaw)
-    const axis = btn.getAttribute('data-axis');   // x, y, z
-    const delta = parseFloat(btn.getAttribute('data-delta') || '0');
+    const mode    = btn.getAttribute('data-mode');   // 'bpos' or 'brot'
+    const rotAxis = btn.getAttribute('data-rot');     // 'y' for root yaw
+    const axis    = btn.getAttribute('data-axis');    // x, y, z
+    const delta   = parseFloat(btn.getAttribute('data-delta') || '0');
     const deltaRad = THREE.MathUtils.degToRad(delta);
 
-    const bone = getSelectedBone();
-    const key  = getCurrentOverrideKey();
+    const bone = getSelectedBone();       // REAL SELECTED BONE
+    const key  = getCurrentOverrideKey(); // ONLY used for root yaw
 
-    // A) Bone Position (SECOND ROW) → rotate like a joint, NOT slide
+    // --------------------------
+    // A) BONE POSITION  (2nd row)
+    // --------------------------
     if (mode === 'bpos'){
         if (!bone){
             console.warn("Select a bone to adjust its local position.");
             return;
         }
 
-        bone.rotation[axis] += deltaRad;   // ← STEP 1 FIX
+        // Rotate bone instead of sliding — correct Step 1 behavior
+        bone.rotation[axis] += deltaRad;
         return;
     }
 
-    // B) Bone Rotation (THIRD ROW)
+    // --------------------------
+    // B) BONE ROTATION  (3rd row)
+    // --------------------------
     if (mode === 'brot'){
         if (!bone){
             console.warn("Select a bone to adjust its rotation.");
             return;
         }
 
-        bone.rotation[axis] += deltaRad;   // Keep same
+        bone.rotation[axis] += deltaRad;
         return;
     }
 
-    // C) Root Model Yaw (⟲ ⟳)
+    // --------------------------
+    // C) ROOT MODEL ROTATION (⟲ ⟳)
+    // --------------------------
     if (rotAxis === 'y' && key){
         ensureOverrideFromCurrentPose();
         const o = POSE_OVERRIDES[key];
@@ -2826,6 +2833,7 @@ const boneTunerSelect = poseTunerEl.querySelector('#boneTunerSelect');
 
   });
 });
+
 
 
   // Reset to base (throw away override & re-apply base mode)
