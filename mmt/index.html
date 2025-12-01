@@ -932,14 +932,33 @@ const _axis = (k)=>{ const v=AXIS_MAP[k]; return v?.startsWith('-')?v.slice(1):v
 const _sign = (k)=> AXIS_MAP[k]?.startsWith('-')?-1:1;
 
 window.poseTunerEl = {
-  // call this from your +/- axis buttons: poseTunerEl.applyStep(key, stepDeg)
-  applyStep(key, stepDeg){
-    const boneName = BONE_FOR[key]; const axis=_axis(key); const s=_sign(key);
-    if(!boneName || !axis) return;
-    const b = getBone(boneName); if(!b) return;
-    const r = THREE.MathUtils.degToRad(stepDeg*s);
-    if(axis==='x') b.rotateX(r); else if(axis==='y') b.rotateY(r); else b.rotateZ(r);
-  },
+// --- REPLACE FULL applyStep WITH THIS ---
+poseTunerEl.applyStep = function(key, stepDeg){
+    const boneName = BONE_FOR[key];
+    const axis = _axis(key);
+    const sign = _sign(key);
+    if (!boneName || !axis) return;
+
+    const bone = getBone(boneName);
+    if (!bone) return;
+
+    // store degree
+    poseDeg[key] = (poseDeg[key] || 0) + stepDeg * sign;
+
+    // reset to parent-space neutral
+    const q0 = initialBoneRot.get(bone);
+    if (q0) bone.quaternion.copy(q0);
+
+    // apply absolute rotation in the joint axis
+    const e = new THREE.Euler(0,0,0,'XYZ');
+    if (axis === 'x') e.x = THREE.MathUtils.degToRad(poseDeg[key]);
+    if (axis === 'y') e.y = THREE.MathUtils.degToRad(poseDeg[key]);
+    if (axis === 'z') e.z = THREE.MathUtils.degToRad(poseDeg[key]);
+
+    const qDelta = new THREE.Quaternion().setFromEuler(e);
+    bone.quaternion.multiply(qDelta);
+};
+
 
   // call to dump current pose deltas to console for the active test/bucket
   saveCurrentToConsole(){
@@ -2799,10 +2818,7 @@ const boneTunerSelect = poseTunerEl.querySelector('#boneTunerSelect');
               console.warn("Select a bone to adjust its local position.");
               return; 
           }
-          // *** FIXED: Moves the selected bone only (Position is local to parent) ***
-          bone.position[axis] += delta; 
-          return; 
-      } 
+       
       
       // B) Bone Rotation Adjustment (brot) - ONLY TARGETS SELECTED BONE
       else if (mode === 'brot') {
