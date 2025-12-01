@@ -2791,7 +2791,8 @@ const boneTunerSelect = poseTunerEl.querySelector('#boneTunerSelect');
       const deltaRad = THREE.MathUtils.degToRad(delta);
 
       const bone = getSelectedBone();
-      const key = getCurrentOverrideKey();
+      const key = btn.getAttribute("data-key");
+
 
       // A) Bone Position Adjustment (bpos) - ONLY TARGETS SELECTED BONE
       if (mode === 'bpos'){
