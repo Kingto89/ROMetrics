@@ -954,24 +954,37 @@ window.poseTunerEl = {
 // call this from your +/- axis buttons: poseTunerEl.applyStep(key, stepDeg)
 applyStep(key, stepDeg){
   const boneName = BONE_FOR[key];
-  if (!boneName || boneName === '__noop__') return;
-
   const axis = _axis(key);
   const s    = _sign(key);
   if (!axis) return;
 
-  // model vs bone target
-  const tgt = (boneName === '__model__') ? model : getBone(boneName);
-  if (!tgt) return;
+  // --- MODEL-ONLY: never touch bones ---
+  if (boneName === '__model__'){
+    const r = THREE.MathUtils.degToRad(stepDeg * s);
+    if (key === 'model_root'){
+      // root yaw = rotate whole rig about Y only
+      model.rotation.y += r;
+      return;
+    }
+    if (axis === 'x') model.rotateX(r);
+    else if (axis === 'y') model.rotateY(r);
+    else model.rotateZ(r);
+    return;
+  }
 
+  // --- BONES (all non-model keys) ---
+  if (!boneName) return;
+  const b = getBone(boneName);
+  if (!b) return;
   const r = THREE.MathUtils.degToRad(stepDeg * s);
-  if (axis === 'x')      tgt.rotateX(r);
-  else if (axis === 'y') tgt.rotateY(r);
-  else                   tgt.rotateZ(r);
+  if (axis === 'x') b.rotateX(r);
+  else if (axis === 'y') b.rotateY(r);
+  else b.rotateZ(r);
 
-  // keep running total for console/export (includes model_* keys)
+  // Optional: keep a running total for console/export
   if (poseDeg && key in poseDeg) poseDeg[key] += stepDeg * s;
 },
+
 
 
   // call to dump current pose deltas to console for the active test/bucket
@@ -988,7 +1001,8 @@ applyStep(key, stepDeg){
       out[`${BONE_FOR[k]}${ax.toUpperCase()}`] = Math.round(deg*100)/100;
     });
     const key = `${CURRENT_BODY_TEST||'Unknown'}:${CURRENT_BODY_BUCKET||'high'}`;
-    console.log(`POSE_OVERRIDES["${key}"] = ${JSON.stringify(out)};`);
+const clean = Object.fromEntries(Object.entries(out).filter(([k]) => !k.startsWith('model_')));
+console.log(`POSE_OVERRIDES["${key}"] = ${JSON.stringify(clean)};`);
   },
   updateLabels(){} // no-op hook to satisfy existing calls
 };
@@ -2192,7 +2206,8 @@ const out = {
         handLRZ: leftHandModel.rotation.z
     };
 
-    console.log(`HAND_OVERRIDES["${key}"] = ${JSON.stringify(out)};`);
+const clean = Object.fromEntries(Object.entries(out).filter(([k]) => !k.startsWith('model_')));
+console.log(`HAND_OVERRIDES["${key}"] = ${JSON.stringify(clean)};`);
     alert("Hand pose saved — check console.");
 });
 
