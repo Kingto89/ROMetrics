@@ -2760,13 +2760,25 @@ function applyOverride(key){
         return; // skip Euler setters for this bone
       }
 
-      // (Optional Euler fallback if present)
-      const bx = o[name+'X'], by = o[name+'Y'], bz = o[name+'Z'];
-      if (bx !== undefined) b.rotation.x = THREE.MathUtils.degToRad(bx);
-      if (by !== undefined) b.rotation.y = THREE.MathUtils.degToRad(by);
-      if (bz !== undefined) b.rotation.z = THREE.MathUtils.degToRad(bz);
+  // (Optional Euler fallback if present) — accept snake_case AND camelCase keys
+const alt = name
+  .replace('_R','R').replace('_L','L')
+  .replace('upperarm','upperArm')
+  .replace('lowerarm','lowerArm')
+  .replace('hand_','hand');
+
+const bx = (o[name+'X'] ?? o[alt+'X']);
+const by = (o[name+'Y'] ?? o[alt+'Y']);
+const bz = (o[name+'Z'] ?? o[alt+'Z']);
+
+if (bx !== undefined) b.rotation.x = THREE.MathUtils.degToRad(bx);
+if (by !== undefined) b.rotation.y = THREE.MathUtils.degToRad(by);
+if (bz !== undefined) b.rotation.z = THREE.MathUtils.degToRad(bz);
+
+b.updateMatrixWorld(true);
     });
   }
+  model.updateMatrixWorld(true);
 }
 
 const boneTunerSelect = poseTunerEl.querySelector('#boneTunerSelect');
