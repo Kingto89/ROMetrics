@@ -2686,6 +2686,17 @@ function ensurePoseTuner(){
     if (!key) return;
     const o = POSE_OVERRIDES[key];
     if (!o) return;
+// Save exact bone orientations (quaternions) to avoid ±180° Euler issues
+if (typeof ALL_TUNABLE_BONES !== 'undefined'){
+  ALL_TUNABLE_BONES.forEach(name=>{
+    const b = getBone(name);
+    if (!b) return;
+    o[name+'QX'] = b.quaternion.x;
+    o[name+'QY'] = b.quaternion.y;
+    o[name+'QZ'] = b.quaternion.z;
+    o[name+'QW'] = b.quaternion.w;
+  });
+}
 
     // Right foot inversion (foot_R, Z axis)
     const footInvR = extractAxisDeg("foot_R", "z");
@@ -2732,11 +2743,31 @@ function ensurePoseTuner(){
   }
 
 function applyOverride(key){
-    const o = key && POSE_OVERRIDES[key];
-    if (!o || !model) return;
-    model.position.set(o.x, o.y, o.z);
-    model.rotation.set(o.rx, o.ry, o.rz);
-  }
+  const o = key && POSE_OVERRIDES[key];
+  if (!o || !model) return;
+
+  model.position.set(o.x, o.y, o.z);
+  model.rotation.set(o.rx, o.ry, o.rz);
+
+  // Reapply saved bone quaternions if present (exact pose replay)
+  if (typeof ALL_TUNABLE_BONES !== 'undefined' && o){
+    ALL_TUNABLE_BONES.forEach(name=>{
+      const b = getBone(name); if (!b) return;
+
+      const qx = o[name+'QX'], qy = o[name+'QY'], qz = o[name+'QZ'], qw = o[name+'QW'];
+      if (qx !== undefined && qy !== undefined && qz !== undefined && qw !== undefined){
+        b.quaternion.set(qx, qy, qz, qw).normalize();
+        return; // skip Euler setters for this bone
+      }
+
+      // (Optional Euler fallback if present)
+      const bx = o[name+'X'], by = o[name+'Y'], bz = o[name+'Z'];
+      if (bx !== undefined) b.rotation.x = THREE.MathUtils.degToRad(bx);
+      if (by !== undefined) b.rotation.y = THREE.MathUtils.degToRad(by);
+      if (bz !== undefined) b.rotation.z = THREE.MathUtils.degToRad(bz);
+    });
+  }
+}
 
 const boneTunerSelect = poseTunerEl.querySelector('#boneTunerSelect');
 
