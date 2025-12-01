@@ -2800,8 +2800,8 @@ const boneTunerSelect = poseTunerEl.querySelector('#boneTunerSelect');
               return; 
           }
           // *** FIXED: Moves the selected bone only (Position is local to parent) ***
-                  poseTunerEl.applyStep(selectedKey, delta);
-                  return; 
+          poseTunerEl.applyStep(key, delta);
+          return; 
       } 
       
       // B) Bone Rotation Adjustment (brot) - ONLY TARGETS SELECTED BONE
