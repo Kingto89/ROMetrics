@@ -2730,42 +2730,13 @@ function ensurePoseTuner(){
     }
     return key;
   }
+
 function applyOverride(key){
-  const o = key && POSE_OVERRIDES[key];
-  if (!o || !model) return;
-
-  // root (model) pose
-  model.position.set(o.x, o.y, o.z);
-  model.rotation.set(o.rx, o.ry, o.rz);
-if (typeof skeleton !== 'undefined' && skeleton && skeleton.pose) skeleton.pose();
-
-  // reapply saved joint angles (deg → rad)
-  if (typeof ALL_TUNABLE_BONES !== 'undefined' && o){
-    ALL_TUNABLE_BONES.forEach(name=>{
-      const b = getBone(name);
-      if (!b) return;
-
-      const bx = o[name+'X'], by = o[name+'Y'], bz = o[name+'Z'];
-
- if (name === 'hand_R' || name === 'hand_L') {
-  const wrapDeg = d => ((d ?? 0) + 540) % 360 - 180;
-  const rx = THREE.MathUtils.degToRad(THREE.MathUtils.clamp(wrapDeg(bx), -80, 80));
-  const ry = THREE.MathUtils.degToRad(wrapDeg(by));
-  const rz = THREE.MathUtils.degToRad(THREE.MathUtils.clamp(wrapDeg(bz), -35, 35));
-  const qBase  = b.quaternion.clone(); // after skeleton.pose()
-  const qDelta = new THREE.Quaternion().setFromEuler(new THREE.Euler(rx, ry, rz, 'XYZ'));
-  b.quaternion.copy(qBase).multiply(qDelta).normalize();
-  return;
-}
-
-
-      // generic bones: Euler set
-      if (bx !== undefined) b.rotation.x = THREE.MathUtils.degToRad(bx);
-      if (by !== undefined) b.rotation.y = THREE.MathUtils.degToRad(by);
-      if (bz !== undefined) b.rotation.z = THREE.MathUtils.degToRad(bz);
-    });
-  }
-}
+    const o = key && POSE_OVERRIDES[key];
+    if (!o || !model) return;
+    model.position.set(o.x, o.y, o.z);
+    model.rotation.set(o.rx, o.ry, o.rz);
+  }
 
 const boneTunerSelect = poseTunerEl.querySelector('#boneTunerSelect');
 
