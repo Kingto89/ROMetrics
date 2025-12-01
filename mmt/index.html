@@ -895,7 +895,7 @@ const AXIS_MAP = {
 
   wr_fe_l:'y',  wr_fe_r:'y',   // Flex/Ext → Y
   wr_ru_l:'x',  wr_ru_r:'x',   // Rad/Uln → X
-  wr_yaw_l:'z', wr_yaw_r:'z',  // Yaw (neutral placeholder) → Z
+  wr_yaw_l:'z', wr_yaw_r:'z',
 
   hip_fe_l:'x', hip_fe_r:'x',
   hip_aa_l:'z', hip_aa_r:'z',
@@ -925,6 +925,7 @@ const BONE_FOR = {
   fa_ps_l:'lowerarm_L',  fa_ps_r:'lowerarm_R',
   wr_fe_l:'hand_L',      wr_fe_r:'hand_R',
   wr_ru_l:'hand_L',      wr_ru_r:'hand_R',
+  wr_yaw_l:'__noop__',   wr_yaw_r:'__noop__',
   hip_fe_l:'thigh_L',    hip_fe_r:'thigh_R',
   hip_aa_l:'thigh_L',    hip_aa_r:'thigh_R',
   hip_irer_l:'thigh_L',  hip_irer_r:'thigh_R',
@@ -940,14 +941,27 @@ const _axis = (k)=>{ const v=AXIS_MAP[k]; return v?.startsWith('-')?v.slice(1):v
 const _sign = (k)=> AXIS_MAP[k]?.startsWith('-')?-1:1;
 
 window.poseTunerEl = {
-  // call this from your +/- axis buttons: poseTunerEl.applyStep(key, stepDeg)
-  applyStep(key, stepDeg){
-    const boneName = BONE_FOR[key]; const axis=_axis(key); const s=_sign(key);
-    if(!boneName || !axis) return;
-    const b = getBone(boneName); if(!b) return;
-    const r = THREE.MathUtils.degToRad(stepDeg*s);
-    if(axis==='x') b.rotateX(r); else if(axis==='y') b.rotateY(r); else b.rotateZ(r);
-  },
+// call this from your +/- axis buttons: poseTunerEl.applyStep(key, stepDeg)
+applyStep(key, stepDeg){
+  const boneName = BONE_FOR[key];
+  if (!boneName || boneName === '__noop__') return;
+
+  const axis = _axis(key);
+  const s    = _sign(key);
+  if (!axis) return;
+
+  const b = getBone(boneName);
+  if (!b) return;
+
+  const r = THREE.MathUtils.degToRad(stepDeg * s);
+  if (axis === 'x') b.rotateX(r);
+  else if (axis === 'y') b.rotateY(r);
+  else b.rotateZ(r);
+
+  // Optional: keep a running total for console/export
+  if (poseDeg && key in poseDeg) poseDeg[key] += stepDeg * s;
+},
+
 
   // call to dump current pose deltas to console for the active test/bucket
   saveCurrentToConsole(){
