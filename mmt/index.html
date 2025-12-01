@@ -2900,18 +2900,24 @@ poseTunerEl.querySelectorAll('button[data-mode], button[data-rot]').forEach(btn=
         return;
     }
 
-    // --------------------------
-    // B) BONE ROTATION  (3rd row)
-    // --------------------------
-    if (mode === 'brot'){
-        if (!bone){
-            console.warn("Select a bone to adjust its rotation.");
-            return;
-        }
+   // --------------------------
+// B) MODEL ROTATION (Pitch, Roll, Yaw on Root Model)
+// --------------------------
+if (mode === 'brot' && key){
+    ensureOverrideFromCurrentPose();
+    const o = POSE_OVERRIDES[key];
 
-        bone.rotation[axis] += deltaRad;
-        return;
-    }
+    // Adjust the rotational component (rx, ry, rz) in the override object.
+    // Pitch (Flex/Ext) adjusts rx
+    if (axis === 'x') o.rx += deltaRad;
+    // Yaw (IR/ER) adjusts ry
+    else if (axis === 'y') o.ry += deltaRad;
+    // Roll (Lat Flex/Tilt) adjusts rz
+    else if (axis === 'z') o.rz += deltaRad;
+
+    applyOverride(key);
+    return;
+}
 
     // --------------------------
     // C) ROOT MODEL ROTATION (⟲ ⟳)
