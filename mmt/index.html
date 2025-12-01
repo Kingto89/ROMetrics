@@ -2781,49 +2781,52 @@ const boneTunerSelect = poseTunerEl.querySelector('#boneTunerSelect');
   });
 
 
-  // 2. Bone Position/Rotation (data-mode) AND Root Model Yaw (data-rot="y")
-  poseTunerEl.querySelectorAll('button[data-mode], button[data-rot]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const mode = btn.getAttribute('data-mode'); // 'bpos' or 'brot' (for bone)
-      const rotAxis = btn.getAttribute('data-rot'); // 'y' (for root yaw)
-      const axis = btn.getAttribute('data-axis');   // x, y, z (for bpos/brot)
-      const delta = parseFloat(btn.getAttribute('data-delta') || '0');
-      const deltaRad = THREE.MathUtils.degToRad(delta);
+ poseTunerEl.querySelectorAll('button[data-mode], button[data-rot]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
 
-      const bone = getSelectedBone();
-      const key = btn.getAttribute("data-key");
+    const mode = btn.getAttribute('data-mode');   // 'bpos' or 'brot'
+    const rotAxis = btn.getAttribute('data-rot'); // 'y' (root yaw)
+    const axis = btn.getAttribute('data-axis');   // x, y, z
+    const delta = parseFloat(btn.getAttribute('data-delta') || '0');
+    const deltaRad = THREE.MathUtils.degToRad(delta);
 
+    const bone = getSelectedBone();
+    const key  = getCurrentOverrideKey();
 
-      // A) Bone Position Adjustment (bpos) - ONLY TARGETS SELECTED BONE
-      if (mode === 'bpos'){
-          if (!bone) {
-              console.warn("Select a bone to adjust its local position.");
-              return; 
-          }
-          // *** FIXED: Moves the selected bone only (Position is local to parent) ***
-          poseTunerEl.applyStep(key, delta);
-          return; 
-      } 
-      
-      // B) Bone Rotation Adjustment (brot) - ONLY TARGETS SELECTED BONE
-      else if (mode === 'brot') {
-          if (!bone) {
-              console.warn("Select a bone to adjust its rotation.");
-              return;
-          }
-          // Rotates the selected bone only
-          bone.rotation[axis] += deltaRad;
-      }
+    // A) Bone Position (SECOND ROW) → rotate like a joint, NOT slide
+    if (mode === 'bpos'){
+        if (!bone){
+            console.warn("Select a bone to adjust its local position.");
+            return;
+        }
 
-      // C) Root Model Yaw Rotation (data-rot="y")
-      else if (rotAxis === 'y' && key) {
-          ensureOverrideFromCurrentPose(); 
-          const o = POSE_OVERRIDES[key];
-          o.ry += deltaRad;
-          applyOverride(key);
-      }
-    });
-  });
+        bone.rotation[axis] += deltaRad;   // ← STEP 1 FIX
+        return;
+    }
+
+    // B) Bone Rotation (THIRD ROW)
+    if (mode === 'brot'){
+        if (!bone){
+            console.warn("Select a bone to adjust its rotation.");
+            return;
+        }
+
+        bone.rotation[axis] += deltaRad;   // Keep same
+        return;
+    }
+
+    // C) Root Model Yaw (⟲ ⟳)
+    if (rotAxis === 'y' && key){
+        ensureOverrideFromCurrentPose();
+        const o = POSE_OVERRIDES[key];
+        o.ry += deltaRad;
+        applyOverride(key);
+        return;
+    }
+
+  });
+});
+
 
   // Reset to base (throw away override & re-apply base mode)
   btnSnapBase.onclick = () => {
