@@ -2747,17 +2747,17 @@ if (typeof skeleton !== 'undefined' && skeleton && skeleton.pose) skeleton.pose(
 
       const bx = o[name+'X'], by = o[name+'Y'], bz = o[name+'Z'];
 
-      // wrists: quaternion reapply to avoid ±180° flip
-      if (name === 'hand_R' || name === 'hand_L') {
-        if (!b.userData.q0) b.userData.q0 = b.quaternion.clone();
-        const wrapDeg = d => ((d ?? 0) + 540) % 360 - 180;
-        const rx = THREE.MathUtils.degToRad(THREE.MathUtils.clamp(wrapDeg(bx), -80, 80));  // flex/ext
-        const ry = THREE.MathUtils.degToRad(wrapDeg(by));                                   // axial twist
-        const rz = THREE.MathUtils.degToRad(THREE.MathUtils.clamp(wrapDeg(bz), -35, 35));  // radial/ulnar
-        const qDelta = new THREE.Quaternion().setFromEuler(new THREE.Euler(rx, ry, rz, 'XYZ'));
-        b.quaternion.copy(b.userData.q0).multiply(qDelta).normalize();
-        return; // skip generic setters for wrists
-      }
+ if (name === 'hand_R' || name === 'hand_L') {
+  const wrapDeg = d => ((d ?? 0) + 540) % 360 - 180;
+  const rx = THREE.MathUtils.degToRad(THREE.MathUtils.clamp(wrapDeg(bx), -80, 80));
+  const ry = THREE.MathUtils.degToRad(wrapDeg(by));
+  const rz = THREE.MathUtils.degToRad(THREE.MathUtils.clamp(wrapDeg(bz), -35, 35));
+  const qBase  = b.quaternion.clone(); // after skeleton.pose()
+  const qDelta = new THREE.Quaternion().setFromEuler(new THREE.Euler(rx, ry, rz, 'XYZ'));
+  b.quaternion.copy(qBase).multiply(qDelta).normalize();
+  return;
+}
+
 
       // generic bones: Euler set
       if (bx !== undefined) b.rotation.x = THREE.MathUtils.degToRad(bx);
