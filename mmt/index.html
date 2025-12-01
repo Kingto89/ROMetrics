@@ -2765,8 +2765,24 @@ const boneTunerSelect = poseTunerEl.querySelector('#boneTunerSelect');
       }
   }
 
-// 2. Bone Position/Rotation (data-mode) AND Root Model Yaw (data-rot="y")
-poseTunerEl.querySelectorAll('button[data-mode], button[data-rot]').forEach(btn=>{
+  // 1. Root Model Position buttons (data-axis - top row)
+  poseTunerEl.querySelectorAll('button[data-axis]:not([data-mode])').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const key = ensureOverrideFromCurrentPose();
+      if (!key) return;
+      const axis = btn.getAttribute('data-axis');
+      const delta = parseFloat(btn.getAttribute('data-delta') || '0');
+      const o = POSE_OVERRIDES[key];
+      if (axis === 'x') o.x += delta;
+      if (axis === 'y') o.y += delta;
+      if (axis === 'z') o.z += delta;
+      applyOverride(key);
+    });
+  });
+
+
+  // 2. Bone Position/Rotation (data-mode) AND Root Model Yaw (data-rot="y")
+  poseTunerEl.querySelectorAll('button[data-mode], button[data-rot]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       const mode = btn.getAttribute('data-mode'); // 'bpos' or 'brot' (for bone)
       const rotAxis = btn.getAttribute('data-rot'); // 'y' (for root yaw)
@@ -2777,12 +2793,17 @@ poseTunerEl.querySelectorAll('button[data-mode], button[data-rot]').forEach(btn=
       const bone = getSelectedBone();
       const key = getCurrentOverrideKey();
 
-      // A) Bone Position Adjustment (bpos) - DELETED/SKIPPED to prevent stretching/compression.
-      if (mode === 'bpos') {
-        // Do nothing, disabling the position buttons.
-        return;
-      }
-
+// A) Bone Position Adjustment (bpos) - ONLY TARGETS SELECTED BONE
+      if (mode === 'bpos'){
+          if (!bone) {
+              console.warn("Select a bone to adjust its local position.");
+              return; 
+          }
+          // *** FIXED: Moves the selected bone only (Position is local to parent) ***
+          bone.position[axis] += delta; 
+          return; 
+      } 
+      
       // B) Bone Rotation Adjustment (brot) - ONLY TARGETS SELECTED BONE
       else if (mode === 'brot') {
           if (!bone) {
@@ -2791,7 +2812,7 @@ poseTunerEl.querySelectorAll('button[data-mode], button[data-rot]').forEach(btn=
           }
           const rotationAxis = bone.rotation;
 
-          // FIX: Swap Roll (Z) and Yaw (Y) for correct anatomical movement
+          // Assume Flex/Ext (X) is correct. Swap Roll (Z) and Yaw (Y).
           if (axis === 'x') {
               rotationAxis.x += deltaRad; // X button -> X axis (Flexion/Extension)
           } else if (axis === 'y') {
@@ -2809,7 +2830,7 @@ poseTunerEl.querySelectorAll('button[data-mode], button[data-rot]').forEach(btn=
           applyOverride(key);
       }
     });
-});
+  });
 
   // Reset to base (throw away override & re-apply base mode)
   btnSnapBase.onclick = () => {
