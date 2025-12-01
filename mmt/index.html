@@ -2730,39 +2730,40 @@ function ensurePoseTuner(){
     }
     return key;
   }
-
 function applyOverride(key){
-    const o = key && POSE_OVERRIDES[key];
-    if (!o || !model) return;
-    model.position.set(o.x, o.y, o.z);
-    model.rotation.set(o.rx, o.ry, o.rz);
-  // Reapply saved joint angles (deg → rad) if present
-if (o && typeof ALL_TUNABLE_BONES !== 'undefined') {
-  ALL_TUNABLE_BONES.forEach(name => {
-    const b  = getBone(name);
-    if (!b) return;
+  const o = key && POSE_OVERRIDES[key];
+  if (!o || !model) return;
 
-    const bx = o[name + 'X'], by = o[name + 'Y'], bz = o[name + 'Z'];
-    if (bx !== undefined) b.rotation.x = THREE.MathUtils.degToRad(bx);
-    if (by !== undefined) b.rotation.y = THREE.MathUtils.degToRad(by);
-    if (bz !== undefined) b.rotation.z = THREE.MathUtils.degToRad(bz);
+  // root (model) pose
+  model.position.set(o.x, o.y, o.z);
+  model.rotation.set(o.rx, o.ry, o.rz);
 
-// ----- Wrist reapply (quaternion; avoids 180° flip) -----
-if (name === 'hand_R' || name === 'hand_L') {
-  // cache bind/rest orientation once
-  if (!b.userData.q0) b.userData.q0 = b.quaternion.clone();
+  // reapply saved joint angles (deg → rad)
+  if (typeof ALL_TUNABLE_BONES !== 'undefined' && o){
+    ALL_TUNABLE_BONES.forEach(name=>{
+      const b = getBone(name);
+      if (!b) return;
 
-  // wrap degrees to [-180,180], clamp safe wrist ranges, then to radians
-  const wrapDeg = d => ((d ?? 0) + 540) % 360 - 180;
-  const rx = THREE.MathUtils.degToRad(THREE.MathUtils.clamp(wrapDeg(bx), -80, 80));  // flex/ext
-  const ry = THREE.MathUtils.degToRad(wrapDeg(by));                                   // axial twist
-  const rz = THREE.MathUtils.degToRad(THREE.MathUtils.clamp(wrapDeg(bz), -35, 35));  // radial/ulnar
+      const bx = o[name+'X'], by = o[name+'Y'], bz = o[name+'Z'];
 
-  // delta from Euler → apply relative to bind pose to avoid ±180° flips
-  const qDelta = new THREE.Quaternion().setFromEuler(new THREE.Euler(rx, ry, rz, 'XYZ'));
-  b.quaternion.copy(b.userData.q0).multiply(qDelta).normalize();
+      // wrists: quaternion reapply to avoid ±180° flip
+      if (name === 'hand_R' || name === 'hand_L') {
+        if (!b.userData.q0) b.userData.q0 = b.quaternion.clone();
+        const wrapDeg = d => ((d ?? 0) + 540) % 360 - 180;
+        const rx = THREE.MathUtils.degToRad(THREE.MathUtils.clamp(wrapDeg(bx), -80, 80));  // flex/ext
+        const ry = THREE.MathUtils.degToRad(wrapDeg(by));                                   // axial twist
+        const rz = THREE.MathUtils.degToRad(THREE.MathUtils.clamp(wrapDeg(bz), -35, 35));  // radial/ulnar
+        const qDelta = new THREE.Quaternion().setFromEuler(new THREE.Euler(rx, ry, rz, 'XYZ'));
+        b.quaternion.copy(b.userData.q0).multiply(qDelta).normalize();
+        return; // skip generic setters for wrists
+      }
 
-  return; // IMPORTANT: skip the generic X/Y/Z setters for wrists
+      // generic bones: Euler set
+      if (bx !== undefined) b.rotation.x = THREE.MathUtils.degToRad(bx);
+      if (by !== undefined) b.rotation.y = THREE.MathUtils.degToRad(by);
+      if (bz !== undefined) b.rotation.z = THREE.MathUtils.degToRad(bz);
+    });
+  }
 }
 
 const boneTunerSelect = poseTunerEl.querySelector('#boneTunerSelect');
