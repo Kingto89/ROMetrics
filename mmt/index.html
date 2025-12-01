@@ -881,7 +881,8 @@ room.add(shadowCatch);
 })();
 
 /* === Anatomic preset — simple like goniometer index === */
-const ANAT = { add:-42, ps:-2 };
+const ANAT = { add:-42, ps:-2, wps:-73 };
+
 const AXIS_MAP = {
   sh_fe_l:'x',  sh_fe_r:'x',
   sh_aa_l:'z',  sh_aa_r:'-z',
@@ -892,9 +893,9 @@ const AXIS_MAP = {
   // PS lives on FOREARM (not wrist)
   fa_ps_l:'y',  fa_ps_r:'y',
 
-  // Wrist: Flex/Ext (x), Rad/Uln dev (z)
-  wr_fe_l:'x',  wr_fe_r:'x',
-  wr_ru_l:'z',  wr_ru_r:'z',
+  wr_fe_l:'y',  wr_fe_r:'y',   // Flex/Ext → Y
+  wr_ru_l:'x',  wr_ru_r:'x',   // Rad/Uln → X
+  wr_yaw_l:'z', wr_yaw_r:'z',  // Yaw (neutral placeholder) → Z
 
   hip_fe_l:'x', hip_fe_r:'x',
   hip_aa_l:'z', hip_aa_r:'z',
