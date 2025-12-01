@@ -907,12 +907,8 @@ const AXIS_MAP = {
   trunk_fe:'x', trunk_lat:'z', trunk_rot:'y',
   cerv_fe:'x',  cerv_lat:'z',  cerv_rot:'y',
 
-  clavicle_L:'z', clavicle_R:'-z',
-  model_pitch:'x',
-  model_roll:'z',
-  model_yaw:'y'
+  clavicle_L:'z', clavicle_R:'-z'
 };
-
 function axisFor(key){
   const a = AXIS_MAP[key];
   if (!a) return { axis:'x', sign:1 };
@@ -938,14 +934,8 @@ const BONE_FOR = {
   foot_invev_l:'foot_L', foot_invev_r:'foot_R',
   trunk_fe:'spine01',    trunk_lat:'spine01',   trunk_rot:'spine01',
   cerv_fe:'neck',        cerv_lat:'neck',       cerv_rot:'neck',
-  clavicle_L:'clavicle_L', clavicle_R:'clavicle_R',
-    model_pitch:'__model__',
-  model_roll:'__model__',
-  model_yaw:'__model__',
-  model_root:'__model__'
+  clavicle_L:'clavicle_L', clavicle_R:'clavicle_R'
 };
-
- 
 const poseDeg = Object.fromEntries(Object.keys(BONE_FOR).map(k => [k, 0]));  
 const _axis = (k)=>{ const v=AXIS_MAP[k]; return v?.startsWith('-')?v.slice(1):v; };
 const _sign = (k)=> AXIS_MAP[k]?.startsWith('-')?-1:1;
@@ -954,28 +944,15 @@ window.poseTunerEl = {
 // call this from your +/- axis buttons: poseTunerEl.applyStep(key, stepDeg)
 applyStep(key, stepDeg){
   const boneName = BONE_FOR[key];
+  if (!boneName || boneName === '__noop__') return;
+
   const axis = _axis(key);
   const s    = _sign(key);
   if (!axis) return;
 
-  // --- MODEL-ONLY: never touch bones ---
-  if (boneName === '__model__'){
-    const r = THREE.MathUtils.degToRad(stepDeg * s);
-    if (key === 'model_root'){
-      // root yaw = rotate whole rig about Y only
-      model.rotation.y += r;
-      return;
-    }
-    if (axis === 'x') model.rotateX(r);
-    else if (axis === 'y') model.rotateY(r);
-    else model.rotateZ(r);
-    return;
-  }
-
-  // --- BONES (all non-model keys) ---
-  if (!boneName) return;
   const b = getBone(boneName);
   if (!b) return;
+
   const r = THREE.MathUtils.degToRad(stepDeg * s);
   if (axis === 'x') b.rotateX(r);
   else if (axis === 'y') b.rotateY(r);
@@ -984,7 +961,6 @@ applyStep(key, stepDeg){
   // Optional: keep a running total for console/export
   if (poseDeg && key in poseDeg) poseDeg[key] += stepDeg * s;
 },
-
 
 
   // call to dump current pose deltas to console for the active test/bucket
@@ -1001,8 +977,7 @@ applyStep(key, stepDeg){
       out[`${BONE_FOR[k]}${ax.toUpperCase()}`] = Math.round(deg*100)/100;
     });
     const key = `${CURRENT_BODY_TEST||'Unknown'}:${CURRENT_BODY_BUCKET||'high'}`;
-const clean = Object.fromEntries(Object.entries(out).filter(([k]) => !k.startsWith('model_')));
-console.log(`POSE_OVERRIDES["${key}"] = ${JSON.stringify(clean)};`);
+    console.log(`POSE_OVERRIDES["${key}"] = ${JSON.stringify(out)};`);
   },
   updateLabels(){} // no-op hook to satisfy existing calls
 };
@@ -2107,25 +2082,6 @@ function addModel(gltf){
   if (POSE.seated) seatPoseOnlyLegs();
 
   scene.add(model);
-    // ---- MODEL-ONLY ROTATION BUTTONS (Pitch/Roll/Yaw) ----
-  const DEG = THREE.MathUtils.degToRad;
-  const STEP = 5; // degrees per click
-
-  function rot(axis, dir){ model.rotation[axis] += DEG(STEP * dir); }
-
-  // Try IDs first; fall back to data-action buttons if IDs differ.
-  const byId = id => document.getElementById(id);
-  const byAct = a => document.querySelector(`[data-action="${a}"]`);
-
-  (byId('pitchMinus') || byAct('pitch-'))?.addEventListener('click', ()=> rot('x', -1));
-  (byId('pitchPlus')  || byAct('pitch+'))?.addEventListener('click', ()=> rot('x', +1));
-
-  (byId('rollMinus')  || byAct('roll-')) ?.addEventListener('click', ()=> rot('z', -1));
-  (byId('rollPlus')   || byAct('roll+')) ?.addEventListener('click', ()=> rot('z', +1));
-
-  (byId('yawMinus')   || byAct('yaw-'))  ?.addEventListener('click', ()=> rot('y', -1));
-  (byId('yawPlus')    || byAct('yaw+'))  ?.addEventListener('click', ()=> rot('y', +1));
-
   $("msg").textContent = "✅ Model loaded";
 }
 
@@ -2225,8 +2181,7 @@ const out = {
         handLRZ: leftHandModel.rotation.z
     };
 
-const clean = Object.fromEntries(Object.entries(out).filter(([k]) => !k.startsWith('model_')));
-console.log(`HAND_OVERRIDES["${key}"] = ${JSON.stringify(clean)};`);
+    console.log(`HAND_OVERRIDES["${key}"] = ${JSON.stringify(out)};`);
     alert("Hand pose saved — check console.");
 });
 
@@ -2634,7 +2589,7 @@ function ensurePoseTuner(){
       </select>
     </div>
 
-    <label style="display:block;opacity:.85;margin-top:8px;">Joint Rotation (degrees, anatomical planes)</label>
+    <label style="display:block;opacity:.85;margin-top:8px;">Bone Position (meters, local to parent)</label>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:8px;">
       <div>
         <div style="opacity:.7;font-size:10px;">X (left/right)</div>
