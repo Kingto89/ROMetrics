@@ -881,31 +881,39 @@ room.add(shadowCatch);
 })();
 
 /* === Anatomic preset — simple like goniometer index === */
-const ANAT = { add:-42, ps:-2, wps:-73 };
+const ANAT = { add:-42, ps:-2 };
 const AXIS_MAP = {
-  sh_fe_l:      'x',  sh_fe_r:      'x',
-  sh_aa_l:      'z',  sh_aa_r:     '-z',
-  sh_irer_l:    'y',  sh_irer_r:    'y',
-  el_fe_l:      'x',  el_fe_r:      'x',
-  fa_ps_l:      'y',  fa_ps_r:      'y',
-  wr_ps_l:      'y',  wr_ps_r:      'y',
-  wr_fe_l:      'x',  wr_fe_r:      'x',
-  wr_ru_l:      'z',  wr_ru_r:      'z',
-  hip_fe_l:     'x',  hip_fe_r:     'x',
-  hip_aa_l:     'z',  hip_aa_r:     'z',
-  hip_irer_l:   'y',  hip_irer_r:   'y',
-  knee_fe_l:    'x',  knee_fe_r:    'x',
-  ankle_dfpf_l: 'x',  ankle_dfpf_r: 'x',
-  foot_invev_l: 'z',  foot_invev_r: 'z',
-  trunk_fe:     'x',
-  trunk_lat:    'z',
-  trunk_rot:    'y',
-  cerv_fe:      'x',
-  cerv_lat:     'z',
-  cerv_rot:     'y',
-  clavicle_L:   'z',
-  clavicle_R:  '-z'
+  sh_fe_l:'x',  sh_fe_r:'x',
+  sh_aa_l:'z',  sh_aa_r:'-z',
+  sh_irer_l:'y', sh_irer_r:'y',
+
+  el_fe_l:'x',  el_fe_r:'x',
+
+  // PS lives on FOREARM (not wrist)
+  fa_ps_l:'y',  fa_ps_r:'y',
+
+  // Wrist: Flex/Ext (x), Rad/Uln dev (z)
+  wr_fe_l:'x',  wr_fe_r:'x',
+  wr_ru_l:'z',  wr_ru_r:'z',
+
+  hip_fe_l:'x', hip_fe_r:'x',
+  hip_aa_l:'z', hip_aa_r:'z',
+  hip_irer_l:'y', hip_irer_r:'y',
+  knee_fe_l:'x', knee_fe_r:'x',
+  ankle_dfpf_l:'x', ankle_dfpf_r:'x',
+  foot_invev_l:'z', foot_invev_r:'z',
+
+  trunk_fe:'x', trunk_lat:'z', trunk_rot:'y',
+  cerv_fe:'x',  cerv_lat:'z',  cerv_rot:'y',
+
+  clavicle_L:'z', clavicle_R:'-z'
 };
+function axisFor(key){
+  const a = AXIS_MAP[key];
+  if (!a) return { axis:'x', sign:1 };
+  return (a[0] === '-') ? { axis: a.slice(1), sign:-1 } : { axis:a, sign:1 };
+}
+
   
 // --- POSE TUNER RESOLVER (fix) ---
 const BONE_FOR = {
@@ -914,7 +922,6 @@ const BONE_FOR = {
   sh_irer_l:'upperarm_L',sh_irer_r:'upperarm_R',
   el_fe_l:'lowerarm_L',  el_fe_r:'lowerarm_R',
   fa_ps_l:'lowerarm_L',  fa_ps_r:'lowerarm_R',
-  wr_ps_l:'hand_L',      wr_ps_r:'hand_R',
   wr_fe_l:'hand_L',      wr_fe_r:'hand_R',
   wr_ru_l:'hand_L',      wr_ru_r:'hand_R',
   hip_fe_l:'thigh_L',    hip_fe_r:'thigh_R',
