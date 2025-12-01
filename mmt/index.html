@@ -907,58 +907,6 @@ const AXIS_MAP = {
   clavicle_R:  '-z'
 };
   
-// --- POSE TUNER RESOLVER (fix) ---
-const BONE_FOR = {
-  sh_fe_l:'upperarm_L',  sh_fe_r:'upperarm_R',
-  sh_aa_l:'upperarm_L',  sh_aa_r:'upperarm_R',
-  sh_irer_l:'upperarm_L',sh_irer_r:'upperarm_R',
-  el_fe_l:'lowerarm_L',  el_fe_r:'lowerarm_R',
-  fa_ps_l:'lowerarm_L',  fa_ps_r:'lowerarm_R',
-  wr_ps_l:'hand_L',      wr_ps_r:'hand_R',
-  wr_fe_l:'hand_L',      wr_fe_r:'hand_R',
-  wr_ru_l:'hand_L',      wr_ru_r:'hand_R',
-  hip_fe_l:'thigh_L',    hip_fe_r:'thigh_R',
-  hip_aa_l:'thigh_L',    hip_aa_r:'thigh_R',
-  hip_irer_l:'thigh_L',  hip_irer_r:'thigh_R',
-  knee_fe_l:'calf_L',    knee_fe_r:'calf_R',
-  ankle_dfpf_l:'foot_L', ankle_dfpf_r:'foot_R',
-  foot_invev_l:'foot_L', foot_invev_r:'foot_R',
-  trunk_fe:'spine01',    trunk_lat:'spine01',   trunk_rot:'spine01',
-  cerv_fe:'neck',        cerv_lat:'neck',       cerv_rot:'neck',
-  clavicle_L:'clavicle_L', clavicle_R:'clavicle_R'
-};
-const poseDeg = Object.fromEntries(Object.keys(BONE_FOR).map(k => [k, 0]));  
-const _axis = (k)=>{ const v=AXIS_MAP[k]; return v?.startsWith('-')?v.slice(1):v; };
-const _sign = (k)=> AXIS_MAP[k]?.startsWith('-')?-1:1;
-
-window.poseTunerEl = {
-  // call this from your +/- axis buttons: poseTunerEl.applyStep(key, stepDeg)
-  applyStep(key, stepDeg){
-    const boneName = BONE_FOR[key]; const axis=_axis(key); const s=_sign(key);
-    if(!boneName || !axis) return;
-    const b = getBone(boneName); if(!b) return;
-    const r = THREE.MathUtils.degToRad(stepDeg*s);
-    if(axis==='x') b.rotateX(r); else if(axis==='y') b.rotateY(r); else b.rotateZ(r);
-  },
-
-  // call to dump current pose deltas to console for the active test/bucket
-  saveCurrentToConsole(){
-    if(!skeleton) return;
-    const out = {};
-    Object.keys(BONE_FOR).forEach(k=>{
-      const b = getBone(BONE_FOR[k]); if(!b) return;
-      const q0 = initialBoneRot.get(b);
-      const q = b.quaternion.clone();
-      if(q0) q.premultiply(q0.clone().invert());
-      const e = new THREE.Euler().setFromQuaternion(q,'XYZ');
-      const ax = _axis(k); const deg = THREE.MathUtils.radToDeg(ax==='x'?e.x:ax==='y'?e.y:e.z);
-      out[`${BONE_FOR[k]}${ax.toUpperCase()}`] = Math.round(deg*100)/100;
-    });
-    const key = `${CURRENT_BODY_TEST||'Unknown'}:${CURRENT_BODY_BUCKET||'high'}`;
-    console.log(`POSE_OVERRIDES["${key}"] = ${JSON.stringify(out)};`);
-  },
-  updateLabels(){} // no-op hook to satisfy existing calls
-};
 
 function getBone(name){
   return skeleton?.bones.find(b => b.name === name) || null;
@@ -1393,54 +1341,71 @@ function applyGlobalPF(){
   if (footR) footR.rotateX(-r);
 }
 
-// A comprehensive list of all bones that can be manually tuned/overridden (NEW GLOBAL LIST)
-const ALL_TUNABLE_BONES = [
-  "spine01", "spine02", "spine03", "neck", "head", "breast_L", "breast_R", // Corrected case for breast
-  "clavicle_L", "upperarm_L", "upperarm_twist_L", "lowerarm_L", "lowerarm_twist_L",
-  "hand_L", "thumb01_L", "thumb02_L", "thumb03_L",
-  "index00_L", "index01_L", "index02_L", "index03_L",
-  "middle00_L", "middle01_L", "middle02_L", "middle03_L",
-  "ring00_L", "ring01_L", "ring02_L", "ring03_L",
-  "pinky00_L", "pinky01_L", "pinky02_L", "pinky03_L",
-  "clavicle_R", "upperarm_R", "upperarm_twist_R", "lowerarm_R", "lowerarm_twist_R",
-  "hand_R", "thumb01_R", "thumb02_R", "thumb03_R",
-  "index00_R", "index01_R", "index02_R", "index03_R",
-  "middle00_R", "middle01_R", "middle02_R", "middle03_R",
-  "ring00_R", "ring01_R", "ring02_R", "ring03_R",
-  "pinky00_R", "pinky01_R", "pinky02_R", "pinky03_R",
-  "thigh_L", "thigh_twist_L", "calf_L", "calf_twist_L", "foot_L", "toes_L",
-  "thigh_R", "thigh_twist_R", "calf_R", "calf_twist_R", "foot_R", "toes_R"
-];
-
-/**
- * Applies all stored bone rotations from the pose override object 'o'.
- * This uses the dynamic list and the generic setDegAxis helper.
- */
 function applyLimbOverridesFromOverride(o){
   if (!o || !skeleton) return;
   const get = (n)=> skeleton.bones.find(b => b.name === n);
   const rad = THREE.MathUtils.degToRad;
 
-  // Apply rotations for all tunable bones based on saved overrides (e.g., o.clavicle_lX)
-  ALL_TUNABLE_BONES.forEach(boneName => {
-    const bone = get(boneName);
-    if (!bone) return;
-    
-    // Check for X, Y, Z rotation overrides (e.g., o["clavicle_LX"])
-    ['X', 'Y', 'Z'].forEach(axis => {
-      const key = `${boneName}${axis}`;
-      if (o[key] !== undefined) {
-        // Use setDegAxis to reset the bone and apply the override angle (in degrees)
-        setDegAxis(bone, axis.toLowerCase(), o[key]);
-      }
-    });
-  });
+  const thighL = get("thigh_L");
+  const thighR = get("thigh_R");
+  const calfL  = get("calf_L");
+  const calfR  = get("calf_R");
   
-  // Re-apply specific side-lying overrides which are separate from general bone overrides
-  if (o.footInvR !== undefined) setDegAxis(get("foot_R"), "z", o.footInvR);
-  if (o.footEvL !== undefined) setDegAxis(get("foot_L"), "z", o.footEvL);
-  if (o.neckLatL !== undefined) setDegAxis(get("neck"), "z", o.neckLatL);
-}
+  // Thigh L: X, Y, Z
+  if (thighL){
+    if (o.thighLX !== undefined) thighL.rotateX(rad(o.thighLX));
+    if (o.thighLY !== undefined) thighL.rotateY(rad(o.thighLY));
+    if (o.thighLZ !== undefined) thighL.rotateZ(rad(o.thighLZ));
+  }
+
+  // Thigh R: X, Y, Z
+  if (thighR){
+    if (o.thighRX !== undefined) thighR.rotateX(rad(o.thighRX));
+    if (o.thighRY !== undefined) thighR.rotateY(rad(o.thighRY));
+    if (o.thighRZ !== undefined) thighR.rotateZ(rad(o.thighRZ));
+  }
+
+  // Calf L: X, Z
+  if (calfL){
+    if (o.calfLX !== undefined) calfL.rotateX(rad(o.calfLX));
+    if (o.calfLZ !== undefined) calfL.rotateZ(rad(o.calfLZ));
+  }
+
+  // Calf R: X, Z
+  if (calfR){
+    if (o.calfRX !== undefined) calfR.rotateX(rad(o.calfRX));
+    if (o.calfRZ !== undefined) calfR.rotateZ(rad(o.calfRZ));
+  }
+  // Spine (trunk) — X, Y, Z for "spine01"
+  const spine = get("spine01");
+  if (spine){
+    if (o.spineX !== undefined) spine.rotateX(rad(o.spineX));
+    if (o.spineY !== undefined) spine.rotateY(rad(o.spineY));
+    if (o.spineZ !== undefined) spine.rotateZ(rad(o.spineZ));
+  }  
+// --- START: Requested Manual Override for "head" bone ---
+  const head = get("head");
+  if (head){
+    if (o.headX !== undefined) head.rotateX(rad(o.headX));
+    if (o.headY !== undefined) head.rotateY(rad(o.headY));
+    if (o.headZ !== undefined) head.rotateZ(rad(o.headZ));
+  }
+ // === NEW: CLAVICLE (Manual Override target) ===
+  const clavL = get("clavicle_L");
+  const clavR = get("clavicle_R");
+
+  if (clavL){
+    if (o.clavicleLX !== undefined) clavL.rotateX(rad(o.clavicleLX));
+    if (o.clavicleLY !== undefined) clavL.rotateY(rad(o.clavicleLY));
+    if (o.clavicleLZ !== undefined) clavL.rotateZ(rad(o.clavicleLZ));
+  }
+
+  if (clavR){
+    if (o.clavicleRX !== undefined) clavR.rotateX(rad(o.clavicleRX));
+    if (o.clavicleRY !== undefined) clavR.rotateY(rad(o.clavicleRY));
+    if (o.clavicleRZ !== undefined) clavR.rotateZ(rad(o.clavicleRZ));
+  }
+}  
 
 // Coarse body-mode: align to bed/cabinet but don't set specific joint test angles
 function setBodyMode(mode, isResistanceActive = false){ // <-- ADDED isResistanceActive = false
@@ -2518,52 +2483,51 @@ function ensurePoseTuner(){
           <option value="spine03">spine03</option>
           <option value="spine02">spine02</option>
           <option value="spine01">spine01</option>
-          <option value="breast_L">breast_l</option>
-          <option value="breast_R">breast_r</option>
+          <option value="breast_l">breast_l</option>
+          <option value="breast_r">breast_r</option>
         </optgroup>
-    <optgroup label="Left Upper Limb">
-  <option value="clavicle_L">clavicle_L</option>
-  <option value="upperarm_L">upperarm_L</option>
-  <option value="upperarm_twist_L">upperarm_twist_L</option>
-  <option value="lowerarm_L">lowerarm_L</option>
-  <option value="lowerarm_twist_L">lowerarm_twist_L</option>
-  <option value="hand_L">hand_L</option>
-  <option value="thumb01_L">thumb01_L</option><option value="thumb02_L">thumb02_L</option><option value="thumb03_L">thumb03_L</option>
-  <option value="index00_L">index00_L</option><option value="index01_L">index01_L</option><option value="index02_L">index02_L</option><option value="index03_L">index03_L</option>
-  <option value="middle00_L">middle00_L</option><option value="middle01_L">middle01_L</option><option value="middle02_L">middle02_L</option><option value="middle03_L">middle03_L</option>
-  <option value="ring00_L">ring00_L</option><option value="ring01_L">ring01_L</option><option value="ring02_L">ring02_L</option><option value="ring03_L">ring03_L</option>
-  <option value="pinky00_L">pinky00_L</option><option value="pinky01_L">pinky01_L</option><option value="pinky02_L">pinky02_L</option><option value="pinky03_L">pinky03_L</option>
-</optgroup>
-<optgroup label="Right Upper Limb">
-  <option value="clavicle_R">clavicle_R</option>
-  <option value="upperarm_R">upperarm_R</option>
-  <option value="upperarm_twist_R">upperarm_twist_R</option>
-  <option value="lowerarm_R">lowerarm_R</option>
-  <option value="lowerarm_twist_R">lowerarm_twist_R</option>
-  <option value="hand_R">hand_R</option>
-  <option value="thumb01_R">thumb01_R</option><option value="thumb02_R">thumb02_R</option><option value="thumb03_R">thumb03_R</option>
-  <option value="index00_R">index00_R</option><option value="index01_R">index01_R</option><option value="index02_R">index02_R</option><option value="index03_R">index03_R</option>
-  <option value="middle00_R">middle00_R</option><option value="middle01_R">middle01_R</option><option value="middle02_R">middle02_R</option><option value="middle03_R">middle03_R</option>
-  <option value="ring00_R">ring00_R</option><option value="ring01_R">ring01_R</option><option value="ring02_R">ring02_R</option><option value="ring03_R">ring03_R</option>
-  <option value="pinky00_R">pinky00_R</option><option value="pinky01_R">pinky01_R</option><option value="pinky02_R">pinky02_R</option><option value="pinky03_R">pinky03_R</option>
-</optgroup>
-<optgroup label="Left Lower Limb">
-  <option value="thigh_L">thigh_L</option>
-  <option value="thigh_twist_L">thigh_twist_L</option>
-  <option value="calf_L">calf_L</option>
-  <option value="calf_twist_L">calf_twist_L</option>
-  <option value="foot_L">foot_L</option>
-  <option value="toes_L">toes_L</option>
-</optgroup>
-<optgroup label="Right Lower Limb">
-  <option value="thigh_R">thigh_R</option>
-  <option value="thigh_twist_R">thigh_twist_R</option>
-  <option value="calf_R">calf_R</option>
-  <option value="calf_twist_R">calf_twist_R</option>
-  <option value="foot_R">foot_R</option>
-  <option value="toes_R">toes_R</option>
-</optgroup>
-
+        <optgroup label="Left Upper Limb">
+          <option value="clavicle_l">clavicle_l</option>
+          <option value="upperarm_l">upperarm_l</option>
+          <option value="upperarm_twist_l">upperarm_twist_l</option>
+          <option value="lowerarm_l">lowerarm_l</option>
+          <option value="lowerarm_twist_l">lowerarm_twist_l</option>
+          <option value="hand_l">hand_l</option>
+          <option value="thumb01_l">thumb01_l</option><option value="thumb02_l">thumb02_l</option><option value="thumb03_l">thumb03_l</option>
+          <option value="index00_l">index00_l</option><option value="index01_l">index01_l</option><option value="index02_l">index02_l</option><option value="index03_l">index03_l</option>
+          <option value="middle00_l">middle00_l</option><option value="middle01_l">middle01_l</option><option value="middle02_l">middle02_l</option><option value="middle03_l">middle03_l</option>
+          <option value="ring00_l">ring00_l</option><option value="ring01_l">ring01_l</option><option value="ring02_l">ring02_l</option><option value="ring03_l">ring03_l</option>
+          <option value="pinky00_l">pinky00_l</option><option value="pinky01_l">pinky01_l</option><option value="pinky02_l">pinky02_l</option><option value="pinky03_l">pinky03_l</option>
+        </optgroup>
+        <optgroup label="Right Upper Limb">
+          <option value="clavicle_r">clavicle_r</option>
+          <option value="upperarm_r">upperarm_r</option>
+          <option value="upperarm_twist_r">upperarm_twist_r</option>
+          <option value="lowerarm_r">lowerarm_r</option>
+          <option value="lowerarm_twist_r">lowerarm_twist_r</option>
+          <option value="hand_r">hand_r</option>
+          <option value="thumb01_r">thumb01_r</option><option value="thumb02_r">thumb02_r</option><option value="thumb03_r">thumb03_r</option>
+          <option value="index00_r">index00_r</option><option value="index01_r">index01_r</option><option value="index02_r">index02_r</option><option value="index03_r">index03_r</option>
+          <option value="middle00_r">middle00_r</option><option value="middle01_r">middle01_r</option><option value="middle02_r">middle02_r</option><option value="middle03_r">middle03_r</option>
+          <option value="ring00_r">ring00_r</option><option value="ring01_r">ring01_r</option><option value="ring02_r">ring02_r</option><option value="ring03_r">ring03_r</option>
+          <option value="pinky00_r">pinky00_r</option><option value="pinky01_r">pinky01_r</option><option value="pinky02_r">pinky02_r</option><option value="pinky03_r">pinky03_r</option>
+        </optgroup>
+        <optgroup label="Left Lower Limb">
+          <option value="thigh_l">thigh_l</option>
+          <option value="thigh_twist_l">thigh_twist_l</option>
+          <option value="calf_l">calf_l</option>
+          <option value="calf_twist_l">calf_twist_l</option>
+          <option value="foot_l">foot_l</option>
+          <option value="toes_l">toes_l</option>
+        </optgroup>
+        <optgroup label="Right Lower Limb">
+          <option value="thigh_r">thigh_r</option>
+          <option value="thigh_twist_r">thigh_twist_r</option>
+          <option value="calf_r">calf_r</option>
+          <option value="calf_twist_r">calf_twist_r</option>
+          <option value="foot_r">foot_r</option>
+          <option value="toes_r">toes_r</option>
+        </optgroup>
       </select>
     </div>
 
@@ -2731,170 +2695,103 @@ function ensurePoseTuner(){
     return key;
   }
 
-function applyOverride(key){
-    const o = key && POSE_OVERRIDES[key];
-    if (!o || !model) return;
-    model.position.set(o.x, o.y, o.z);
-    model.rotation.set(o.rx, o.ry, o.rz);
-  }
+  function applyOverride(key){
+    const o = key && POSE_OVERRIDES[key];
+    if (!o || !model) return;
+    model.position.set(o.x, o.y, o.z);
+    model.rotation.set(o.rx, o.ry, o.rz);
+  }
 
-const boneTunerSelect = poseTunerEl.querySelector('#boneTunerSelect');
+  // Position buttons
+  poseTunerEl.querySelectorAll('button[data-axis]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const key = ensureOverrideFromCurrentPose();
+      if (!key) return;
+      const axis = btn.getAttribute('data-axis');
+      const delta = parseFloat(btn.getAttribute('data-delta') || '0');
+      const o = POSE_OVERRIDES[key];
+      if (axis === 'x') o.x += delta;
+      if (axis === 'y') o.y += delta;
+      if (axis === 'z') o.z += delta;
+      applyOverride(key);
+    });
+  });
 
-  // Helper to get the currently selected bone object
-  function getSelectedBone(){
-      const boneName = boneTunerSelect.value;
-      if (!boneName || boneName === "") return null;
-      return getBone(boneName);
-  }
+  // Rotation buttons (deg)
+  poseTunerEl.querySelectorAll('button[data-rot]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const key = ensureOverrideFromCurrentPose();
+      if (!key) return;
+      const axis = btn.getAttribute('data-rot');
+      const deltaDeg = parseFloat(btn.getAttribute('data-delta') || '0');
+      const deltaRad = THREE.MathUtils.degToRad(deltaDeg);
+      const o = POSE_OVERRIDES[key];
+      if (axis === 'x') o.rx += deltaRad;
+      if (axis === 'y') o.ry += deltaRad;
+      if (axis === 'z') o.rz += deltaRad;
+      applyOverride(key);
+    });
+  });
+  // Plantarflexion buttons
+  poseTunerEl.querySelectorAll('button[data-pf]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const delta = parseFloat(btn.getAttribute('data-pf') || '0');
+      // Clamp so you don't break ankles
+      GLOBAL_PF_DEG = Math.max(-45, Math.min(45, GLOBAL_PF_DEG + delta));
+      applyGlobalPF();
+      updatePFLabel();
+    });
+  });
 
-  // Helper to extract rotation data for a specific bone for logging
-  function getBoneRotationData(boneName, boneLog) {
-      const bone = getBone(boneName);
-      if (bone) {
-          const rx = extractAxisDeg(boneName, "x");
-          const ry = extractAxisDeg(boneName, "y");
-          const rz = extractAxisDeg(boneName, "z");
+  // Reset to base (throw away override & re-apply base mode)
+  btnSnapBase.onclick = () => {
+    const key = getCurrentOverrideKey();
+    if (key && POSE_OVERRIDES[key]) delete POSE_OVERRIDES[key];
+    applyBodyPositionFromSelection();
+    updateLabels();
+  };
 
-          // Check if rotation is significant (threshold 0.1 degree)
-          if (Math.abs(rx) > 0.1 || Math.abs(ry) > 0.1 || Math.abs(rz) > 0.1) {
-              // Log to a temporary object for the console output
-              if (Math.abs(rx) > 0.1) boneLog[`${boneName}X`] = rx.toFixed(1);
-              if (Math.abs(ry) > 0.1) boneLog[`${boneName}Y`] = ry.toFixed(1);
-              if (Math.abs(rz) > 0.1) boneLog[`${boneName}Z`] = rz.toFixed(1);
-          }
-      }
-  }
+  // Save button logs config INCLUDING plantarflexion + side-lying angles
+  btnSave.onclick = () => {
+    const key = ensureOverrideFromCurrentPose();
+    if (!key) return;
+    const o = POSE_OVERRIDES[key];
 
-  // 1. Root Model Position buttons (data-axis - top row)
-  poseTunerEl.querySelectorAll('button[data-axis]:not([data-mode])').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const key = ensureOverrideFromCurrentPose();
-      if (!key) return;
-      const axis = btn.getAttribute('data-axis');
-      const delta = parseFloat(btn.getAttribute('data-delta') || '0');
-      const o = POSE_OVERRIDES[key];
-      if (axis === 'x') o.x += delta;
-      if (axis === 'y') o.y += delta;
-      if (axis === 'z') o.z += delta;
-      applyOverride(key);
-    });
-  });
+    // store current global PF into this override
+    o.pf = GLOBAL_PF_DEG || 0;
 
+    // NEW: capture actual joint angles so the pose "remembers" them
+    // Right foot inversion (foot_R, Z axis)
+    o.footInvR = extractAxisDeg("foot_R", "z");
+    // Left foot eversion (foot_L, Z axis)
+    o.footEvL  = extractAxisDeg("foot_L", "z");
+    // Neck left lateral flexion (neck, Z axis)
+    o.neckLatL = extractAxisDeg("neck",   "z");
 
-  // 2. Bone Position/Rotation (data-mode) AND Root Model Yaw (data-rot="y")
-  poseTunerEl.querySelectorAll('button[data-mode], button[data-rot]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const mode = btn.getAttribute('data-mode'); // 'bpos' or 'brot' (for bone)
-      const rotAxis = btn.getAttribute('data-rot'); // 'y' (for root yaw)
-      const axis = btn.getAttribute('data-axis');   // x, y, z (for bpos/brot)
-      const delta = parseFloat(btn.getAttribute('data-delta') || '0');
-      const deltaRad = THREE.MathUtils.degToRad(delta);
+    console.log(
+      `POSE_OVERRIDES["${key}"] = { ` +
+      `x:${o.x.toFixed(3)}, y:${o.y.toFixed(3)}, z:${o.z.toFixed(3)}, ` +
+      `rx:${o.rx.toFixed(3)}, ry:${o.ry.toFixed(3)}, rz:${o.rz.toFixed(3)}, ` +
+      `pf:${o.pf.toFixed(1)}, ` +
+      `footInvR:${o.footInvR.toFixed(1)}, footEvL:${o.footEvL.toFixed(1)}, neckLatL:${o.neckLatL.toFixed(1)} };`
+    );
 
-      const bone = getSelectedBone();
-      const key = getCurrentOverrideKey();
-
-// A) Bone Position Adjustment (bpos) - ONLY TARGETS SELECTED BONE
-      if (mode === 'bpos'){
-          if (!bone) {
-              console.warn("Select a bone to adjust its local position.");
-              return; 
-          }
-          // *** FIXED: Moves the selected bone only (Position is local to parent) ***
-          bone.position[axis] += delta; 
-          return; 
-      } 
-      
-      // B) Bone Rotation Adjustment (brot) - ONLY TARGETS SELECTED BONE
-      else if (mode === 'brot') {
-          if (!bone) {
-              console.warn("Select a bone to adjust its rotation.");
-              return;
-          }
-          const rotationAxis = bone.rotation;
-
-          // Assume Flex/Ext (X) is correct. Swap Roll (Z) and Yaw (Y).
-          if (axis === 'x') {
-              rotationAxis.x += deltaRad; // X button -> X axis (Flexion/Extension)
-          } else if (axis === 'y') {
-              rotationAxis.z += deltaRad; // Y button (Yaw/IR/ER) -> Z axis (Rotation)
-          } else if (axis === 'z') {
-              rotationAxis.y += deltaRad; // Z button (Roll/Ab/Ad) -> Y axis (Abduction/Adduction)
-          }
-      }
-
-      // C) Root Model Yaw Rotation (data-rot="y")
-      else if (rotAxis === 'y' && key) {
-          ensureOverrideFromCurrentPose(); 
-          const o = POSE_OVERRIDES[key];
-          o.ry += deltaRad;
-          applyOverride(key);
-      }
-    });
-  });
-
-  // Reset to base (throw away override & re-apply base mode)
-  btnSnapBase.onclick = () => {
-    const key = getCurrentOverrideKey();
-    if (key && POSE_OVERRIDES[key]) delete POSE_OVERRIDES[key];
-    applyBodyPositionFromSelection();
-    updateLabels();
-  };
-
-  // Save button logs config INCLUDING all bone rotations
-  btnSave.onclick = () => {
-    const key = ensureOverrideFromCurrentPose();
-    if (!key) return;
-    const o = POSE_OVERRIDES[key];
-
-    // --- 1. Root Model & Hardcoded Saves ---
-    o.pf = GLOBAL_PF_DEG || 0; 
-    o.footInvR = extractAxisDeg("foot_R", "z");
-    o.footEvL  = extractAxisDeg("foot_L", "z");
-    o.neckLatL = extractAxisDeg("neck",   "z");
-
-    // --- 2. Bone Rotation Saving (NEW Logic) ---
-    const allBones = ALL_TUNABLE_BONES; 
-
-    const boneRotations = {}; // Collects all non-zero rotations
-    allBones.forEach(boneName => getBoneRotationData(boneName, boneRotations));
-    
-    // --- 3. Final Console Log ---
-    
-    // Log Model Root Pose
-    console.log(
-      `POSE_OVERRIDES["${key}"] = { ` +
-      `x:${o.x.toFixed(3)}, y:${o.y.toFixed(3)}, z:${o.z.toFixed(3)}, ` +
-      `rx:${o.rx.toFixed(3)}, ry:${o.ry.toFixed(3)}, rz:${o.rz.toFixed(3)}, ` +
-      `pf:${o.pf.toFixed(1)}, ` +
-      `footInvR:${o.footInvR.toFixed(1)}, footEvL:${o.footEvL.toFixed(1)}, neckLatL:${o.neckLatL.toFixed(1)} };`
-    );
-    
-    // Log detailed bone rotations separately
-    if (Object.keys(boneRotations).length > 0) {
-        // Output bone rotations in a format for easy manual copy/paste as joint angle overrides
-        console.log(`\n// --- MANUAL JOINT ANGLE OVERRIDES FOR: ${key} ---`);
-        const boneString = Object.entries(boneRotations)
-          .map(([k, v]) => `${k}:${v}`)
-          .join(', ');
-        console.log(boneString);
-        console.log(`// --------------------------------------------------\n`);
-    }
-
-    labelTest.style.color = '#22c55e';
-    setTimeout(()=>labelTest.style.color='#e2e8f0', 600);
-  };
+    labelTest.style.color = '#22c55e';
+    setTimeout(()=>labelTest.style.color='#e2e8f0', 600);
+  };
 
 
-  // Close
-  btnClose.onclick = () => {
-    poseTunerVisible = false;
-    poseTunerEl.style.display = 'none';
-  };
 
-  // Public helper so other code can refresh labels when test/grade changes
-  poseTunerEl.updateLabels = updateLabels;
+  // Close
+  btnClose.onclick = () => {
+    poseTunerVisible = false;
+    poseTunerEl.style.display = 'none';
+  };
 
-  return poseTunerEl;
+  // Public helper so other code can refresh labels when test/grade changes
+  poseTunerEl.updateLabels = updateLabels;
+
+  return poseTunerEl;
 }
 
 function showPoseTuner(show){
