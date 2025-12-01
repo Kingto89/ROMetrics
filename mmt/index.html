@@ -2686,6 +2686,34 @@ function ensurePoseTuner(){
     if (!key) return;
     const o = POSE_OVERRIDES[key];
     if (!o) return;
+// Canonicalize joint angles to the same camelCase key format used by working poses
+const CANON = n => n
+  .replace('upperarm_','upperArm')
+  .replace('lowerarm_','lowerArm')
+  .replace('hand_','hand')
+  .replace('_L','L')
+  .replace('_R','R');
+
+// Bones we actually care about for scap/middle trap poses
+const BONES = ['upperarm_L','upperarm_R','lowerarm_L','lowerarm_R','hand_L','hand_R'];
+
+BONES.forEach(name=>{
+  const b = getBone(name); if (!b) return;
+
+  // angles in DEGREES (match your existing override style)
+  const xDeg = THREE.MathUtils.radToDeg(b.rotation.x);
+  const yDeg = THREE.MathUtils.radToDeg(b.rotation.y);
+  const zDeg = THREE.MathUtils.radToDeg(b.rotation.z);
+
+  const base = CANON(name);               // e.g., 'upperArmR', 'handL'
+  o[base+'X'] = xDeg;                     // e.g., upperArmRX
+  o[base+'Y'] = yDeg;                     // e.g., upperArmRY
+  o[base+'Z'] = zDeg;                     // e.g., upperArmRZ
+
+  // remove any mismatched snake_case copies to avoid conflicts
+  delete o[name+'X']; delete o[name+'Y']; delete o[name+'Z'];
+});
+    
 // Save exact bone orientations (quaternions) to avoid ±180° Euler issues
 if (typeof ALL_TUNABLE_BONES !== 'undefined'){
   ALL_TUNABLE_BONES.forEach(name=>{
