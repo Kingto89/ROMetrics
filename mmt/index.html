@@ -938,12 +938,13 @@ const BONE_FOR = {
   foot_invev_l:'foot_L', foot_invev_r:'foot_R',
   trunk_fe:'spine01',    trunk_lat:'spine01',   trunk_rot:'spine01',
   cerv_fe:'neck',        cerv_lat:'neck',       cerv_rot:'neck',
-  clavicle_L:'clavicle_L', clavicle_R:'clavicle_R'
-   // model-only targets
-  model_pitch:'__model__',
+  clavicle_L:'clavicle_L', clavicle_R:'clavicle_R',
+    model_pitch:'__model__',
   model_roll:'__model__',
   model_yaw:'__model__',
   model_root:'__model__'
+};
+
 };
  
 const poseDeg = Object.fromEntries(Object.keys(BONE_FOR).map(k => [k, 0]));  
