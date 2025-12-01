@@ -2107,6 +2107,25 @@ function addModel(gltf){
   if (POSE.seated) seatPoseOnlyLegs();
 
   scene.add(model);
+    // ---- MODEL-ONLY ROTATION BUTTONS (Pitch/Roll/Yaw) ----
+  const DEG = THREE.MathUtils.degToRad;
+  const STEP = 5; // degrees per click
+
+  function rot(axis, dir){ model.rotation[axis] += DEG(STEP * dir); }
+
+  // Try IDs first; fall back to data-action buttons if IDs differ.
+  const byId = id => document.getElementById(id);
+  const byAct = a => document.querySelector(`[data-action="${a}"]`);
+
+  (byId('pitchMinus') || byAct('pitch-'))?.addEventListener('click', ()=> rot('x', -1));
+  (byId('pitchPlus')  || byAct('pitch+'))?.addEventListener('click', ()=> rot('x', +1));
+
+  (byId('rollMinus')  || byAct('roll-')) ?.addEventListener('click', ()=> rot('z', -1));
+  (byId('rollPlus')   || byAct('roll+')) ?.addEventListener('click', ()=> rot('z', +1));
+
+  (byId('yawMinus')   || byAct('yaw-'))  ?.addEventListener('click', ()=> rot('y', -1));
+  (byId('yawPlus')    || byAct('yaw+'))  ?.addEventListener('click', ()=> rot('y', +1));
+
   $("msg").textContent = "✅ Model loaded";
 }
 
