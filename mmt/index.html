@@ -2782,7 +2782,7 @@ poseTunerEl.querySelectorAll('button[data-axis]:not([data-mode])').forEach(btn=>
 
 
 // 2. Bone Position/Rotation (data-mode) AND Root Model Yaw (data-rot="y")
-poseTunerEl.querySelectorAll('button[data-mode], button[data-rot]').forEach(btn=>{
+  poseTunerEl.querySelectorAll('button[data-mode], button[data-rot]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       const mode = btn.getAttribute('data-mode'); // 'bpos' or 'brot' (for bone)
       const rotAxis = btn.getAttribute('data-rot'); // 'y' (for root yaw)
@@ -2794,7 +2794,7 @@ poseTunerEl.querySelectorAll('button[data-mode], button[data-rot]').forEach(btn=
       const key = getCurrentOverrideKey();
 
       // A) Bone Position Adjustment (bpos) - DELETED / SKIPPED
-      // This ensures that only rotation affects the bones, preventing stretching.
+      // The buttons for 'bpos' will now do nothing, preventing stretching/compression.
 
       // B) Bone Rotation Adjustment (brot) - ONLY TARGETS SELECTED BONE
       if (mode === 'brot') {
@@ -2822,7 +2822,7 @@ poseTunerEl.querySelectorAll('button[data-mode], button[data-rot]').forEach(btn=
           applyOverride(key);
       }
     });
-});
+  });
 
   // Reset to base (throw away override & re-apply base mode)
   btnSnapBase.onclick = () => {
