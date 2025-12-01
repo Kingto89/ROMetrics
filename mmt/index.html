@@ -2737,6 +2737,7 @@ function applyOverride(key){
   // root (model) pose
   model.position.set(o.x, o.y, o.z);
   model.rotation.set(o.rx, o.ry, o.rz);
+if (typeof skeleton !== 'undefined' && skeleton && skeleton.pose) skeleton.pose();
 
   // reapply saved joint angles (deg → rad)
   if (typeof ALL_TUNABLE_BONES !== 'undefined' && o){
