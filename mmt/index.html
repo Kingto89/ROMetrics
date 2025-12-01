@@ -2788,7 +2788,7 @@ poseTunerEl.querySelectorAll('button[data-mode], button[data-rot]').forEach(btn=
     const rotAxis = btn.getAttribute('data-rot');     // 'y' for root yaw
     const axis    = btn.getAttribute('data-axis');    // x, y, z
     const delta   = parseFloat(btn.getAttribute('data-delta') || '0');
-    const deltaRad = THREE.MathUtils.degToRad(delta);
+    const deltaRad = THREE.MathUtils.degToRad(mode === 'bpos' ? delta * 180 : delta);
 
     const bone = getSelectedBone();       // REAL SELECTED BONE
     const key  = getCurrentOverrideKey(); // ONLY used for root yaw
