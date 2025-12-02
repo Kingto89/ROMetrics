@@ -2888,23 +2888,43 @@ poseTunerEl.querySelectorAll('button[data-mode], button[data-rot]').forEach(btn=
 
    // --------------------------
 // A) BONE POSITION (2nd row) - NEW: Converts to Rotation
-// --------------------------
-if (mode === 'bpos'){
+// ...
+const delta = parseFloat(btn.getAttribute('data-delta') || '0');
+// We use a degree step, small for position, larger for rotation
+const stepDeg = (mode === 'bpos') ? 0.5 : 1.0; 
+const finalDeltaRad = THREE.MathUtils.degToRad(delta > 0 ? stepDeg : -stepDeg);
+const key = getCurrentOverrideKey(); // Key needed for body transforms only
+
+// ----------------------------------------------------------------------
+// A/B) BONE POSITION ('bpos') and BONE ROTATION ('brot') - NEW LOCAL AXIS ROTATION
+// ----------------------------------------------------------------------
+if (mode === 'bpos' || mode === 'brot'){
     if (!bone){
         console.warn("Select a bone to adjust its rotation.");
         return;
     }
 
-    // Define new rotation step in degrees (e.g., 0.5 deg per click)
-    const rotStepDeg = 0.5;
-    const delta = parseFloat(btn.getAttribute('data-delta') || '0');
-    const finalDeltaRad = THREE.MathUtils.degToRad( (delta > 0 ? rotStepDeg : -rotStepDeg) );
+    // 1. Define the rotation axis vector based on the button's axis attribute
+    const axisVector = new THREE.Vector3(
+        axis === 'x' ? 1 : 0,
+        axis === 'y' ? 1 : 0,
+        axis === 'z' ? 1 : 0
+    );
 
-    // Apply rotation to the selected bone
-    bone.rotation[axis] += finalDeltaRad;
+    // 2. Create a rotation quaternion around the local axis
+    const qDelta = new THREE.Quaternion().setFromAxisAngle(
+        axisVector,
+        finalDeltaRad
+    );
+
+    // 3. Apply the rotation (q_new = q_current * q_delta)
+    bone.quaternion.multiply(qDelta);
     return;
 }
 
+// --------------------------
+// C) ROOT MODEL ROTATION (⟲ ⟳)
+// ... (rest of the code for root model rotation remains the same)
    // --------------------------
 // B) MODEL ROTATION (Pitch, Roll, Yaw on Root Model)
 // --------------------------
