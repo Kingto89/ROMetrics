@@ -2491,7 +2491,7 @@ function ensurePoseTuner(){
     display: 'none'
   });
 
-  poseTunerEl.innerHTML = `
+poseTunerEl.innerHTML = `
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
       <strong style="font-size:13px;">Pose Tuner (High / Low)</strong>
       <button id="poseTunerClose" title="Close" style="margin-left:auto;background:transparent;border:0;color:#9fb0c9;font-size:16px;cursor:pointer;">✕</button>
@@ -2503,7 +2503,7 @@ function ensurePoseTuner(){
 
     <div style="border-top:1px solid #1f2933;margin:6px 0 8px 0;"></div>
 
-    <label style="display:block;opacity:.85;">Position (meters)</label>
+    <label style="display:block;opacity:.85;">Root Model Position (meters)</label>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:4px;">
       <div>
         <div style="opacity:.7;">X (left/right)</div>
@@ -2528,8 +2528,35 @@ function ensurePoseTuner(){
       </div>
     </div>
 
-<div style="border-top:1px solid #1f2933;margin:6px 0 8px 0;"></div>
-
+    <div style="border-top:1px solid #1f2933;margin:6px 0 8px 0;"></div>
+    
+    <label style="display:block;opacity:.85;">Root Model Rotation (Pitch, Roll, Yaw)</label>
+    <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;">
+        <div style="flex:1;min-width:48%;">
+            <div style="opacity:.7;">Pitch (Model X)</div>
+            <div style="display:flex;gap:4px;">
+              <button data-axis="x" data-delta="-1" class="mini">Pitch −</button>
+              <button data-axis="x" data-delta="1" class="mini">Pitch +</button>
+            </div>
+        </div>
+        <div style="flex:1;min-width:48%;">
+            <div style="opacity:.7;">Roll (Model Z)</div>
+            <div style="display:flex;gap:4px;">
+              <button data-axis="z" data-delta="-1" class="mini">Roll −</button>
+              <button data-axis="z" data-delta="1" class="mini">Roll +</button>
+            </div>
+        </div>
+        <div style="flex:1;min-width:48%;">
+            <div style="opacity:.7;">Yaw (Model Y)</div>
+            <div style="display:flex;gap:4px;">
+              <button data-rot="y" data-delta="-5" class="mini">⟲</button>
+              <button data-rot="y" data-delta="5" class="mini">⟳</button>
+            </div>
+        </div>
+    </div>
+    
+    <div style="border-top:1px solid #1f2933;margin:6px 0 8px 0;"></div>
+    
     <label style="display:block;opacity:.85;">**Bone Tuning**</label>
     <div style="display:flex;gap:4px;margin-bottom:4px;">
       <select id="boneTunerSelect" style="flex:1;background:#334155;border:1px solid #475569;color:#e2e8f0;padding:4px 6px;border-radius:6px;font-size:11px;">
@@ -2585,14 +2612,13 @@ function ensurePoseTuner(){
   <option value="foot_R">foot_R</option>
   <option value="toes_R">toes_R</option>
 </optgroup>
-
       </select>
     </div>
 
-    <label style="display:block;opacity:.85;margin-top:8px;">Bone Position (degree, specific bone movement)</label>
+    <label style="display:block;opacity:.85;margin-top:8px;">Bone Position (Fine Rotation)</label>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:8px;">
       <div>
-        <div style="opacity:.7;font-size:10px;">X ((Flex/Ext)</div>
+        <div style="opacity:.7;font-size:10px;">X (Flex/Ext)</div>
         <div style="display:flex;gap:4px;">
           <button data-mode="bpos" data-axis="x" data-delta="-0.005" class="mini">−</button>
           <button data-mode="bpos" data-axis="x" data-delta="0.005" class="mini">+</button>
@@ -2614,11 +2640,11 @@ function ensurePoseTuner(){
       </div>
     </div>
     
-    <label style="display:block;opacity:.85;margin-top:4px;">Bone Rotation (degrees)</label>
-    <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:4px;">
+    <label style="display:block;opacity:.85;margin-top:4px;">Bone Rotation (Coarse Rotation)</label>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:4px;">
       
       <div style="flex:1;min-width:48%;">
-        <div style="opacity:.7;">Pitch </div>
+        <div style="opacity:.7;">Pitch (X)</div>
         <div style="display:flex;gap:4px;">
           <button data-mode="brot" data-axis="x" data-delta="-1" class="mini">Pitch −</button>
           <button data-mode="brot" data-axis="x" data-delta="1" class="mini">Pitch +</button>
@@ -2626,7 +2652,7 @@ function ensurePoseTuner(){
       </div>
 
       <div style="flex:1;min-width:48%;">
-        <div style="opacity:.7;">Roll </div>
+        <div style="opacity:.7;">Roll (Z)</div>
         <div style="display:flex;gap:4px;">
           <button data-mode="brot" data-axis="z" data-delta="-1" class="mini">Roll −</button>
           <button data-mode="brot" data-axis="z" data-delta="1" class="mini">Roll +</button>
@@ -2634,23 +2660,15 @@ function ensurePoseTuner(){
       </div>
 
       <div style="flex:1;min-width:48%;">
-        <div style="opacity:.7;">Yaw </div>
+        <div style="opacity:.7;">Yaw (Y)</div>
         <div style="display:flex;gap:4px;">
           <button data-mode="brot" data-axis="y" data-delta="-1" class="mini">Yaw −</button>
           <button data-mode="brot" data-axis="y" data-delta="1" class="mini">Yaw +</button>
         </div>
       </div>
-      
-      <div style="flex:1;min-width:48%;">
-        <div style="opacity:.7;">Root Yaw (Model)</div>
-        <div style="display:flex;gap:4px;">
-          <button data-rot="y" data-delta="-5" class="mini">⟲</button>
-          <button data-rot="y" data-delta="5" class="mini">⟳</button>
-        </div>
-      </div>
     </div>
-
-<div style="display:flex;gap:8px;margin-top:8px;">
+    
+    <div style="display:flex;gap:8px;margin-top:8px;">
       <button id="poseTunerSnapBase" class="mini" style="flex:1;">Reset to Base Mode</button>
       <button id="poseTunerSave" class="mini" style="flex:1;background:#0f766e;border-color:#0f766e;color:#fff;">Save for Test</button>
     </div>
@@ -2658,7 +2676,7 @@ function ensurePoseTuner(){
     <div style="margin-top:6px;font-size:10px;opacity:.7;">
       Uses current dropdown + grade to decide <em>which</em> pose (high vs low) you’re tuning.
     </div>
-  `; // IMPORTANT: Ensure the closing backtick and semicolon (`;) are included if this closes the innerHTML assignment.
+  `;
 
   document.body.appendChild(poseTunerEl);
 
@@ -2872,82 +2890,81 @@ const boneTunerSelect = poseTunerEl.querySelector('#boneTunerSelect');
       applyOverride(key);
     });
   });
+/**
+ * Handles all rotation/movement for an individual bone selected in the dropdown.
+ * Returns true if a bone action was executed and further processing should stop.
+ */
+function handleBoneTuning(btn, mode, axis, delta, bone) {
+    // If no bone is selected in the dropdown, or if the button is not a bone-tuning button, do nothing.
+    if (!bone || !(mode === 'bpos' || mode === 'brot')) {
+        return false;
+    }
 
-// Locate this function definition:
+    // Determine step size (fine: 0.5° for bpos, coarse: 1.0° for brot)
+    const stepDeg = (mode === 'bpos') ? 0.5 : 1.0; 
+    const dir = parseFloat(btn.getAttribute('data-delta') || '0');
+    const finalDeltaRad = THREE.MathUtils.degToRad( (dir > 0 ? stepDeg : -stepDeg) );
+    
+    // Use the stable quaternion rotation (local axis)
+    const axisVector = new THREE.Vector3();
+    if (axis === 'x') axisVector.set(1, 0, 0);
+    else if (axis === 'y') axisVector.set(0, 1, 0);
+    else if (axis === 'z') axisVector.set(0, 0, 1);
+
+    const qDelta = new THREE.Quaternion().setFromAxisAngle(axisVector, finalDeltaRad);
+    bone.quaternion.multiply(qDelta); 
+    
+    return true; // Execution stopped: a bone action was performed.
+}
+// Locate this function definition (around line 1618)
 poseTunerEl.querySelectorAll('button[data-mode], button[data-rot]').forEach(btn=>{
   btn.addEventListener('click', ()=>{
 
     const mode    = btn.getAttribute('data-mode');   // 'bpos' or 'brot'
-    const rotAxis = btn.getAttribute('data-rot');     // 'y' for root yaw
+    const rotAxis = btn.getAttribute('data-rot');     // 'y' for root yaw (model)
     const axis    = btn.getAttribute('data-axis');    // x, y, z
     const delta   = parseFloat(btn.getAttribute('data-delta') || '0');
     const key     = getCurrentOverrideKey();          // Check if an override object exists
     const bone    = getSelectedBone();                // The individual bone selected in the dropdown
 
-    // =================================================================
-    // 1. INDIVIDUAL BONE ROTATION ('bpos' and 'brot')
-    //    (Fine-tunes the selected bone only)
-    // =================================================================
-    if (mode === 'bpos' || mode === 'brot'){
-        if (!bone){
-            console.warn("Select a bone to adjust its rotation.");
-            return;
-        }
-
-        // Determine step size (fine: 0.5° for bpos, coarse: 1.0° for brot)
-        const stepDeg = (mode === 'bpos') ? 0.5 : 1.0; 
-        const dir = parseFloat(btn.getAttribute('data-delta') || '0');
-        const finalDeltaRad = THREE.MathUtils.degToRad( (dir > 0 ? stepDeg : -stepDeg) );
-        
-        // Use the stable quaternion rotation that we just fixed (local axis)
-        const axisVector = new THREE.Vector3();
-        if (axis === 'x') axisVector.set(1, 0, 0);
-        else if (axis === 'y') axisVector.set(0, 1, 0);
-        else if (axis === 'z') axisVector.set(0, 0, 1);
-
-        const qDelta = new THREE.Quaternion().setFromAxisAngle(axisVector, finalDeltaRad);
-        bone.quaternion.multiply(qDelta); 
-        
-        return; // End of BONE ROTATION logic
+    // Check 1: If an individual bone is selected and a bone-tuning button is pressed, handle it and EXIT.
+    if (handleBoneTuning(btn, mode, axis, delta, bone)) {
+        return; 
     }
     
-    // =================================================================
-    // 2. ROOT MODEL PITCH & ROLL (Re-purposing the Pitch/Roll buttons)
-    //    (Affects the entire model, never the individual bones)
-    // =================================================================
-    // We check if the button has an 'axis' but is NOT a bone mode (bpos/brot) 
-    // AND if it's the specific Pitch (X) or Roll (Z) button we want to re-purpose.
-    if (key && axis && !mode){
+    // NOTE: All subsequent logic only runs if handleBoneTuning() returned false (i.e., 
+    // either no bone was selected, or the button was not a bone-tuning button).
+    
+    // Check 2: Root Model Pitch & Roll (X and Z axis for the whole model)
+    if (key && axis){
         ensureOverrideFromCurrentPose();
         const o = POSE_OVERRIDES[key];
-        const deltaRad = THREE.MathUtils.degToRad(delta); // Use the button's built-in delta (±1°)
+        const deltaRad = THREE.MathUtils.degToRad(delta);
         
         // X-axis: Pitch (Flexion/Extension)
         if (axis === 'x') {
           o.rx += deltaRad;
-          applyOverride(key);
         } 
         // Z-axis: Roll (Lateral Flexion)
         else if (axis === 'z') {
           o.rz += deltaRad;
-          applyOverride(key);
+        } else {
+          return; // Ignore any other axis click that wasn't caught above.
         }
         
-        return; // End of MODEL PITCH/ROLL logic
+        applyOverride(key);
+        return;
     }
 
-    // =================================================================
-    // 3. ROOT MODEL YAW (The existing '⟲' / '⟳' buttons)
-    //    (Affects the entire model, never the individual bones)
-    // =================================================================
+    // Check 3: Root Model Yaw (The existing '⟲' / '⟳' buttons)
     if (rotAxis === 'y' && key){
         ensureOverrideFromCurrentPose();
         const o = POSE_OVERRIDES[key];
-        const deltaRad = THREE.MathUtils.degToRad(delta); // Use the button's built-in delta (±5°)
+        const deltaRad = THREE.MathUtils.degToRad(delta);
         
         o.ry += deltaRad;
         applyOverride(key);
-        return; // End of MODEL YAW logic
+        return;
     }
   });
 });
