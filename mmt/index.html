@@ -2490,7 +2490,6 @@ function ensurePoseTuner(){
     boxShadow: '0 8px 28px rgba(0,0,0,.4)',
     display: 'none'
   });
-
 poseTunerEl.innerHTML = `
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
       <strong style="font-size:13px;">Pose Tuner (High / Low)</strong>
@@ -2612,10 +2611,10 @@ poseTunerEl.innerHTML = `
   <option value="foot_R">foot_R</option>
   <option value="toes_R">toes_R</option>
 </optgroup>
-      </select>
-    </div>
+      </select>
+    </div>
 
-  <label style="display:block;opacity:.85;margin-top:8px;">Bone Position (Fine Rotation)</label>
+  <label style="display:block;opacity:.85;margin-top:8px;">Bone Position (Fine Rotation)</label>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:8px;">
       <div>
         <div style="opacity:.7;font-size:10px;">X (Flex/Ext)</div>
@@ -2649,9 +2648,7 @@ poseTunerEl.innerHTML = `
     <div style="margin-top:6px;font-size:10px;opacity:.7;">
       Uses current dropdown + grade to decide <em>which</em> pose (high vs low) you’re tuning.
     </div>
- 
-`; // <-- Add this closing backtick and semicolon (`;) at the end of the entire assignment.
-
+`;
   document.body.appendChild(poseTunerEl);
 
   const labelTest   = poseTunerEl.querySelector('#poseTunerTestLabel');
