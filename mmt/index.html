@@ -2589,24 +2589,24 @@ function ensurePoseTuner(){
       </select>
     </div>
 
-    <label style="display:block;opacity:.85;margin-top:8px;">Bone Position (meters, local to parent)</label>
+    <label style="display:block;opacity:.85;margin-top:8px;">Bone Position (degree, specific bone movement)</label>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:8px;">
       <div>
-        <div style="opacity:.7;font-size:10px;">X (left/right)</div>
+        <div style="opacity:.7;font-size:10px;">X ((Flex/Ext)</div>
         <div style="display:flex;gap:4px;">
           <button data-mode="bpos" data-axis="x" data-delta="-0.005" class="mini">−</button>
           <button data-mode="bpos" data-axis="x" data-delta="0.005" class="mini">+</button>
         </div>
       </div>
       <div>
-        <div style="opacity:.7;font-size:10px;">Y (up/down)</div>
+        <div style="opacity:.7;font-size:10px;">Y (IR/ER)</div>
         <div style="display:flex;gap:4px;">
           <button data-mode="bpos" data-axis="y" data-delta="-0.005" class="mini">−</button>
           <button data-mode="bpos" data-axis="y" data-delta="0.005" class="mini">+</button>
         </div>
       </div>
       <div>
-        <div style="opacity:.7;font-size:10px;">Z (front/back)</div>
+        <div style="opacity:.7;font-size:10px;">Z (Ab/Ad)</div>
         <div style="display:flex;gap:4px;">
           <button data-mode="bpos" data-axis="z" data-delta="-0.005" class="mini">−</button>
           <button data-mode="bpos" data-axis="z" data-delta="0.005" class="mini">+</button>
@@ -2618,7 +2618,7 @@ function ensurePoseTuner(){
     <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:4px;">
       
       <div style="flex:1;min-width:48%;">
-        <div style="opacity:.7;">Pitch (Flex/Ext)</div>
+        <div style="opacity:.7;">Pitch </div>
         <div style="display:flex;gap:4px;">
           <button data-mode="brot" data-axis="x" data-delta="-1" class="mini">Pitch −</button>
           <button data-mode="brot" data-axis="x" data-delta="1" class="mini">Pitch +</button>
@@ -2626,7 +2626,7 @@ function ensurePoseTuner(){
       </div>
 
       <div style="flex:1;min-width:48%;">
-        <div style="opacity:.7;">Roll (Lat Flex/Tilt)</div>
+        <div style="opacity:.7;">Roll </div>
         <div style="display:flex;gap:4px;">
           <button data-mode="brot" data-axis="z" data-delta="-1" class="mini">Roll −</button>
           <button data-mode="brot" data-axis="z" data-delta="1" class="mini">Roll +</button>
@@ -2634,7 +2634,7 @@ function ensurePoseTuner(){
       </div>
 
       <div style="flex:1;min-width:48%;">
-        <div style="opacity:.7;">Yaw (IR/ER)</div>
+        <div style="opacity:.7;">Yaw </div>
         <div style="display:flex;gap:4px;">
           <button data-mode="brot" data-axis="y" data-delta="-1" class="mini">Yaw −</button>
           <button data-mode="brot" data-axis="y" data-delta="1" class="mini">Yaw +</button>
@@ -2886,19 +2886,24 @@ poseTunerEl.querySelectorAll('button[data-mode], button[data-rot]').forEach(btn=
     const bone = getSelectedBone();       // REAL SELECTED BONE
     const key  = getCurrentOverrideKey(); // ONLY used for root yaw
 
-    // --------------------------
-    // A) BONE POSITION  (2nd row)
-    // --------------------------
-    if (mode === 'bpos'){
-        if (!bone){
-            console.warn("Select a bone to adjust its local position.");
-            return;
-        }
-
-        // Rotate bone instead of sliding — correct Step 1 behavior
-        bone.rotation[axis] += deltaRad;
+   // --------------------------
+// A) BONE POSITION (2nd row) - NEW: Converts to Rotation
+// --------------------------
+if (mode === 'bpos'){
+    if (!bone){
+        console.warn("Select a bone to adjust its rotation.");
         return;
     }
+
+    // Define new rotation step in degrees (e.g., 0.5 deg per click)
+    const rotStepDeg = 0.5;
+    const delta = parseFloat(btn.getAttribute('data-delta') || '0');
+    const finalDeltaRad = THREE.MathUtils.degToRad( (delta > 0 ? rotStepDeg : -rotStepDeg) );
+
+    // Apply rotation to the selected bone
+    bone.rotation[axis] += finalDeltaRad;
+    return;
+}
 
    // --------------------------
 // B) MODEL ROTATION (Pitch, Roll, Yaw on Root Model)
