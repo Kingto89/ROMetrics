@@ -2874,6 +2874,7 @@ const boneTunerSelect = poseTunerEl.querySelector('#boneTunerSelect');
   });
 
 
+// Locate the following function definition:
 poseTunerEl.querySelectorAll('button[data-mode], button[data-rot]').forEach(btn=>{
   btn.addEventListener('click', ()=>{
 
@@ -2881,79 +2882,59 @@ poseTunerEl.querySelectorAll('button[data-mode], button[data-rot]').forEach(btn=
     const rotAxis = btn.getAttribute('data-rot');     // 'y' for root yaw
     const axis    = btn.getAttribute('data-axis');    // x, y, z
     const delta   = parseFloat(btn.getAttribute('data-delta') || '0');
-    const deltaRad = THREE.MathUtils.degToRad(mode === 'bpos' ? delta * 180 : delta);
+    const key     = getCurrentOverrideKey();          // Check if an override object exists
+    const bone    = getSelectedBone();                // The individual bone selected in the dropdown
 
-    const bone = getSelectedBone();       // REAL SELECTED BONE
-    const key  = getCurrentOverrideKey(); // ONLY used for root yaw
+    // =================================================================
+    // 1. BONE POSITION ('bpos') - Fine Rotation (±0.5°) on the selected bone
+    // =================================================================
+    if (mode === 'bpos'){
+        if (!bone){
+            console.warn("Select a bone to adjust its position/rotation.");
+            return;
+        }
 
-   // --------------------------
-// A) BONE POSITION (2nd row) - NEW: Converts to Rotation
-// ...
-const delta = parseFloat(btn.getAttribute('data-delta') || '0');
-// We use a degree step, small for position, larger for rotation
-const stepDeg = (mode === 'bpos') ? 0.5 : 1.0; 
-const finalDeltaRad = THREE.MathUtils.degToRad(delta > 0 ? stepDeg : -stepDeg);
-const key = getCurrentOverrideKey(); // Key needed for body transforms only
+        const stepDeg = 0.5; // Fine step
+        const finalDeltaRad = THREE.MathUtils.degToRad( (delta > 0 ? stepDeg : -stepDeg) );
 
-// ----------------------------------------------------------------------
-// ... (code above remains the same)
-
-// ----------------------------------------------------------------------
-// A/B) BONE POSITION ('bpos') and BONE ROTATION ('brot') - Simplified Local Axis Rotation
-// ----------------------------------------------------------------------
-if (mode === 'bpos' || mode === 'brot'){
-    if (!bone){
-        console.warn("Select a bone to adjust its rotation.");
-        return;
+        // Apply rotation to the selected bone's local axis
+        bone.rotation[axis] += finalDeltaRad;
+        return; // End of BONE POSITION logic
     }
 
-    // 'bpos' buttons are for fine tuning (0.5 degrees). 
-    // 'brot' buttons (the row below) are for large tuning (1 degree).
-    const stepDeg = (mode === 'bpos') ? 0.5 : 1.0; 
-    const dir = parseFloat(btn.getAttribute('data-delta') || '0');
-    
-    // Determine the final rotation in radians
-    const finalDeltaRad = THREE.MathUtils.degToRad( (dir > 0 ? stepDeg : -stepDeg) );
-    
-    // Apply the rotation directly to the bone's Euler angle.
-    bone.rotation[axis] += finalDeltaRad;
-    return;
-}
-   // --------------------------
-// B) MODEL ROTATION (Pitch, Roll, Yaw on Root Model)
-// --------------------------
-if (mode === 'brot' && key){
-    ensureOverrideFromCurrentPose();
-    const o = POSE_OVERRIDES[key];
+    // =================================================================
+    // 2. BONE ROTATION ('brot') - Coarse Rotation (±1°) on the selected bone
+    // =================================================================
+    if (mode === 'brot'){
+        if (!bone){
+            console.warn("Select a bone to adjust its rotation.");
+            return;
+        }
 
-    // Adjust the rotational component (rx, ry, rz) in the override object.
-    // Pitch (Flex/Ext) adjusts rx
-    if (axis === 'x') o.rx += deltaRad;
-    // Yaw (IR/ER) adjusts ry
-    else if (axis === 'y') o.ry += deltaRad;
-    // Roll (Lat Flex/Tilt) adjusts rz
-    else if (axis === 'z') o.rz += deltaRad;
+        const stepDeg = 1.0; // Coarse step
+        // Re-calculate deltaRad based on the button's delta attribute
+        const finalDeltaRad = THREE.MathUtils.degToRad( (delta > 0 ? stepDeg : -stepDeg) );
 
-    applyOverride(key);
-    return;
-}
+        // Apply rotation to the selected bone's local axis
+        bone.rotation[axis] += finalDeltaRad;
+        return; // End of BONE ROTATION logic
+    }
 
-    // --------------------------
-    // C) ROOT MODEL ROTATION (⟲ ⟳)
-    // --------------------------
+
+    // =================================================================
+    // 3. ROOT MODEL ROTATION (data-rot) - Affects the entire body model
+    // =================================================================
     if (rotAxis === 'y' && key){
         ensureOverrideFromCurrentPose();
         const o = POSE_OVERRIDES[key];
+        const deltaRad = THREE.MathUtils.degToRad(delta); // Use the delta from the button (+5 or -5)
+        
         o.ry += deltaRad;
         applyOverride(key);
-        return;
+        return; // End of ROOT MODEL logic
     }
-
   });
 });
-
-
-
   // Reset to base (throw away override & re-apply base mode)
   btnSnapBase.onclick = () => {
     const key = getCurrentOverrideKey();
