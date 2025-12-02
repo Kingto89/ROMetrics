@@ -2490,7 +2490,8 @@ function ensurePoseTuner(){
     boxShadow: '0 8px 28px rgba(0,0,0,.4)',
     display: 'none'
   });
- poseTunerEl.innerHTML = `
+
+poseTunerEl.innerHTML = `
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
       <strong style="font-size:13px;">Pose Tuner (High / Low)</strong>
       <button id="poseTunerClose" title="Close" style="margin-left:auto;background:transparent;border:0;color:#9fb0c9;font-size:16px;cursor:pointer;">✕</button>
@@ -2502,7 +2503,7 @@ function ensurePoseTuner(){
 
     <div style="border-top:1px solid #1f2933;margin:6px 0 8px 0;"></div>
 
-    <label style="display:block;opacity:.85;">Position (meters)</label>
+    <label style="display:block;opacity:.85;">Root Model Position (meters)</label>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:4px;">
       <div>
         <div style="opacity:.7;">X (left/right)</div>
@@ -2527,44 +2528,35 @@ function ensurePoseTuner(){
       </div>
     </div>
 
-<div style="border-top:1px solid #1f2933;margin:6px 0 8px 0;"></div>
-
-    <label style="display:block;opacity:.85;margin-top:4px;">Bone Rotation (degrees)</label>
-    <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:4px;">
-      
-      <div style="flex:1;min-width:48%;">
-        <div style="opacity:.7;">Pitch </div>
-        <div style="display:flex;gap:4px;">
-          <button data-mode="brot" data-axis="x" data-delta="-1" class="mini">Pitch −</button>
-          <button data-mode="brot" data-axis="x" data-delta="1" class="mini">Pitch +</button>
+    <div style="border-top:1px solid #1f2933;margin:6px 0 8px 0;"></div>
+    
+    <label style="display:block;opacity:.85;">Root Model Rotation (Pitch, Roll, Yaw)</label>
+    <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;">
+        <div style="flex:1;min-width:48%;">
+            <div style="opacity:.7;">Pitch (Model X)</div>
+            <div style="display:flex;gap:4px;">
+              <button data-axis="x" data-delta="-1" class="mini">Pitch −</button>
+              <button data-axis="x" data-delta="1" class="mini">Pitch +</button>
+            </div>
         </div>
-      </div>
-
-      <div style="flex:1;min-width:48%;">
-        <div style="opacity:.7;">Roll </div>
-        <div style="display:flex;gap:4px;">
-          <button data-mode="brot" data-axis="z" data-delta="-1" class="mini">Roll −</button>
-          <button data-mode="brot" data-axis="z" data-delta="1" class="mini">Roll +</button>
+        <div style="flex:1;min-width:48%;">
+            <div style="opacity:.7;">Roll (Model Z)</div>
+            <div style="display:flex;gap:4px;">
+              <button data-axis="z" data-delta="-1" class="mini">Roll −</button>
+              <button data-axis="z" data-delta="1" class="mini">Roll +</button>
+            </div>
         </div>
-      </div>
-
-      <div style="flex:1;min-width:48%;">
-        <div style="opacity:.7;">Yaw </div>
-        <div style="display:flex;gap:4px;">
-          <button data-mode="brot" data-axis="y" data-delta="-1" class="mini">Yaw −</button>
-          <button data-mode="brot" data-axis="y" data-delta="1" class="mini">Yaw +</button>
+        <div style="flex:1;min-width:48%;">
+            <div style="opacity:.7;">Yaw (Model Y)</div>
+            <div style="display:flex;gap:4px;">
+              <button data-rot="y" data-delta="-5" class="mini">⟲</button>
+              <button data-rot="y" data-delta="5" class="mini">⟳</button>
+            </div>
         </div>
-      </div>
-      
-      <div style="flex:1;min-width:48%;">
-        <div style="opacity:.7;">Root Yaw (Model)</div>
-        <div style="display:flex;gap:4px;">
-          <button data-rot="y" data-delta="-5" class="mini">⟲</button>
-          <button data-rot="y" data-delta="5" class="mini">⟳</button>
-        </div>
-      </div>
     </div>
-
+    
+    <div style="border-top:1px solid #1f2933;margin:6px 0 8px 0;"></div>
+    
     <label style="display:block;opacity:.85;">**Bone Tuning**</label>
     <div style="display:flex;gap:4px;margin-bottom:4px;">
       <select id="boneTunerSelect" style="flex:1;background:#334155;border:1px solid #475569;color:#e2e8f0;padding:4px 6px;border-radius:6px;font-size:11px;">
@@ -2620,14 +2612,13 @@ function ensurePoseTuner(){
   <option value="foot_R">foot_R</option>
   <option value="toes_R">toes_R</option>
 </optgroup>
-
       </select>
     </div>
 
-    <label style="display:block;opacity:.85;margin-top:8px;">Bone Position (degree, specific bone movement)</label>
+    <label style="display:block;opacity:.85;margin-top:8px;">Bone Position (Fine Rotation)</label>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:8px;">
       <div>
-        <div style="opacity:.7;font-size:10px;">X ((Flex/Ext)</div>
+        <div style="opacity:.7;font-size:10px;">X (Flex/Ext)</div>
         <div style="display:flex;gap:4px;">
           <button data-mode="bpos" data-axis="x" data-delta="-0.005" class="mini">−</button>
           <button data-mode="bpos" data-axis="x" data-delta="0.005" class="mini">+</button>
@@ -2648,8 +2639,8 @@ function ensurePoseTuner(){
         </div>
       </div>
     </div>
-
-<div style="display:flex;gap:8px;margin-top:8px;">
+    
+    <div style="display:flex;gap:8px;margin-top:8px;">
       <button id="poseTunerSnapBase" class="mini" style="flex:1;">Reset to Base Mode</button>
       <button id="poseTunerSave" class="mini" style="flex:1;background:#0f766e;border-color:#0f766e;color:#fff;">Save for Test</button>
     </div>
@@ -2657,7 +2648,7 @@ function ensurePoseTuner(){
     <div style="margin-top:6px;font-size:10px;opacity:.7;">
       Uses current dropdown + grade to decide <em>which</em> pose (high vs low) you’re tuning.
     </div>
-  `; // IMPORTANT: Ensure the closing backtick and semicolon (`;) are included if this closes the innerHTML assignment.
+  `;
 
   document.body.appendChild(poseTunerEl);
 
