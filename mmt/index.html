@@ -2885,42 +2885,48 @@ poseTunerEl.querySelectorAll('button[data-mode], button[data-rot]').forEach(btn=
     const key     = getCurrentOverrideKey();          // Check if an override object exists
     const bone    = getSelectedBone();                // The individual bone selected in the dropdown
 
-    // =================================================================
-    // 1. BONE POSITION ('bpos') - Fine Rotation (±0.5°) on the selected bone
-    // =================================================================
-    if (mode === 'bpos'){
-        if (!bone){
-            console.warn("Select a bone to adjust its position/rotation.");
-            return;
-        }
+// Locate this section within the main button event listener:
+// poseTunerEl.querySelectorAll('button[data-mode], button[data-rot]').forEach(btn=>{...}
 
-        const stepDeg = 0.5; // Fine step
-        const finalDeltaRad = THREE.MathUtils.degToRad( (delta > 0 ? stepDeg : -stepDeg) );
-
-        // Apply rotation to the selected bone's local axis
-        bone.rotation[axis] += finalDeltaRad;
-        return; // End of BONE POSITION logic
-    }
+// REPLACE THE ENTIRE SECTION FOR 'bpos' AND 'brot' (logic blocks 1 & 2 from last response)
+// WITH THE FOLLOWING QUATERNION LOGIC:
 
     // =================================================================
-    // 2. BONE ROTATION ('brot') - Coarse Rotation (±1°) on the selected bone
+    // 1 & 2. BONE TUNING ('bpos' and 'brot') - Local Axis Quaternion Rotation
     // =================================================================
-    if (mode === 'brot'){
+    if (mode === 'bpos' || mode === 'brot'){
         if (!bone){
             console.warn("Select a bone to adjust its rotation.");
             return;
         }
 
-        const stepDeg = 1.0; // Coarse step
-        // Re-calculate deltaRad based on the button's delta attribute
-        const finalDeltaRad = THREE.MathUtils.degToRad( (delta > 0 ? stepDeg : -stepDeg) );
+        // Determine step size (fine vs. coarse)
+        const stepDeg = (mode === 'bpos') ? 0.5 : 1.0; 
+        const dir = parseFloat(btn.getAttribute('data-delta') || '0');
+        const finalDeltaRad = THREE.MathUtils.degToRad( (dir > 0 ? stepDeg : -stepDeg) );
+        
+        // 1. Define the rotation axis vector based on the button's axis attribute
+        // This vector is defined in the BONE'S LOCAL COORDINATE SYSTEM.
+        const axisVector = new THREE.Vector3();
+        if (axis === 'x') axisVector.set(1, 0, 0); // Local X
+        else if (axis === 'y') axisVector.set(0, 1, 0); // Local Y (for IR/ER)
+        else if (axis === 'z') axisVector.set(0, 0, 1); // Local Z
 
-        // Apply rotation to the selected bone's local axis
-        bone.rotation[axis] += finalDeltaRad;
-        return; // End of BONE ROTATION logic
+        // 2. Create a rotation quaternion around the local axis
+        const qDelta = new THREE.Quaternion().setFromAxisAngle(
+            axisVector,
+            finalDeltaRad
+        );
+
+        // 3. Apply the rotation: q_new = q_current * q_delta
+        // This pre-multiplication ensures the rotation is applied in the BONE'S LOCAL SPACE.
+        bone.quaternion.multiply(qDelta); 
+        
+        // After applying the quaternion, we must update the bone's matrix
+        // for rendering, and the quaternion is automatically reflected in bone.rotation.
+        
+        return; 
     }
-
-
     // =================================================================
     // 3. ROOT MODEL ROTATION (data-rot) - Affects the entire body model
     // =================================================================
