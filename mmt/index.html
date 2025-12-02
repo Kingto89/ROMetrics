@@ -2896,7 +2896,10 @@ const finalDeltaRad = THREE.MathUtils.degToRad(delta > 0 ? stepDeg : -stepDeg);
 const key = getCurrentOverrideKey(); // Key needed for body transforms only
 
 // ----------------------------------------------------------------------
-// A/B) BONE POSITION ('bpos') and BONE ROTATION ('brot') - NEW LOCAL AXIS ROTATION
+// ... (code above remains the same)
+
+// ----------------------------------------------------------------------
+// A/B) BONE POSITION ('bpos') and BONE ROTATION ('brot') - Simplified Local Axis Rotation
 // ----------------------------------------------------------------------
 if (mode === 'bpos' || mode === 'brot'){
     if (!bone){
@@ -2904,27 +2907,18 @@ if (mode === 'bpos' || mode === 'brot'){
         return;
     }
 
-    // 1. Define the rotation axis vector based on the button's axis attribute
-    const axisVector = new THREE.Vector3(
-        axis === 'x' ? 1 : 0,
-        axis === 'y' ? 1 : 0,
-        axis === 'z' ? 1 : 0
-    );
-
-    // 2. Create a rotation quaternion around the local axis
-    const qDelta = new THREE.Quaternion().setFromAxisAngle(
-        axisVector,
-        finalDeltaRad
-    );
-
-    // 3. Apply the rotation (q_new = q_current * q_delta)
-    bone.quaternion.multiply(qDelta);
+    // 'bpos' buttons are for fine tuning (0.5 degrees). 
+    // 'brot' buttons (the row below) are for large tuning (1 degree).
+    const stepDeg = (mode === 'bpos') ? 0.5 : 1.0; 
+    const dir = parseFloat(btn.getAttribute('data-delta') || '0');
+    
+    // Determine the final rotation in radians
+    const finalDeltaRad = THREE.MathUtils.degToRad( (dir > 0 ? stepDeg : -stepDeg) );
+    
+    // Apply the rotation directly to the bone's Euler angle.
+    bone.rotation[axis] += finalDeltaRad;
     return;
 }
-
-// --------------------------
-// C) ROOT MODEL ROTATION (⟲ ⟳)
-// ... (rest of the code for root model rotation remains the same)
    // --------------------------
 // B) MODEL ROTATION (Pitch, Roll, Yaw on Root Model)
 // --------------------------
