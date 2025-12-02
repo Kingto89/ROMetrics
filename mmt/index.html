@@ -2615,68 +2615,42 @@ poseTunerEl.innerHTML = `
       </select>
     </div>
 
-    <label style="display:block;opacity:.85;margin-top:8px;">Bone Position (Fine Rotation)</label>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:8px;">
-      <div>
-        <div style="opacity:.7;font-size:10px;">X (Flex/Ext)</div>
-        <div style="display:flex;gap:4px;">
-          <button data-mode="bpos" data-axis="x" data-delta="-0.005" class="mini">−</button>
-          <button data-mode="bpos" data-axis="x" data-delta="0.005" class="mini">+</button>
-        </div>
-      </div>
-      <div>
-        <div style="opacity:.7;font-size:10px;">Y (IR/ER)</div>
-        <div style="display:flex;gap:4px;">
-          <button data-mode="bpos" data-axis="y" data-delta="-0.005" class="mini">−</button>
-          <button data-mode="bpos" data-axis="y" data-delta="0.005" class="mini">+</button>
-        </div>
-      </div>
-      <div>
-        <div style="opacity:.7;font-size:10px;">Z (Ab/Ad)</div>
-        <div style="display:flex;gap:4px;">
-          <button data-mode="bpos" data-axis="z" data-delta="-0.005" class="mini">−</button>
-          <button data-mode="bpos" data-axis="z" data-delta="0.005" class="mini">+</button>
-        </div>
-      </div>
-    </div>
-    
-    <label style="display:block;opacity:.85;margin-top:4px;">Bone Rotation (Coarse Rotation)</label>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:4px;">
-      
-      <div style="flex:1;min-width:48%;">
-        <div style="opacity:.7;">Pitch (X)</div>
-        <div style="display:flex;gap:4px;">
-          <button data-mode="brot" data-axis="x" data-delta="-1" class="mini">Pitch −</button>
-          <button data-mode="brot" data-axis="x" data-delta="1" class="mini">Pitch +</button>
-        </div>
-      </div>
+  <label style="display:block;opacity:.85;margin-top:8px;">Bone Position (Fine Rotation)</label>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:8px;">
+      <div>
+        <div style="opacity:.7;font-size:10px;">X (Flex/Ext)</div>
+        <div style="display:flex;gap:4px;">
+          <button data-mode="bpos" data-axis="x" data-delta="-0.005" class="mini">−</button>
+          <button data-mode="bpos" data-axis="x" data-delta="0.005" class="mini">+</button>
+        </div>
+      </div>
+      <div>
+        <div style="opacity:.7;font-size:10px;">Y (IR/ER)</div>
+        <div style="display:flex;gap:4px;">
+          <button data-mode="bpos" data-axis="y" data-delta="-0.005" class="mini">−</button>
+          <button data-mode="bpos" data-axis="y" data-delta="0.005" class="mini">+</button>
+        </div>
+      </div>
+      <div>
+        <div style="opacity:.7;font-size:10px;">Z (Ab/Ad)</div>
+        <div style="display:flex;gap:4px;">
+          <button data-mode="bpos" data-axis="z" data-delta="-0.005" class="mini">−</button>
+          <button data-mode="bpos" data-axis="z" data-delta="0.005" class="mini">+</button>
+        </div>
+      </div>
+    </div>
 
-      <div style="flex:1;min-width:48%;">
-        <div style="opacity:.7;">Roll (Z)</div>
-        <div style="display:flex;gap:4px;">
-          <button data-mode="brot" data-axis="z" data-delta="-1" class="mini">Roll −</button>
-          <button data-mode="brot" data-axis="z" data-delta="1" class="mini">Roll +</button>
-        </div>
-      </div>
+    
+    <div style="display:flex;gap:8px;margin-top:8px;">
+      <button id="poseTunerSnapBase" class="mini" style="flex:1;">Reset to Base Mode</button>
+      <button id="poseTunerSave" class="mini" style="flex:1;background:#0f766e;border-color:#0f766e;color:#fff;">Save for Test</button>
+    </div>
 
-      <div style="flex:1;min-width:48%;">
-        <div style="opacity:.7;">Yaw (Y)</div>
-        <div style="display:flex;gap:4px;">
-          <button data-mode="brot" data-axis="y" data-delta="-1" class="mini">Yaw −</button>
-          <button data-mode="brot" data-axis="y" data-delta="1" class="mini">Yaw +</button>
-        </div>
-      </div>
-    </div>
-    
-    <div style="display:flex;gap:8px;margin-top:8px;">
-      <button id="poseTunerSnapBase" class="mini" style="flex:1;">Reset to Base Mode</button>
-      <button id="poseTunerSave" class="mini" style="flex:1;background:#0f766e;border-color:#0f766e;color:#fff;">Save for Test</button>
-    </div>
-
-    <div style="margin-top:6px;font-size:10px;opacity:.7;">
-      Uses current dropdown + grade to decide <em>which</em> pose (high vs low) you’re tuning.
-    </div>
-  `;
+    <div style="margin-top:6px;font-size:10px;opacity:.7;">
+      Uses current dropdown + grade to decide <em>which</em> pose (high vs low) you’re tuning.
+    </div>
+ 
+`; // <-- Add this closing backtick and semicolon (`;) at the end of the entire assignment.
 
   document.body.appendChild(poseTunerEl);
 
