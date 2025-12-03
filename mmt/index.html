@@ -1660,57 +1660,68 @@ if (!HAND_OVERRIDES[key] && poseToApply) {
  }
 
   // Universal fine-tune rotations (shortcut from POSE_OVERRIDES)
-  if (key && POSE_OVERRIDES[key] && skeleton){
-    const o = POSE_OVERRIDES[key];
+// Optional arm/hand fine-tune rotations (shortcut from POSE_OVERRIDES) 
+if (key && POSE_OVERRIDES[key] && skeleton){
+  const o = POSE_OVERRIDES[key];
 
-    const BONES = [
-      "spine01","spine02","spine03","neck","head",
-      "breast_L","breast_R",
-      "clavicle_L","upperarm_L","upperarm_twist_L","lowerarm_L","lowerarm_twist_L",
-      "hand_L","thumb01_L","thumb02_L","thumb03_L",
-      "index00_L","index01_L","index02_L","index03_L",
-      "middle00_L","middle01_L","middle02_L","middle03_L",
-      "ring00_L","ring01_L","ring02_L","ring03_L",
-      "pinky00_L","pinky01_L","pinky02_L","pinky03_L",
-      "clavicle_R","upperarm_R","upperarm_twist_R","lowerarm_R","lowerarm_twist_R",
-      "hand_R","thumb01_R","thumb02_R","thumb03_R",
-      "index00_R","index01_R","index02_R","index03_R",
-      "middle00_R","middle01_R","middle02_R","middle03_R",
-      "ring00_R","ring01_R","ring02_R","ring03_R",
-      "pinky00_R","pinky01_R","pinky02_R","pinky03_R",
-      "thigh_L","thigh_twist_L","calf_L","calf_twist_L","foot_L","toes_L",
-      "thigh_R","thigh_twist_R","calf_R","calf_twist_R","foot_R","toes_R"
-    ];
+  const laL   = getBone("lowerarm_L");
+  const laR   = getBone("lowerarm_R");
+  const uaL   = getBone("upperarm_L");
+  const uaR   = getBone("upperarm_R");
+  const handL = getBone("hand_L");
+  const handR = getBone("hand_R");
+  const clavL = getBone("clavicle_L");
+  const clavR = getBone("clavicle_R");
 
-    for (const name of BONES){
-      const bone = getBone(name);
-      if (!bone) continue;
-
-      const parts = name.split('_');      // e.g. "upperarm","R" or "thumb01","R"
-      const main  = parts[0];
-      const side  = parts[1] || "";
-
-      // base1: simple no-underscore merge: "thumb01_R" -> "thumb01R"
-      let base1 = main + side;
-
-      // base2: camelCase fix for arm segments (matches your overrides: upperArmRX, lowerArmRX)
-      let base2 = base1;
-      if (main === "upperarm") base2 = "upperArm" + side;
-      else if (main === "lowerarm") base2 = "lowerArm" + side;
-
-      // Look up X/Y/Z in override object, preferring camelCase base2, then base1
-      const x = (typeof o[base2 + "X"] === "number") ? o[base2 + "X"]
-               : (typeof o[base1 + "X"] === "number") ? o[base1 + "X"] : null;
-      const y = (typeof o[base2 + "Y"] === "number") ? o[base2 + "Y"]
-               : (typeof o[base1 + "Y"] === "number") ? o[base1 + "Y"] : null;
-      const z = (typeof o[base2 + "Z"] === "number") ? o[base2 + "Z"]
-               : (typeof o[base1 + "Z"] === "number") ? o[base1 + "Z"] : null;
-
-      if (x != null) bone.rotateX(degToRad(x));
-      if (y != null) bone.rotateY(degToRad(y));
-      if (z != null) bone.rotateZ(degToRad(z));
-    }
+  // LOWER ARMS (L/R) — X, Y, Z
+  if (laL){
+    if (typeof o.lowerArmLX === "number") laL.rotateX(degToRad(o.lowerArmLX));
+    if (typeof o.lowerArmLY === "number") laL.rotateY(degToRad(o.lowerArmLY));
+    if (typeof o.lowerArmLZ === "number") laL.rotateZ(degToRad(o.lowerArmLZ));
   }
+  if (laR){
+    if (typeof o.lowerArmRX === "number") laR.rotateX(degToRad(o.lowerArmRX));
+    if (typeof o.lowerArmRY === "number") laR.rotateY(degToRad(o.lowerArmRY));
+    if (typeof o.lowerArmRZ === "number") laR.rotateZ(degToRad(o.lowerArmRZ));
+  }
+
+  // UPPER ARMS (L/R) — X, Y, Z
+  if (uaL){
+    if (typeof o.upperArmLX === "number") uaL.rotateX(degToRad(o.upperArmLX));
+    if (typeof o.upperArmLY === "number") uaL.rotateY(degToRad(o.upperArmLY));
+    if (typeof o.upperArmLZ === "number") uaL.rotateZ(degToRad(o.upperArmLZ));
+  }
+  if (uaR){
+    if (typeof o.upperArmRX === "number") uaR.rotateX(degToRad(o.upperArmRX));
+    if (typeof o.upperArmRY === "number") uaR.rotateY(degToRad(o.upperArmRY));
+    if (typeof o.upperArmRZ === "number") uaR.rotateZ(degToRad(o.upperArmRZ));
+  }
+
+  // HANDS (L/R) — X, Y, Z
+  if (handL){
+    if (typeof o.handLX === "number") handL.rotateX(degToRad(o.handLX));
+    if (typeof o.handLY === "number") handL.rotateY(degToRad(o.handLY));
+    if (typeof o.handLZ === "number") handL.rotateZ(degToRad(o.handLZ));
+  }
+  if (handR){
+    if (typeof o.handRX === "number") handR.rotateX(degToRad(o.handRX));
+    if (typeof o.handRY === "number") handR.rotateY(degToRad(o.handRY));
+    if (typeof o.handRZ === "number") handR.rotateZ(degToRad(o.handRZ));
+  }
+
+  // CLAVICLES (L/R) — X, Y, Z
+  if (clavL){
+    if (typeof o.clavicleLX === "number") clavL.rotateX(degToRad(o.clavicleLX));
+    if (typeof o.clavicleLY === "number") clavL.rotateY(degToRad(o.clavicleLY));
+    if (typeof o.clavicleLZ === "number") clavL.rotateZ(degToRad(o.clavicleLZ));
+  }
+  if (clavR){
+    if (typeof o.clavicleRX === "number") clavR.rotateX(degToRad(o.clavicleRX));
+    if (typeof o.clavicleRY === "number") clavR.rotateY(degToRad(o.clavicleRY));
+    if (typeof o.clavicleRZ === "number") clavR.rotateZ(degToRad(o.clavicleRZ));
+  }
+}
+
 
 
   // If this test is using side-lying, also snap arms/legs to side-lying baseline
@@ -2975,48 +2986,33 @@ if (key && axis && mode !== 'brot'){
 });
 
   // Save button logs config INCLUDING all bone rotations
-  btnSave.onclick = () => {
-    const key = ensureOverrideFromCurrentPose();
-    if (!key) return;
-    const o = POSE_OVERRIDES[key];
+btnSave.onclick = () => {
+  const key = ensureOverrideFromCurrentPose();
+  if (!key) return;
+  const o = POSE_OVERRIDES[key];
+  if (!o) return;
 
-    // --- 1. Root Model & Hardcoded Saves ---
-    o.pf       = GLOBAL_PF_DEG || 0;
-    o.footInvR = extractAxisDeg("foot_R", "z");
-    o.footEvL  = extractAxisDeg("foot_L", "z");
-    o.neckLatL = extractAxisDeg("neck",   "z");
+  // Root plantarflexion + foot/neck extras (same as old index)
+  const footInvR = extractAxisDeg("foot_R", "z");
+  const footEvL  = extractAxisDeg("foot_L", "z");
+  const neckLatL = extractAxisDeg("neck",   "z");
+  o.pf       = GLOBAL_PF_DEG || 0;
+  o.footInvR = footInvR;
+  o.footEvL  = footEvL;
+  o.neckLatL = neckLatL;
 
-    // --- 2. Collect all bone rotations into a map (values are already strings) ---
-      // --- 2. Bone Rotation Saving (ONLY bones tuned this session) ---
-    const boneRotations = {};
-    TUNED_BONES.forEach(boneName => getBoneRotationData(boneName, boneRotations));
-    TUNED_BONES.clear();
+  console.log(
+    `POSE_OVERRIDES["${key}"] = { ` +
+    `x:${o.x.toFixed(3)}, y:${o.y.toFixed(3)}, z:${o.z.toFixed(3)}, ` +
+    `rx:${o.rx.toFixed(3)}, ry:${o.ry.toFixed(3)}, rz:${o.rz.toFixed(3)}, ` +
+    `pf:${o.pf.toFixed(1)}, ` +
+    `footInvR:${o.footInvR.toFixed(1)}, footEvL:${o.footEvL.toFixed(1)}, neckLatL:${o.neckLatL.toFixed(1)} };`
+  );
 
+  labelTest.style.color = '#22c55e';
+  setTimeout(()=>labelTest.style.color='#e2e8f0', 600);
+};
 
-    // --- 3. Build a single one-line output ---
-    const parts = [
-      `x:${o.x.toFixed(3)}`,
-      `y:${o.y.toFixed(3)}`,
-      `z:${o.z.toFixed(3)}`,
-      `rx:${o.rx.toFixed(3)}`,
-      `ry:${o.ry.toFixed(3)}`,
-      `rz:${o.rz.toFixed(3)}`,
-      `pf:${(o.pf ?? 0).toFixed(1)}`,
-      `footInvR:${(o.footInvR ?? 0).toFixed(1)}`,
-      `footEvL:${(o.footEvL ?? 0).toFixed(1)}`,
-      `neckLatL:${(o.neckLatL ?? 0).toFixed(1)}`
-    ];
-
-    // boneRotations has values like "12.3" already, so JUST append them, no toFixed
-    for (const [name, degStr] of Object.entries(boneRotations)) {
-      parts.push(`${name}:${degStr}`);
-    }
-
-    console.log(`POSE_OVERRIDES["${key}"] = { ${parts.join(", ")} };`);
-
-    labelTest.style.color = '#22c55e';
-    setTimeout(() => labelTest.style.color = '#e2e8f0', 600);
-  };
 
   // Close
   btnClose.onclick = () => {
