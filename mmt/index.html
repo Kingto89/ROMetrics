@@ -2527,8 +2527,8 @@ poseTunerEl.innerHTML = `
         </div>
       </div>
     </div>
-   
-    <label style="display:block;opacity:.85;margin-top:4px;">Bone Rotation (Coarse Rotation)</label>
+
+<label style="display:block;opacity:.85;margin-top:4px;">Bone Rotation (Coarse Rotation)</label>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:4px;">
       
       <div style="flex:1;min-width:48%;">
@@ -2545,15 +2545,14 @@ poseTunerEl.innerHTML = `
           <button data-mode="brot" data-axis="z" data-delta="-1" class="mini">Roll −</button>
           <button data-mode="brot" data-axis="z" data-delta="1" class="mini">Roll +</button>
         </div>
-      </div>
-
-      <div style="flex:1;min-width:48%;">
-        <div style="opacity:.7;">Yaw (Y)</div>
-        <div style="display:flex;gap:4px;">
-          <button data-mode="brot" data-axis="y" data-delta="-1" class="mini">Yaw −</button>
-          <button data-mode="brot" data-axis="y" data-delta="1" class="mini">Yaw +</button>
+    </div>
+        <div style="flex:1;min-width:48%;">
+            <div style="opacity:.7;">Yaw (Model Y)</div>
+            <div style="display:flex;gap:4px;">
+              <button data-rot="y" data-delta="-5" class="mini">⟲</button>
+              <button data-rot="y" data-delta="5" class="mini">⟳</button>
+            </div>
         </div>
-      </div>
     </div>
     
     <div style="border-top:1px solid #1f2933;margin:6px 0 8px 0;"></div>
