@@ -2837,10 +2837,19 @@ const TUNED_BONES = new Set();
   }
 
  // Helper to extract rotation data for a specific bone for logging
+// Helper to extract rotation data for a specific bone for logging
 function getBoneRotationData(boneName, boneLog) {
+  // Only log bones that were actually tuned this session
+  if (typeof TUNED_BONES !== "undefined" &&
+      TUNED_BONES.size &&
+      !TUNED_BONES.has(boneName)) {
+    return;
+  }
+
   const bone = getBone(boneName);
   if (!bone) return;
 
+  // Use the same axis extractor you already use everywhere else
   const rx = extractAxisDeg(boneName, "x");
   const ry = extractAxisDeg(boneName, "y");
   const rz = extractAxisDeg(boneName, "z");
@@ -2848,20 +2857,24 @@ function getBoneRotationData(boneName, boneLog) {
   // Skip if there’s no meaningful rotation
   if (Math.abs(rx) <= 0.1 && Math.abs(ry) <= 0.1 && Math.abs(rz) <= 0.1) return;
 
-  // Universal: remove underscores via camel-casing segments
-  // e.g. "upperarm_R" -> "upperarmRX" (and your loader already maps this)
+  // Canonical key format: no underscores, upperArm / lowerArm / hand / clavicle / thigh / calf / foot / toes, L/R suffix
   const base = boneName
-    .split('_')
-    .map((part, i) =>
-      i === 0 ? part : part.charAt(0).toUpperCase() + part.slice(1)
-    )
-    .join('');
+    .replace(/_L$/,'L')
+    .replace(/_R$/,'R')
+    .replace('upperarm','upperArm')
+    .replace('lowerarm','lowerArm')
+    .replace('hand_','hand')
+    .replace('clavicle','clavicle')
+    .replace('thigh_','thigh')
+    .replace('calf_','calf')
+    .replace('foot_','foot')
+    .replace('toes_','toes');
 
-  if (Math.abs(rx) > 0.1) boneLog[base + "X"] = parseFloat(rx.toFixed(1));
-  if (Math.abs(ry) > 0.1) boneLog[base + "Y"] = parseFloat(ry.toFixed(1));
-  if (Math.abs(rz) > 0.1) boneLog[base + "Z"] = parseFloat(rz.toFixed(1));
+  if (Math.abs(rx) > 0.1) boneLog[base + 'X'] = parseFloat(rx.toFixed(1));
+  if (Math.abs(ry) > 0.1) boneLog[base + 'Y'] = parseFloat(ry.toFixed(1));
+  if (Math.abs(rz) > 0.1) boneLog[base + 'Z'] = parseFloat(rz.toFixed(1));
 }
- 
+
 
 
   // 1. Root Model Position buttons (data-axis - top row)
