@@ -2835,39 +2835,33 @@ const TUNED_BONES = new Set();
       if (!boneName || boneName === "") return null;
       return getBone(boneName);
   }
-// Helper to extract rotation data for a specific bone for logging
-function getBoneRotationData(boneName, boneLog) {
-  // Only log bones that were actually tuned this session
-  if (typeof TUNED_BONES !== "undefined" &&
-      TUNED_BONES.size &&
-      !TUNED_BONES.has(boneName)) {
-    return;
-  }
 
+ // Helper to extract rotation data for a specific bone for logging
+function getBoneRotationData(boneName, boneLog) {
   const bone = getBone(boneName);
   if (!bone) return;
 
-  // Read LOCAL Euler angles in degrees (this matches how your overrides are applied)
-  const e = bone.rotation;
-  const rx = THREE.MathUtils.radToDeg(e.x);
-  const ry = THREE.MathUtils.radToDeg(e.y);
-  const rz = THREE.MathUtils.radToDeg(e.z);
+  const rx = extractAxisDeg(boneName, "x");
+  const ry = extractAxisDeg(boneName, "y");
+  const rz = extractAxisDeg(boneName, "z");
 
   // Skip if there’s no meaningful rotation
   if (Math.abs(rx) <= 0.1 && Math.abs(ry) <= 0.1 && Math.abs(rz) <= 0.1) return;
 
-  // Canonical key format: no underscores, upperArm / lowerArm / hand, L/R suffix
+  // Universal: remove underscores via camel-casing segments
+  // e.g. "upperarm_R" -> "upperarmRX" (and your loader already maps this)
   const base = boneName
-    .replace(/_L$/,'L')
-    .replace(/_R$/,'R')
-    .replace('upperarm','upperArm')
-    .replace('lowerarm','lowerArm');
+    .split('_')
+    .map((part, i) =>
+      i === 0 ? part : part.charAt(0).toUpperCase() + part.slice(1)
+    )
+    .join('');
 
-  if (Math.abs(rx) > 0.1) boneLog[base + 'X'] = parseFloat(rx.toFixed(1));
-  if (Math.abs(ry) > 0.1) boneLog[base + 'Y'] = parseFloat(ry.toFixed(1));
-  if (Math.abs(rz) > 0.1) boneLog[base + 'Z'] = parseFloat(rz.toFixed(1));
+  if (Math.abs(rx) > 0.1) boneLog[base + "X"] = parseFloat(rx.toFixed(1));
+  if (Math.abs(ry) > 0.1) boneLog[base + "Y"] = parseFloat(ry.toFixed(1));
+  if (Math.abs(rz) > 0.1) boneLog[base + "Z"] = parseFloat(rz.toFixed(1));
 }
-
+ 
 
 
   // 1. Root Model Position buttons (data-axis - top row)
