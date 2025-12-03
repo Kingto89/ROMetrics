@@ -1884,11 +1884,162 @@ if (key && POSE_OVERRIDES[key] && skeleton){
     if (typeof o.index03RZ === "number") index03R.rotateZ(degToRad(o.index03RZ));
   }
 
-  // --- MIDDLE / RING / PINKY FINGERS (L/R) ---
-  // You can follow the exact same pattern as INDEX above:
-  // middle00_L/R -> middle00LX, middle00RX, etc.
-  // ring00_L/R   -> ring00LX, ring00RX, etc.
-  // pinky00_L/R  -> pinky00LX, pinky00RX, etc.
+  // --- MIDDLE FINGERS (L/R) ---
+  const middle00L = getBone("middle00_L");
+  const middle01L = getBone("middle01_L");
+  const middle02L = getBone("middle02_L");
+  const middle03L = getBone("middle03_L");
+  const middle00R = getBone("middle00_R");
+  const middle01R = getBone("middle01_R");
+  const middle02R = getBone("middle02_R");
+  const middle03R = getBone("middle03_R");
+
+  if (middle00L){
+    if (typeof o.middle00LX === "number") middle00L.rotateX(degToRad(o.middle00LX));
+    if (typeof o.middle00LY === "number") middle00L.rotateY(degToRad(o.middle00LY));
+    if (typeof o.middle00LZ === "number") middle00L.rotateZ(degToRad(o.middle00LZ));
+  }
+  if (middle01L){
+    if (typeof o.middle01LX === "number") middle01L.rotateX(degToRad(o.middle01LX));
+    if (typeof o.middle01LY === "number") middle01L.rotateY(degToRad(o.middle01LY));
+    if (typeof o.middle01LZ === "number") middle01L.rotateZ(degToRad(o.middle01LZ));
+  }
+  if (middle02L){
+    if (typeof o.middle02LX === "number") middle02L.rotateX(degToRad(o.middle02LX));
+    if (typeof o.middle02LY === "number") middle02L.rotateY(degToRad(o.middle02LY));
+    if (typeof o.middle02LZ === "number") middle02L.rotateZ(degToRad(o.middle02LZ));
+  }
+  if (middle03L){
+    if (typeof o.middle03LX === "number") middle03L.rotateX(degToRad(o.middle03LX));
+    if (typeof o.middle03LY === "number") middle03L.rotateY(degToRad(o.middle03LY));
+    if (typeof o.middle03LZ === "number") middle03L.rotateZ(degToRad(o.middle03LZ));
+  }
+
+  if (middle00R){
+    if (typeof o.middle00RX === "number") middle00R.rotateX(degToRad(o.middle00RX));
+    if (typeof o.middle00RY === "number") middle00R.rotateY(degToRad(o.middle00RY));
+    if (typeof o.middle00RZ === "number") middle00R.rotateZ(degToRad(o.middle00RZ));
+  }
+  if (middle01R){
+    if (typeof o.middle01RX === "number") middle01R.rotateX(degToRad(o.middle01RX));
+    if (typeof o.middle01RY === "number") middle01R.rotateY(degToRad(o.middle01RY));
+    if (typeof o.middle01RZ === "number") middle01R.rotateZ(degToRad(o.middle01RZ));
+  }
+  if (middle02R){
+    if (typeof o.middle02RX === "number") middle02R.rotateX(degToRad(o.middle02RX));
+    if (typeof o.middle02RY === "number") middle02R.rotateY(degToRad(o.middle02RY));
+    if (typeof o.middle02RZ === "number") middle02R.rotateZ(degToRad(o.middle02RZ));
+  }
+  if (middle03R){
+    if (typeof o.middle03RX === "number") middle03R.rotateX(degToRad(o.middle03RX));
+    if (typeof o.middle03RY === "number") middle03R.rotateY(degToRad(o.middle03RY));
+    if (typeof o.middle03RZ === "number") middle03R.rotateZ(degToRad(o.middle03RZ));
+  }
+
+  // --- RING FINGERS (L/R) ---
+  const ring00L = getBone("ring00_L");
+  const ring01L = getBone("ring01_L");
+  const ring02L = getBone("ring02_L");
+  const ring03L = getBone("ring03_L");
+  const ring00R = getBone("ring00_R");
+  const ring01R = getBone("ring01_R");
+  const ring02R = getBone("ring02_R");
+  const ring03R = getBone("ring03_R");
+
+  if (ring00L){
+    if (typeof o.ring00LX === "number") ring00L.rotateX(degToRad(o.ring00LX));
+    if (typeof o.ring00LY === "number") ring00L.rotateY(degToRad(o.ring00LY));
+    if (typeof o.ring00LZ === "number") ring00L.rotateZ(degToRad(o.ring00LZ));
+  }
+  if (ring01L){
+    if (typeof o.ring01LX === "number") ring01L.rotateX(degToRad(o.ring01LX));
+    if (typeof o.ring01LY === "number") ring01L.rotateY(degToRad(o.ring01LY));
+    if (typeof o.ring01LZ === "number") ring01L.rotateZ(degToRad(o.ring01LZ));
+  }
+  if (ring02L){
+    if (typeof o.ring02LX === "number") ring02L.rotateX(degToRad(o.ring02LX));
+    if (typeof o.ring02LY === "number") ring02L.rotateY(degToRad(o.ring02LY));
+    if (typeof o.ring02LZ === "number") ring02L.rotateZ(degToRad(o.ring02LZ));
+  }
+  if (ring03L){
+    if (typeof o.ring03LX === "number") ring03L.rotateX(degToRad(o.ring03LX));
+    if (typeof o.ring03LY === "number") ring03L.rotateY(degToRad(o.ring03LY));
+    if (typeof o.ring03LZ === "number") ring03L.rotateZ(degToRad(o.ring03LZ));
+  }
+
+  if (ring00R){
+    if (typeof o.ring00RX === "number") ring00R.rotateX(degToRad(o.ring00RX));
+    if (typeof o.ring00RY === "number") ring00R.rotateY(degToRad(o.ring00RY));
+    if (typeof o.ring00RZ === "number") ring00R.rotateZ(degToRad(o.ring00RZ));
+  }
+  if (ring01R){
+    if (typeof o.ring01RX === "number") ring01R.rotateX(degToRad(o.ring01RX));
+    if (typeof o.ring01RY === "number") ring01R.rotateY(degToRad(o.ring01RY));
+    if (typeof o.ring01RZ === "number") ring01R.rotateZ(degToRad(o.ring01RZ));
+  }
+  if (ring02R){
+    if (typeof o.ring02RX === "number") ring02R.rotateX(degToRad(o.ring02RX));
+    if (typeof o.ring02RY === "number") ring02R.rotateY(degToRad(o.ring02RY));
+    if (typeof o.ring02RZ === "number") ring02R.rotateZ(degToRad(o.ring02RZ));
+  }
+  if (ring03R){
+    if (typeof o.ring03RX === "number") ring03R.rotateX(degToRad(o.ring03RX));
+    if (typeof o.ring03RY === "number") ring03R.rotateY(degToRad(o.ring03RY));
+    if (typeof o.ring03RZ === "number") ring03R.rotateZ(degToRad(o.ring03RZ));
+  }
+
+  // --- PINKY FINGERS (L/R) ---
+  const pinky00L = getBone("pinky00_L");
+  const pinky01L = getBone("pinky01_L");
+  const pinky02L = getBone("pinky02_L");
+  const pinky03L = getBone("pinky03_L");
+  const pinky00R = getBone("pinky00_R");
+  const pinky01R = getBone("pinky01_R");
+  const pinky02R = getBone("pinky02_R");
+  const pinky03R = getBone("pinky03_R");
+
+  if (pinky00L){
+    if (typeof o.pinky00LX === "number") pinky00L.rotateX(degToRad(o.pinky00LX));
+    if (typeof o.pinky00LY === "number") pinky00L.rotateY(degToRad(o.pinky00LY));
+    if (typeof o.pinky00LZ === "number") pinky00L.rotateZ(degToRad(o.pinky00LZ));
+  }
+  if (pinky01L){
+    if (typeof o.pinky01LX === "number") pinky01L.rotateX(degToRad(o.pinky01LX));
+    if (typeof o.pinky01LY === "number") pinky01L.rotateY(degToRad(o.pinky01LY));
+    if (typeof o.pinky01LZ === "number") pinky01L.rotateZ(degToRad(o.pinky01LZ));
+  }
+  if (pinky02L){
+    if (typeof o.pinky02LX === "number") pinky02L.rotateX(degToRad(o.pinky02LX));
+    if (typeof o.pinky02LY === "number") pinky02L.rotateY(degToRad(o.pinky02LY));
+    if (typeof o.pinky02LZ === "number") pinky02L.rotateZ(degToRad(o.pinky02LZ));
+  }
+  if (pinky03L){
+    if (typeof o.pinky03LX === "number") pinky03L.rotateX(degToRad(o.pinky03LX));
+    if (typeof o.pinky03LY === "number") pinky03L.rotateY(degToRad(o.pinky03LY));
+    if (typeof o.pinky03LZ === "number") pinky03L.rotateZ(degToRad(o.pinky03LZ));
+  }
+
+  if (pinky00R){
+    if (typeof o.pinky00RX === "number") pinky00R.rotateX(degToRad(o.pinky00RX));
+    if (typeof o.pinky00RY === "number") pinky00R.rotateY(degToRad(o.pinky00RY));
+    if (typeof o.pinky00RZ === "number") pinky00R.rotateZ(degToRad(o.pinky00RZ));
+  }
+  if (pinky01R){
+    if (typeof o.pinky01RX === "number") pinky01R.rotateX(degToRad(o.pinky01RX));
+    if (typeof o.pinky01RY === "number") pinky01R.rotateY(degToRad(o.pinky01RY));
+    if (typeof o.pinky01RZ === "number") pinky01R.rotateZ(degToRad(o.pinky01RZ));
+  }
+  if (pinky02R){
+    if (typeof o.pinky02RX === "number") pinky02R.rotateX(degToRad(o.pinky02RX));
+    if (typeof o.pinky02RY === "number") pinky02R.rotateY(degToRad(o.pinky02RY));
+    if (typeof o.pinky02RZ === "number") pinky02R.rotateZ(degToRad(o.pinky02RZ));
+  }
+  if (pinky03R){
+    if (typeof o.pinky03RX === "number") pinky03R.rotateX(degToRad(o.pinky03RX));
+    if (typeof o.pinky03RY === "number") pinky03R.rotateY(degToRad(o.pinky03RY));
+    if (typeof o.pinky03RZ === "number") pinky03R.rotateZ(degToRad(o.pinky03RZ));
+  }
+
 
   // --- LEGS / FEET / TOES (L/R) ---
   const thighL      = getBone("thigh_L");
