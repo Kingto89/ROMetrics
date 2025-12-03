@@ -2822,6 +2822,7 @@ b.updateMatrixWorld(true);
 }
 
 const boneTunerSelect = poseTunerEl.querySelector('#boneTunerSelect');
+const TUNED_BONES = new Set();
 
   // Helper to get the currently selected bone object
   function getSelectedBone(){
@@ -2895,6 +2896,10 @@ function handleBoneTuning(btn, mode, axis, delta, bone) {
 
     const qDelta = new THREE.Quaternion().setFromAxisAngle(axisVector, finalDeltaRad);
     bone.quaternion.multiply(qDelta); 
+
+    if (boneTunerSelect && boneTunerSelect.value) {
+      TUNED_BONES.add(boneTunerSelect.value);
+    }
     
     return true; // Execution stopped: a bone action was performed.
 }
@@ -2964,9 +2969,11 @@ poseTunerEl.querySelectorAll('button[data-mode], button[data-rot]').forEach(btn=
     o.neckLatL = extractAxisDeg("neck",   "z");
 
     // --- 2. Collect all bone rotations into a map (values are already strings) ---
+      // --- 2. Bone Rotation Saving (ONLY bones tuned this session) ---
     const boneRotations = {};
-    const allBones = ALL_TUNABLE_BONES;
-    allBones.forEach(boneName => getBoneRotationData(boneName, boneRotations));
+    TUNED_BONES.forEach(boneName => getBoneRotationData(boneName, boneRotations));
+    TUNED_BONES.clear();
+
 
     // --- 3. Build a single one-line output ---
     const parts = [
