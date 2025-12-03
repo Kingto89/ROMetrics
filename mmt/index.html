@@ -1603,6 +1603,53 @@ function setBodyMode(mode, isResistanceActive = false){ // <-- ADDED isResistanc
       // We rely on applyHoldMovement() calling setDegAxis, which uses q0 as its base.
     }
   }
+
+  // Apply any saved individual bone overrides from the tuner 
+const currentKey = CURRENT_BODY_TEST && CURRENT_BODY_BUCKET 
+    ? `${CURRENT_BODY_TEST}:${CURRENT_BODY_BUCKET}`
+    : null;
+
+if (currentKey && POSE_OVERRIDES[currentKey] && skeleton){
+    const o = POSE_OVERRIDES[currentKey];
+    const rad = THREE.MathUtils.degToRad;
+
+    // Define a list of bone names to SKIP (ONLY the main hand bones controlled by HAND_OVERRIDES)
+    const bonesToSkip = new Set([
+        "hand_L", 
+        "hand_R"
+    ]);
+
+    // Iterate over all properties in the override object 'o'
+    for (const prop in o) {
+        // 1. Check if the property is a bone rotation key (e.g., thumb01_RX, clavicle_RZ)
+        const isBoneRotation = prop.match(/(L|R|0|1|2|3|twist)(X|Y|Z)$/i); 
+        
+        if (isBoneRotation) {
+            const boneName = prop.slice(0, -1); // e.g., 'upperarm_L', 'hand_L'
+            const axis = prop.slice(-1).toLowerCase(); 
+            
+            // 2. CRITICAL CHECK: ONLY SKIP the main hand bones (hand_L, hand_R).
+            if (bonesToSkip.has(boneName)) {
+                continue; 
+            }
+            
+            const bone = getBone(boneName);
+            if (bone) {
+                const deg = o[prop];
+                const r = rad(deg);
+                
+                // Reset the bone to its baseline before applying the custom rotation
+                const q0 = initialBoneRot.get(bone);
+                if (q0) bone.quaternion.copy(q0); 
+                
+                // Apply rotation
+                if (axis === 'x') bone.rotateX(r);
+                else if (axis === 'y') bone.rotateY(r);
+                else if (axis === 'z') bone.rotateZ(r);
+            }
+        }
+    }
+}
 // <<<<<<<< INSERTION POINT IS IMMEDIATELY HERE >>>>>>>>
 
 // Apply any saved individual bone overrides from the tuner 
