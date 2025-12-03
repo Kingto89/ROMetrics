@@ -2753,7 +2753,6 @@ if (typeof ALL_TUNABLE_BONES !== 'undefined'){
 
     // And show them in the console so you can see the exact numbers
     console.log(
-      `[PoseTuner extra] ${key}: ` +
       `footInvR=${footInvR.toFixed(1)}°, ` +
       `footEvL=${footEvL.toFixed(1)}°, ` +
       `neckLatL=${neckLatL.toFixed(1)}°`
@@ -2978,16 +2977,6 @@ poseTunerEl.querySelectorAll('button[data-mode], button[data-rot]').forEach(btn=
       `footInvR:${o.footInvR.toFixed(1)}, footEvL:${o.footEvL.toFixed(1)}, neckLatL:${o.neckLatL.toFixed(1)} };`
     );
     
-    // Log detailed bone rotations separately
-    if (Object.keys(boneRotations).length > 0) {
-        // Output bone rotations in a format for easy manual copy/paste as joint angle overrides
-        console.log(`\n// --- MANUAL JOINT ANGLE OVERRIDES FOR: ${key} ---`);
-        const boneString = Object.entries(boneRotations)
-          .map(([k, v]) => `${k}:${v}`)
-          .join(', ');
-        console.log(boneString);
-        console.log(`// --------------------------------------------------\n`);
-    }
 
     labelTest.style.color = '#22c55e';
     setTimeout(()=>labelTest.style.color='#e2e8f0', 600);
