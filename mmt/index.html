@@ -1217,7 +1217,7 @@ POSE_OVERRIDES["Upper_Trapezius:high"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000
 POSE_OVERRIDES["Upper_Trapezius:low"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0 }; //normal prone
 POSE_OVERRIDES["Middle_Trapezius:high"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0, upperArmRZ: -85, lowerArmRX: 90 };
 POSE_OVERRIDES["Middle_Trapezius:low"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0, upperArmRZ: -85, lowerArmRX: 90 };
-POSE_OVERRIDES["Scap_Depression_Adduction:high"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0, upperarm_LX:-8.4, upperarm_LY:-5.9, upperarm_LZ:-40.4, index00_LZ:0.6, upperarm_RX:56.4, upperarm_RY:16.8, upperarm_RZ:-93.7, lowerarm_RX:-0.3, lowerarm_RY:-2.7, lowerarm_RZ:10.4, thumb02_RX:9.5, thumb02_RY:-2.5, thumb02_RZ:-1.0, index01_RX:0.4, index01_RY:0.4, index01_RZ:1.7, index02_RX:-79.5, index02_RY:8.6, index02_RZ:-2.9, index03_RX:-59.1, index03_RY:-1.5, index03_RZ:5.0, middle02_RX:-93.3, middle02_RY:-4.5, middle02_RZ:3.6, middle03_RX:-39.9, middle03_RY:1.6, middle03_RZ:-6.1, ring02_RX:-85.5, ring02_RY:0.5, ring02_RZ:-0.6, ring03_RX:-55.8, ring03_RY:-2.4, ring03_RZ:-0.8, pinky02_RX:-74.6, pinky02_RY:-1.2, pinky02_RZ:-5.5, pinky03_RX:-43.1, pinky03_RY:-0.6, pinky03_RZ:2.7 }; //prone
+POSE_OVERRIDES["Scap_Depression_Adduction:high"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0, upperarm_LX:-8.6, upperarm_LY:-5.9, upperarm_LZ:-41.2, index00_LY:4.5, index00_LZ:-0.6, upperarm_RX:6.0, upperarm_RY:-3.5, upperarm_RZ:-74.3, lowerarm_RX:-3.6, lowerarm_RY:36.4, lowerarm_RZ:10.8, thumb02_RX:9.9, index01_RX:-10.0, index01_RY:7.8, index01_RZ:1.8, index02_RX:-80.1, index03_RX:-59.4, middle02_RX:-93.6, middle03_RX:-40.5, ring02_RX:-85.5, ring03_RX:-55.8, pinky02_RX:-74.7, pinky03_RX:-43.2  }; //prone
 POSE_OVERRIDES["Scap_Depression_Adduction:low"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  //seated
 POSE_OVERRIDES["Rhomboids:high"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0 };  
 POSE_OVERRIDES["Rhomboids:low"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0 };
@@ -1603,17 +1603,7 @@ function setBodyMode(mode, isResistanceActive = false){ // <-- ADDED isResistanc
       // We rely on applyHoldMovement() calling setDegAxis, which uses q0 as its base.
     }
   }
-// <<<<<<<< INSERTION POINT IS IMMEDIATELY HERE >>>>>>>>
 
-// Apply any saved individual bone overrides from the tuner 
-const currentKey = CURRENT_BODY_TEST && CURRENT_BODY_BUCKET 
-    ? `${CURRENT_BODY_TEST}:${CURRENT_BODY_BUCKET}`
-    : null;
-
-if (currentKey && POSE_OVERRIDES[currentKey] && skeleton){
-// ... (the rest of the detailed loading logic)
-}
-// <<<<<<<< END OF INSERTION >>>>>>>>
 // === NEW: Therapist Hand Overrides (separate dictionary) ===
  
  // 1. Determine the key and check if a pose is saved in HAND_OVERRIDES
@@ -2070,52 +2060,7 @@ function applySideLyingLimbs(){
   }
 }
 
-// --- HELPER FUNCTION: EXTRACT ALL RIGGED BONE ROTATIONS ---
-// This function collects the rotational difference for every bone you listed.
-function extractAllBoneRotations() {
-    if (!skeleton) return {};
-    const boneOverrides = {};
 
-    // STRICTLY USE ONLY THE RIGGED BONES YOU PROVIDED
-    const relevantBoneNames = [
-        "spine01", "spine02", "spine03", "neck", "head", 
-        "breast_L", "breast_R", 
-        // Left Arm
-        "clavicle_L", "upperarm_L", "upperarm_twist_L", "lowerarm_L", "lowerarm_twist_L",
-        "hand_L", 
-        "thumb01_L", "thumb02_L", "thumb03_L",
-        "index00_L", "index01_L", "index02_L", "index03_L",
-        "middle00_L", "middle01_L", "middle02_L", "middle03_L",
-        "ring00_L", "ring01_L", "ring02_L", "ring03_L",
-        "pinky00_L", "pinky01_L", "pinky02_L", "pinky03_L",
-        // Right Arm
-        "clavicle_R", "upperarm_R", "upperarm_twist_R", "lowerarm_R", "lowerarm_twist_R",
-        "hand_R", 
-        "thumb01_R", "thumb02_R", "thumb03_R",
-        "index00_R", "index01_R", "index02_R", "index03_R",
-        "middle00_R", "middle01_R", "middle02_R", "middle03_R",
-        "ring00_R", "ring01_R", "ring02_R", "ring03_R",
-        "pinky00_R", "pinky01_R", "pinky02_R", "pinky03_R",
-        // Legs
-        "thigh_L", "thigh_twist_L", "calf_L", "calf_twist_L", "foot_L", "toes_L",
-        "thigh_R", "thigh_twist_R", "calf_R", "calf_twist_R", "foot_R", "toes_R"
-    ];
-    
-    const axes = ['x', 'y', 'z'];
-
-    skeleton.bones.forEach(bone => {
-        if (relevantBoneNames.includes(bone.name)) {
-            axes.forEach(axis => {
-                const deg = extractAxisDeg(bone.name, axis);
-                if (Math.abs(deg) > 0.1) {
-                    boneOverrides[bone.name + axis.toUpperCase()] = deg;
-                }
-            });
-        }
-    });
-
-    return boneOverrides;
-}
 /* ==== Load model ==== */
 function addModel(gltf){
   model = gltf.scene;
@@ -2695,6 +2640,34 @@ poseTunerEl.innerHTML = `
       </div>
     </div>
     
+    <label style="display:block;opacity:.85;margin-top:4px;">Bone Rotation (Coarse Rotation)</label>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:4px;">
+      
+      <div style="flex:1;min-width:48%;">
+        <div style="opacity:.7;">Pitch (X)</div>
+        <div style="display:flex;gap:4px;">
+          <button data-mode="brot" data-axis="x" data-delta="-1" class="mini">Pitch −</button>
+          <button data-mode="brot" data-axis="x" data-delta="1" class="mini">Pitch +</button>
+        </div>
+      </div>
+
+      <div style="flex:1;min-width:48%;">
+        <div style="opacity:.7;">Roll (Z)</div>
+        <div style="display:flex;gap:4px;">
+          <button data-mode="brot" data-axis="z" data-delta="-1" class="mini">Roll −</button>
+          <button data-mode="brot" data-axis="z" data-delta="1" class="mini">Roll +</button>
+        </div>
+      </div>
+
+      <div style="flex:1;min-width:48%;">
+        <div style="opacity:.7;">Yaw (Y)</div>
+        <div style="display:flex;gap:4px;">
+          <button data-mode="brot" data-axis="y" data-delta="-1" class="mini">Yaw −</button>
+          <button data-mode="brot" data-axis="y" data-delta="1" class="mini">Yaw +</button>
+        </div>
+      </div>
+    </div>
+    
     <div style="display:flex;gap:8px;margin-top:8px;">
       <button id="poseTunerSnapBase" class="mini" style="flex:1;">Reset to Base Mode</button>
       <button id="poseTunerSave" class="mini" style="flex:1;background:#0f766e;border-color:#0f766e;color:#fff;">Save for Test</button>
@@ -3003,51 +2976,50 @@ poseTunerEl.querySelectorAll('button[data-mode], button[data-rot]').forEach(btn=
     updateLabels();
   };
 
-btnSave.onclick = () => {
-    const key = ensureOverrideFromCurrentPose();
-    if (!key) return;
-    const o = POSE_OVERRIDES[key];
+  // Save button logs config INCLUDING all bone rotations
+  btnSave.onclick = () => {
+    const key = ensureOverrideFromCurrentPose();
+    if (!key) return;
+    const o = POSE_OVERRIDES[key];
 
-    // 1. Store Global Model State (Cleaned)
-    // We rely entirely on bone rotations for all joint data.
-    // Base model parameters (x, y, z, rx, ry, rz) are already in 'o' via ensureOverrideFromCurrentPose().
-    
-    // 2. CAPTURE & MERGE ALL DETAILED BONE ROTATIONS
-    const detailedBoneRotations = extractAllBoneRotations(); 
-    
-    // Clear all stale high-level state properties and old detailed bone rotations
-    Object.keys(o).forEach(prop => {
-        // Clear all high-level states (pf, footInvR, neckLatL) and detailed rotations (like thumb01_LX)
-        if (prop.match(/(pf|footInvR|footEvL|neckLatL|L|R|0|1|2|3|twist)(X|Y|Z)?$/i)) {
-            delete o[prop];
-        }
-    });
-    
-    // Merge the newly captured detailed angles into the main override object 'o'.
-    Object.assign(o, detailedBoneRotations); 
+    // --- 1. Root Model & Hardcoded Saves ---
+    o.pf = GLOBAL_PF_DEG || 0; 
+    o.footInvR = extractAxisDeg("foot_R", "z");
+    o.footEvL  = extractAxisDeg("foot_L", "z");
+    o.neckLatL = extractAxisDeg("neck",   "z");
 
-    // 3. Final Console Log (Minimalist Output)
-    console.log("--- POSE OVERRIDE SAVED (Copy this line into POSE_OVERRIDES) ---");
-    
-    // Format the detailed bone rotations for clean logging
-    const detailedLogString = Object.entries(detailedBoneRotations)
-        .map(([k, v]) => `${k}:${v.toFixed(1)}`)
-        .join(', ');
-        
-    // Log the complete pose.
-    console.log(
-        `POSE_OVERRIDES["${key}"] = { ` +
-        `x:${o.x.toFixed(3)}, y:${o.y.toFixed(3)}, z:${o.z.toFixed(3)}, ` +
-        `rx:${o.rx.toFixed(3)}, ry:${o.ry.toFixed(3)}, rz:${o.rz.toFixed(3)}` + 
-        (detailedLogString ? ', ' + detailedLogString : '') +
-        ` };`
-    );
-    console.log(`// --------------------------------------------------\n`);
+    // --- 2. Bone Rotation Saving (NEW Logic) ---
+    const allBones = ALL_TUNABLE_BONES; 
 
-    // Visual feedback
-    labelTest.style.color = '#22c55e';
-    setTimeout(()=>labelTest.style.color='#e2e8f0', 600);
-};
+    const boneRotations = {}; // Collects all non-zero rotations
+    allBones.forEach(boneName => getBoneRotationData(boneName, boneRotations));
+    
+    // --- 3. Final Console Log ---
+    
+    // Log Model Root Pose
+    console.log(
+      `POSE_OVERRIDES["${key}"] = { ` +
+      `x:${o.x.toFixed(3)}, y:${o.y.toFixed(3)}, z:${o.z.toFixed(3)}, ` +
+      `rx:${o.rx.toFixed(3)}, ry:${o.ry.toFixed(3)}, rz:${o.rz.toFixed(3)}, ` +
+      `pf:${o.pf.toFixed(1)}, ` +
+      `footInvR:${o.footInvR.toFixed(1)}, footEvL:${o.footEvL.toFixed(1)}, neckLatL:${o.neckLatL.toFixed(1)} };`
+    );
+    
+    // Log detailed bone rotations separately
+    if (Object.keys(boneRotations).length > 0) {
+        // Output bone rotations in a format for easy manual copy/paste as joint angle overrides
+        console.log(`\n// --- MANUAL JOINT ANGLE OVERRIDES FOR: ${key} ---`);
+        const boneString = Object.entries(boneRotations)
+          .map(([k, v]) => `${k}:${v}`)
+          .join(', ');
+        console.log(boneString);
+        console.log(`// --------------------------------------------------\n`);
+    }
+
+    labelTest.style.color = '#22c55e';
+    setTimeout(()=>labelTest.style.color='#e2e8f0', 600);
+  };
+
 
   // Close
   btnClose.onclick = () => {
@@ -3220,3 +3192,4 @@ function onPointerDownTransformControls(event) {
   
 </body>
 </html>
+
