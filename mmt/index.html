@@ -2948,39 +2948,53 @@ poseTunerEl.querySelectorAll('button[data-mode], button[data-rot]').forEach(btn=
     updateLabels();
   };
 
-  // Save button logs config INCLUDING all bone rotations
-  btnSave.onclick = () => {
-    const key = ensureOverrideFromCurrentPose();
-    if (!key) return;
-    const o = POSE_OVERRIDES[key];
+  // Save button logs config INCLUDING all bone rotations
+  btnSave.onclick = () => {
+    const key = ensureOverrideFromCurrentPose();
+    if (!key) return;
+    const o = POSE_OVERRIDES[key];
 
-    // --- 1. Root Model & Hardcoded Saves ---
-    o.pf = GLOBAL_PF_DEG || 0; 
-    o.footInvR = extractAxisDeg("foot_R", "z");
-    o.footEvL  = extractAxisDeg("foot_L", "z");
-    o.neckLatL = extractAxisDeg("neck",   "z");
+    // --- 1. Root Model & Hardcoded Saves ---
+    o.pf       = GLOBAL_PF_DEG || 0;
+    o.footInvR = extractAxisDeg("foot_R", "z");
+    o.footEvL  = extractAxisDeg("foot_L", "z");
+    o.neckLatL = extractAxisDeg("neck",   "z");
 
-    // --- 2. Bone Rotation Saving (NEW Logic) ---
-    const allBones = ALL_TUNABLE_BONES; 
+    // --- 2. Collect all bone rotations into a map ---
+    const boneRotations = {};
+    const allBones = ALL_TUNABLE_BONES;
+    allBones.forEach(boneName => {
+      getBoneRotationData(boneName, boneRotations);
+    });
 
-    const boneRotations = {}; // Collects all non-zero rotations
-    allBones.forEach(boneName => getBoneRotationData(boneName, boneRotations));
-    
-    // --- 3. Final Console Log ---
-    
-    // Log Model Root Pose
-    console.log(
-      `POSE_OVERRIDES["${key}"] = { ` +
-      `x:${o.x.toFixed(3)}, y:${o.y.toFixed(3)}, z:${o.z.toFixed(3)}, ` +
-      `rx:${o.rx.toFixed(3)}, ry:${o.ry.toFixed(3)}, rz:${o.rz.toFixed(3)}, ` +
-      `pf:${o.pf.toFixed(1)}, ` +
-      `footInvR:${o.footInvR.toFixed(1)}, footEvL:${o.footEvL.toFixed(1)}, neckLatL:${o.neckLatL.toFixed(1)} };`
-    );
-    
+    // Also copy them into the override object itself
+    for (const [k, v] of Object.entries(boneRotations)) {
+      o[k] = v;
+    }
 
-    labelTest.style.color = '#22c55e';
-    setTimeout(()=>labelTest.style.color='#e2e8f0', 600);
-  };
+    // --- 3. Build a single one-line output ---
+    const parts = [
+      `x:${o.x.toFixed(3)}`,
+      `y:${o.y.toFixed(3)}`,
+      `z:${o.z.toFixed(3)}`,
+      `rx:${o.rx.toFixed(3)}`,
+      `ry:${o.ry.toFixed(3)}`,
+      `rz:${o.rz.toFixed(3)}`,
+      `pf:${(o.pf ?? 0).toFixed(1)}`,
+      `footInvR:${(o.footInvR ?? 0).toFixed(1)}`,
+      `footEvL:${(o.footEvL ?? 0).toFixed(1)}`,
+      `neckLatL:${(o.neckLatL ?? 0).toFixed(1)}`
+    ];
+
+    // Append all non-zero bone rotations in the same object
+    for (const [name, deg] of Object.entries(boneRotations)) {
+      parts.push(`${name}:${deg.toFixed(1)}`);
+    }
+
+    console.log(`POSE_OVERRIDES["${key}"] = { ${parts.join(", ")} };`);
+    alert("Pose saved — check DevTools → Console to copy override.");
+  };
+
 
 
   // Close
