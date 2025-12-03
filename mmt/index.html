@@ -2934,7 +2934,7 @@ poseTunerEl.querySelectorAll('button[data-mode], button[data-rot]').forEach(btn=
     // either no bone was selected, or the button was not a bone-tuning button).
     
     // Check 2: Root Model Pitch & Roll (X and Z axis for the whole model)
-    if (key && axis){
+if (key && axis && mode !== 'brot'){
         ensureOverrideFromCurrentPose();
         const o = POSE_OVERRIDES[key];
         const deltaRad = THREE.MathUtils.degToRad(delta);
