@@ -2940,13 +2940,6 @@ poseTunerEl.querySelectorAll('button[data-mode], button[data-rot]').forEach(btn=
     }
   });
 });
-  // Reset to base (throw away override & re-apply base mode)
-  btnSnapBase.onclick = () => {
-    const key = getCurrentOverrideKey();
-    if (key && POSE_OVERRIDES[key]) delete POSE_OVERRIDES[key];
-    applyBodyPositionFromSelection();
-    updateLabels();
-  };
 
   // Save button logs config INCLUDING all bone rotations
   btnSave.onclick = () => {
@@ -2960,17 +2953,10 @@ poseTunerEl.querySelectorAll('button[data-mode], button[data-rot]').forEach(btn=
     o.footEvL  = extractAxisDeg("foot_L", "z");
     o.neckLatL = extractAxisDeg("neck",   "z");
 
-    // --- 2. Collect all bone rotations into a map ---
+    // --- 2. Collect all bone rotations into a map (values are already strings) ---
     const boneRotations = {};
     const allBones = ALL_TUNABLE_BONES;
-    allBones.forEach(boneName => {
-      getBoneRotationData(boneName, boneRotations);
-    });
-
-    // Also copy them into the override object itself
-    for (const [k, v] of Object.entries(boneRotations)) {
-      o[k] = v;
-    }
+    allBones.forEach(boneName => getBoneRotationData(boneName, boneRotations));
 
     // --- 3. Build a single one-line output ---
     const parts = [
@@ -2986,16 +2972,16 @@ poseTunerEl.querySelectorAll('button[data-mode], button[data-rot]').forEach(btn=
       `neckLatL:${(o.neckLatL ?? 0).toFixed(1)}`
     ];
 
-    // Append all non-zero bone rotations in the same object
-    for (const [name, deg] of Object.entries(boneRotations)) {
-      parts.push(`${name}:${deg.toFixed(1)}`);
+    // boneRotations has values like "12.3" already, so JUST append them, no toFixed
+    for (const [name, degStr] of Object.entries(boneRotations)) {
+      parts.push(`${name}:${degStr}`);
     }
 
     console.log(`POSE_OVERRIDES["${key}"] = { ${parts.join(", ")} };`);
-    alert("Pose saved — check DevTools → Console to copy override.");
+
+    labelTest.style.color = '#22c55e';
+    setTimeout(() => labelTest.style.color = '#e2e8f0', 600);
   };
-
-
 
   // Close
   btnClose.onclick = () => {
