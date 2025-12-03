@@ -2890,7 +2890,7 @@ function getBoneRotationData(boneName, boneLog) {
  */
 function handleBoneTuning(btn, mode, axis, delta, bone) {
     // If no bone is selected in the dropdown, or if the button is not a bone-tuning button, do nothing.
-    if (!bone || !(mode === 'bpos' || mode === 'brot')) {
+    if (!bone || mode !== 'bpos') {
         return false;
     }
 
