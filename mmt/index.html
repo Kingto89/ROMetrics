@@ -2841,12 +2841,15 @@ function getBoneRotationData(boneName, boneLog) {
   const bone = getBone(boneName);
   if (!bone) return;
 
-  const rx = extractAxisDeg(boneName, "x");
-  const ry = extractAxisDeg(boneName, "y");
-  const rz = extractAxisDeg(boneName, "z");
+  // Read the bone's absolute local Euler angles (not delta)
+  const e  = bone.rotation;
+  const rx = THREE.MathUtils.radToDeg(e.x);
+  const ry = THREE.MathUtils.radToDeg(e.y);
+  const rz = THREE.MathUtils.radToDeg(e.z);
 
   // Skip if there’s no meaningful rotation
   if (Math.abs(rx) <= 0.1 && Math.abs(ry) <= 0.1 && Math.abs(rz) <= 0.1) return;
+
 
   // --- Universal canonical name builder ---
   // Converts things like:
