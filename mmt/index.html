@@ -1217,7 +1217,7 @@ POSE_OVERRIDES["Upper_Trapezius:high"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000
 POSE_OVERRIDES["Upper_Trapezius:low"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0 }; //normal prone
 POSE_OVERRIDES["Middle_Trapezius:high"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0, upperArmRZ: -85, lowerArmRX: 90 };
 POSE_OVERRIDES["Middle_Trapezius:low"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0, upperArmRZ: -85, lowerArmRX: 90 };
-POSE_OVERRIDES["Scap_Depression_Adduction:high"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0, footInvR:-0.7, footEvL:0.7, neckLatL:0.0, upperArmRX:52.1, upperArmRY:11.0, upperArmRZ:-88.0, lowerArmRX:-6.1, lowerArmRY:24.3, lowerArmRZ:18.8, thumb01RX:-5.2, thumb01RY:12.7, thumb01RZ:-5.3 };
+
 POSE_OVERRIDES["Scap_Depression_Adduction:low"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  //seated
 POSE_OVERRIDES["Rhomboids:high"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0 };  
 POSE_OVERRIDES["Rhomboids:low"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0 };
@@ -2844,30 +2844,38 @@ const TUNED_BONES = new Set();
       return getBone(boneName);
   }
 
-  // Helper to extract rotation data for a specific bone for logging
-  function getBoneRotationData(boneName, boneLog) {
-      const bone = getBone(boneName);
-      if (bone) {
-          const rx = extractAxisDeg(boneName, "x");
-          const ry = extractAxisDeg(boneName, "y");
-          const rz = extractAxisDeg(boneName, "z");
+// Helper to extract rotation data for a specific bone for logging
+function getBoneRotationData(boneName, boneLog) {
+  const bone = getBone(boneName);
+  if (!bone) return;
 
-          // Check if rotation is significant (threshold 0.1 degree)
-          if (Math.abs(rx) > 0.1 || Math.abs(ry) > 0.1 || Math.abs(rz) > 0.1) {
-              // Generic: remove ALL underscores by camelCasing subsequent segments
-              // e.g. "clavicle_L" -> "clavicleL", "upperarm_R" -> "upperarmR"
-              const base = boneName
-                .split('_')
-                .map((part, idx) => idx === 0
-                  ? part
-                  : part.charAt(0).toUpperCase() + part.slice(1)
-                )
-                .join('');
+  const rx = extractAxisDeg(boneName, "x");
+  const ry = extractAxisDeg(boneName, "y");
+  const rz = extractAxisDeg(boneName, "z");
 
-              if (Math.abs(rx) > 0.1) boneLog[`${base}X`] = rx.toFixed(1);
-              if (Math.abs(ry) > 0.1) boneLog[`${base}Y`] = ry.toFixed(1);
-              if (Math.abs(rz) > 0.1) boneLog[`${base}Z`] = rz.toFixed(1);
-          }
+  // Skip if there’s no meaningful rotation
+  if (Math.abs(rx) <= 0.1 && Math.abs(ry) <= 0.1 && Math.abs(rz) <= 0.1) return;
+
+  // --- Universal canonical name builder ---
+  // Converts things like:
+  //  "upperarm_R"  → "upperArmR"
+  //  "lowerarm_L"  → "lowerArmL"
+  //  "clavicle_R"  → "clavicleR"
+  //  "thumb01_L"   → "thumb01L"
+  //  "spine01"     → "spine01"
+  const base = boneName
+    .split('_')
+    .map((part, i) =>
+      i === 0
+        ? part.charAt(0).toLowerCase() + part.slice(1)   // ensure first is lowerCamel
+        : part.charAt(0).toUpperCase() + part.slice(1)
+    )
+    .join('');
+
+  if (Math.abs(rx) > 0.1) boneLog[`${base}X`] = parseFloat(rx.toFixed(1));
+  if (Math.abs(ry) > 0.1) boneLog[`${base}Y`] = parseFloat(ry.toFixed(1));
+  if (Math.abs(rz) > 0.1) boneLog[`${base}Z`] = parseFloat(rz.toFixed(1));
+}
 
       }
   }
