@@ -2876,9 +2876,8 @@ function getBoneRotationData(boneName, boneLog) {
   if (Math.abs(ry) > 0.1) boneLog[`${base}Y`] = parseFloat(ry.toFixed(1));
   if (Math.abs(rz) > 0.1) boneLog[`${base}Z`] = parseFloat(rz.toFixed(1));
 }
-
       }
-  }
+
 
   // 1. Root Model Position buttons (data-axis - top row)
   poseTunerEl.querySelectorAll('button[data-axis]:not([data-mode])').forEach(btn=>{
