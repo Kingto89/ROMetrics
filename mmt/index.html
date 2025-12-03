@@ -1659,33 +1659,77 @@ if (!HAND_OVERRIDES[key] && poseToApply) {
     }
  }
 
-  // Universal fine-tune rotations (shortcut from POSE_OVERRIDES)
-// Optional arm/hand fine-tune rotations (shortcut from POSE_OVERRIDES) 
+// Optional full-body fine-tune rotations (shortcut from POSE_OVERRIDES)
 if (key && POSE_OVERRIDES[key] && skeleton){
   const o = POSE_OVERRIDES[key];
 
-  const laL   = getBone("lowerarm_L");
-  const laR   = getBone("lowerarm_R");
-  const uaL   = getBone("upperarm_L");
-  const uaR   = getBone("upperarm_R");
-  const handL = getBone("hand_L");
-  const handR = getBone("hand_R");
+  // --- SPINE / NECK / HEAD ---
+  const spine01 = getBone("spine01");
+  const spine02 = getBone("spine02");
+  const spine03 = getBone("spine03");
+  const neck    = getBone("neck");
+  const head    = getBone("head");
+
+  if (spine01){
+    if (typeof o.spine01X === "number") spine01.rotateX(degToRad(o.spine01X));
+    if (typeof o.spine01Y === "number") spine01.rotateY(degToRad(o.spine01Y));
+    if (typeof o.spine01Z === "number") spine01.rotateZ(degToRad(o.spine01Z));
+  }
+  if (spine02){
+    if (typeof o.spine02X === "number") spine02.rotateX(degToRad(o.spine02X));
+    if (typeof o.spine02Y === "number") spine02.rotateY(degToRad(o.spine02Y));
+    if (typeof o.spine02Z === "number") spine02.rotateZ(degToRad(o.spine02Z));
+  }
+  if (spine03){
+    if (typeof o.spine03X === "number") spine03.rotateX(degToRad(o.spine03X));
+    if (typeof o.spine03Y === "number") spine03.rotateY(degToRad(o.spine03Y));
+    if (typeof o.spine03Z === "number") spine03.rotateZ(degToRad(o.spine03Z));
+  }
+  if (neck){
+    if (typeof o.neckX === "number") neck.rotateX(degToRad(o.neckX));
+    if (typeof o.neckY === "number") neck.rotateY(degToRad(o.neckY));
+    if (typeof o.neckZ === "number") neck.rotateZ(degToRad(o.neckZ));
+  }
+  if (head){
+    if (typeof o.headX === "number") head.rotateX(degToRad(o.headX));
+    if (typeof o.headY === "number") head.rotateY(degToRad(o.headY));
+    if (typeof o.headZ === "number") head.rotateZ(degToRad(o.headZ));
+  }
+
+  // --- BREASTS ---
+  const breastL = getBone("breast_L");
+  const breastR = getBone("breast_R");
+  if (breastL){
+    if (typeof o.breastLX === "number") breastL.rotateX(degToRad(o.breastLX));
+    if (typeof o.breastLY === "number") breastL.rotateY(degToRad(o.breastLY));
+    if (typeof o.breastLZ === "number") breastL.rotateZ(degToRad(o.breastLZ));
+  }
+  if (breastR){
+    if (typeof o.breastRX === "number") breastR.rotateX(degToRad(o.breastRX));
+    if (typeof o.breastRY === "number") breastR.rotateY(degToRad(o.breastRY));
+    if (typeof o.breastRZ === "number") breastR.rotateZ(degToRad(o.breastRZ));
+  }
+
+  // --- CLAVICLES (L/R) ---
   const clavL = getBone("clavicle_L");
   const clavR = getBone("clavicle_R");
-
-  // LOWER ARMS (L/R) — X, Y, Z
-  if (laL){
-    if (typeof o.lowerArmLX === "number") laL.rotateX(degToRad(o.lowerArmLX));
-    if (typeof o.lowerArmLY === "number") laL.rotateY(degToRad(o.lowerArmLY));
-    if (typeof o.lowerArmLZ === "number") laL.rotateZ(degToRad(o.lowerArmLZ));
+  if (clavL){
+    if (typeof o.clavicleLX === "number") clavL.rotateX(degToRad(o.clavicleLX));
+    if (typeof o.clavicleLY === "number") clavL.rotateY(degToRad(o.clavicleLY));
+    if (typeof o.clavicleLZ === "number") clavL.rotateZ(degToRad(o.clavicleLZ));
   }
-  if (laR){
-    if (typeof o.lowerArmRX === "number") laR.rotateX(degToRad(o.lowerArmRX));
-    if (typeof o.lowerArmRY === "number") laR.rotateY(degToRad(o.lowerArmRY));
-    if (typeof o.lowerArmRZ === "number") laR.rotateZ(degToRad(o.lowerArmRZ));
+  if (clavR){
+    if (typeof o.clavicleRX === "number") clavR.rotateX(degToRad(o.clavicleRX));
+    if (typeof o.clavicleRY === "number") clavR.rotateY(degToRad(o.clavicleRY));
+    if (typeof o.clavicleRZ === "number") clavR.rotateZ(degToRad(o.clavicleRZ));
   }
 
-  // UPPER ARMS (L/R) — X, Y, Z
+  // --- UPPER ARMS (L/R) ---
+  const uaL   = getBone("upperarm_L");
+  const uaR   = getBone("upperarm_R");
+  const uaTwL = getBone("upperarm_twist_L");
+  const uaTwR = getBone("upperarm_twist_R");
+
   if (uaL){
     if (typeof o.upperArmLX === "number") uaL.rotateX(degToRad(o.upperArmLX));
     if (typeof o.upperArmLY === "number") uaL.rotateY(degToRad(o.upperArmLY));
@@ -1696,8 +1740,47 @@ if (key && POSE_OVERRIDES[key] && skeleton){
     if (typeof o.upperArmRY === "number") uaR.rotateY(degToRad(o.upperArmRY));
     if (typeof o.upperArmRZ === "number") uaR.rotateZ(degToRad(o.upperArmRZ));
   }
+  if (uaTwL){
+    if (typeof o.upperArmTwistLX === "number") uaTwL.rotateX(degToRad(o.upperArmTwistLX));
+    if (typeof o.upperArmTwistLY === "number") uaTwL.rotateY(degToRad(o.upperArmTwistLY));
+    if (typeof o.upperArmTwistLZ === "number") uaTwL.rotateZ(degToRad(o.upperArmTwistLZ));
+  }
+  if (uaTwR){
+    if (typeof o.upperArmTwistRX === "number") uaTwR.rotateX(degToRad(o.upperArmTwistRX));
+    if (typeof o.upperArmTwistRY === "number") uaTwR.rotateY(degToRad(o.upperArmTwistRY));
+    if (typeof o.upperArmTwistRZ === "number") uaTwR.rotateZ(degToRad(o.upperArmTwistRZ));
+  }
 
-  // HANDS (L/R) — X, Y, Z
+  // --- LOWER ARMS (L/R) ---
+  const laL   = getBone("lowerarm_L");
+  const laR   = getBone("lowerarm_R");
+  const laTwL = getBone("lowerarm_twist_L");
+  const laTwR = getBone("lowerarm_twist_R");
+
+  if (laL){
+    if (typeof o.lowerArmLX === "number") laL.rotateX(degToRad(o.lowerArmLX));
+    if (typeof o.lowerArmLY === "number") laL.rotateY(degToRad(o.lowerArmLY));
+    if (typeof o.lowerArmLZ === "number") laL.rotateZ(degToRad(o.lowerArmLZ));
+  }
+  if (laR){
+    if (typeof o.lowerArmRX === "number") laR.rotateX(degToRad(o.lowerArmRX));
+    if (typeof o.lowerArmRY === "number") laR.rotateY(degToRad(o.lowerArmRY));
+    if (typeof o.lowerArmRZ === "number") laR.rotateZ(degToRad(o.lowerArmRZ));
+  }
+  if (laTwL){
+    if (typeof o.lowerArmTwistLX === "number") laTwL.rotateX(degToRad(o.lowerArmTwistLX));
+    if (typeof o.lowerArmTwistLY === "number") laTwL.rotateY(degToRad(o.lowerArmTwistLY));
+    if (typeof o.lowerArmTwistLZ === "number") laTwL.rotateZ(degToRad(o.lowerArmTwistLZ));
+  }
+  if (laTwR){
+    if (typeof o.lowerArmTwistRX === "number") laTwR.rotateX(degToRad(o.lowerArmTwistRX));
+    if (typeof o.lowerArmTwistRY === "number") laTwR.rotateY(degToRad(o.lowerArmTwistRY));
+    if (typeof o.lowerArmTwistRZ === "number") laTwR.rotateZ(degToRad(o.lowerArmTwistRZ));
+  }
+
+  // --- HANDS (L/R) ---
+  const handL = getBone("hand_L");
+  const handR = getBone("hand_R");
   if (handL){
     if (typeof o.handLX === "number") handL.rotateX(degToRad(o.handLX));
     if (typeof o.handLY === "number") handL.rotateY(degToRad(o.handLY));
@@ -1709,16 +1792,180 @@ if (key && POSE_OVERRIDES[key] && skeleton){
     if (typeof o.handRZ === "number") handR.rotateZ(degToRad(o.handRZ));
   }
 
-  // CLAVICLES (L/R) — X, Y, Z
-  if (clavL){
-    if (typeof o.clavicleLX === "number") clavL.rotateX(degToRad(o.clavicleLX));
-    if (typeof o.clavicleLY === "number") clavL.rotateY(degToRad(o.clavicleLY));
-    if (typeof o.clavicleLZ === "number") clavL.rotateZ(degToRad(o.clavicleLZ));
+  // --- THUMBS (L/R) ---
+  const thumb01L = getBone("thumb01_L");
+  const thumb02L = getBone("thumb02_L");
+  const thumb03L = getBone("thumb03_L");
+  const thumb01R = getBone("thumb01_R");
+  const thumb02R = getBone("thumb02_R");
+  const thumb03R = getBone("thumb03_R");
+
+  if (thumb01L){
+    if (typeof o.thumb01LX === "number") thumb01L.rotateX(degToRad(o.thumb01LX));
+    if (typeof o.thumb01LY === "number") thumb01L.rotateY(degToRad(o.thumb01LY));
+    if (typeof o.thumb01LZ === "number") thumb01L.rotateZ(degToRad(o.thumb01LZ));
   }
-  if (clavR){
-    if (typeof o.clavicleRX === "number") clavR.rotateX(degToRad(o.clavicleRX));
-    if (typeof o.clavicleRY === "number") clavR.rotateY(degToRad(o.clavicleRY));
-    if (typeof o.clavicleRZ === "number") clavR.rotateZ(degToRad(o.clavicleRZ));
+  if (thumb02L){
+    if (typeof o.thumb02LX === "number") thumb02L.rotateX(degToRad(o.thumb02LX));
+    if (typeof o.thumb02LY === "number") thumb02L.rotateY(degToRad(o.thumb02LY));
+    if (typeof o.thumb02LZ === "number") thumb02L.rotateZ(degToRad(o.thumb02LZ));
+  }
+  if (thumb03L){
+    if (typeof o.thumb03LX === "number") thumb03L.rotateX(degToRad(o.thumb03LX));
+    if (typeof o.thumb03LY === "number") thumb03L.rotateY(degToRad(o.thumb03LY));
+    if (typeof o.thumb03LZ === "number") thumb03L.rotateZ(degToRad(o.thumb03LZ));
+  }
+
+  if (thumb01R){
+    if (typeof o.thumb01RX === "number") thumb01R.rotateX(degToRad(o.thumb01RX));
+    if (typeof o.thumb01RY === "number") thumb01R.rotateY(degToRad(o.thumb01RY));
+    if (typeof o.thumb01RZ === "number") thumb01R.rotateZ(degToRad(o.thumb01RZ));
+  }
+  if (thumb02R){
+    if (typeof o.thumb02RX === "number") thumb02R.rotateX(degToRad(o.thumb02RX));
+    if (typeof o.thumb02RY === "number") thumb02R.rotateY(degToRad(o.thumb02RY));
+    if (typeof o.thumb02RZ === "number") thumb02R.rotateZ(degToRad(o.thumb02RZ));
+  }
+  if (thumb03R){
+    if (typeof o.thumb03RX === "number") thumb03R.rotateX(degToRad(o.thumb03RX));
+    if (typeof o.thumb03RY === "number") thumb03R.rotateY(degToRad(o.thumb03RY));
+    if (typeof o.thumb03RZ === "number") thumb03R.rotateZ(degToRad(o.thumb03RZ));
+  }
+
+  // --- INDEX FINGERS (L/R) ---
+  const index00L = getBone("index00_L");
+  const index01L = getBone("index01_L");
+  const index02L = getBone("index02_L");
+  const index03L = getBone("index03_L");
+  const index00R = getBone("index00_R");
+  const index01R = getBone("index01_R");
+  const index02R = getBone("index02_R");
+  const index03R = getBone("index03_R");
+
+  if (index00L){
+    if (typeof o.index00LX === "number") index00L.rotateX(degToRad(o.index00LX));
+    if (typeof o.index00LY === "number") index00L.rotateY(degToRad(o.index00LY));
+    if (typeof o.index00LZ === "number") index00L.rotateZ(degToRad(o.index00LZ));
+  }
+  if (index01L){
+    if (typeof o.index01LX === "number") index01L.rotateX(degToRad(o.index01LX));
+    if (typeof o.index01LY === "number") index01L.rotateY(degToRad(o.index01LY));
+    if (typeof o.index01LZ === "number") index01L.rotateZ(degToRad(o.index01LZ));
+  }
+  if (index02L){
+    if (typeof o.index02LX === "number") index02L.rotateX(degToRad(o.index02LX));
+    if (typeof o.index02LY === "number") index02L.rotateY(degToRad(o.index02LY));
+    if (typeof o.index02LZ === "number") index02L.rotateZ(degToRad(o.index02LZ));
+  }
+  if (index03L){
+    if (typeof o.index03LX === "number") index03L.rotateX(degToRad(o.index03LX));
+    if (typeof o.index03LY === "number") index03L.rotateY(degToRad(o.index03LY));
+    if (typeof o.index03LZ === "number") index03L.rotateZ(degToRad(o.index03LZ));
+  }
+
+  if (index00R){
+    if (typeof o.index00RX === "number") index00R.rotateX(degToRad(o.index00RX));
+    if (typeof o.index00RY === "number") index00R.rotateY(degToRad(o.index00RY));
+    if (typeof o.index00RZ === "number") index00R.rotateZ(degToRad(o.index00RZ));
+  }
+  if (index01R){
+    if (typeof o.index01RX === "number") index01R.rotateX(degToRad(o.index01RX));
+    if (typeof o.index01RY === "number") index01R.rotateY(degToRad(o.index01RY));
+    if (typeof o.index01RZ === "number") index01R.rotateZ(degToRad(o.index01RZ));
+  }
+  if (index02R){
+    if (typeof o.index02RX === "number") index02R.rotateX(degToRad(o.index02RX));
+    if (typeof o.index02RY === "number") index02R.rotateY(degToRad(o.index02RY));
+    if (typeof o.index02RZ === "number") index02R.rotateZ(degToRad(o.index02RZ));
+  }
+  if (index03R){
+    if (typeof o.index03RX === "number") index03R.rotateX(degToRad(o.index03RX));
+    if (typeof o.index03RY === "number") index03R.rotateY(degToRad(o.index03RY));
+    if (typeof o.index03RZ === "number") index03R.rotateZ(degToRad(o.index03RZ));
+  }
+
+  // --- MIDDLE / RING / PINKY FINGERS (L/R) ---
+  // You can follow the exact same pattern as INDEX above:
+  // middle00_L/R -> middle00LX, middle00RX, etc.
+  // ring00_L/R   -> ring00LX, ring00RX, etc.
+  // pinky00_L/R  -> pinky00LX, pinky00RX, etc.
+
+  // --- LEGS / FEET / TOES (L/R) ---
+  const thighL      = getBone("thigh_L");
+  const thighR      = getBone("thigh_R");
+  const thighTwL    = getBone("thigh_twist_L");
+  const thighTwR    = getBone("thigh_twist_R");
+  const calfL       = getBone("calf_L");
+  const calfR       = getBone("calf_R");
+  const calfTwL     = getBone("calf_twist_L");
+  const calfTwR     = getBone("calf_twist_R");
+  const footL       = getBone("foot_L");
+  const footR       = getBone("foot_R");
+  const toesL       = getBone("toes_L");
+  const toesR       = getBone("toes_R");
+
+  if (thighL){
+    if (typeof o.thighLX === "number") thighL.rotateX(degToRad(o.thighLX));
+    if (typeof o.thighLY === "number") thighL.rotateY(degToRad(o.thighLY));
+    if (typeof o.thighLZ === "number") thighL.rotateZ(degToRad(o.thighLZ));
+  }
+  if (thighR){
+    if (typeof o.thighRX === "number") thighR.rotateX(degToRad(o.thighRX));
+    if (typeof o.thighRY === "number") thighR.rotateY(degToRad(o.thighRY));
+    if (typeof o.thighRZ === "number") thighR.rotateZ(degToRad(o.thighRZ));
+  }
+  if (thighTwL){
+    if (typeof o.thighTwistLX === "number") thighTwL.rotateX(degToRad(o.thighTwistLX));
+    if (typeof o.thighTwistLY === "number") thighTwL.rotateY(degToRad(o.thighTwistLY));
+    if (typeof o.thighTwistLZ === "number") thighTwL.rotateZ(degToRad(o.thighTwistLZ));
+  }
+  if (thighTwR){
+    if (typeof o.thighTwistRX === "number") thighTwR.rotateX(degToRad(o.thighTwistRX));
+    if (typeof o.thighTwistRY === "number") thighTwR.rotateY(degToRad(o.thighTwistRY));
+    if (typeof o.thighTwistRZ === "number") thighTwR.rotateZ(degToRad(o.thighTwistRZ));
+  }
+
+  if (calfL){
+    if (typeof o.calfLX === "number") calfL.rotateX(degToRad(o.calfLX));
+    if (typeof o.calfLY === "number") calfL.rotateY(degToRad(o.calfLY));
+    if (typeof o.calfLZ === "number") calfL.rotateZ(degToRad(o.calfLZ));
+  }
+  if (calfR){
+    if (typeof o.calfRX === "number") calfR.rotateX(degToRad(o.calfRX));
+    if (typeof o.calfRY === "number") calfR.rotateY(degToRad(o.calfRY));
+    if (typeof o.calfRZ === "number") calfR.rotateZ(degToRad(o.calfRZ));
+  }
+  if (calfTwL){
+    if (typeof o.calfTwistLX === "number") calfTwL.rotateX(degToRad(o.calfTwistLX));
+    if (typeof o.calfTwistLY === "number") calfTwL.rotateY(degToRad(o.calfTwistLY));
+    if (typeof o.calfTwistLZ === "number") calfTwL.rotateZ(degToRad(o.calfTwistLZ));
+  }
+  if (calfTwR){
+    if (typeof o.calfTwistRX === "number") calfTwR.rotateX(degToRad(o.calfTwistRX));
+    if (typeof o.calfTwistRY === "number") calfTwR.rotateY(degToRad(o.calfTwistRY));
+    if (typeof o.calfTwistRZ === "number") calfTwR.rotateZ(degToRad(o.calfTwistRZ));
+  }
+
+  if (footL){
+    if (typeof o.footLX === "number") footL.rotateX(degToRad(o.footLX));
+    if (typeof o.footLY === "number") footL.rotateY(degToRad(o.footLY));
+    if (typeof o.footLZ === "number") footL.rotateZ(degToRad(o.footLZ));
+  }
+  if (footR){
+    if (typeof o.footRX === "number") footR.rotateX(degToRad(o.footRX));
+    if (typeof o.footRY === "number") footR.rotateY(degToRad(o.footRY));
+    if (typeof o.footRZ === "number") footR.rotateZ(degToRad(o.footRZ));
+  }
+
+  if (toesL){
+    if (typeof o.toesLX === "number") toesL.rotateX(degToRad(o.toesLX));
+    if (typeof o.toesLY === "number") toesL.rotateY(degToRad(o.toesLY));
+    if (typeof o.toesLZ === "number") toesL.rotateZ(degToRad(o.toesLZ));
+  }
+  if (toesR){
+    if (typeof o.toesRX === "number") toesR.rotateX(degToRad(o.toesRX));
+    if (typeof o.toesRY === "number") toesR.rotateY(degToRad(o.toesRY));
+    if (typeof o.toesRZ === "number") toesR.rotateZ(degToRad(o.toesRZ));
   }
 }
 
