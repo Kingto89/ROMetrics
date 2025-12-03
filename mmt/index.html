@@ -1670,6 +1670,8 @@ if (!HAND_OVERRIDES[key] && poseToApply) {
     const uaR   = getBone("upperarm_R");
     const handL = getBone("hand_L");
     const handR = getBone("hand_R");
+    const clavL = getBone("clavicle_L");
+    const clavR = getBone("clavicle_R");
 
     // LOWER ARMS (L/R) — X, Y, Z
     if (laL){
@@ -1706,6 +1708,17 @@ if (!HAND_OVERRIDES[key] && poseToApply) {
       if (typeof o.handRY === "number") handR.rotateY(degToRad(o.handRY));
       if (typeof o.handRZ === "number") handR.rotateZ(degToRad(o.handRZ));
     }
+     // CLAVICLES (L/R) — X, Y, Z
+  if (clavL){
+    if (typeof o.clavicleLX === "number") clavL.rotateX(degToRad(o.clavicleLX));
+    if (typeof o.clavicleLY === "number") clavL.rotateY(degToRad(o.clavicleLY));
+    if (typeof o.clavicleLZ === "number") clavL.rotateZ(degToRad(o.clavicleLZ));
+  }
+  if (clavR){
+    if (typeof o.clavicleRX === "number") clavR.rotateX(degToRad(o.clavicleRX));
+    if (typeof o.clavicleRY === "number") clavR.rotateY(degToRad(o.clavicleRY));
+    if (typeof o.clavicleRZ === "number") clavR.rotateZ(degToRad(o.clavicleRZ));
+  } 
   }
 
   // If this test is using side-lying, also snap arms/legs to side-lying baseline
