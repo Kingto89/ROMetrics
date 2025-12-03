@@ -1609,8 +1609,15 @@ const currentKey = CURRENT_BODY_TEST && CURRENT_BODY_BUCKET
     ? `${CURRENT_BODY_TEST}:${CURRENT_BODY_BUCKET}`
     : null;
 
-if (currentKey && POSE_OVERRIDES[currentKey] && skeleton){
-    const o = POSE_OVERRIDES[currentKey];
+// --- REPLACING THE INSERTION BLOCK IN setBodyMode(mode) ---
+
+// The variable 'key' (and 'o' via the if statement below) is already declared in the parent scope.
+// We are skipping the re-declaration to resolve the SyntaxError.
+
+// The block that applies coarse overrides just above defines 'key' and 'o'.
+if (key && POSE_OVERRIDES[key] && skeleton){
+    // Use 'key' and define 'o' here, since it's only guaranteed inside this block
+    const o = POSE_OVERRIDES[key];
     const rad = THREE.MathUtils.degToRad;
 
     // Define a list of bone names to SKIP (ONLY the main hand bones controlled by HAND_OVERRIDES)
@@ -1621,11 +1628,11 @@ if (currentKey && POSE_OVERRIDES[currentKey] && skeleton){
 
     // Iterate over all properties in the override object 'o'
     for (const prop in o) {
-        // 1. Check if the property is a bone rotation key (e.g., thumb01_RX, clavicle_RZ)
+        // 1. Check if the property is a bone rotation key
         const isBoneRotation = prop.match(/(L|R|0|1|2|3|twist)(X|Y|Z)$/i); 
         
         if (isBoneRotation) {
-            const boneName = prop.slice(0, -1); // e.g., 'upperarm_L', 'hand_L'
+            const boneName = prop.slice(0, -1); 
             const axis = prop.slice(-1).toLowerCase(); 
             
             // 2. CRITICAL CHECK: ONLY SKIP the main hand bones (hand_L, hand_R).
@@ -1650,6 +1657,7 @@ if (currentKey && POSE_OVERRIDES[currentKey] && skeleton){
         }
     }
 }
+// --- END OF REPLACEMENT BLOCK ---
 // <<<<<<<< INSERTION POINT IS IMMEDIATELY HERE >>>>>>>>
 
 // Apply any saved individual bone overrides from the tuner 
