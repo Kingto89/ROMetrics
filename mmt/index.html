@@ -1368,7 +1368,6 @@ document.body.appendChild(boneTunerPanel);
   $(axis + "Plus").onclick  = () => rotateBone(axis,  5);
   $(axis + "Minus").onclick = () => rotateBone(axis, -5);
 });
- 
 $("saveBoneOverride").onclick = () => {
   const testKey = actionSel.value;
   if (!testKey) {
@@ -1376,7 +1375,7 @@ $("saveBoneOverride").onclick = () => {
     return;
   }
 
-  // decide high vs low
+  // decide high vs low bucket
   const isLowBucket = gradeMain.disabled
     ? (gradeExceptions.value === "2" || gradeExceptions.value === "1" || gradeExceptions.value === "0")
     : (gradeMain.value === "2");
@@ -1385,24 +1384,18 @@ $("saveBoneOverride").onclick = () => {
 
   if (!BONE_OVERRIDES[key]) BONE_OVERRIDES[key] = {};
 
-  // if nothing marked, at least save the currently selected bone
-  const bonesToSave = tunedBones.size
-    ? Array.from(tunedBones)
-    : [ $("boneSel").value ];
+  const boneName = $("boneSel").value;
+  const bone = getBone(boneName);
+  if (!bone) return;
 
-  bonesToSave.forEach(bName => {
-    const bone = getBone(bName);
-    if (!bone) return;
+  const e = new THREE.Euler().setFromQuaternion(bone.quaternion, "XYZ");
+  const xDeg = THREE.MathUtils.radToDeg(e.x);
+  const yDeg = THREE.MathUtils.radToDeg(e.y);
+  const zDeg = THREE.MathUtils.radToDeg(e.z);
 
-    const e = new THREE.Euler().setFromQuaternion(bone.quaternion, "XYZ");
-    BONE_OVERRIDES[key][bName] = {
-      x: THREE.MathUtils.radToDeg(e.x),
-      y: THREE.MathUtils.radToDeg(e.y),
-      z: THREE.MathUtils.radToDeg(e.z)
-    };
-  });
+  BONE_OVERRIDES[key][boneName] = { x: xDeg, y: yDeg, z: zDeg };
 
-  // pretty POSE_OVERRIDES-style console line
+  // Pretty pose-style console output with ALL bones stored for this key
   const dict = BONE_OVERRIDES[key];
   const parts = Object.keys(dict).sort().map(name => {
     const r = dict[name];
@@ -1410,8 +1403,7 @@ $("saveBoneOverride").onclick = () => {
   });
   console.log(`BONE_OVERRIDES["${key}"] = { ${parts.join(", ")} };`);
 
-  $("msg").textContent = `Saved overrides for ${bonesToSave.join(", ")} (${key})`;
-  tunedBones.clear();  // new session next time
+  $("msg").textContent = `Saved override for ${boneName} (${key})`;
 };
 
 
