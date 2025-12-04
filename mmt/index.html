@@ -2580,34 +2580,22 @@ function ensurePoseTuner(){
     updateLabels();
   };
 
-  // Save button logs config INCLUDING plantarflexion + side-lying angles
-  btnSave.onclick = () => {
-    const key = ensureOverrideFromCurrentPose();
-    if (!key) return;
-    const o = POSE_OVERRIDES[key];
+// Save button logs config INCLUDING plantarflexion + side-lying angles
+btnSave.onclick = () => {
+  const key = ensureOverrideFromCurrentPose();
+  if (!key) return;
+  const o = POSE_OVERRIDES[key];
 
-    // store current global PF into this override
-    o.pf = GLOBAL_PF_DEG || 0;
+  // Only logging x, y, z, rx, ry, rz as requested
+  console.log(
+    `POSE_OVERRIDES["${key}"] = { ` +
+    `x:${o.x.toFixed(3)}, y:${o.y.toFixed(3)}, z:${o.z.toFixed(3)}, ` +
+    `rx:${o.rx.toFixed(3)}, ry:${o.ry.toFixed(3)}, rz:${o.rz.toFixed(3)} };`
+  );
 
-    // NEW: capture actual joint angles so the pose "remembers" them
-    // Right foot inversion (foot_R, Z axis)
-    o.footInvR = extractAxisDeg("foot_R", "z");
-    // Left foot eversion (foot_L, Z axis)
-    o.footEvL  = extractAxisDeg("foot_L", "z");
-    // Neck left lateral flexion (neck, Z axis)
-    o.neckLatL = extractAxisDeg("neck",   "z");
-
-    console.log(
-      `POSE_OVERRIDES["${key}"] = { ` +
-      `x:${o.x.toFixed(3)}, y:${o.y.toFixed(3)}, z:${o.z.toFixed(3)}, ` +
-      `rx:${o.rx.toFixed(3)}, ry:${o.ry.toFixed(3)}, rz:${o.rz.toFixed(3)}, ` +
-      `pf:${o.pf.toFixed(1)}, ` +
-      `footInvR:${o.footInvR.toFixed(1)}, footEvL:${o.footEvL.toFixed(1)}, neckLatL:${o.neckLatL.toFixed(1)} };`
-    );
-
-    labelTest.style.color = '#22c55e';
-    setTimeout(()=>labelTest.style.color='#e2e8f0', 600);
-  };
+  labelTest.style.color = '#22c55e';
+  setTimeout(()=>labelTest.style.color='#e2e8f0', 600);
+};
 
 
 
