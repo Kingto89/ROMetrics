@@ -1294,57 +1294,6 @@ function shouldResistanceBeDisabled() {
     return false; 
 }
 
-function applyLimbOverridesFromOverride(o){
-  if (!o || !skeleton) return;
-  const get = (n)=> skeleton.bones.find(b => b.name === n);
-  const rad = THREE.MathUtils.degToRad;
-
-  const thighL = get("thigh_L");
-  const thighR = get("thigh_R");
-  const calfL  = get("calf_L");
-  const calfR  = get("calf_R");
-  
-  // Thigh L: X, Y, Z
-  if (thighL){
-    if (o.thighLX !== undefined) thighL.rotateX(rad(o.thighLX));
-    if (o.thighLY !== undefined) thighL.rotateY(rad(o.thighLY));
-    if (o.thighLZ !== undefined) thighL.rotateZ(rad(o.thighLZ));
-  }
-
-  // Thigh R: X, Y, Z
-  if (thighR){
-    if (o.thighRX !== undefined) thighR.rotateX(rad(o.thighRX));
-    if (o.thighRY !== undefined) thighR.rotateY(rad(o.thighRY));
-    if (o.thighRZ !== undefined) thighR.rotateZ(rad(o.thighRZ));
-  }
-
-  // Calf L: X, Z
-  if (calfL){
-    if (o.calfLX !== undefined) calfL.rotateX(rad(o.calfLX));
-    if (o.calfLZ !== undefined) calfL.rotateZ(rad(o.calfLZ));
-  }
-
-  // Calf R: X, Z
-  if (calfR){
-    if (o.calfRX !== undefined) calfR.rotateX(rad(o.calfRX));
-    if (o.calfRZ !== undefined) calfR.rotateZ(rad(o.calfRZ));
-  }
-  // Spine (trunk) — X, Y, Z for "spine01"
-  const spine = get("spine01");
-  if (spine){
-    if (o.spineX !== undefined) spine.rotateX(rad(o.spineX));
-    if (o.spineY !== undefined) spine.rotateY(rad(o.spineY));
-    if (o.spineZ !== undefined) spine.rotateZ(rad(o.spineZ));
-  }  
-// --- START: Requested Manual Override for "head" bone ---
-  const head = get("head");
-  if (head){
-    if (o.headX !== undefined) head.rotateX(rad(o.headX));
-    if (o.headY !== undefined) head.rotateY(rad(o.headY));
-    if (o.headZ !== undefined) head.rotateZ(rad(o.headZ));
-  }
-}  
-
 // Coarse body-mode: align to bed/cabinet but don't set specific joint test angles
 function setBodyMode(mode, isResistanceActive = false){ // <-- ADDED isResistanceActive = false
   if (!model || !skeleton) return;
@@ -1446,32 +1395,25 @@ function setBodyMode(mode, isResistanceActive = false){ // <-- ADDED isResistanc
     rotZ = 0;
   }
 
-  // Apply any saved override for this test + family (high/low)
-  const key = CURRENT_BODY_TEST && CURRENT_BODY_BUCKET
-    ? `${CURRENT_BODY_TEST}:${CURRENT_BODY_BUCKET}`
-    : null;
+// Apply any saved override for this test + family (high/low)
+const key = CURRENT_BODY_TEST && CURRENT_BODY_BUCKET
+  ? `${CURRENT_BODY_TEST}:${CURRENT_BODY_BUCKET}`
+  : null;
 
-  if (key && POSE_OVERRIDES[key]){
-    const o = POSE_OVERRIDES[key];
-    posX = o.x;
-    posY = o.y;
-    posZ = o.z;
-    rotX = o.rx;
-    rotY = o.ry;
-    rotZ = o.rz;
+if (key && POSE_OVERRIDES[key]){
+  const o = POSE_OVERRIDES[key];
+  posX = o.x;
+  posY = o.y;
+  posZ = o.z;
+  rotX = o.rx;
+  rotY = o.ry;
+  rotZ = o.rz;
 
-    // NEW: read plantarflexion from override if present
-    if (typeof o.pf === "number") {
-      GLOBAL_PF_DEG = o.pf;
-    }
-  }
-
+  // }
+}
 
   model.position.set(posX, posY, posZ);
   model.rotation.set(rotX, rotY, rotZ);
-
-  // Re-apply global plantarflexion to both feet
-  applyGlobalPF();
 
  // Apply any per-test thigh/calf overrides (if present)
   if (key && POSE_OVERRIDES[key]){
@@ -1540,54 +1482,6 @@ if (!HAND_OVERRIDES[key] && poseToApply) {
     }
  }
 
-
-  // Optional arm/hand fine-tune rotations (shortcut from POSE_OVERRIDES) 
-  if (key && POSE_OVERRIDES[key] && skeleton){
-    const o = POSE_OVERRIDES[key];
-
-    const laL   = getBone("lowerarm_L");
-    const laR   = getBone("lowerarm_R");
-    const uaL   = getBone("upperarm_L");
-    const uaR   = getBone("upperarm_R");
-    const handL = getBone("hand_L");
-    const handR = getBone("hand_R");
-
-    // LOWER ARMS (L/R) — X, Y, Z
-    if (laL){
-      if (typeof o.lowerArmLX === "number") laL.rotateX(degToRad(o.lowerArmLX));
-      if (typeof o.lowerArmLY === "number") laL.rotateY(degToRad(o.lowerArmLY));
-      if (typeof o.lowerArmLZ === "number") laL.rotateZ(degToRad(o.lowerArmLZ));
-    }
-    if (laR){
-      if (typeof o.lowerArmRX === "number") laR.rotateX(degToRad(o.lowerArmRX));
-      if (typeof o.lowerArmRY === "number") laR.rotateY(degToRad(o.lowerArmRY));
-      if (typeof o.lowerArmRZ === "number") laR.rotateZ(degToRad(o.lowerArmRZ));
-    }
-
-    // UPPER ARMS (L/R) — X, Y, Z
-    if (uaL){
-      if (typeof o.upperArmLX === "number") uaL.rotateX(degToRad(o.upperArmLX));
-      if (typeof o.upperArmLY === "number") uaL.rotateY(degToRad(o.upperArmLY));
-      if (typeof o.upperArmLZ === "number") uaL.rotateZ(degToRad(o.upperArmLZ));
-    }
-    if (uaR){
-      if (typeof o.upperArmRX === "number") uaR.rotateX(degToRad(o.upperArmRX));
-      if (typeof o.upperArmRY === "number") uaR.rotateY(degToRad(o.upperArmRY));
-      if (typeof o.upperArmRZ === "number") uaR.rotateZ(degToRad(o.upperArmRZ));
-    }
-
-    // HANDS (L/R) — X, Y, Z
-    if (handL){
-      if (typeof o.handLX === "number") handL.rotateX(degToRad(o.handLX));
-      if (typeof o.handLY === "number") handL.rotateY(degToRad(o.handLY));
-      if (typeof o.handLZ === "number") handL.rotateZ(degToRad(o.handLZ));
-    }
-    if (handR){
-      if (typeof o.handRX === "number") handR.rotateX(degToRad(o.handRX));
-      if (typeof o.handRY === "number") handR.rotateY(degToRad(o.handRY));
-      if (typeof o.handRZ === "number") handR.rotateZ(degToRad(o.handRZ));
-    }
-  }
 
   // If this test is using side-lying, also snap arms/legs to side-lying baseline
   if (mode === "side_lying"){
@@ -2413,15 +2307,7 @@ function ensurePoseTuner(){
       </div>
     </div>
 
-        <label style="display:block;opacity:.85;margin-top:4px;">Ankle Plantarflexion (both feet)</label>
-    <div style="display:flex;gap:4px;margin-bottom:4px;align-items:center;">
-      <button data-pf="-5" class="mini">Less PF</button>
-      <button data-pf="5" class="mini">More PF</button>
-      <span id="pfLabel" style="margin-left:auto;opacity:.7;">0°</span>
-    </div>
-
-
-    <div style="display:flex;gap:8px;margin-top:8px;">
+   <div style="display:flex;gap:8px;margin-top:8px;">
       <button id="poseTunerSnapBase" class="mini" style="flex:1;">Reset to Base Mode</button>
       <button id="poseTunerSave" class="mini" style="flex:1;background:#0f766e;border-color:#0f766e;color:#fff;">Save for Test</button>
     </div>
@@ -2429,7 +2315,7 @@ function ensurePoseTuner(){
     <div style="margin-top:6px;font-size:10px;opacity:.7;">
       Uses current dropdown + grade to decide <em>which</em> pose (high vs low) you’re tuning.
     </div>
-  `;
+  `; 
 
   document.body.appendChild(poseTunerEl);
 
@@ -2438,18 +2324,12 @@ function ensurePoseTuner(){
   const btnClose    = poseTunerEl.querySelector('#poseTunerClose');
   const btnSave     = poseTunerEl.querySelector('#poseTunerSave');
   const btnSnapBase = poseTunerEl.querySelector('#poseTunerSnapBase');
-  const pfLabel = poseTunerEl.querySelector('#pfLabel');
-
-  function updatePFLabel(){
-    if (pfLabel) pfLabel.textContent = `${GLOBAL_PF_DEG|0}°`;
-  }
 
   function updateLabels(){
     if (!actionSel) return;
     const opt = actionSel.selectedOptions?.[0];
     labelTest.textContent = opt ? opt.textContent.trim() : '(none)';
     labelBucket.textContent = CURRENT_BODY_BUCKET || 'high';
-    updatePFLabel();
   }
 
   // Helper: read rotation in degrees vs baseline, around a single axis
@@ -2472,34 +2352,6 @@ function ensurePoseTuner(){
     return THREE.MathUtils.radToDeg(rad);
   }
 
-  // Extra hook: when you click "Save for Test", also store / log
-  // foot inversion/eversion + neck lateral flexion.
-  btnSave.addEventListener('click', () => {
-    const key = ensureOverrideFromCurrentPose();
-    if (!key) return;
-    const o = POSE_OVERRIDES[key];
-    if (!o) return;
-
-    // Right foot inversion (foot_R, Z axis)
-    const footInvR = extractAxisDeg("foot_R", "z");
-    // Left foot eversion (foot_L, Z axis)
-    const footEvL  = extractAxisDeg("foot_L", "z");
-    // Neck left lateral flexion (neck, Z axis)
-    const neckLatL = extractAxisDeg("neck",   "z");
-
-    // Store in the override object so this pose "remembers" them
-    o.footInvR = footInvR;
-    o.footEvL  = footEvL;
-    o.neckLatL = neckLatL;
-
-    // And show them in the console so you can see the exact numbers
-    console.log(
-      `[PoseTuner extra] ${key}: ` +
-      `footInvR=${footInvR.toFixed(1)}°, ` +
-      `footEvL=${footEvL.toFixed(1)}°, ` +
-      `neckLatL=${neckLatL.toFixed(1)}°`
-    );
-  });
 
   // Helper: get or create override object for current test+bucket
   function getCurrentOverrideKey(){
@@ -2546,31 +2398,21 @@ function ensurePoseTuner(){
     });
   });
 
-  // Rotation buttons (deg)
-  poseTunerEl.querySelectorAll('button[data-rot]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const key = ensureOverrideFromCurrentPose();
-      if (!key) return;
-      const axis = btn.getAttribute('data-rot');
-      const deltaDeg = parseFloat(btn.getAttribute('data-delta') || '0');
-      const deltaRad = THREE.MathUtils.degToRad(deltaDeg);
-      const o = POSE_OVERRIDES[key];
-      if (axis === 'x') o.rx += deltaRad;
-      if (axis === 'y') o.ry += deltaRad;
-      if (axis === 'z') o.rz += deltaRad;
-      applyOverride(key);
-    });
-  });
-  // Plantarflexion buttons
-  poseTunerEl.querySelectorAll('button[data-pf]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const delta = parseFloat(btn.getAttribute('data-pf') || '0');
-      // Clamp so you don't break ankles
-      GLOBAL_PF_DEG = Math.max(-45, Math.min(45, GLOBAL_PF_DEG + delta));
-      applyGlobalPF();
-      updatePFLabel();
-    });
-  });
+// Rotation buttons (deg)
+poseTunerEl.querySelectorAll('button[data-rot]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const key = ensureOverrideFromCurrentPose();
+    if (!key) return;
+    const axis = btn.getAttribute('data-rot');
+    const deltaDeg = parseFloat(btn.getAttribute('data-delta') || '0');
+    const deltaRad = THREE.MathUtils.degToRad(deltaDeg);
+    const o = POSE_OVERRIDES[key];
+    if (axis === 'x') o.rx += deltaRad;
+    if (axis === 'y') o.ry += deltaRad;
+    if (axis === 'z') o.rz += deltaRad;
+    applyOverride(key);
+  }); // <--- Closing the click event listener
+}); // <--- Closing the forEach loop
 
   // Reset to base (throw away override & re-apply base mode)
   btnSnapBase.onclick = () => {
