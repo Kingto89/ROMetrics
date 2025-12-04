@@ -1294,28 +1294,6 @@ function shouldResistanceBeDisabled() {
     return false; 
 }
 
-/** Global plantarflexion for both feet */
-function applyGlobalPF(){
-  if (!skeleton) return;
-
-  const footL = getBone("foot_L");
-  const footR = getBone("foot_R");
-
-  // Reset feet to their baseline before applying PF
-  [footL, footR].forEach(b => {
-    if (!b) return;
-    const q0 = initialBoneRot.get(b);
-    if (q0) b.quaternion.copy(q0);
-  });
-
-  if (!GLOBAL_PF_DEG) return; // nothing to do if 0°
-
-  const r = degToRad(GLOBAL_PF_DEG);
-  // If toes go the wrong way, flip sign here
-  if (footL) footL.rotateX(-r);
-  if (footR) footR.rotateX(-r);
-}
-
 function applyLimbOverridesFromOverride(o){
   if (!o || !skeleton) return;
   const get = (n)=> skeleton.bones.find(b => b.name === n);
