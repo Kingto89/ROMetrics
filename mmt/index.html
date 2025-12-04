@@ -1353,12 +1353,10 @@ boneTunerPanel.style.left = "430px";
 boneTunerPanel.style.top = "12px";
 document.body.appendChild(boneTunerPanel);
 
-function rotateBone(axis, delta){
+ function rotateBone(axis, delta){
   const bName = $("boneSel").value;
   const bone = getBone(bName);
   if (!bone) return;
-
-  tunedBones.add(bName); // track that this bone was tuned
 
   const r = THREE.MathUtils.degToRad(delta);
   const e = new THREE.Euler();
@@ -1366,12 +1364,11 @@ function rotateBone(axis, delta){
   bone.quaternion.multiply(new THREE.Quaternion().setFromEuler(e));
 }
 
-
-["x","y","z"].forEach(a=>{
-  $(""+a+"Plus").onclick = ()=>rotateBone(a, 5);
-  $(""+a+"Minus").onclick= ()=>rotateBone(a,-5);
+["x","y","z"].forEach(axis => {
+  $(axis + "Plus").onclick  = () => rotateBone(axis,  5);
+  $(axis + "Minus").onclick = () => rotateBone(axis, -5);
 });
-
+ 
 $("saveBoneOverride").onclick = () => {
   const testKey = actionSel.value;
   if (!testKey) {
