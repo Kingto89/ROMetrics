@@ -1356,34 +1356,67 @@ document.body.appendChild(boneTunerPanel);
 function rotateBone(axis, delta){
   const bName = $("boneSel").value;
   const bone = getBone(bName);
-  if(!bone) return;
+  if (!bone) return;
+
+  tunedBones.add(bName); // track that this bone was tuned
+
   const r = THREE.MathUtils.degToRad(delta);
   const e = new THREE.Euler();
   e[axis] = r;
   bone.quaternion.multiply(new THREE.Quaternion().setFromEuler(e));
 }
 
+
 ["x","y","z"].forEach(a=>{
   $(""+a+"Plus").onclick = ()=>rotateBone(a, 5);
   $(""+a+"Minus").onclick= ()=>rotateBone(a,-5);
 });
 
-$("saveBoneOverride").onclick = ()=>{
+$("saveBoneOverride").onclick = () => {
   const testKey = actionSel.value;
-  const gradeBucket = (gradeMain.disabled ? gradeExceptions.value : gradeMain.value)=="2" ? "low":"high";
+  if (!testKey) {
+    alert("Select an MMT test first");
+    return;
+  }
+
+  // decide high vs low
+  const isLowBucket = gradeMain.disabled
+    ? (gradeExceptions.value === "2" || gradeExceptions.value === "1" || gradeExceptions.value === "0")
+    : (gradeMain.value === "2");
+  const gradeBucket = isLowBucket ? "low" : "high";
   const key = `${testKey}:${gradeBucket}`;
-  if(!testKey){ alert("Select an MMT test first"); return; }
-  if(!BONE_OVERRIDES[key]) BONE_OVERRIDES[key]={};
-  const bName = $("boneSel").value;
-  const q = getBone(bName).rotation;
-  BONE_OVERRIDES[key][bName] = {
-    x:THREE.MathUtils.radToDeg(q.x),
-    y:THREE.MathUtils.radToDeg(q.y),
-    z:THREE.MathUtils.radToDeg(q.z)
-  };
-  console.log(`BONE_OVERRIDES["${key}"] =`, BONE_OVERRIDES[key]);
-  $("msg").textContent=`Saved override for ${bName} (${key})`;
+
+  if (!BONE_OVERRIDES[key]) BONE_OVERRIDES[key] = {};
+
+  // if nothing marked, at least save the currently selected bone
+  const bonesToSave = tunedBones.size
+    ? Array.from(tunedBones)
+    : [ $("boneSel").value ];
+
+  bonesToSave.forEach(bName => {
+    const bone = getBone(bName);
+    if (!bone) return;
+
+    const e = new THREE.Euler().setFromQuaternion(bone.quaternion, "XYZ");
+    BONE_OVERRIDES[key][bName] = {
+      x: THREE.MathUtils.radToDeg(e.x),
+      y: THREE.MathUtils.radToDeg(e.y),
+      z: THREE.MathUtils.radToDeg(e.z)
+    };
+  });
+
+  // pretty POSE_OVERRIDES-style console line
+  const dict = BONE_OVERRIDES[key];
+  const parts = Object.keys(dict).sort().map(name => {
+    const r = dict[name];
+    return `${name}:{ x:${r.x.toFixed(1)}, y:${r.y.toFixed(1)}, z:${r.z.toFixed(1)} }`;
+  });
+  console.log(`BONE_OVERRIDES["${key}"] = { ${parts.join(", ")} };`);
+
+  $("msg").textContent = `Saved overrides for ${bonesToSave.join(", ")} (${key})`;
+  tunedBones.clear();  // new session next time
 };
+
 
 // Coarse body-mode: align to bed/cabinet but don't set specific joint test angles
 function setBodyMode(mode, isResistanceActive = false){ // <-- ADDED isResistanceActive = false
