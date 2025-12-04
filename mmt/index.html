@@ -882,105 +882,31 @@ room.add(shadowCatch);
 
 /* === Anatomic preset — simple like goniometer index === */
 const ANAT = { add:-42, ps:-2, wps:-73 };
-
 const AXIS_MAP = {
-  sh_fe_l:'x',  sh_fe_r:'x',
-  sh_aa_l:'z',  sh_aa_r:'-z',
-  sh_irer_l:'y', sh_irer_r:'y',
-
-  el_fe_l:'x',  el_fe_r:'x',
-
-  // PS lives on FOREARM (not wrist)
-  fa_ps_l:'y',  fa_ps_r:'y',
-
-  wr_fe_l:'y',  wr_fe_r:'y',   // Flex/Ext → Y
-  wr_ru_l:'x',  wr_ru_r:'x',   // Rad/Uln → X
-  wr_yaw_l:'z', wr_yaw_r:'z',
-
-  hip_fe_l:'x', hip_fe_r:'x',
-  hip_aa_l:'z', hip_aa_r:'z',
-  hip_irer_l:'y', hip_irer_r:'y',
-  knee_fe_l:'x', knee_fe_r:'x',
-  ankle_dfpf_l:'x', ankle_dfpf_r:'x',
-  foot_invev_l:'z', foot_invev_r:'z',
-
-  trunk_fe:'x', trunk_lat:'z', trunk_rot:'y',
-  cerv_fe:'x',  cerv_lat:'z',  cerv_rot:'y',
-
-  clavicle_L:'z', clavicle_R:'-z'
+  sh_fe_l:      'x',  sh_fe_r:      'x',
+  sh_aa_l:      'z',  sh_aa_r:     '-z',
+  sh_irer_l:    'y',  sh_irer_r:    'y',
+  el_fe_l:      'x',  el_fe_r:      'x',
+  fa_ps_l:      'y',  fa_ps_r:      'y',
+  wr_ps_l:      'y',  wr_ps_r:      'y',
+  wr_fe_l:      'x',  wr_fe_r:      'x',
+  wr_ru_l:      'z',  wr_ru_r:      'z',
+  hip_fe_l:     'x',  hip_fe_r:     'x',
+  hip_aa_l:     'z',  hip_aa_r:     'z',
+  hip_irer_l:   'y',  hip_irer_r:   'y',
+  knee_fe_l:    'x',  knee_fe_r:    'x',
+  ankle_dfpf_l: 'x',  ankle_dfpf_r: 'x',
+  foot_invev_l: 'z',  foot_invev_r: 'z',
+  trunk_fe:     'x',
+  trunk_lat:    'z',
+  trunk_rot:    'y',
+  cerv_fe:      'x',
+  cerv_lat:     'z',
+  cerv_rot:     'y',
+  clavicle_L:   'z',
+  clavicle_R:  '-z'
 };
-function axisFor(key){
-  const a = AXIS_MAP[key];
-  if (!a) return { axis:'x', sign:1 };
-  return (a[0] === '-') ? { axis: a.slice(1), sign:-1 } : { axis:a, sign:1 };
-}
-
   
-// --- POSE TUNER RESOLVER (fix) ---
-const BONE_FOR = {
-  sh_fe_l:'upperarm_L',  sh_fe_r:'upperarm_R',
-  sh_aa_l:'upperarm_L',  sh_aa_r:'upperarm_R',
-  sh_irer_l:'upperarm_L',sh_irer_r:'upperarm_R',
-  el_fe_l:'lowerarm_L',  el_fe_r:'lowerarm_R',
-  fa_ps_l:'lowerarm_L',  fa_ps_r:'lowerarm_R',
-  wr_fe_l:'hand_L',      wr_fe_r:'hand_R',
-  wr_ru_l:'hand_L',      wr_ru_r:'hand_R',
-  wr_yaw_l:'__noop__',   wr_yaw_r:'__noop__',
-  hip_fe_l:'thigh_L',    hip_fe_r:'thigh_R',
-  hip_aa_l:'thigh_L',    hip_aa_r:'thigh_R',
-  hip_irer_l:'thigh_L',  hip_irer_r:'thigh_R',
-  knee_fe_l:'calf_L',    knee_fe_r:'calf_R',
-  ankle_dfpf_l:'foot_L', ankle_dfpf_r:'foot_R',
-  foot_invev_l:'foot_L', foot_invev_r:'foot_R',
-  trunk_fe:'spine01',    trunk_lat:'spine01',   trunk_rot:'spine01',
-  cerv_fe:'neck',        cerv_lat:'neck',       cerv_rot:'neck',
-  clavicle_L:'clavicle_L', clavicle_R:'clavicle_R'
-};
-const poseDeg = Object.fromEntries(Object.keys(BONE_FOR).map(k => [k, 0]));  
-const _axis = (k)=>{ const v=AXIS_MAP[k]; return v?.startsWith('-')?v.slice(1):v; };
-const _sign = (k)=> AXIS_MAP[k]?.startsWith('-')?-1:1;
-
-window.poseTunerEl = {
-// call this from your +/- axis buttons: poseTunerEl.applyStep(key, stepDeg)
-applyStep(key, stepDeg){
-  const boneName = BONE_FOR[key];
-  if (!boneName || boneName === '__noop__') return;
-
-  const axis = _axis(key);
-  const s    = _sign(key);
-  if (!axis) return;
-
-  const b = getBone(boneName);
-  if (!b) return;
-
-  const r = THREE.MathUtils.degToRad(stepDeg * s);
-  if (axis === 'x') b.rotateX(r);
-  else if (axis === 'y') b.rotateY(r);
-  else b.rotateZ(r);
-
-  // Optional: keep a running total for console/export
-  if (poseDeg && key in poseDeg) poseDeg[key] += stepDeg * s;
-},
-
-
-  // call to dump current pose deltas to console for the active test/bucket
-  saveCurrentToConsole(){
-    if(!skeleton) return;
-    const out = {};
-    Object.keys(BONE_FOR).forEach(k=>{
-      const b = getBone(BONE_FOR[k]); if(!b) return;
-      const q0 = initialBoneRot.get(b);
-      const q = b.quaternion.clone();
-      if(q0) q.premultiply(q0.clone().invert());
-      const e = new THREE.Euler().setFromQuaternion(q,'XYZ');
-      const ax = _axis(k); const deg = THREE.MathUtils.radToDeg(ax==='x'?e.x:ax==='y'?e.y:e.z);
-      out[`${BONE_FOR[k]}${ax.toUpperCase()}`] = Math.round(deg*100)/100;
-    });
-    const key = `${CURRENT_BODY_TEST||'Unknown'}:${CURRENT_BODY_BUCKET||'high'}`;
-    console.log(`POSE_OVERRIDES["${key}"] = ${JSON.stringify(out)};`);
-  },
-  updateLabels(){} // no-op hook to satisfy existing calls
-};
 
 function getBone(name){
   return skeleton?.bones.find(b => b.name === name) || null;
@@ -1012,11 +938,11 @@ function setDegAxis(bone, axis, deg){
 const CERVICAL_MMT_MAP = {
   // Movement direction: 1 = Flexion/Left/Internal; -1 = Extension/Right/External (General)
   Capital_Extension:   ['head', 'x', -1],   // Prone: Extends head (Pitch down)
-  Cervical_Extension:  ['neck', 'x', 0],   // Prone: Extends neck (Pitch down)
+  Cervical_Extension:  ['neck', 'x', -1],   // Prone: Extends neck (Pitch down)
   Capital_Flexion:     ['head', 'x', 1],    // Supine: Flexes head (Pitch up)
   Cervical_Flexion:    ['neck', 'x', 1],    // Supine: Flexes neck (Pitch up)
-  Single_SCM:         ['neck','ry', 0], // keep posed orientation; tremor jitters around it
-  Cervical_Rotation:   ['head', 'y', -1]     // Rotation (Y is rotation)
+  Single_SCM:          ['head', 'y', 1],    // Single SCM (Rotation)
+  Cervical_Rotation:   ['head', 'y', 1]     // Rotation (Y is rotation)
 };  
 // If your rig uses "wrist_L/R" instead of "hand_L/R", change those two names below.
 function applyAnatomicBaseline(){
@@ -1058,20 +984,6 @@ function applyHoldMovement() {
 
   // 3. Apply the rotation
   setDegAxis(bone, axis, totalRotation);
-  // NEW: Head tremor during resistance hold (tiny random rotations)
-{
-  const head = getBone('head');
-  if (head) {
-    const AMP_DEG = 0.35; // max ~0.35° each axis per tick
-    const jx = (Math.random() * 2 - 1) * AMP_DEG;
-    const jy = (Math.random() * 2 - 1) * AMP_DEG;
-    const jz = (Math.random() * 2 - 1) * AMP_DEG;
-    head.rotateX(degToRad(jx));
-    head.rotateY(degToRad(jy));
-    head.rotateZ(degToRad(jz));
-  }
-}
-
 // 2. ⭐ NEW: Hand Tremor Logic (only if hands are loaded and visible)
   // -------------------------------------------------------------
   if (leftHandModel && handsModel?.visible) {
@@ -1207,17 +1119,17 @@ POSE_OVERRIDES["Capital_Flexion:high"] = { x:-1.220, y:0.740, z:0.470, rx:-1.571
 POSE_OVERRIDES["Capital_Flexion:low"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };
 POSE_OVERRIDES["Cervical_Flexion:high"] = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };
 POSE_OVERRIDES["Cervical_Flexion:low"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };
-POSE_OVERRIDES["Single_SCM:high"] = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35, headY: 63 };
+POSE_OVERRIDES["Single_SCM:high"] = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35, headX: 30, headY: 63 };
 POSE_OVERRIDES["Single_SCM:low"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35, headY: 63 };
 POSE_OVERRIDES["Cervical_Rotation:high"] = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222, pf: 35 };
 POSE_OVERRIDES["Cervical_Rotation:low"] = { x:0.440, y:-0.460, z:-2.020, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, upperArmRY: -19.0, lowerArmRX: 45.0, upperArmLY: 19.0, lowerArmLX: 45.0 };  //seated on chair arm ZX
-POSE_OVERRIDES["Serratus_Anterior:high"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, upperArmRX: 100, upperArmRZ: -10, lowerArmLX: 25, handLX: 42, handLY: 145 };  //seated on bed
-POSE_OVERRIDES["Serratus_Anterior:low"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, upperArmRX: 100, upperArmRZ: -10, lowerArmLX: 25, handLX: 42, handLY: 145 };  //seated on bed
-POSE_OVERRIDES["Upper_Trapezius:high"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, handLX: -55, handRX: -55, clavicleLZ: 43, clavicleRZ: -43, upperArmLZ: -40, upperArmRZ: 40 };  // seated on bed
+POSE_OVERRIDES["Serratus_Anterior:high"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  //seated on bed
+POSE_OVERRIDES["Serratus_Anterior:low"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  // seated on bed
+POSE_OVERRIDES["Upper_Trapezius:high"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  // seated on bed
 POSE_OVERRIDES["Upper_Trapezius:low"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0 }; //normal prone
-POSE_OVERRIDES["Middle_Trapezius:high"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0, upperArmRZ: -85, lowerArmRX: 90 };
-POSE_OVERRIDES["Middle_Trapezius:low"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0, upperArmRZ: -85, lowerArmRX: 90 };
-POSE_OVERRIDES["Scap_Depression_Adduction:high"] = { x:-1.220, y:0.830, z:0.450, rx:1.606, ry:0.000, rz:-1.885, pf:0.0, footInvR:-0.5, footEvL:0.4, neckLatL:0.0, footRX:-41.6, footRY:-6, footRZ:-0.5, footLX:-39.6, footLY:5.8, footLZ:0.4, upperArmRX:35.9, upperArmRY:20.2, upperArmRZ:-89.7, clavicleRX:-2.2, clavicleRZ:-12.9, lowerArmRX:-4.4, lowerArmRY:48.2, lowerArmRZ:15.2, thumb01RX:-9.1, thumb01RY:14.3, thumb01RZ:-6.1, pinky02RX:-27.9, pinky02RY:-1.1, pinky02RZ:-2.8, pinky01RX:-24.3, pinky01RY:-1, pinky01RZ:2.8, pinky03RX:-46.9, pinky03RY:-0.8, pinky03RZ:2.9, ring03RX:-24.5, ring03RY:-1.1, ring02RX:-25.5, ring02RZ:-0.2, ring01RX:-27.4, ring01RY:-1, ring01RZ:2.5, middle01RX:-34.5, middle01RY:1.9, middle01RZ:6.1, middle03RX:-33, middle03RY:1, middle03RZ:-5.2, index01RX:-35.8, index01RY:2.5, index01RZ:7.5, index03RX:-26.9, index03RZ:2.5 };
+POSE_OVERRIDES["Middle_Trapezius:high"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0 };
+POSE_OVERRIDES["Middle_Trapezius:low"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0 };
+POSE_OVERRIDES["Scap_Depression_Adduction:high"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0 };  //prone
 POSE_OVERRIDES["Scap_Depression_Adduction:low"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  //seated
 POSE_OVERRIDES["Rhomboids:high"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0 };  
 POSE_OVERRIDES["Rhomboids:low"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0 };
@@ -1297,30 +1209,20 @@ POSE_OVERRIDES["Gastrocnemius:high"] = { x:-0.500, y:0.000, z:-1.600, rx:0.000, 
 POSE_OVERRIDES["Gastrocnemius:low"] = { x:-1.520, y:0.800, z:0.550, rx:1.571, ry:0.000, rz:-1.920, pf:0.0, spineX: -33, lowerArmRX: 80, lowerArmLX: 80, upperArmRX: 55, upperArmLX: 55, handLY: 130, handRY: -130, handLX: 17, handRX: 17 };  //prone
 
 
-/* ==== HAND OVERRIDES (new, separate from pose- must remove orride here first to reset) ==== */
+/* ==== HAND OVERRIDES (new, separate from pose) ==== */
 const HAND_OVERRIDES = {};
 HAND_OVERRIDES["Capital_Extension:high"] = {"handRX":3.7084705208004003,"handRY":-5.1987606148409595,"handRZ":-4.6035542788667625,"handRRX":3.1683205406154173,"handRRY":-3.344445299653452,"handRRZ":-0.9229091699147043,"handLX":3.733414292335506,"handLY":-4.564649659395211,"handLZ":-4.626662611961357,"handLRX":-0.23128912206036426,"handLRY":0.3726189086851196,"handLRZ":0.8238038715507627};
-HAND_OVERRIDES["Capital_Extension:low"] = {"handRX":3.299999999999998,"handRY":-4.849999999999992,"handRZ":-3.7499999999999947,"handRRX":4.65,"handRRY":-1.4999999999999998,"handRRZ":0.7500000000000002,"handLX":3.399999999999996,"handLY":-4.949999999999992,"handLZ":-2.9499999999999975,"handLRX":5.551115123125783e-17,"handLRY":-1.2,"handLRZ":3.449999999999999};
-HAND_OVERRIDES["Cervical_Extension:high"] = {"handRX":3.7084705208004003,"handRY":-5.1987606148409595,"handRZ":-4.6035542788667625,"handRRX":3.1683205406154173,"handRRY":-3.344445299653452,"handRRZ":-0.9229091699147043,"handLX":4.333414292335504,"handLY":-3.914649659395213,"handLZ":-4.576662611961357,"handLRX":-0.08128912206036426,"handLRY":0.3726189086851196,"handLRZ":-0.8261961284492374};
+HAND_OVERRIDES["Capital_Extension:low"] = {"handRX":3.299999999999998,"handRY":-4.849999999999992,"handRZ":-3.7499999999999947,"handRRX":4.65,"handRRY":-1.4999999999999998,"handRRZ":0.7500000000000002,"handLX":3.399999999999996,"handLY":-4.749999999999992,"handLZ":-2.9499999999999975,"handLRX":5.551115123125783e-17,"handLRY":-1.2,"handLRZ":3.449999999999999};
+HAND_OVERRIDES["Cervical_Extension:high"] = {"handRX":3.7084705208004003,"handRY":-5.1987606148409595,"handRZ":-4.6035542788667625,"handRRX":3.1683205406154173,"handRRY":-3.344445299653452,"handRRZ":-0.9229091699147043,"handLX":4.333414292335504,"handLY":-3.7646496593952135,"handLZ":-4.576662611961357,"handLRX":0.21871087793963573,"handLRY":0.2226189086851196,"handLRZ":-0.37619612844923733};
 HAND_OVERRIDES["Cervical_Extension:low"] = {"handRX":3.299999999999998,"handRY":-4.8999999999999915,"handRZ":-3.7999999999999945,"handRRX":4.65,"handRRY":-1.4999999999999998,"handRRZ":0.30000000000000016,"handLX":3.399999999999996,"handLY":-4.749999999999992,"handLZ":-2.7499999999999982,"handLRX":5.551115123125783e-17,"handLRY":-1.2,"handLRZ":3.449999999999999};
-HAND_OVERRIDES["Capital_Flexion:high"] = {"handRX":2.3000000000000003,"handRY":-4.149999999999994,"handRZ":-2.1000000000000005,"handRRX":-5.551115123125783e-17,"handRRY":-2.5499999999999994,"handRRZ":-1.2,"handLX":1.3000000000000005,"handLY":-4.549999999999993,"handLZ":-4.099999999999993,"handLRX":0,"handLRY":0.3,"handLRZ":1.2};
+HAND_OVERRIDES["Cervical_Flexion:high"] = {"handRX":0.7984328107860896,"handRY":-4.20660783641249,"handRZ":-3.8144924081652487,"handRRX":-0.15,"handRRY":0.3,"handRRZ":-1.05,"handLX":1.4220504874828899,"handLY":-4.215783890408164,"handLZ":-3.6972291234390613,"handLRX":0.15,"handLRY":0.15,"handLRZ":0.9};
 HAND_OVERRIDES["Capital_Flexion:low"] = {"handRX":2.4366607096519464,"handRY":-5.134163299337729,"handRZ":-2.378371050121847,"handRRX":-2.0000166592430553,"handRRY":-0.7510895572089885,"handRRZ":-2.5574762811691976,"handLX":1.0596022397803093,"handLY":-4.8822640230731045,"handLZ":-4.135524403146678,"handLRX":-0.3,"handLRY":0.15,"handLRZ":0.15};
-HAND_OVERRIDES["Cervical_Flexion:high"] = {"handRX":1.5984328107860903,"handRY":-4.006607836412491,"handRZ":-3.8144924081652487,"handRRX":-0.15,"handRRY":0.3,"handRRZ":0.3,"handLX":0.37205048748288905,"handLY":-3.8157838904081656,"handLZ":-3.747229123439061,"handLRX":0.15,"handLRY":0.15,"handLRZ":-0.29999999999999993};
+HAND_OVERRIDES["Cervical_Flexion:high"] = {"handRX":1.5984328107860903,"handRY":-4.056607836412491,"handRZ":-3.8144924081652487,"handRRX":-0.15,"handRRY":0.3,"handRRZ":0,"handLX":0.37205048748288905,"handLY":-3.8157838904081656,"handLZ":-3.747229123439061,"handLRX":0.15,"handLRY":0.15,"handLRZ":-0.29999999999999993};
 HAND_OVERRIDES["Cervical_Flexion:low"] = {"handRX":2.3984328107860895,"handRY":-4.506607836412489,"handRZ":-1.814492408165255,"handRRX":3.149999999999999,"handRRY":-0.6,"handRRZ":2.6999999999999993,"handLX":1.1220504874828894,"handLY":-4.865783890408162,"handLZ":-4.19722912343906,"handLRX":-0.15,"handLRY":0.15000000000000005,"handLRZ":0.45000000000000007};
-HAND_OVERRIDES["Single_SCM:high"] = {"handRX":3.2835587966634714,"handRY":-5.025346688143354,"handRZ":-3.6887990472163033,"handRRX":-0.15000000000000005,"handRRY":-0.75,"handRRZ":-2.849999999999999,"handLX":1.9792747331228238,"handLY":-4.228476485371765,"handLZ":-3.8499999999999943,"handLRX":-0.15000000000000005,"handLRY":6.450000000000005,"handLRZ":6.600000000000005};
+HAND_OVERRIDES["Single_SCM:high"] = {"handRX":3.2835587966634714,"handRY":-4.825346688143314,"handRZ":-3.6887990472163033,"handRRX":-0.15000000000000005,"handRRY":-0.75,"handRRZ":-2.5499999999999994,"handLX":1.9792747331228238,"handLY":-4.228476485371765,"handLZ":-3.8499999999999943,"handLRX":-0.15000000000000005,"handLRY":6.450000000000005,"handLRZ":7.050000000000006};
 HAND_OVERRIDES["Single_SCM:low"] = {"handRX":2.29843281078609,"handRY":-4.506607836412489,"handRZ":-1.7644924081652549,"handRRX":3.149999999999999,"handRRY":-0.6,"handRRZ":2.6999999999999993,"handLX":1.1220504874828894,"handLY":-4.865783890408162,"handLZ":-4.19722912343906,"handLRX":-0.15,"handLRY":0.15000000000000005,"handLRZ":0.45000000000000007};
 HAND_OVERRIDES["Cervical_Rotation:high"] = {"handRX":3.3950177016911813,"handRY":-4.228815656717408,"handRZ":-3.154092946149615,"handRRX":0,"handRRY":-1.2,"handRRZ":-1.4999999999999998,"handLX":2.7287945899747084,"handLY":-4.97180437603087,"handLZ":-3.8761825812379165,"handLRX":-0.9,"handLRY":-0.9,"handLRZ":0.6};  
-HAND_OVERRIDES["Cervical_Rotation:low"] = {"handRX":1.952046370115527,"handRY":-2.84389916547042,"handRZ":-11.248623580618029,"handRRX":0.3,"handRRY":3.149999999999999,"handRRZ":-1.4999999999999998,"handLX":2.8066499482026206,"handLY":-3.1803327115407654,"handLZ":-11.747197366311715,"handLRX":0.3,"handLRY":-2.6999999999999993,"handLRZ":1.9499999999999997};
-
-/* ==== PT HAND POSITION  ==== */  
-HAND_OVERRIDES["Serratus_Anterior:high"] = {"handRX":-4.8231216104109045,"handRY":-2.5645979175212306,"handRZ":-1.2678077086865607,"handRRX":-0.15,"handRRY":1.6499999999999997,"handRRZ":-1.4999999999999998,"handLX":-3.0999999999999974,"handLY":-1.4000000000000012,"handLZ":0.4,"handLRX":-0.44999999999999996,"handLRY":-2.849999999999999,"handLRZ":0};
-HAND_OVERRIDES["Serratus_Anterior:low"] = {"handRX":-4.730918322541252,"handRY":-2.4582118677691165,"handRZ":-1.0168289573595006,"handRRX":-0.29999999999999993,"handRRY":-4.35,"handRRZ":-1.5,"handLX":-3.4850047527806503,"handLY":-1.9936748950897918,"handLZ":1.600000000000001,"handLRX":-0.15,"handLRY":-2.6999999999999993,"handLRZ":2.849999999999999};
-HAND_OVERRIDES["Upper_Trapezius:high"] = {"handRX":-2.7447470289301403,"handRY":-1.3468729829727544,"handRZ":-2.0711885106237538,"handRRX":0,"handRRY":0.3,"handRRZ":0.3,"handLX":-4.157766530551986,"handLY":-1.3082670501660842,"handLZ":-1.701231165381691,"handLRX":0,"handLRY":0.15,"handLRZ":-0.30000000000000004};  
-HAND_OVERRIDES["Upper_Trapezius:low"] = {"handRX":0.9160030553587553,"handRY":-3.7837524910419056,"handRZ":-2.142629473509569,"handRRX":-1.3499999999999999,"handRRY":1.9499999999999995,"handRRZ":1.05,"handLX":0.663478400509151,"handLY":-4.843696784342338,"handLZ":-1.9612793186350383,"handLRX":0.15,"handLRY":2.0999999999999996,"handLRZ":-3.149999999999999};
-HAND_OVERRIDES["Middle_Trapezius:high"] = {"handRX":0.6610771261365713,"handRY":-3.9808042099891257,"handRZ":-2.5880059617717843,"handRRX":5.551115123125783e-17,"handRRY":1.7999999999999996,"handRRZ":-0.44999999999999996,"handLX":1.9179248050696196,"handLY":-4.243165038669331,"handLZ":-0.10470036515740098,"handLRX":-3.1597823134433782,"handLRY":0.8655047268847083,"handLRZ":3.630611340262021};
-HAND_OVERRIDES["Middle_Trapezius:low"] = {"handRX":0.8292723103009485,"handRY":-5.132589372586637,"handRZ":-1.7573885870445916,"handRRX":-1.972533568714105,"handRRY":1.269039869494415,"handRRZ":-1.3312992631540388,"handLX":0.7563218845978337,"handLY":-3.55439493842373,"handLZ":-1.9846578020627061,"handLRX":1.8765562731512637,"handLRY":0.9923982488377865,"handLRZ":-1.8854240595854568};  
-
-  
+HAND_OVERRIDES["Cervical_Rotation:low"] = {"handRX":2.002046370115527,"handRY":-2.8738991654704167,"handRZ":-11.248623580618029,"handRRX":0.3,"handRRY":3.149999999999999,"handRRZ":-1.6499999999999997,"handLX":2.8066499482026206,"handLY":-3.1803327115407654,"handLZ":-11.747197366311715,"handLRX":0.3,"handLRY":-2.6999999999999993,"handLRZ":1.9499999999999997};  
   
 /* ==== NEUTRAL HAND POSITION (New Default) ==== */
 const HAND_NEUTRAL_POSE = {
@@ -1415,54 +1317,56 @@ function applyGlobalPF(){
   if (footR) footR.rotateX(-r);
 }
 
-// A comprehensive list of all bones that can be manually tuned/overridden (NEW GLOBAL LIST)
-const ALL_TUNABLE_BONES = [
-  "spine01", "spine02", "spine03", "neck", "head", "breast_L", "breast_R", // Corrected case for breast
-  "clavicle_L", "upperarm_L", "upperarm_twist_L", "lowerarm_L", "lowerarm_twist_L",
-  "hand_L", "thumb01_L", "thumb02_L", "thumb03_L",
-  "index00_L", "index01_L", "index02_L", "index03_L",
-  "middle00_L", "middle01_L", "middle02_L", "middle03_L",
-  "ring00_L", "ring01_L", "ring02_L", "ring03_L",
-  "pinky00_L", "pinky01_L", "pinky02_L", "pinky03_L",
-  "clavicle_R", "upperarm_R", "upperarm_twist_R", "lowerarm_R", "lowerarm_twist_R",
-  "hand_R", "thumb01_R", "thumb02_R", "thumb03_R",
-  "index00_R", "index01_R", "index02_R", "index03_R",
-  "middle00_R", "middle01_R", "middle02_R", "middle03_R",
-  "ring00_R", "ring01_R", "ring02_R", "ring03_R",
-  "pinky00_R", "pinky01_R", "pinky02_R", "pinky03_R",
-  "thigh_L", "thigh_twist_L", "calf_L", "calf_twist_L", "foot_L", "toes_L",
-  "thigh_R", "thigh_twist_R", "calf_R", "calf_twist_R", "foot_R", "toes_R"
-];
-
-/**
- * Applies all stored bone rotations from the pose override object 'o'.
- * This uses the dynamic list and the generic setDegAxis helper.
- */
 function applyLimbOverridesFromOverride(o){
   if (!o || !skeleton) return;
   const get = (n)=> skeleton.bones.find(b => b.name === n);
   const rad = THREE.MathUtils.degToRad;
 
-  // Apply rotations for all tunable bones based on saved overrides (e.g., o.clavicle_lX)
-  ALL_TUNABLE_BONES.forEach(boneName => {
-    const bone = get(boneName);
-    if (!bone) return;
-    
-    // Check for X, Y, Z rotation overrides (e.g., o["clavicle_LX"])
-    ['X', 'Y', 'Z'].forEach(axis => {
-      const key = `${boneName}${axis}`;
-      if (o[key] !== undefined) {
-        // Use setDegAxis to reset the bone and apply the override angle (in degrees)
-        setDegAxis(bone, axis.toLowerCase(), o[key]);
-      }
-    });
-  });
+  const thighL = get("thigh_L");
+  const thighR = get("thigh_R");
+  const calfL  = get("calf_L");
+  const calfR  = get("calf_R");
   
-  // Re-apply specific side-lying overrides which are separate from general bone overrides
-  if (o.footInvR !== undefined) setDegAxis(get("foot_R"), "z", o.footInvR);
-  if (o.footEvL !== undefined) setDegAxis(get("foot_L"), "z", o.footEvL);
-  if (o.neckLatL !== undefined) setDegAxis(get("neck"), "z", o.neckLatL);
-}
+  // Thigh L: X, Y, Z
+  if (thighL){
+    if (o.thighLX !== undefined) thighL.rotateX(rad(o.thighLX));
+    if (o.thighLY !== undefined) thighL.rotateY(rad(o.thighLY));
+    if (o.thighLZ !== undefined) thighL.rotateZ(rad(o.thighLZ));
+  }
+
+  // Thigh R: X, Y, Z
+  if (thighR){
+    if (o.thighRX !== undefined) thighR.rotateX(rad(o.thighRX));
+    if (o.thighRY !== undefined) thighR.rotateY(rad(o.thighRY));
+    if (o.thighRZ !== undefined) thighR.rotateZ(rad(o.thighRZ));
+  }
+
+  // Calf L: X, Z
+  if (calfL){
+    if (o.calfLX !== undefined) calfL.rotateX(rad(o.calfLX));
+    if (o.calfLZ !== undefined) calfL.rotateZ(rad(o.calfLZ));
+  }
+
+  // Calf R: X, Z
+  if (calfR){
+    if (o.calfRX !== undefined) calfR.rotateX(rad(o.calfRX));
+    if (o.calfRZ !== undefined) calfR.rotateZ(rad(o.calfRZ));
+  }
+  // Spine (trunk) — X, Y, Z for "spine01"
+  const spine = get("spine01");
+  if (spine){
+    if (o.spineX !== undefined) spine.rotateX(rad(o.spineX));
+    if (o.spineY !== undefined) spine.rotateY(rad(o.spineY));
+    if (o.spineZ !== undefined) spine.rotateZ(rad(o.spineZ));
+  }  
+// --- START: Requested Manual Override for "head" bone ---
+  const head = get("head");
+  if (head){
+    if (o.headX !== undefined) head.rotateX(rad(o.headX));
+    if (o.headY !== undefined) head.rotateY(rad(o.headY));
+    if (o.headZ !== undefined) head.rotateZ(rad(o.headZ));
+  }
+}  
 
 // Coarse body-mode: align to bed/cabinet but don't set specific joint test angles
 function setBodyMode(mode, isResistanceActive = false){ // <-- ADDED isResistanceActive = false
@@ -1659,463 +1563,54 @@ if (!HAND_OVERRIDES[key] && poseToApply) {
     }
  }
 
-// Optional full-body fine-tune rotations (shortcut from POSE_OVERRIDES)
-if (key && POSE_OVERRIDES[key] && skeleton){
-  const o = POSE_OVERRIDES[key];
 
-  // --- SPINE / NECK / HEAD ---
-  const spine01 = getBone("spine01");
-  const spine02 = getBone("spine02");
-  const spine03 = getBone("spine03");
-  const neck    = getBone("neck");
-  const head    = getBone("head");
+  // Optional arm/hand fine-tune rotations (shortcut from POSE_OVERRIDES) 
+  if (key && POSE_OVERRIDES[key] && skeleton){
+    const o = POSE_OVERRIDES[key];
 
-  if (spine01){
-    if (typeof o.spine01X === "number") spine01.rotateX(degToRad(o.spine01X));
-    if (typeof o.spine01Y === "number") spine01.rotateY(degToRad(o.spine01Y));
-    if (typeof o.spine01Z === "number") spine01.rotateZ(degToRad(o.spine01Z));
-  }
-  if (spine02){
-    if (typeof o.spine02X === "number") spine02.rotateX(degToRad(o.spine02X));
-    if (typeof o.spine02Y === "number") spine02.rotateY(degToRad(o.spine02Y));
-    if (typeof o.spine02Z === "number") spine02.rotateZ(degToRad(o.spine02Z));
-  }
-  if (spine03){
-    if (typeof o.spine03X === "number") spine03.rotateX(degToRad(o.spine03X));
-    if (typeof o.spine03Y === "number") spine03.rotateY(degToRad(o.spine03Y));
-    if (typeof o.spine03Z === "number") spine03.rotateZ(degToRad(o.spine03Z));
-  }
-  if (neck){
-    if (typeof o.neckX === "number") neck.rotateX(degToRad(o.neckX));
-    if (typeof o.neckY === "number") neck.rotateY(degToRad(o.neckY));
-    if (typeof o.neckZ === "number") neck.rotateZ(degToRad(o.neckZ));
-  }
+    const laL   = getBone("lowerarm_L");
+    const laR   = getBone("lowerarm_R");
+    const uaL   = getBone("upperarm_L");
+    const uaR   = getBone("upperarm_R");
+    const handL = getBone("hand_L");
+    const handR = getBone("hand_R");
 
-  // --- BREASTS ---
-  const breastL = getBone("breast_L");
-  const breastR = getBone("breast_R");
-  if (breastL){
-    if (typeof o.breastLX === "number") breastL.rotateX(degToRad(o.breastLX));
-    if (typeof o.breastLY === "number") breastL.rotateY(degToRad(o.breastLY));
-    if (typeof o.breastLZ === "number") breastL.rotateZ(degToRad(o.breastLZ));
-  }
-  if (breastR){
-    if (typeof o.breastRX === "number") breastR.rotateX(degToRad(o.breastRX));
-    if (typeof o.breastRY === "number") breastR.rotateY(degToRad(o.breastRY));
-    if (typeof o.breastRZ === "number") breastR.rotateZ(degToRad(o.breastRZ));
-  }
+    // LOWER ARMS (L/R) — X, Y, Z
+    if (laL){
+      if (typeof o.lowerArmLX === "number") laL.rotateX(degToRad(o.lowerArmLX));
+      if (typeof o.lowerArmLY === "number") laL.rotateY(degToRad(o.lowerArmLY));
+      if (typeof o.lowerArmLZ === "number") laL.rotateZ(degToRad(o.lowerArmLZ));
+    }
+    if (laR){
+      if (typeof o.lowerArmRX === "number") laR.rotateX(degToRad(o.lowerArmRX));
+      if (typeof o.lowerArmRY === "number") laR.rotateY(degToRad(o.lowerArmRY));
+      if (typeof o.lowerArmRZ === "number") laR.rotateZ(degToRad(o.lowerArmRZ));
+    }
 
-  // --- CLAVICLES (L/R) ---
-  const clavL = getBone("clavicle_L");
-  const clavR = getBone("clavicle_R");
-  if (clavL){
-    if (typeof o.clavicleLX === "number") clavL.rotateX(degToRad(o.clavicleLX));
-    if (typeof o.clavicleLY === "number") clavL.rotateY(degToRad(o.clavicleLY));
-    if (typeof o.clavicleLZ === "number") clavL.rotateZ(degToRad(o.clavicleLZ));
-  }
-  if (clavR){
-    if (typeof o.clavicleRX === "number") clavR.rotateX(degToRad(o.clavicleRX));
-    if (typeof o.clavicleRY === "number") clavR.rotateY(degToRad(o.clavicleRY));
-    if (typeof o.clavicleRZ === "number") clavR.rotateZ(degToRad(o.clavicleRZ));
-  }
+    // UPPER ARMS (L/R) — X, Y, Z
+    if (uaL){
+      if (typeof o.upperArmLX === "number") uaL.rotateX(degToRad(o.upperArmLX));
+      if (typeof o.upperArmLY === "number") uaL.rotateY(degToRad(o.upperArmLY));
+      if (typeof o.upperArmLZ === "number") uaL.rotateZ(degToRad(o.upperArmLZ));
+    }
+    if (uaR){
+      if (typeof o.upperArmRX === "number") uaR.rotateX(degToRad(o.upperArmRX));
+      if (typeof o.upperArmRY === "number") uaR.rotateY(degToRad(o.upperArmRY));
+      if (typeof o.upperArmRZ === "number") uaR.rotateZ(degToRad(o.upperArmRZ));
+    }
 
-  // --- UPPER ARMS (L/R) ---
-  const uaL   = getBone("upperarm_L");
-  const uaR   = getBone("upperarm_R");
-  const uaTwL = getBone("upperarm_twist_L");
-  const uaTwR = getBone("upperarm_twist_R");
-
-  if (uaL){
-    if (typeof o.upperArmLX === "number") uaL.rotateX(degToRad(o.upperArmLX));
-    if (typeof o.upperArmLY === "number") uaL.rotateY(degToRad(o.upperArmLY));
-    if (typeof o.upperArmLZ === "number") uaL.rotateZ(degToRad(o.upperArmLZ));
+    // HANDS (L/R) — X, Y, Z
+    if (handL){
+      if (typeof o.handLX === "number") handL.rotateX(degToRad(o.handLX));
+      if (typeof o.handLY === "number") handL.rotateY(degToRad(o.handLY));
+      if (typeof o.handLZ === "number") handL.rotateZ(degToRad(o.handLZ));
+    }
+    if (handR){
+      if (typeof o.handRX === "number") handR.rotateX(degToRad(o.handRX));
+      if (typeof o.handRY === "number") handR.rotateY(degToRad(o.handRY));
+      if (typeof o.handRZ === "number") handR.rotateZ(degToRad(o.handRZ));
+    }
   }
-  if (uaR){
-    if (typeof o.upperArmRX === "number") uaR.rotateX(degToRad(o.upperArmRX));
-    if (typeof o.upperArmRY === "number") uaR.rotateY(degToRad(o.upperArmRY));
-    if (typeof o.upperArmRZ === "number") uaR.rotateZ(degToRad(o.upperArmRZ));
-  }
-  if (uaTwL){
-    if (typeof o.upperArmTwistLX === "number") uaTwL.rotateX(degToRad(o.upperArmTwistLX));
-    if (typeof o.upperArmTwistLY === "number") uaTwL.rotateY(degToRad(o.upperArmTwistLY));
-    if (typeof o.upperArmTwistLZ === "number") uaTwL.rotateZ(degToRad(o.upperArmTwistLZ));
-  }
-  if (uaTwR){
-    if (typeof o.upperArmTwistRX === "number") uaTwR.rotateX(degToRad(o.upperArmTwistRX));
-    if (typeof o.upperArmTwistRY === "number") uaTwR.rotateY(degToRad(o.upperArmTwistRY));
-    if (typeof o.upperArmTwistRZ === "number") uaTwR.rotateZ(degToRad(o.upperArmTwistRZ));
-  }
-
-  // --- LOWER ARMS (L/R) ---
-  const laL   = getBone("lowerarm_L");
-  const laR   = getBone("lowerarm_R");
-  const laTwL = getBone("lowerarm_twist_L");
-  const laTwR = getBone("lowerarm_twist_R");
-
-  if (laL){
-    if (typeof o.lowerArmLX === "number") laL.rotateX(degToRad(o.lowerArmLX));
-    if (typeof o.lowerArmLY === "number") laL.rotateY(degToRad(o.lowerArmLY));
-    if (typeof o.lowerArmLZ === "number") laL.rotateZ(degToRad(o.lowerArmLZ));
-  }
-  if (laR){
-    if (typeof o.lowerArmRX === "number") laR.rotateX(degToRad(o.lowerArmRX));
-    if (typeof o.lowerArmRY === "number") laR.rotateY(degToRad(o.lowerArmRY));
-    if (typeof o.lowerArmRZ === "number") laR.rotateZ(degToRad(o.lowerArmRZ));
-  }
-  if (laTwL){
-    if (typeof o.lowerArmTwistLX === "number") laTwL.rotateX(degToRad(o.lowerArmTwistLX));
-    if (typeof o.lowerArmTwistLY === "number") laTwL.rotateY(degToRad(o.lowerArmTwistLY));
-    if (typeof o.lowerArmTwistLZ === "number") laTwL.rotateZ(degToRad(o.lowerArmTwistLZ));
-  }
-  if (laTwR){
-    if (typeof o.lowerArmTwistRX === "number") laTwR.rotateX(degToRad(o.lowerArmTwistRX));
-    if (typeof o.lowerArmTwistRY === "number") laTwR.rotateY(degToRad(o.lowerArmTwistRY));
-    if (typeof o.lowerArmTwistRZ === "number") laTwR.rotateZ(degToRad(o.lowerArmTwistRZ));
-  }
-
-  // --- HANDS (L/R) ---
-  const handL = getBone("hand_L");
-  const handR = getBone("hand_R");
-  if (handL){
-    if (typeof o.handLX === "number") handL.rotateX(degToRad(o.handLX));
-    if (typeof o.handLY === "number") handL.rotateY(degToRad(o.handLY));
-    if (typeof o.handLZ === "number") handL.rotateZ(degToRad(o.handLZ));
-  }
-  if (handR){
-    if (typeof o.handRX === "number") handR.rotateX(degToRad(o.handRX));
-    if (typeof o.handRY === "number") handR.rotateY(degToRad(o.handRY));
-    if (typeof o.handRZ === "number") handR.rotateZ(degToRad(o.handRZ));
-  }
-
-  // --- THUMBS (L/R) ---
-  const thumb01L = getBone("thumb01_L");
-  const thumb02L = getBone("thumb02_L");
-  const thumb03L = getBone("thumb03_L");
-  const thumb01R = getBone("thumb01_R");
-  const thumb02R = getBone("thumb02_R");
-  const thumb03R = getBone("thumb03_R");
-
-  if (thumb01L){
-    if (typeof o.thumb01LX === "number") thumb01L.rotateX(degToRad(o.thumb01LX));
-    if (typeof o.thumb01LY === "number") thumb01L.rotateY(degToRad(o.thumb01LY));
-    if (typeof o.thumb01LZ === "number") thumb01L.rotateZ(degToRad(o.thumb01LZ));
-  }
-  if (thumb02L){
-    if (typeof o.thumb02LX === "number") thumb02L.rotateX(degToRad(o.thumb02LX));
-    if (typeof o.thumb02LY === "number") thumb02L.rotateY(degToRad(o.thumb02LY));
-    if (typeof o.thumb02LZ === "number") thumb02L.rotateZ(degToRad(o.thumb02LZ));
-  }
-  if (thumb03L){
-    if (typeof o.thumb03LX === "number") thumb03L.rotateX(degToRad(o.thumb03LX));
-    if (typeof o.thumb03LY === "number") thumb03L.rotateY(degToRad(o.thumb03LY));
-    if (typeof o.thumb03LZ === "number") thumb03L.rotateZ(degToRad(o.thumb03LZ));
-  }
-
-  if (thumb01R){
-    if (typeof o.thumb01RX === "number") thumb01R.rotateX(degToRad(o.thumb01RX));
-    if (typeof o.thumb01RY === "number") thumb01R.rotateY(degToRad(o.thumb01RY));
-    if (typeof o.thumb01RZ === "number") thumb01R.rotateZ(degToRad(o.thumb01RZ));
-  }
-  if (thumb02R){
-    if (typeof o.thumb02RX === "number") thumb02R.rotateX(degToRad(o.thumb02RX));
-    if (typeof o.thumb02RY === "number") thumb02R.rotateY(degToRad(o.thumb02RY));
-    if (typeof o.thumb02RZ === "number") thumb02R.rotateZ(degToRad(o.thumb02RZ));
-  }
-  if (thumb03R){
-    if (typeof o.thumb03RX === "number") thumb03R.rotateX(degToRad(o.thumb03RX));
-    if (typeof o.thumb03RY === "number") thumb03R.rotateY(degToRad(o.thumb03RY));
-    if (typeof o.thumb03RZ === "number") thumb03R.rotateZ(degToRad(o.thumb03RZ));
-  }
-
-  // --- INDEX FINGERS (L/R) ---
-  const index00L = getBone("index00_L");
-  const index01L = getBone("index01_L");
-  const index02L = getBone("index02_L");
-  const index03L = getBone("index03_L");
-  const index00R = getBone("index00_R");
-  const index01R = getBone("index01_R");
-  const index02R = getBone("index02_R");
-  const index03R = getBone("index03_R");
-
-  if (index00L){
-    if (typeof o.index00LX === "number") index00L.rotateX(degToRad(o.index00LX));
-    if (typeof o.index00LY === "number") index00L.rotateY(degToRad(o.index00LY));
-    if (typeof o.index00LZ === "number") index00L.rotateZ(degToRad(o.index00LZ));
-  }
-  if (index01L){
-    if (typeof o.index01LX === "number") index01L.rotateX(degToRad(o.index01LX));
-    if (typeof o.index01LY === "number") index01L.rotateY(degToRad(o.index01LY));
-    if (typeof o.index01LZ === "number") index01L.rotateZ(degToRad(o.index01LZ));
-  }
-  if (index02L){
-    if (typeof o.index02LX === "number") index02L.rotateX(degToRad(o.index02LX));
-    if (typeof o.index02LY === "number") index02L.rotateY(degToRad(o.index02LY));
-    if (typeof o.index02LZ === "number") index02L.rotateZ(degToRad(o.index02LZ));
-  }
-  if (index03L){
-    if (typeof o.index03LX === "number") index03L.rotateX(degToRad(o.index03LX));
-    if (typeof o.index03LY === "number") index03L.rotateY(degToRad(o.index03LY));
-    if (typeof o.index03LZ === "number") index03L.rotateZ(degToRad(o.index03LZ));
-  }
-
-  if (index00R){
-    if (typeof o.index00RX === "number") index00R.rotateX(degToRad(o.index00RX));
-    if (typeof o.index00RY === "number") index00R.rotateY(degToRad(o.index00RY));
-    if (typeof o.index00RZ === "number") index00R.rotateZ(degToRad(o.index00RZ));
-  }
-  if (index01R){
-    if (typeof o.index01RX === "number") index01R.rotateX(degToRad(o.index01RX));
-    if (typeof o.index01RY === "number") index01R.rotateY(degToRad(o.index01RY));
-    if (typeof o.index01RZ === "number") index01R.rotateZ(degToRad(o.index01RZ));
-  }
-  if (index02R){
-    if (typeof o.index02RX === "number") index02R.rotateX(degToRad(o.index02RX));
-    if (typeof o.index02RY === "number") index02R.rotateY(degToRad(o.index02RY));
-    if (typeof o.index02RZ === "number") index02R.rotateZ(degToRad(o.index02RZ));
-  }
-  if (index03R){
-    if (typeof o.index03RX === "number") index03R.rotateX(degToRad(o.index03RX));
-    if (typeof o.index03RY === "number") index03R.rotateY(degToRad(o.index03RY));
-    if (typeof o.index03RZ === "number") index03R.rotateZ(degToRad(o.index03RZ));
-  }
-
-  // --- MIDDLE FINGERS (L/R) ---
-  const middle00L = getBone("middle00_L");
-  const middle01L = getBone("middle01_L");
-  const middle02L = getBone("middle02_L");
-  const middle03L = getBone("middle03_L");
-  const middle00R = getBone("middle00_R");
-  const middle01R = getBone("middle01_R");
-  const middle02R = getBone("middle02_R");
-  const middle03R = getBone("middle03_R");
-
-  if (middle00L){
-    if (typeof o.middle00LX === "number") middle00L.rotateX(degToRad(o.middle00LX));
-    if (typeof o.middle00LY === "number") middle00L.rotateY(degToRad(o.middle00LY));
-    if (typeof o.middle00LZ === "number") middle00L.rotateZ(degToRad(o.middle00LZ));
-  }
-  if (middle01L){
-    if (typeof o.middle01LX === "number") middle01L.rotateX(degToRad(o.middle01LX));
-    if (typeof o.middle01LY === "number") middle01L.rotateY(degToRad(o.middle01LY));
-    if (typeof o.middle01LZ === "number") middle01L.rotateZ(degToRad(o.middle01LZ));
-  }
-  if (middle02L){
-    if (typeof o.middle02LX === "number") middle02L.rotateX(degToRad(o.middle02LX));
-    if (typeof o.middle02LY === "number") middle02L.rotateY(degToRad(o.middle02LY));
-    if (typeof o.middle02LZ === "number") middle02L.rotateZ(degToRad(o.middle02LZ));
-  }
-  if (middle03L){
-    if (typeof o.middle03LX === "number") middle03L.rotateX(degToRad(o.middle03LX));
-    if (typeof o.middle03LY === "number") middle03L.rotateY(degToRad(o.middle03LY));
-    if (typeof o.middle03LZ === "number") middle03L.rotateZ(degToRad(o.middle03LZ));
-  }
-
-  if (middle00R){
-    if (typeof o.middle00RX === "number") middle00R.rotateX(degToRad(o.middle00RX));
-    if (typeof o.middle00RY === "number") middle00R.rotateY(degToRad(o.middle00RY));
-    if (typeof o.middle00RZ === "number") middle00R.rotateZ(degToRad(o.middle00RZ));
-  }
-  if (middle01R){
-    if (typeof o.middle01RX === "number") middle01R.rotateX(degToRad(o.middle01RX));
-    if (typeof o.middle01RY === "number") middle01R.rotateY(degToRad(o.middle01RY));
-    if (typeof o.middle01RZ === "number") middle01R.rotateZ(degToRad(o.middle01RZ));
-  }
-  if (middle02R){
-    if (typeof o.middle02RX === "number") middle02R.rotateX(degToRad(o.middle02RX));
-    if (typeof o.middle02RY === "number") middle02R.rotateY(degToRad(o.middle02RY));
-    if (typeof o.middle02RZ === "number") middle02R.rotateZ(degToRad(o.middle02RZ));
-  }
-  if (middle03R){
-    if (typeof o.middle03RX === "number") middle03R.rotateX(degToRad(o.middle03RX));
-    if (typeof o.middle03RY === "number") middle03R.rotateY(degToRad(o.middle03RY));
-    if (typeof o.middle03RZ === "number") middle03R.rotateZ(degToRad(o.middle03RZ));
-  }
-
-  // --- RING FINGERS (L/R) ---
-  const ring00L = getBone("ring00_L");
-  const ring01L = getBone("ring01_L");
-  const ring02L = getBone("ring02_L");
-  const ring03L = getBone("ring03_L");
-  const ring00R = getBone("ring00_R");
-  const ring01R = getBone("ring01_R");
-  const ring02R = getBone("ring02_R");
-  const ring03R = getBone("ring03_R");
-
-  if (ring00L){
-    if (typeof o.ring00LX === "number") ring00L.rotateX(degToRad(o.ring00LX));
-    if (typeof o.ring00LY === "number") ring00L.rotateY(degToRad(o.ring00LY));
-    if (typeof o.ring00LZ === "number") ring00L.rotateZ(degToRad(o.ring00LZ));
-  }
-  if (ring01L){
-    if (typeof o.ring01LX === "number") ring01L.rotateX(degToRad(o.ring01LX));
-    if (typeof o.ring01LY === "number") ring01L.rotateY(degToRad(o.ring01LY));
-    if (typeof o.ring01LZ === "number") ring01L.rotateZ(degToRad(o.ring01LZ));
-  }
-  if (ring02L){
-    if (typeof o.ring02LX === "number") ring02L.rotateX(degToRad(o.ring02LX));
-    if (typeof o.ring02LY === "number") ring02L.rotateY(degToRad(o.ring02LY));
-    if (typeof o.ring02LZ === "number") ring02L.rotateZ(degToRad(o.ring02LZ));
-  }
-  if (ring03L){
-    if (typeof o.ring03LX === "number") ring03L.rotateX(degToRad(o.ring03LX));
-    if (typeof o.ring03LY === "number") ring03L.rotateY(degToRad(o.ring03LY));
-    if (typeof o.ring03LZ === "number") ring03L.rotateZ(degToRad(o.ring03LZ));
-  }
-
-  if (ring00R){
-    if (typeof o.ring00RX === "number") ring00R.rotateX(degToRad(o.ring00RX));
-    if (typeof o.ring00RY === "number") ring00R.rotateY(degToRad(o.ring00RY));
-    if (typeof o.ring00RZ === "number") ring00R.rotateZ(degToRad(o.ring00RZ));
-  }
-  if (ring01R){
-    if (typeof o.ring01RX === "number") ring01R.rotateX(degToRad(o.ring01RX));
-    if (typeof o.ring01RY === "number") ring01R.rotateY(degToRad(o.ring01RY));
-    if (typeof o.ring01RZ === "number") ring01R.rotateZ(degToRad(o.ring01RZ));
-  }
-  if (ring02R){
-    if (typeof o.ring02RX === "number") ring02R.rotateX(degToRad(o.ring02RX));
-    if (typeof o.ring02RY === "number") ring02R.rotateY(degToRad(o.ring02RY));
-    if (typeof o.ring02RZ === "number") ring02R.rotateZ(degToRad(o.ring02RZ));
-  }
-  if (ring03R){
-    if (typeof o.ring03RX === "number") ring03R.rotateX(degToRad(o.ring03RX));
-    if (typeof o.ring03RY === "number") ring03R.rotateY(degToRad(o.ring03RY));
-    if (typeof o.ring03RZ === "number") ring03R.rotateZ(degToRad(o.ring03RZ));
-  }
-
-  // --- PINKY FINGERS (L/R) ---
-  const pinky00L = getBone("pinky00_L");
-  const pinky01L = getBone("pinky01_L");
-  const pinky02L = getBone("pinky02_L");
-  const pinky03L = getBone("pinky03_L");
-  const pinky00R = getBone("pinky00_R");
-  const pinky01R = getBone("pinky01_R");
-  const pinky02R = getBone("pinky02_R");
-  const pinky03R = getBone("pinky03_R");
-
-  if (pinky00L){
-    if (typeof o.pinky00LX === "number") pinky00L.rotateX(degToRad(o.pinky00LX));
-    if (typeof o.pinky00LY === "number") pinky00L.rotateY(degToRad(o.pinky00LY));
-    if (typeof o.pinky00LZ === "number") pinky00L.rotateZ(degToRad(o.pinky00LZ));
-  }
-  if (pinky01L){
-    if (typeof o.pinky01LX === "number") pinky01L.rotateX(degToRad(o.pinky01LX));
-    if (typeof o.pinky01LY === "number") pinky01L.rotateY(degToRad(o.pinky01LY));
-    if (typeof o.pinky01LZ === "number") pinky01L.rotateZ(degToRad(o.pinky01LZ));
-  }
-  if (pinky02L){
-    if (typeof o.pinky02LX === "number") pinky02L.rotateX(degToRad(o.pinky02LX));
-    if (typeof o.pinky02LY === "number") pinky02L.rotateY(degToRad(o.pinky02LY));
-    if (typeof o.pinky02LZ === "number") pinky02L.rotateZ(degToRad(o.pinky02LZ));
-  }
-  if (pinky03L){
-    if (typeof o.pinky03LX === "number") pinky03L.rotateX(degToRad(o.pinky03LX));
-    if (typeof o.pinky03LY === "number") pinky03L.rotateY(degToRad(o.pinky03LY));
-    if (typeof o.pinky03LZ === "number") pinky03L.rotateZ(degToRad(o.pinky03LZ));
-  }
-
-  if (pinky00R){
-    if (typeof o.pinky00RX === "number") pinky00R.rotateX(degToRad(o.pinky00RX));
-    if (typeof o.pinky00RY === "number") pinky00R.rotateY(degToRad(o.pinky00RY));
-    if (typeof o.pinky00RZ === "number") pinky00R.rotateZ(degToRad(o.pinky00RZ));
-  }
-  if (pinky01R){
-    if (typeof o.pinky01RX === "number") pinky01R.rotateX(degToRad(o.pinky01RX));
-    if (typeof o.pinky01RY === "number") pinky01R.rotateY(degToRad(o.pinky01RY));
-    if (typeof o.pinky01RZ === "number") pinky01R.rotateZ(degToRad(o.pinky01RZ));
-  }
-  if (pinky02R){
-    if (typeof o.pinky02RX === "number") pinky02R.rotateX(degToRad(o.pinky02RX));
-    if (typeof o.pinky02RY === "number") pinky02R.rotateY(degToRad(o.pinky02RY));
-    if (typeof o.pinky02RZ === "number") pinky02R.rotateZ(degToRad(o.pinky02RZ));
-  }
-  if (pinky03R){
-    if (typeof o.pinky03RX === "number") pinky03R.rotateX(degToRad(o.pinky03RX));
-    if (typeof o.pinky03RY === "number") pinky03R.rotateY(degToRad(o.pinky03RY));
-    if (typeof o.pinky03RZ === "number") pinky03R.rotateZ(degToRad(o.pinky03RZ));
-  }
-
-
-  // --- LEGS / FEET / TOES (L/R) ---
-  const thighL      = getBone("thigh_L");
-  const thighR      = getBone("thigh_R");
-  const thighTwL    = getBone("thigh_twist_L");
-  const thighTwR    = getBone("thigh_twist_R");
-  const calfL       = getBone("calf_L");
-  const calfR       = getBone("calf_R");
-  const calfTwL     = getBone("calf_twist_L");
-  const calfTwR     = getBone("calf_twist_R");
-  const footL       = getBone("foot_L");
-  const footR       = getBone("foot_R");
-  const toesL       = getBone("toes_L");
-  const toesR       = getBone("toes_R");
-
-  if (thighL){
-    if (typeof o.thighLX === "number") thighL.rotateX(degToRad(o.thighLX));
-    if (typeof o.thighLY === "number") thighL.rotateY(degToRad(o.thighLY));
-    if (typeof o.thighLZ === "number") thighL.rotateZ(degToRad(o.thighLZ));
-  }
-  if (thighR){
-    if (typeof o.thighRX === "number") thighR.rotateX(degToRad(o.thighRX));
-    if (typeof o.thighRY === "number") thighR.rotateY(degToRad(o.thighRY));
-    if (typeof o.thighRZ === "number") thighR.rotateZ(degToRad(o.thighRZ));
-  }
-  if (thighTwL){
-    if (typeof o.thighTwistLX === "number") thighTwL.rotateX(degToRad(o.thighTwistLX));
-    if (typeof o.thighTwistLY === "number") thighTwL.rotateY(degToRad(o.thighTwistLY));
-    if (typeof o.thighTwistLZ === "number") thighTwL.rotateZ(degToRad(o.thighTwistLZ));
-  }
-  if (thighTwR){
-    if (typeof o.thighTwistRX === "number") thighTwR.rotateX(degToRad(o.thighTwistRX));
-    if (typeof o.thighTwistRY === "number") thighTwR.rotateY(degToRad(o.thighTwistRY));
-    if (typeof o.thighTwistRZ === "number") thighTwR.rotateZ(degToRad(o.thighTwistRZ));
-  }
-
-  if (calfL){
-    if (typeof o.calfLX === "number") calfL.rotateX(degToRad(o.calfLX));
-    if (typeof o.calfLY === "number") calfL.rotateY(degToRad(o.calfLY));
-    if (typeof o.calfLZ === "number") calfL.rotateZ(degToRad(o.calfLZ));
-  }
-  if (calfR){
-    if (typeof o.calfRX === "number") calfR.rotateX(degToRad(o.calfRX));
-    if (typeof o.calfRY === "number") calfR.rotateY(degToRad(o.calfRY));
-    if (typeof o.calfRZ === "number") calfR.rotateZ(degToRad(o.calfRZ));
-  }
-  if (calfTwL){
-    if (typeof o.calfTwistLX === "number") calfTwL.rotateX(degToRad(o.calfTwistLX));
-    if (typeof o.calfTwistLY === "number") calfTwL.rotateY(degToRad(o.calfTwistLY));
-    if (typeof o.calfTwistLZ === "number") calfTwL.rotateZ(degToRad(o.calfTwistLZ));
-  }
-  if (calfTwR){
-    if (typeof o.calfTwistRX === "number") calfTwR.rotateX(degToRad(o.calfTwistRX));
-    if (typeof o.calfTwistRY === "number") calfTwR.rotateY(degToRad(o.calfTwistRY));
-    if (typeof o.calfTwistRZ === "number") calfTwR.rotateZ(degToRad(o.calfTwistRZ));
-  }
-
-  if (footL){
-    if (typeof o.footLX === "number") footL.rotateX(degToRad(o.footLX));
-    if (typeof o.footLY === "number") footL.rotateY(degToRad(o.footLY));
-    if (typeof o.footLZ === "number") footL.rotateZ(degToRad(o.footLZ));
-  }
-  if (footR){
-    if (typeof o.footRX === "number") footR.rotateX(degToRad(o.footRX));
-    if (typeof o.footRY === "number") footR.rotateY(degToRad(o.footRY));
-    if (typeof o.footRZ === "number") footR.rotateZ(degToRad(o.footRZ));
-  }
-
-  if (toesL){
-    if (typeof o.toesLX === "number") toesL.rotateX(degToRad(o.toesLX));
-    if (typeof o.toesLY === "number") toesL.rotateY(degToRad(o.toesLY));
-    if (typeof o.toesLZ === "number") toesL.rotateZ(degToRad(o.toesLZ));
-  }
-  if (toesR){
-    if (typeof o.toesRX === "number") toesR.rotateX(degToRad(o.toesRX));
-    if (typeof o.toesRY === "number") toesR.rotateY(degToRad(o.toesRY));
-    if (typeof o.toesRZ === "number") toesR.rotateZ(degToRad(o.toesRZ));
-  }
-}
-
-
 
   // If this test is using side-lying, also snap arms/legs to side-lying baseline
   if (mode === "side_lying"){
@@ -2635,30 +2130,15 @@ toggleHandsBtn.classList.add("lockOn");
 if (toggleHandsBtn) toggleHandsBtn.addEventListener('click', toggleHands);
 
 // When a test is selected, unlock buttons and apply pose
-actionSel.addEventListener("change", () => {    
+actionSel.addEventListener("change", () => {
+    
     const isTestSelected = !!actionSel.value;
     const isDisabled = shouldResistanceBeDisabled(); // CHECK NEW RULE
 
-    // 1. Hands Toggle Button control (MODIFIED: Always turn hands ON if a test is selected)
-    const toggleHandsBtn = $("toggleHandsBtn");
+    // 1. Hands Toggle Button control (Keep existing logic)
     toggleHandsBtn.disabled = !isTestSelected;
-
-    if (isTestSelected) {
-        // --- ENFORCE HANDS VISIBILITY ---
-        if (!handsModel) {
-            // If the model is not loaded yet, call loadHandsModel(). 
-            // The loading function will handle initial visibility and lockOn state upon completion.
-            loadHandsModel();
-        } else {
-            // If model is loaded, force it to be visible and update the button's visual state.
-            handsModel.visible = true;
-            toggleHandsBtn.classList.add("lockOn");
-        }
-    } else {
-        // No test selected: Disable button (visually 'on') and hide hands.
-        toggleHandsBtn.classList.add("lockOn"); 
-        if (handsModel) handsModel.visible = false;
-    }
+    toggleHandsBtn.classList.remove("lockOn");
+    if (!isTestSelected) toggleHandsBtn.classList.add("lockOn");
 
     // 2. Vector Overlay Button Control (enables/disables button & resets vectors)
     vectorOverlayBtn.disabled = !isTestSelected;
@@ -2679,7 +2159,6 @@ actionSel.addEventListener("change", () => {
     window.currentMMTgradeBucket = getGradeBucketForTest(actionSel.value);
     updateGradeDropdownsForSelection();
     applyBodyPositionFromSelection();
-    // This function will apply the correct hand pose based on the newly selected test and grade bucket.
     forceApplyHandOverrideOnce();
 
     if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
@@ -2900,7 +2379,7 @@ function ensurePoseTuner(){
     display: 'none'
   });
 
-poseTunerEl.innerHTML = `
+  poseTunerEl.innerHTML = `
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
       <strong style="font-size:13px;">Pose Tuner (High / Low)</strong>
       <button id="poseTunerClose" title="Close" style="margin-left:auto;background:transparent;border:0;color:#9fb0c9;font-size:16px;cursor:pointer;">✕</button>
@@ -2912,7 +2391,7 @@ poseTunerEl.innerHTML = `
 
     <div style="border-top:1px solid #1f2933;margin:6px 0 8px 0;"></div>
 
-    <label style="display:block;opacity:.85;">Root Model Position (meters)</label>
+    <label style="display:block;opacity:.85;">Position (meters)</label>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:4px;">
       <div>
         <div style="opacity:.7;">X (left/right)</div>
@@ -2937,119 +2416,34 @@ poseTunerEl.innerHTML = `
       </div>
     </div>
 
-  <label style="display:block;opacity:.85;">Root Model Rotation</label>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:4px;">
+    <label style="display:block;opacity:.85;margin-top:4px;">Rotation (degrees)</label>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:4px;">
       <div>
-      <div style="flex;min-width:0;">
-        <div style="opacity:.7;">Pitch (X)</div>
+        <div style="opacity:.7;">Yaw (turn left/right)</div>
         <div style="display:flex;gap:4px;">
-          <button data-mode="brot" data-axis="x" data-delta="-1" class="mini">Pitch −</button>
-          <button data-mode="brot" data-axis="x" data-delta="1" class="mini">Pitch +</button>
+          <button data-rot="y" data-delta="-5" class="mini">⟲</button>
+          <button data-rot="y" data-delta="5" class="mini">⟳</button>
         </div>
-     </div>
-      <div style="flex;min-width:0;">
-        <div style="opacity:.7;">Roll (Z)</div>
-        <div style="display:flex;gap:7px;">
-          <button data-mode="brot" data-axis="z" data-delta="-1" class="mini">Roll −</button>
-          <button data-mode="brot" data-axis="z" data-delta="1" class="mini">Roll +</button>
+      </div>
+      <div>
+        <div style="opacity:.7;">Pitch/Roll (face up/down/side)</div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;">
+          <button data-rot="x" data-delta="-5" class="mini">Pitch −</button>
+          <button data-rot="x" data-delta="5" class="mini">Pitch +</button>
+          <button data-rot="z" data-delta="-5" class="mini">Roll −</button>
+          <button data-rot="z" data-delta="5" class="mini">Roll +</button>
         </div>
-    </div>
-    </div>
-        <div style="flex;min-width:0;">
-            <div style="opacity:.7;">Yaw (Model Y)</div>
-            <div style="display:flex;gap:7px;">
-              <button data-rot="y" data-delta="-5" class="mini">⟲</button>
-              <button data-rot="y" data-delta="5" class="mini">⟳</button>
-            </div>
-        </div>
-    </div>
-    
-    <div style="border-top:1px solid #1f2933;margin:6px 0 8px 0;"></div>
-    
-    <label style="display:block;opacity:.85;">**Bone Tuning**</label>
-    <div style="display:flex;gap:4px;margin-bottom:4px;">
-      <select id="boneTunerSelect" style="flex:1;background:#334155;border:1px solid #475569;color:#e2e8f0;padding:4px 6px;border-radius:6px;font-size:11px;">
-        <option value="">-- Body Model (Root) --</option>
-        <optgroup label="Spine & Head">
-          <option value="head">head</option>
-          <option value="neck">neck</option>
-          <option value="spine03">spine03</option>
-          <option value="spine02">spine02</option>
-          <option value="spine01">spine01</option>
-          <option value="breast_L">breast_l</option>
-          <option value="breast_R">breast_r</option>
-        </optgroup>
-    <optgroup label="Left Upper Limb">
-  <option value="clavicle_L">clavicle_L</option>
-  <option value="upperarm_L">upperarm_L</option>
-  <option value="upperarm_twist_L">upperarm_twist_L</option>
-  <option value="lowerarm_L">lowerarm_L</option>
-  <option value="lowerarm_twist_L">lowerarm_twist_L</option>
-  <option value="hand_L">hand_L</option>
-  <option value="thumb01_L">thumb01_L</option><option value="thumb02_L">thumb02_L</option><option value="thumb03_L">thumb03_L</option>
-  <option value="index00_L">index00_L</option><option value="index01_L">index01_L</option><option value="index02_L">index02_L</option><option value="index03_L">index03_L</option>
-  <option value="middle00_L">middle00_L</option><option value="middle01_L">middle01_L</option><option value="middle02_L">middle02_L</option><option value="middle03_L">middle03_L</option>
-  <option value="ring00_L">ring00_L</option><option value="ring01_L">ring01_L</option><option value="ring02_L">ring02_L</option><option value="ring03_L">ring03_L</option>
-  <option value="pinky00_L">pinky00_L</option><option value="pinky01_L">pinky01_L</option><option value="pinky02_L">pinky02_L</option><option value="pinky03_L">pinky03_L</option>
-</optgroup>
-<optgroup label="Right Upper Limb">
-  <option value="clavicle_R">clavicle_R</option>
-  <option value="upperarm_R">upperarm_R</option>
-  <option value="upperarm_twist_R">upperarm_twist_R</option>
-  <option value="lowerarm_R">lowerarm_R</option>
-  <option value="lowerarm_twist_R">lowerarm_twist_R</option>
-  <option value="hand_R">hand_R</option>
-  <option value="thumb01_R">thumb01_R</option><option value="thumb02_R">thumb02_R</option><option value="thumb03_R">thumb03_R</option>
-  <option value="index00_R">index00_R</option><option value="index01_R">index01_R</option><option value="index02_R">index02_R</option><option value="index03_R">index03_R</option>
-  <option value="middle00_R">middle00_R</option><option value="middle01_R">middle01_R</option><option value="middle02_R">middle02_R</option><option value="middle03_R">middle03_R</option>
-  <option value="ring00_R">ring00_R</option><option value="ring01_R">ring01_R</option><option value="ring02_R">ring02_R</option><option value="ring03_R">ring03_R</option>
-  <option value="pinky00_R">pinky00_R</option><option value="pinky01_R">pinky01_R</option><option value="pinky02_R">pinky02_R</option><option value="pinky03_R">pinky03_R</option>
-</optgroup>
-<optgroup label="Left Lower Limb">
-  <option value="thigh_L">thigh_L</option>
-  <option value="thigh_twist_L">thigh_twist_L</option>
-  <option value="calf_L">calf_L</option>
-  <option value="calf_twist_L">calf_twist_L</option>
-  <option value="foot_L">foot_L</option>
-  <option value="toes_L">toes_L</option>
-</optgroup>
-<optgroup label="Right Lower Limb">
-  <option value="thigh_R">thigh_R</option>
-  <option value="thigh_twist_R">thigh_twist_R</option>
-  <option value="calf_R">calf_R</option>
-  <option value="calf_twist_R">calf_twist_R</option>
-  <option value="foot_R">foot_R</option>
-  <option value="toes_R">toes_R</option>
-</optgroup>
-      </select>
+      </div>
     </div>
 
-    <label style="display:block;opacity:.85;margin-top:8px;">Bone Position (Fine Rotation)</label>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:8px;">
-      <div>
-        <div style="opacity:.7;font-size:10px;">X (Flex/Ext)</div>
-        <div style="display:flex;gap:4px;">
-          <button data-mode="bpos" data-axis="x" data-delta="-0.005" class="mini">−</button>
-          <button data-mode="bpos" data-axis="x" data-delta="0.005" class="mini">+</button>
-        </div>
-      </div>
-      <div>
-        <div style="opacity:.7;font-size:10px;">Y (IR/ER)</div>
-        <div style="display:flex;gap:4px;">
-          <button data-mode="bpos" data-axis="y" data-delta="-0.005" class="mini">−</button>
-          <button data-mode="bpos" data-axis="y" data-delta="0.005" class="mini">+</button>
-        </div>
-      </div>
-      <div>
-        <div style="opacity:.7;font-size:10px;">Z (Ab/Ad)</div>
-        <div style="display:flex;gap:4px;">
-          <button data-mode="bpos" data-axis="z" data-delta="-0.005" class="mini">−</button>
-          <button data-mode="bpos" data-axis="z" data-delta="0.005" class="mini">+</button>
-        </div>
-      </div>
+        <label style="display:block;opacity:.85;margin-top:4px;">Ankle Plantarflexion (both feet)</label>
+    <div style="display:flex;gap:4px;margin-bottom:4px;align-items:center;">
+      <button data-pf="-5" class="mini">Less PF</button>
+      <button data-pf="5" class="mini">More PF</button>
+      <span id="pfLabel" style="margin-left:auto;opacity:.7;">0°</span>
     </div>
- 
-    
+
+
     <div style="display:flex;gap:8px;margin-top:8px;">
       <button id="poseTunerSnapBase" class="mini" style="flex:1;">Reset to Base Mode</button>
       <button id="poseTunerSave" class="mini" style="flex:1;background:#0f766e;border-color:#0f766e;color:#fff;">Save for Test</button>
@@ -3108,45 +2502,6 @@ poseTunerEl.innerHTML = `
     if (!key) return;
     const o = POSE_OVERRIDES[key];
     if (!o) return;
-// Canonicalize joint angles to the same camelCase key format used by working poses
-const CANON = n => n
-  .replace('upperarm_','upperArm')
-  .replace('lowerarm_','lowerArm')
-  .replace('hand_','hand')
-  .replace('_L','L')
-  .replace('_R','R');
-
-// Bones we actually care about for scap/middle trap poses
-const BONES = ['upperarm_L','upperarm_R','lowerarm_L','lowerarm_R','hand_L','hand_R'];
-
-BONES.forEach(name=>{
-  const b = getBone(name); if (!b) return;
-
-  // angles in DEGREES (match your existing override style)
-  const xDeg = THREE.MathUtils.radToDeg(b.rotation.x);
-  const yDeg = THREE.MathUtils.radToDeg(b.rotation.y);
-  const zDeg = THREE.MathUtils.radToDeg(b.rotation.z);
-
-  const base = CANON(name);               // e.g., 'upperArmR', 'handL'
-  o[base+'X'] = xDeg;                     // e.g., upperArmRX
-  o[base+'Y'] = yDeg;                     // e.g., upperArmRY
-  o[base+'Z'] = zDeg;                     // e.g., upperArmRZ
-
-  // remove any mismatched snake_case copies to avoid conflicts
-  delete o[name+'X']; delete o[name+'Y']; delete o[name+'Z'];
-});
-    
-// Save exact bone orientations (quaternions) to avoid ±180° Euler issues
-if (typeof ALL_TUNABLE_BONES !== 'undefined'){
-  ALL_TUNABLE_BONES.forEach(name=>{
-    const b = getBone(name);
-    if (!b) return;
-    o[name+'QX'] = b.quaternion.x;
-    o[name+'QY'] = b.quaternion.y;
-    o[name+'QZ'] = b.quaternion.z;
-    o[name+'QW'] = b.quaternion.w;
-  });
-}
 
     // Right foot inversion (foot_R, Z axis)
     const footInvR = extractAxisDeg("foot_R", "z");
@@ -3162,6 +2517,7 @@ if (typeof ALL_TUNABLE_BONES !== 'undefined'){
 
     // And show them in the console so you can see the exact numbers
     console.log(
+      `[PoseTuner extra] ${key}: ` +
       `footInvR=${footInvR.toFixed(1)}°, ` +
       `footEvL=${footEvL.toFixed(1)}°, ` +
       `neckLatL=${neckLatL.toFixed(1)}°`
@@ -3191,232 +2547,103 @@ if (typeof ALL_TUNABLE_BONES !== 'undefined'){
     return key;
   }
 
-function applyOverride(key){
-  const o = key && POSE_OVERRIDES[key];
-  if (!o || !model) return;
+  function applyOverride(key){
+    const o = key && POSE_OVERRIDES[key];
+    if (!o || !model) return;
+    model.position.set(o.x, o.y, o.z);
+    model.rotation.set(o.rx, o.ry, o.rz);
+  }
 
-  model.position.set(o.x, o.y, o.z);
-  model.rotation.set(o.rx, o.ry, o.rz);
-
-  // Reapply saved bone quaternions if present (exact pose replay)
-  if (typeof ALL_TUNABLE_BONES !== 'undefined' && o){
-    ALL_TUNABLE_BONES.forEach(name=>{
-      const b = getBone(name); if (!b) return;
-
-      const qx = o[name+'QX'], qy = o[name+'QY'], qz = o[name+'QZ'], qw = o[name+'QW'];
-      if (qx !== undefined && qy !== undefined && qz !== undefined && qw !== undefined){
-        b.quaternion.set(qx, qy, qz, qw).normalize();
-        return; // skip Euler setters for this bone
-      }
-
-  // (Optional Euler fallback if present) — accept snake_case AND camelCase keys
-const alt = name
-  .replace('_R','R').replace('_L','L')
-  .replace('upperarm','upperArm')
-  .replace('lowerarm','lowerArm')
-  .replace('hand_','hand');
-
-const bx = (o[name+'X'] ?? o[alt+'X']);
-const by = (o[name+'Y'] ?? o[alt+'Y']);
-const bz = (o[name+'Z'] ?? o[alt+'Z']);
-
-if (bx !== undefined) b.rotation.x = THREE.MathUtils.degToRad(bx);
-if (by !== undefined) b.rotation.y = THREE.MathUtils.degToRad(by);
-if (bz !== undefined) b.rotation.z = THREE.MathUtils.degToRad(bz);
-
-b.updateMatrixWorld(true);
+  // Position buttons
+  poseTunerEl.querySelectorAll('button[data-axis]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const key = ensureOverrideFromCurrentPose();
+      if (!key) return;
+      const axis = btn.getAttribute('data-axis');
+      const delta = parseFloat(btn.getAttribute('data-delta') || '0');
+      const o = POSE_OVERRIDES[key];
+      if (axis === 'x') o.x += delta;
+      if (axis === 'y') o.y += delta;
+      if (axis === 'z') o.z += delta;
+      applyOverride(key);
     });
-  }
-  model.updateMatrixWorld(true);
-}
-
-const boneTunerSelect = poseTunerEl.querySelector('#boneTunerSelect');
-const TUNED_BONES = new Set();
-
-  // Helper to get the currently selected bone object
-  function getSelectedBone(){
-      const boneName = boneTunerSelect.value;
-      if (!boneName || boneName === "") return null;
-      return getBone(boneName);
-  }
-
- // Helper to extract rotation data for a specific bone for logging
-// Helper to extract rotation data for a specific bone for logging
-function getBoneRotationData(boneName, boneLog) {
-  // Only log bones that were actually tuned this session
-  if (typeof TUNED_BONES !== "undefined" &&
-      TUNED_BONES.size &&
-      !TUNED_BONES.has(boneName)) {
-    return;
-  }
-
-  const bone = getBone(boneName);
-  if (!bone) return;
-
-  // Use the same axis extractor you already use everywhere else
-  const rx = extractAxisDeg(boneName, "x");
-  const ry = extractAxisDeg(boneName, "y");
-  const rz = extractAxisDeg(boneName, "z");
-
-  // Skip if there’s no meaningful rotation
-  if (Math.abs(rx) <= 0.1 && Math.abs(ry) <= 0.1 && Math.abs(rz) <= 0.1) return;
-
-  // Canonical key format: no underscores, upperArm / lowerArm / hand / clavicle / thigh / calf / foot / toes, L/R suffix
-  const base = boneName
-    .replace(/_L$/,'L')
-    .replace(/_R$/,'R')
-    .replace('upperarm','upperArm')
-    .replace('lowerarm','lowerArm')
-    .replace('hand_','hand')
-    .replace('clavicle','clavicle')
-    .replace('thigh_','thigh')
-    .replace('calf_','calf')
-    .replace('foot_','foot')
-    .replace('toes_','toes');
-
-  if (Math.abs(rx) > 0.1) boneLog[base + 'X'] = parseFloat(rx.toFixed(1));
-  if (Math.abs(ry) > 0.1) boneLog[base + 'Y'] = parseFloat(ry.toFixed(1));
-  if (Math.abs(rz) > 0.1) boneLog[base + 'Z'] = parseFloat(rz.toFixed(1));
-}
-
-
-
-  // 1. Root Model Position buttons (data-axis - top row)
-  poseTunerEl.querySelectorAll('button[data-axis]:not([data-mode])').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const key = ensureOverrideFromCurrentPose();
-      if (!key) return;
-      const axis = btn.getAttribute('data-axis');
-      const delta = parseFloat(btn.getAttribute('data-delta') || '0');
-      const o = POSE_OVERRIDES[key];
-      if (axis === 'x') o.x += delta;
-      if (axis === 'y') o.y += delta;
-      if (axis === 'z') o.z += delta;
-      applyOverride(key);
-    });
-  });
-/**
- * Handles all rotation/movement for an individual bone selected in the dropdown.
- * Returns true if a bone action was executed and further processing should stop.
- */
-function handleBoneTuning(btn, mode, axis, delta, bone) {
-    // If no bone is selected in the dropdown, or if the button is not a bone-tuning button, do nothing.
-    if (!bone || mode !== 'bpos') {
-        return false;
-    }
-
-    // Determine step size (fine: 0.5° for bpos, coarse: 1.0° for brot)
-    const stepDeg = (mode === 'bpos') ? 0.5 : 1.0; 
-    const dir = parseFloat(btn.getAttribute('data-delta') || '0');
-    const finalDeltaRad = THREE.MathUtils.degToRad( (dir > 0 ? stepDeg : -stepDeg) );
-    
-    // Use the stable quaternion rotation (local axis)
-    const axisVector = new THREE.Vector3();
-    if (axis === 'x') axisVector.set(1, 0, 0);
-    else if (axis === 'y') axisVector.set(0, 1, 0);
-    else if (axis === 'z') axisVector.set(0, 0, 1);
-
-    const qDelta = new THREE.Quaternion().setFromAxisAngle(axisVector, finalDeltaRad);
-    bone.quaternion.multiply(qDelta); 
-
-    if (boneTunerSelect && boneTunerSelect.value) {
-      TUNED_BONES.add(boneTunerSelect.value);
-    }
-    
-    return true; // Execution stopped: a bone action was performed.
-}
-// Locate this function definition (around line 1618)
-poseTunerEl.querySelectorAll('button[data-mode], button[data-rot]').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-
-    const mode    = btn.getAttribute('data-mode');   // 'bpos' or 'brot'
-    const rotAxis = btn.getAttribute('data-rot');     // 'y' for root yaw (model)
-    const axis    = btn.getAttribute('data-axis');    // x, y, z
-    const delta   = parseFloat(btn.getAttribute('data-delta') || '0');
-    const key     = getCurrentOverrideKey();          // Check if an override object exists
-    const bone    = getSelectedBone();                // The individual bone selected in the dropdown
-
-    // Check 1: If an individual bone is selected and a bone-tuning button is pressed, handle it and EXIT.
-    if (handleBoneTuning(btn, mode, axis, delta, bone)) {
-        return; 
-    }
-    
-    // NOTE: All subsequent logic only runs if handleBoneTuning() returned false (i.e., 
-    // either no bone was selected, or the button was not a bone-tuning button).
-    
-    // Check 2: Root Model Pitch & Roll (X and Z axis for the whole model)
-if (key && axis && mode !== 'brot'){
-        ensureOverrideFromCurrentPose();
-        const o = POSE_OVERRIDES[key];
-        const deltaRad = THREE.MathUtils.degToRad(delta);
-        
-        // X-axis: Pitch (Flexion/Extension)
-        if (axis === 'x') {
-          o.rx += deltaRad;
-        } 
-        // Z-axis: Roll (Lateral Flexion)
-        else if (axis === 'z') {
-          o.rz += deltaRad;
-        } else {
-          return; // Ignore any other axis click that wasn't caught above.
-        }
-        
-        applyOverride(key);
-        return;
-    }
-
-    // Check 3: Root Model Yaw (The existing '⟲' / '⟳' buttons)
-    if (rotAxis === 'y' && key){
-        ensureOverrideFromCurrentPose();
-        const o = POSE_OVERRIDES[key];
-        const deltaRad = THREE.MathUtils.degToRad(delta);
-        
-        o.ry += deltaRad;
-        applyOverride(key);
-        return;
-    }
   });
-});
 
-  // Save button logs config INCLUDING all bone rotations
-btnSave.onclick = () => {
-  const key = ensureOverrideFromCurrentPose();
-  if (!key) return;
-  const o = POSE_OVERRIDES[key];
-  if (!o) return;
+  // Rotation buttons (deg)
+  poseTunerEl.querySelectorAll('button[data-rot]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const key = ensureOverrideFromCurrentPose();
+      if (!key) return;
+      const axis = btn.getAttribute('data-rot');
+      const deltaDeg = parseFloat(btn.getAttribute('data-delta') || '0');
+      const deltaRad = THREE.MathUtils.degToRad(deltaDeg);
+      const o = POSE_OVERRIDES[key];
+      if (axis === 'x') o.rx += deltaRad;
+      if (axis === 'y') o.ry += deltaRad;
+      if (axis === 'z') o.rz += deltaRad;
+      applyOverride(key);
+    });
+  });
+  // Plantarflexion buttons
+  poseTunerEl.querySelectorAll('button[data-pf]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const delta = parseFloat(btn.getAttribute('data-pf') || '0');
+      // Clamp so you don't break ankles
+      GLOBAL_PF_DEG = Math.max(-45, Math.min(45, GLOBAL_PF_DEG + delta));
+      applyGlobalPF();
+      updatePFLabel();
+    });
+  });
 
-  // Root plantarflexion + foot/neck extras (same as old index)
-  const footInvR = extractAxisDeg("foot_R", "z");
-  const footEvL  = extractAxisDeg("foot_L", "z");
-  const neckLatL = extractAxisDeg("neck",   "z");
-  o.pf       = GLOBAL_PF_DEG || 0;
-  o.footInvR = footInvR;
-  o.footEvL  = footEvL;
-  o.neckLatL = neckLatL;
+  // Reset to base (throw away override & re-apply base mode)
+  btnSnapBase.onclick = () => {
+    const key = getCurrentOverrideKey();
+    if (key && POSE_OVERRIDES[key]) delete POSE_OVERRIDES[key];
+    applyBodyPositionFromSelection();
+    updateLabels();
+  };
 
-  console.log(
-    `POSE_OVERRIDES["${key}"] = { ` +
-    `x:${o.x.toFixed(3)}, y:${o.y.toFixed(3)}, z:${o.z.toFixed(3)}, ` +
-    `rx:${o.rx.toFixed(3)}, ry:${o.ry.toFixed(3)}, rz:${o.rz.toFixed(3)}, ` +
-    `pf:${o.pf.toFixed(1)}, ` +
-    `footInvR:${o.footInvR.toFixed(1)}, footEvL:${o.footEvL.toFixed(1)}, neckLatL:${o.neckLatL.toFixed(1)} };`
-  );
+  // Save button logs config INCLUDING plantarflexion + side-lying angles
+  btnSave.onclick = () => {
+    const key = ensureOverrideFromCurrentPose();
+    if (!key) return;
+    const o = POSE_OVERRIDES[key];
 
-  labelTest.style.color = '#22c55e';
-  setTimeout(()=>labelTest.style.color='#e2e8f0', 600);
-};
+    // store current global PF into this override
+    o.pf = GLOBAL_PF_DEG || 0;
+
+    // NEW: capture actual joint angles so the pose "remembers" them
+    // Right foot inversion (foot_R, Z axis)
+    o.footInvR = extractAxisDeg("foot_R", "z");
+    // Left foot eversion (foot_L, Z axis)
+    o.footEvL  = extractAxisDeg("foot_L", "z");
+    // Neck left lateral flexion (neck, Z axis)
+    o.neckLatL = extractAxisDeg("neck",   "z");
+
+    console.log(
+      `POSE_OVERRIDES["${key}"] = { ` +
+      `x:${o.x.toFixed(3)}, y:${o.y.toFixed(3)}, z:${o.z.toFixed(3)}, ` +
+      `rx:${o.rx.toFixed(3)}, ry:${o.ry.toFixed(3)}, rz:${o.rz.toFixed(3)}, ` +
+      `pf:${o.pf.toFixed(1)}, ` +
+      `footInvR:${o.footInvR.toFixed(1)}, footEvL:${o.footEvL.toFixed(1)}, neckLatL:${o.neckLatL.toFixed(1)} };`
+    );
+
+    labelTest.style.color = '#22c55e';
+    setTimeout(()=>labelTest.style.color='#e2e8f0', 600);
+  };
 
 
-  // Close
-  btnClose.onclick = () => {
-    poseTunerVisible = false;
-    poseTunerEl.style.display = 'none';
-  };
 
-  // Public helper so other code can refresh labels when test/grade changes
-  poseTunerEl.updateLabels = updateLabels;
+  // Close
+  btnClose.onclick = () => {
+    poseTunerVisible = false;
+    poseTunerEl.style.display = 'none';
+  };
 
-  return poseTunerEl;
+  // Public helper so other code can refresh labels when test/grade changes
+  poseTunerEl.updateLabels = updateLabels;
+
+  return poseTunerEl;
 }
 
 function showPoseTuner(show){
@@ -3532,7 +2759,7 @@ function onPointerDownTransformControls(event) {
 <div id="handTuner" style="
   position:fixed; right:12px; top:80px; width:240px;
   background:#ffffffdd; padding:12px; border-radius:10px;
-  font-family:system-ui; display:none; z-index:9999; box-shadow:0 0 10px #0003;
+  font-family:system-ui; display:block; z-index:9999; box-shadow:0 0 10px #0003;
 ">
   <div style="font-weight:600; margin-bottom:8px;">Therapist Hand Tuner</div>
 
