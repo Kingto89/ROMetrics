@@ -3378,305 +3378,39 @@ if (key && axis && mode !== 'brot'){
   });
 });
 
-  // Save button logs config INCLUDING all bone rotations
 btnSave.onclick = () => {
   const key = ensureOverrideFromCurrentPose();
   if (!key) return;
   const o = POSE_OVERRIDES[key];
   if (!o) return;
 
-btnSave.onclick = () => {
-  const key = ensureOverrideFromCurrentPose();
-  if (!key) return;
-  const o = POSE_OVERRIDES[key];
-  if (!o) return;
-
-  // --- ROOT + PF + FOOT / NECK (same style as old index) ---
+  // Root plantarflexion + foot/neck extras (same as old index)
   const footInvR = extractAxisDeg("foot_R", "z");
   const footEvL  = extractAxisDeg("foot_L", "z");
   const neckLatL = extractAxisDeg("neck",   "z");
-
   o.pf       = GLOBAL_PF_DEG || 0;
   o.footInvR = footInvR;
   o.footEvL  = footEvL;
   o.neckLatL = neckLatL;
 
-  // --- SPINE / NECK / HEAD ---
-  const spine01X = extractAxisDeg("spine01","x");
-  const spine01Y = extractAxisDeg("spine01","y");
-  const spine01Z = extractAxisDeg("spine01","z");
-  if (Math.abs(spine01X) > 0.1) o.spine01X = spine01X;
-  if (Math.abs(spine01Y) > 0.1) o.spine01Y = spine01Y;
-  if (Math.abs(spine01Z) > 0.1) o.spine01Z = spine01Z;
-
-  const spine02X = extractAxisDeg("spine02","x");
-  const spine02Y = extractAxisDeg("spine02","y");
-  const spine02Z = extractAxisDeg("spine02","z");
-  if (Math.abs(spine02X) > 0.1) o.spine02X = spine02X;
-  if (Math.abs(spine02Y) > 0.1) o.spine02Y = spine02Y;
-  if (Math.abs(spine02Z) > 0.1) o.spine02Z = spine02Z;
-
-  const spine03X = extractAxisDeg("spine03","x");
-  const spine03Y = extractAxisDeg("spine03","y");
-  const spine03Z = extractAxisDeg("spine03","z");
-  if (Math.abs(spine03X) > 0.1) o.spine03X = spine03X;
-  if (Math.abs(spine03Y) > 0.1) o.spine03Y = spine03Y;
-  if (Math.abs(spine03Z) > 0.1) o.spine03Z = spine03Z;
-
-  const neckX = extractAxisDeg("neck","x");
-  const neckY = extractAxisDeg("neck","y");
-  const neckZ = extractAxisDeg("neck","z");
-  if (Math.abs(neckX) > 0.1) o.neckX = neckX;
-  if (Math.abs(neckY) > 0.1) o.neckY = neckY;
-  if (Math.abs(neckZ) > 0.1) o.neckZ = neckZ;
-
-  const headX = extractAxisDeg("head","x");
-  const headY = extractAxisDeg("head","y");
-  const headZ = extractAxisDeg("head","z");
-  if (Math.abs(headX) > 0.1) o.headX = headX;
-  if (Math.abs(headY) > 0.1) o.headY = headY;
-  if (Math.abs(headZ) > 0.1) o.headZ = headZ;
-
-  // --- BREASTS ---
-  const breastLX = extractAxisDeg("breast_L","x");
-  const breastLY = extractAxisDeg("breast_L","y");
-  const breastLZ = extractAxisDeg("breast_L","z");
-  if (Math.abs(breastLX) > 0.1) o.breastLX = breastLX;
-  if (Math.abs(breastLY) > 0.1) o.breastLY = breastLY;
-  if (Math.abs(breastLZ) > 0.1) o.breastLZ = breastLZ;
-
-  const breastRX = extractAxisDeg("breast_R","x");
-  const breastRY = extractAxisDeg("breast_R","y");
-  const breastRZ = extractAxisDeg("breast_R","z");
-  if (Math.abs(breastRX) > 0.1) o.breastRX = breastRX;
-  if (Math.abs(breastRY) > 0.1) o.breastRY = breastRY;
-  if (Math.abs(breastRZ) > 0.1) o.breastRZ = breastRZ;
-
-  // --- CLAVICLES ---
-  const clavicleLX = extractAxisDeg("clavicle_L","x");
-  const clavicleLY = extractAxisDeg("clavicle_L","y");
-  const clavicleLZ = extractAxisDeg("clavicle_L","z");
-  if (Math.abs(clavicleLX) > 0.1) o.clavicleLX = clavicleLX;
-  if (Math.abs(clavicleLY) > 0.1) o.clavicleLY = clavicleLY;
-  if (Math.abs(clavicleLZ) > 0.1) o.clavicleLZ = clavicleLZ;
-
-  const clavicleRX = extractAxisDeg("clavicle_R","x");
-  const clavicleRY = extractAxisDeg("clavicle_R","y");
-  const clavicleRZ = extractAxisDeg("clavicle_R","z");
-  if (Math.abs(clavicleRX) > 0.1) o.clavicleRX = clavicleRX;
-  if (Math.abs(clavicleRY) > 0.1) o.clavicleRY = clavicleRY;
-  if (Math.abs(clavicleRZ) > 0.1) o.clavicleRZ = clavicleRZ;
-
-  // --- UPPER ARMS + TWIST ---
-  const upperArmLX = extractAxisDeg("upperarm_L","x");
-  const upperArmLY = extractAxisDeg("upperarm_L","y");
-  const upperArmLZ = extractAxisDeg("upperarm_L","z");
-  if (Math.abs(upperArmLX) > 0.1) o.upperArmLX = upperArmLX;
-  if (Math.abs(upperArmLY) > 0.1) o.upperArmLY = upperArmLY;
-  if (Math.abs(upperArmLZ) > 0.1) o.upperArmLZ = upperArmLZ;
-
-  const upperArmRX = extractAxisDeg("upperarm_R","x");
-  const upperArmRY = extractAxisDeg("upperarm_R","y");
-  const upperArmRZ = extractAxisDeg("upperarm_R","z");
-  if (Math.abs(upperArmRX) > 0.1) o.upperArmRX = upperArmRX;
-  if (Math.abs(upperArmRY) > 0.1) o.upperArmRY = upperArmRY;
-  if (Math.abs(upperArmRZ) > 0.1) o.upperArmRZ = upperArmRZ;
-
-  const upperArmTwistLX = extractAxisDeg("upperarm_twist_L","x");
-  const upperArmTwistLY = extractAxisDeg("upperarm_twist_L","y");
-  const upperArmTwistLZ = extractAxisDeg("upperarm_twist_L","z");
-  if (Math.abs(upperArmTwistLX) > 0.1) o.upperArmTwistLX = upperArmTwistLX;
-  if (Math.abs(upperArmTwistLY) > 0.1) o.upperArmTwistLY = upperArmTwistLY;
-  if (Math.abs(upperArmTwistLZ) > 0.1) o.upperArmTwistLZ = upperArmTwistLZ;
-
-  const upperArmTwistRX = extractAxisDeg("upperarm_twist_R","x");
-  const upperArmTwistRY = extractAxisDeg("upperarm_twist_R","y");
-  const upperArmTwistRZ = extractAxisDeg("upperarm_twist_R","z");
-  if (Math.abs(upperArmTwistRX) > 0.1) o.upperArmTwistRX = upperArmTwistRX;
-  if (Math.abs(upperArmTwistRY) > 0.1) o.upperArmTwistRY = upperArmTwistRY;
-  if (Math.abs(upperArmTwistRZ) > 0.1) o.upperArmTwistRZ = upperArmTwistRZ;
-
-  // --- LOWER ARMS + TWIST ---
-  const lowerArmLX = extractAxisDeg("lowerarm_L","x");
-  const lowerArmLY = extractAxisDeg("lowerarm_L","y");
-  const lowerArmLZ = extractAxisDeg("lowerarm_L","z");
-  if (Math.abs(lowerArmLX) > 0.1) o.lowerArmLX = lowerArmLX;
-  if (Math.abs(lowerArmLY) > 0.1) o.lowerArmLY = lowerArmLY;
-  if (Math.abs(lowerArmLZ) > 0.1) o.lowerArmLZ = lowerArmLZ;
-
-  const lowerArmRX = extractAxisDeg("lowerarm_R","x");
-  const lowerArmRY = extractAxisDeg("lowerarm_R","y");
-  const lowerArmRZ = extractAxisDeg("lowerarm_R","z");
-  if (Math.abs(lowerArmRX) > 0.1) o.lowerArmRX = lowerArmRX;
-  if (Math.abs(lowerArmRY) > 0.1) o.lowerArmRY = lowerArmRY;
-  if (Math.abs(lowerArmRZ) > 0.1) o.lowerArmRZ = lowerArmRZ;
-
-  const lowerArmTwistLX = extractAxisDeg("lowerarm_twist_L","x");
-  const lowerArmTwistLY = extractAxisDeg("lowerarm_twist_L","y");
-  const lowerArmTwistLZ = extractAxisDeg("lowerarm_twist_L","z");
-  if (Math.abs(lowerArmTwistLX) > 0.1) o.lowerArmTwistLX = lowerArmTwistLX;
-  if (Math.abs(lowerArmTwistLY) > 0.1) o.lowerArmTwistLY = lowerArmTwistLY;
-  if (Math.abs(lowerArmTwistLZ) > 0.1) o.lowerArmTwistLZ = lowerArmTwistLZ;
-
-  const lowerArmTwistRX = extractAxisDeg("lowerarm_twist_R","x");
-  const lowerArmTwistRY = extractAxisDeg("lowerarm_twist_R","y");
-  const lowerArmTwistRZ = extractAxisDeg("lowerarm_twist_R","z");
-  if (Math.abs(lowerArmTwistRX) > 0.1) o.lowerArmTwistRX = lowerArmTwistRX;
-  if (Math.abs(lowerArmTwistRY) > 0.1) o.lowerArmTwistRY = lowerArmTwistRY;
-  if (Math.abs(lowerArmTwistRZ) > 0.1) o.lowerArmTwistRZ = lowerArmTwistRZ;
-
-  // --- HANDS ---
-  const handLX = extractAxisDeg("hand_L","x");
-  const handLY = extractAxisDeg("hand_L","y");
-  const handLZ = extractAxisDeg("hand_L","z");
-  if (Math.abs(handLX) > 0.1) o.handLX = handLX;
-  if (Math.abs(handLY) > 0.1) o.handLY = handLY;
-  if (Math.abs(handLZ) > 0.1) o.handLZ = handLZ;
-
-  const handRX = extractAxisDeg("hand_R","x");
-  const handRY = extractAxisDeg("hand_R","y");
-  const handRZ = extractAxisDeg("hand_R","z");
-  if (Math.abs(handRX) > 0.1) o.handRX = handRX;
-  if (Math.abs(handRY) > 0.1) o.handRY = handRY;
-  if (Math.abs(handRZ) > 0.1) o.handRZ = handRZ;
-
-  // --- THUMBS L ---
-  const thumb01LX = extractAxisDeg("thumb01_L","x");
-  const thumb01LY = extractAxisDeg("thumb01_L","y");
-  const thumb01LZ = extractAxisDeg("thumb01_L","z");
-  if (Math.abs(thumb01LX) > 0.1) o.thumb01LX = thumb01LX;
-  if (Math.abs(thumb01LY) > 0.1) o.thumb01LY = thumb01LY;
-  if (Math.abs(thumb01LZ) > 0.1) o.thumb01LZ = thumb01LZ;
-
-  const thumb02LX = extractAxisDeg("thumb02_L","x");
-  const thumb02LY = extractAxisDeg("thumb02_L","y");
-  const thumb02LZ = extractAxisDeg("thumb02_L","z");
-  if (Math.abs(thumb02LX) > 0.1) o.thumb02LX = thumb02LX;
-  if (Math.abs(thumb02LY) > 0.1) o.thumb02LY = thumb02LY;
-  if (Math.abs(thumb02LZ) > 0.1) o.thumb02LZ = thumb02LZ;
-
-  const thumb03LX = extractAxisDeg("thumb03_L","x");
-  const thumb03LY = extractAxisDeg("thumb03_L","y");
-  const thumb03LZ = extractAxisDeg("thumb03_L","z");
-  if (Math.abs(thumb03LX) > 0.1) o.thumb03LX = thumb03LX;
-  if (Math.abs(thumb03LY) > 0.1) o.thumb03LY = thumb03LY;
-  if (Math.abs(thumb03LZ) > 0.1) o.thumb03LZ = thumb03LZ;
-
-  // --- THUMBS R ---
-  const thumb01RX = extractAxisDeg("thumb01_R","x");
-  const thumb01RY = extractAxisDeg("thumb01_R","y");
-  const thumb01RZ = extractAxisDeg("thumb01_R","z");
-  if (Math.abs(thumb01RX) > 0.1) o.thumb01RX = thumb01RX;
-  if (Math.abs(thumb01RY) > 0.1) o.thumb01RY = thumb01RY;
-  if (Math.abs(thumb01RZ) > 0.1) o.thumb01RZ = thumb01RZ;
-
-  const thumb02RX = extractAxisDeg("thumb02_R","x");
-  const thumb02RY = extractAxisDeg("thumb02_R","y");
-  const thumb02RZ = extractAxisDeg("thumb02_R","z");
-  if (Math.abs(thumb02RX) > 0.1) o.thumb02RX = thumb02RX;
-  if (Math.abs(thumb02RY) > 0.1) o.thumb02RY = thumb02RY;
-  if (Math.abs(thumb02RZ) > 0.1) o.thumb02RZ = thumb02RZ;
-
-  const thumb03RX = extractAxisDeg("thumb03_R","x");
-  const thumb03RY = extractAxisDeg("thumb03_R","y");
-  const thumb03RZ = extractAxisDeg("thumb03_R","z");
-  if (Math.abs(thumb03RX) > 0.1) o.thumb03RX = thumb03RX;
-  if (Math.abs(thumb03RY) > 0.1) o.thumb03RY = thumb03RY;
-  if (Math.abs(thumb03RZ) > 0.1) o.thumb03RZ = thumb03RZ;
-
-  // --- INDEX / MIDDLE / RING / PINKY (L/R) ---
-  // INDEX L
-  const index00LX = extractAxisDeg("index00_L","x");
-  const index00LY = extractAxisDeg("index00_L","y");
-  const index00LZ = extractAxisDeg("index00_L","z");
-  if (Math.abs(index00LX) > 0.1) o.index00LX = index00LX;
-  if (Math.abs(index00LY) > 0.1) o.index00LY = index00LY;
-  if (Math.abs(index00LZ) > 0.1) o.index00LZ = index00LZ;
-
-  const index01LX = extractAxisDeg("index01_L","x");
-  const index01LY = extractAxisDeg("index01_L","y");
-  const index01LZ = extractAxisDeg("index01_L","z");
-  if (Math.abs(index01LX) > 0.1) o.index01LX = index01LX;
-  if (Math.abs(index01LY) > 0.1) o.index01LY = index01LY;
-  if (Math.abs(index01LZ) > 0.1) o.index01LZ = index01LZ;
-
-  const index02LX = extractAxisDeg("index02_L","x");
-  const index02LY = extractAxisDeg("index02_L","y");
-  const index02LZ = extractAxisDeg("index02_L","z");
-  if (Math.abs(index02LX) > 0.1) o.index02LX = index02LX;
-  if (Math.abs(index02LY) > 0.1) o.index02LY = index02LY;
-  if (Math.abs(index02LZ) > 0.1) o.index02LZ = index02LZ;
-
-  const index03LX = extractAxisDeg("index03_L","x");
-  const index03LY = extractAxisDeg("index03_L","y");
-  const index03LZ = extractAxisDeg("index03_L","z");
-  if (Math.abs(index03LX) > 0.1) o.index03LX = index03LX;
-  if (Math.abs(index03LY) > 0.1) o.index03LY = index03LY;
-  if (Math.abs(index03LZ) > 0.1) o.index03LZ = index03LZ;
-
-  // INDEX R
-  const index00RX = extractAxisDeg("index00_R","x");
-  const index00RY = extractAxisDeg("index00_R","y");
-  const index00RZ = extractAxisDeg("index00_R","z");
-  if (Math.abs(index00RX) > 0.1) o.index00RX = index00RX;
-  if (Math.abs(index00RY) > 0.1) o.index00RY = index00RY;
-  if (Math.abs(index00RZ) > 0.1) o.index00RZ = index00RZ;
-
-  const index01RX = extractAxisDeg("index01_R","x");
-  const index01RY = extractAxisDeg("index01_R","y");
-  const index01RZ = extractAxisDeg("index01_R","z");
-  if (Math.abs(index01RX) > 0.1) o.index01RX = index01RX;
-  if (Math.abs(index01RY) > 0.1) o.index01RY = index01RY;
-  if (Math.abs(index01RZ) > 0.1) o.index01RZ = index01RZ;
-
-  const index02RX = extractAxisDeg("index02_R","x");
-  const index02RY = extractAxisDeg("index02_R","y");
-  const index02RZ = extractAxisDeg("index02_R","z");
-  if (Math.abs(index02RX) > 0.1) o.index02RX = index02RX;
-  if (Math.abs(index02RY) > 0.1) o.index02RY = index02RY;
-  if (Math.abs(index02RZ) > 0.1) o.index02RZ = index02RZ;
-
-  const index03RX = extractAxisDeg("index03_R","x");
-  const index03RY = extractAxisDeg("index03_R","y");
-  const index03RZ = extractAxisDeg("index03_R","z");
-  if (Math.abs(index03RX) > 0.1) o.index03RX = index03RX;
-  if (Math.abs(index03RY) > 0.1) o.index03RY = index03RY;
-  if (Math.abs(index03RZ) > 0.1) o.index03RZ = index03RZ;
-
-  // (Repeat the same pattern for middle00/01/02/03, ring00/01/02/03,
-  //  pinky00/01/02/03 L/R, and then thigh / thighTwist / calf / calfTwist /
-  //  foot / toes L/R, using names like:
-  //  middle00LX, middle00RX, ring03LX, pinky02RX, thighLX, footRX, toesLZ, etc.)
-
-  // --- BUILD CONSOLE LINE FROM o ---
-  const parts = [
-    `x:${o.x.toFixed(3)}`,
-    `y:${o.y.toFixed(3)}`,
-    `z:${o.z.toFixed(3)}`,
-    `rx:${o.rx.toFixed(3)}`,
-    `ry:${o.ry.toFixed(3)}`,
-    `rz:${o.rz.toFixed(3)}`,
-    `pf:${o.pf.toFixed(1)}`,
-    `footInvR:${o.footInvR.toFixed(1)}`,
-    `footEvL:${o.footEvL.toFixed(1)}`,
-    `neckLatL:${o.neckLatL.toFixed(1)}`
-  ];
-
-  // append every extra bone field on o in the same "name:value" style
-  const skip = new Set(["x","y","z","rx","ry","rz","pf","footInvR","footEvL","neckLatL"]);
-  Object.keys(o).forEach(k=>{
-    if (skip.has(k)) return;
-    const v = o[k];
-    if (typeof v === "number"){
-      parts.push(`${k}:${v.toFixed(1)}`);
-    }
-  });
-
-  console.log(`POSE_OVERRIDES["${key}"] = { ${parts.join(', ')} };`);
+  console.log(
+    `POSE_OVERRIDES["${key}"] = { ` +
+    `x:${o.x.toFixed(3)}, y:${o.y.toFixed(3)}, z:${o.z.toFixed(3)}, ` +
+    `rx:${o.rx.toFixed(3)}, ry:${o.ry.toFixed(3)}, rz:${o.rz.toFixed(3)}, ` +
+    `pf:${o.pf.toFixed(1)}, ` +
+    `footInvR:${o.footInvR.toFixed(1)}, footEvL:${o.footEvL.toFixed(1)}, neckLatL:${o.neckLatL.toFixed(1)} };`
+  );
 
   labelTest.style.color = '#22c55e';
   setTimeout(()=>labelTest.style.color='#e2e8f0', 600);
 };
+
+
+  // Close
+  btnClose.onclick = () => {
+    poseTunerVisible = false;
+    poseTunerEl.style.display = 'none';
+  };
 
 
 
