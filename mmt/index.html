@@ -1305,6 +1305,7 @@ const RIGGED_BONES = [
   "thigh_L","thigh_R","calf_L","calf_R","foot_L","foot_R",
   "toes_L","toes_R"
 ];
+const MODIFIED_BONES = new Set(); // only bones touched by tuner this session
   
 function applyTunerOverrides(testKey, gradeBucket){
   if (!skeleton) return;
@@ -1351,7 +1352,7 @@ boneTunerPanel.style.left = "430px";
 boneTunerPanel.style.top = "12px";
 document.body.appendChild(boneTunerPanel);
 
- function rotateBone(axis, delta){
+function rotateBone(axis, delta){
   const bName = $("boneSel").value;
   const bone = getBone(bName);
   if (!bone) return;
@@ -1360,7 +1361,11 @@ document.body.appendChild(boneTunerPanel);
   const e = new THREE.Euler();
   e[axis] = r;
   bone.quaternion.multiply(new THREE.Quaternion().setFromEuler(e));
+
+  // mark this bone as explicitly tuned
+  MODIFIED_BONES.add(bName);
 }
+
 
 ["x","y","z"].forEach(axis => {
   $(axis + "Plus").onclick  = () => rotateBone(axis,  5);
@@ -1383,8 +1388,14 @@ $("saveBoneOverride").onclick = () => {
 
   // Build a fresh dictionary from the current tuner state,
   // reading EVERY rigged bone (just like pose saver reads everything at once)
+  // Build a dictionary ONLY from bones actually edited with the tuner
+  if (MODIFIED_BONES.size === 0) {
+    alert("No bones were adjusted with the tuner for this test.");
+    return;
+  }
+
   const dict = {};
-  RIGGED_BONES.forEach((boneName) => {
+  MODIFIED_BONES.forEach((boneName) => {
     const bone = getBone(boneName);
     if (!bone) return;
 
@@ -1393,14 +1404,15 @@ $("saveBoneOverride").onclick = () => {
     const yDeg = THREE.MathUtils.radToDeg(e.y);
     const zDeg = THREE.MathUtils.radToDeg(e.z);
 
-    // Skip bones that are effectively at 0 / 0 / 0 so the log stays clean
-    if (Math.abs(xDeg) < 0.001 && Math.abs(yDeg) < 0.001 && Math.abs(zDeg) < 0.001) return;
-
     dict[boneName] = { x: xDeg, y: yDeg, z: zDeg };
   });
 
-  // Store: latest save = full snapshot (exactly how POSE_OVERRIDES works)
+  // Store only tuned bones for this test/bucket
   BONE_OVERRIDES[key] = dict;
+
+  // Reset for the next tuning session
+  MODIFIED_BONES.clear();
+
 
   // Pretty POSE-style console output
   const parts = Object.keys(dict).sort().map((name) => {
