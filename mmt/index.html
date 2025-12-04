@@ -1210,7 +1210,6 @@ POSE_OVERRIDES["Gastrocnemius:low"] = { x:-1.520, y:0.800, z:0.550, rx:1.571, ry
 
 
 const BONE_OVERRIDES = {}; // e.g. BONE_OVERRIDES["Anterior_Deltoid:high"] = { boneName:{x:5,y:0,z:-10} };
-BONE_OVERRIDES["Scap_Depression_Adduction:high"] = { foot_L:{ x:15.5, y:-4.4, z:-7.2 }, foot_R:{ x:15.5, y:4.4, z:7.2 },  hand_R:{ x:-3.3, y:-14.2, z:6.1 }, lowerarm_L:{ x:14.3, y:3.2, z:2.5 }, lowerarm_R:{ x:32.4, y:38.4, z:-5.6 }. upperarm_L:{ x:-12.1, y:8.3, z:-58.2 }, upperarm_R:{ x:56.6, y:34.0, z:-60.5 } };
 
   
 /* ==== HAND OVERRIDES (new, separate from pose) ==== */
@@ -1308,26 +1307,27 @@ const RIGGED_BONES = [
 ];
   
 function applyTunerOverrides(testKey, gradeBucket){
-  if(!skeleton) return;
+  if (!skeleton) return;
   const key = `${testKey}:${gradeBucket}`;
   const dict = BONE_OVERRIDES[key];
-  if(!dict) return;
+  if (!dict) return;
 
-  // Apply each bone’s stored rotations before hand placement
-  for(const boneName in dict){
+  for (const boneName in dict){
     const bone = getBone(boneName);
-    const rot = dict[boneName];
-    if(bone && rot){
-      const e = new THREE.Euler(
-        THREE.MathUtils.degToRad(rot.x||0),
-        THREE.MathUtils.degToRad(rot.y||0),
-        THREE.MathUtils.degToRad(rot.z||0),
-        'XYZ'
-      );
-      const qDelta = new THREE.Quaternion().setFromEuler(e);
-      bone.quaternion.multiply(qDelta);
-    }
+    const rot  = dict[boneName];
+    if (!bone || !rot) continue;
+
+    // Use the stored angles as the FULL local rotation, not a delta
+    const e = new THREE.Euler(
+      THREE.MathUtils.degToRad(rot.x || 0),
+      THREE.MathUtils.degToRad(rot.y || 0),
+      THREE.MathUtils.degToRad(rot.z || 0),
+      "XYZ"
+    );
+    bone.quaternion.setFromEuler(e);   // ⬅️ key change (no .multiply)
   }
+}
+
   console.log("✅ Applied Bone Tuner Overrides for", key);
 }
 
