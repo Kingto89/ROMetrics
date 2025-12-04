@@ -3400,24 +3400,33 @@ btnSave.onclick = () => {
   const spine03y = extractAxisDeg("spine03", "y");
   const spine03z = extractAxisDeg("spine03", "z");
 
-  // Only treat spine as "active" if anything is actually non-zero this session
-  const hasSpine =
-    Math.abs(spine01x) > 0.01 || Math.abs(spine01y) > 0.01 || Math.abs(spine01z) > 0.01 ||
-    Math.abs(spine02x) > 0.01 || Math.abs(spine02y) > 0.01 || Math.abs(spine02z) > 0.01 ||
+  // Per-segment flags: only “active” if that segment actually moved
+  const spine01Active =
+    Math.abs(spine01x) > 0.01 || Math.abs(spine01y) > 0.01 || Math.abs(spine01z) > 0.01;
+  const spine02Active =
+    Math.abs(spine02x) > 0.01 || Math.abs(spine02y) > 0.01 || Math.abs(spine02z) > 0.01;
+  const spine03Active =
     Math.abs(spine03x) > 0.01 || Math.abs(spine03y) > 0.01 || Math.abs(spine03z) > 0.01;
+
+  const hasSpine = spine01Active || spine02Active || spine03Active;
 
   o.pf       = GLOBAL_PF_DEG || 0;
   o.footInvR = footInvR;
   o.footEvL  = footEvL;
   o.neckLatL = neckLatL;
 
-  if (hasSpine) {
+  // Only write spine values for the segments that actually changed
+  if (spine01Active) {
     o.spine01x = spine01x;
     o.spine01y = spine01y;
     o.spine01z = spine01z;
+  }
+  if (spine02Active) {
     o.spine02x = spine02x;
     o.spine02y = spine02y;
     o.spine02z = spine02z;
+  }
+  if (spine03Active) {
     o.spine03x = spine03x;
     o.spine03y = spine03y;
     o.spine03z = spine03z;
@@ -3430,11 +3439,18 @@ btnSave.onclick = () => {
     `pf:${o.pf.toFixed(1)}, ` +
     `footInvR:${o.footInvR.toFixed(1)}, footEvL:${o.footEvL.toFixed(1)}, neckLatL:${o.neckLatL.toFixed(1)}`;
 
-  if (hasSpine) {
+  // Append only the active segments
+  if (spine01Active) {
     msg +=
-      `, spine01x:${o.spine01x.toFixed(1)}, spine01y:${o.spine01y.toFixed(1)}, spine01z:${o.spine01z.toFixed(1)}, ` +
-      `spine02x:${o.spine02x.toFixed(1)}, spine02y:${o.spine02y.toFixed(1)}, spine02z:${o.spine02z.toFixed(1)}, ` +
-      `spine03x:${o.spine03x.toFixed(1)}, spine03y:${o.spine03y.toFixed(1)}, spine03z:${o.spine03z.toFixed(1)}`;
+      `, spine01x:${o.spine01x.toFixed(1)}, spine01y:${o.spine01y.toFixed(1)}, spine01z:${o.spine01z.toFixed(1)}`;
+  }
+  if (spine02Active) {
+    msg +=
+      `, spine02x:${o.spine02x.toFixed(1)}, spine02y:${o.spine02y.toFixed(1)}, spine02z:${o.spine02z.toFixed(1)}`;
+  }
+  if (spine03Active) {
+    msg +=
+      `, spine03x:${o.spine03x.toFixed(1)}, spine03y:${o.spine03y.toFixed(1)}, spine03z:${o.spine03z.toFixed(1)}`;
   }
 
   msg += ' };';
@@ -3451,13 +3467,6 @@ btnSave.onclick = () => {
     poseTunerEl.style.display = 'none';
   };
 
-
-
-  // Close
-  btnClose.onclick = () => {
-    poseTunerVisible = false;
-    poseTunerEl.style.display = 'none';
-  };
 
   // Public helper so other code can refresh labels when test/grade changes
   poseTunerEl.updateLabels = updateLabels;
