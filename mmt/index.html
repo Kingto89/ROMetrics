@@ -1326,10 +1326,9 @@ function applyTunerOverrides(testKey, gradeBucket){
     );
     bone.quaternion.setFromEuler(e);   // ⬅️ key change (no .multiply)
   }
+  console.log("✅ Applied Bone Tuner Overrides for", key);  
 }
 
-  console.log("✅ Applied Bone Tuner Overrides for", key);
-}
 
 /* === Bone Tuner UI & Logic === */
 const boneTunerPanel = document.createElement("div");
