@@ -1415,18 +1415,6 @@ if (key && POSE_OVERRIDES[key]){
   model.position.set(posX, posY, posZ);
   model.rotation.set(rotX, rotY, rotZ);
 
- // Apply any per-test thigh/calf overrides (if present)
-  if (key && POSE_OVERRIDES[key]){
-    // ⭐ NEW CHECK: ONLY apply overrides if resistance is NOT active
-    if (!isResistanceActive) { 
-      applyLimbOverridesFromOverride(POSE_OVERRIDES[key]);
-    } else {
-      // If resistance is active, we must still apply the base pose 
-      // but skip the head/neck specific rotations, which are handled by applyHoldMovement()
-      // We rely on applyHoldMovement() calling setDegAxis, which uses q0 as its base.
-    }
-  }
-
 // === NEW: Therapist Hand Overrides (separate dictionary) ===
  
  // 1. Determine the key and check if a pose is saved in HAND_OVERRIDES
