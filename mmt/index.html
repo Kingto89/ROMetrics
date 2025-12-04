@@ -1208,6 +1208,12 @@ POSE_OVERRIDES["Foot_Eversion_PF:low"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000
 POSE_OVERRIDES["Gastrocnemius:high"] = { x:-0.500, y:0.000, z:-1.600, rx:0.000, ry:1.920, rz:0.000 }; 
 POSE_OVERRIDES["Gastrocnemius:low"] = { x:-1.520, y:0.800, z:0.550, rx:1.571, ry:0.000, rz:-1.920 };  //prone
 
+
+const BONE_OVERRIDES = {}; // e.g. BONE_OVERRIDES["Anterior_Deltoid:high"] = { boneName:{x:5,y:0,z:-10} };
+
+
+
+  
 /* ==== HAND OVERRIDES (new, separate from pose) ==== */
 const HAND_OVERRIDES = {};
 HAND_OVERRIDES["Capital_Extension:high"] = {"handRX":3.7084705208004003,"handRY":-5.1987606148409595,"handRZ":-4.6035542788667625,"handRRX":3.1683205406154173,"handRRY":-3.344445299653452,"handRRZ":-0.9229091699147043,"handLX":3.733414292335506,"handLY":-4.564649659395211,"handLZ":-4.626662611961357,"handLRX":-0.23128912206036426,"handLRY":0.3726189086851196,"handLRZ":0.8238038715507627};
@@ -1293,6 +1299,91 @@ function shouldResistanceBeDisabled() {
     // Default: Grades 3, 4, 5 and Grade 2 Gastroc use manual resistance/hold time.
     return false; 
 }
+/* ========================= BONE TUNER (DEVELOPER TOOL) ========================= */
+const RIGGED_BONES = [
+  "spine01","spine02","spine03","neck","head",
+  "clavicle_L","clavicle_R","upperarm_L","upperarm_R",
+  "lowerarm_L","lowerarm_R","hand_L","hand_R",
+  "thigh_L","thigh_R","calf_L","calf_R","foot_L","foot_R",
+  "toes_L","toes_R"
+];
+  
+function applyTunerOverrides(testKey, gradeBucket){
+  if(!skeleton) return;
+  const key = `${testKey}:${gradeBucket}`;
+  const dict = BONE_OVERRIDES[key];
+  if(!dict) return;
+
+  // Apply each bone’s stored rotations before hand placement
+  for(const boneName in dict){
+    const bone = getBone(boneName);
+    const rot = dict[boneName];
+    if(bone && rot){
+      const e = new THREE.Euler(
+        THREE.MathUtils.degToRad(rot.x||0),
+        THREE.MathUtils.degToRad(rot.y||0),
+        THREE.MathUtils.degToRad(rot.z||0),
+        'XYZ'
+      );
+      const qDelta = new THREE.Quaternion().setFromEuler(e);
+      bone.quaternion.multiply(qDelta);
+    }
+  }
+  console.log("✅ Applied Bone Tuner Overrides for", key);
+}
+
+/* === Bone Tuner UI & Logic === */
+const boneTunerPanel = document.createElement("div");
+boneTunerPanel.id = "boneTuner";
+boneTunerPanel.innerHTML = `
+  <div class="dragbar">🦴 Bone Tuner <span class="hint">developer</span></div>
+  <div class="content">
+    <label>Bone</label>
+    <select id="boneSel">${RIGGED_BONES.map(b=>`<option value="${b}">${b}</option>`).join("")}</select>
+    <label>Rotation (deg)</label>
+    <div class="row">
+      <button id="xMinus">X−</button><button id="xPlus">X+</button>
+      <button id="yMinus">Y−</button><button id="yPlus">Y+</button>
+      <button id="zMinus">Z−</button><button id="zPlus">Z+</button>
+    </div>
+    <button id="saveBoneOverride" class="mini">💾 Save Override</button>
+  </div>`;
+boneTunerPanel.className = "panel";
+boneTunerPanel.style.left = "430px";
+boneTunerPanel.style.top = "12px";
+document.body.appendChild(boneTunerPanel);
+
+function rotateBone(axis, delta){
+  const bName = $("boneSel").value;
+  const bone = getBone(bName);
+  if(!bone) return;
+  const r = THREE.MathUtils.degToRad(delta);
+  const e = new THREE.Euler();
+  e[axis] = r;
+  bone.quaternion.multiply(new THREE.Quaternion().setFromEuler(e));
+}
+
+["x","y","z"].forEach(a=>{
+  $(""+a+"Plus").onclick = ()=>rotateBone(a, 5);
+  $(""+a+"Minus").onclick= ()=>rotateBone(a,-5);
+});
+
+$("saveBoneOverride").onclick = ()=>{
+  const testKey = actionSel.value;
+  const gradeBucket = (gradeMain.disabled ? gradeExceptions.value : gradeMain.value)=="2" ? "low":"high";
+  const key = `${testKey}:${gradeBucket}`;
+  if(!testKey){ alert("Select an MMT test first"); return; }
+  if(!BONE_OVERRIDES[key]) BONE_OVERRIDES[key]={};
+  const bName = $("boneSel").value;
+  const q = getBone(bName).rotation;
+  BONE_OVERRIDES[key][bName] = {
+    x:THREE.MathUtils.radToDeg(q.x),
+    y:THREE.MathUtils.radToDeg(q.y),
+    z:THREE.MathUtils.radToDeg(q.z)
+  };
+  console.log(`BONE_OVERRIDES["${key}"] =`, BONE_OVERRIDES[key]);
+  $("msg").textContent=`Saved override for ${bName} (${key})`;
+};
 
 // Coarse body-mode: align to bed/cabinet but don't set specific joint test angles
 function setBodyMode(mode, isResistanceActive = false){ // <-- ADDED isResistanceActive = false
@@ -1414,7 +1505,10 @@ if (key && POSE_OVERRIDES[key]){
 
   model.position.set(posX, posY, posZ);
   model.rotation.set(rotX, rotY, rotZ);
-
+  // NEW: Apply Bone Tuner overrides (patient skeleton) BEFORE therapist hands
+  if (CURRENT_BODY_TEST && CURRENT_BODY_BUCKET) {
+    applyTunerOverrides(CURRENT_BODY_TEST, CURRENT_BODY_BUCKET);
+  }
 // === NEW: Therapist Hand Overrides (separate dictionary) ===
  
  // 1. Determine the key and check if a pose is saved in HAND_OVERRIDES
