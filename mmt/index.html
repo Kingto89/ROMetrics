@@ -3389,7 +3389,7 @@ btnSave.onclick = () => {
   const footEvL  = extractAxisDeg("foot_L", "z");
   const neckLatL = extractAxisDeg("neck",   "z");
 
-  // Spine segments – save all axes
+  // Spine segments – read all axes
   const spine01x = extractAxisDeg("spine01", "x");
   const spine01y = extractAxisDeg("spine01", "y");
   const spine01z = extractAxisDeg("spine01", "z");
@@ -3400,34 +3400,48 @@ btnSave.onclick = () => {
   const spine03y = extractAxisDeg("spine03", "y");
   const spine03z = extractAxisDeg("spine03", "z");
 
+  // Only treat spine as "active" if anything is actually non-zero this session
+  const hasSpine =
+    Math.abs(spine01x) > 0.01 || Math.abs(spine01y) > 0.01 || Math.abs(spine01z) > 0.01 ||
+    Math.abs(spine02x) > 0.01 || Math.abs(spine02y) > 0.01 || Math.abs(spine02z) > 0.01 ||
+    Math.abs(spine03x) > 0.01 || Math.abs(spine03y) > 0.01 || Math.abs(spine03z) > 0.01;
+
   o.pf       = GLOBAL_PF_DEG || 0;
   o.footInvR = footInvR;
   o.footEvL  = footEvL;
   o.neckLatL = neckLatL;
 
-  o.spine01x = spine01x;
-  o.spine01y = spine01y;
-  o.spine01z = spine01z;
-  o.spine02x = spine02x;
-  o.spine02y = spine02y;
-  o.spine02z = spine02z;
-  o.spine03x = spine03x;
-  o.spine03y = spine03y;
-  o.spine03z = spine03z;
+  if (hasSpine) {
+    o.spine01x = spine01x;
+    o.spine01y = spine01y;
+    o.spine01z = spine01z;
+    o.spine02x = spine02x;
+    o.spine02y = spine02y;
+    o.spine02z = spine02z;
+    o.spine03x = spine03x;
+    o.spine03y = spine03y;
+    o.spine03z = spine03z;
+  }
 
-  console.log(
+  let msg =
     `POSE_OVERRIDES["${key}"] = { ` +
     `x:${o.x.toFixed(3)}, y:${o.y.toFixed(3)}, z:${o.z.toFixed(3)}, ` +
     `rx:${o.rx.toFixed(3)}, ry:${o.ry.toFixed(3)}, rz:${o.rz.toFixed(3)}, ` +
     `pf:${o.pf.toFixed(1)}, ` +
-    `footInvR:${o.footInvR.toFixed(1)}, footEvL:${o.footEvL.toFixed(1)}, neckLatL:${o.neckLatL.toFixed(1)}, ` +
-    `spine01x:${o.spine01x.toFixed(1)}, spine01y:${o.spine01y.toFixed(1)}, spine01z:${o.spine01z.toFixed(1)}, ` +
-    `spine02x:${o.spine02x.toFixed(1)}, spine02y:${o.spine02y.toFixed(1)}, spine02z:${o.spine02z.toFixed(1)}, ` +
-    `spine03x:${o.spine03x.toFixed(1)}, spine03y:${o.spine03y.toFixed(1)}, spine03z:${o.spine03z.toFixed(1)} };`
-  );
+    `footInvR:${o.footInvR.toFixed(1)}, footEvL:${o.footEvL.toFixed(1)}, neckLatL:${o.neckLatL.toFixed(1)}`;
+
+  if (hasSpine) {
+    msg +=
+      `, spine01x:${o.spine01x.toFixed(1)}, spine01y:${o.spine01y.toFixed(1)}, spine01z:${o.spine01z.toFixed(1)}, ` +
+      `spine02x:${o.spine02x.toFixed(1)}, spine02y:${o.spine02y.toFixed(1)}, spine02z:${o.spine02z.toFixed(1)}, ` +
+      `spine03x:${o.spine03x.toFixed(1)}, spine03y:${o.spine03y.toFixed(1)}, spine03z:${o.spine03z.toFixed(1)}`;
+  }
+
+  msg += ' };';
+  console.log(msg);
 
   labelTest.style.color = '#22c55e';
-  setTimeout(()=>labelTest.style.color='#e2e8f0', 600);
+  setTimeout(() => labelTest.style.color = '#e2e8f0', 600);
 };
 
 
