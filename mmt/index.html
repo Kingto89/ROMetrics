@@ -1217,7 +1217,7 @@ POSE_OVERRIDES["Upper_Trapezius:high"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000
 POSE_OVERRIDES["Upper_Trapezius:low"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0 }; //normal prone
 POSE_OVERRIDES["Middle_Trapezius:high"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0, upperArmRZ: -85, lowerArmRX: 90 };
 POSE_OVERRIDES["Middle_Trapezius:low"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0, upperArmRZ: -85, lowerArmRX: 90 };
-POSE_OVERRIDES["Scap_Depression_Adduction:high"] = { x:0.120, y:1.090, z:-0.470, rx:1.571, ry:-4.625, rz:0.000, pf:0.0, footInvR:0.0, footEvL:0.0, neckLatL:0.0 };
+POSE_OVERRIDES["Scap_Depression_Adduction:high"] = { x:-1.220, y:0.830, z:0.450, rx:1.606, ry:0.000, rz:-1.885, pf:0.0, footInvR:-0.5, footEvL:0.4, neckLatL:0.0, footRX:-41.6, footRY:-6, footRZ:-0.5, footLX:-39.6, footLY:5.8, footLZ:0.4, upperArmRX:35.9, upperArmRY:20.2, upperArmRZ:-89.7, clavicleRX:-2.2, clavicleRZ:-12.9, lowerArmRX:-4.4, lowerArmRY:48.2, lowerArmRZ:15.2, thumb01RX:-9.1, thumb01RY:14.3, thumb01RZ:-6.1, pinky02RX:-27.9, pinky02RY:-1.1, pinky02RZ:-2.8, pinky01RX:-24.3, pinky01RY:-1, pinky01RZ:2.8, pinky03RX:-46.9, pinky03RY:-0.8, pinky03RZ:2.9, ring03RX:-24.5, ring03RY:-1.1, ring02RX:-25.5, ring02RZ:-0.2, ring01RX:-27.4, ring01RY:-1, ring01RZ:2.5, middle01RX:-34.5, middle01RY:1.9, middle01RZ:6.1, middle03RX:-33, middle03RY:1, middle03RZ:-5.2, index01RX:-35.8, index01RY:2.5, index01RZ:7.5, index03RX:-26.9, index03RZ:2.5 };
 POSE_OVERRIDES["Scap_Depression_Adduction:low"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000, pf:-10.0, lowerArmRX: 25, lowerArmLX: 25, handLX: 42, handRX: 42, handLY: 145, handRY: -145 };  //seated
 POSE_OVERRIDES["Rhomboids:high"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0 };  
 POSE_OVERRIDES["Rhomboids:low"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920, pf:45.0 };
@@ -3306,7 +3306,7 @@ function handleBoneTuning(btn, mode, axis, delta, bone) {
     }
 
     // Determine step size (fine: 0.5° for bpos, coarse: 1.0° for brot)
-    const stepDeg = (mode === 'bpos') ? 1.5 : 1.0; 
+    const stepDeg = (mode === 'bpos') ? 0.5 : 1.0; 
     const dir = parseFloat(btn.getAttribute('data-delta') || '0');
     const finalDeltaRad = THREE.MathUtils.degToRad( (dir > 0 ? stepDeg : -stepDeg) );
     
@@ -3378,6 +3378,7 @@ if (key && axis && mode !== 'brot'){
   });
 });
 
+  // Save button logs config INCLUDING all bone rotations
 btnSave.onclick = () => {
   const key = ensureOverrideFromCurrentPose();
   if (!key) return;
@@ -3388,76 +3389,21 @@ btnSave.onclick = () => {
   const footInvR = extractAxisDeg("foot_R", "z");
   const footEvL  = extractAxisDeg("foot_L", "z");
   const neckLatL = extractAxisDeg("neck",   "z");
-
-  // Spine segments – read all axes
-  const spine01x = extractAxisDeg("spine01", "x");
-  const spine01y = extractAxisDeg("spine01", "y");
-  const spine01z = extractAxisDeg("spine01", "z");
-  const spine02x = extractAxisDeg("spine02", "x");
-  const spine02y = extractAxisDeg("spine02", "y");
-  const spine02z = extractAxisDeg("spine02", "z");
-  const spine03x = extractAxisDeg("spine03", "x");
-  const spine03y = extractAxisDeg("spine03", "y");
-  const spine03z = extractAxisDeg("spine03", "z");
-
-  // Per-segment flags: only “active” if that segment actually moved
-  const spine01Active =
-    Math.abs(spine01x) > 0.01 || Math.abs(spine01y) > 0.01 || Math.abs(spine01z) > 0.01;
-  const spine02Active =
-    Math.abs(spine02x) > 0.01 || Math.abs(spine02y) > 0.01 || Math.abs(spine02z) > 0.01;
-  const spine03Active =
-    Math.abs(spine03x) > 0.01 || Math.abs(spine03y) > 0.01 || Math.abs(spine03z) > 0.01;
-
-  const hasSpine = spine01Active || spine02Active || spine03Active;
-
   o.pf       = GLOBAL_PF_DEG || 0;
   o.footInvR = footInvR;
   o.footEvL  = footEvL;
   o.neckLatL = neckLatL;
 
-  // Only write spine values for the segments that actually changed
-  if (spine01Active) {
-    o.spine01x = spine01x;
-    o.spine01y = spine01y;
-    o.spine01z = spine01z;
-  }
-  if (spine02Active) {
-    o.spine02x = spine02x;
-    o.spine02y = spine02y;
-    o.spine02z = spine02z;
-  }
-  if (spine03Active) {
-    o.spine03x = spine03x;
-    o.spine03y = spine03y;
-    o.spine03z = spine03z;
-  }
-
-  let msg =
+  console.log(
     `POSE_OVERRIDES["${key}"] = { ` +
     `x:${o.x.toFixed(3)}, y:${o.y.toFixed(3)}, z:${o.z.toFixed(3)}, ` +
     `rx:${o.rx.toFixed(3)}, ry:${o.ry.toFixed(3)}, rz:${o.rz.toFixed(3)}, ` +
     `pf:${o.pf.toFixed(1)}, ` +
-    `footInvR:${o.footInvR.toFixed(1)}, footEvL:${o.footEvL.toFixed(1)}, neckLatL:${o.neckLatL.toFixed(1)}`;
-
-  // Append only the active segments
-  if (spine01Active) {
-    msg +=
-      `, spine01x:${o.spine01x.toFixed(1)}, spine01y:${o.spine01y.toFixed(1)}, spine01z:${o.spine01z.toFixed(1)}`;
-  }
-  if (spine02Active) {
-    msg +=
-      `, spine02x:${o.spine02x.toFixed(1)}, spine02y:${o.spine02y.toFixed(1)}, spine02z:${o.spine02z.toFixed(1)}`;
-  }
-  if (spine03Active) {
-    msg +=
-      `, spine03x:${o.spine03x.toFixed(1)}, spine03y:${o.spine03y.toFixed(1)}, spine03z:${o.spine03z.toFixed(1)}`;
-  }
-
-  msg += ' };';
-  console.log(msg);
+    `footInvR:${o.footInvR.toFixed(1)}, footEvL:${o.footEvL.toFixed(1)}, neckLatL:${o.neckLatL.toFixed(1)} };`
+  );
 
   labelTest.style.color = '#22c55e';
-  setTimeout(() => labelTest.style.color = '#e2e8f0', 600);
+  setTimeout(()=>labelTest.style.color='#e2e8f0', 600);
 };
 
 
@@ -3466,7 +3412,6 @@ btnSave.onclick = () => {
     poseTunerVisible = false;
     poseTunerEl.style.display = 'none';
   };
-
 
   // Public helper so other code can refresh labels when test/grade changes
   poseTunerEl.updateLabels = updateLabels;
