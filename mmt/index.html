@@ -1230,7 +1230,12 @@ BONE_OVERRIDES["Trunk_Ext_Thoracic:high"] = { clavicle_L:{ x:-0.6, y:-15.1, z:-7
 BONE_OVERRIDES["Trunk_Flexion:high"] = { clavicle_L:{ x:-0.9, y:-5.1, z:-77.9 }, clavicle_R:{ x:-0.9, y:5.1, z:67.9 }, hand_L:{ x:-5.9, y:-10.3, z:-6.0 }, lowerarm_L:{ x:13.8, y:9.7, z:132.4 }, lowerarm_R:{ x:17.6, y:-6.2, z:-138.1 }, spine01:{ x:41.0, y:-0.0, z:0.0 }, spine03:{ x:20.1, y:0.0, z:-0.0 }, thigh_L:{ x:3.9, y:-0.1, z:174.6 }, thigh_R:{ x:3.9, y:0.1, z:-174.6 }, upperarm_L:{ x:6.8, y:5.1, z:20.0 }, upperarm_R:{ x:-12.0, y:-8.8, z:-11.8 } };  
 BONE_OVERRIDES["Trunk_Rotation:high"] = { clavicle_L:{ x:-0.9, y:-5.1, z:-72.9 }, clavicle_R:{ x:-0.9, y:5.1, z:82.9 }, hand_L:{ x:4.1, y:-12.1, z:-14.0 }, hand_R:{ x:-18.8, y:18.5, z:15.1 }, lowerarm_L:{ x:12.5, y:10.7, z:133.0 }, lowerarm_R:{ x:3.0, y:-19.7, z:-134.9 }, spine01:{ x:11.9, y:48.8, z:9.4 }, spine02:{ x:10.6, y:24.2, z:-0.2 }, spine03:{ x:2.6, y:-33.9, z:-2.0 }, thigh_L:{ x:3.9, y:-0.1, z:174.6 }, thigh_R:{ x:3.9, y:0.1, z:-174.6 }, upperarm_L:{ x:-12.4, y:-10.4, z:35.5 }, upperarm_R:{ x:60.6, y:-0.5, z:-8.6 } };
 BONE_OVERRIDES["Pelvic_Elevation:high"] = { foot_R:{ x:40.5, y:7.1, z:4.7 }, lowerarm_L:{ x:4.6, y:1.4, z:-6.5 }, lowerarm_R:{ x:9.3, y:-2.7, z:-2.9 }, thigh_L:{ x:-1.1, y:-0.5, z:-175.4 }, thigh_R:{ x:3.9, y:0.1, z:175.4 }, upperarm_L:{ x:-19.3, y:10.2, z:-61.8 }, upperarm_R:{ x:-15.1, y:-12.8, z:62.6 } };
+BONE_OVERRIDES["Biceps_Brachii:high"] = { clavicle_R:{ x:12.2, y:14.2, z:115.0 }, hand_R:{ x:54.7, y:8.7, z:-3.1 }, lowerarm_L:{ x:34.3, y:3.8, z:1.3 }, lowerarm_R:{ x:49.3, y:-3.9, z:-0.4 }, upperarm_L:{ x:-0.7, y:-63.1, z:-69.4 }, upperarm_R:{ x:-20.4, y:-3.4, z:56.5 } };
+BONE_OVERRIDES["Brachialis:high"] = { clavicle_L:{ x:-30.6, y:1.7, z:-93.4 }, clavicle_R:{ x:25.6, y:1.2, z:103.6 }, hand_L:{ x:-0.0, y:39.4, z:-7.6 }, lowerarm_L:{ x:-2.7, y:49.2, z:80.0 }, lowerarm_R:{ x:-0.7, y:-63.1, z:-69.4  }, upperarm_L:{ x:53.5, y:32.2, z:-83.9 }, upperarm_R:{ x:-20.4, y:-3.4, z:56.5 };  
+BONE_OVERRIDES["Brachioradialis:high"] = { lowerarm_L:{ x:18.8, y:28.3, z:30.1 }, upperarm_L:{ x:42.0, y:-13.9, z:-40.5 }, lowerarm_R:{ x:49.3, y:-3.9, z:-0.4 }, upperarm_R:{ x:-15.1, y:-12.8, z:62.6 } };
+BONE_OVERRIDES["Triceps_Brachii:high"] = { clavicle_L:{ x:-0.9, y:-5.1, z:-102.9 }, clavicle_R:{ x:-0.8, y:10.1, z:87.9 }, foot_L:{ x:15.5, y:-4.4, z:-7.2 }, foot_R:{ x:20.4, y:5.0, z:6.8 }, upperarm_R:{ x:-12.0, y:-8.8, z:-1.8 } };
 
+  
   
 /* ==== HAND OVERRIDES (new, separate from pose) ==== */
 const HAND_OVERRIDES = {};
@@ -1326,18 +1331,18 @@ const RIGGED_BONES = [
   "toes_L","toes_R",
 
   // FINGERS — LEFT
-  "thumb_01_L","thumb_02_L","thumb_03_L",
-  "index_01_L","index_02_L","index_03_L",
-  "middle_01_L","middle_02_L","middle_03_L",
-  "ring_01_L","ring_02_L","ring_03_L",
-  "pinky_01_L","pinky_02_L","pinky_03_L",
+  "thumb01_L","thumb02_L","thumb03_L",
+  "index01_L","index02_L","index03_L",
+  "middle01_L","middle02_L","middle03_L",
+  "ring01_L","ring02_L","ring03_L",
+  "pinky01_L","pinky02_L","pinky03_L",
 
   // FINGERS — RIGHT
-  "thumb_01_R","thumb_02_R","thumb_03_R",
-  "index_01_R","index_02_R","index_03_R",
-  "middle_01_R","middle_02_R","middle_03_R",
-  "ring_01_R","ring_02_R","ring_03_R",
-  "pinky_01_R","pinky_02_R","pinky_03_R"
+  "thumb01_R","thumb02_R","thumb03_R",
+  "index01_R","index02_R","index03_R",
+  "middle01_R","middle02_R","middle03_R",
+  "ring01_R","ring02_R","ring03_R",
+  "pinky01_R","pinky02_R","pinky03_R"
 ];
 const MODIFIED_BONES = new Set(); // only bones touched by tuner this session
   
