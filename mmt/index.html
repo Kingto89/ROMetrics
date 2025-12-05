@@ -944,6 +944,46 @@ const CERVICAL_MMT_MAP = {
   Single_SCM:          ['head', 'ry', 0],    // Single SCM (Rotation)
   Cervical_Rotation:   ['head', 'y', -1]     // Rotation (Y is rotation)
 };  
+// If your rig uses "wrist_L/R" instead of "hand_L/R", change those two names below.
+function applyAnatomicBaseline(){
+  const shL = getBone('upperarm_L'), shR = getBone('upperarm_R'); // shoulder ab/ad on Z
+  const faL = getBone('forearm_L'),  faR = getBone('forearm_R');  // forearm PS on Y
+  const wrL = getBone('hand_L'),     wrR = getBone('hand_R');     // wrist PS on Y (use 'wrist_*' if needed)
+
+  setDegAxis(shL, 'z', ANAT.add);
+  setDegAxis(shR, 'z', -ANAT.add);
+
+  setDegAxis(wrL, 'y', ANAT.wps);
+  setDegAxis(wrR, 'y', -ANAT.wps);   
+}
+  
+/**
+ * Applies a small, slow, incremental movement to the bone being tested.
+ * Simulates the patient straining against resistance.
+ */
+function applyHoldMovement() {
+  const testKey = actionSel.value;
+  if (!testKey || isPracticeModeActive) return;
+
+  const mapping = CERVICAL_MMT_MAP[testKey];
+  if (!mapping) return; // Not a targeted MMT test (e.g., Elbow, Hip), so skip
+
+  const [boneName, axis, direction] = mapping;
+  const bone = getBone(boneName);
+  if (!bone) return;
+
+  const MAX_HOLD_ANGLE = 5; // Maximum visible movement (degrees) - greatly reduced ROM
+  const STEP_INCREMENT = 0.15; // Speed (degrees per tick/100ms) - slow enough for visual hold
+  const MAX_TREMOR_DISPLACEMENT = 0.003; // 3 mm maximum random shift for hand tremor (in meters)
+  
+  // 1. Increment the hold angle slowly
+  currentHoldAngle = Math.min(MAX_HOLD_ANGLE, currentHoldAngle + STEP_INCREMENT);
+
+  // 2. Calculate the total rotation (direction is 1 or -1)
+  const totalRotation = currentHoldAngle * direction;
+
+  // 3. Apply the rotation
+  setDegAxis(bone, axis, totalRotation);
 // 2. ⭐ NEW: Hand Tremor Logic (only if hands are loaded and visible)
   // -------------------------------------------------------------
   if (leftHandModel && handsModel?.visible) {
