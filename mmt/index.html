@@ -944,31 +944,6 @@ const CERVICAL_MMT_MAP = {
   Single_SCM:          ['head', 'ry', 0],    // Single SCM (Rotation)
   Cervical_Rotation:   ['head', 'y', -1]     // Rotation (Y is rotation)
 };  
-// If your rig uses "wrist_L/R" instead of "hand_L/R", change those two names below.
-function applyAnatomicBaseline(){
-  const shL = getBone('upperarm_L'), shR = getBone('upperarm_R'); // shoulder ab/ad on Z
-  const faL = getBone('forearm_L'),  faR = getBone('forearm_R');  // forearm PS on Y
-  const wrL = getBone('hand_L'),     wrR = getBone('hand_R');     // wrist PS on Y (use 'wrist_*' if needed)
-
-  setDegAxis(shL, 'z', ANAT.add);
-  setDegAxis(shR, 'z', -ANAT.add);
-
-  setDegAxis(wrL, 'y', ANAT.wps);
-  setDegAxis(wrR, 'y', -ANAT.wps);   
-}
-  
-// If your rig uses "wrist_L/R" instead of "hand_L/R", change those two names below.
-function applyAnatomicBaseline(){
-  const shL = getBone('upperarm_L'), shR = getBone('upperarm_R'); // shoulder ab/ad on Z
-  const faL = getBone('forearm_L'),  faR = getBone('forearm_R');  // forearm PS on Y
-  const wrL = getBone('hand_L'),     wrR = getBone('hand_R');     // wrist PS on Y (use 'wrist_*' if needed)
-
-  setDegAxis(shL, 'z', ANAT.add);
-  setDegAxis(shR, 'z', -ANAT.add);
-
-  setDegAxis(wrL, 'y', ANAT.wps);
-  setDegAxis(wrR, 'y', -ANAT.wps);   
-}
   
 /**
  * Applies a small, slow, incremental movement to the bone being tested.
