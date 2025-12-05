@@ -984,6 +984,19 @@ function applyHoldMovement() {
 
   // 3. Apply the rotation
   setDegAxis(bone, axis, totalRotation);
+ // ⭐ NEW: Head tremor during resistance hold (Moved from Steady.html)
+{
+  const head = getBone('head');
+  if (head) {
+    const AMP_DEG = 0.35; // max ~0.35° each axis per tick
+    const jx = (Math.random() * 2 - 1) * AMP_DEG;
+    const jy = (Math.random() * 2 - 1) * AMP_DEG;
+    const jz = (Math.random() * 2 - 1) * AMP_DEG;
+    head.rotateX(degToRad(jx));
+    head.rotateY(degToRad(jy));
+    head.rotateZ(degToRad(jz));
+  }
+} 
 // 2. ⭐ NEW: Hand Tremor Logic (only if hands are loaded and visible)
   // -------------------------------------------------------------
   if (leftHandModel && handsModel?.visible) {
