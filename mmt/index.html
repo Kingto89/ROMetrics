@@ -941,9 +941,22 @@ const CERVICAL_MMT_MAP = {
   Cervical_Extension:  ['neck', 'x', -1],   // Prone: Extends neck (Pitch down)
   Capital_Flexion:     ['head', 'x', 1],    // Supine: Flexes head (Pitch up)
   Cervical_Flexion:    ['neck', 'x', 1],    // Supine: Flexes neck (Pitch up)
-  Single_SCM:          ['head', 'y', 1],    // Single SCM (Rotation)
+  Single_SCM:          ['head', 'ry', 0],    // Single SCM (Rotation)
   Cervical_Rotation:   ['head', 'y', -1]     // Rotation (Y is rotation)
 };  
+// If your rig uses "wrist_L/R" instead of "hand_L/R", change those two names below.
+function applyAnatomicBaseline(){
+  const shL = getBone('upperarm_L'), shR = getBone('upperarm_R'); // shoulder ab/ad on Z
+  const faL = getBone('forearm_L'),  faR = getBone('forearm_R');  // forearm PS on Y
+  const wrL = getBone('hand_L'),     wrR = getBone('hand_R');     // wrist PS on Y (use 'wrist_*' if needed)
+
+  setDegAxis(shL, 'z', ANAT.add);
+  setDegAxis(shR, 'z', -ANAT.add);
+
+  setDegAxis(wrL, 'y', ANAT.wps);
+  setDegAxis(wrR, 'y', -ANAT.wps);   
+}
+  
 // If your rig uses "wrist_L/R" instead of "hand_L/R", change those two names below.
 function applyAnatomicBaseline(){
   const shL = getBone('upperarm_L'), shR = getBone('upperarm_R'); // shoulder ab/ad on Z
@@ -984,6 +997,19 @@ function applyHoldMovement() {
 
   // 3. Apply the rotation
   setDegAxis(bone, axis, totalRotation);
+  // NEW: Head tremor during resistance hold (tiny random rotations)
+{
+  const head = getBone('head');
+  if (head) {
+    const AMP_DEG = 0.35; // max ~0.35° each axis per tick
+    const jx = (Math.random() * 2 - 1) * AMP_DEG;
+    const jy = (Math.random() * 2 - 1) * AMP_DEG;
+    const jz = (Math.random() * 2 - 1) * AMP_DEG;
+    head.rotateX(degToRad(jx));
+    head.rotateY(degToRad(jy));
+    head.rotateZ(degToRad(jz));
+  }
+}
 // 2. ⭐ NEW: Hand Tremor Logic (only if hands are loaded and visible)
   // -------------------------------------------------------------
   if (leftHandModel && handsModel?.visible) {
