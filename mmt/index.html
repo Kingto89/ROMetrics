@@ -294,12 +294,16 @@ let resistanceVectorMesh = null; // Green Resistance Tunnel
 
 /* ==== VECTOR GUIDES: Origin (Pos) and Direction (Dir) for Effort (E) and Resistance (R) ==== */
 const VECTOR_GUIDES = {
+    
     // Capital Extension: Patient is Prone (Head off the table, facing the floor)
     Capital_Extension: { 
-        E_startPos: { x: 0.0, y: 1.05, z: 0.0 }, 
-        E_direction: { x: 0, y: 0.7, z: 0.0 },  
-        R_startPos: { x: 0.05, y: 1.15, z: 0.0 }, 
-        R_direction: { x: 0, y: -0.7, z: 0.0 }  
+        // Effort Vector (Blue): Starts near the back of the head, pointing UP/BACK
+        E_startPos: { x: 0.0, y: 0.95, z: -0.1 },  // Start point near occiput
+        E_direction: { x: 0, y: 0.7, z: 0.0 },     // Direction is mainly vertical (up)
+        
+        // Resistance Vector (Green): Starts slightly above the effort, pointing DOWN/FORWARD
+        R_startPos: { x: 0.05, y: 1.05, z: -0.1 }, // Start point on therapist's hand/occiput
+        R_direction: { x: 0, y: -0.7, z: 0.1 }     // Direction is down and slightly forward
     },
     
     // Anterior Deltoid (Shoulder Flexion): Patient is Seated, Arm at side
@@ -1434,7 +1438,7 @@ boneTunerPanel.className = "panel";
 boneTunerPanel.style.left = "430px";
 boneTunerPanel.style.top = "12px";
 document.body.appendChild(boneTunerPanel);
-boneTunerPanel.style.display = 'none'; // <--- Hides the simple bone tuner  
+boneTunerPanel.style.display = 'block'; // <--- Hides the simple bone tuner  
 
 function rotateBone(axis, delta){
   const bName = $("boneSel").value;
@@ -2773,7 +2777,7 @@ function onPointerDownTransformControls(event) {
 <div id="handTuner" style="
   position:fixed; right:12px; top:80px; width:240px;
   background:#ffffffdd; padding:12px; border-radius:10px;
-  font-family:system-ui; display:block; z-index:9999; box-shadow:0 0 10px #0003;
+  font-family:system-ui; display:none; z-index:9999; box-shadow:0 0 10px #0003;
 ">
   <div style="font-weight:600; margin-bottom:8px;">Therapist Hand Tuner</div>
 
