@@ -450,6 +450,27 @@ function updateResistanceFill() {
 }
 
 function executeVoluntaryMovement() {
+// 1. Define tests that should SKIP the voluntary movement phase
+    const NO_VOLUNTARY_MOVEMENT_TESTS = [
+      'Capital_Extension', 
+      'Cervical_Extension',
+      'Capital_Flexion',
+      'Cervical_Flexion',
+      'Single_SCM', // <-- **ADD THIS TEST**
+      'Cervical_Rotation'
+      // Add other tests here if they require the patient to start in the final position 
+    ];
+
+    const testKey = actionSel.value;
+
+    if (NO_VOLUNTARY_MOVEMENT_TESTS.includes(testKey)) {
+        // For neck MMTs (and others listed), skip the 0.5s movement delay 
+        // and jump straight to the resistance phase.
+        isMMTMoving = false;
+        testButton.disabled = false;
+        $("msg").textContent = "Movement skipped. Hold the resistance button to apply pressure (Tremor Active).";
+        return; // EXIT THE FUNCTION EARLY
+    }  
     isMMTMoving = true;
     testButton.disabled = true; 
     $("msg").textContent = "Patient is executing voluntary movement (0.5s)...";
