@@ -339,10 +339,14 @@ function toggleRoomLock() {
 if (lockRoomBtn) lockRoomBtn.addEventListener('click', toggleRoomLock);
 
 /* ==== Vector Overlay and 3D Tunnel Logic (MMT Guidance) ==== */
-
-// Utility function to create the energy tunnel mesh
+// index (80).html - REPLACEMENT FOR createEnergyTunnel() (Around line 170)
+// This function creates the cylinder (tunnel) and adds a cone (arrowhead) at one end.
 function createEnergyTunnel(color) {
-    const geometry = new THREE.CylinderGeometry(0.04, 0.04, 0.7, 16); 
+    const TUNNEL_LENGTH = 0.7; // Length of the cylinder
+    const TUNNEL_RADIUS = 0.02; // Half size (from 0.04 to 0.02)
+    
+    // 1. Cylinder (Tunnel Body)
+    const geometry = new THREE.CylinderGeometry(TUNNEL_RADIUS, TUNNEL_RADIUS, TUNNEL_LENGTH, 16); 
     const material = new THREE.MeshBasicMaterial({ 
         color: color, 
         transparent: true, 
@@ -350,18 +354,34 @@ function createEnergyTunnel(color) {
         side: THREE.DoubleSide
     });
     const mesh = new THREE.Mesh(geometry, material);
-    mesh.matrixAutoUpdate = false;
-    mesh.visible = false;
-    scene.add(mesh);
-    return mesh;
+    
+    // 2. Cone (Arrow Tip)
+    const coneGeom = new THREE.ConeGeometry(TUNNEL_RADIUS * 1.8, 0.1, 16); // Slightly wider cone
+    const coneMesh = new THREE.Mesh(coneGeom, material);
+    
+    // Position the cone at the end of the cylinder (0.5 * length)
+    coneMesh.position.y = TUNNEL_LENGTH / 2; 
+    
+    // Combine the mesh and the cone into a single Group
+    const group = new THREE.Group();
+    group.add(mesh);
+    group.add(coneMesh);
+    
+    group.matrixAutoUpdate = false;
+    group.visible = false;
+    scene.add(group);
+    return group;
 }
 
-// Function to calculate position and rotation for the tunnel
+// ALSO: Locate positionVector function (around line 190) and change the hardcoded distance:
+// Position Vector (Around line 190)
 const _up = new THREE.Vector3(0, 1, 0); 
 function positionVector(mesh, startPos, direction) {
     const dir = new THREE.Vector3().set(direction.x, direction.y, direction.z).normalize();
-    const midPoint = new THREE.Vector3().set(startPos.x, startPos.y, startPos.z).addScaledVector(dir, 0.7 / 2);
-    
+    // VITAL: Change 0.7 to the constant TUNNEL_LENGTH defined above (or just 0.7)
+    // The positioning logic must use the vector length (0.7) to find the midpoint.
+    const midPoint = new THREE.Vector3().set(startPos.x, startPos.y, startPos.z).addScaledVector(dir, 0.7 / 2); // Keep 0.7 here as it is used for cylinder length
+        
     mesh.position.copy(midPoint);
     
     const rotationQuaternion = new THREE.Quaternion().setFromUnitVectors(_up, dir);
@@ -2738,7 +2758,8 @@ function showVectorTuner(show) {
 
 // ----------------------------------------------------
 // A P P L Y   T U N E R   C H A N G E S
-// ----------------------------------------------------
+// index (80).html - REPLACEMENT for the vectorTunerEl.querySelectorAll('.vectorStep').forEach(btn => {...}); block (Around line 2360)
+
 vectorTunerEl.querySelectorAll('.vectorStep').forEach(btn => {
     btn.addEventListener('click', () => {
         const testKey = actionSel.value;
@@ -2748,21 +2769,49 @@ vectorTunerEl.querySelectorAll('.vectorStep').forEach(btn => {
         const type = vectorTypeSel.value; // E, R, E_DIR, R_DIR
         const axis = btn.dataset.axis;
         const delta = parseFloat(btn.dataset.delta);
+        const mode = btn.dataset.mode; // 'rot' or undefined (for position/magnitude)
         
-        // Determine which object to modify (Start Position or Direction)
         let targetObject;
-        if (type === 'E') targetObject = data.E_startPos;
-        else if (type === 'R') targetObject = data.R_startPos;
-        else if (type === 'E_DIR') targetObject = data.E_direction;
-        else if (type === 'R_DIR') targetObject = data.R_direction;
 
-        if (targetObject) {
-            targetObject[axis] += delta;
+        if (mode !== 'rot') {
+            // --- POSITION / MAGNITUDE ADJUSTMENT (Existing Logic) ---
+            if (type === 'E') targetObject = data.E_startPos;
+            else if (type === 'R') targetObject = data.R_startPos;
+            else if (type === 'E_DIR') targetObject = data.E_direction;
+            else if (type === 'R_DIR') targetObject = data.R_direction;
+
+            if (targetObject) {
+                targetObject[axis] += delta;
+            }
+
+        } else {
+            // --- ROTATION ADJUSTMENT (NEW Logic) ---
+            // Only apply rotation if 'Direction' is selected
+            if (type === 'E_DIR' || type === 'R_DIR') {
+                targetObject = (type === 'E_DIR') ? data.E_direction : data.R_direction;
+                
+                // 1. Convert targetObject to a THREE.Vector3
+                const vector = new THREE.Vector3(targetObject.x, targetObject.y, targetObject.z);
+                const rotationMatrix = new THREE.Matrix4();
+                const deltaRad = THREE.MathUtils.degToRad(delta);
+                
+                // 2. Create rotation matrix around the specified axis
+                if (axis === 'x') rotationMatrix.makeRotationX(deltaRad);
+                else if (axis === 'y') rotationMatrix.makeRotationY(deltaRad);
+                else if (axis === 'z') rotationMatrix.makeRotationZ(deltaRad);
+
+                // 3. Apply rotation to the vector
+                vector.applyMatrix4(rotationMatrix);
+                
+                // 4. Update the targetObject back to plain JavaScript object (needed for saving to console)
+                targetObject.x = vector.x;
+                targetObject.y = vector.y;
+                targetObject.z = vector.z;
+            }
         }
 
         // Re-apply the vector overlay immediately to see the change
         if (areVectorsVisible) {
-            // Toggle off and then back on to force a position update
             toggleVectorOverlay();
             toggleVectorOverlay();
         }
@@ -2998,6 +3047,32 @@ function onPointerDownTransformControls(event) {
     </div>
   </div>
   
+<div style="border-top:1px solid #1f2933;margin:8px 0 8px 0;"></div>
+
+  <label style="display:block;opacity:.85;">Rotation Adjustment (degrees)</label>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:8px;">
+    <div>
+      <div style="opacity:.7;font-size:10px;">X (Pitch)</div>
+      <div class="row">
+        <button data-axis="x" data-delta="-5" data-mode="rot" class="vectorStep mini">−5°</button>
+        <button data-axis="x" data-delta="5" data-mode="rot" class="vectorStep mini">+5°</button>
+      </div>
+    </div>
+    <div>
+      <div style="opacity:.7;font-size:10px;">Y (Yaw)</div>
+      <div class="row">
+        <button data-axis="y" data-delta="-5" data-mode="rot" class="vectorStep mini">−5°</button>
+        <button data-axis="y" data-delta="5" data-mode="rot" class="vectorStep mini">+5°</button>
+      </div>
+    </div>
+    <div>
+      <div style="opacity:.7;font-size:10px;">Z (Roll)</div>
+      <div class="row">
+        <button data-axis="z" data-delta="-5" data-mode="rot" class="vectorStep mini">−5°</button>
+        <button data-axis="z" data-delta="5" data-mode="rot" class="vectorStep mini">+5°</button>
+      </div>
+    </div>
+  </div>
   <div style="margin-top:10px;">
     <button id="vectorTunerSaveBtn" style="width:100%;background:#0f766e;border-color:#0f766e;color:#fff;">Save Vector Config</button>
   </div>
