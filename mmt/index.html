@@ -294,16 +294,13 @@ let resistanceVectorMesh = null; // Green Resistance Tunnel
 
 /* ==== VECTOR GUIDES: Origin (Pos) and Direction (Dir) for Effort (E) and Resistance (R) ==== */
 const VECTOR_GUIDES = {
-    
-    // Capital Extension: Patient is Prone (Head off the table, facing the floor)
-    Capital_Extension: { 
-        // Effort Vector (Blue): Starts near the back of the head, pointing UP/BACK
-        E_startPos: { x: 0.0, y: 0.95, z: -0.1 },  // Start point near occiput
-        E_direction: { x: 0, y: 0.7, z: 0.0 },     // Direction is mainly vertical (up)
-        
-        // Resistance Vector (Green): Starts slightly above the effort, pointing DOWN/FORWARD
-        R_startPos: { x: 0.05, y: 1.05, z: -0.1 }, // Start point on therapist's hand/occiput
-        R_direction: { x: 0, y: -0.7, z: 0.1 }     // Direction is down and slightly forward
+
+   // Capital_Extension: (Aligned Vectors)
+    Capital_Extension: {
+        E_startPos: { x: 0.040, y: 1.550, z: 0.780 },
+        E_direction: { x: 0.000, y: 0.000, z: -0.700 },
+        R_startPos: { x: 0.810, y: 1.530, z: -0.260 },
+        R_direction: { x: 0.000, y: -0.707, z: -0.023 }
     },
     
     // Anterior Deltoid (Shoulder Flexion): Patient is Seated, Arm at side
