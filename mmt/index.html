@@ -2245,7 +2245,12 @@ actionSel.addEventListener("change", () => {
     updateGradeDropdownsForSelection();
     applyBodyPositionFromSelection();
     forceApplyHandOverrideOnce();
-
+    if (isVectorTunerVisible) updateVectorTunerLabels();
+    if (areVectorsVisible) {
+        // Force vector update on test change if visible
+        toggleVectorOverlay();
+        toggleVectorOverlay();
+    }
     if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
 });
 
@@ -2684,7 +2689,125 @@ window.addEventListener("load", () => {
     console.error(e);
   }
 });
- 
+/* ==== Vector Tuner Logic ==== */
+const vectorTunerEl = $("vectorTuner");
+const vectorTunerClose = $("vectorTunerClose");
+const vectorTypeSel = $("vectorTypeSel");
+const vectorTunerTestLabel = $("vectorTunerTestLabel");
+const vectorTunerSaveBtn = $("vectorTunerSaveBtn");
+const toggleVectorTunerBtn = $("toggleVectorTunerBtn");
+
+let isVectorTunerVisible = false;
+
+function getCurrentVectorData() {
+    const testKey = actionSel.value;
+    if (!testKey) return null;
+    return VECTOR_GUIDES[testKey];
+}
+
+function updateVectorTunerLabels() {
+    const testKey = actionSel.value;
+    vectorTunerTestLabel.textContent = testKey || "(No Test Selected)";
+
+    // Force vector overlay to show while tuning
+    if (!areVectorsVisible) {
+        toggleVectorOverlay();
+    }
+}
+
+function showVectorTuner(show) {
+    if (show === undefined) show = !isVectorTunerVisible;
+    isVectorTunerVisible = show;
+
+    if (isVectorTunerVisible) {
+        vectorTunerEl.style.display = 'block';
+        updateVectorTunerLabels();
+        // Force initial update of vectors to show them correctly positioned
+        if (!areVectorsVisible) toggleVectorOverlay(); 
+        
+        // Ensure only the selected test is displayed
+        if (!actionSel.value) {
+            $("msg").textContent = "Select an MMT test to use the Vector Tuner.";
+        }
+    } else {
+        vectorTunerEl.style.display = 'none';
+        // Hide vectors when tuner closes
+        if (areVectorsVisible) toggleVectorOverlay(); 
+    }
+}
+
+// ----------------------------------------------------
+// A P P L Y   T U N E R   C H A N G E S
+// ----------------------------------------------------
+vectorTunerEl.querySelectorAll('.vectorStep').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const testKey = actionSel.value;
+        const data = getCurrentVectorData();
+        if (!data) return;
+
+        const type = vectorTypeSel.value; // E, R, E_DIR, R_DIR
+        const axis = btn.dataset.axis;
+        const delta = parseFloat(btn.dataset.delta);
+        
+        // Determine which object to modify (Start Position or Direction)
+        let targetObject;
+        if (type === 'E') targetObject = data.E_startPos;
+        else if (type === 'R') targetObject = data.R_startPos;
+        else if (type === 'E_DIR') targetObject = data.E_direction;
+        else if (type === 'R_DIR') targetObject = data.R_direction;
+
+        if (targetObject) {
+            targetObject[axis] += delta;
+        }
+
+        // Re-apply the vector overlay immediately to see the change
+        if (areVectorsVisible) {
+            // Toggle off and then back on to force a position update
+            toggleVectorOverlay();
+            toggleVectorOverlay();
+        }
+    });
+});
+
+// ----------------------------------------------------
+// S A V E   T O   C O N S O L E
+// ----------------------------------------------------
+vectorTunerSaveBtn.addEventListener('click', () => {
+    const testKey = actionSel.value;
+    const data = getCurrentVectorData();
+    if (!testKey || !data) {
+        alert("Select an MMT test first.");
+        return;
+    }
+
+    const output = `
+    // ${testKey}: (Aligned Vectors)
+    ${testKey}: {
+        E_startPos: { x: ${data.E_startPos.x.toFixed(3)}, y: ${data.E_startPos.y.toFixed(3)}, z: ${data.E_startPos.z.toFixed(3)} },
+        E_direction: { x: ${data.E_direction.x.toFixed(3)}, y: ${data.E_direction.y.toFixed(3)}, z: ${data.E_direction.z.toFixed(3)} },
+        R_startPos: { x: ${data.R_startPos.x.toFixed(3)}, y: ${data.R_startPos.y.toFixed(3)}, z: ${data.R_startPos.z.toFixed(3)} },
+        R_direction: { x: ${data.R_direction.x.toFixed(3)}, y: ${data.R_direction.y.toFixed(3)}, z: ${data.R_direction.z.toFixed(3)} }
+    },`;
+
+    console.log(output);
+    $("msg").textContent = `Vector configuration saved to console for ${testKey}. Copy and paste into VECTOR_GUIDES.`;
+});
+
+
+/* ==== Wiring & Initial State for Vector Tuner ==== */
+if (vectorTunerClose) vectorTunerClose.addEventListener('click', () => showVectorTuner(false));
+if (toggleVectorTunerBtn) toggleVectorTunerBtn.addEventListener('click', () => showVectorTuner());
+
+// Update logic when a new test is selected (Need to modify existing listener)
+// You need to add these lines inside your existing actionSel.addEventListener("change", ...);
+/*
+if (isVectorTunerVisible) updateVectorTunerLabels();
+if (areVectorsVisible) {
+    // Force vector update on test change if visible
+    toggleVectorOverlay();
+    toggleVectorOverlay();
+}
+*/ 
 /* ==== Loop & resize ==== */
 addEventListener("resize", ()=>{
   camera.aspect = innerWidth/innerHeight;
@@ -2820,9 +2943,65 @@ function onPointerDownTransformControls(event) {
   <button id="handSaveBtn" style="margin-top:12px;width:100%;background:#10b981;color:white;">
   Save Hand Pose
 </button>
-
+//VECTOR TUNER//
 </div>
+<div id="vectorTuner" style="
+  position:fixed; right:12px; top:80px; width:300px; max-height: 90vh; overflow-y: auto;
+  background:rgba(8,13,26,.96); border:1px solid #334155; border-radius:12px;
+  padding:10px; z-index:9999; box-shadow:0 8px 28px rgba(0,0,0,.4);
+  color:#e2e8f0; font:12px/1.3 system-ui,Segoe UI,Roboto; display:none;
+">
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+    <strong style="font-size:13px;">Vector Tuner (MMT Guide)</strong>
+    <button id="vectorTunerClose" title="Close" style="margin-left:auto;background:transparent;border:0;color:#9fb0c9;font-size:16px;cursor:pointer;">✕</button>
+  </div>
+  <div style="font-size:11px;margin-bottom:6px;">
+    <div><strong>Test:</strong> <span id="vectorTunerTestLabel">(none)</span></div>
+  </div>
 
+  <div style="border-top:1px solid #1f2933;margin:6px 0 8px 0;"></div>
+
+  <label style="display:block;opacity:.85;margin-bottom:4px;">Active Vector:</label>
+  <select id="vectorTypeSel" style="width:100%;margin-bottom:8px;background:#334155;color:#e2e8f0;border-color:#475569;">
+    <option value="E">Effort (Blue) - Start Position</option>
+    <option value="R">Resistance (Green) - Start Position</option>
+    <option value="E_DIR">Effort (Blue) - Direction</option>
+    <option value="R_DIR">Resistance (Green) - Direction</option>
+  </select>
+  
+  <p style="font-size:10px; margin: 4px 0 8px; opacity: 0.7;">
+    Note: Direction tuning changes the vector's rotation/end point.
+  </p>
+
+  <label style="display:block;opacity:.85;">Adjust Coordinates (meters / Directional Magnitude)</label>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:8px;">
+    <div>
+      <div style="opacity:.7;font-size:10px;">X</div>
+      <div class="row">
+        <button data-axis="x" data-delta="-0.01" class="vectorStep mini">−</button>
+        <button data-axis="x" data-delta="0.01" class="vectorStep mini">+</button>
+      </div>
+    </div>
+    <div>
+      <div style="opacity:.7;font-size:10px;">Y</div>
+      <div class="row">
+        <button data-axis="y" data-delta="-0.01" class="vectorStep mini">−</button>
+        <button data-axis="y" data-delta="0.01" class="vectorStep mini">+</button>
+      </div>
+    </div>
+    <div>
+      <div style="opacity:.7;font-size:10px;">Z</div>
+      <div class="row">
+        <button data-axis="z" data-delta="-0.01" class="vectorStep mini">−</button>
+        <button data-axis="z" data-delta="0.01" class="vectorStep mini">+</button>
+      </div>
+    </div>
+  </div>
+  
+  <div style="margin-top:10px;">
+    <button id="vectorTunerSaveBtn" style="width:100%;background:#0f766e;border-color:#0f766e;color:#fff;">Save Vector Config</button>
+  </div>
+</div>
   
 </body>
 </html>
