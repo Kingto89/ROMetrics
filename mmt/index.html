@@ -1036,12 +1036,12 @@ const CERVICAL_MMT_MAP = {
 
 const SCAPULAR_MMT_MAP = {
     // [ Bone Name, Axis ('x', 'y', 'z'), Direction (1 or -1) ]
-    Serratus_Anterior: ['upperarm_R', 'z', -1], 
-    Upper_Trapezius: ['upperarm_R', 'z', -1],   
-    Middle_Trapezius: ['upperarm_R', 'y', 1],   
-    Scap_Depression_Adduction: ['upperarm_R', 'x', 1], 
-    Rhomboids: ['upperarm_R', 'y', 1],
-    Latissimus_Dorsi: ['upperarm_R', 'x', -1]
+    Serratus_Anterior: ['upperArm_R', 'z', 0], 
+    Upper_Trapezius: ['upperArm_R', 'z', 0],   
+    Middle_Trapezius: ['upperArm_R', 'y', 0],   
+    Scap_Depression_Adduction: ['upperArm_R', 'x', 0], 
+    Rhomboids: ['upperArm_R', 'y', 0],
+    Latissimus_Dorsi: ['upperArm_R', 'x', 0]
 };
 // If your rig uses "wrist_L/R" instead of "hand_L/R", change those two names below.
 function applyAnatomicBaseline(){
