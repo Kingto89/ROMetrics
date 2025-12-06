@@ -1046,10 +1046,10 @@ function applyAnatomicBaseline(){
   setDegAxis(wrL, 'y', ANAT.wps);
   setDegAxis(wrR, 'y', -ANAT.wps);   
 }
-  
 /**
  * Applies a small, slow, incremental movement to the bone being tested.
  * Simulates the patient straining against resistance.
+ * Also adds subtle hand tremor globally while Resistance is HELD.
  */
 function applyHoldMovement() {
   const testKey = actionSel.value;
@@ -1057,9 +1057,9 @@ function applyHoldMovement() {
 
   const mapping = CERVICAL_MMT_MAP[testKey];
 
-  const MAX_HOLD_ANGLE = 5;          // Maximum visible movement (degrees)
-  const STEP_INCREMENT = 0.15;       // Speed (degrees per tick/100ms)
-  const MAX_TREMOR_DISPLACEMENT = 0.003; // 3 mm max random shift for hand tremor (meters)
+  const MAX_HOLD_ANGLE = 5;               // Maximum visible movement (degrees)
+  const STEP_INCREMENT = 0.15;            // Speed (degrees per tick/100ms)
+  const MAX_TREMOR_DISPLACEMENT = 0.003;  // 3 mm max random shift for hand tremor (meters)
 
   // 1) Cervical-only hold movement + head tremor
   if (mapping) {
@@ -1090,7 +1090,7 @@ function applyHoldMovement() {
     }
   }
 
-  // 2) Hand tremor for ANY test while resistance is held
+  // 2) Global hand tremor while resistance is held (ANY test)
   if (leftHandModel && handsModel?.visible) {
     const d = MAX_TREMOR_DISPLACEMENT;
 
@@ -1104,27 +1104,6 @@ function applyHoldMovement() {
   }
 }
 
- 
-// 2. ⭐ NEW: Hand Tremor Logic (only if hands are loaded and visible)
-  // -------------------------------------------------------------
-  if (leftHandModel && handsModel?.visible) {
-    const d = MAX_TREMOR_DISPLACEMENT;
-
-    // Generate a new small, random offset vector for X, Y, Z
-    // Random number between -d and d
-    const tremorX = (Math.random() * 2 * d) - d;
-    const tremorY = (Math.random() * 2 * d) - d;
-    const tremorZ = (Math.random() * 2 * d) - d;
-
-    // Apply the offset to the current position (relative to its parent/scene)
-    leftHandModel.position.x += tremorX;
-    leftHandModel.position.y += tremorY;
-    leftHandModel.position.z += tremorZ;
-    
-    // Safety clamp (optional but good practice to keep it near its general area)
-    // We rely mostly on the next step (3. Reset/Anchor) to fix drift.
-  }
-}
 /* ==== Loader ==== */
 const loader = new GLTFLoader();
 loader.setMeshoptDecoder(MeshoptDecoder);
