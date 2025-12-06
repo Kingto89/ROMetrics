@@ -467,16 +467,7 @@ function updateResistanceFill() {
         applyBodyPositionFromSelection();
         $("msg").textContent = `Test finished. Recorded score: Grade 5!`;
         testButton.disabled = false;
-        vectorOverlayBtn.disabled = false;
-  // **CRITICAL FIX: Force Clear or Redraw on Test Change**
-    if (areVectorsVisible) {
-        // If vectors were visible for the OLD test, turn them off/clear the meshes
-        toggleVectorOverlay(); 
-        
-        // If a NEW test is selected, immediately turn them back on 
-        // to force a redraw using the new VECTOR_GUIDES data.
-        if (isTestSelected) {
-             toggleVectorOverlay();    
+        vectorOverlayBtn.disabled = false; 
     }
 }
 
@@ -2246,7 +2237,18 @@ actionSel.addEventListener("change", () => {
     
     const isTestSelected = !!actionSel.value;
     const isDisabled = shouldResistanceBeDisabled(); // CHECK NEW RULE
-
+// --- 1. Vector Clearing/Redraw (MUST RUN EARLY) ---
+    // This logic handles vector visibility before the rest of the UI updates.
+    if (areVectorsVisible) {
+        // 1a. Always clear the old vector first, regardless of the new selection.
+        toggleVectorOverlay(); 
+        
+        // 1b. If a NEW valid test IS selected, immediately redraw the vector for the new test.
+        if (isTestSelected) {
+             toggleVectorOverlay();
+        }
+    }
+  
     // 1. Hands Toggle Button control (Keep existing logic)
     toggleHandsBtn.disabled = !isTestSelected;
     toggleHandsBtn.classList.remove("lockOn");
