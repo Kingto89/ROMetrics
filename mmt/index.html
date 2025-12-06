@@ -468,6 +468,15 @@ function updateResistanceFill() {
         $("msg").textContent = `Test finished. Recorded score: Grade 5!`;
         testButton.disabled = false;
         vectorOverlayBtn.disabled = false;
+  // **CRITICAL FIX: Force Clear or Redraw on Test Change**
+    if (areVectorsVisible) {
+        // If vectors were visible for the OLD test, turn them off/clear the meshes
+        toggleVectorOverlay(); 
+        
+        // If a NEW test is selected, immediately turn them back on 
+        // to force a redraw using the new VECTOR_GUIDES data.
+        if (isTestSelected) {
+             toggleVectorOverlay();    
     }
 }
 
