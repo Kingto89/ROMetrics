@@ -1056,37 +1056,54 @@ function applyHoldMovement() {
   if (!testKey || isPracticeModeActive) return;
 
   const mapping = CERVICAL_MMT_MAP[testKey];
-  if (!mapping) return; // Not a targeted MMT test (e.g., Elbow, Hip), so skip
 
-  const [boneName, axis, direction] = mapping;
-  const bone = getBone(boneName);
-  if (!bone) return;
+  const MAX_HOLD_ANGLE = 5;          // Maximum visible movement (degrees)
+  const STEP_INCREMENT = 0.15;       // Speed (degrees per tick/100ms)
+  const MAX_TREMOR_DISPLACEMENT = 0.003; // 3 mm max random shift for hand tremor (meters)
 
-  const MAX_HOLD_ANGLE = 5; // Maximum visible movement (degrees) - greatly reduced ROM
-  const STEP_INCREMENT = 0.15; // Speed (degrees per tick/100ms) - slow enough for visual hold
-  const MAX_TREMOR_DISPLACEMENT = 0.003; // 3 mm maximum random shift for hand tremor (in meters)
-  
-  // 1. Increment the hold angle slowly
-  currentHoldAngle = Math.min(MAX_HOLD_ANGLE, currentHoldAngle + STEP_INCREMENT);
+  // 1) Cervical-only hold movement + head tremor
+  if (mapping) {
+    const [boneName, axis, direction] = mapping;
+    const bone = getBone(boneName);
 
-  // 2. Calculate the total rotation (direction is 1 or -1)
-  const totalRotation = currentHoldAngle * direction;
+    if (bone) {
+      // Increment the hold angle slowly
+      currentHoldAngle = Math.min(MAX_HOLD_ANGLE, currentHoldAngle + STEP_INCREMENT);
 
-  // 3. Apply the rotation
-  setDegAxis(bone, axis, totalRotation);
- // ⭐ NEW: Head tremor during resistance hold (Moved from Steady.html)
-{
-  const head = getBone('head');
-  if (head) {
-    const AMP_DEG = 0.35; // max ~0.35° each axis per tick
-    const jx = (Math.random() * 2 - 1) * AMP_DEG;
-    const jy = (Math.random() * 2 - 1) * AMP_DEG;
-    const jz = (Math.random() * 2 - 1) * AMP_DEG;
-    head.rotateX(degToRad(jx));
-    head.rotateY(degToRad(jy));
-    head.rotateZ(degToRad(jz));
+      // Total rotation
+      const totalRotation = currentHoldAngle * direction;
+
+      // Apply the rotation to the tested cervical bone
+      setDegAxis(bone, axis, totalRotation);
+
+      // ⭐ Head tremor only for cervical tests
+      const head = getBone('head');
+      if (head) {
+        const AMP_DEG = 0.35; // max ~0.35° each axis per tick
+        const jx = (Math.random() * 2 - 1) * AMP_DEG;
+        const jy = (Math.random() * 2 - 1) * AMP_DEG;
+        const jz = (Math.random() * 2 - 1) * AMP_DEG;
+        head.rotateX(degToRad(jx));
+        head.rotateY(degToRad(jy));
+        head.rotateZ(degToRad(jz));
+      }
+    }
   }
-} 
+
+  // 2) Hand tremor for ANY test while resistance is held
+  if (leftHandModel && handsModel?.visible) {
+    const d = MAX_TREMOR_DISPLACEMENT;
+
+    const tremorX = (Math.random() * 2 * d) - d;
+    const tremorY = (Math.random() * 2 * d) - d;
+    const tremorZ = (Math.random() * 2 * d) - d;
+
+    leftHandModel.position.x += tremorX;
+    leftHandModel.position.y += tremorY;
+    leftHandModel.position.z += tremorZ;
+  }
+}
+
  
 // 2. ⭐ NEW: Hand Tremor Logic (only if hands are loaded and visible)
   // -------------------------------------------------------------
