@@ -523,26 +523,28 @@ function updateResistanceFill() {
 }
 
 // index (80).html - Replace the entire existing function
-// index (80).html - Replace the entire existing function
 function executeVoluntaryMovement() {
+    // 1. Define tests that should SKIP the voluntary movement phase
+    const NO_VOLUNTARY_MOVEMENT_TESTS = [
+      'Capital_Extension', 
+      'Cervical_Extension',
+      'Capital_Flexion',
+      'Cervical_Flexion',
+      'Single_SCM', // <-- Added to list
+      'Cervical_Rotation'
+    ];
+
     const testKey = actionSel.value;
 
-    // Define the tests that should NOT perform voluntary movement,
-    // which are all the tests where manual resistance is ENABLED
-    // (i.e., all Grades 3, 4, 5 limb and cervical tests).
-    const isDisabled = shouldResistanceBeDisabled();
-    
-    // We only proceed if resistance is enabled (meaning it's a Grade 3-5 equivalent test)
-    if (!isDisabled) {
-        // Skip the voluntary movement phase and immediately start the hold phase.
+    if (NO_VOLUNTARY_MOVEMENT_TESTS.includes(testKey)) {
+        // Skip the 0.5s movement delay and jump straight to the resistance phase.
         isMMTMoving = false;
         testButton.disabled = false;
-        $("msg").textContent = "Resistance active. Hold the button to apply pressure (Tremor Active).";
+        $("msg").textContent = "Movement skipped. Hold the resistance button to apply pressure (Tremor Active).";
         return; // EXIT THE FUNCTION EARLY
     }
 
-    // This block is for tests where resistance is NOT applied (Grades 0-2, Trunk, Gastroc).
-    // The button is disabled in the UI for these, so this code should rarely run during a "test."
+    // Existing Voluntary Movement Logic (for limb movements, etc.)
     isMMTMoving = true;
     testButton.disabled = true; 
     $("msg").textContent = "Patient is executing voluntary movement (0.5s)...";
@@ -550,9 +552,10 @@ function executeVoluntaryMovement() {
     setTimeout(() => {
         isMMTMoving = false;
         testButton.disabled = false; 
-        $("msg").textContent = "Movement complete. Hold the resistance button to apply pressure (N/A).";
+        $("msg").textContent = "Movement complete. Hold the resistance button to apply pressure.";
     }, 500); 
 }
+
 function startResistanceTest(event) {
     if (testButton.disabled || resistanceTimer) return;
     
@@ -1049,6 +1052,15 @@ function applyAnatomicBaseline(){
  * Simulates the patient straining against resistance.
  */
 function applyHoldMovement() {
+  const testKey = actionSel.value;
+  if (!testKey || isPracticeModeActive) return;
+
+  const mapping = CERVICAL_MMT_MAP[testKey];
+  if (!mapping) return; // Not a targeted MMT test (e.g., Elbow, Hip), so skip
+
+  const [boneName, axis, direction] = mapping;
+  const bone = getBone(boneName);
+  if (!bone) return;
 
   const MAX_HOLD_ANGLE = 5; // Maximum visible movement (degrees) - greatly reduced ROM
   const STEP_INCREMENT = 0.15; // Speed (degrees per tick/100ms) - slow enough for visual hold
