@@ -1097,14 +1097,17 @@ function applyHoldMovement() {
   }
 } 
 
-// ⭐ NEW: Scapular/Body Tremor Logic (only for Scapula MMT tests)
-// Applies tremor to the trunk (spine) region.
+// index (80).html - Inside the existing function applyHoldMovement()
+
+/* ... (Existing code for bone movement increment, head tremor, and hand tremor) ... */
+
+// ⭐ UPDATED: Scapular/Arm Tremor Logic (now targets the entire testing limb)
 if (SCAPULAR_MMT_TESTS.has(testKey)) {
-    const AMP_DEG = 0.25; // Slightly less tremor magnitude than the head
+    const AMP_DEG = 0.35; // Tremor magnitude (degrees per tick)
     const bonesToTremor = [
-        getBone('spine01'), 
-        getBone('spine02'), 
-        getBone('spine03')
+        getBone('upperarm_R'), 
+        getBone('lowerarm_R'),
+        getBone('hand_R') // <--- ADDED THE RIGHT HAND BONE
     ];
 
     bonesToTremor.forEach(bone => {
@@ -1119,7 +1122,8 @@ if (SCAPULAR_MMT_TESTS.has(testKey)) {
             bone.rotateZ(degToRad(jz));
         }
     });
-}  
+}
+
 // 2. ⭐ NEW: Hand Tremor Logic (only if hands are loaded and visible)
   // -------------------------------------------------------------
   if (leftHandModel && handsModel?.visible) {
