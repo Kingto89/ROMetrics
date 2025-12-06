@@ -295,21 +295,45 @@ let resistanceVectorMesh = null; // Green Resistance Tunnel
 /* ==== VECTOR GUIDES: Origin (Pos) and Direction (Dir) for Effort (E) and Resistance (R) ==== */
 const VECTOR_GUIDES = {
 
-   // Capital_Extension: (Aligned Vectors)
-    Capital_Extension: {
-        E_startPos: { x: 0.040, y: 1.550, z: 0.780 },
-        E_direction: { x: 0.000, y: 0.000, z: -0.700 },
-        R_startPos: { x: 0.810, y: 1.530, z: -0.260 },
-        R_direction: { x: 0.000, y: -0.707, z: -0.023 }
-    },
-    
-    // Anterior Deltoid (Shoulder Flexion): Patient is Seated, Arm at side
-    Anterior_Deltoid: {
-        E_startPos: { x: -0.3, y: 0.3, z: 0.1 }, 
-        E_direction: { x: 0, y: 0.7, z: 0.0 }, 
-        R_startPos: { x: -0.3, y: 0.4, z: 0.1 }, 
-        R_direction: { x: 0, y: -0.7, z: 0.0 }
-    }
+Capital_Extension: { E_startPos:{x:0.040,y:1.550,z:0.780}, E_direction:{x:0.000,y:0.000,z:-0.700}, R_startPos:{x:0.810,y:1.530,z:-0.260}, R_direction:{x:0.000,y:-0.707,z:-0.023} },
+Cervical_Extension: { E_startPos:{x:0.040,y:1.550,z:0.780}, E_direction:{x:0.000,y:0.000,z:-0.700}, R_startPos:{x:0.810,y:1.530,z:-0.260}, R_direction:{x:0.000,y:-0.707,z:-0.023} },
+Capital_Flexion: { E_startPos:{x:0.040,y:1.550,z:0.780}, E_direction:{x:0.000,y:0.000,z:-0.700}, R_startPos:{x:0.810,y:1.530,z:-0.260}, R_direction:{x:0.000,y:-0.707,z:-0.023} },
+Single_SCM: { E_startPos:{x:0.040,y:1.550,z:0.780}, E_direction:{x:0.000,y:0.000,z:-0.700}, R_startPos:{x:0.810,y:1.530,z:-0.260}, R_direction:{x:0.000,y:-0.707,z:-0.023} },
+Cervical_Rotation: { E_startPos:{x:0.040,y:1.550,z:0.780}, E_direction:{x:0.000,y:0.000,z:-0.700}, R_startPos:{x:0.810,y:1.530,z:-0.260}, R_direction:{x:0.000,y:-0.707,z:-0.023} },
+
+Serratus_Anterior: { E_startPos:{x:0.040,y:1.550,z:0.780}, E_direction:{x:0.000,y:0.000,z:-0.700}, R_startPos:{x:0.810,y:1.530,z:-0.260}, R_direction:{x:0.000,y:-0.707,z:-0.023} },
+Upper_Trapezius: { E_startPos:{x:0.040,y:1.550,z:0.780}, E_direction:{x:0.000,y:0.000,z:-0.700}, R_startPos:{x:0.810,y:1.530,z:-0.260}, R_direction:{x:0.000,y:-0.707,z:-0.023} },
+Middle_Trapezius: { E_startPos:{x:0.040,y:1.550,z:0.780}, E_direction:{x:0.000,y:0.000,z:-0.700}, R_startPos:{x:0.810,y:1.530,z:-0.260}, R_direction:{x:0.000,y:-0.707,z:-0.023} },
+Scap_Depression_Adduction: { E_startPos:{x:0.040,y:1.550,z:0.780}, E_direction:{x:0.000,y:0.000,z:-0.700}, R_startPos:{x:0.810,y:1.530,z:-0.260}, R_direction:{x:0.000,y:-0.707,z:-0.023} },
+Rhomboids: { E_startPos:{x:0.040,y:1.550,z:0.780}, E_direction:{x:0.000,y:0.000,z:-0.700}, R_startPos:{x:0.810,y:1.530,z:-0.260}, R_direction:{x:0.000,y:-0.707,z:-0.023} },
+Latissimus_Dorsi: { E_startPos:{x:0.040,y:1.550,z:0.780}, E_direction:{x:0.000,y:0.000,z:-0.700}, R_startPos:{x:0.810,y:1.530,z:-0.260}, R_direction:{x:0.000,y:-0.707,z:-0.023} },
+
+Anterior_Deltoid: { E_startPos:{x:0.040,y:1.550,z:0.780}, E_direction:{x:0.000,y:0.000,z:-0.700}, R_startPos:{x:0.810,y:1.530,z:-0.260}, R_direction:{x:0.000,y:-0.707,z:-0.023} },
+Posterior_Deltoid: { E_startPos:{x:0.040,y:1.550,z:0.780}, E_direction:{x:0.000,y:0.000,z:-0.700}, R_startPos:{x:0.810,y:1.530,z:-0.260}, R_direction:{x:0.000,y:-0.707,z:-0.023} },
+Middle_Deltoid: { E_startPos:{x:0.040,y:1.550,z:0.780}, E_direction:{x:0.000,y:0.000,z:-0.700}, R_startPos:{x:0.810,y:1.530,z:-0.260}, R_direction:{x:0.000,y:-0.707,z:-0.023} },
+Shoulder_Horiz_Abd: { E_startPos:{x:0.040,y:1.550,z:0.780}, E_direction:{x:0.000,y:0.000,z:-0.700}, R_startPos:{x:0.810,y:1.530,z:-0.260}, R_direction:{x:0.000,y:-0.707,z:-0.023} },
+Shoulder_Horiz_Add: { E_startPos:{x:0.040,y:1.550,z:0.780}, E_direction:{x:0.000,y:0.000,z:-0.700}, R_startPos:{x:0.810,y:1.530,z:-0.260}, R_direction:{x:0.000,y:-0.707,z:-0.023} },
+Infraspinatus: { E_startPos:{x:0.040,y:1.550,z:0.780}, E_direction:{x:0.000,y:0.000,z:-0.700}, R_startPos:{x:0.810,y:1.530,z:-0.260}, R_direction:{x:0.000,y:-0.707,z:-0.023} },
+Subscapularis: { E_startPos:{x:0.040,y:1.550,z:0.780}, E_direction:{x:0.000,y:0.000,z:-0.700}, R_startPos:{x:0.810,y:1.530,z:-0.260}, R_direction:{x:0.000,y:-0.707,z:-0.023} },
+
+Trunk_Ext_Lumbar: { E_startPos:{x:0.040,y:1.550,z:0.780}, E_direction:{x:0.000,y:0.000,z:-0.700}, R_startPos:{x:0.810,y:1.530,z:-0.260}, R_direction:{x:0.000,y:-0.707,z:-0.023} },
+Trunk_Ext_Thoracic: { E_startPos:{x:0.040,y:1.550,z:0.780}, E_direction:{x:0.000,y:0.000,z:-0.700}, R_startPos:{x:0.810,y:1.530,z:-0.260}, R_direction:{x:0.000,y:-0.707,z:-0.023} },
+Trunk_Flexion: { E_startPos:{x:0.040,y:1.550,z:0.780}, E_direction:{x:0.000,y:0.000,z:-0.700}, R_startPos:{x:0.810,y:1.530,z:-0.260}, R_direction:{x:0.000,y:-0.707,z:-0.023} },
+Trunk_Rotation: { E_startPos:{x:0.040,y:1.550,z:0.780}, E_direction:{x:0.000,y:0.000,z:-0.700}, R_startPos:{x:0.810,y:1.530,z:-0.260}, R_direction:{x:0.000,y:-0.707,z:-0.023} },
+Pelvic_Elevation: { E_startPos:{x:0.040,y:1.550,z:0.780}, E_direction:{x:0.000,y:0.000,z:-0.700}, R_startPos:{x:0.810,y:1.530,z:-0.260}, R_direction:{x:0.000,y:-0.707,z:-0.023} },
+  
+Biceps_Brachii: { E_startPos:{x:0.040,y:1.550,z:0.780}, E_direction:{x:0.000,y:0.000,z:-0.700}, R_startPos:{x:0.810,y:1.530,z:-0.260}, R_direction:{x:0.000,y:-0.707,z:-0.023} },
+Brachialis: { E_startPos:{x:0.040,y:1.550,z:0.780}, E_direction:{x:0.000,y:0.000,z:-0.700}, R_startPos:{x:0.810,y:1.530,z:-0.260}, R_direction:{x:0.000,y:-0.707,z:-0.023} },
+Brachioradialis: { E_startPos:{x:0.040,y:1.550,z:0.780}, E_direction:{x:0.000,y:0.000,z:-0.700}, R_startPos:{x:0.810,y:1.530,z:-0.260}, R_direction:{x:0.000,y:-0.707,z:-0.023} },
+Triceps_Brachii: { E_startPos:{x:0.040,y:1.550,z:0.780}, E_direction:{x:0.000,y:0.000,z:-0.700}, R_startPos:{x:0.810,y:1.530,z:-0.260}, R_direction:{x:0.000,y:-0.707,z:-0.023} },
+
+ECRL: { E_startPos:{x:0.040,y:1.550,z:0.780}, E_direction:{x:0.000,y:0.000,z:-0.700}, R_startPos:{x:0.810,y:1.530,z:-0.260}, R_direction:{x:0.000,y:-0.707,z:-0.023} },
+ECRB: { E_startPos:{x:0.040,y:1.550,z:0.780}, E_direction:{x:0.000,y:0.000,z:-0.700}, R_startPos:{x:0.810,y:1.530,z:-0.260}, R_direction:{x:0.000,y:-0.707,z:-0.023} },
+ECU: { E_startPos:{x:0.040,y:1.550,z:0.780}, E_direction:{x:0.000,y:0.000,z:-0.700}, R_startPos:{x:0.810,y:1.530,z:-0.260}, R_direction:{x:0.000,y:-0.707,z:-0.023} },
+FCR: { E_startPos:{x:0.040,y:1.550,z:0.780}, E_direction:{x:0.000,y:0.000,z:-0.700}, R_startPos:{x:0.810,y:1.530,z:-0.260}, R_direction:{x:0.000,y:-0.707,z:-0.023} },
+FCU: { E_startPos:{x:0.040,y:1.550,z:0.780}, E_direction:{x:0.000,y:0.000,z:-0.700}, R_startPos:{x:0.810,y:1.530,z:-0.260}, R_direction:{x:0.000,y:-0.707,z:-0.023} },
+ 
+   
     // ... Add more MMT tests here as needed ...
 };
   
