@@ -1148,7 +1148,7 @@ function applyHoldMovement() {
     }
 
     if (bonesToJitter.length) {
-      const AMP_DEG_BODY = 0.4; // small visible jitter
+      const AMP_DEG_BODY = 0.3; // small visible jitter
       bonesToJitter.forEach(bone => {
         const jx = (Math.random() * 2 - 1) * AMP_DEG_BODY;
         const jy = (Math.random() * 2 - 1) * AMP_DEG_BODY;
