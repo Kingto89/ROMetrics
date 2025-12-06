@@ -1123,13 +1123,23 @@ function applyHoldMovement() {
 
     const bonesToJitter = [];
 
-    if (UPPERCHAIN_TREMOR_TESTS.has(testKey)) {
+    // ⭐ Scapular elevation: tremor at clavicles only
+    if (testKey === "Upper_Trapezius") {
+      const clavL = getBone("clavicle_L");
+      const clavR = getBone("clavicle_R");
+      if (clavL) bonesToJitter.push(clavL);
+      if (clavR) bonesToJitter.push(clavR);
+
+    // Other scapula / shoulder tests: upper arm + forearm + hand (right)
+    } else if (UPPERCHAIN_TREMOR_TESTS.has(testKey)) {
       const upper = getBone("upperarm_R");
       const lower = getBone("lowerarm_R");
       const hand  = getBone("hand_R");
       if (upper) bonesToJitter.push(upper);
       if (lower) bonesToJitter.push(lower);
       if (hand)  bonesToJitter.push(hand);
+
+    // Rotator tests: forearm + hand (right)
     } else if (ROTATOR_TREMOR_TESTS.has(testKey)) {
       const lower = getBone("lowerarm_R");
       const hand  = getBone("hand_R");
@@ -1149,6 +1159,7 @@ function applyHoldMovement() {
       });
     }
   }
+
 
   // 3) Global hand tremor while resistance is held (ANY test)
   if (leftHandModel && handsModel?.visible) {
@@ -1427,10 +1438,10 @@ HAND_OVERRIDES["Cervical_Rotation:low"] = {"handRX":2.002046370115527,"handRY":-
 HAND_OVERRIDES["Serratus_Anterior:high"] = {"handRX":-4.442741543517701,"handRY":-2.742981837727001,"handRZ":-1.2588276110193035,"handRRX":5.551115123125783e-17,"handRRY":1.7999999999999998,"handRRZ":-1.9499999999999997,"handLX":-3.058416811942804,"handLY":-1.7946303374835402,"handLZ":0.5915965675603173,"handLRX":-0.15,"handLRY":-2.849999999999999,"handLRZ":-5.551115123125783e-17};
 HAND_OVERRIDES["Upper_Trapezius:high"] = {"handRX":-2.5763380952032966,"handRY":-1.480551759906813,"handRZ":-1.9847937403107905,"handRRX":0,"handRRY":0.44999999999999996,"handRRZ":-0.15,"handLX":-4.337293361994533,"handLY":-1.625356637488423,"handLZ":-1.5373439425562927,"handLRX":0,"handLRY":0.29999999999999993,"handLRZ":0.14999999999999994};
 HAND_OVERRIDES["Middle_Trapezius:high"] = {"handRX":0.5569781232474104,"handRY":-3.8660588669042086,"handRZ":-2.1216394227611883,"handRRX":0.06934454188661507,"handRRY":1.8693696440051888,"handRRZ":0.09579317124981133,"handLX":1.5195068194254806,"handLY":-4.422605334381742,"handLZ":-0.3058618515609669,"handLRX":0,"handLRY":1.9499999999999995,"handLRZ":0.44999999999999996};
-HAND_OVERRIDES["Scap_Depression_Adduction:high"] = {"handRX":0.35000000000000003,"handRY":-4.0675115277035765,"handRZ":-1.7366544106717154,"handRRX":0.15,"handRRY":2.0999999999999996,"handRRZ":0,"handLX":4.365554477266186,"handLY":-4.45586857847631,"handLZ":-0.45159938606613453,"handLRX":0.0035720322085804335,"handLRY":-3.4531450874162584,"handLRZ":0.4486656021362936};
-HAND_OVERRIDES["Rhomboids:high"] = {"handRX":0.5190131130197497,"handRY":-3.9340075365206717,"handRZ":-1.9922118873148675,"handRRX":0,"handRRY":2.0999999999999996,"handRRZ":-0.15,"handLX":1.2350027706553313,"handLY":-4.110034766446274,"handLZ":-0.34475356699198945,"handLRX":-0.29999999999999993,"handLRY":-3.4499999999999993,"handLRZ":0.30000000000000004};
-HAND_OVERRIDES["Latissimus_Dorsi:high"] = {"handRX":-1.7591083525165192,"handRY":-4.86954673124393,"handRZ":-0.266738805716018,"handRRX":0,"handRRY":2.0999999999999996,"handRRZ":-0.15,"handLX":-0.6000000000000001,"handLY":-3.8260748620898797,"handLZ":0.0217646625528657,"handLRX":-0.44999999999999996,"handLRY":2.3999999999999995,"handLRZ":-0.4500000000000002};
-
+HAND_OVERRIDES["Scap_Depression_Adduction:high"] = {"handRX":0.35000000000000003,"handRY":-4.0675115277035765,"handRZ":-1.7366544106717154,"handRRX":0.15,"handRRY":2.0999999999999996,"handRRZ":0,"handLX":4.465554477266186,"handLY":-4.55586857847631,"handLZ":-0.35159938606613456,"handLRX":0.0035720322085804335,"handLRY":-3.3031450874162585,"handLRZ":0.5986656021362936};
+HAND_OVERRIDES["Rhomboids:high"] = {"handRX":0.5190131130197497,"handRY":-3.9340075365206717,"handRZ":-1.9922118873148675,"handRRX":0,"handRRY":2.0999999999999996,"handRRZ":-0.15,"handLX":1.4850027706553315,"handLY":-3.7100347664462756,"handLZ":-1.09475356699199,"handLRX":-0.75,"handLRY":-2.8499999999999996,"handLRZ":-0.6};
+HAND_OVERRIDES["Latissimus_Dorsi:high"] = {"handRX":-1.7591083525165192,"handRY":-4.86954673124393,"handRZ":-0.266738805716018,"handRRX":0,"handRRY":2.0999999999999996,"handRRZ":-0.15,"handLX":0.10000000000000002,"handLY":-3.72607486208988,"handLZ":-0.7282353374471344,"handLRX":-1.6499999999999997,"handLRY":3.5999999999999988,"handLRZ":-0.6000000000000002};
+  
 HAND_OVERRIDES["Anterior_Deltoid:high"] = {"handRX":-4.092514253841237,"handRY":-1.6511624721219198,"handRZ":-1.8628712151296891,"handRRX":0,"handRRY":0.6,"handRRZ":0,"handLX":-4.360517805926354,"handLY":-1.989816350340847,"handLZ":0.4827111158866561,"handLRX":-0.15,"handLRY":1.4999999999999998,"handLRZ":0.6};
 HAND_OVERRIDES["Posterior_Deltoid:high"] = {"handRX":0.4600801398396655,"handRY":-4.0020186162517914,"handRZ":-1.8429242361498783,"handRRX":0,"handRRY":1.9499999999999995,"handRRZ":0.15,"handLX":1.1385832461237204,"handLY":-4.2544627806031245,"handLZ":-0.49230648481587896,"handLRX":0,"handLRY":3.149999999999999,"handLRZ":0.44999999999999996};
 HAND_OVERRIDES["Middle_Deltoid:high"] = {"handRX":-3.966793959670711,"handRY":-1.718937103886422,"handRZ":-1.645414325328554,"handRRX":0,"handRRY":0.3,"handRRZ":-0.3,"handLX":-5.351985832068992,"handLY":-2.1811405583496883,"handLZ":-1.1738530530855538,"handLRX":0,"handLRY":0.15,"handLRZ":0.44999999999999996};
