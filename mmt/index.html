@@ -524,38 +524,34 @@ function updateResistanceFill() {
 
 // index (80).html - Replace the entire existing function
 function executeVoluntaryMovement() {
-    // 1. Define tests that should SKIP the voluntary movement phase
-    const NO_VOLUNTARY_MOVEMENT_TESTS = [
-      'Capital_Extension', 
-      'Cervical_Extension',
-      'Capital_Flexion',
-      'Cervical_Flexion',
-      'Single_SCM', // <-- Added to list
-      'Cervical_Rotation'
-    ];
-
+    // Determine if the current test selection (including grade) requires manual resistance.
+    // This is true for Grades 3-5 of limb tests, and the cervical tests.
+    const isResistanceApplicable = !shouldResistanceBeDisabled();
     const testKey = actionSel.value;
 
-    if (NO_VOLUNTARY_MOVEMENT_TESTS.includes(testKey)) {
-        // Skip the 0.5s movement delay and jump straight to the resistance phase.
+    if (!testKey) return; // No test selected, nothing to do.
+
+    if (isResistanceApplicable) {
+        // For tests with manual resistance (Grades 3-5, including cervical tests):
+        // 1. Skip the voluntary movement phase (patient is already holding position).
+        // 2. The resistance timer, when started, will run the applyHoldMovement(), which contains the tremor.
         isMMTMoving = false;
         testButton.disabled = false;
-        $("msg").textContent = "Movement skipped. Hold the resistance button to apply pressure (Tremor Active).";
+        $("msg").textContent = "Test requires hold. Hold the resistance button to apply pressure (Tremor Active).";
         return; // EXIT THE FUNCTION EARLY
     }
 
-    // Existing Voluntary Movement Logic (for limb movements, etc.)
+    // Existing Voluntary Movement Logic (for Grades 0-2 limb movements, if they reach this point)
     isMMTMoving = true;
-    testButton.disabled = true; 
+    testButton.disabled = true;
     $("msg").textContent = "Patient is executing voluntary movement (0.5s)...";
     
     setTimeout(() => {
         isMMTMoving = false;
-        testButton.disabled = false; 
-        $("msg").textContent = "Movement complete. Hold the resistance button to apply pressure.";
-    }, 500); 
+        testButton.disabled = false;
+        $("msg").textContent = "Movement complete. Hold the resistance button to apply pressure (N/A for Grades 0-2).";
+    }, 500);
 }
-
 function startResistanceTest(event) {
     if (testButton.disabled || resistanceTimer) return;
     
