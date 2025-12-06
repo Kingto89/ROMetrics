@@ -1034,15 +1034,15 @@ const CERVICAL_MMT_MAP = {
   Cervical_Rotation:   ['head', 'y', -1]     // Rotation (Y is rotation)
 };  
 
-const SCAPULAR_MMT_MAP = {
-    // [ Bone Name, Axis ('x', 'y', 'z'), Direction (1 or -1) ]
-    Serratus_Anterior: ['upperArm_R', 'z', 0], 
-    Upper_Trapezius: ['upperArm_R', 'z', 0],   
-    Middle_Trapezius: ['upperArm_R', 'y', 0],   
-    Scap_Depression_Adduction: ['upperArm_R', 'x', 0], 
-    Rhomboids: ['upperArm_R', 'y', 0],
-    Latissimus_Dorsi: ['upperArm_R', 'x', 0]
-};
+// Inside your main script body 
+const SCAPULAR_MMT_TESTS = new Set([
+  'Serratus_Anterior',
+  'Upper_Trapezius',
+  'Middle_Trapezius',
+  'Scap_Depression_Adduction',
+  'Rhomboids',
+  'Latissimus_Dorsi'
+]);  
 // If your rig uses "wrist_L/R" instead of "hand_L/R", change those two names below.
 function applyAnatomicBaseline(){
   const shL = getBone('upperarm_L'), shR = getBone('upperarm_R'); // shoulder ab/ad on Z
@@ -1061,38 +1061,28 @@ function applyAnatomicBaseline(){
  * Simulates the patient straining against resistance.
  */
 function applyHoldMovement() {
-  const testKey = actionSel.value;
-  if (!testKey || isPracticeModeActive) return;
+  const testKey = actionSel.value;
+  if (!testKey || isPracticeModeActive) return;
 
-  // --- 1. Sequential Mapping Check ---
-  // Check CERVICAL map first
-  let mapping = CERVICAL_MMT_MAP[testKey];
-  
-  // If not found in CERVICAL, check SCAPULAR map
-  if (!mapping) {
-    mapping = SCAPULAR_MMT_MAP[testKey];
-  }
-  
-  // If still no mapping found (i.e., Hip, Knee, or untested), exit
-  if (!mapping) return; 
-  
-  // --- 2. Apply Movement Logic ---
-  const [boneName, axis, direction] = mapping;
-  const bone = getBone(boneName);
-  if (!bone) return;
+  const mapping = CERVICAL_MMT_MAP[testKey];
+  if (!mapping) return; // Not a targeted MMT test (e.g., Elbow, Hip), so skip
 
-  const MAX_HOLD_ANGLE = 5; // Maximum visible movement (degrees) - greatly reduced ROM
-  const STEP_INCREMENT = 0.15; // Speed (degrees per tick/100ms) - slow enough for visual hold
-  const MAX_TREMOR_DISPLACEMENT = 0.003; // 3 mm maximum random shift for hand tremor (in meters)
-  
-  // 1. Increment the hold angle slowly
-  currentHoldAngle = Math.min(MAX_HOLD_ANGLE, currentHoldAngle + STEP_INCREMENT);
+  const [boneName, axis, direction] = mapping;
+  const bone = getBone(boneName);
+  if (!bone) return;
 
-  // 2. Calculate the total rotation (direction is 1 or -1)
-  const totalRotation = currentHoldAngle * direction;
+  const MAX_HOLD_ANGLE = 5; // Maximum visible movement (degrees) - greatly reduced ROM
+  const STEP_INCREMENT = 0.15; // Speed (degrees per tick/100ms) - slow enough for visual hold
+  const MAX_TREMOR_DISPLACEMENT = 0.003; // 3 mm maximum random shift for hand tremor (in meters)
+  
+  // 1. Increment the hold angle slowly
+  currentHoldAngle = Math.min(MAX_HOLD_ANGLE, currentHoldAngle + STEP_INCREMENT);
 
-  // 3. Apply the rotation
-  setDegAxis(bone, axis, totalRotation);
+  // 2. Calculate the total rotation (direction is 1 or -1)
+  const totalRotation = currentHoldAngle * direction;
+
+  // 3. Apply the rotation
+  setDegAxis(bone, axis, totalRotation);
  // ⭐ NEW: Head tremor during resistance hold (Moved from Steady.html)
 {
   const head = getBone('head');
