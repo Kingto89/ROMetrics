@@ -2237,25 +2237,23 @@ actionSel.addEventListener("change", () => {
     
     const isTestSelected = !!actionSel.value;
     const isDisabled = shouldResistanceBeDisabled(); // CHECK NEW RULE
-// --- 1. Vector Clearing/Redraw (MUST RUN EARLY) ---
-// This logic handles vector visibility before the rest of the UI updates.
-if (areVectorsVisible) {
-    // 1a. Always clear the old vector first, regardless of the new selection.
-    // toggleVectorOverlay() sets areVectorsVisible to false.
-    toggleVectorOverlay(); 
-    
-    // 1b. If a NEW valid test IS selected, immediately redraw the vector for the new test.
-    // Calling it again sets areVectorsVisible back to true and draws the new vectors.
-    if (isTestSelected) {
-        toggleVectorOverlay();
+
+    // --- 1. VECTOR CLEARING (FIX: Hide vectors and reset button state) ---
+    // If vectors are visible, toggle them OFF once.
+    if (areVectorsVisible) {
+        toggleVectorOverlay(); // This sets areVectorsVisible = false, hides meshes, and removes 'lockOn'.
     }
-}
-    // 1. Hands Toggle Button control (Keep existing logic)
+    // Always ensure the button is explicitly off/disabled regardless of prior state.
+    vectorOverlayBtn.classList.remove('lockOn');
+    vectorOverlayBtn.disabled = !isTestSelected; // Must be set here if not done elsewhere.
+    // --- END VECTOR CLEARING FIX ---
+
+    // 1. Hands Toggle Button control
     toggleHandsBtn.disabled = !isTestSelected;
     toggleHandsBtn.classList.remove("lockOn");
     if (!isTestSelected) toggleHandsBtn.classList.add("lockOn");
 
-    // 3. Resistance Button Control (UPDATED FOR GRADING RULES)
+    // 2. Resistance Button Control 
     testButton.disabled = isDisabled; 
     if (isDisabled) {
         resistanceText.textContent = 'Manual Resistance N/A (Grade 0–2)';
@@ -2265,15 +2263,15 @@ if (areVectorsVisible) {
         $("msg").textContent = "Test selected. **Hold resistance button to execute MMT.**";
     }
     
-    // 4. Model Setup (Pose and Hand Placement)
+    // 3. Model Setup (Pose and Hand Placement)
     window.currentMMTtest = actionSel.value;
     window.currentMMTgradeBucket = getGradeBucketForTest(actionSel.value);
     updateGradeDropdownsForSelection();
     applyBodyPositionFromSelection();
     forceApplyHandOverrideOnce();
+    
+    // 4. Tuner Updates (Remove all redundant vector logic)
     if (isVectorTunerVisible) updateVectorTunerLabels();
-    if (areVectorsVisible) {
-    }
     if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
 });
 
