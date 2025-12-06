@@ -336,98 +336,123 @@ function toggleRoomLock() {
 if (lockRoomBtn) lockRoomBtn.addEventListener('click', toggleRoomLock);
 
 /* ==== Vector Overlay and 3D Tunnel Logic (MMT Guidance) ==== */
-// index (80).html - REPLACEMENT FOR createEnergyTunnel() (Around line 170)
-// This function creates the cylinder (tunnel) and adds a cone (arrowhead) at one end.
 function createEnergyTunnel(color) {
-    const TUNNEL_LENGTH = 0.35; // Length of the cylinder
-    const TUNNEL_RADIUS = 0.02; // Half size (from 0.04 to 0.02)
-    
-    // 1. Cylinder (Tunnel Body)
-    const geometry = new THREE.CylinderGeometry(TUNNEL_RADIUS, TUNNEL_RADIUS, TUNNEL_LENGTH, 16); 
-    const material = new THREE.MeshBasicMaterial({ 
-        color: color, 
-        transparent: true, 
-        opacity: 0.6,
-        side: THREE.DoubleSide
-    });
-    const mesh = new THREE.Mesh(geometry, material);
-    
-    // 2. Cone (Arrow Tip)
-    const coneGeom = new THREE.ConeGeometry(TUNNEL_RADIUS * 1.8, 0.1, 16); // Slightly wider cone
-    const coneMesh = new THREE.Mesh(coneGeom, material);
-    
-    // Position the cone at the end of the cylinder (0.5 * length)
-    coneMesh.position.y = TUNNEL_LENGTH / 2; 
-    
-    // Combine the mesh and the cone into a single Group
-    const group = new THREE.Group();
-    group.add(mesh);
-    group.add(coneMesh);
-    
-    group.matrixAutoUpdate = false;
-    group.visible = false;
-    scene.add(group);
-    return group;
+  const TUNNEL_LENGTH = 0.35;
+  const TUNNEL_RADIUS = 0.02;
+
+  const geometry = new THREE.CylinderGeometry(TUNNEL_RADIUS, TUNNEL_RADIUS, TUNNEL_LENGTH, 16);
+  const material = new THREE.MeshBasicMaterial({
+    color,
+    transparent: true,
+    opacity: 0.6,
+    side: THREE.DoubleSide
+  });
+
+  const mesh = new THREE.Mesh(geometry, material);
+
+  const coneGeom = new THREE.ConeGeometry(TUNNEL_RADIUS * 1.8, 0.1, 16);
+  const coneMesh = new THREE.Mesh(coneGeom, material);
+  coneMesh.position.y = TUNNEL_LENGTH / 2;
+
+  const group = new THREE.Group();
+  group.add(mesh);
+  group.add(coneMesh);
+
+  group.matrixAutoUpdate = false;
+  group.visible = false;
+  scene.add(group);
+  return group;
 }
 
-// ALSO: Locate positionVector function (around line 190) and change the hardcoded distance:
-// Position Vector (Around line 190)
-const _up = new THREE.Vector3(0, 1, 0); 
+const _up = new THREE.Vector3(0, 1, 0);
 function positionVector(mesh, startPos, direction) {
-    const dir = new THREE.Vector3().set(direction.x, direction.y, direction.z).normalize();
-    // VITAL: Change 0.7 to the constant TUNNEL_LENGTH defined above (or just 0.7)
-    // The positioning logic must use the vector length (0.7) to find the midpoint.
-    const midPoint = new THREE.Vector3().set(startPos.x, startPos.y, startPos.z).addScaledVector(dir, 0.7 / 2); // Keep 0.7 here as it is used for cylinder length
-        
-    mesh.position.copy(midPoint);
-    
-    const rotationQuaternion = new THREE.Quaternion().setFromUnitVectors(_up, dir);
-    mesh.rotation.setFromQuaternion(rotationQuaternion);
-    
-    mesh.updateMatrix();
+  const dir = new THREE.Vector3().set(direction.x, direction.y, direction.z).normalize();
+  const midPoint = new THREE.Vector3()
+    .set(startPos.x, startPos.y, startPos.z)
+    .addScaledVector(dir, 0.7 / 2);
+
+  mesh.position.copy(midPoint);
+
+  const rotationQuaternion = new THREE.Quaternion().setFromUnitVectors(_up, dir);
+  mesh.rotation.setFromQuaternion(rotationQuaternion);
+  mesh.updateMatrix();
+}
+
+function showVectorsForTest(testKey) {
+  if (!testKey) {
+    $("msg").textContent = "Select a test, then tap Vector Overlay.";
+    return;
+  }
+
+  const guide = VECTOR_GUIDES[testKey];
+  if (!guide) {
+    $("msg").textContent = `No Vector Guide data found for ${testKey}.`;
+    // If we can't draw for this test, hide anything old
+    hideVectors();
+    return;
+  }
+
+  if (!effortVectorMesh) effortVectorMesh = createEnergyTunnel(0x0066FF); // Blue
+  if (!resistanceVectorMesh) resistanceVectorMesh = createEnergyTunnel(0x00AA00); // Green
+
+  // Effort: patient force
+  positionVector(effortVectorMesh, guide.E_startPos, guide.E_direction);
+  if (model && effortVectorMesh.parent !== model) model.add(effortVectorMesh);
+  effortVectorMesh.visible = true;
+
+  // Resistance: therapist force
+  positionVector(resistanceVectorMesh, guide.R_startPos, guide.R_direction);
+  const resistParent = rightHandModel ? rightHandModel : scene;
+  if (resistanceVectorMesh.parent !== resistParent) resistParent.add(resistanceVectorMesh);
+  resistanceVectorMesh.visible = true;
+
+  areVectorsVisible = true;
+  vectorOverlayBtn.classList.add("lockOn");
+  $("msg").textContent = "Vectors: Blue = Patient Effort, Green = Therapist Resistance.";
+}
+
+function hideVectors() {
+  if (effortVectorMesh) effortVectorMesh.visible = false;
+  if (resistanceVectorMesh) resistanceVectorMesh.visible = false;
+  areVectorsVisible = false;
+  if (vectorOverlayBtn) vectorOverlayBtn.classList.remove("lockOn");
 }
 
 function toggleVectorOverlay() {
-    const testKey = actionSel.value;
-    
-    if (!testKey) return; 
-    
-    const guide = VECTOR_GUIDES[testKey];
-    if (!guide) {
-        $("msg").textContent = `No Vector Guide data found for ${testKey}.`;
-        return;
-    }
-
-    if (!effortVectorMesh) effortVectorMesh = createEnergyTunnel(0x0066FF); // Blue (Effort)
-    if (!resistanceVectorMesh) resistanceVectorMesh = createEnergyTunnel(0x00AA00); // Green (Resistance)
-
-    areVectorsVisible = !areVectorsVisible;
-
-    if (areVectorsVisible) {
-        // --- SHOW VECTORS ---
-        positionVector(effortVectorMesh, guide.E_startPos, guide.E_direction);
-        model.add(effortVectorMesh); 
-        effortVectorMesh.visible = true;
-
-        positionVector(resistanceVectorMesh, guide.R_startPos, guide.R_direction);
-        (rightHandModel ? rightHandModel : scene).add(resistanceVectorMesh); 
-        resistanceVectorMesh.visible = true;
-
-       vectorOverlayBtn.classList.add('lockOn'); // Activate glow
-       $("msg").textContent = "Vectors: Blue = Patient Effort, Green = Therapist Resistance.";
-
-
-    } else {
-        // --- HIDE VECTORS ---
-        effortVectorMesh.visible = false;
-        resistanceVectorMesh.visible = false;
-        vectorOverlayBtn.classList.remove('lockOn'); // Deactivate glow
-        $("msg").textContent = "Vector Overlay Off.";
-    }
+  // Only ever change state when the button is clicked
+  if (areVectorsVisible) {
+    hideVectors();
+    $("msg").textContent = "Vector Overlay Off.";
+  } else {
+    showVectorsForTest(actionSel.value);
+  }
 }
 
-// Wire the new toggle function to the button (click to toggle glow/visibility)
-if (vectorOverlayBtn) vectorOverlayBtn.addEventListener('click', toggleVectorOverlay);
+// When the user changes the MMT test:
+if (actionSel) {
+  actionSel.addEventListener("change", () => {
+    const testKey = actionSel.value;
+
+    // If overlay is OFF, just make sure nothing stale is on-screen
+    if (!areVectorsVisible) {
+      hideVectors();
+      return;
+    }
+
+    // Overlay is ON → either update to the new test or clear it
+    if (!testKey || !VECTOR_GUIDES[testKey]) {
+      hideVectors();
+      $("msg").textContent = "Vector Overlay Off (no guide for this test).";
+    } else {
+      showVectorsForTest(testKey); // switch to the new test’s vectors
+    }
+  });
+}
+
+// Wire the toggle to the button
+if (vectorOverlayBtn) {
+  vectorOverlayBtn.addEventListener("click", toggleVectorOverlay);
+}
 
 
 /* ==== MMT Resistance Timing & Execution Logic (Core Test Loop) ==== */
@@ -637,12 +662,6 @@ function shouldResistanceBeDisabled() {
   }
 }
   
-/* ==== Vector Overlay Button Glow Fix (Click Feedback Only) ==== */
-vectorOverlayBtn.addEventListener('click', () => {
-  // Simple click feedback: add the glow instantly and remove it after 300ms
-  vectorOverlayBtn.classList.add('lockOn');
-  setTimeout(() => vectorOverlayBtn.classList.remove('lockOn'), 300);
-});
 
 /* ==== THREE setup ==== */
 const renderer = new THREE.WebGLRenderer({ canvas, antialias:true });
