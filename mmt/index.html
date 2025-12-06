@@ -431,9 +431,10 @@ function showVectorsForTest(testKey) {
   effortVectorMesh.visible = true;
 
   // Resistance: therapist force
+  // Resistance: therapist force
   positionVector(resistanceVectorMesh, guide.R_startPos, guide.R_direction);
-  const resistParent = rightHandModel ? rightHandModel : scene;
-  if (resistanceVectorMesh.parent !== resistParent) resistParent.add(resistanceVectorMesh);
+  if (model && resistanceVectorMesh.parent !== model) model.add(resistanceVectorMesh);
+  resistanceVectorMesh.scale.set(1, 1, 1); // keep green vector from shrinking
   resistanceVectorMesh.visible = true;
 
   areVectorsVisible = true;
