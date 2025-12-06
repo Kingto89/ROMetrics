@@ -1390,8 +1390,41 @@ const HAND_NEUTRAL_POSE = {
     handLX: -0.45, handLY: 1.25, handLZ: 0.55,  
     handLRX: 0, handLRY: 0, handLRZ: 0  
 };
+let CURRENT_TEST = null;
 let CURRENT_BODY_TEST = null;
-let CURRENT_BODY_BUCKET = "high"; // "high" or "low"
+function shouldLeftHandTremor(test){
+  if (!test) return false;
+
+  const region = (test.region || "").toLowerCase();
+  const name   = (test.name || test.id || test.key || "").toLowerCase();
+
+  // Exception: Gastroc test → no tremor
+  if (name.includes("gastroc")) return false;
+
+  // Trunk: ONLY pelvic elevation uses therapist hand
+  if (region === "trunk"){
+    const isPelvicElev =
+      name.includes("pelvic") && name.includes("elev");
+    return isPelvicElev;
+  }
+
+  // Regions where left-hand tremor is allowed
+  if (
+    region === "cervical" ||
+    region === "scapular" ||
+    region === "shoulder" ||
+    region === "elbow" ||
+    region === "hip" ||
+    region === "wrist" ||
+    region === "knee" ||
+    region === "foot"
+  ){
+    return true;
+  }
+
+  return false;
+}
+
   
 // Decide which pose family to use ("high" = Grades 3–5 family, "low" = Grades 0–2 family)
 function getGradeBucketForTest(testKey){
