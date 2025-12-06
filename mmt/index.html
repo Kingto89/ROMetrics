@@ -1049,7 +1049,15 @@ function applyAnatomicBaseline(){
 /**
  * Applies a small, slow, incremental movement to the bone being tested.
  * Simulates the patient straining against resistance.
- * Also adds subtle hand tremor globally while Resistance is HELD.
+ * Also adds subtle hand tremor globally while Resistance is HELD. Come back here to add body tremors after hands are SET. CHECKSPOT
+ */
+/**
+ * Applies a small, slow, incremental movement to the bone being tested.
+ * Simulates the patient straining against resistance.
+ * Also adds:
+ *  - Head tremor for cervical tests
+ *  - Upper-body tremor for scapula/shoulder tests
+ *  - Global hand tremor while resistance is HELD
  */
 function applyHoldMovement() {
   const testKey = actionSel.value;
@@ -1090,7 +1098,59 @@ function applyHoldMovement() {
     }
   }
 
-  // 2) Global hand tremor while resistance is held (ANY test)
+  // 2) Body tremor for scapula / shoulder tests (non-cervical)
+  if (!mapping) {
+    const UPPERCHAIN_TREMOR_TESTS = new Set([
+      // Scapula
+      "Serratus_Anterior",
+      "Upper_Trapezius",
+      "Middle_Trapezius",
+      "Scap_Depression_Adduction",
+      "Rhomboids",
+      "Latissimus_Dorsi",
+      // Shoulder
+      "Anterior_Deltoid",
+      "Posterior_Deltoid",
+      "Middle_Deltoid",
+      "Shoulder_Horiz_Abd",
+      "Shoulder_Horiz_Add"
+    ]);
+
+    const ROTATOR_TREMOR_TESTS = new Set([
+      "Infraspinatus",
+      "Subscapularis"
+    ]);
+
+    const bonesToJitter = [];
+
+    if (UPPERCHAIN_TREMOR_TESTS.has(testKey)) {
+      const upper = getBone("upperarm_R");
+      const lower = getBone("lowerarm_R");
+      const hand  = getBone("hand_R");
+      if (upper) bonesToJitter.push(upper);
+      if (lower) bonesToJitter.push(lower);
+      if (hand)  bonesToJitter.push(hand);
+    } else if (ROTATOR_TREMOR_TESTS.has(testKey)) {
+      const lower = getBone("lowerarm_R");
+      const hand  = getBone("hand_R");
+      if (lower) bonesToJitter.push(lower);
+      if (hand)  bonesToJitter.push(hand);
+    }
+
+    if (bonesToJitter.length) {
+      const AMP_DEG_BODY = 0.4; // small visible jitter
+      bonesToJitter.forEach(bone => {
+        const jx = (Math.random() * 2 - 1) * AMP_DEG_BODY;
+        const jy = (Math.random() * 2 - 1) * AMP_DEG_BODY;
+        const jz = (Math.random() * 2 - 1) * AMP_DEG_BODY;
+        bone.rotateX(degToRad(jx));
+        bone.rotateY(degToRad(jy));
+        bone.rotateZ(degToRad(jz));
+      });
+    }
+  }
+
+  // 3) Global hand tremor while resistance is held (ANY test)
   if (leftHandModel && handsModel?.visible) {
     const d = MAX_TREMOR_DISPLACEMENT;
 
