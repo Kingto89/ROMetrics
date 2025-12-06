@@ -1033,6 +1033,16 @@ const CERVICAL_MMT_MAP = {
   Single_SCM:          ['neck', 'ry', 0],    // Single SCM (Rotation)
   Cervical_Rotation:   ['head', 'y', -1]     // Rotation (Y is rotation)
 };  
+
+// Inside your main script body 
+const SCAPULAR_MMT_TESTS = new Set([
+  'Serratus_Anterior',
+  'Upper_Trapezius',
+  'Middle_Trapezius',
+  'Scap_Depression_Adduction',
+  'Rhomboids',
+  'Latissimus_Dorsi'
+]);  
 // If your rig uses "wrist_L/R" instead of "hand_L/R", change those two names below.
 function applyAnatomicBaseline(){
   const shL = getBone('upperarm_L'), shR = getBone('upperarm_R'); // shoulder ab/ad on Z
@@ -1086,6 +1096,30 @@ function applyHoldMovement() {
     head.rotateZ(degToRad(jz));
   }
 } 
+
+// ⭐ NEW: Scapular/Body Tremor Logic (only for Scapula MMT tests)
+// Applies tremor to the trunk (spine) region.
+if (SCAPULAR_MMT_TESTS.has(testKey)) {
+    const AMP_DEG = 0.25; // Slightly less tremor magnitude than the head
+    const bonesToTremor = [
+        getBone('spine01'), 
+        getBone('spine02'), 
+        getBone('spine03')
+    ];
+
+    bonesToTremor.forEach(bone => {
+        if (bone) {
+            // Apply a small random rotation on all three axes for an "in-spot" tremor
+            const jx = (Math.random() * 2 - 1) * AMP_DEG;
+            const jy = (Math.random() * 2 - 1) * AMP_DEG;
+            const jz = (Math.random() * 2 - 1) * AMP_DEG;
+
+            bone.rotateX(degToRad(jx));
+            bone.rotateY(degToRad(jy));
+            bone.rotateZ(degToRad(jz));
+        }
+    });
+}  
 // 2. ⭐ NEW: Hand Tremor Logic (only if hands are loaded and visible)
   // -------------------------------------------------------------
   if (leftHandModel && handsModel?.visible) {
