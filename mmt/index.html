@@ -1755,19 +1755,7 @@ function setBodyMode(mode, isResistanceActive = false){ // <-- ADDED isResistanc
     posZ = tableTop.position.z;
     rotX = Math.PI / 2;
     rotY = degToRad(POSE.ryDeg + 180);
-
-} else if (mode === "side_lying"){
-    // Side-lying: just roll model onto its side, nothing else
-    posX = 0;
-    posY = TABLE_HEIGHT + TABLE_THICK / 2 + 0.04;
-    posZ = tableTop.position.z;
-
-    rotX = 0;                          // no extra pitch
-    rotY = degToRad(POSE.ryDeg || 0);  // keep facing from POSE
-    rotZ = Math.PI / 2;                // roll onto side
-}
-
-
+    
   } else if (mode === "gastroc"){
     // Standing by cabinet for heel raises
     const standZ = cabinet.position.z - 0.5;
