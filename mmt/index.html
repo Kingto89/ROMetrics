@@ -1756,6 +1756,15 @@ function setBodyMode(mode, isResistanceActive = false){ // <-- ADDED isResistanc
     rotX = Math.PI / 2;
     rotY = degToRad(POSE.ryDeg + 180);
 
+  } else if (mode === "side_lying"){
+    // Side-lying on bed (rough: lying with trunk rotated)
+    posX = 0;
+    posY = TABLE_HEIGHT + TABLE_THICK / 2 + 0.04;
+    posZ = tableTop.position.z;
+    rotX = Math.PI / 2;
+    rotY = degToRad(POSE.ryDeg);
+    rotZ = Math.PI / 2; // roll onto side
+
   } else if (mode === "gastroc"){
     // Standing by cabinet for heel raises
     const standZ = cabinet.position.z - 0.5;
@@ -1853,6 +1862,44 @@ if (!HAND_OVERRIDES[key] && poseToApply) {
     }
  }
 
+
+  // If this test is using side-lying, also snap arms/legs to side-lying baseline
+  if (mode === "side_lying"){
+    applySideLyingLimbs();
+  }
+   // Wrist tests: add right-arm bias (0° abd, 0° flex) in both seated modes
+  if (mode === "seatedgravity" || mode === "seatednogravity"){
+    const upperR = getBone("upperarm_R");
+    const lowerR = getBone("lowerarm_R");
+
+    // Reset just these bones to baseline so angles are absolute (not stacked)
+    [upperR, lowerR].forEach(b => {
+      if (!b) return;
+      const q0 = initialBoneRot.get(b);
+      if (q0) b.quaternion.copy(q0);
+    });
+
+    if (upperR) upperR.rotateZ(degToRad(-16));  // ° shoulder abduction
+    if (lowerR) lowerR.rotateX(degToRad(25));  // ° elbow flexion
+  }
+ 
+// Wrist tests: right-arm bias for NO-gravity (0–2) pose
+if (mode === "seatednogravity"){
+  const upperR = getBone("upperarm_R");
+  const lowerR = getBone("lowerarm_R");
+
+  // Reset just these bones to baseline so angles are absolute (not stacked)
+  [upperR, lowerR].forEach(b => {
+    if (!b) return;
+    const q0 = initialBoneRot.get(b);
+    if (q0) b.quaternion.copy(q0);
+  });
+
+  // Same shoulder, MORE elbow flexion for gravity-eliminated setup
+  if (upperR) upperR.rotateZ(degToRad(-12)); // shoulder abduction
+  if (lowerR) lowerR.rotateX(degToRad(75));  // more elbow flexion (tweak if needed)
+}
+}
 
 /* ==== Therapist Hands Model Logic ==== */
 let rightHandModel = null;
