@@ -1269,9 +1269,9 @@ const TEST_POSITION = {
   // Wrist
   ECRL:                { high: "seated",  low: "seated" },
   ECRB:                { high: "seated",  low: "seated" },
-  ECU:                 { high: "seatedgravity",  low: "seatednogravity" },
-  FCR:                 { high: "seatedgravity",  low: "seatednogravity" },
-  FCU:                 { high: "seatedgravity",  low: "seatednogravity" },
+  ECU:                 { high: "seated",  low: "seated" },
+  FCR:                 { high: "seated",  low: "seated" },
+  FCU:                 { high: "seated",  low: "seated" },
 
    // Hip
   Iliopsoas:           { high: "seated",     low: "side_lying"  },
@@ -1716,26 +1716,6 @@ function setBodyMode(mode, isResistanceActive = false){ // <-- ADDED isResistanc
   rotY = degToRad(POSE.ryDeg);
 
   longSitLegs(); // new helper below
-    
-  } else if (mode === "seatedgravity"){
-    // Same base seated transform as "seated" (3–5: against gravity)
-    const edgeZ = tableTop.position.z + (TABLE_D / 2) - 0.25;
-    posX = 0;
-    posY = TABLE_HEIGHT + 0.02;
-    posZ = edgeZ;
-    rotX = 0;
-    rotY = degToRad(POSE.ryDeg);
-    seatPoseOnlyLegs();
-
-  } else if (mode === "seatednogravity"){
-    // Same base seated transform as "seated" (0–2: gravity eliminated)
-    const edgeZ = tableTop.position.z + (TABLE_D / 2) - 0.25;
-    posX = 0;
-    posY = TABLE_HEIGHT + 0.02;
-    posZ = edgeZ;
-    rotX = 0;
-    rotY = degToRad(POSE.ryDeg);
-    seatPoseOnlyLegs();
 
   } else if (mode === "supine"){
     // Supine on bed, centered
