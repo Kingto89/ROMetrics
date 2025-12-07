@@ -204,7 +204,7 @@ select,button,input[type=range]{width:100%;margin:6px 0 8px 0;padding:8px 10px;b
     <span style="display: block;">Practice <br> Placement</span>
   </button>
 
-  <button id="switchActiveHandBtn" class="mini multi-line-btn" title="Switch between manipulating the Right and Left hands">
+  <button id="switchActiveHandBtn" class="mini multi-line-btn" title="Switch between hands">
     <span style="display: block;">Switch <br> Hands</span>
   </button>
 </div>
@@ -558,7 +558,12 @@ function executeVoluntaryMovement() {
 
 function startResistanceTest(event) {
     if (testButton.disabled || resistanceTimer) return;
-    
+        // Only allow resistance when therapist hands are ON
+    if (!handsModel || !handsModel.visible) {
+        $("msg").textContent = "Turn Therapist Hands ON before applying resistance.";
+        return;
+    }
+
     executeVoluntaryMovement();
     currentHoldAngle = 0;
   
@@ -588,7 +593,7 @@ function stopResistanceTest() {
     resistanceFill.style.transition = 'width 0.3s ease-in, background-color 0.3s';
     resistanceFill.style.width = '0%'; 
     
-    const finalGradeText = currentGrade > 0 ? `Grade ${currentGrade} achieved.` : "Hold was too short for Grade 3.";
+    const finalGradeText = currentGrade > 0 ? `Grade ${currentGrade} achieved.` : "Hold was too short - Grade 3.";
     $("msg").textContent = `Test finished. Recorded score: ${finalGradeText}`;
     resistanceText.textContent = 'Hold to Apply Resistance (Grade 3, 4, 5)';
 }
