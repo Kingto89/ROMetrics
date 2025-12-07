@@ -332,9 +332,17 @@ ECRL: { E_startPos: { x: -0.240, y: 1.030, z: 0.660 }, E_direction: { x: 0.061, 
 ECRB: {  E_startPos: { x: -0.760, y: 1.590, z: -0.020 }, E_direction: { x: 0.574, y: -0.319, z: 0.243 },  R_startPos: { x: 0.130, y: 1.090, z: 0.500 },  R_direction: { x: -0.561, y: 0.309, z: -0.300 }  },
 ECU: {  E_startPos: { x: 0.080, y: 1.070, z: 0.420 }, E_direction: { x: -0.518, y: 0.435, z: -0.181 }, R_startPos: { x: -0.870, y: 1.690, z: 0.140 }, R_direction: { x: 0.584, y: -0.399, z: -0.022 } },
 FCR: { E_startPos: { x: -0.160, y: 1.310, z: 0.620 }, E_direction: { x: -0.324, y: 0.172, z: -0.596 }, R_startPos: { x: -0.990, y: 1.010, z: 0.260 },  R_direction: { x: 0.579, y: 0.406, z: -0.023 } },
- FCU: {  E_startPos: { x: -0.960, y: 1.550, z: -0.100 },  E_direction: { x: 0.593, y: -0.219, z: 0.321 },  R_startPos: { x: 0.050, y: 1.170, z: 0.620 }, R_direction: { x: -0.493, y: 0.391, z: -0.470 }  },
+FCU: {  E_startPos: { x: -0.960, y: 1.550, z: -0.100 },  E_direction: { x: 0.593, y: -0.219, z: 0.321 },  R_startPos: { x: 0.050, y: 1.170, z: 0.620 }, R_direction: { x: -0.493, y: 0.391, z: -0.470 }  },
+
+Iliopsoas: { E_startPos: { x: -0.480, y: 1.630, z: 0.580 },E_direction: { x: -0.033, y: -0.447, z: -0.538 },R_startPos: { x: -0.470, y: 0.610, z: -0.500 }, R_direction: { x: 0.000, y: 0.484, z: 0.516 } },
    
-   
+//  Glute_Max:           { high: "prone",      low: "side_lying"  },
+//  Glute_Med:           { high: "side_lying", low: "supine"      },
+//  TFL:                 { high: "side_lying", low: "long_sit"    },
+//  Hip_Adduction:       { high: "side_lying", low: "supine"      },
+//  Sartorius:           { high: "seated",     low: "supine"      },
+//  Hip_ER:              { high: "seated",     low: "supine"      },
+//  Hip_IR:  
 };
   
 const practicePlacementBtn = $("practicePlacementBtn");  
@@ -1430,6 +1438,10 @@ BONE_OVERRIDES["ECU:high"] = { hand_R:{ x:-86.1, y:-10.6, z:-17.9 }, lowerarm_R:
 BONE_OVERRIDES["FCR:high"] = { clavicle_R:{ x:4.1, y:4.9, z:87.5 }, hand_R:{ x:65.6, y:-15.1, z:-21.2  }, lowerarm_R:{ x:16.4, y:37.0, z:81.7 }, upperarm_R:{ x:-57.6, y:54.2, z:54.9 } };
 BONE_OVERRIDES["FCU:high"] = { clavicle_R:{ x:4.1, y:4.9, z:87.5 }, hand_R:{ x:65.6, y:-15.1, z:45.2  }, lowerarm_R:{ x:16.4, y:37.0, z:81.7 }, upperarm_R:{ x:-57.6, y:54.2, z:54.9 } };
 
+BONE_OVERRIDES["Iliopsoas:high"] = { hand_L:{ x:-83.3, y:15.8, z:58.6 }, hand_R:{ x:-82.7, y:-19.5, z:-81.1 }, thigh_R:{ x:-96.1, y:4.5, z:-179.1 } };
+
+
+                                                                                              
                              
 /* ==== HAND OVERRIDES (new, separate from pose) ==== */
 const HAND_OVERRIDES = {};
@@ -1472,6 +1484,8 @@ HAND_OVERRIDES["ECRB:high"] = {"handRX":0.79477037979376,"handRY":-3.52898175859
 HAND_OVERRIDES["ECU:high"] = {"handRX":0.5321217929483433,"handRY":-3.455030783598274,"handRZ":-9.873827616950102,"handRRX":-0.15,"handRRY":-3.299999999999999,"handRRZ":2.3999999999999995,"handLX":-0.6102419067828225,"handLY":-2.778748113372595,"handLZ":-10.250010469265842,"handLRX":0.29999999999999993,"handLRY":-4.5,"handLRZ":-1.7999999999999998};
 HAND_OVERRIDES["FCR:high"] = {"handRX":0.55,"handRY":-3.259541602190672,"handRZ":-9.89638627408414,"handRRX":-0.3,"handRRY":-2.849999999999999,"handRRZ":2.3999999999999995,"handLX":-0.9000000000000004,"handLY":-2.3124502200164567,"handLZ":-10.27369333347275,"handLRX":-0.44999999999999996,"handLRY":1.7999999999999996,"handLRZ":-1.05};  
 HAND_OVERRIDES["FCU:high"] = {"handRX":0.44291869119899585,"handRY":-3.290188954308885,"handRZ":-9.638541131892374,"handRRX":-0.3,"handRRY":-2.999999999999999,"handRRZ":-3.299999999999999,"handLX":1.2370525369535177,"handLY":-3.4701284811140414,"handLZ":-10.10791498024637,"handLRX":-0.15,"handLRY":-1.9499999999999995,"handLRZ":1.7999999999999996};  
+
+HAND_OVERRIDES["Iliopsoas:high"] = {"handRX":-3.9326457881186947,"handRY":-4.1120690945840135,"handRZ":-0.319781569667101,"handRRX":-0.15,"handRRY":3.299999999999999,"handRRZ":-1.4999999999999998,"handLX":-3.7146681421870085,"handLY":-3.99917002310452,"handLZ":1.2852027502783014,"handLRX":0,"handLRY":1.3499999999999999,"handLRZ":0.44999999999999996};
   
   
 /* ==== NEUTRAL HAND POSITION (New Default) ==== */
