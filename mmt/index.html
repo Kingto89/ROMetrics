@@ -328,7 +328,7 @@ Brachialis: { E_startPos: { x: 0.280, y: 0.870, z: 1.060 }, E_direction: { x: 0.
 Brachioradialis: { E_startPos: { x: 0.280, y: 0.870, z: 1.060 }, E_direction: { x: 0.000, y: 0.402, z: -0.573 }, R_startPos: { x: 0.250, y: 1.770, z: 0.020 },  R_direction: { x: 0.000, y: -0.472, z: 0.527 }},
 Triceps_Brachii: { E_startPos: { x: -0.480, y: 1.630, z: 0.580 },E_direction: { x: -0.033, y: -0.447, z: -0.538 },R_startPos: { x: -0.470, y: 0.610, z: -0.500 }, R_direction: { x: 0.000, y: 0.484, z: 0.516 } },
   
-ECRL: { E_startPos:{x:0.040,y:1.550,z:0.780}, E_direction:{x:0.000,y:0.000,z:-0.700}, R_startPos:{x:0.810,y:1.530,z:-0.260}, R_direction:{x:0.000,y:-0.707,z:-0.023} },
+ECRL: { E_startPos: { x: -0.240, y: 1.030, z: 0.660 }, E_direction: { x: 0.061, y: 0.448, z: -0.534 }, R_startPos: { x: -0.590, y: 1.570, z: -0.020 }, R_direction: { x: 0.000, y: -0.424, z: 0.566 } },
 ECRB: { E_startPos:{x:0.040,y:1.550,z:0.780}, E_direction:{x:0.000,y:0.000,z:-0.700}, R_startPos:{x:0.810,y:1.530,z:-0.260}, R_direction:{x:0.000,y:-0.707,z:-0.023} },
 ECU: { E_startPos:{x:0.040,y:1.550,z:0.780}, E_direction:{x:0.000,y:0.000,z:-0.700}, R_startPos:{x:0.810,y:1.530,z:-0.260}, R_direction:{x:0.000,y:-0.707,z:-0.023} },
 FCR: { E_startPos:{x:0.040,y:1.550,z:0.780}, E_direction:{x:0.000,y:0.000,z:-0.700}, R_startPos:{x:0.810,y:1.530,z:-0.260}, R_direction:{x:0.000,y:-0.707,z:-0.023} },
@@ -1470,7 +1470,7 @@ HAND_OVERRIDES["Brachialis:high"] = {"handRX":-2.0886883203461557,"handRY":-1.67
 HAND_OVERRIDES["Brachioradialis:high"] = {"handRX":-2.038688320346156,"handRY":-2.075037703228273,"handRZ":-0.7729639441469008,"handRRX":0.6,"handRRY":3.449999999999999,"handRRZ":0,"handLX":-0.4211251666750595,"handLY":-3.0087728179382767,"handLZ":0.03910154951156128,"handLRX":2.991592653589793,"handLRY":-1.7925831658915896,"handLRZ":3.441592653589793};
 HAND_OVERRIDES["Triceps_Brachii:high"] = {"handRX":0.8251259870240402,"handRY":-4.9988265907475755,"handRZ":-1.4921180269685714,"handRRX":0.15000000000000005,"handRRY":1.9499999999999997,"handRRZ":2.6999999999999997,"handLX":0.5081854201466252,"handLY":-4.487076828945899,"handLZ":1.2324362448777697,"handLRX":-0.6,"handLRY":1.9499999999999995,"handLRZ":0.75};
 
-
+HAND_OVERRIDES["ECRL:high"] = {"handRX":-0.9336294273727871,"handRY":-2.9762781740934474,"handRZ":-11.644477828691546,"handRRX":0,"handRRY":0,"handRRZ":0,"handLX":-1.6856833817275458,"handLY":-3.0348774271662067,"handLZ":-12.332397122089986,"handLRX":0,"handLRY":0,"handLRZ":0};
 
   
 /* ==== NEUTRAL HAND POSITION (New Default) ==== */
@@ -1611,7 +1611,7 @@ boneTunerPanel.className = "panel";
 boneTunerPanel.style.left = "430px";
 boneTunerPanel.style.top = "12px";
 document.body.appendChild(boneTunerPanel);
-boneTunerPanel.style.display = 'none'; // <--- Hides the simple bone tuner  (none or block)
+boneTunerPanel.style.display = 'block'; // <--- Hides the simple bone tuner  (none or block)
 
 function rotateBone(axis, delta){
   const bName = $("boneSel").value;
