@@ -1591,36 +1591,45 @@ const MODIFIED_BONES = new Set(); // only bones touched by tuner this session
   
 // index (80).html - REPLACEMENT for applyTunerOverrides()
 function applyTunerOverrides(testKey, gradeBucket, isResistanceActive = false){
-    if (!skeleton) return;
-    const key = `${testKey}:${gradeBucket}`;
-    
-    let dict = null;
-    
-    if (!isResistanceActive && BONE_OVERRIDES_START[key]) {
-        // If resistance is NOT active, try to use the starting pose override (TFL:high only currently)
-        dict = BONE_OVERRIDES_START[key];
-    } else {
-        // Otherwise, use the standard override (for holding/resistance phase)
-        dict = BONE_OVERRIDES[key];
-    }
+    if (!skeleton) return;
+    const key = `${testKey}:${gradeBucket}`;
+    
+    // 1. Identify if this specific test (e.g., TFL:high) has a custom starting pose.
+    const hasStartPose = !!BONE_OVERRIDES_START[key];
+    
+    let dict = null;
+    let poseType = 'Default';
 
-    if (!dict) return;
+    // A) If a starting pose exists AND resistance is NOT active, use the start pose.
+    if (hasStartPose && !isResistanceActive) {
+        dict = BONE_OVERRIDES_START[key];
+        poseType = 'Start Pose';
 
-    for (const boneName in dict){
-        const bone = getBone(boneName);
-        const rot  = dict[boneName];
-        if (!bone || !rot) continue;
+    } 
+    // B) If a starting pose exists AND resistance IS active, OR if it's any other test, use the regular override.
+    // This handles: (TFL switch to end range) AND (All normal tests that have no start pose).
+    else if (hasStartPose && isResistanceActive || !hasStartPose) {
+        dict = BONE_OVERRIDES[key];
+        poseType = 'End Pose/Standard';
+    }
 
-        // Use the stored angles as the FULL local rotation
-        const e = new THREE.Euler(
-            THREE.MathUtils.degToRad(rot.x || 0),
-            THREE.MathUtils.degToRad(rot.y || 0),
-            THREE.MathUtils.degToRad(rot.z || 0),
-            "XYZ"
-        );
-        bone.quaternion.setFromEuler(e);    
-    }
-    console.log(`✅ Applied Bone Tuner Overrides for ${key} (${isResistanceActive ? 'End Pose' : 'Start Pose'}).`);  
+    if (!dict) return;
+
+    for (const boneName in dict){
+        const bone = getBone(boneName);
+        const rot  = dict[boneName];
+        if (!bone || !rot) continue;
+
+        // Use the stored angles as the FULL local rotation
+        const e = new THREE.Euler(
+            THREE.MathUtils.degToRad(rot.x || 0),
+            THREE.MathUtils.degToRad(rot.y || 0),
+            THREE.MathUtils.degToRad(rot.z || 0),
+            "XYZ"
+        );
+        bone.quaternion.setFromEuler(e);    
+    }
+    console.log(`✅ Applied Bone Tuner Overrides for ${key} (${poseType}).`);  
 }
 
 
