@@ -312,8 +312,8 @@ Latissimus_Dorsi: { E_startPos: { x: -0.640, y: 0.550, z: 0.180 }, E_direction: 
 Anterior_Deltoid: {E_startPos: { x: -0.200, y: 0.670, z: 0.180 }, E_direction: { x: 0.000, y: 0.700, z: -0.000 },R_startPos: { x: -0.150, y: 2.010, z: 0.220 }, R_direction: { x: 0.000, y: -0.707, z: -0.023 }  },
 Posterior_Deltoid: { E_startPos: { x: -0.200, y: 1.270, z: 0.060 }, E_direction: { x: 0.000, y: 0.000, z: -0.700 }, R_startPos: { x: -0.230, y: 1.170, z: -0.660 }, R_direction: { x: 0.023, y: 0.020, z: 0.707 } },
 Middle_Deltoid: {  E_startPos: { x: -0.040, y: 0.830, z: 0.060 },  E_direction: { x: -0.590, y: 0.376, z: -0.011 }, R_startPos: { x: -0.350, y: 2.010, z: -0.140 },   R_direction: { x: 0.002, y: -0.706, z: 0.039 }  },
-Shoulder_Horiz_Abd: { E_startPos:{x:0.040,y:1.550,z:0.780}, E_direction:{x:0.000,y:0.000,z:-0.700}, R_startPos:{x:0.810,y:1.530,z:-0.260}, R_direction:{x:0.000,y:-0.707,z:-0.023} },
-Shoulder_Horiz_Add: { E_startPos:{x:0.040,y:1.550,z:0.780}, E_direction:{x:0.000,y:0.000,z:-0.700}, R_startPos:{x:0.810,y:1.530,z:-0.260}, R_direction:{x:0.000,y:-0.707,z:-0.023} },
+Shoulder_Horiz_Abd: { E_startPos: { x: -0.360, y: 1.350, z: 0.700 },  E_direction: { x: 0.000, y: 0.000, z: -0.700 }, R_startPos: { x: -0.350, y: 1.410, z: -0.700 },  R_direction: { x: 0.013, y: -0.046, z: 0.706 } },
+Shoulder_Horiz_Add: { E_startPos: { x: 0.920, y: 1.350, z: 0.100 }, E_direction: { x: -0.697, y: 0.061, z: -0.000 }, R_startPos: { x: -0.430, y: 1.330, z: 0.180 },  R_direction: { x: 0.744, y: -0.019, z: -0.028 }  },
 Infraspinatus: { E_startPos:{x:0.040,y:1.550,z:0.780}, E_direction:{x:0.000,y:0.000,z:-0.700}, R_startPos:{x:0.810,y:1.530,z:-0.260}, R_direction:{x:0.000,y:-0.707,z:-0.023} },
 Subscapularis: { E_startPos:{x:0.040,y:1.550,z:0.780}, E_direction:{x:0.000,y:0.000,z:-0.700}, R_startPos:{x:0.810,y:1.530,z:-0.260}, R_direction:{x:0.000,y:-0.707,z:-0.023} },
 
@@ -1450,7 +1450,8 @@ HAND_OVERRIDES["Latissimus_Dorsi:high"] = {"handRX":-1.7591083525165192,"handRY"
 HAND_OVERRIDES["Anterior_Deltoid:high"] = {"handRX":-4.092514253841237,"handRY":-1.6511624721219198,"handRZ":-1.8628712151296891,"handRRX":0,"handRRY":0.6,"handRRZ":0,"handLX":-4.360517805926354,"handLY":-1.989816350340847,"handLZ":0.4827111158866561,"handLRX":-0.15,"handLRY":1.4999999999999998,"handLRZ":0.6};
 HAND_OVERRIDES["Posterior_Deltoid:high"] = {"handRX":0.4600801398396655,"handRY":-4.0020186162517914,"handRZ":-1.8429242361498783,"handRRX":0,"handRRY":1.9499999999999995,"handRRZ":0.15,"handLX":1.1385832461237204,"handLY":-4.2544627806031245,"handLZ":-0.49230648481587896,"handLRX":0,"handLRY":3.149999999999999,"handLRZ":0.44999999999999996};
 HAND_OVERRIDES["Middle_Deltoid:high"] = {"handRX":-3.966793959670711,"handRY":-1.718937103886422,"handRZ":-1.645414325328554,"handRRX":0,"handRRY":0.3,"handRRZ":-0.3,"handLX":-5.351985832068992,"handLY":-2.1811405583496883,"handLZ":-1.1738530530855538,"handLRX":0,"handLRY":0.15,"handLRZ":0.44999999999999996};
-
+HAND_OVERRIDES["Shoulder_Horiz_Abd:high"] = {"handRX":0.4415814299580666,"handRY":-3.8951729282914886,"handRZ":-2.085235498585376,"handRRX":0,"handRRY":1.9499999999999995,"handRRZ":0,"handLX":1.3643662504272245,"handLY":-4.289365848939238,"handLZ":-0.3740318249127394,"handLRX":0.15,"handLRY":1.7999999999999998,"handLRZ":0.3};
+HAND_OVERRIDES["Shoulder_Horiz_Add:high"] = {"handRX":2.464468316140405,"handRY":-4.411779907331424,"handRZ":-2.379177026215971,"handRRX":0,"handRRY":-1.4999999999999998,"handRRZ":-0.3,"handLX":2.5011933737591883,"handLY":-4.277943353408735,"handLZ":-1.898823682140151,"handLRX":0,"handLRY":-1.6499999999999997,"handLRZ":1.3499999999999999};  
 
   
 /* ==== NEUTRAL HAND POSITION (New Default) ==== */
@@ -1591,7 +1592,7 @@ boneTunerPanel.className = "panel";
 boneTunerPanel.style.left = "430px";
 boneTunerPanel.style.top = "12px";
 document.body.appendChild(boneTunerPanel);
-boneTunerPanel.style.display = 'block'; // <--- Hides the simple bone tuner  (none or block)
+boneTunerPanel.style.display = 'none'; // <--- Hides the simple bone tuner  (none or block)
 
 function rotateBone(axis, delta){
   const bName = $("boneSel").value;
