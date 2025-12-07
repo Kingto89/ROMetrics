@@ -1403,7 +1403,10 @@ POSE_OVERRIDES["Foot_Eversion_PF:low"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000
 POSE_OVERRIDES["Gastrocnemius:high"] = { x:-0.500, y:0.000, z:-1.600, rx:0.000, ry:1.920, rz:0.000 }; 
 POSE_OVERRIDES["Gastrocnemius:low"] = { x:-1.520, y:0.800, z:0.550, rx:1.571, ry:0.000, rz:-1.920 };  //prone
 
-
+/* ==== NEW: Starting Pose Bone Overrides (Applied when resistance is NOT active) ==== */
+const BONE_OVERRIDES_START = {};
+BONE_OVERRIDES_START["TFL:high"] = { calf_L:{ x:-48.4, y:-3.8, z:-3.8 }, hand_R:{ x:65.0, y:-50.4, z:44.7 }, lowerarm_L:{ x:100.0, y:6.5, z:7.2 }, lowerarm_R:{ x:97.4, y:-10.4, z:47.0 }, neck:{ x:45.4, y:6.0, z:-29.8 }, thigh_L:{ x:4.1, y:19.9, z:179.6 }, thigh_R:{ x:-1.9, y:8.1, z:-160.7 }, upperarm_L:{ x:-14.1, y:-24.9, z:-77.4 }, upperarm_R:{ x:-1.5, y:8.3, z:78.3 } };
+  
 const BONE_OVERRIDES = {}; // e.g. BONE_OVERRIDES["Anterior_Deltoid:high"] = { boneName:{x:5,y:0,z:-10} };
 BONE_OVERRIDES["Capital_Extension:high"] = { foot_L:{ x:15.5, y:-4.4, z:-7.2 }, foot_R:{ x:15.5, y:4.4, z:7.2 } };
 BONE_OVERRIDES["Cervical_Extension:high"] = { foot_L:{ x:15.5, y:-4.4, z:-7.2 }, foot_R:{ x:15.5, y:4.4, z:7.2 } };  
@@ -1442,7 +1445,7 @@ BONE_OVERRIDES["FCU:high"] = { clavicle_R:{ x:4.1, y:4.9, z:87.5 }, hand_R:{ x:6
 BONE_OVERRIDES["Iliopsoas:high"] = { hand_L:{ x:-83.3, y:15.8, z:58.6 }, hand_R:{ x:-82.7, y:-19.5, z:-81.1 }, thigh_R:{ x:-96.1, y:4.5, z:-179.1 } };
 BONE_OVERRIDES["Glute_Max:high"] = { foot_L:{ x:15.5, y:-4.4, z:-7.2 }, foot_R:{ x:20.4, y:5.6, z:7.3 }, thigh_L:{ x:13.9, y:0.7, z:-175.5 } };
 BONE_OVERRIDES["Glute_Med:high"] = { calf_L:{ x:-32.9, y:6.7, z:7.1 }, foot_L:{ x:60.7, y:-1.9, z:3.0 }, hand_L:{ x:41.3, y:14.7, z:-25.6 }, hand_R:{ x:26.9, y:-9.3, z:12.4 }, lowerarm_L:{ x:119.1, y:33.4, z:-40.0 }, lowerarm_R:{ x:114.4, y:-40.4, z:33.9 }, neck:{ x:27.6, y:-0.0, z:0.0 }, spine03:{ x:10.7, y:7.8, z:4.5 }, thigh_L:{ x:-16.1, y:27.7, z:-175.3 }, thigh_R:{ x:6.1, y:25.0, z:174.9 }, upperarm_L:{ x:47.2, y:-2.8, z:-60.5 }, upperarm_R:{ x:-4.8, y:-17.2, z:60.4 } };
-                                                                                              
+BONE_OVERRIDES["TFL:high"] = { calf_L:{ x:-48.4, y:-3.8, z:-3.8 }, hand_R:{ x:65.0, y:-50.4, z:44.7 }, lowerarm_L:{ x:100.0, y:6.5, z:7.2 }, lowerarm_R:{ x:97.4, y:-10.4, z:47.0 }, neck:{ x:45.4, y:6.0, z:-29.8 }, thigh_L:{ x:4.1, y:19.9, z:179.6 }, thigh_R:{ x:18.2, y:7.4, z:171.5 }, upperarm_L:{ x:-14.1, y:-24.9, z:-77.4 }, upperarm_R:{ x:-1.5, y:8.3, z:78.3 } };                                                                                              
                              
 /* ==== HAND OVERRIDES (new, separate from pose) ==== */
 const HAND_OVERRIDES = {};
@@ -1586,27 +1589,38 @@ const RIGGED_BONES = [
 ];
 const MODIFIED_BONES = new Set(); // only bones touched by tuner this session
   
-function applyTunerOverrides(testKey, gradeBucket){
-  if (!skeleton) return;
-  const key = `${testKey}:${gradeBucket}`;
-  const dict = BONE_OVERRIDES[key];
-  if (!dict) return;
+// index (80).html - REPLACEMENT for applyTunerOverrides()
+function applyTunerOverrides(testKey, gradeBucket, isResistanceActive = false){
+    if (!skeleton) return;
+    const key = `${testKey}:${gradeBucket}`;
+    
+    let dict = null;
+    
+    if (!isResistanceActive && BONE_OVERRIDES_START[key]) {
+        // If resistance is NOT active, try to use the starting pose override (TFL:high only currently)
+        dict = BONE_OVERRIDES_START[key];
+    } else {
+        // Otherwise, use the standard override (for holding/resistance phase)
+        dict = BONE_OVERRIDES[key];
+    }
 
-  for (const boneName in dict){
-    const bone = getBone(boneName);
-    const rot  = dict[boneName];
-    if (!bone || !rot) continue;
+    if (!dict) return;
 
-    // Use the stored angles as the FULL local rotation, not a delta
-    const e = new THREE.Euler(
-      THREE.MathUtils.degToRad(rot.x || 0),
-      THREE.MathUtils.degToRad(rot.y || 0),
-      THREE.MathUtils.degToRad(rot.z || 0),
-      "XYZ"
-    );
-    bone.quaternion.setFromEuler(e);   // ⬅️ key change (no .multiply)
-  }
-  console.log("✅ Applied Bone Tuner Overrides for", key);  
+    for (const boneName in dict){
+        const bone = getBone(boneName);
+        const rot  = dict[boneName];
+        if (!bone || !rot) continue;
+
+        // Use the stored angles as the FULL local rotation
+        const e = new THREE.Euler(
+            THREE.MathUtils.degToRad(rot.x || 0),
+            THREE.MathUtils.degToRad(rot.y || 0),
+            THREE.MathUtils.degToRad(rot.z || 0),
+            "XYZ"
+        );
+        bone.quaternion.setFromEuler(e);    
+    }
+    console.log(`✅ Applied Bone Tuner Overrides for ${key} (${isResistanceActive ? 'End Pose' : 'Start Pose'}).`);  
 }
 
 
