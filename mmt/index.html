@@ -1853,11 +1853,6 @@ if (!HAND_OVERRIDES[key] && poseToApply) {
     }
  }
 
-
-  // If this test is using side-lying, also snap arms/legs to side-lying baseline
-  if (mode === "side_lying"){
-    applySideLyingLimbs();
-  }
    // Wrist tests: add right-arm bias (0° abd, 0° flex) in both seated modes
   if (mode === "seatedgravity" || mode === "seatednogravity"){
     const upperR = getBone("upperarm_R");
