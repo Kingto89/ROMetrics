@@ -1809,12 +1809,12 @@ if (key && POSE_OVERRIDES[key]){
   // }
 }
 
-  model.position.set(posX, posY, posZ);
-  model.rotation.set(rotX, rotY, rotZ);
-  // NEW: Apply Bone Tuner overrides (patient skeleton) BEFORE therapist hands
-  if (CURRENT_BODY_TEST && CURRENT_BODY_BUCKET) {
-    applyTunerOverrides(CURRENT_BODY_TEST, CURRENT_BODY_BUCKET);
-  }
+model.position.set(posX, posY, posZ);
+  model.rotation.set(rotX, rotY, rotZ);
+  // NEW: Apply Bone Tuner overrides (patient skeleton) BEFORE therapist hands
+  if (CURRENT_BODY_TEST && CURRENT_BODY_BUCKET) {
+    applyTunerOverrides(CURRENT_BODY_TEST, CURRENT_BODY_BUCKET, isResistanceActive);
+  }
 // === NEW: Therapist Hand Overrides (separate dictionary) ===
  
  // 1. Determine the key and check if a pose is saved in HAND_OVERRIDES
