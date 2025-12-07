@@ -1054,15 +1054,6 @@ function applyAnatomicBaseline(){
 /**
  * Applies a small, slow, incremental movement to the bone being tested.
  * Simulates the patient straining against resistance.
- * Also adds subtle hand tremor globally while Resistance is HELD. Come back here to add body tremors after hands are SET. CHECKSPOT
- */
-/**
- * Applies a small, slow, incremental movement to the bone being tested.
- * Simulates the patient straining against resistance.
- * Also adds:
- *  - Head tremor for cervical tests
- *  - Upper-body tremor for scapula/shoulder tests
- *  - Global hand tremor while resistance is HELD
  */
 function applyHoldMovement() {
   const testKey = actionSel.value;
@@ -1126,6 +1117,15 @@ function applyHoldMovement() {
       "Subscapularis"
     ]);
 
+    const ELBOW_BICEPS_TESTS = new Set([
+      "Biceps_Brachii",
+      "Brachialis",
+      "Brachioradialis"
+    ]);
+
+    const ELBOW_TRICEPS_TESTS = new Set([
+      "Triceps_Brachii"
+    ]);
     const bonesToJitter = [];
 
     // ⭐ Scapular elevation: tremor at clavicles only
@@ -1143,7 +1143,17 @@ function applyHoldMovement() {
       if (upper) bonesToJitter.push(upper);
       if (lower) bonesToJitter.push(lower);
       if (hand)  bonesToJitter.push(hand);
+   // Elbow flexors (3 biceps tests): LEFT lower arm + LEFT hand
+    } else if (ELBOW_BICEPS_TESTS.has(testKey)) {
+      const lowerL = getBone("lowerarm_L");
+      const handL  = getBone("hand_L");
+      if (lowerL) bonesToJitter.push(lowerL);
+      if (handL)  bonesToJitter.push(handL);
 
+    // Triceps: RIGHT lower arm only
+    } else if (ELBOW_TRICEPS_TESTS.has(testKey)) {
+      const lowerR = getBone("lowerarm_R");
+      if (lowerR) bonesToJitter.push(lowerR);
     // Rotator tests: forearm + hand (right)
     } else if (ROTATOR_TREMOR_TESTS.has(testKey)) {
       const lower = getBone("lowerarm_R");
