@@ -581,6 +581,8 @@ function startResistanceTest(event) {
     resistanceFill.style.transition = 'none'; 
 
     resistanceTimer = setInterval(updateResistanceFill, 100);
+  // ⭐ CRITICAL FIX: Force model to update to END POSE now that resistance is active (resistanceTimer is set).
+    applyBodyPositionFromSelection();
     event.preventDefault(); 
 }
 
