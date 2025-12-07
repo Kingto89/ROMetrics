@@ -934,8 +934,8 @@ The patient flexes, abducts, and externally rotates the hip while maintaining kn
 
 ### Grades 3, 4, 5
 
-* **Grade 5:** holds position against max resistance
-* **Grade 4:** holds against moderate resistance
+* **Grade 5:** holds position against max resistance (Must be at Ankle)
+* **Grade 4:** holds against moderate resistance 
 * **Grade 3:** full ROM against gravity, no resistance
 
 ---
@@ -992,12 +992,12 @@ Plane: sagittal | End-Feel: firm
 
 ### Action
 
-* Abduct leg; resist downward at **lateral leg** just above ankle **grades 4/5 based on resistance**. Above lateral knee **grade 4 only**
+* Abduct leg; resist downward at **lateral leg** just above ankle **grades 4/5 based on resistance**. **Above lateral knee **grade 4 only**
 
 ### Grades 3, 4, 5
 
-* **Grade 5:** holds position against max resistance
-* **Grade 4:** holds against moderate resistance
+* **Grade 5:** holds position against max resistance (Must be at Ankle)
+* **Grade 4:** holds against moderate resistance 
 * **Grade 3:** full ROM against gravity, no resistance
 
 ---
