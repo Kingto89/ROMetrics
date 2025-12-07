@@ -335,7 +335,7 @@ FCR: { E_startPos: { x: -0.160, y: 1.310, z: 0.620 }, E_direction: { x: -0.324, 
 FCU: {  E_startPos: { x: -0.960, y: 1.550, z: -0.100 },  E_direction: { x: 0.593, y: -0.219, z: 0.321 },  R_startPos: { x: 0.050, y: 1.170, z: 0.620 }, R_direction: { x: -0.493, y: 0.391, z: -0.470 }  },
 
 Iliopsoas: { E_startPos: { x: -0.000, y: 0.430, z: 0.380 }, E_direction: { x: -0.033, y: 0.699, z: 0.003 }, R_startPos: { x: -0.110, y: 1.690, z: 0.260 },  R_direction: { x: -0.040, y: -0.702, z: 0.076 }  },  
-Glute_Max: { E_startPos: { x: -0.480, y: 1.630, z: 0.580 },E_direction: { x: -0.033, y: -0.447, z: -0.538 },R_startPos: { x: -0.470, y: 0.610, z: -0.500 }, R_direction: { x: 0.000, y: 0.484, z: 0.516 } },
+Glute_Max: { E_startPos: { x: -0.440, y: -0.170, z: 0.460 }, E_direction: { x: 0.006, y: 0.801, z: -2.283 },  R_startPos: { x: -0.310, y: 0.610, z: -0.660 },  R_direction: { x: 0.134, y: -0.484, z: 0.498 } },
 Glute_Med: { E_startPos: { x: -0.480, y: 1.630, z: 0.580 },E_direction: { x: -0.033, y: -0.447, z: -0.538 },R_startPos: { x: -0.470, y: 0.610, z: -0.500 }, R_direction: { x: 0.000, y: 0.484, z: 0.516 } },
 TFL: { E_startPos: { x: -0.480, y: 1.630, z: 0.580 },E_direction: { x: -0.033, y: -0.447, z: -0.538 },R_startPos: { x: -0.470, y: 0.610, z: -0.500 }, R_direction: { x: 0.000, y: 0.484, z: 0.516 } },
 Hip_Adduction: { E_startPos: { x: -0.480, y: 1.630, z: 0.580 },E_direction: { x: -0.033, y: -0.447, z: -0.538 },R_startPos: { x: -0.470, y: 0.610, z: -0.500 }, R_direction: { x: 0.000, y: 0.484, z: 0.516 } },
@@ -1440,7 +1440,7 @@ BONE_OVERRIDES["FCR:high"] = { clavicle_R:{ x:4.1, y:4.9, z:87.5 }, hand_R:{ x:6
 BONE_OVERRIDES["FCU:high"] = { clavicle_R:{ x:4.1, y:4.9, z:87.5 }, hand_R:{ x:65.6, y:-15.1, z:45.2  }, lowerarm_R:{ x:16.4, y:37.0, z:81.7 }, upperarm_R:{ x:-57.6, y:54.2, z:54.9 } };
 
 BONE_OVERRIDES["Iliopsoas:high"] = { hand_L:{ x:-83.3, y:15.8, z:58.6 }, hand_R:{ x:-82.7, y:-19.5, z:-81.1 }, thigh_R:{ x:-96.1, y:4.5, z:-179.1 } };
-
+BONE_OVERRIDES["Glute_Max:high"] = { foot_L:{ x:15.5, y:-4.4, z:-7.2 }, foot_R:{ x:25.4, y:5.6, z:7.3 }, thigh_L:{ x:13.9, y:0.7, z:-175.5 } };
 
                                                                                               
                              
@@ -1487,7 +1487,7 @@ HAND_OVERRIDES["FCR:high"] = {"handRX":0.55,"handRY":-3.259541602190672,"handRZ"
 HAND_OVERRIDES["FCU:high"] = {"handRX":0.44291869119899585,"handRY":-3.290188954308885,"handRZ":-9.638541131892374,"handRRX":-0.3,"handRRY":-2.999999999999999,"handRRZ":-3.299999999999999,"handLX":1.2370525369535177,"handLY":-3.4701284811140414,"handLZ":-10.10791498024637,"handLRX":-0.15,"handLRY":-1.9499999999999995,"handLRZ":1.7999999999999996};  
 
 HAND_OVERRIDES["Iliopsoas:high"] = {"handRX":-3.9326457881186947,"handRY":-4.1120690945840135,"handRZ":-0.319781569667101,"handRRX":-0.15,"handRRY":3.299999999999999,"handRRZ":-1.4999999999999998,"handLX":-3.7146681421870085,"handLY":-3.99917002310452,"handLZ":1.2852027502783014,"handLRX":0,"handLRY":1.3499999999999999,"handLRZ":0.44999999999999996};
-  
+HAND_OVERRIDES["Glute_Max:high"] = {"handRX":-1.0492222906032285,"handRY":-3.9317900987551058,"handRZ":-3.225569559919459,"handRRX":0,"handRRY":-6.0000000000000036,"handRRZ":-0.75,"handLX":-6.089944693036415,"handLY":-3.7373442625414395,"handLZ":-2.0646569233162997,"handLRX":0,"handLRY":0.3,"handLRZ":0.44999999999999996};  
   
 /* ==== NEUTRAL HAND POSITION (New Default) ==== */
 const HAND_NEUTRAL_POSE = {
