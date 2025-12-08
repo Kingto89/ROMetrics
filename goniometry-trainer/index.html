@@ -211,7 +211,7 @@ input[type=range]::-moz-range-thumb { width: 24px; height: 24px; background: #e2
             </g>
 
             <!-- Stationary (red) -->
-              <g id="armA_grp" transform="rotate(180)">
+              <g id="armA_grp">
               <rect x="-10" y="120" width="20" height="260" rx="10" stroke="#ef4444" fill="none" stroke-width="3" />
               <line id="axisA" x1="0" y1="380" x2="0" y2="-116" stroke="#ef4444" stroke-width="1.6" opacity=".85" stroke-linecap="round"/>
               <g id="armA_ruler"></g>
@@ -416,7 +416,7 @@ const Gonio = (() => {
   }
   function render(){
     const a=document.getElementById('armA_grp'), b=document.getElementById('armB_grp');
-    if(a) a.setAttribute('transform','rotate(0)');
+    if(a) a.setAttribute('transform', 'rotate(180)');
     if(b) b.setAttribute('transform',`rotate(${mov})`);
     updateRulerUpright();
   }
