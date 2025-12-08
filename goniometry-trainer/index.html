@@ -202,9 +202,9 @@ input[type=range]::-moz-range-thumb { width: 24px; height: 24px; background: #e2
             <circle r="120" fill="rgba(0,0,0,0)" stroke="#94a3b8" stroke-width="1.6" style="pointer-events:all"/>
             <circle r="86"  fill="none" stroke="#94a3b8" stroke-width="0.9" opacity="0.65"/>     
               <g id="ticks"></g>
-              <g id="numsOut"></g>
+              <g id="numsOut" transform="rotate(180)"></g>
               <g id="labelsFixed">
-              <g id="numsInWrap"><g id="numsIn"></g></g>
+              <g id="numsInWrap" transform="rotate(180)">
             </g>
 
               <circle r="3.2" fill="#94a3b8"/>
@@ -406,8 +406,8 @@ const Gonio = (() => {
   function updateRulerUpright(){
     document.querySelectorAll('.ruLbl').forEach(t=>{
       const which=t.dataset.arm, base=(which==='A'?0:mov)+baseRot+userRot, x=+t.dataset.x, y=+t.dataset.y;
-      t.setAttribute('transform', `rotate(${180 - base} ${x} ${y})`);
-          });
+      t.setAttribute('transform', `rotate(${-base} ${x} ${y})`);
+    });
   }
   function clampPanToViewport(){
     const bound=80*zoom*scale, m=6, minX=m+bound, maxX=innerWidth-m-bound, minY=m+bound, maxY=innerHeight-m-bound;
