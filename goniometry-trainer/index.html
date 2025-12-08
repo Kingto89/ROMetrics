@@ -233,6 +233,63 @@ input[type=range]::-moz-range-thumb { width: 24px; height: 24px; background: #e2
     </g>
   </svg>
 </div>
+<!-- ====== NUMBER TUNER DEV TOOL ====== -->
+<style>
+  #numTunerPanel{
+    position:fixed;right:20px;bottom:20px;
+    background:#0f172a;border:1px solid #334155;
+    padding:10px;border-radius:10px;z-index:9999;
+    display:none;color:#e2e8f0;font-size:12px;
+  }
+  #numTunerPanel input{width:60px;}
+</style>
+
+<div id="numTunerPanel">
+  <div style="margin-bottom:5px;font-weight:700">Text Tuner</div>
+  X:<input id="ntX" type="number" step="1"><br>
+  Y:<input id="ntY" type="number" step="1"><br>
+  R:<input id="ntR" type="number" step="1"><br>
+  <button id="ntLog">Log</button>
+</div>
+
+<script>
+let NT_active=null;
+
+document.addEventListener("pointerdown",e=>{
+  if(!(e.target.tagName==="text" || e.target.tagName==="TEXT")) return;
+
+  NT_active = e.target;
+
+  const tr = NT_active.getAttribute("transform") || "";
+  const m = tr.match(/rotate\((-?\d+)\s+(-?\d+)\s+(-?\d+)\)/);
+
+  document.getElementById("numTunerPanel").style.display="block";
+
+  document.getElementById("ntX").value = NT_active.getAttribute("x");
+  document.getElementById("ntY").value = NT_active.getAttribute("y");
+  document.getElementById("ntR").value = m ? m[1] : 0;
+});
+
+["ntX","ntY","ntR"].forEach(id=>{
+  document.getElementById(id).addEventListener("input",()=>{
+    if(!NT_active) return;
+    const x = document.getElementById("ntX").value;
+    const y = document.getElementById("ntY").value;
+    const r = document.getElementById("ntR").value;
+    NT_active.setAttribute("x",x);
+    NT_active.setAttribute("y",y);
+    NT_active.setAttribute("transform",`rotate(${r} ${x} ${y})`);
+  });
+});
+
+document.getElementById("ntLog").onclick=()=>{
+  if(!NT_active) return;
+  const x = NT_active.getAttribute("x");
+  const y = NT_active.getAttribute("y");
+  const r = NT_active.getAttribute("transform");
+  console.log("FINAL NUMBER FIX →",{ text:NT_active.textContent, x, y, r });
+};
+</script>
 
   <details id="controllers">
     <summary>🎛️ Controllers</summary>
