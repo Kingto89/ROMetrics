@@ -1,206 +1,195 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ROMetrics — Landing</title>
-  <meta name="description" content="ROMetrics landing page with hero backdrop and quick links to Goniometry Trainer, Motions Lab, MMT, LQS, UQS, and Neuro." />
-  <style>
-    :root{
-      --bg1:#06355c;  /* center glow */
-      --bg2:#0a2d4a;  /* mid */
-      --bg3:#081b2d;  /* outer */
-      --bg4:#051423;  /* edge */
-      --ink:#e6eef7;
-      --muted:#a8c0da;
-      --ring:rgba(255,255,255,.18);
-    }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ROMetrics — Landing</title>
+  <meta name="description" content="ROMetrics landing page with hero backdrop and quick links to Goniometry Trainer, Motions Lab, MMT, LQS, UQS, and Neuro." />
+  <style>
+    :root{
+      --bg1:#06355c;  /* center glow */
+      --bg2:#0a2d4a;  /* mid */
+      --bg3:#081b2d;  /* outer */
+      --bg4:#051423;  /* edge */
+      --ink:#e6eef7;
+      --muted:#a8c0da;
+      --ring:rgba(255,255,255,.18);
+      /* New custom properties for hover effect */
+      --bubble-float-up: -24px; /* Approximating 1 inch float up (24px for a noticeable effect) */
+      --bubble-glow-color: rgba(255, 255, 255, 0.6);
+    }
 
-    /* Page background + layout */
-    html, body{
-      margin:0; padding:0;
-      background: radial-gradient(circle at 58% 40%, var(--bg1) 0%, var(--bg2) 45%, var(--bg3) 85%, var(--bg4) 100%);
-      color:var(--ink);
-      font-family:system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-    }
+    /* Page background + layout */
+    html, body{
+      margin:0; padding:0;
+      background: radial-gradient(circle at 58% 40%, var(--bg1) 0%, var(--bg2) 45%, var(--bg3) 85%, var(--bg4) 100%);
+      color:var(--ink);
+      font-family:system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    }
 
-    /* Backdrop image: always fit device width; scroll allowed */
-    .frame{
-      position:relative;
-      min-height:100vh;
-    }
-    .frame img.hero{
-      display:block;
-      width:100vw;   /* fit width of device */
-      height:auto;   /* keep proportions */
-      user-select:none;
-      -webkit-user-drag:none;
-    }
+    /* Backdrop image: always fit device width; scroll allowed */
+    .frame{
+      position:relative;
+      min-height:100vh;
+    }
+    .frame img.hero{
+      display:block;
+      width:100vw;   /* fit width of device */
+      height:auto;   /* keep proportions */
+      user-select:none;
+      -webkit-user-drag:none;
+    }
 
-    /* Overlay content */
-    .overlay{
-      position:absolute;
-      inset:0;
-      display:grid;
-      grid-template-rows:auto 1fr auto;
-      pointer-events:none; /* only buttons get events below */
-    }
+    /* Overlay content */
+    .overlay{
+      position:absolute;
+      inset:0;
+      display:grid;
+      grid-template-rows:auto 1fr auto;
+      pointer-events:none; /* only buttons get events below */
+    }
 
-    /* Top-center brand wordmark */
-    .brand{
-      position:absolute;
-      top:10px;
-      left:50%;
-      transform:translateX(-50%);
-      z-index:60;
-      pointer-events:auto;
-      padding:6px 12px;
-      border-radius:10px;
-      color:var(--ink);
-      text-decoration:none;
-      font-weight:800;
-      letter-spacing:.5px;
-      font-size: clamp(16px, 2.2vw, 24px);
-      background:rgba(3,14,28,.45);
-      border:1px solid var(--ring);
-      backdrop-filter: blur(6px);
-    }
-    @media (max-width:480px){
-      .brand{ top:8px; font-size: clamp(15px, 4.5vw, 20px); padding:5px 10px; }
-    }
+    /* Top-center brand wordmark */
+    .brand{
+      position:absolute;
+      top:10px;
+      left:50%;
+      transform:translateX(-50%);
+      z-index:60;
+      pointer-events:auto;
+      padding:6px 12px;
+      border-radius:10px;
+      color:var(--ink);
+      text-decoration:none;
+      font-weight:800;
+      letter-spacing:.5px;
+      font-size: clamp(16px, 2.2vw, 24px);
+      background:rgba(3,14,28,.45);
+      border:1px solid var(--ring);
+      backdrop-filter: blur(6px);
+    }
+    @media (max-width:480px){
+      .brand{ top:8px; font-size: clamp(15px, 4.5vw, 20px); padding:5px 10px; }
+    }
 
-    /* Headline block (left) */
-    .copy{
-      align-self:start;
-      pointer-events:auto;
-      padding: clamp(14px, 3vw, 28px);
-      max-width: min(700px, 46vw); /* cap width so text doesn't run into the image */
-    }
+    /* Headline block (left) */
+    .copy{
+      align-self:start;
+      pointer-events:auto;
+      padding: clamp(14px, 3vw, 28px);
+      max-width: min(700px, 46vw); /* cap width so text doesn't run into the image */
+    }
 
-    .kicker{
-      display:inline-block; font-size:11px; letter-spacing:.16em; text-transform:uppercase;
-      color:var(--muted);
-      background:rgba(3,14,28,.55);
-      border:1px solid var(--ring);
-      padding:6px 10px; border-radius:999px;
-      backdrop-filter: blur(6px);
-    }
+    .kicker{
+      display:inline-block; font-size:11px; letter-spacing:.16em; text-transform:uppercase;
+      color:var(--muted);
+      background:rgba(3,14,28,.55);
+      border:1px solid var(--ring);
+      padding:6px 10px; border-radius:999px;
+      backdrop-filter: blur(6px);
+    }
 
-    /* Slightly smaller headline & sub so 100% zoom fits cleanly */
-    h1{ margin:12px 0 10px 0; font-size:clamp(26px, 4.2vw, 44px); line-height:1.08 }
-    .sub{ max-width:60ch; color:var(--muted); font-size:clamp(14px, 1.3vw, 17px) }
+    /* Slightly smaller headline & sub so 100% zoom fits cleanly */
+    h1{ margin:12px 0 10px 0; font-size:clamp(26px, 4.2vw, 44px); line-height:1.08 }
+    .sub{ max-width:60ch; color:var(--muted); font-size:clamp(14px, 1.3vw, 17px) }
 
-    /* On very wide screens, keep copy tighter left */
-    @media (min-width: 1200px){
-      .copy{ max-width: 42vw; }
-    }
+    /* On very wide screens, keep copy tighter left */
+    @media (min-width: 1200px){
+      .copy{ max-width: 42vw; }
+    }
 
-    /* On shorter viewports, step headline down more */
-    @media (max-height: 750px){
-      h1{ font-size:clamp(24px, 3.6vw, 38px); }
-      .sub{ font-size:clamp(13px, 1.2vw, 16px); }
-    }
+    /* On shorter viewports, step headline down more */
+    @media (max-height: 750px){
+      h1{ font-size:clamp(24px, 3.6vw, 38px); }
+      .sub{ font-size:clamp(13px, 1.2vw, 16px); }
+    }
 
-    /* Bubbles strip (bottom, centered) */
-    .strip{
-      display:grid; place-items:center;
-      padding: 10px clamp(10px, 3vw, 24px) clamp(16px, 3.5vw, 28px);
-      pointer-events:auto;
-    }
-    .bubbles{
-      display:grid; gap:12px;
-      grid-template-columns: repeat(7, minmax(0, 1fr));
-      width:min(1100px, 95vw);
-    }
-    @media (max-width:1100px){ .bubbles{grid-template-columns:repeat(3,1fr);} }
-    @media (max-width:620px){  .bubbles{grid-template-columns:repeat(2,1fr);} }
+    /* Bubbles strip (bottom, centered) */
+    .strip{
+      display:grid; place-items:center;
+      padding: 10px clamp(10px, 3vw, 24px) clamp(16px, 3.5vw, 28px);
+      pointer-events:auto;
+    }
+    .bubbles{
+      display:grid; gap:12px;
+      grid-template-columns: repeat(5, minmax(0, 1fr)); /* Reduced to 5 columns */
+      width:min(1100px, 95vw);
+    }
+    @media (max-width:1100px){ .bubbles{grid-template-columns:repeat(3,1fr);} }
+    @media (max-width:620px){  .bubbles{grid-template-columns:repeat(2,1fr);} }
 
-    .bubble{
-      text-decoration:none; color:var(--ink);
-      background:rgba(4,18,32,.65);
-      border:1px solid var(--ring);
-      border-radius:16px;
-      padding:14px 12px;
-      display:flex; flex-direction:column; gap:8px;
-      transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
-      backdrop-filter: blur(6px);
-    }
-    .bubble:hover{ transform:translateY(-2px); border-color:rgba(255,255,255,.35); box-shadow:0 12px 28px rgba(0,0,0,.25) }
-    .b-ico{ width:36px;height:36px;border-radius:12px;display:grid;place-items:center;border:1px solid var(--ring) }
-    .b-title{ font-weight:700; font-size:15px; letter-spacing:.2px }
-    .b-sub{ font-size:12px; color:var(--muted) }
+    .bubble{
+      text-decoration:none; color:var(--ink);
+      background:rgba(4,18,32,.65);
+      border:1px solid var(--ring);
+      border-radius:16px;
+      padding:14px 12px;
+      display:flex; flex-direction:column; gap:8px;
+      transition:transform .3s ease, box-shadow .3s ease, border-color .3s ease; /* Increased transition time for smoother effect */
+      backdrop-filter: blur(6px);
+    }
+    /* MODIFIED: Float up ~1 inch (24px) and added same-line white glow */
+    .bubble:hover{
+      transform:translateY(var(--bubble-float-up));
+      border-color:rgba(255,255,255,.35);
+      box-shadow: 0 0 16px var(--bubble-glow-color), 0 12px 28px rgba(0,0,0,.25);
+    }
+    .b-ico{ width:36px;height:36px;border-radius:12px;display:grid;place-items:center;border:1px solid var(--ring) }
+    .b-title{ font-weight:700; font-size:15px; letter-spacing:.2px }
+    .b-sub{ font-size:12px; color:var(--muted) }
 
-    /* Subtle icon tints */
-    .b1 .b-ico{background:linear-gradient(180deg, rgba(245,158,11,.22), rgba(245,158,11,.06))}
-    .b2 .b-ico{background:linear-gradient(180deg, rgba(99,102,241,.22), rgba(99,102,241,.06))}
-    .b3 .b-ico{background:linear-gradient(180deg, rgba(14,165,233,.22), rgba(14,165,233,.06))}
-    .b4 .b-ico{background:linear-gradient(180deg, rgba(16,185,129,.22), rgba(16,185,129,.06))}
-    .b5 .b-ico{background:linear-gradient(180deg, rgba(34,197,94,.22), rgba(34,197,94,.06))}
-    .b6 .b-ico{background:linear-gradient(180deg, rgba(236,72,153,.22), rgba(236,72,153,.06))}
-    .b7 .b-ico{background:linear-gradient(180deg, rgba(239,68,68,.22), rgba(239,68,68,.06))} /* Performance Hub */
+    /* Subtle icon tints (b6 and b7 are now unused) */
+    .b1 .b-ico{background:linear-gradient(180deg, rgba(245,158,11,.22), rgba(245,158,11,.06))}
+    .b2 .b-ico{background:linear-gradient(180deg, rgba(99,102,241,.22), rgba(99,102,241,.06))}
+    .b3 .b-ico{background:linear-gradient(180deg, rgba(14,165,233,.22), rgba(14,165,233,.06))}
+    .b4 .b-ico{background:linear-gradient(180deg, rgba(16,185,129,.22), rgba(16,185,129,.06))}
+    .b5 .b-ico{background:linear-gradient(180deg, rgba(34,197,94,.22), rgba(34,197,94,.06))}
+    /* .b6 .b-ico{background:linear-gradient(180deg, rgba(236,72,153,.22), rgba(236,72,153,.06))} */
+    /* .b7 .b-ico{background:linear-gradient(180deg, rgba(239,68,68,.22), rgba(239,68,68,.06))} */
 
-    /* Accessibility */
-    .bubble:focus-visible{ outline:3px solid rgba(46,255,186,.6); outline-offset:2px }
-  </style>
+    /* Accessibility */
+    .bubble:focus-visible{ outline:3px solid rgba(46,255,186,.6); outline-offset:2px }
+  </style>
 </head>
 <body>
-  <div class="frame">
-    <!-- Backdrop -->
-    <img class="hero" src="./assets/backdrop.png" alt="ROMetrics backdrop" />
+  <div class="frame">
+        <img class="hero" src="./assets/backdrop.png" alt="ROMetrics backdrop" />
 
-    <!-- Content overlay -->
-    <div class="overlay" aria-hidden="false">
-      <!-- Brand wordmark -->
-      <a class="brand" href="./" aria-label="ROMetrics home">ROMetrics</a>
+        <div class="overlay" aria-hidden="false">
+            <a class="brand" href="./" aria-label="ROMetrics home">ROMetrics</a>
 
-      <section class="copy" aria-label="Intro">
-        <span class="kicker">Clinical Skills Workspace</span>
-        <h1>Assess, Measure, and Train — all in one place.</h1>
-        <p class="sub">Use the ROMetrics toolkit to practice manual muscle testing (MMT), screen postural and movement quality (LQS), and run digital goniometry. Tap a tool below to get started.</p>
-      </section>
+      <section class="copy" aria-label="Intro">
+        <span class="kicker">Clinical Skills Workspace</span>
+        <h1>Assess, Measure, and Train — all in one place.</h1>
+        <p class="sub">Use the ROMetrics toolkit to practice manual muscle testing (MMT), screen postural and movement quality (LQS), and run digital goniometry. Tap a tool below to get started.</p>
+      </section>
 
-      <div></div> <!-- spacer row -->
-
-      <nav class="strip" aria-label="Quick links">
-        <div class="bubbles">
-          <a class="bubble b1" href="./goniometry-trainer/">
-            <div class="b-ico" aria-hidden="true">📐</div>
-            <div class="b-title">Goniometry Trainer</div>
-            <div class="b-sub">Interactive ROM trainer</div>
-          </a>
-          <a class="bubble b2" href="./lab-motion/">
-            <div class="b-ico" aria-hidden="true">🎛️</div>
-            <div class="b-title">Motions Lab</div>
-            <div class="b-sub">Kinematics sandbox</div>
-          </a>
-          <a class="bubble b3" href="./mmt/">
-            <div class="b-ico" aria-hidden="true">💪</div>
-            <div class="b-title">Manual Muscle Test</div>
-            <div class="b-sub">MMT positions & cues</div>
-          </a>
-               <!-- Neuro -->
-          <a class="bubble b6" href="./neuro/">
-            <div class="b-ico" aria-hidden="true">🧠</div>
-            <div class="b-title">Neuro</div>
-            <div class="b-sub">Screens & quick tests</div>
-          </a>
-
-          <!-- Simulated Eval(single bubble) -->
-          <a class="bubble b4" href="./simulated-evaluations/">
-            <div class="b-ico" aria-hidden="true">📋</div>
-            <div class="b-title">Simulated Evaluations</div>
-            <div class="b-sub">a comprehensive assessment of a patient's physical condition</div>
-          </a>
-
-          <!-- Performance Hub remains unchanged -->
-          <a class="bubble b7" href="./performance-hub/" aria-label="Open Performance Hub — Pro analytics & reports">
-            <div class="b-ico" aria-hidden="true">📈</div>
-            <div class="b-title">Performance Hub</div>
-            <div class="b-sub">Pro analytics • trends • reports</div>
-          </a>
-        </div>
-      </nav>
-    </div>
-  </div>
+      <div></div>       <nav class="strip" aria-label="Quick links">
+        <div class="bubbles">
+          <a class="bubble b1" href="./goniometry-trainer/">
+            <div class="b-ico" aria-hidden="true">📐</div>
+            <div class="b-title">Goniometry Trainer</div>
+            <div class="b-sub">Interactive ROM trainer</div>
+          </a>
+          <a class="bubble b2" href="./lab-motion/">
+            <div class="b-ico" aria-hidden="true">🎛️</div>
+            <div class="b-title">Motions Lab</div>
+            <div class="b-sub">Kinematics sandbox</div>
+          </a>
+          <a class="bubble b3" href="./mmt/">
+            <div class="b-ico" aria-hidden="true">💪</div>
+            <div class="b-title">Manual Muscle Test</div>
+            <div class="b-sub">MMT positions & cues</div>
+          </a>
+          
+                    <a class="bubble b4" href="./simulated-evaluations/">
+            <div class="b-ico" aria-hidden="true">📋</div>
+            <div class="b-title">Simulated Evaluations</div>
+            <div class="b-sub">a comprehensive assessment of a patient's physical condition</div>
+          </a>
+        </div>
+      </nav>
+    </div>
+  </div>
 </body>
 </html>
