@@ -21,6 +21,24 @@
 }
 html,body{margin:0;height:100%;background:var(--bg);color:var(--text);overflow:hidden;font-family:system-ui,Segoe UI,Roboto}
 canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
+.zoom-buttons{
+  display:flex;
+  gap:4px;
+  margin-left:auto;          /* push them to the right side of header */
+}
+
+.zoom-buttons button{
+  width:22px;
+  height:22px;
+  padding:0;
+  border-radius:999px;
+  border:1px solid var(--line);
+  background:var(--ctrl);
+  color:var(--text);
+  font-size:14px;
+  line-height:1;
+  cursor:pointer;
+}
 
 .panel{position:fixed;left:25px;top:12px;width:380px;max-height:92vh;z-index:100;background:var(--panel);
   border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.15);display:flex;flex-direction:column;overflow:hidden}
@@ -84,7 +102,11 @@ select,button,input[type=range]{width:100%;margin:6px 0 8px 0;padding:8px 10px;b
 <body>
 
 <div class="panel" id="panel">
-  <div class="dragbar" id="dragbar">💪 MMT Trainer <span class="hint">drag me</span></div>
+  <div class="dragbar" id="dragbar">💪 MMT Trainer <span class="hint">/span></div>
+  <div class="zoom-buttons">
+  <button id="zoomInBtn" type="button">+</button>
+  <button id="zoomOutBtn" type="button">−</button>
+</div>
   <div class="content">
     <label>MMT Test & Muscle</label>
     <select id="actionSel">
@@ -725,6 +747,32 @@ const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true; controls.dampingFactor = .08;
 controls.minDistance=.6; controls.maxDistance=20;
 controls.target.set(0,1.05,0); 
+// --- UI zoom buttons control camera distance, not page zoom ---
+const ZOOM_IN_FACTOR  = 0.85;  // smaller factor = closer
+const ZOOM_OUT_FACTOR = 1.15;  // larger factor = farther
+
+function zoomCamera(factor){
+  const dir = new THREE.Vector3();
+  dir.subVectors(camera.position, controls.target);      // from target to camera
+  const currentDist = dir.length();
+  let newDist = currentDist * factor;
+
+  // clamp to OrbitControls limits
+  newDist = Math.max(controls.minDistance, Math.min(controls.maxDistance, newDist));
+  dir.setLength(newDist);
+  camera.position.copy(controls.target).add(dir);
+  camera.updateProjectionMatrix();
+}
+
+const zoomInBtn  = document.getElementById('zoomInBtn');
+const zoomOutBtn = document.getElementById('zoomOutBtn');
+
+if (zoomInBtn) {
+  zoomInBtn.addEventListener('click', () => zoomCamera(ZOOM_IN_FACTOR));
+}
+if (zoomOutBtn) {
+  zoomOutBtn.addEventListener('click', () => zoomCamera(ZOOM_OUT_FACTOR));
+}
 
 // --- START: 3D Manipulation Widget Setup ---
 let transformControls = null;
