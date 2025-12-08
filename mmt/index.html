@@ -1138,6 +1138,45 @@ function applyHoldMovement() {
     const ELBOW_TRICEPS_TESTS = new Set([
       "Triceps_Brachii"
     ]);
+      // Wrist tests – all use hand_R for tremor
+    const WRIST_TREMOR_TESTS = new Set([
+      "ECRL",
+      "ECRB",
+      "ECU",
+      "FCR",
+      "FCU"
+    ]);
+
+    // Hip tests
+    const HIP_FLEX_TESTS = new Set([
+      "Iliopsoas"
+    ]);
+    const HIP_EXT_TESTS = new Set([
+      "Glute_Max"
+    ]);
+    const HIP_ABD_TESTS = new Set([
+      "Glute_Med",
+      "TFL"
+    ]);
+    const HIP_ADD_TESTS = new Set([
+      "Hip_Adduction"
+    ]);
+    const HIP_ER_TESTS = new Set([
+      "Sartorius",
+      "Hip_ER"
+    ]);
+    const HIP_IR_TESTS = new Set([
+      "Hip_IR"
+    ]);
+
+    // Knee tests
+    const KNEE_FLEX_TESTS = new Set([
+      "Hamstrings"
+    ]);
+    const KNEE_EXT_TESTS = new Set([
+      "Quadriceps"
+    ]);
+  
     const bonesToJitter = [];
 
     // ⭐ Scapular elevation: tremor at clavicles only
@@ -1175,56 +1214,62 @@ function applyHoldMovement() {
       if (lower) bonesToJitter.push(lower);
       if (hand)  bonesToJitter.push(hand);
     }
-// --- START NEW BLOCK ---
-// Wrist, Hip, and Knee Tremor Logic (NEW BLOCK)
-    else if (testKey.startsWith("ECR") || testKey.startsWith("FC") || testKey.startsWith("Hip") || testKey === "TFL" || testKey.startsWith("Hamstrings") || testKey.startsWith("Quadriceps") || testKey === "Iliopsoas" || testKey === "Glute_Max" || testKey === "Glute_Med" || testKey === "Sartorius") {
-      const wristTests = new Set(["ECRL", "ECRB", "ECU", "FCR", "FCU"]);
-      
-      // Wrist Tremors: All use hand_R
-      if (wristTests.has(testKey)) {
-        const hand = getBone("hand_R");
-        if (hand) bonesToJitter.push(hand);
-      
-      // Hip & Knee Tremors
-      } else {
-        switch (testKey) {
-          case "Iliopsoas":
-            const tR_Iliopsoas = getBone("thigh_R");
-            if (tR_Iliopsoas) bonesToJitter.push(tR_Iliopsoas);
-            break;
-          case "Glute_Max":
-            const cL_GluteMax = getBone("calf_L");
-            if (cL_GluteMax) bonesToJitter.push(cL_GluteMax);
-            break;
-          case "Glute_Med":
-          case "TFL":
-          case "Sartorius":
-          case "Hip_ER":
-          case "Hip_IR":
-            const cR_Hip = getBone("calf_R");
-            const tR_Hip = getBone("thigh_R");
-            if (cR_Hip) bonesToJitter.push(cR_Hip);
-            if (tR_Hip) bonesToJitter.push(tR_Hip);
-            break;
-          case "Hip_Adduction":
-            const cL_HipAdd = getBone("calf_L");
-            const tL_HipAdd = getBone("thigh_L");
-            const fL_HipAdd = getBone("foot_L");
-            if (cL_HipAdd) bonesToJitter.push(cL_HipAdd);
-            if (tL_HipAdd) bonesToJitter.push(tL_HipAdd);
-            if (fL_HipAdd) bonesToJitter.push(fL_HipAdd);
-            break;
-          case "Hamstrings":
-            const cL_Hamstring = getBone("calf_L");
-            if (cL_Hamstring) bonesToJitter.push(cL_Hamstring);
-            break;
-          case "Quadriceps":
-            const cR_Quadriceps = getBone("calf_R");
-            if (cR_Quadriceps) bonesToJitter.push(cR_Quadriceps);
-            break;
-        }
-      }
-// --- END NEW BLOCK ---
+    // Wrist: all use hand_R for tremor
+    else if (WRIST_TREMOR_TESTS.has(testKey)) {
+      const handR = getBone("hand_R");
+      if (handR) bonesToJitter.push(handR);
+
+    // Hip – Iliopsoas: thigh_R
+    } else if (HIP_FLEX_TESTS.has(testKey)) {
+      const thighR = getBone("thigh_R");
+      if (thighR) bonesToJitter.push(thighR);
+
+    // Hip – Glute Max: calf_L
+    } else if (HIP_EXT_TESTS.has(testKey)) {
+      const calfL = getBone("calf_L");
+      if (calfL) bonesToJitter.push(calfL);
+
+    // Hip – Glute Med & TFL: calf_R and thigh_R
+    } else if (HIP_ABD_TESTS.has(testKey)) {
+      const calfR  = getBone("calf_R");
+      const thighR = getBone("thigh_R");
+      if (calfR)  bonesToJitter.push(calfR);
+      if (thighR) bonesToJitter.push(thighR);
+
+    // Hip – Adductors: calf_L, thigh_L, foot_L
+    } else if (HIP_ADD_TESTS.has(testKey)) {
+      const calfL  = getBone("calf_L");
+      const thighL = getBone("thigh_L");
+      const footL  = getBone("foot_L");
+      if (calfL)  bonesToJitter.push(calfL);
+      if (thighL) bonesToJitter.push(thighL);
+      if (footL)  bonesToJitter.push(footL);
+
+    // Hip – Sartorius / ER: calf_R and thigh_R
+    } else if (HIP_ER_TESTS.has(testKey)) {
+      const calfR  = getBone("calf_R");
+      const thighR = getBone("thigh_R");
+      if (calfR)  bonesToJitter.push(calfR);
+      if (thighR) bonesToJitter.push(thighR);
+
+    // Hip – IR: calf_R and thigh_R
+    } else if (HIP_IR_TESTS.has(testKey)) {
+      const calfR  = getBone("calf_R");
+      const thighR = getBone("thigh_R");
+      if (calfR)  bonesToJitter.push(calfR);
+      if (thighR) bonesToJitter.push(thighR);
+
+    // Knee – Hamstrings: calf_L
+    } else if (KNEE_FLEX_TESTS.has(testKey)) {
+      const calfL = getBone("calf_L");
+      if (calfL) bonesToJitter.push(calfL);
+
+    // Knee – Quadriceps: calf_R
+    } else if (KNEE_EXT_TESTS.has(testKey)) {
+      const calfR = getBone("calf_R");
+      if (calfR) bonesToJitter.push(calfR);
+    }
+
     if (bonesToJitter.length) {
       const AMP_DEG_BODY = 0.3; // small visible jitter
       bonesToJitter.forEach(bone => {
