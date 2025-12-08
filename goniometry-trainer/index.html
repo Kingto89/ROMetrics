@@ -416,7 +416,7 @@ const Gonio = (() => {
   }
   function render(){
     const a=document.getElementById('armA_grp'), b=document.getElementById('armB_grp');
-    if(a) a.setAttribute('transform', 'rotate(180)');
+    if(a) a.setAttribute('transform', 'rotate(-180)');
     if(b) b.setAttribute('transform',`rotate(${mov})`);
     updateRulerUpright();
   }
