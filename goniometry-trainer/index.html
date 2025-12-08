@@ -196,7 +196,7 @@ input[type=range]::-moz-range-thumb { width: 24px; height: 24px; background: #e2
     </g>
     <g id="viewport" transform="translate(0,0) scale(1)">
       <g id="rotWrap" transform="rotate(0)">
-        <g id="mirrorWrap" transform="scale(1,1)">
+        <g id="mirrorWrap" transform="scale(1,-1)">
           <g id="instrument">
             <g id="head">
             <circle r="120" fill="rgba(0,0,0,0)" stroke="#94a3b8" stroke-width="1.6" style="pointer-events:all"/>
@@ -211,7 +211,7 @@ input[type=range]::-moz-range-thumb { width: 24px; height: 24px; background: #e2
             </g>
 
             <!-- Stationary (red) -->
-            <g id="armA_grp" transform="rotate(180)">
+            <g id="armA_grp">
               <rect x="-10" y="120" width="20" height="260" rx="10" stroke="#ef4444" fill="none" stroke-width="3" />
               <line id="axisA" x1="0" y1="380" x2="0" y2="-116" stroke="#ef4444" stroke-width="1.6" opacity=".85" stroke-linecap="round"/>
               <g id="armA_ruler"></g>
@@ -405,8 +405,8 @@ const Gonio = (() => {
   }
   function updateRulerUpright(){
     document.querySelectorAll('.ruLbl').forEach(t=>{
-      const which=t.dataset.arm, base=(which==='A'?180:mov)+baseRot+userRot, x=+t.dataset.x, y=+t.dataset.y;
-      t.setAttribute('transform', `rotate(${180 - base} ${x} ${y})`);
+      const which=t.dataset.arm, base=(which==='A'?0:mov)+baseRot+userRot, x=+t.dataset.x, y=+t.dataset.y;
+      t.setAttribute('transform', `rotate(${-base} ${x} ${y})`);
     });
   }
   function clampPanToViewport(){
