@@ -405,7 +405,7 @@ const Gonio = (() => {
   }
   function updateRulerUpright(){
     document.querySelectorAll('.ruLbl').forEach(t=>{
-      const which=t.dataset.arm, base=(which==='A'?0:mov)+baseRot+userRot, x=+t.dataset.x, y=+t.dataset.y;
+      const which=t.dataset.arm, base=(which==='A'?45:mov)+baseRot+userRot, x=+t.dataset.x, y=+t.dataset.y;
       t.setAttribute('transform', `rotate(${-base} ${x} ${y})`);
     });
   }
