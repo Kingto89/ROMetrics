@@ -406,7 +406,7 @@ const Gonio = (() => {
   function updateRulerUpright(){
     document.querySelectorAll('.ruLbl').forEach(t=>{
       const which=t.dataset.arm, base=(which==='A'?180:mov)+baseRot+userRot, x=+t.dataset.x, y=+t.dataset.y;
-      t.setAttribute('transform', `rotate(${-base} ${x} ${y})`);
+      t.setAttribute('transform', `rotate(${180 - base} ${x} ${y})`);
     });
   }
   function clampPanToViewport(){
