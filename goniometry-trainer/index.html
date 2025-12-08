@@ -351,12 +351,7 @@ const Gonio = (() => {
       n.setAttribute('x',x); n.setAttribute('y',y); n.setAttribute('class',cls);
       n.textContent = t; p.appendChild(n); return n;
     };
-    // REPLACED innerFromD to fix number orientation issue
-const innerFromD = (d)=>{ 
-  const raw = d % 360; 
-  // This simple version will count 0-180 and then 180-0. 
-  return raw <= 180 ? raw : 360 - raw; 
-};
+    const innerFromD = (d)=>{ const raw=(d+180)%360; return (raw<=180)?raw:360-raw; };
     const rBand = (R+Rin)*0.5;
     for (let d=0; d<360; d+=5){
       const a=(d-90)*Math.PI/180, big=(d%10===0), len=big?12:6;
@@ -402,25 +397,17 @@ const innerFromD = (d)=>{
 
   function applyView(){ viewport.setAttribute('transform',`translate(${panX},${panY}) scale(${zoom*scale})`); }
   function applyRot(){ rotWrap.setAttribute('transform',`rotate(${baseRot+userRot})`); }
-// REPLACED applyLabelFix function to fix number inversion/mirrored look
-function applyLabelFix(){
-    // Get the total rotation of the goniometer head (where the tick marks are)
-    const t = (baseRot + userRot);
-
-    // Compensate the outer fixed labels by the NEGATIVE of the rotation (keeps them upright)
-    if(labelsFixed) labelsFixed.setAttribute('transform', `rotate(${-t})`);
-
-    // Compensate the inner moving labels by the NEGATIVE of the rotation (keeps them upright)
+  function applyLabelFix(){
+    const t = -(baseRot + userRot);
+    if(labelsFixed) labelsFixed.setAttribute('transform', `rotate(${t})`);
     if(numsInWrap) numsInWrap.setAttribute('transform', `rotate(${-t})`);
-
-    // Keep outer numbers (0-360 scale) static
     if(numsOut) numsOut.setAttribute('transform','rotate(0)');
-}
+  }
   function updateRulerUpright(){
     document.querySelectorAll('.ruLbl').forEach(t=>{
       const which=t.dataset.arm, base=(which==='A'?0:mov)+baseRot+userRot, x=+t.dataset.x, y=+t.dataset.y;
-      t.setAttribute('transform', `rotate(${-base} ${x} ${y})`);
-    });
+      t.setAttribute('transform', `rotate(${180 - base} ${x} ${y})`);
+          });
   }
   function clampPanToViewport(){
     const bound=80*zoom*scale, m=6, minX=m+bound, maxX=innerWidth-m-bound, minY=m+bound, maxY=innerHeight-m-bound;
