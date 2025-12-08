@@ -75,10 +75,7 @@ optgroup{color:#9fb0c9;font-style:normal}
   .rulerTick{stroke:#94a3b8}
   .ruLbl{fill:#cbd5e1;font-size:9.5px;dominant-baseline:middle;paint-order:stroke;stroke:#0b1220;stroke-width:3px}
   .scrLine{stroke-width:2.2; stroke-linecap:round}
-.flip-180 {
-    /* Rotates the text element itself by 180 degrees */
-    transform: rotate(180deg); 
-}
+
   /* Cursors */
   #instrument{cursor:move}
   #armB_handleKnob,#armB_handleShaft,#armB_knob{cursor:grab}
@@ -236,6 +233,91 @@ input[type=range]::-moz-range-thumb { width: 24px; height: 24px; background: #e2
     </g>
   </svg>
 </div>
+<script>
+let NT_active = null;
+
+document.addEventListener("pointerdown", (e) => {
+  if (!(e.target.tagName === "text" || e.target.tagName === "TEXT")) return;
+
+  NT_active = e.target;
+
+  const tr = NT_active.getAttribute("transform") || "";
+  const m  = tr.match(/rotate\((-?\d+\.?\d*)\s+(-?\d+\.?\d*)\s+(-?\d+\.?\d*)\)/);
+
+  document.getElementById("numTunerPanel").style.display = "block";
+
+  document.getElementById("ntX").value = NT_active.getAttribute("x") || 0;
+  document.getElementById("ntY").value = NT_active.getAttribute("y") || 0;
+  document.getElementById("ntR").value = m ? m[1] : 0;
+});
+
+["ntX","ntY","ntR"].forEach(id=>{
+  document.getElementById(id).addEventListener("input",()=>{
+    if (!NT_active) return;
+    const x = document.getElementById("ntX").value;
+    const y = document.getElementById("ntY").value;
+    const r = document.getElementById("ntR").value;
+    NT_active.setAttribute("x", x);
+    NT_active.setAttribute("y", y);
+    NT_active.setAttribute("transform", `rotate(${r} ${x} ${y})`);
+  });
+});
+
+document.getElementById("ntLog").onclick = () => {
+  if (!NT_active) return;
+
+  const rawX = NT_active.getAttribute("x") || "0";
+  const rawY = NT_active.getAttribute("y") || "0";
+  const x = Number(rawX).toFixed(1);
+  const y = Number(rawY).toFixed(1);
+
+  const tr = NT_active.getAttribute("transform") || "";
+  let rot = 0;
+  const m = tr.match(/rotate\((-?\d+\.?\d*)\s+(-?\d+\.?\d*)\s+(-?\d+\.?\d*)\)/);
+  if (m) rot = parseFloat(m[1]) || 0;
+
+  const txt   = (NT_active.textContent || "").trim();
+  const parent   = NT_active.parentNode;
+  const parentId = parent && parent.id;
+
+  let key = "";
+
+  // ===== Angle labels (outer / inner rings) =====
+  if (parentId === "numsOut" || parentId === "numsIn") {
+    const kind = parentId === "numsOut" ? "outer" : "inner";
+    const siblings = Array.from(parent.querySelectorAll("text"))
+      .filter(n => (n.textContent || "").trim() === txt);
+    const idx = siblings.indexOf(NT_active);   // disambiguate duplicate “10”s etc.
+    key = `${kind}:${txt}:${idx}`;
+  }
+
+  // ===== Ruler labels on arms A/B (cm / in) =====
+  else if (parentId === "armA_ruler" || parentId === "armB_ruler") {
+    const arm  = parentId === "armA_ruler" ? "A" : "B";
+    const xNum = parseFloat(rawX) || 0;
+    let unit = "";
+    if (txt === "cm" || xNum < 0) unit = "cm";
+    else if (txt === "in" || xNum > 0) unit = "in";
+
+    const siblings = Array.from(parent.querySelectorAll("text"))
+      .filter(n => (n.textContent || "").trim() === txt);
+    const idx = siblings.indexOf(NT_active);
+
+    key = `ruler:${arm}:${unit}:${txt}:${idx}`;
+  }
+
+  // ===== Fallback: generic text =====
+  else {
+    key = `raw:${txt}`;
+  }
+
+  const snippet = `NUM_TWEAKS["${key}"] = { x:${x}, y:${y}, rot:${rot} };`;
+  console.log("FINAL NUMBER FIX →", snippet);
+};
+</script>
+
+
+</script>
 
   <details id="controllers">
     <summary>🎛️ Controllers</summary>
@@ -340,40 +422,38 @@ const Gonio = (() => {
   const clamp360=a=>(a%360+360)%360;
   const toDegUp=(x,y)=>clamp360(Math.atan2(-y,x)*180/Math.PI+90);
 
-// Inside the Gonio = (() => { ... })(); module
-
-(function build(){
-    const NS = "http://www.w3.org/2000/svg";
-// ... (lines 472-487 remain unchanged) ...
-
-    numsOut.innerHTML=""; numsIn.innerHTML="";
-    const rWhite=R-8, rInner=Rin+9;
-    for (let d=0; d<360; d+=10){
-      const inner=innerFromD(d), outer=Math.abs(90-inner);
-      
-      // --- OUTER NUMBERS (e.g., 170, 160... 100) ---
-      if (outer%20===0 && outer<=180) { // Increased outer max to 180
-        const a=(d-90)*Math.PI/180; 
-        
-        // If the number is in the 100-180 range (which appear on the bottom half)
-        const flipOuter = (outer > 90); 
-        const clsOuter = flipOuter ? "labelOuter flip-180" : "labelOuter";
-        
-        text(numsOut, Math.cos(a)*rWhite, Math.sin(a)*rWhite, String(outer), clsOuter);
-      }
-      
-      // --- INNER NUMBERS (e.g., 100, 110... 180) ---
-      if (inner%10===0 && (inner!==0 || d===180)){
-        const a=(d-90)*Math.PI/180; 
-
-        // If the number is greater than 90 (which appear on the bottom half)
-        const flipInner = (inner > 90);
-        const clsInner = flipInner ? "labelInner flip-180" : "labelInner";
-        
-        text(numsIn, Math.cos(a)*rInner, Math.sin(a)*rInner, String(inner), clsInner);
-      }
-    }
-// ... (rest of the build function remains unchanged) ...
+  (function build(){
+    const NS = "http://www.w3.org/2000/svg";
+    if(!ticks || !numsOut || !numsIn) return;
+    const R = 120, Rin = 86;
+    const line = (p,x1,y1,x2,y2,cls)=>{
+      const n = document.createElementNS(NS,'line');
+      n.setAttribute('x1',x1); n.setAttribute('y1',y1); n.setAttribute('x2',x2); n.setAttribute('y2',y2);
+      if (cls) n.setAttribute('class',cls); p.appendChild(n);
+    };
+    const text = (p,x,y,t,cls)=>{
+      const n = document.createElementNS(NS,'text');
+      n.setAttribute('x',x); n.setAttribute('y',y); n.setAttribute('class',cls);
+      n.textContent = t; p.appendChild(n); return n;
+    };
+    const innerFromD = (d)=>{ const raw=(d+180)%360; return (raw<=180)?raw:360-raw; };
+    const rBand = (R+Rin)*0.5;
+    for (let d=0; d<360; d+=5){
+      const a=(d-90)*Math.PI/180, big=(d%10===0), len=big?12:6;
+      const r1=rBand-len*0.5, r2=rBand+len*0.5;
+      line(ticks, Math.cos(a)*r1, Math.sin(a)*r1, Math.cos(a)*r2, Math.sin(a)*r2, big?"tick tickBig":"tick");
+    }
+    numsOut.innerHTML=""; numsIn.innerHTML="";
+    const rWhite=R-8, rInner=Rin+9;
+    for (let d=0; d<360; d+=10){
+      const inner=innerFromD(d), outer=Math.abs(90-inner);
+      if (outer%20===0 && outer<=80) {
+        const a=(d-90)*Math.PI/180; text(numsOut, Math.cos(a)*rWhite, Math.sin(a)*rWhite, String(outer), "labelOuter");
+      }
+      if (inner%10===0 && (inner!==0 || d===180)){
+        const a=(d-90)*Math.PI/180; text(numsIn, Math.cos(a)*rInner, Math.sin(a)*rInner, String(inner), "labelInner");
+      }
+    }
     function buildTipRuler(group, tipY, dir, which){
       if(!group) return; group.innerHTML='';
       const CM=14, IN=2.5;
@@ -404,7 +484,9 @@ const Gonio = (() => {
   function applyRot(){ rotWrap.setAttribute('transform',`rotate(${baseRot+userRot})`); }
   function applyLabelFix(){
     const t = -(baseRot + userRot);
-    if(labelsFixed) labelsFixed.setAttribute('transform', `rotate(${t})`)
+    if(labelsFixed) labelsFixed.setAttribute('transform', `rotate(${t})`);
+    if(numsInWrap) numsInWrap.setAttribute('transform', `rotate(${-t})`);
+    if(numsOut) numsOut.setAttribute('transform','rotate(0)');
   }
   function updateRulerUpright(){
     document.querySelectorAll('.ruLbl').forEach(t=>{
