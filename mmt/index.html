@@ -372,8 +372,10 @@ Hip_IR: { E_startPos: { x: 0.280, y: 0.270, z: 0.660 }, E_direction: { x: -0.729
 Hamstrings: { E_startPos: { x: 0.400, y: -0.170, z: 0.460 }, E_direction: { x: 0.006, y: 0.801, z: -2.283 },  R_startPos: { x: 0.050, y: 0.610, z: -0.660 },  R_direction: { x: 0.134, y: -0.484, z: 0.498 }},
 Quadriceps: { E_startPos: { x: -0.120, y: 0.150, z: 0.100 }, E_direction: { x: 0.006, y: 1.731, z: 1.691 },  R_startPos: { x: -0.230, y: 1.170, z: 1.220 },  R_direction: { x: 0.134, y: -0.454, z: -0.526 }  },
 
-Tibialis_Anterior: { E_startPos: { x: 0.400, y: -0.170, z: 0.460 }, E_direction: { x: 0.006, y: 0.801, z: -2.283 },  R_startPos: { x: 0.050, y: 0.610, z: -0.660 },  R_direction: { x: 0.134, y: -0.484, z: 0.498 }},
-Foot_Eversion_PF: { E_startPos: { x: -0.120, y: 0.150, z: 0.100 }, E_direction: { x: 0.006, y: 1.731, z: 1.691 },  R_startPos: { x: -0.230, y: 1.170, z: 1.220 },  R_direction: { x: 0.134, y: -0.454, z: -0.526 }  },
+
+    // Tibialis_Anterior: (Aligned Vectors)
+    Tibialis_Anterior: { E_startPos: { x: -0.560, y: -0.090, z: -0.300 }, E_direction: { x: 0.980, y: 0.191, z: 2.324 },R_startPos: { x: 0.050, y: 0.610, z: 0.340 },  R_direction: { x: -1.066, y: -2.370, z: -1.151 } },
+  Foot_Eversion_PF: { E_startPos: { x: -0.120, y: 0.150, z: 0.100 }, E_direction: { x: 0.006, y: 1.731, z: 1.691 },  R_startPos: { x: -0.230, y: 1.170, z: 1.220 },  R_direction: { x: 0.134, y: -0.454, z: -0.526 }  },
    
 };   
   
@@ -1665,8 +1667,7 @@ HAND_OVERRIDES["Hip_IR:high"] = {"handRX":-2.526837780699485,"handRY":-4.7423509
 HAND_OVERRIDES["Hamstrings:high"] = {"handRX":-3.1010985249645246,"handRY":-4.163765553612232,"handRZ":-2.599523086792104,"handRRX":0,"handRRY":0,"handRRZ":0,"handLX":-5.380289332204698,"handLY":-2.986593834775415,"handLZ":-2.2343355444830006,"handLRX":0,"handLRY":0,"handLRZ":-0.29999999999999993};
 HAND_OVERRIDES["Quadriceps:high"] = {"handRX":-3.640244206896882,"handRY":-5.820891199594678,"handRZ":1.7860142361484386,"handRRX":0,"handRRY":2.0999999999999996,"handRRZ":-2.6999999999999993,"handLX":-3.0692490546984215,"handLY":-6.217347412120756,"handLZ":3.0340909282674016,"handLRX":0.15,"handLRY":-4.35,"handLRZ":0.9};
 
-HAND_OVERRIDES["Tibialis_Anterior:high"] = {"handRX":-5.80748270112216,"handRY":-4.9185035044051375,"handRZ":-2.314467880863499,"handRRX":0,"handRRY":0,"handRRZ":2.849999999999999,"handLX":-7.106383225558583,"handLY":-4.362209276108732,"handLZ":-1.0989726589619133,"handLRX":1.9499999999999997,"handLRY":1.65,"handLRZ":-0.14999999999999994};  
-
+HAND_OVERRIDES["Tibialis_Anterior:high"] = {"handRX":-5.80748270112216,"handRY":-4.9185035044051375,"handRZ":-2.314467880863499,"handRRX":0,"handRRY":0,"handRRZ":2.849999999999999,"handLX":-7.106383225558583,"handLY":-4.362209276108732,"handLZ":-1.1489726589619134,"handLRX":1.9499999999999997,"handLRY":1.65,"handLRZ":5.551115123125783e-17};
   
 /* ==== NEUTRAL HAND POSITION (New Default) ==== */
 const HAND_NEUTRAL_POSE = {
