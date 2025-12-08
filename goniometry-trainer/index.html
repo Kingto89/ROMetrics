@@ -70,8 +70,29 @@ optgroup{color:#9fb0c9;font-style:normal}
   #gonioHost{position:fixed; inset:0; z-index:10; pointer-events:none}
   #gonioHost svg{width:100vw;height:100vh;background:transparent;pointer-events:none}
   .tick{stroke:#64748b;stroke-width:.9}.tickBig{stroke-width:1.6}
-  .labelOuter{fill:#e5e7eb;font-size:11px;text-anchor:middle;dominant-baseline:middle;paint-order:stroke;stroke:#0b1220;stroke-width:3px}
-  .labelInner{fill:#fca5a5;font-size:8.2px;text-anchor:middle;dominant-baseline:middle;paint-order:stroke;stroke:#0b1220;stroke-width:3px}
+    .labelOuter{
+    fill:#e5e7eb;
+    font-size:11px;
+    text-anchor:middle;
+    dominant-baseline:middle;
+    paint-order:stroke;
+    stroke:#0b1220;
+    stroke-width:3px;
+    pointer-events:auto;   /* 🔑 make outer numbers clickable */
+    cursor:pointer;
+  }
+  .labelInner{
+    fill:#fca5a5;
+    font-size:8.2px;
+    text-anchor:middle;
+    dominant-baseline:middle;
+    paint-order:stroke;
+    stroke:#0b1220;
+    stroke-width:3px;
+    pointer-events:auto;   /* 🔑 make inner numbers clickable */
+    cursor:pointer;
+  }
+
   .rulerTick{stroke:#94a3b8}
   .ruLbl{fill:#cbd5e1;font-size:9.5px;dominant-baseline:middle;paint-order:stroke;stroke:#0b1220;stroke-width:3px}
   .scrLine{stroke-width:2.2; stroke-linecap:round}
