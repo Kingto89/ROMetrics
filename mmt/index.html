@@ -610,20 +610,24 @@ function updateResistanceFill() {
     const maxTime = 7.0; 
     
  // --- START OF ADJUSTED CASE MODE CLAMPING LOGIC ---
+// --- START OF FINAL FIX FOR MMT ROTATION CAP ---
 let maxAllowedTime = maxTime;
 
 if (window.MMT_CASE_MODE && window.MMT_CASE_MODE.active) {
     const testKey = actionSel.value;
     let impairmentKey = 'default_unrestricted';
 
-    // 1. MMT Cap Check (Checks keys defined in your MMT impairment data)
-    if (testKey === 'Cervical_Rotation') { // <-- FIXED KEY CHECK
-        impairmentKey = 'Cervical_Rotation';
-    } else if (testKey === 'Single_SCM') {
+    // 1. MMT Cap Check
+    if (testKey === 'Single_SCM') {
         impairmentKey = 'Single_SCM';
+    } else if (testKey === 'Cervical_Rotation') {
+        // --- THIS IS THE KEY FIX: Directly use the impairment key for the MMT test. ---
+        impairmentKey = 'Cervical_Rotation'; 
     } 
-    // Note: Cervical_Flexion is intentionally skipped here to default to Grade 5.
 
+    // --- We delete the redundant ROM Cap Check (Step 2 of old code) for MMT safety. ---
+    
+    // Now look up the impairment value for the identified key.
     const impairment = window.MMT_CASE_MODE.impairments[impairmentKey];
     
     // Check if the current test has an MMT hold time impairment defined
@@ -631,6 +635,7 @@ if (window.MMT_CASE_MODE && window.MMT_CASE_MODE.active) {
         maxAllowedTime = impairment.max_hold_time;
     }
 }
+// --- END OF FINAL FIX FOR MMT ROTATION CAP ---
 // --- END OF ADJUSTED CASE MODE CLAMPING LOGIC ---
     // --- END CASE MODE CLAMPING LOGIC ---
 
