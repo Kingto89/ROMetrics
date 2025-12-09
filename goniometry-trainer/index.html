@@ -1925,38 +1925,36 @@ actionDeg.addEventListener("input", ()=> {
     val = cap; actionDeg.value = String(val);
     log(`Anticollision limit hit (${CURRENT_ACTION.label}): max ${cap}°`);
   }
+  // --- TOKEN MODE RANGE CLAMP (reuses seated/standing pattern) ---CHECKPOINT
+  if (window.GONIO_TOKEN_MODE && window.GONIO_TOKEN_MODE.active){
+    const t = window.GONIO_TOKEN_MODE;
 
-  // Signed degrees for the chosen direction
-  let signed = CURRENT_ACTION.sign * val;
+    // explicit token window [min,max] if provided
+    if (typeof t.min === 'number' || typeof t.max === 'number'){
+      let tMin = (typeof t.min === 'number') ? t.min : 0;
+      let tMax = (typeof t.max === 'number') ? t.max : CURRENT_ACTION.max;
 
-  // === CASE ROM CLAMPS (CERVICAL) ===  CASE CHECKSPOT
-  if (window.GONIO_CASE_MODE && window.GONIO_CASE_MODE.active){
+      // keep inside this motion’s legal window
+      tMin = Math.max(0, tMin);
+      tMax = Math.min(CURRENT_ACTION.max, tMax);
 
-    // 1) Cervical Lateral Flexion — LEFT
-    //    (your setup uses negative for left)
-    if (CURRENT_ACTION.key === 'cerv_lat' && signed < 0){
-      const raw     = -signed; // magnitude
-      const clamped = clampAngleForCase(raw, 'cervical_left_lat_flex');
-      if (clamped < raw){
-        signed          = -clamped;      // keep it on the left side
-        val             = clamped;
-        actionDeg.value = String(clamped);
-      }
-    }
+      if (val < tMin) val = tMin;
+      if (val > tMax) val = tMax;
 
-    // 2) Cervical Rotation — RIGHT
-    //    (from your mapping, RIGHT uses the negative side)
-    if (CURRENT_ACTION.key === 'cerv_rot' && signed < 0){
-      const raw     = -signed; // magnitude
-      const clamped = clampAngleForCase(raw, 'cervical_right_rotation');
-      if (clamped < raw){
-        signed          = -clamped;      // keep it on the right side
-        val             = clamped;
-        actionDeg.value = String(clamped);
+      actionDeg.value = String(val);
+      log(`Token clamp → ${tMin}–${tMax}° (${CURRENT_ACTION.label})`);
+    } else {
+      // no explicit window: fall back to seated/standing COLLIM cap
+      if (typeof cap === 'number' && val > cap){
+        val = cap;
+        actionDeg.value = String(val);
+        log(`Token anticollision clamp → ${cap}° (${CURRENT_ACTION.label})`);
       }
     }
   }
 
+  // Signed degrees for the chosen direction
+  let signed = CURRENT_ACTION.sign * val;
 
 // === DYNAMIC COUPLING: HIP FLEXION to KNEE FLEXION (Only for Non-Sitting) ===
 if (CURRENT_ACTION.key.startsWith('hip_fe_') && CURRENT_ACTION.sign > 0 && positionSel.value !== 'sitting') {
