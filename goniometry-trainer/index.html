@@ -1927,29 +1927,32 @@ actionDeg.addEventListener("input", ()=> {
   }
 
   // Signed degrees for the chosen direction
-  let signed = CURRENT_ACTION.sign * val;
+  // === CASE ROM CLAMPS (CERVICAL, TOKEN MODE ONLY) ===
+  if (window.GONIO_CASE_MODE && window.GONIO_CASE_MODE.active) {
+    const label = (CURRENT_ACTION.label || "").trim().toLowerCase();
+    let mag    = Math.abs(signed);
 
-  // === CASE ROM CLAMPS (CERVICAL) ===  CASE CHECKSPOT 
-  if (window.GONIO_CASE_MODE && window.GONIO_CASE_MODE.active){
-    // Cervical lateral flexion — LEFT (negative side)
-    if (CURRENT_ACTION.key === 'cerv_lat' && signed < 0){
-      const raw     = Math.abs(signed);
-      const clamped = clampAngleForCase(raw, 'cervical_left_lat_flex');
-      if (clamped !== raw){
-        signed          = -clamped;
-        val             = clamped;
-        actionDeg.value = String(clamped);
+    // 1) Cervical Lateral Flexion — Left
+    if (label === "cervical lateral flexion — left") {
+      const limited = clampAngleForCase(mag, "cervical_left_lat_flex");
+      if (limited !== mag) {
+        const s   = signed >= 0 ? 1 : -1; // keep your existing sign
+        mag       = limited;
+        signed    = s * limited;
+        val       = limited;
+        actionDeg.value = String(limited);
       }
     }
 
-    // Cervical rotation — RIGHT (positive side)
-    if (CURRENT_ACTION.key === 'cerv_rot' && signed > 0){
-      const raw     = Math.abs(signed);
-      const clamped = clampAngleForCase(raw, 'cervical_right_rotation');
-      if (clamped !== raw){
-        signed          = clamped;
-        val             = clamped;
-        actionDeg.value = String(clamped);
+    // 2) Cervical Rotation — Right
+    if (label === "cervical rotation — right") {
+      const limited = clampAngleForCase(mag, "cervical_right_rotation");
+      if (limited !== mag) {
+        const s   = signed >= 0 ? 1 : -1; // keep your existing sign
+        mag       = limited;
+        signed    = s * limited;
+        val       = limited;
+        actionDeg.value = String(limited);
       }
     }
   }
@@ -2857,8 +2860,8 @@ const clock = new THREE.Clock();
       // Impairments for this case: max measured angles
       // Keys are arbitrary strings you can pass into clampAngleForCase(...)
       impairments: {
-        cervical_left_lat_flex:  { max: 35 },  // 45° left lateral flexion
-        cervical_right_rotation: { max: 60 }   // 70° right rotation
+        cervical_left_lat_flex:  { max: 35 },  // 35° left lateral flexion
+        cervical_right_rotation: { max: 60 }   // 60° right rotation
       }
     }
   };
