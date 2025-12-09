@@ -1926,24 +1926,34 @@ actionDeg.addEventListener("input", ()=> {
     log(`Anticollision limit hit (${CURRENT_ACTION.label}): max ${cap}°`);
   }
 
-  // Signed degrees for the chosen direction
-  let signed = CURRENT_ACTION.sign * val;
-// === CASE ROM CLAMPS (CERVICAL) ===
-if (window.GONIO_CASE_MODE && window.GONIO_CASE_MODE.active){
-  // Cervical lateral flexion — LEFT (negative side)
-  if (CURRENT_ACTION.key === 'cerv_lat' && signed < 0){
-    const raw     = Math.abs(signed);
-    const clamped = clampAngleForCase(raw, 'cervical_left_lat_flex');
-    signed = -clamped;
+  // Signed degrees for the chosen direction
+  let signed = CURRENT_ACTION.sign * val;
+
+  // === CASE ROM CLAMPS (CERVICAL) ===  CASE CHECKSPOT
+  if (window.GONIO_CASE_MODE && window.GONIO_CASE_MODE.active){
+    // Cervical lateral flexion — LEFT (negative side)
+    if (CURRENT_ACTION.key === 'cerv_lat' && signed < 0){
+      const raw     = Math.abs(signed);
+      const clamped = clampAngleForCase(raw, 'cervical_left_lat_flex');
+      if (clamped !== raw){
+        signed          = -clamped;
+        val             = clamped;
+        actionDeg.value = String(clamped);
+      }
+    }
+
+    // Cervical rotation — RIGHT (positive side)
+    if (CURRENT_ACTION.key === 'cerv_rot' && signed > 0){
+      const raw     = Math.abs(signed);
+      const clamped = clampAngleForCase(raw, 'cervical_right_rotation');
+      if (clamped !== raw){
+        signed          = clamped;
+        val             = clamped;
+        actionDeg.value = String(clamped);
+      }
+    }
   }
 
-  // Cervical rotation — RIGHT (positive side)
-  if (CURRENT_ACTION.key === 'cerv_rot' && signed > 0){
-    const raw     = Math.abs(signed);
-    const clamped = clampAngleForCase(raw, 'cervical_right_rotation');
-    signed = clamped;
-  }
-}
 
 // === DYNAMIC COUPLING: HIP FLEXION to KNEE FLEXION (Only for Non-Sitting) ===
 if (CURRENT_ACTION.key.startsWith('hip_fe_') && CURRENT_ACTION.sign > 0 && positionSel.value !== 'sitting') {
