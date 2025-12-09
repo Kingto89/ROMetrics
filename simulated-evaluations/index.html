@@ -339,8 +339,65 @@ document.getElementById("caseBtn").onclick = async () => {
   doc.style.pointerEvents = "none";
 };
 
+/* -------- ATTACH WRONG-CHOICE HANDLERS (ALWAYS CALL AFTER MENU CHANGES) -------- */
+function attachWrongHandlers() {
+  document.querySelectorAll("#modalBackdrop .wrong").forEach(btn => {
+    btn.onclick = () => {
+      const isMMT = btn.textContent.toLowerCase().includes("mmt");
 
-/* -------- RESET MAIN MENU MODAL (old name kept!) -------- */
+      const modal = document.querySelector("#modalBackdrop .modal");
+      modal.innerHTML = `
+        <div class="modal-title">Before You Proceed</div>
+
+        <p style="color:#9ca3af;font-size:13px;margin-bottom:10px;">
+          This step isn't normally first in clinical workflow.<br>
+          You may continue, but consider the recommended order.
+        </p>
+
+        <div style="
+          border:1px solid var(--accent);
+          padding:10px;
+          border-radius:8px;
+          background:rgba(56,189,248,0.08);
+          margin-bottom:12px;
+          font-size:13px;
+          line-height:1.45;
+          color:var(--text);
+        ">
+          <strong style="color:var(--accent)">Recommended Flow:</strong><br>
+          • Observation & functional screen<br>
+          • AROM/PROM findings<br>
+          • Goniometry<br>
+          • MMT as needed<br>
+          • Prognosis last
+        </div>
+
+        <button class="choice-btn" id="proceedAnyway">Proceed Anyway</button>
+        <button class="choice-btn" id="cancelWarning">Back to Menu</button>
+      `;
+
+      document.getElementById("modalBackdrop").classList.add("active");
+
+      // Proceed Anyway: only MMT should jump into MMT case mode
+      document.getElementById("proceedAnyway").onclick = () => {
+        if (isMMT) {
+          window.location.href =
+            "https://kingto89.github.io/ROMetrics.com/mmt/?caseToken=MMT-CERVICAL-001";
+        } else {
+          document.getElementById("modalBackdrop").classList.remove("active");
+        }
+      };
+
+      // Back to Menu: show the SECOND-STAGE menu (different from initial)
+      document.getElementById("cancelWarning").onclick = () => {
+        resetChoiceModal();
+        document.getElementById("modalBackdrop").classList.add("active");
+      };
+    };
+  });
+}
+
+/* -------- RESET MAIN MENU MODAL (SECOND-STAGE MENU) -------- */
 function resetChoiceModal() {
   const modal = document.querySelector("#modalBackdrop .modal");
   modal.innerHTML = `
@@ -355,19 +412,19 @@ function resetChoiceModal() {
       "https://kingto89.github.io/ROMetrics.com/goniometry-trainer/?caseToken=GONIO-CERVICAL-001";
   };
 
-  document.querySelectorAll(".wrong").forEach(btn => {
-    btn.onclick = () => {
-      btn.dispatchEvent(new Event("click"));
-    };
-  });
+  // Wire up the new wrong buttons in this menu
+  attachWrongHandlers();
 }
 
-
-/* -------- READ BUTTON → OPEN MENU -------- */
+/* -------- READ BUTTON → OPEN INITIAL MENU -------- */
 document.getElementById("readBtn").onclick = () => {
   if (!caseLoaded) return;
   document.getElementById("modalBackdrop").classList.add("active");
 };
+
+/* -------- INITIAL WIRING FOR ORIGINAL WRONG BUTTONS -------- */
+attachWrongHandlers();
+</script>
 
 
 /* -------- WRONG CHOICE → WARNING MODAL -------- */
