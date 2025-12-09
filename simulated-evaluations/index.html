@@ -373,6 +373,8 @@ document.getElementById("readBtn").onclick = () => {
 /* -------- WRONG CHOICE → WARNING MODAL -------- */
 document.querySelectorAll(".wrong").forEach(btn => {
   btn.onclick = () => {
+    const isMMT = btn.textContent.toLowerCase().includes("mmt");
+
     const modal = document.querySelector("#modalBackdrop .modal");
     modal.innerHTML = `
       <div class="modal-title">Before You Proceed</div>
@@ -406,7 +408,12 @@ document.querySelectorAll(".wrong").forEach(btn => {
     document.getElementById("modalBackdrop").classList.add("active");
 
     document.getElementById("proceedAnyway").onclick = () => {
-      document.getElementById("modalBackdrop").classList.remove("active");
+      if (isMMT) {
+        window.location.href =
+          "https://kingto89.github.io/ROMetrics.com/mmt/?caseToken=MMT-CERVICAL-001";
+      } else {
+        document.getElementById("modalBackdrop").classList.remove("active");
+      }
     };
 
     document.getElementById("cancelWarning").onclick = () => {
@@ -415,6 +422,7 @@ document.querySelectorAll(".wrong").forEach(btn => {
     };
   };
 });
+
 
 
 </script>
