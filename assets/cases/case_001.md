@@ -1,9 +1,3 @@
-# Case File: case_001
-*ROMetrics Case File — Markdown + JSON Hybrid (For programmatic reading)*
-
----
-
-## CASE METADATA
 {
   "case_id": "case_001",
   "unlocks": {
@@ -33,6 +27,7 @@
     }
   }
 }
+
 
 ---
 
