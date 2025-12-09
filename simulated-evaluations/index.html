@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" /> 
+<meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>ROMetrics — Case Modules Prototype</title>
 
@@ -252,50 +252,19 @@ textarea{
 </main>
 </div>
 
-<!-- Main Menu Modal -->
-<div class="modal-backdrop" id="menuModal">
+<!-- Module Choice Modal -->
+<div class="modal-backdrop" id="modalBackdrop">
   <div class="modal">
     <div class="modal-title">What do you want to do next?</div>
 
-    <!-- Correct first step -->
-    <button class="choice-btn" id="goFunctional">Functional / ROM Observation</button>
+    <!-- First step (merged functional + ROM observation) -->
+    <button class="choice-btn" id="correctChoice">Functional / ROM Observation</button>
 
-    <!-- Wrong-order steps -->
+    <!-- Steps that should trigger warning -->
     <button class="choice-btn wrong">Goniometry</button>
     <button class="choice-btn wrong">MMT Test</button>
-    <button class="choice-btn wrong">Prognosis</button>
-  </div>
-</div>
+    <button class="choice-btn wrong">Jump to Prognosis</button>
 
-<!-- Warning Modal -->
-<div class="modal-backdrop" id="warningModal">
-  <div class="modal">
-    <div class="modal-title">Before You Proceed</div>
-
-    <p style="color:#9ca3af;font-size:13px;margin-bottom:10px;">
-      This step is normally performed later, but you may continue if needed.
-    </p>
-
-    <div style="
-      border:1px solid var(--accent);
-      padding:10px;
-      border-radius:8px;
-      background:rgba(56,189,248,0.08);
-      margin-bottom:12px;
-      font-size:13px;
-      color:var(--text);
-    ">
-      • Functional / ROM observation first<br>
-      • AROM/PROM screen second<br>
-      • Goniometry after ROM<br>
-      • MMT after objective ROM<br>
-      • Prognosis last
-    </div>
-
-    <button class="choice-btn" id="warningProceed">Proceed Anyway</button>
-    <button class="choice-btn" id="warningBack" style="background:#1b2537;">
-      Back to Menu
-    </button>
   </div>
 </div>
 
@@ -303,12 +272,19 @@ textarea{
 <script>
 /* -------- LOAD CASE FILE -------- */
 let caseLoaded = false;
+let modules = { goniometry:false, mmt:false, motion:false };
 
 document.getElementById("caseBtn").onclick = async () => {
   const res = await fetch("../assets/cases/case_001.md");
   const raw = await res.text();
+
+  // split into lines
   const lines = raw.split("\n");
 
+  // extract only these sections:
+  // ## Patient Profile
+  // ## Chief Complaint
+  // ## History of Present Illness
   let allowed = ["## Patient Profile", "## Chief Complaint", "## History of Present Illness"];
   let capture = false;
   let out = [];
@@ -322,9 +298,12 @@ document.getElementById("caseBtn").onclick = async () => {
       continue;
     }
 
+    // Stop capturing when Objective Exam starts
     if (line.startsWith("## Objective Examination")) break;
 
-    if (capture && line.length > 0) out.push(line);
+    if (capture && line.length > 0) {
+      out.push(line);
+    }
   }
 
   document.getElementById("snapshotBody").innerHTML = out.join("<br><br>");
@@ -332,15 +311,11 @@ document.getElementById("caseBtn").onclick = async () => {
   caseLoaded = true;
   document.getElementById("readBtn").disabled = false;
 
-  // Grey-out documentation
-  const doc = document.getElementById("docCard");
-  doc.style.opacity = "0.35";
-  doc.style.display = "block";
-  doc.style.pointerEvents = "none";
+  // Show documentation section but greyed out
+  document.getElementById("docCard").style.opacity = "0.35";
+  document.getElementById("docCard").style.display = "block";
+  document.getElementById("docCard").style.pointerEvents = "none";
 };
-
-
-/* -------- RESET MAIN MENU MODAL (old name kept!) -------- */
 function resetChoiceModal() {
   const modal = document.querySelector("#modalBackdrop .modal");
   modal.innerHTML = `
@@ -350,6 +325,7 @@ function resetChoiceModal() {
     <button class="choice-btn wrong">Jump to Prognosis</button>
   `;
 
+  // rebind buttons after reset
   document.getElementById("correctChoice").onclick = () => {
     window.location.href =
       "https://kingto89.github.io/ROMetrics.com/goniometry-trainer/?caseToken=GONIO-CERVICAL-001";
@@ -357,23 +333,39 @@ function resetChoiceModal() {
 
   document.querySelectorAll(".wrong").forEach(btn => {
     btn.onclick = () => {
-      btn.dispatchEvent(new Event("click"));
+      const clickEvent = new Event("click");
+      btn.dispatchEvent(clickEvent);
     };
   });
 }
 
 
-/* -------- READ BUTTON → OPEN MENU -------- */
+/* -------- UNLOCK DOCUMENTATION -------- */
+function checkAllComplete(){
+  if(modules.goniometry && modules.mmt && modules.motion){
+    document.getElementById("docCard").style.display = "block";
+  }
+}
+/* ===============================
+   FIX: MAKE READ BUTTON WORK
+   =============================== */
+
+// 1) Modal opener
+function showChoiceModal() {
+  document.getElementById("modalBackdrop").classList.add("active");
+}
+
+// 2) READ BUTTON → triggers modal
 document.getElementById("readBtn").onclick = () => {
   if (!caseLoaded) return;
-  document.getElementById("modalBackdrop").classList.add("active");
+  showChoiceModal();
 };
 
-
-/* -------- WRONG CHOICE → WARNING MODAL -------- */
+// WRONG CHOICE → SHOW WARNING MODAL
 document.querySelectorAll(".wrong").forEach(btn => {
   btn.onclick = () => {
     const modal = document.querySelector("#modalBackdrop .modal");
+
     modal.innerHTML = `
       <div class="modal-title">Before You Proceed</div>
 
@@ -415,7 +407,6 @@ document.querySelectorAll(".wrong").forEach(btn => {
     };
   };
 });
-
 
 </script>
 
