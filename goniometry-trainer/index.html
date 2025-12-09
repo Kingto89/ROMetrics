@@ -1960,36 +1960,31 @@ if (window.GONIO_CASE_MODE && window.GONIO_CASE_MODE.active){
     let clamped = val;
     let impairmentKey = null;
 
-// --- START OF FINAL CORRECTED REPLACEMENT BLOCK ---
+
+// --- FINAL CLAMPING LOGIC FOR RIGHT-SIDED IMPAIRMENT ---
 // 1. CERVICAL LATERAL FLEXION
 if (CURRENT_ACTION.key === 'cerv_lat'){
-    // When the user selects "Lateral Flexion — Right" (the IMPAIRED side)
+    // User selects "Right" (IMPAIRED side)
     if (CURRENT_ACTION.label.includes('Right')) {
-        // Use the impairment key for the right side (which holds the low value: 20°)
-        impairmentKey = 'cervical_right_lat_flex';
+        impairmentKey = 'cervical_right_lat_flex'; // Applies 20° limit
     } 
-    // When the user selects "Lateral Flexion — Left" (the FULL ROM side)
+    // User selects "Left" (FULL ROM side)
     else if (CURRENT_ACTION.label.includes('Left')) {
-        // Use the full ROM key for the left side (which holds the high value: 45°)
-        impairmentKey = 'cervical_left_lat_flex';
+        impairmentKey = 'cervical_left_lat_flex'; // Applies 45° limit
     }
 }
 
 // 2. CERVICAL ROTATION
 else if (CURRENT_ACTION.key === 'cerv_rot'){
-    // When the user selects "Rotation — Right" (the IMPAIRED side)
+    // User selects "Right" (IMPAIRED side)
     if (CURRENT_ACTION.label.includes('Right')) {
-        // Use the impairment key for the right side (which holds the low value: 30°)
-        impairmentKey = 'cervical_right_rotation';
+        impairmentKey = 'cervical_right_rotation'; // Applies 30° limit
     } 
-    // When the user selects "Rotation — Left" (the FULL ROM side)
+    // User selects "Left" (FULL ROM side)
     else if (CURRENT_ACTION.label.includes('Left')) {
-        // Use the full ROM key for the left side (which holds the high value: 70°)
-        impairmentKey = 'cervical_left_rotation';
+        impairmentKey = 'cervical_left_rotation'; // Applies 70° limit
     }
 }
-// --- END OF FINAL CORRECTED REPLACEMENT BLOCK ---
-
 // Apply clamp if a key was found (using the magnitude 'val')
 if (impairmentKey){
     clamped = clampAngleForCase(val, impairmentKey);
@@ -2917,18 +2912,19 @@ const GONIO_CASE_TOKENS = {
     label: "Cervical ROM Case", // Label adjusted for clarity
     allowedRegions: ["cervical"],
 // Impairments for this case: max measured angles
+// Impairments for this case: max measured angles
 impairments: {
-    // 1. RIGHT Lateral Flexion (Full ROM/Unaffected)
-    cervical_right_lat_flex: { max: 45 }, // Full ROM limit (45°)
+    // 1. RIGHT Lateral Flexion (SEVERE LIMIT)
+    cervical_right_lat_flex: { max: 20 }, // Impaired side (20°)
 
-    // 2. LEFT Lateral Flexion (severe limit)
-    cervical_left_lat_flex: { max: 20 }, // NEW: impaired side (20°)
+    // 2. LEFT Lateral Flexion (Full ROM/Unaffected)
+    cervical_left_lat_flex: { max: 45 }, // Full ROM limit (45°)
 
-    // 3. RIGHT Rotation (Full ROM/Unaffected)
-    cervical_right_rotation: { max: 70 }, // Full ROM limit (70°)
+    // 3. RIGHT Rotation (MODERATE LIMIT)
+    cervical_right_rotation: { max: 30 }, // Impaired side (30°)
 
-    // 4. LEFT Rotation (Moderate impairment)
-    cervical_left_rotation: { max: 30 }, // NEW: impaired side (30°)
+    // 4. LEFT Rotation (Full ROM/Unaffected)
+    cervical_left_rotation: { max: 70 }, // Full ROM limit (70°)
     
     // Ensure the required default is still present for MMT token scaling
     default_unrestricted: { max: 99.0 }
