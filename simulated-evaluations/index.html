@@ -256,11 +256,18 @@ textarea{
 <div class="modal-backdrop" id="modalBackdrop">
   <div class="modal">
     <div class="modal-title">What do you want to do next?</div>
-    <button class="choice-btn" id="correctChoice">Start Goniometry Case Mode</button>
-    <button class="choice-btn wrong">Review Documentation)</button>
-    <button class="choice-btn wrong">Jump to Prognosis </button>
+
+    <!-- First step (merged functional + ROM observation) -->
+    <button class="choice-btn" id="correctChoice">Functional / ROM Observation</button>
+
+    <!-- Steps that should trigger warning -->
+    <button class="choice-btn wrong">Goniometry</button>
+    <button class="choice-btn wrong">MMT Test</button>
+    <button class="choice-btn wrong">Jump to Prognosis</button>
+
   </div>
 </div>
+
 
 <script>
 /* -------- LOAD CASE FILE -------- */
@@ -309,6 +316,28 @@ document.getElementById("caseBtn").onclick = async () => {
   document.getElementById("docCard").style.display = "block";
   document.getElementById("docCard").style.pointerEvents = "none";
 };
+function resetChoiceModal() {
+  const modal = document.querySelector("#modalBackdrop .modal");
+  modal.innerHTML = `
+    <div class="modal-title">What do you want to do next?</div>
+    <button class="choice-btn" id="correctChoice">Start Goniometry Case Mode</button>
+    <button class="choice-btn wrong">MMT test</button>
+    <button class="choice-btn wrong">Jump to Prognosis</button>
+  `;
+
+  // rebind buttons after reset
+  document.getElementById("correctChoice").onclick = () => {
+    window.location.href =
+      "https://kingto89.github.io/ROMetrics.com/goniometry-trainer/?caseToken=GONIO-CERVICAL-001";
+  };
+
+  document.querySelectorAll(".wrong").forEach(btn => {
+    btn.onclick = () => {
+      const clickEvent = new Event("click");
+      btn.dispatchEvent(clickEvent);
+    };
+  });
+}
 
 
 /* -------- UNLOCK DOCUMENTATION -------- */
@@ -332,69 +361,53 @@ document.getElementById("readBtn").onclick = () => {
   showChoiceModal();
 };
 
-// 3) Wrong choices → show warning modal
+// WRONG CHOICE → SHOW WARNING MODAL
 document.querySelectorAll(".wrong").forEach(btn => {
   btn.onclick = () => {
-    showWarning();
+    const modal = document.querySelector("#modalBackdrop .modal");
+
+    modal.innerHTML = `
+      <div class="modal-title">Before You Proceed</div>
+
+      <p style="color:#9ca3af;font-size:13px;margin-bottom:10px;">
+        This step isn't normally first in clinical workflow.<br>
+        You may continue, but consider the recommended order.
+      </p>
+
+      <div style="
+        border:1px solid var(--accent);
+        padding:10px;
+        border-radius:8px;
+        background:rgba(56,189,248,0.08);
+        margin-bottom:12px;
+        font-size:13px;
+        line-height:1.45;
+        color:var(--text);
+      ">
+        <strong style="color:var(--accent)">Recommended Flow:</strong><br>
+        • Observation & functional screen<br>
+        • AROM/PROM findings<br>
+        • Goniometry<br>
+        • MMT as needed<br>
+      </div>
+
+      <button class="choice-btn" id="proceedAnyway">Proceed Anyway</button>
+      <button class="choice-btn" id="cancelWarning">Back to Menu</button>
+    `;
+
     document.getElementById("modalBackdrop").classList.add("active");
+
+    document.getElementById("proceedAnyway").onclick = () => {
+      document.getElementById("modalBackdrop").classList.remove("active");
+    };
+
+    document.getElementById("cancelWarning").onclick = () => {
+      resetChoiceModal();
+      document.getElementById("modalBackdrop").classList.add("active");
+    };
   };
 });
 
-// 4) Correct choice → launches case mode
-document.getElementById("correctChoice").onclick = () => {
-  window.location.href =
-    "https://kingto89.github.io/ROMetrics.com/goniometry-trainer/?caseToken=GONIO-CERVICAL-001";
-};
-/* ==========================================
-   WARNING MODAL (NO ANSWERS, NO NUMBERS)
-========================================== */
-function showWarning(step) {
-  const modal = document.getElementById("modal");
-
-  const recommended = `
-    <div style="
-      border:1px solid var(--accent);
-      padding:10px;
-      border-radius:8px;
-      background:rgba(56,189,248,0.08);
-      margin-bottom:12px;
-      font-size:13px;
-      line-height:1.45;
-      color:var(--text);
-    ">
-      <strong style="color:var(--accent)">Recommended Order:</strong><br>
-      • Goniometry — establishes baseline ROM findings.<br>
-      • Motion Lab — visualizes movement quality and compensations.<br>
-      • MMT — evaluates strength after ROM/motion are understood.<br>
-      <br>
-      Following this order supports normal clinical reasoning.
-    </div>
-  `;
-
-  modal.innerHTML = `
-    <div class="modal-title">Before You Proceed</div>
-
-    <p style="color:#9ca3af;font-size:13px;margin-bottom:10px;">
-      This isn’t the standard first step for clinical workflow.
-      You can continue, but consider the recommended flow.
-    </p>
-
-    ${recommended}
-
-    <button class="choice-btn" id="proceedBtn">Proceed Anyway</button>
-    <button class="choice-btn" id="cancelBtn" style="background:#1b2537;">
-      Close & Choose Again
-    </button>
-  `;
-
-  document.getElementById("proceedBtn").onclick = () => proceed(step);
-  document.getElementById("cancelBtn").onclick = () => showChoiceModal();
-}
-  
-function proceed() {
-  document.getElementById("modalBackdrop").classList.remove("active");
-}
-  
 </script>
 
 </body>
