@@ -307,6 +307,34 @@ document.getElementById("ntLog").onclick = () => {
   const snippet = `NUM_TWEAKS["${key}"] = { x:${x}, y:${y}, rot:${rot} };`;
   console.log("FINAL NUMBER FIX →", snippet);
 };
+const NUM_TWEAKS = {
+  "numsOut:80:1": { x:19.4,  y:110.3, rot:180 },
+  "numsOut:80:2": { x:-19.4, y:110.3, rot:180 },
+  "numsIn:10:1":  { x:-16.5, y:93.6,  rot:180 }
+};
+
+function applyNumTweaks(){
+  Object.entries(NUM_TWEAKS).forEach(([key, cfg]) => {
+    const [groupId, label, indexStr] = key.split(":");   // e.g. "numsOut","80","1"
+    const idx = parseInt(indexStr, 10);
+
+    const group = document.getElementById(groupId);
+    if (!group) return;
+
+    const matches = Array.from(group.querySelectorAll("text"))
+      .filter(t => (t.textContent || "").trim() === label);
+
+    const node = matches[idx];
+    if (!node) return;
+
+    const { x, y, rot } = cfg;
+    node.setAttribute("x", x);
+    node.setAttribute("y", y);
+    node.setAttribute("transform", `rotate(${rot} ${x} ${y})`);
+  });
+}
+
+window.addEventListener("load", applyNumTweaks);
 
 </script>
 
@@ -2724,35 +2752,6 @@ const clock = new THREE.Clock();
   <div id="noteContent" style="margin-top:10px; font-size:13px; line-height:1.45;"></div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js"></script>
-<script>
-  // 🔧 Saved number tweaks from the tuner
-  const NUM_TWEAKS = {
-    "numsOut:80:1": { x:19.4, y:110.3, rot:180 },
-    "numsOut:80:2"] = { x:-19.4, y:110.3, rot:180 },
-  "numsIn:10:1"] = { x:-16.5, y:93.6, rot:180 }
-  };
-
-  function applyNumTweaks(){
-    Object.entries(NUM_TWEAKS).forEach(([key, cfg]) => {
-      const [parentId, txt, idxStr] = key.split(":");
-      const parent = document.getElementById(parentId);
-      if (!parent) return;
-
-      const siblings = Array.from(parent.querySelectorAll("text"))
-        .filter(n => (n.textContent || "").trim() === txt);
-
-      const node = siblings[Number(idxStr)];
-      if (!node) return;
-
-      const { x, y, rot } = cfg;
-      node.setAttribute("x", x);
-      node.setAttribute("y", y);
-      node.setAttribute("transform", `rotate(${rot} ${x} ${y})`);
-    });
-  }
-
-  // run once after everything is loaded
-  window.addEventListener("load", applyNumTweaks);
 </script>
   
 </body>
