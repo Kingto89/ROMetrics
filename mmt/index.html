@@ -610,6 +610,7 @@ function updateResistanceFill() {
     const maxTime = 7.0; 
     
  // --- START OF ADJUSTED CASE MODE CLAMPING LOGIC ---
+// --- START OF FINAL FIX FOR MMT ROTATION CAP ---
 let maxAllowedTime = maxTime;
 
 if (window.MMT_CASE_MODE && window.MMT_CASE_MODE.active) {
@@ -651,25 +652,20 @@ if (window.MMT_CASE_MODE && window.MMT_CASE_MODE.active) {
         currentGrade = status.grade;
     }
 
-if (elapsed >= maxAllowedTime) {
-    clearInterval(resistanceTimer);
-    resistanceTimer = null;
-    applyBodyPositionFromSelection();
-    
-    const finalGrade = elapsed >= 7.0 ? 5 : 4; // If the test was capped early (<7.0s), the max achieved is Grade 4.
-    
-    // Get the display name of the selected test
-    const testName = actionSel.options[actionSel.selectedIndex].text.split('(')[0].trim();
-
-    if (maxAllowedTime < 7.0) {
-        // Output the specific test name and the 4/5 cap
-        $("msg").textContent = `Case Cap Hit: ${testName} 4/5.`;
-    } else {
-        $("msg").textContent = `Test finished. Recorded score: Grade 5!`;
-    }
-}
-            // --- END REPLACEMENT FOR FINAL MESSAGE BLOCK ---
-                    
+    // Check against the maximum allowed time (either 7.0s or the case cap)
+    if (elapsed >= maxAllowedTime) {
+        clearInterval(resistanceTimer);
+        resistanceTimer = null;
+        applyBodyPositionFromSelection();
+        
+        const finalGrade = elapsed >= 7.0 ? 5 : 4; // If the test was capped early (<7.0s), the max achieved is Grade 4.
+        
+        if (maxAllowedTime < 7.0) {
+            $("msg").textContent = `Case Mode Cap: Max Grade achieved is 4 (4/5).`;
+        } else {
+            $("msg").textContent = `Test finished. Recorded score: Grade 5!`;
+        }
+        
         testButton.disabled = false;
         vectorOverlayBtn.disabled = false; 
     } 
