@@ -171,6 +171,64 @@ optgroup{color:#9fb0c9;font-style:normal}
   import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
   import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
   import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
+
+/* =========================================
+   ROM CASE TOKEN DEFINITIONS (Drop-In)
+   ========================================= */
+const ROM_CASE_TOKENS = {
+    "LAB-CERVICAL-001": {
+        caseId: "case_001",
+        label: "Cervical Impairment: Right-Sided ROM Deficit",
+        
+        // --- UI CONTROL: Only allow Upper Body Motions ---
+        allowedRegions: ["Cervical", "Shoulder", "Elbow", "Wrist"], 
+        disableAdvancedMenu: true, // Hide the Bone (Advanced) details menu
+        
+        // --- IMPAIRMENTS: ROM Limits (Max Measured Angles) ---
+        impairments: {
+            cerv_rot_r: { max: 30 },  // Right Rotation (70 -> 30)
+            cerv_lat_r: { max: 20 },  // Right Lateral Flexion (45 -> 20)
+            // Left side movements and Flexion/Extension remain unrestricted (will use default caps)
+        },
+        
+        // --- VISUAL FEEDBACK: Shape Keys for Pain Grimace ---
+        painShapeKeys: [
+            // Activates a wince effect when limit is hit
+            { key: 'Expressions_browsMidVert_max', value: 0.9 }, // Furrow brow
+            { key: 'Expressions_eyeSquintL_max', value: 0.7 },
+            { key: 'Expressions_eyeSquintR_max', value: 0.7 },
+            { key: 'Expressions_mouthClosed_min', value: 0.8 } // Tighten/compress mouth
+        ],
+
+        // --- NOTES OVERLAY CONTENT ---
+        notes: {
+            // Constant Floating Note (Sensation)
+            constantNote: `
+                Sensation:
+                - Dermatomes C2–T1 intact
+                - No radiating symptoms
+            `,
+            // Pop-up Note (Case Clues) - triggered on first movement attempt
+            cluesNote: `
+                Case Clues:
+                - Direction-specific ROM loss
+                - Pain-limited strength
+                - No sensory involvement
+                - Mechanical pattern with positional onset
+            `
+        }
+    }
+};
+
+window.ROM_CASE_MODE = {
+    active: false,
+    token: null,
+    impairments: {},
+    notes: {}
+};
+
+
+    
 /* ===== UI ===== */
 const msg = document.getElementById("msg");
 const logEl = document.getElementById("log");
@@ -490,7 +548,25 @@ function populateBones(){
 
   boneSel2.appendChild(spineGroup2);
   boneSel2.appendChild(rightGroup2);
+// ==========================================================
+//  NEW ROM CASE LOGIC HERE (REPLACEMENT FOR STEP 2A)
+// ==========================================================
 
+    // --- CASE MODE: DISABLE LOWER BODY SEGMENT & ADVANCED MENU ---
+    if (window.ROM_CASE_MODE.active) {
+        // Disable and hide Lower Body segment button
+        segLower.disabled = true;
+        segLower.style.display = 'none';
+
+        // Hide the Bone (Advanced) details menu
+        const advancedDetails = document.querySelector('details');
+        if (advancedDetails) {
+            advancedDetails.style.display = 'none';
+        }
+
+        // Ensure the Motion Segment starts on Upper Body
+        segUpper.click();
+    }
   // ----- Collect bones first so we can sort by ORDER_MAP -----
   const spineArr = [];
   const leftArr  = [];
@@ -1088,19 +1164,62 @@ function applyAnatomicBaseline(){
   });
 
 actionDeg.addEventListener("input", ()=> {
-  if (!CURRENT_ACTION) return;
+    if (!CURRENT_ACTION) return;
 
-  let val = Math.max(0, Math.min(CURRENT_ACTION.max, parseFloat(actionDeg.value)||0));
+    let val = Math.max(0, Math.min(CURRENT_ACTION.max, parseFloat(actionDeg.value)||0));
+    let isImpairedMotion = false;
+    let limitHit = false;
 
-  // Anticollision cap (keep this early)
-  const cap = capFor(CURRENT_ACTION);
-  if (typeof cap === 'number' && val > cap){
-    val = cap; actionDeg.value = String(val);
-    log(`Anticollision limit hit (${CURRENT_ACTION.label}): max ${cap}°`);
-  }
+    // --- CASE MODE LOGIC: GRIMACE & LIMITS ---
+    if (window.ROM_CASE_MODE.active) {
+        const token = window.ROM_CASE_MODE.token;
+        let cap = capFor(CURRENT_ACTION);
 
-  // Signed degrees for the chosen direction
-  let signed = CURRENT_ACTION.sign * val;
+        // Check if current motion is one of the impaired ones
+        if (CURRENT_ACTION.key === 'cerv_rot' || CURRENT_ACTION.key === 'cerv_lat') {
+            const side = CURRENT_ACTION.label.includes('Right') ? 'r' : 'l';
+            const key = `${CURRENT_ACTION.key}_${side}`; 
+            
+            // Re-check cap against the specific impairment key if one exists
+            if (token.impairments[key]) {
+                cap = token.impairments[key].max;
+                isImpairedMotion = true;
+            }
+        }
+
+        // Apply Hard Stop and Grimace Trigger
+        if (typeof cap === 'number' && val > cap) {
+            val = cap; actionDeg.value = String(val);
+            limitHit = true;
+            
+            if (isImpairedMotion) {
+                // 1. TRIGGER GRIMACE
+                token.painShapeKeys.forEach(s => {
+                    model.getObjectByName('head').morphTargetInfluences[model.getObjectByName('head').morphTargetDictionary[s.key]] = s.value;
+                });
+                // 2. TRIGGER CLUES POP-UP ON FIRST ATTEMPT
+                if (!window.ROM_CASE_MODE.notes.cluesShown) {
+                    alert(token.notes.cluesNote);
+                    window.ROM_CASE_MODE.notes.cluesShown = true;
+                }
+            }
+        } else {
+             // DEACTIVATE GRIMACE
+             if (isImpairedMotion) {
+                token.painShapeKeys.forEach(s => {
+                    model.getObjectByName('head').morphTargetInfluences[model.getObjectByName('head').morphTargetDictionary[s.key]] = 0;
+                });
+            }
+        }
+        
+        if (limitHit) {
+             log(`Motion Limit Hit (${CURRENT_ACTION.label}): max ${val}°`);
+        }
+    }
+    // --- END CASE MODE LOGIC ---
+
+    // Signed degrees for the chosen direction
+    let signed = CURRENT_ACTION.sign * val;
 
   // === Smooth IR/ER path (compose with Abd/Add from same baseline) ===
   if (CURRENT_ACTION.key==='sh_irer_l' || CURRENT_ACTION.key==='sh_irer_r'){
@@ -1280,7 +1399,57 @@ resetModel.onclick = ()=>{
     wrist.quaternion.copy(qBind).multiply(new THREE.Quaternion().setFromEuler(e));
     log(`Wrist ${side.toUpperCase()} (hand_${side}) PS = ${deg}°`);
   }
+// =======================================================
+// ➡️ INSERT NEW loadROMCaseMode FUNCTION (STEP 2B) HERE
+// =======================================================
 
+function loadROMCaseMode() {
+    const token = new URLSearchParams(window.location.search).get("caseToken");
+    const cfg = token && ROM_CASE_TOKENS[token];
+
+    if (!cfg) return;
+
+    window.ROM_CASE_MODE.active = true;
+    window.ROM_CASE_MODE.token = cfg;
+    window.ROM_CASE_MODE.impairments = cfg.impairments;
+    window.ROM_CASE_MODE.notes = cfg.notes;
+    
+    // --- 1. APPLY INITIAL POSE & COLLISION ---
+    // Enforce seated pose for cervical AROM
+    resetModel.click(); // Reset to default
+    // Set position to seated on the plinth edge
+    mx.value="0"; my.value="-0.25"; mz.value="0.35"; ms.value="100"; myaw.value="180"; 
+    if (model) {
+        model.position.set(0, -0.25, 0.35); 
+        model.scale.setScalar(1.0);
+        model.rotation.y = THREE.MathUtils.degToRad(180);
+    }
+    
+    // Set up collision limits
+    COLLIM.enabled = true; // Global collision enabled
+    COLLIM.cervRotRMax = cfg.impairments.cerv_rot_r.max; // 30 degrees
+    COLLIM.cervRotLMax = 80; // Left side WNL
+    // NOTE: In the Motion Lab code, cerv_lat uses trunkLatRMax/LMax keys.
+    COLLIM.trunkLatRMax = cfg.impairments.cerv_lat_r.max; // 20 degrees
+    COLLIM.trunkLatLMax = 45; // Left side WNL
+    COLLIM.save(); // Save updated collision limits
+
+    // --- 2. DISPLAY CONSTANT NOTES (SENSATION) ---
+    const constantNote = document.createElement("div");
+    constantNote.id = "caseConstantNote";
+    // Replace newlines with <br> for HTML display
+    constantNote.innerHTML = cfg.notes.constantNote.replace(/\n/g, '<br>').replace(/  +/g, '');
+    constantNote.style.cssText = "position:fixed; top:12px; right:12px; width:220px; padding:10px; background:rgba(30,41,59,0.95); border:1px solid #334155; border-radius:8px; font-size:13px; color:#e2e8f0; z-index:99; white-space:pre-wrap; box-shadow:0 4px 8px rgba(0,0,0,0.3);";
+    document.body.appendChild(constantNote);
+
+    // Run the UI cleanup function (Step 2A)
+    populateBones(); 
+}
+
+// ---------------------------------------------------------
+//  new function before loadModel runs
+// ---------------------------------------------------------
+loadROMCaseMode();
 /* ===== Hidden Anatomic Tuner (dev-only, non-mirrored) ===== */
 let tunerEl = null, tunerVisible = false;
 function ensureAnatomicTuner() {
