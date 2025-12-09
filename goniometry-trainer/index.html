@@ -1955,35 +1955,46 @@ actionDeg.addEventListener("input", ()=> {
 
   // Signed degrees for the chosen direction line from original logic
   let signed = CURRENT_ACTION.sign * val;
-  // === CASE ROM CLAMPS (CERVICAL) ===  CASE CHECKSPOT
-  if (window.GONIO_CASE_MODE && window.GONIO_CASE_MODE.active){
+ // === CASE ROM CLAMPS (CERVICAL) ===
+if (window.GONIO_CASE_MODE && window.GONIO_CASE_MODE.active){
+    let clamped = val;
+    let impairmentKey = null;
 
-    // 1) Cervical Lateral Flexion — LEFT
-    //    (your setup uses negative for left)
-    if (CURRENT_ACTION.key === 'cerv_lat' && signed < 0){
-      const raw     = -signed; // magnitude
-      const clamped = clampAngleForCase(raw, 'cervical_left_lat_flex');
-      if (clamped < raw){
-        signed          = -clamped;      // keep it on the left side
-        val             = clamped;
-        actionDeg.value = String(clamped);
-      }
+    // 1. CERVICAL LATERAL FLEXION
+    if (CURRENT_ACTION.key === 'cerv_lat'){
+        if (CURRENT_ACTION.label.includes('Left')) {
+            // Left Lateral Flexion (signed < 0, raw = -signed)
+            impairmentKey = 'cervical_left_lat_flex';
+        } else if (CURRENT_ACTION.label.includes('Right')) {
+            // Right Lateral Flexion (signed > 0, raw = +signed)
+            impairmentKey = 'cervical_right_lat_flex'; // Mapped impairment key
+        }
     }
 
-    // 2) Cervical Rotation — RIGHT
-    //    (from your mapping, RIGHT uses the negative side)
-    if (CURRENT_ACTION.key === 'cerv_rot' && signed < 0){
-      const raw     = -signed; // magnitude
-      const clamped = clampAngleForCase(raw, 'cervical_right_rotation');
-      if (clamped < raw){
-        signed          = -clamped;      // keep it on the right side
-        val             = clamped;
-        actionDeg.value = String(clamped);
-      }
+    // 2. CERVICAL ROTATION
+    else if (CURRENT_ACTION.key === 'cerv_rot'){
+        if (CURRENT_ACTION.label.includes('Left')) {
+            // Left Rotation (signed > 0, raw = +signed)
+            impairmentKey = 'cervical_left_rotation'; // Mapped impairment key
+        } else if (CURRENT_ACTION.label.includes('Right')) {
+            // Right Rotation (signed < 0, raw = -signed)
+            impairmentKey = 'cervical_right_rotation';
+        }
     }
-  }
 
-  
+    // Apply clamp if a key was found (using the magnitude 'val')
+    if (impairmentKey){
+        clamped = clampAngleForCase(val, impairmentKey);
+        
+        // If the angle was clamped, update the UI slider value and the signed angle.
+        if (clamped < val){
+            val = clamped;
+            signed = CURRENT_ACTION.sign * val;
+            actionDeg.value = String(clamped);
+            log(`Case clamp → ${clamped}° for ${impairmentKey} (${CURRENT_ACTION.label})`);
+        }
+    }
+}
 
 // === DYNAMIC COUPLING: HIP FLEXION to KNEE FLEXION (Only for Non-Sitting) ===
 if (CURRENT_ACTION.key.startsWith('hip_fe_') && CURRENT_ACTION.sign > 0 && positionSel.value !== 'sitting') {
@@ -2877,21 +2888,26 @@ const clock = new THREE.Clock();
   /* =========================
      GONIOMETRY CASE MODE
      ========================= */
+const GONIO_CASE_TOKENS = {
+    "GONIO-CERVICAL-001": {
+      caseId: "case_001",          // must match CASE_FILES id above
+      label:  "Cervical ROM Case", // UI label
+      allowedRegions: ["cervical"],
 
-  const GONIO_CASE_TOKENS = {
-    "GONIO-CERVICAL-001": {
-      caseId: "case_001",          // must match CASE_FILES id above
-      label:  "Cervical ROM Case", // UI label
-      allowedRegions: ["cervical"],
+      // Impairments for this case: max measured angles
+      impairments: {
+        // 1. LEFT Lateral Flexion (Your original limit)
+        cervical_left_lat_flex:  { max: 35 },  
+        // 2. RIGHT Rotation (Your original limit)
+        cervical_right_rotation: { max: 60 },
 
-      // Impairments for this case: max measured angles
-      // Keys are arbitrary strings you can pass into clampAngleForCase(...)
-      impairments: {
-        cervical_left_lat_flex:  { max: 35 },  // 35° left lateral flexion
-        cervical_right_rotation: { max: 60 }   // 60° right rotation
-      }
-    }
-  };
+        // 3. RIGHT Lateral Flexion (Full ROM/Unaffected)
+        cervical_right_lat_flex: { max: 45 }, // Full ROM limit (e.g., 45°)
+        // 4. LEFT Rotation (Full ROM/Unaffected)
+        cervical_left_rotation:  { max: 70 }, // Full ROM limit (e.g., 70°)
+      }
+    }
+  };
 
   // Small helper: read a query parameter from the URL.
   function getQueryParam(name){
