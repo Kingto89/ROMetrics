@@ -1959,29 +1959,35 @@ actionDeg.addEventListener("input", ()=> {
 if (window.GONIO_CASE_MODE && window.GONIO_CASE_MODE.active){
     let clamped = val;
     let impairmentKey = null;
-// --- START OF REPLACEMENT BLOCK ---
+// --- START OF CORRECTED BLOCK (Enforcing Right-Side Impairment) ---
 // 1. CERVICAL LATERAL FLEXION
 if (CURRENT_ACTION.key === 'cerv_lat'){
+    // When the user selects "Lateral Flexion — Right"
     if (CURRENT_ACTION.label.includes('Right')) {
-        // GOAL: UI says "Right", apply RIGHT side impairment limit (e.g., 20°)
+        // ASSIGN IMPAIRED KEY: Uses the low number (20°)
         impairmentKey = 'cervical_right_lat_flex';
-    } else if (CURRENT_ACTION.label.includes('Left')) {
-        // GOAL: UI says "Left", apply LEFT side full ROM limit (e.g., 45°)
+    } 
+    // When the user selects "Lateral Flexion — Left"
+    else if (CURRENT_ACTION.label.includes('Left')) {
+        // ASSIGN FULL ROM KEY: Uses the high number (45°)
         impairmentKey = 'cervical_left_lat_flex';
     }
 }
 
 // 2. CERVICAL ROTATION
 else if (CURRENT_ACTION.key === 'cerv_rot'){
+    // When the user selects "Rotation — Right"
     if (CURRENT_ACTION.label.includes('Right')) {
-        // GOAL: UI says "Right", apply RIGHT side impairment limit (e.g., 60°)
+        // ASSIGN IMPAIRED KEY: Uses the low number (30°)
         impairmentKey = 'cervical_right_rotation';
-    } else if (CURRENT_ACTION.label.includes('Left')) {
-        // GOAL: UI says "Left", apply LEFT side full ROM limit (e.g., 70°)
+    } 
+    // When the user selects "Rotation — Left"
+    else if (CURRENT_ACTION.label.includes('Left')) {
+        // ASSIGN FULL ROM KEY: Uses the high number (70°)
         impairmentKey = 'cervical_left_rotation';
     }
 }
-// --- END OF REPLACEMENT BLOCK ---
+// --- END OF CORRECTED BLOCK ---
 
 // Apply clamp if a key was found (using the magnitude 'val')
 if (impairmentKey){
