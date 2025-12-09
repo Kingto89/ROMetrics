@@ -609,38 +609,29 @@ function updateResistanceFill() {
     const status = getGradeStatus(elapsed);
     const maxTime = 7.0; 
     
-    // --- CASE MODE CLAMPING LOGIC (ENFORCING RIGHT IMPAIRMENT) ---
-    let maxAllowedTime = maxTime;
-    if (window.MMT_CASE_MODE && window.MMT_CASE_MODE.active) {
-        const testKey = actionSel.value;
-        let impairmentKey = 'default_unrestricted';
-        
-        // 1. MMT Cap Check
-        if (testKey === 'Cervical_Flexion') {
-            impairmentKey = 'Cervical_Flexion';
-        } else if (testKey === 'Single_SCM') {
-            impairmentKey = 'Single_SCM';
-        }
+ // --- START OF ADJUSTED CASE MODE CLAMPING LOGIC ---
+let maxAllowedTime = maxTime;
 
-        // 2. ROM Cap Check (Mapping UI Label to Right/Left Keys for ROM tests)
-        // NOTE: This logic is designed for the Motion Lab/Goniometry tools, but is included 
-        // here for consistency if you run ROM tests in this file.
-        if (testKey === 'cerv_lat' || testKey === 'cerv_rot') {
-             const label = CURRENT_ACTION?.label || ""; 
-             
-             // This applies the correct Right-Sided Deficit from the impairment data
-             if (label.includes('Right')) {
-                 impairmentKey = (testKey === 'cerv_lat') ? 'cervical_right_lat_flex' : 'cervical_right_rotation';
-             } else if (label.includes('Left')) {
-                 impairmentKey = (testKey === 'cerv_lat') ? 'cervical_left_lat_flex' : 'cervical_left_rotation';
-             }
-        }
+if (window.MMT_CASE_MODE && window.MMT_CASE_MODE.active) {
+    const testKey = actionSel.value;
+    let impairmentKey = 'default_unrestricted';
 
-        const impairment = window.MMT_CASE_MODE.impairments[impairmentKey];
-        if (impairment && typeof impairment.max_hold_time === 'number') {
-            maxAllowedTime = impairment.max_hold_time;
-        }
-    }
+    // 1. MMT Cap Check (Checks keys defined in your MMT impairment data)
+    if (testKey === 'Cervical_Rotation') { // <-- FIXED KEY CHECK
+        impairmentKey = 'Cervical_Rotation';
+    } else if (testKey === 'Single_SCM') {
+        impairmentKey = 'Single_SCM';
+    } 
+    // Note: Cervical_Flexion is intentionally skipped here to default to Grade 5.
+
+    const impairment = window.MMT_CASE_MODE.impairments[impairmentKey];
+    
+    // Check if the current test has an MMT hold time impairment defined
+    if (impairment && typeof impairment.max_hold_time === 'number') {
+        maxAllowedTime = impairment.max_hold_time;
+    }
+}
+// --- END OF ADJUSTED CASE MODE CLAMPING LOGIC ---
     // --- END CASE MODE CLAMPING LOGIC ---
 
 
