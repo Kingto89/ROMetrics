@@ -266,7 +266,76 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
+import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
+// <--- PLACE TOKEN DEFINITIONS HERE ADDING FOR TOKEN BEGINS---
 
+/* =========================================
+   MMT CASE TOKEN DEFINITIONS (Drop-In)
+   ========================================= */
+const MMT_CASE_TOKENS = {
+    "MMT-CERVICAL-001": {
+        caseId: "case_mmt_001",
+        label: "Cervical Impairment: Left Rotation and Flexion Deficit", 
+        allowedRegions: ["cervical", "scapula", "shoulder", "elbow", "wrist"],
+        impairments: {
+            Cervical_Rotation_Left:    { max_hold_time: 4.5 }, 
+            Cervical_Flexion:          { max_hold_time: 4.5 }, 
+            default_unrestricted:      { max_hold_time: 99.0 }
+        }
+    }
+};
+
+window.MMT_CASE_MODE = {
+    active: false,
+    token: null,
+    impairments: {}
+};
+
+/* --- MMT Case Initialization and Menu Filtering --- */
+
+// Function to check URL for token and apply case mode restrictions
+(function initMMTCaseMode() {
+    const token = new URLSearchParams(window.location.search).get("caseToken");
+    const cfg = token && MMT_CASE_TOKENS[token];
+    
+    if (!cfg) {
+        window.MMT_CASE_MODE.active = false;
+        return;
+    }
+
+    // --- ACTIVATE CASE MODE AND APPLY FILTERS/BANNER ---
+    window.MMT_CASE_MODE.active = true;
+    window.MMT_CASE_MODE.token = token;
+    window.MMT_CASE_MODE.impairments = cfg.impairments;
+
+    // 1. Apply Case Banner (Red text at the top)
+    const banner = document.createElement("div");
+    banner.textContent = `MMT Case Mode Active: ${cfg.label} (Token: ${token})`;
+    banner.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:9999;padding:6px;font-size:14px;font-weight:600;background:#dc2626;color:#fff;text-align:center;";
+    document.body.appendChild(banner);
+
+    // 2. Filter Menu Options (Blocks lower body/trunk regions)
+    const regionsToShow = cfg.allowedRegions;
+    const actionSel = document.getElementById("actionSel");
+    
+    if (actionSel) {
+        Array.from(actionSel.options).forEach(opt => {
+            if (opt.tagName === 'OPTGROUP') {
+                const label = (opt.label || "").toLowerCase().replace(/[^a-z]/g, '');
+                const isAllowed = regionsToShow.some(region => label.includes(region));
+                
+                if (!isAllowed) {
+                    opt.style.display = 'none';
+                    Array.from(opt.children).forEach(child => child.disabled = true);
+                } else {
+                    opt.style.display = '';
+                }
+            }
+        });
+    }
+})();
+
+/* // ADDED for TOKEN ENDS
 /* ==== Hard-wired numeric pose (edit these) ==== */
 const POSE = {
   x: -0.10,   // left(-) / right(+)
