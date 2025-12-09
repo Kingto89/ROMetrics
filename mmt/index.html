@@ -661,7 +661,7 @@ if (window.MMT_CASE_MODE && window.MMT_CASE_MODE.active) {
         const finalGrade = elapsed >= 7.0 ? 5 : 4; // If the test was capped early (<7.0s), the max achieved is Grade 4.
         
         if (maxAllowedTime < 7.0) {
-            $("msg").textContent = `Case Mode Cap: Max Grade achieved is 4 (4/5).`;
+            $("msg").textContent = `Case Mode : Max Grade achieved is 4 (4/5).`;
         } else {
             $("msg").textContent = `Test finished. Recorded score: Grade 5!`;
         }
