@@ -1,369 +1,183 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>ROMetrics — Case Modules Prototype</title>
 
 <style>
-/* ——————————— YOUR ORIGINAL CSS UNCHANGED ——————————— */
-:root{
-  --bg:#020617;
-  --panel:#020617;
-  --panel-soft:#020617;
-  --accent:#38bdf8;
-  --accent-soft:rgba(56,189,248,0.16);
-  --accent-strong:#0ea5e9;
-  --danger:#f97373;
-  --text:#e5e7eb;
-  --muted:#9ca3af;
-  --border:#1f2937;
-  --good:#22c55e;
-  --bad:#f97316;
-}
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{
-  height:100%;
-  background:radial-gradient(circle at top,#1f2937 0,#020617 55%);
-  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-  color:var(--text);
-}
-body{
-  display:flex;
-  align-items:stretch;
-  justify-content:center;
-}
-.app-shell{
-  margin:10px;
-  flex:1;
-  max-width:1100px;
-  border-radius:16px;
-  border:1px solid rgba(148,163,184,.35);
-  background:linear-gradient(135deg,rgba(15,23,42,0.97),rgba(15,23,42,0.99));
-  box-shadow:0 18px 45px rgba(15,23,42,0.95);
-  display:flex;
-  flex-direction:column;
-  overflow:hidden;
-}
-header{
-  padding:10px 14px;
-  border-bottom:1px solid var(--border);
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:8px;
-}
-header .title-block{display:flex;flex-direction:column;gap:3px}
-h1{
-  font-size:16px;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-  display:flex;
-  align-items:center;
-  gap:8px;
-}
-h1 span.logo-pill{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  padding:3px 9px;
-  border-radius:999px;
-  background:var(--accent-soft);
-  font-size:11px;
-  text-transform:none;
-  letter-spacing:0;
-  color:var(--accent-strong);
-}
-header .subtitle{
-  font-size:12px;
-  color:var(--muted);
-}
-.badge-mini{
-  font-size:11px;
-  padding:2px 8px;
-  border-radius:999px;
-  border:1px solid rgba(148,163,184,0.6);
-  color:var(--muted);
-  background:rgba(15,23,42,0.9);
-}
-main{
-  flex:1;
-  display:flex;
-  min-height:0;
-}
-.sidebar{
-  width:240px;
-  min-width:200px;
-  border-right:1px solid var(--border);
-  background:#020617;
-  padding:10px;
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-}
-.sidebar-header{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:2px 2px 4px;
-}
-.sidebar-header h2{
-  font-size:11px;
-  text-transform:uppercase;
-  letter-spacing:.12em;
-  color:var(--muted);
-}
-.case-list{display:flex;flex-direction:column;gap:6px;margin-top:4px}
-.case-item{
-  border-radius:10px;
-  border:1px solid var(--border);
-  padding:8px 9px;
-  background:rgba(15,23,42,0.88);
-  cursor:pointer;
-  display:flex;
-  flex-direction:column;
-  gap:2px;
-  transition:border-color .12s,background .12s,box-shadow .12s,transform .08s;
-}
-.case-item:hover{
-  border-color:var(--accent);
-  box-shadow:0 0 0 1px rgba(56,189,248,0.38);
-  transform:translateY(-1px);
-}
-.case-item.active{
-  border-color:var(--accent-strong);
-  background:linear-gradient(135deg,#0f172a,#020617);
-  box-shadow:0 0 0 1px rgba(56,189,248,0.9);
-}
-.case-title{font-size:13px;font-weight:600}
-.case-tagline{font-size:11px;color:var(--muted)}
-.content{
-  flex:1;
-  padding:12px 14px;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-}
-.content-header{
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:10px;
-}
-.content-header-main{display:flex;flex-direction:column;gap:4px}
-.content-header-main h2{font-size:16px}
-.content-header-main p{font-size:13px;color:var(--muted)}
-.summary-shell{
-  margin-top:4px;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-}
-.card{
-  flex:1;
-  border-radius:12px;
-  border:1px solid var(--border);
-  background:var(--panel-soft);
-  padding:9px 11px;
-}
-.case-preview{font-size:13px;color:var(--muted);line-height:1.5}
-.case-preview strong{color:var(--text)}
-.modal-backdrop{
-  position:fixed;
-  inset:0;
-  background:rgba(15,23,42,0.78);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  z-index:50;
-}
-.modal-backdrop.active{display:flex}
-.modal{
-  width:100%;
-  max-width:520px;
-  margin:10px;
-  border-radius:16px;
-  background:#020617;
-  border:1px solid rgba(148,163,184,0.6);
-  box-shadow:0 22px 60px rgba(15,23,42,0.9);
-  padding:12px 14px 10px;
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-}
-.modal-title{font-size:14px;font-weight:600}
-.modal-pill{
-  font-size:11px;
-  padding:2px 7px;
-  border-radius:999px;
-  border:1px solid var(--border);
-  color:var(--muted);
-}
-.modal-body{
-  margin-top:4px;
-  font-size:13px;
-  color:var(--muted);
-  line-height:1.5;
-  max-height:55vh;
-  overflow:auto;
-}
-.modal-body p{margin-bottom:6px}
-.ghost-btn{
-  border-radius:999px;
-  border:1px solid var(--border);
-  padding:6px 10px;
-  font-size:13px;
-  background:transparent;
-  color:var(--muted);
-  cursor:pointer;
-}
+  :root{
+    --bg:#020617; --panel:#020617; --panel-soft:#020617;
+    --accent:#38bdf8; --accent-soft:rgba(56,189,248,0.16);
+    --accent-strong:#0ea5e9; --danger:#f97373;
+    --text:#e5e7eb; --muted:#9ca3af; --border:#1f2937;
+    --good:#22c55e; --bad:#f97316;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{
+    height:100%;background:radial-gradient(circle at top,#1f2937 0,#020617 55%);
+    font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--text);
+  }
+  body{display:flex;align-items:stretch;justify-content:center;}
+  .app-shell{
+    margin:10px;flex:1;max-width:1100px;border-radius:16px;
+    border:1px solid rgba(148,163,184,.35);
+    background:linear-gradient(135deg,rgba(15,23,42,0.97),rgba(15,23,42,0.99));
+    box-shadow:0 18px 45px rgba(15,23,42,0.95);
+    display:flex;flex-direction:column;overflow:hidden;
+  }
+  header{
+    padding:10px 14px;border-bottom:1px solid var(--border);
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+  }
+  h1{font-size:16px;letter-spacing:.08em;text-transform:uppercase;display:flex;align-items:center;gap:8px;}
+  .logo-pill{
+    padding:3px 9px;border-radius:999px;background:var(--accent-soft);
+    font-size:11px;color:var(--accent-strong);
+  }
+  main{flex:1;display:flex;min-height:0;}
+  .sidebar{
+    width:240px;border-right:1px solid var(--border);
+    background:#020617;padding:10px;display:flex;flex-direction:column;gap:8px;
+  }
+  .case-list{display:flex;flex-direction:column;gap:6px;margin-top:4px}
+  .case-item{
+    border-radius:10px;border:1px solid var(--border);
+    padding:8px 9px;background:rgba(15,23,42,0.88);cursor:pointer;
+    display:flex;flex-direction:column;gap:2px;
+    transition:.12s;
+  }
+  .case-item:hover{border-color:var(--accent);box-shadow:0 0 0 1px rgba(56,189,248,0.38);transform:translateY(-1px);}
+  .case-item.active{border-color:var(--accent-strong);background:linear-gradient(135deg,#0f172a,#020617);}
+  .content{
+    flex:1;padding:12px 14px;display:flex;flex-direction:column;gap:10px;
+  }
+  .summary-shell{margin-top:4px;display:flex;flex-direction:column;gap:10px;}
+  @media(min-width:800px){.summary-shell{flex-direction:row}}
+  .card{
+    flex:1;border-radius:12px;border:1px solid var(--border);
+    background:var(--panel-soft);padding:9px 11px;
+  }
+  /* Documentation Panel */
+  #docPanel{
+    margin-top:14px;border:1px solid var(--border);
+    border-radius:12px;padding:12px 14px;background:#0b1120;
+  }
+  #docPanel.locked{opacity:.35;pointer-events:none;}
+  #docPanel h3{margin-bottom:6px;font-size:15px;}
+  #docPanel textarea{
+    width:100%;min-height:60px;border-radius:8px;border:1px solid var(--border);
+    background:#020617;color:var(--text);padding:6px;font-size:13px;margin-bottom:8px;
+  }
+  #submitDocBtn{
+    margin-top:10px;padding:8px 14px;border-radius:999px;
+    background:var(--accent);color:#0b1120;border:none;font-weight:600;cursor:pointer;
+  }
+  #scoreBox{margin-top:12px;font-size:14px;}
+  .good{color:var(--good);} .bad{color:var(--danger);}
+
+  /* Modal */
+  .modal-backdrop{
+    position:fixed;inset:0;background:rgba(15,23,42,0.78);display:none;
+    align-items:center;justify-content:center;z-index:50;
+  }
+  .modal-backdrop.active{display:flex}
+  .modal{
+    width:100%;max-width:520px;margin:10px;border-radius:16px;
+    background:#020617;border:1px solid rgba(148,163,184,0.6);
+    padding:12px 14px 10px;display:flex;flex-direction:column;gap:8px;
+  }
+  .modal-body{max-height:55vh;overflow:auto;font-size:13px;color:var(--muted);line-height:1.5;}
 </style>
 </head>
 
 <body>
-
 <div class="app-shell">
-
   <header>
     <div class="title-block">
       <h1>ROMetrics <span class="logo-pill">Case Modules</span></h1>
       <div class="subtitle">Prototype flow — Case → View → Read → Launch Modules</div>
     </div>
-    <div class="badge-mini">Module 4 · Prototype</div>
   </header>
 
   <main>
     <aside class="sidebar">
-      <div class="sidebar-header">
-        <h2>Cases</h2>
-      </div>
+      <h2 style="font-size:11px;color:var(--muted);text-transform:uppercase;">Cases</h2>
       <div class="case-list" id="caseList"></div>
     </aside>
 
     <section class="content">
       <div class="content-header">
-        <div class="content-header-main">
+        <div>
           <h2 id="caseTitle">Select a case to begin</h2>
-          <p id="caseSubtitle">Cases load dynamically from Markdown files.</p>
+          <p id="caseSubtitle">Cases load dynamically.</p>
         </div>
-
-        <button id="startBtn" class="primary-btn" disabled>
-          <span class="dot"></span>Open Case
-        </button>
-      </div>
-
-      <div class="status-strip">
-        <span class="label">Status:</span> Waiting for case selection.
+        <button id="startBtn" class="primary-btn" disabled><span class="dot"></span>Open Case</button>
       </div>
 
       <div class="summary-shell">
         <div class="card">
           <h3>Case snapshot</h3>
-          <div id="casePreview" class="case-preview">
-            Choose a case to load its summary here.
-          </div>
-        </div>
-
-        <div class="card">
-          <h3>Case Metadata</h3>
-          <pre id="caseMetadata" style="font-size:11px;color:var(--muted);white-space:pre-wrap;"></pre>
+          <div id="casePreview" class="case-preview">Select a case.</div>
         </div>
       </div>
+
+      <div id="docPanel" class="locked">
+        <h3>Case Documentation</h3>
+        <textarea id="romField" placeholder="Document ROM findings..."></textarea>
+        <textarea id="mmtField" placeholder="Document MMT findings..."></textarea>
+        <textarea id="diagField" placeholder="Your diagnosis..."></textarea>
+        <textarea id="treatmentField" placeholder="Treatment Plan..."></textarea>
+        <textarea id="goalsField" placeholder="Goals..."></textarea>
+        <textarea id="prognosisField" placeholder="Prognosis..."></textarea>
+
+        <button id="submitDocBtn">Submit Documentation</button>
+        <div id="scoreBox"></div>
+      </div>
+
     </section>
-
   </main>
-
 </div>
 
 <!-- Modal -->
 <div class="modal-backdrop" id="modalBackdrop">
-  <div class="modal" id="modal">
-
+  <div class="modal">
     <div class="modal-header">
-      <div>
-        <div class="modal-title" id="modalTitle">Case</div>
-        <div class="modal-pill" id="modalStage">Case Text</div>
-      </div>
-      <button class="ghost-btn" id="closeModalBtn">Close</button>
+      <h3 id="modalTitle"></h3>
+      <button class="ghost-btn" id="closeModal">Close</button>
     </div>
-
     <div class="modal-body" id="modalBody"></div>
-
-    <div class="modal-footer">
-      <button class="ghost-btn" id="closeModalBtn2">Close</button>
-    </div>
-
+    <button class="primary-btn" id="caseReadBtn"><span class="dot"></span>I have read this</button>
   </div>
 </div>
 
 <script>
-/* ————————————————————————————————————
-   CASE FILE DEFINITIONS
-———————————————————————————————————— */
+/* CASE LOADING */
 const CASE_FILES = [
-  { id:"case_001", path:"../assets/cases/case_001.md" }
+  { id:"case_001", path:"./assets/cases/case_001.md" }
 ];
 
-let loadedCases = [];
-let selectedCase = null;
+let loadedCases = [], selectedCase = null;
 
-/* ————————————————————————————————————
-   FUNCTION: Extract FULL JSON BLOCK
-———————————————————————————————————— */
-function extractJsonBlock(text){
-  let depth = 0;
-  let start = text.indexOf("{");
-  if (start === -1) return null;
-
-  for (let i = start; i < text.length; i++){
-    if (text[i] === "{") depth++;
-    if (text[i] === "}") depth--;
-    if (depth === 0){
-      return text.substring(start, i + 1);
-    }
-  }
-  return null;
-}
-
-/* ————————————————————————————————————
-   LOAD CASE FILE
-———————————————————————————————————— */
+/* Parse Markdown */
 async function loadCaseFile(id, path){
   const res = await fetch(path);
   const raw = await res.text();
 
-  const jsonText = extractJsonBlock(raw);
-  let metadata = {};
-  if (jsonText){
-    try { metadata = JSON.parse(jsonText); }
-    catch(e){ console.error("Bad JSON:", e); }
-  }
+  const jsonStart = raw.indexOf("{");
+  const jsonEnd   = raw.indexOf("}")+1;
+  const jsonText  = raw.slice(jsonStart, jsonEnd);
+  const metadata  = JSON.parse(jsonText);
 
-  // Body = everything AFTER the JSON
-  const body = raw.replace(jsonText, "").trim();
-
-  // Extract title (# ...)
-  const titleMatch = body.match(/^#\s*(.+)$/m);
+  const titleMatch = raw.match(/^#\s*(.+)$/m);
   const title = titleMatch ? titleMatch[1] : "Untitled Case";
 
-  // Preview = first readable paragraph
-  const paragraphs = body.split("\n").map(x=>x.trim()).filter(x=>x.length);
-  const preview = paragraphs[1] ?? "No preview available.";
+  const preview = raw.split("\n").slice(10, 18).join(" ");
 
-  return {
-    id,
-    title,
-    preview,
-    metadata,
-    body
-  };
+  return { id, raw, title, preview, metadata };
 }
 
-/* ————————————————————————————————————
-   INITIALIZE CASES
-———————————————————————————————————— */
 async function initCases(){
-  loadedCases = [];
   for (let c of CASE_FILES){
     loadedCases.push(await loadCaseFile(c.id, c.path));
   }
@@ -373,56 +187,67 @@ async function initCases(){
 function renderCaseList(){
   const list = document.getElementById("caseList");
   list.innerHTML = "";
-
   loadedCases.forEach(c=>{
-    const div = document.createElement("div");
-    div.className = "case-item";
-    div.dataset.id = c.id;
-
-    div.innerHTML = `
-      <div class="case-title">${c.title}</div>
-      <div class="case-tagline">Loaded from Markdown</div>
-    `;
-    div.onclick = ()=>selectCase(c.id);
-
+    const div=document.createElement("div");
+    div.className="case-item";
+    div.innerHTML=`<div class='case-title'>${c.title}</div>`;
+    div.onclick=()=>selectCase(c.id);
     list.appendChild(div);
   });
 }
 
 function selectCase(id){
-  selectedCase = loadedCases.find(x=>x.id === id);
-
-  document.getElementById("caseTitle").textContent = selectedCase.title;
-  document.getElementById("casePreview").textContent = selectedCase.preview;
-
-  document.getElementById("caseMetadata").textContent =
-    JSON.stringify(selectedCase.metadata, null, 2);
-
-  document.getElementById("startBtn").disabled = false;
+  selectedCase=loadedCases.find(x=>x.id===id);
+  document.getElementById("caseTitle").textContent=selectedCase.title;
+  document.getElementById("casePreview").textContent=selectedCase.preview;
+  document.getElementById("startBtn").disabled=false;
 }
 
-/* ————————————————————————————————————
-   MODAL HANDLERS
-———————————————————————————————————— */
-function openModal(){
-  document.getElementById("modalTitle").textContent = selectedCase.title;
-  document.getElementById("modalBody").textContent = selectedCase.body;
+/* MODAL */
+document.getElementById("startBtn").onclick=()=>{
+  document.getElementById("modalBody").textContent=selectedCase.raw;
+  document.getElementById("modalTitle").textContent=selectedCase.title;
   document.getElementById("modalBackdrop").classList.add("active");
-}
-
-function closeModal(){
+};
+document.getElementById("closeModal").onclick=()=>{
   document.getElementById("modalBackdrop").classList.remove("active");
-}
+};
 
-document.getElementById("startBtn").onclick = openModal;
-document.getElementById("closeModalBtn").onclick = closeModal;
-document.getElementById("closeModalBtn2").onclick = closeModal;
+document.getElementById("caseReadBtn").onclick=()=>{
+  document.getElementById("modalBackdrop").classList.remove("active");
+  document.getElementById("docPanel").classList.remove("locked");
+};
 
-/* ————————————————————————————————————
-   START
-———————————————————————————————————— */
+/* SCORING */
+document.getElementById("submitDocBtn").onclick=()=>{
+  const meta = selectedCase.metadata;
+  const scoreBox = document.getElementById("scoreBox");
+  let score = 0;
+
+  const studentROM = document.getElementById("romField").value;
+  const targetROM = meta.limits.goniometry_limit.cervical_left_rotation;
+
+  if(studentROM.match(/\d+/)){
+    const n = parseInt(studentROM.match(/\d+/)[0]);
+    if(Math.abs(n-targetROM)<=5){score+=1;}
+  }
+
+  const studentMMT = document.getElementById("mmtField").value.trim();
+  const targetMMT = meta.limits.mmt_target_grade.left_cervical_rotators;
+  if(studentMMT.includes(targetMMT)) score+=1;
+
+  const acceptedDx = ["facet dysfunction","joint sprain","mechanical cervical pain","cervical sprain"];
+  const studentDx = document.getElementById("diagField").value.toLowerCase();
+  if(acceptedDx.some(d=>studentDx.includes(d))) score+=1;
+
+  let level="Novice";
+  if(score===2) level="Apprentice";
+  if(score===3) level="Clinical";
+
+  scoreBox.innerHTML=`Score: ${score}/3 — <span class="${score===3?'good':'bad'}">${level}</span>`;
+};
+
 initCases();
 </script>
-
 </body>
 </html>
