@@ -2883,7 +2883,7 @@ const clock = new THREE.Clock();
   window.GONIO_CASE_MODE.allowedRegions = cfg.allowedRegions.slice();
   window.GONIO_CASE_MODE.impairments    = Object.assign({}, cfg.impairments);
 
-  // 1) Case banner at BOTTOM
+  // === 1) Case banner at BOTTOM ===
   const banner = document.createElement("div");
   banner.id = "goniometry-case-banner";
   banner.textContent = `Case Mode: ${cfg.label} — token ${token}`;
@@ -2901,11 +2901,11 @@ const clock = new THREE.Clock();
   banner.style.boxShadow = "0 -2px 6px rgba(0,0,0,0.4)";
   document.body.appendChild(banner);
 
-  // 2) After UI is ready, force Body Region to ONLY "Cervical Spine"
+  // === 2) BODY REGION: auto-select ONLY "Cervical Spine" and lock ===
   function lockCervicalBodyRegion(){
     const regionSel = document.getElementById("regionSel");
 
-    // wait until the dropdown exists and has options
+    // wait until dropdown exists and has options
     if (!regionSel || !regionSel.options || !regionSel.options.length){
       requestAnimationFrame(lockCervicalBodyRegion);
       return;
@@ -2914,7 +2914,7 @@ const clock = new THREE.Clock();
     const targetLabel = "Cervical Spine";
     let hasCervical = false;
 
-    // first pass: check if that label exists
+    // check if that label exists
     Array.from(regionSel.options).forEach(opt => {
       const label = (opt.textContent || "").trim();
       if (label === targetLabel) hasCervical = true;
@@ -2926,7 +2926,7 @@ const clock = new THREE.Clock();
       return;
     }
 
-    // second pass: remove everything that is NOT "Cervical Spine"
+    // remove everything that is NOT "Cervical Spine"
     Array.from(regionSel.options).forEach(opt => {
       const label = (opt.textContent || "").trim();
       if (label !== targetLabel){
@@ -2940,7 +2940,41 @@ const clock = new THREE.Clock();
     regionSel.disabled = true;
   }
 
+  // === 3) ACTIONS: only keep motions that start with "Cervical" ===
+  function lockCervicalActionsOnly(){
+    const actionSel = document.getElementById("actionSel");
+
+    if (!actionSel || !actionSel.options || !actionSel.options.length){
+      requestAnimationFrame(lockCervicalActionsOnly);
+      return;
+    }
+
+    Array.from(actionSel.options).forEach(opt => {
+      const label = (opt.textContent || "").trim().toLowerCase();
+      if (!label) return;
+
+      // keep placeholder like "(Select a motion…)" if you have it
+      if (label.includes("select a motion")) return;
+
+      // remove anything that does NOT start with "cervical"
+      if (!label.startsWith("cervical")){
+        opt.remove();
+      }
+    });
+
+    // Optional: auto-select first cervical motion if no placeholder is left
+    if (actionSel.options.length){
+      const firstLabel =
+        (actionSel.options[0].textContent || "").toLowerCase();
+      if (!firstLabel.includes("select a motion")){
+        actionSel.selectedIndex = 0;
+        actionSel.dispatchEvent(new Event("change", { bubbles:true }));
+      }
+    }
+  }
+
   lockCervicalBodyRegion();
+  lockCervicalActionsOnly();
 })();
 
 
