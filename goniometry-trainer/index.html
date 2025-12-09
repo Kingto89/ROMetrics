@@ -350,6 +350,23 @@ document.getElementById("ntLog").onclick = () => {
   const snippet = `NUM_TWEAKS["${key}"] = { x:${x}, y:${y}, rot:${rot} };`;
   console.log("FINAL NUMBER FIX →", snippet);
 };
+<style>
+  #numTunerPanel{
+    position:fixed;right:20px;bottom:20px;
+    background:#0f172a;border:1px solid #334155;
+    padding:10px;border-radius:10px;z-index:9999;
+    display:none;color:#e2e8f0;font-size:12px;
+  }
+  #numTunerPanel input{width:60px;}
+</style>
+
+<div id="numTunerPanel">
+  <div style="margin-bottom:5px;font-weight:700">Text Tuner</div>
+  X:<input id="ntX" type="number" step="1"><br>
+  Y:<input id="ntY" type="number" step="1"><br>
+  R:<input id="ntR" type="number" step="1"><br>
+  <button id="ntLog">Log</button>
+</div>
 
 </script>
 
