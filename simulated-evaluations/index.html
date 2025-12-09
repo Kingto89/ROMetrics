@@ -3,165 +3,196 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>ROMetrics — Case Modules Prototype</title>
+<title>ROMetrics — Case Modules</title>
 
 <style>
   :root{
-    --bg:#020617; --panel:#020617; --panel-soft:#020617;
-    --accent:#38bdf8; --accent-soft:rgba(56,189,248,0.16);
-    --accent-strong:#0ea5e9; --danger:#f97373;
-    --text:#e5e7eb; --muted:#9ca3af; --border:#1f2937;
+    --bg:#020617; --panel:#0b1120; --panel-soft:#0f172a;
+    --accent:#38bdf8; --accent-strong:#0ea5e9;
+    --border:#1f2937; --muted:#94a3b8; --text:#e5e7eb;
     --good:#22c55e; --bad:#f97316;
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  html,body{
-    height:100%;background:radial-gradient(circle at top,#1f2937 0,#020617 55%);
-    font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--text);
+  body,html{
+    height:100%;background:#020617;
+    font-family:system-ui,Segoe UI,Roboto;color:var(--text);
+    display:flex;justify-content:center;
   }
-  body{display:flex;align-items:stretch;justify-content:center;}
   .app-shell{
-    margin:10px;flex:1;max-width:1100px;border-radius:16px;
-    border:1px solid rgba(148,163,184,.35);
-    background:linear-gradient(135deg,rgba(15,23,42,0.97),rgba(15,23,42,0.99));
-    box-shadow:0 18px 45px rgba(15,23,42,0.95);
-    display:flex;flex-direction:column;overflow:hidden;
+    flex:1;max-width:1100px;margin:10px;
+    background:var(--panel-soft);border-radius:14px;
+    border:1px solid var(--border);overflow:hidden;
+    display:flex;flex-direction:column;
   }
   header{
     padding:10px 14px;border-bottom:1px solid var(--border);
-    display:flex;align-items:center;justify-content:space-between;gap:8px;
+    display:flex;justify-content:space-between;align-items:center;
   }
-  h1{font-size:16px;letter-spacing:.08em;text-transform:uppercase;display:flex;align-items:center;gap:8px;}
-  .logo-pill{
-    padding:3px 9px;border-radius:999px;background:var(--accent-soft);
-    font-size:11px;color:var(--accent-strong);
-  }
-  main{flex:1;display:flex;min-height:0;}
+  main{flex:1;display:flex;min-height:0}
+
+  /* Sidebar */
   .sidebar{
     width:240px;border-right:1px solid var(--border);
-    background:#020617;padding:10px;display:flex;flex-direction:column;gap:8px;
+    background:#020617;padding:11px;
   }
-  .case-list{display:flex;flex-direction:column;gap:6px;margin-top:4px}
   .case-item{
-    border-radius:10px;border:1px solid var(--border);
-    padding:8px 9px;background:rgba(15,23,42,0.88);cursor:pointer;
-    display:flex;flex-direction:column;gap:2px;
-    transition:.12s;
+    padding:8px 9px;border-radius:10px;
+    background:#0f172a;border:1px solid var(--border);
+    margin-bottom:6px;cursor:pointer;transition:.12s;
   }
-  .case-item:hover{border-color:var(--accent);box-shadow:0 0 0 1px rgba(56,189,248,0.38);transform:translateY(-1px);}
-  .case-item.active{border-color:var(--accent-strong);background:linear-gradient(135deg,#0f172a,#020617);}
+  .case-item:hover{border-color:var(--accent)}
+  .case-item.active{
+    border-color:var(--accent-strong);
+    background:#0b1120;
+  }
+
+  /* Content */
   .content{
-    flex:1;padding:12px 14px;display:flex;flex-direction:column;gap:10px;
+    flex:1;padding:14px;display:flex;flex-direction:column;gap:14px;
   }
-  .summary-shell{margin-top:4px;display:flex;flex-direction:column;gap:10px;}
-  @media(min-width:800px){.summary-shell{flex-direction:row}}
   .card{
-    flex:1;border-radius:12px;border:1px solid var(--border);
-    background:var(--panel-soft);padding:9px 11px;
+    background:#0b1120;border:1px solid var(--border);
+    border-radius:12px;padding:10px;
   }
-  /* Documentation Panel */
+  .case-preview{font-size:13px;color:var(--muted)}
+
+  /* Documentation panel */
   #docPanel{
-    margin-top:14px;border:1px solid var(--border);
-    border-radius:12px;padding:12px 14px;background:#0b1120;
+    background:#0b1120;border:1px solid var(--border);
+    border-radius:14px;padding:14px;display:none;
+    margin-top:10px;animation:fadeIn .25s ease;
   }
-  #docPanel.locked{opacity:.35;pointer-events:none;}
-  #docPanel h3{margin-bottom:6px;font-size:15px;}
-  #docPanel textarea{
-    width:100%;min-height:60px;border-radius:8px;border:1px solid var(--border);
-    background:#020617;color:var(--text);padding:6px;font-size:13px;margin-bottom:8px;
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  #docPanel.locked{display:none}
+  #docPanel h3{margin-bottom:8px}
+
+  .doc-field{
+    margin-bottom:12px;
   }
+  .doc-label{font-size:13px;color:var(--muted);margin-bottom:4px}
+  .doc-line{
+    width:100%;border:none;border-bottom:1px solid var(--border);
+    background:transparent;color:var(--text);
+    padding:4px 2px;font-size:14px;
+  }
+  textarea{
+    width:100%;min-height:70px;border-radius:8px;
+    background:#020617;border:1px solid var(--border);
+    padding:6px;font-size:13px;color:var(--text);
+  }
+
   #submitDocBtn{
-    margin-top:10px;padding:8px 14px;border-radius:999px;
-    background:var(--accent);color:#0b1120;border:none;font-weight:600;cursor:pointer;
+    padding:8px 14px;border:none;border-radius:999px;
+    background:var(--accent);color:#000;font-weight:600;
+    cursor:pointer;margin-top:10px;
   }
-  #scoreBox{margin-top:12px;font-size:14px;}
-  .good{color:var(--good);} .bad{color:var(--danger);}
 
   /* Modal */
   .modal-backdrop{
-    position:fixed;inset:0;background:rgba(15,23,42,0.78);display:none;
-    align-items:center;justify-content:center;z-index:50;
+    position:fixed;inset:0;display:none;
+    background:rgba(0,0,0,0.7);justify-content:center;align-items:center;
   }
   .modal-backdrop.active{display:flex}
   .modal{
-    width:100%;max-width:520px;margin:10px;border-radius:16px;
-    background:#020617;border:1px solid rgba(148,163,184,0.6);
-    padding:12px 14px 10px;display:flex;flex-direction:column;gap:8px;
+    width:520px;background:#0b1120;border:1px solid var(--border);
+    border-radius:12px;padding:14px;max-height:80vh;overflow:auto;
   }
-  .modal-body{max-height:55vh;overflow:auto;font-size:13px;color:var(--muted);line-height:1.5;}
+  .modal h3{margin-bottom:8px}
+  #modalBody{white-space:pre-wrap;font-size:13px;color:var(--muted)}
+  .primary-btn{
+    margin-top:10px;padding:8px 14px;border:none;border-radius:999px;
+    background:var(--accent);color:#000;font-weight:600;cursor:pointer;
+  }
 </style>
 </head>
 
 <body>
 <div class="app-shell">
-  <header>
-    <div class="title-block">
-      <h1>ROMetrics <span class="logo-pill">Case Modules</span></h1>
-      <div class="subtitle">Prototype flow — Case → View → Read → Launch Modules</div>
+<header>
+  <h2 style="font-size:16px;">ROMetrics <span style="color:var(--accent)">Case Modules</span></h2>
+</header>
+
+<main>
+  <aside class="sidebar">
+    <h3 style="font-size:12px;color:var(--muted);text-transform:uppercase;margin-bottom:6px;">Cases</h3>
+    <div id="caseList"></div>
+  </aside>
+
+  <section class="content">
+    <div>
+      <h2 id="caseTitle">Select a case to begin</h2>
+      <p id="caseSubtitle" style="font-size:13px;color:var(--muted)">Cases load dynamically.</p>
+      <button id="startBtn" class="primary-btn" disabled>Open Case</button>
     </div>
-  </header>
 
-  <main>
-    <aside class="sidebar">
-      <h2 style="font-size:11px;color:var(--muted);text-transform:uppercase;">Cases</h2>
-      <div class="case-list" id="caseList"></div>
-    </aside>
+    <div class="card">
+      <h3>Case Snapshot</h3>
+      <div id="casePreview" class="case-preview">Select a case.</div>
+    </div>
 
-    <section class="content">
-      <div class="content-header">
-        <div>
-          <h2 id="caseTitle">Select a case to begin</h2>
-          <p id="caseSubtitle">Cases load dynamically.</p>
-        </div>
-        <button id="startBtn" class="primary-btn" disabled><span class="dot"></span>Open Case</button>
+    <!-- Documentation Panel -->
+    <div id="docPanel" class="locked">
+      <h3>Case Documentation</h3>
+
+      <div class="doc-field">
+        <div class="doc-label">ROM Findings</div>
+        <input class="doc-line" id="romField" placeholder="Example: Left rotation limited to 40° (pain-limited)">
       </div>
 
-      <div class="summary-shell">
-        <div class="card">
-          <h3>Case snapshot</h3>
-          <div id="casePreview" class="case-preview">Select a case.</div>
-        </div>
+      <div class="doc-field">
+        <div class="doc-label">MMT Findings</div>
+        <input class="doc-line" id="mmtField" placeholder="Example: Left cervical rotators 4/5">
       </div>
 
-      <div id="docPanel" class="locked">
-        <h3>Case Documentation</h3>
-        <textarea id="romField" placeholder="Document ROM findings..."></textarea>
-        <textarea id="mmtField" placeholder="Document MMT findings..."></textarea>
-        <textarea id="diagField" placeholder="Your diagnosis..."></textarea>
-        <textarea id="treatmentField" placeholder="Treatment Plan..."></textarea>
-        <textarea id="goalsField" placeholder="Goals..."></textarea>
-        <textarea id="prognosisField" placeholder="Prognosis..."></textarea>
-
-        <button id="submitDocBtn">Submit Documentation</button>
-        <div id="scoreBox"></div>
+      <div class="doc-field">
+        <div class="doc-label">Diagnosis</div>
+        <input class="doc-line" id="diagField" placeholder="Enter suspected diagnosis">
       </div>
 
-    </section>
-  </main>
+      <div class="doc-field">
+        <div class="doc-label">Treatment Plan</div>
+        <textarea id="treatmentField" placeholder="Interventions, education, dosage..."></textarea>
+      </div>
+
+      <div class="doc-field">
+        <div class="doc-label">Goals</div>
+        <textarea id="goalsField" placeholder="Short-term and long-term goals"></textarea>
+      </div>
+
+      <div class="doc-field">
+        <div class="doc-label">Prognosis</div>
+        <input class="doc-line" id="prognosisField" placeholder="Good / Fair / Excellent, with reasoning">
+      </div>
+
+      <button id="submitDocBtn">Submit Documentation</button>
+      <div id="scoreBox" style="margin-top:12px;font-size:14px;"></div>
+    </div>
+
+  </section>
+</main>
 </div>
 
-<!-- Modal -->
+<!-- MODAL -->
 <div class="modal-backdrop" id="modalBackdrop">
   <div class="modal">
-    <div class="modal-header">
-      <h3 id="modalTitle"></h3>
-      <button class="ghost-btn" id="closeModal">Close</button>
-    </div>
-    <div class="modal-body" id="modalBody"></div>
-    <button class="primary-btn" id="caseReadBtn"><span class="dot"></span>I have read this</button>
+    <h3 id="modalTitle"></h3>
+    <div id="modalBody"></div>
+    <button id="confirmRead" class="primary-btn">I have read this</button>
   </div>
 </div>
 
 <script>
-/* CASE LOADING */
 const CASE_FILES = [
   { id:"case_001", path:"./assets/cases/case_001.md" }
 ];
 
-let loadedCases = [], selectedCase = null;
+let loadedCases = [];
+let selectedCase = null;
 
-/* Parse Markdown */
+/* Load Markdown Case */
 async function loadCaseFile(id, path){
   const res = await fetch(path);
+  if(!res.ok){ console.error("MD not found:", path); }
   const raw = await res.text();
 
   const jsonStart = raw.indexOf("{");
@@ -170,29 +201,29 @@ async function loadCaseFile(id, path){
   const metadata  = JSON.parse(jsonText);
 
   const titleMatch = raw.match(/^#\s*(.+)$/m);
-  const title = titleMatch ? titleMatch[1] : "Untitled Case";
+  const title = titleMatch ? titleMatch[1] : id;
 
-  const preview = raw.split("\n").slice(10, 18).join(" ");
+  const preview = raw.split("\n").slice(10, 17).join(" ");
 
-  return { id, raw, title, preview, metadata };
+  return { id, raw, metadata, title, preview };
 }
 
 async function initCases(){
-  for (let c of CASE_FILES){
+  for(let c of CASE_FILES){
     loadedCases.push(await loadCaseFile(c.id, c.path));
   }
   renderCaseList();
 }
 
 function renderCaseList(){
-  const list = document.getElementById("caseList");
-  list.innerHTML = "";
+  const list=document.getElementById("caseList");
+  list.innerHTML="";
   loadedCases.forEach(c=>{
-    const div=document.createElement("div");
-    div.className="case-item";
-    div.innerHTML=`<div class='case-title'>${c.title}</div>`;
-    div.onclick=()=>selectCase(c.id);
-    list.appendChild(div);
+    const item=document.createElement("div");
+    item.className="case-item";
+    item.innerHTML=`<div>${c.title}</div>`;
+    item.onclick=()=>selectCase(c.id);
+    list.appendChild(item);
   });
 }
 
@@ -203,51 +234,49 @@ function selectCase(id){
   document.getElementById("startBtn").disabled=false;
 }
 
-/* MODAL */
+/* Modal Show */
 document.getElementById("startBtn").onclick=()=>{
-  document.getElementById("modalBody").textContent=selectedCase.raw;
   document.getElementById("modalTitle").textContent=selectedCase.title;
+  document.getElementById("modalBody").textContent=selectedCase.raw;
   document.getElementById("modalBackdrop").classList.add("active");
 };
-document.getElementById("closeModal").onclick=()=>{
+
+document.getElementById("confirmRead").onclick=()=>{
   document.getElementById("modalBackdrop").classList.remove("active");
+  const docPanel=document.getElementById("docPanel");
+  docPanel.style.display="block";
 };
 
-document.getElementById("caseReadBtn").onclick=()=>{
-  document.getElementById("modalBackdrop").classList.remove("active");
-  document.getElementById("docPanel").classList.remove("locked");
-};
-
-/* SCORING */
+/* Documentation Scoring */
 document.getElementById("submitDocBtn").onclick=()=>{
   const meta = selectedCase.metadata;
-  const scoreBox = document.getElementById("scoreBox");
-  let score = 0;
+  let score=0;
 
-  const studentROM = document.getElementById("romField").value;
-  const targetROM = meta.limits.goniometry_limit.cervical_left_rotation;
-
+  /* ROM tolerance */
+  const studentROM=document.getElementById("romField").value;
+  const targetROM=meta.limits.goniometry_limit.cervical_left_rotation;
   if(studentROM.match(/\d+/)){
-    const n = parseInt(studentROM.match(/\d+/)[0]);
-    if(Math.abs(n-targetROM)<=5){score+=1;}
+    const num=parseInt(studentROM.match(/\d+/)[0]);
+    if(Math.abs(num-targetROM)<=5) score+=1;
   }
 
-  const studentMMT = document.getElementById("mmtField").value.trim();
-  const targetMMT = meta.limits.mmt_target_grade.left_cervical_rotators;
-  if(studentMMT.includes(targetMMT)) score+=1;
+  /* MMT exact */
+  const studentMMT=document.getElementById("mmtField").value;
+  if(studentMMT.includes("4/5")) score+=1;
 
-  const acceptedDx = ["facet dysfunction","joint sprain","mechanical cervical pain","cervical sprain"];
-  const studentDx = document.getElementById("diagField").value.toLowerCase();
-  if(acceptedDx.some(d=>studentDx.includes(d))) score+=1;
+  /* Diagnosis accepted */
+  const dxList=["facet dysfunction","joint sprain","mechanical cervical pain","cervical sprain"];
+  const dx=document.getElementById("diagField").value.toLowerCase();
+  if(dxList.some(x=>dx.includes(x))) score+=1;
 
-  let level="Novice";
-  if(score===2) level="Apprentice";
-  if(score===3) level="Clinical";
+  let level="Novice"; if(score==2) level="Apprentice"; if(score==3) level="Clinical";
 
-  scoreBox.innerHTML=`Score: ${score}/3 — <span class="${score===3?'good':'bad'}">${level}</span>`;
+  document.getElementById("scoreBox").innerHTML=
+    `Score: ${score}/3 — <span class="${score==3?'good':'bad'}">${level}</span>`;
 };
 
 initCases();
 </script>
+
 </body>
 </html>
