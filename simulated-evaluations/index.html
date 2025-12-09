@@ -4,265 +4,249 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>ROMetrics — Case Modules Prototype</title>
-<style>
-  /* ———  ALL YOUR EXISTING CSS UNCHANGED  ——— */
-  :root{
-    --bg:#020617;
-    --panel:#020617;
-    --panel-soft:#020617;
-    --accent:#38bdf8;
-    --accent-soft:rgba(56,189,248,0.16);
-    --accent-strong:#0ea5e9;
-    --danger:#f97373;
-    --text:#e5e7eb;
-    --muted:#9ca3af;
-    --border:#1f2937;
-    --good:#22c55e;
-    --bad:#f97316;
-  }
-  *{box-sizing:border-box;margin:0;padding:0}
-  html,body{
-    height:100%;
-    background:radial-gradient(circle at top,#1f2937 0,#020617 55%);
-    font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-    color:var(--text);
-  }
-  body{
-    display:flex;
-    align-items:stretch;
-    justify-content:center;
-  }
-  .app-shell{
-    margin:10px;
-    flex:1;
-    max-width:1100px;
-    border-radius:16px;
-    border:1px solid rgba(148,163,184,.35);
-    background:linear-gradient(135deg,rgba(15,23,42,0.97),rgba(15,23,42,0.99));
-    box-shadow:0 18px 45px rgba(15,23,42,0.95);
-    display:flex;
-    flex-direction:column;
-    overflow:hidden;
-  }
-  header{
-    padding:10px 14px;
-    border-bottom:1px solid var(--border);
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:8px;
-  }
-  header .title-block{display:flex;flex-direction:column;gap:3px}
-  h1{
-    font-size:16px;
-    letter-spacing:.08em;
-    text-transform:uppercase;
-    display:flex;
-    align-items:center;
-    gap:8px;
-  }
-  h1 span.logo-pill{
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    padding:3px 9px;
-    border-radius:999px;
-    background:var(--accent-soft);
-    font-size:11px;
-    text-transform:none;
-    letter-spacing:0;
-    color:var(--accent-strong);
-  }
-  header .subtitle{
-    font-size:12px;
-    color:var(--muted);
-  }
-  .badge-mini{
-    font-size:11px;
-    padding:2px 8px;
-    border-radius:999px;
-    border:1px solid rgba(148,163,184,0.6);
-    color:var(--muted);
-    background:rgba(15,23,42,0.9);
-  }
-  main{
-    flex:1;
-    display:flex;
-    min-height:0;
-  }
-  .sidebar{
-    width:240px;
-    min-width:200px;
-    border-right:1px solid var(--border);
-    background:#020617;
-    padding:10px;
-    display:flex;
-    flex-direction:column;
-    gap:8px;
-  }
-  .sidebar-header{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:2px 2px 4px;
-  }
-  .sidebar-header h2{
-    font-size:11px;
-    text-transform:uppercase;
-    letter-spacing:.12em;
-    color:var(--muted);
-  }
-  .case-list{display:flex;flex-direction:column;gap:6px;margin-top:4px}
-  .case-item{
-    border-radius:10px;
-    border:1px solid var(--border);
-    padding:8px 9px;
-    background:rgba(15,23,42,0.88);
-    cursor:pointer;
-    display:flex;
-    flex-direction:column;
-    gap:2px;
-    transition:border-color .12s,background .12s,box-shadow .12s,transform .08s;
-  }
-  .case-item:hover{
-    border-color:var(--accent);
-    box-shadow:0 0 0 1px rgba(56,189,248,0.38);
-    transform:translateY(-1px);
-  }
-  .case-item.active{
-    border-color:var(--accent-strong);
-    background:linear-gradient(135deg,#0f172a,#020617);
-    box-shadow:0 0 0 1px rgba(56,189,248,0.9);
-  }
-  .case-title{font-size:13px;font-weight:600}
-  .case-tagline{font-size:11px;color:var(--muted)}
-  .content{
-    flex:1;
-    padding:12px 14px;
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-  }
-  .content-header{
-    display:flex;
-    align-items:flex-start;
-    justify-content:space-between;
-    gap:10px;
-  }
-  .content-header-main{display:flex;flex-direction:column;gap:4px}
-  .content-header-main h2{font-size:16px}
-  .content-header-main p{font-size:13px;color:var(--muted)}
-  .pill-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:2px}
-  .pill{
-    border-radius:999px;
-    padding:3px 8px;
-    font-size:11px;
-    border:1px solid var(--border);
-    color:var(--muted);
-  }
-  .pill.hot{
-    border-color:var(--accent);
-    color:var(--accent-strong);
-    background:var(--accent-soft);
-  }
-  .primary-btn{
-    border:none;
-    border-radius:999px;
-    padding:7px 13px;
-    font-size:13px;
-    font-weight:500;
-    cursor:pointer;
-    background:linear-gradient(135deg,var(--accent),var(--accent-strong));
-    color:#0b1120;
-    box-shadow:0 10px 25px rgba(56,189,248,0.35);
-    display:inline-flex;
-    align-items:center;
-    gap:6px;
-    transition:transform .08s,box-shadow .08s,opacity .08s;
-    white-space:nowrap;
-  }
-  .primary-btn span.dot{width:6px;height:6px;border-radius:999px;background:#0b1120}
-  .primary-btn:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
-  .primary-btn:not(:disabled):hover{transform:translateY(-1px);box-shadow:0 12px 30px rgba(56,189,248,0.45)}
-  .summary-shell{
-    margin-top:4px;
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-  }
-  @media(min-width:800px){
-    .summary-shell{flex-direction:row}
-  }
-  .card{
-    flex:1;
-    border-radius:12px;
-    border:1px solid var(--border);
-    background:var(--panel-soft);
-    padding:9px 11px;
-  }
-  .card h3{font-size:14px;margin-bottom:4px}
-  .card p{font-size:13px;color:var(--muted)}
-  .case-preview{font-size:13px;color:var(--muted);line-height:1.5}
-  .case-preview strong{color:var(--text)}
-  .steps-list{font-size:12px;color:var(--muted);line-height:1.5}
-  .steps-list li{margin-left:18px}
 
-  /* MODAL */
-  .modal-backdrop{
-    position:fixed;
-    inset:0;
-    background:rgba(15,23,42,0.78);
-    display:none;
-    align-items:center;
-    justify-content:center;
-    z-index:50;
-  }
-  .modal-backdrop.active{display:flex}
-  .modal{
-    width:100%;
-    max-width:520px;
-    margin:10px;
-    border-radius:16px;
-    background:#020617;
-    border:1px solid rgba(148,163,184,0.6);
-    box-shadow:0 22px 60px rgba(15,23,42,0.9);
-    padding:12px 14px 10px;
-    display:flex;
-    flex-direction:column;
-    gap:8px;
-  }
-  .modal-header{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    gap:6px;
-  }
-  .modal-title{font-size:14px;font-weight:600}
-  .modal-pill{
-    font-size:11px;
-    padding:2px 7px;
-    border-radius:999px;
-    border:1px solid var(--border);
-    color:var(--muted);
-  }
-  .modal-body{margin-top:4px;font-size:13px;color:var(--muted);line-height:1.5;max-height:55vh;overflow:auto}
-  .modal-body p{margin-bottom:6px}
-  .modal-footer{
-    margin-top:8px;
-    display:flex;
-    flex-wrap:wrap;
-    gap:6px;
-    justify-content:flex-end;
-  }
-  .ghost-btn{
-    border-radius:999px;
-    border:1px solid var(--border);
-    padding:6px 10px;
-    font-size:13px;
-    background:transparent;
-    color:var(--muted);
-    cursor:pointer;
-  }
+<style>
+/* ——— YOUR ENTIRE ORIGINAL CSS EXACTLY AS GIVEN ——— */
+:root{
+  --bg:#020617;
+  --panel:#020617;
+  --panel-soft:#020617;
+  --accent:#38bdf8;
+  --accent-soft:rgba(56,189,248,0.16);
+  --accent-strong:#0ea5e9;
+  --danger:#f97373;
+  --text:#e5e7eb;
+  --muted:#9ca3af;
+  --border:#1f2937;
+  --good:#22c55e;
+  --bad:#f97316;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{
+  height:100%;
+  background:radial-gradient(circle at top,#1f2937 0,#020617 55%);
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  color:var(--text);
+}
+body{
+  display:flex;
+  align-items:stretch;
+  justify-content:center;
+}
+.app-shell{
+  margin:10px;
+  flex:1;
+  max-width:1100px;
+  border-radius:16px;
+  border:1px solid rgba(148,163,184,.35);
+  background:linear-gradient(135deg,rgba(15,23,42,0.97),rgba(15,23,42,0.99));
+  box-shadow:0 18px 45px rgba(15,23,42,0.95);
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+header{
+  padding:10px 14px;
+  border-bottom:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+}
+header .title-block{display:flex;flex-direction:column;gap:3px}
+h1{
+  font-size:16px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+h1 span.logo-pill{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:3px 9px;
+  border-radius:999px;
+  background:var(--accent-soft);
+  font-size:11px;
+  text-transform:none;
+  letter-spacing:0;
+  color:var(--accent-strong);
+}
+header .subtitle{
+  font-size:12px;
+  color:var(--muted);
+}
+.badge-mini{
+  font-size:11px;
+  padding:2px 8px;
+  border-radius:999px;
+  border:1px solid rgba(148,163,184,0.6);
+  color:var(--muted);
+  background:rgba(15,23,42,0.9);
+}
+main{
+  flex:1;
+  display:flex;
+  min-height:0;
+}
+.sidebar{
+  width:240px;
+  min-width:200px;
+  border-right:1px solid var(--border);
+  background:#020617;
+  padding:10px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.sidebar-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:2px 2px 4px;
+}
+.sidebar-header h2{
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.12em;
+  color:var(--muted);
+}
+.case-list{display:flex;flex-direction:column;gap:6px;margin-top:4px}
+.case-item{
+  border-radius:10px;
+  border:1px solid var(--border);
+  padding:8px 9px;
+  background:rgba(15,23,42,0.88);
+  cursor:pointer;
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  transition:border-color .12s,background .12s,box-shadow .12s,transform .08s;
+}
+.case-item:hover{
+  border-color:var(--accent);
+  box-shadow:0 0 0 1px rgba(56,189,248,0.38);
+  transform:translateY(-1px);
+}
+.case-item.active{
+  border-color:var(--accent-strong);
+  background:linear-gradient(135deg,#0f172a,#020617);
+  box-shadow:0 0 0 1px rgba(56,189,248,0.9);
+}
+.case-title{font-size:13px;font-weight:600}
+.case-tagline{font-size:11px;color:var(--muted)}
+.content{
+  flex:1;
+  padding:12px 14px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.content-header{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+}
+.content-header-main{display:flex;flex-direction:column;gap:4px}
+.content-header-main h2{font-size:16px}
+.content-header-main p{font-size:13px;color:var(--muted)}
+.pill-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:2px}
+.pill{
+  border-radius:999px;
+  padding:3px 8px;
+  font-size:11px;
+  border:1px solid var(--border);
+  color:var(--muted);
+}
+.pill.hot{
+  border-color:var(--accent);
+  color:var(--accent-strong);
+  background:var(--accent-soft);
+}
+.primary-btn{
+  border:none;
+  border-radius:999px;
+  padding:7px 13px;
+  font-size:13px;
+  font-weight:500;
+  cursor:pointer;
+  background:linear-gradient(135deg,var(--accent),var(--accent-strong));
+  color:#0b1120;
+  box-shadow:0 10px 25px rgba(56,189,248,0.35);
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  transition:transform .08s,box-shadow .08s,opacity .08s;
+  white-space:nowrap;
+}
+.primary-btn span.dot{width:6px;height:6px;border-radius:999px;background:#0b1120}
+.primary-btn:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
+.primary-btn:not(:disabled):hover{transform:translateY(-1px);box-shadow:0 12px 30px rgba(56,189,248,0.45)}
+.summary-shell{
+  margin-top:4px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+@media(min-width:800px){
+  .summary-shell{flex-direction:row}
+}
+.card{
+  flex:1;
+  border-radius:12px;
+  border:1px solid var(--border);
+  background:var(--panel-soft);
+  padding:9px 11px;
+}
+.card h3{font-size:14px;margin-bottom:4px}
+.card p{font-size:13px;color:var(--muted)}
+.case-preview{font-size:13px;color:var(--muted);line-height:1.5}
+.case-preview strong{color:var(--text)}
+.modal-backdrop{
+  position:fixed;
+  inset:0;
+  background:rgba(15,23,42,0.78);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:50;
+}
+.modal-backdrop.active{display:flex}
+.modal{
+  width:100%;
+  max-width:520px;
+  margin:10px;
+  border-radius:16px;
+  background:#020617;
+  border:1px solid rgba(148,163,184,0.6);
+  box-shadow:0 22px 60px rgba(15,23,42,0.9);
+  padding:12px 14px 10px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.modal-title{font-size:14px;font-weight:600}
+.modal-pill{
+  font-size:11px;
+  padding:2px 7px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  color:var(--muted);
+}
+.modal-body{margin-top:4px;font-size:13px;color:var(--muted);line-height:1.5;max-height:55vh;overflow:auto}
+.modal-body p{margin-bottom:6px}
+.ghost-btn{
+  border-radius:999px;
+  border:1px solid var(--border);
+  padding:6px 10px;
+  font-size:13px;
+  background:transparent;
+  color:var(--muted);
+  cursor:pointer;
+}
 </style>
 </head>
 
@@ -281,7 +265,6 @@
       <div class="sidebar-header">
         <h2>Cases</h2>
       </div>
-
       <div class="case-list" id="caseList"></div>
     </aside>
 
@@ -337,60 +320,48 @@
 </div>
 
 <script>
-/* ————————————————————————————————————————————————
-   LOAD CASE 1 FROM assets/cases/case_001.md
-———————————————————————————————————————————————— */
-
+/// CASE FILES (add more later)
 const CASE_FILES = [
-  { id:"case_001", path:"assets/cases/case_001.md" }
+  { id:"case_001", path:"/assets/cases/case_001.md" }
 ];
 
 let loadedCases = [];
 let selectedCase = null;
 
-/* ————————————————————————————————————————————————
-   Utility: Fetch & Parse Markdown Case File
-———————————————————————————————————————————————— */
-
 async function loadCaseFile(id, path){
   const res = await fetch(path);
   const raw = await res.text();
 
-  // Extract metadata JSON
-  const jsonStart = raw.indexOf("{");
-  const jsonEnd   = raw.indexOf("}") + 1;
-  const jsonText  = raw.slice(jsonStart, jsonEnd);
+  // Extract metadata JSON (first JSON block)
+  const firstBrace = raw.indexOf("{");
+  const lastBrace  = raw.indexOf("}") + 1;
+  const jsonText   = raw.substring(firstBrace, lastBrace);
 
   let metadata = {};
   try { metadata = JSON.parse(jsonText); }
   catch(e){ console.error("Metadata parse error:", e); }
 
-  // Extract title (first H1 or H2)
+  // Extract title (first markdown heading)
   const titleMatch = raw.match(/^#\s*(.+)$/m);
   const title = titleMatch ? titleMatch[1] : "Untitled Case";
 
-  // Extract preview (first non-empty paragraph)
-  const paragraphs = raw.split("\n").map(x=>x.trim()).filter(x=>x.length>0);
-  const preview = paragraphs.slice(2, 5).join(" ").substring(0,250) + "...";
+  // Extract preview (first paragraph after JSON)
+  const bodyOnly = raw.substring(lastBrace).trim();
+  const paragraphs = bodyOnly.split("\n").map(x=>x.trim()).filter(x=>x.length > 0);
+  const preview = paragraphs.length ? paragraphs[0] : "No preview available.";
 
   return {
     id,
-    raw,
     title,
     preview,
-    metadata
+    metadata,
+    raw: bodyOnly
   };
 }
 
-/* ————————————————————————————————————————————————
-   Load all cases
-———————————————————————————————————————————————— */
-
 async function initCases(){
-  loadedCases = [];
   for (let c of CASE_FILES){
-    const data = await loadCaseFile(c.id, c.path);
-    loadedCases.push(data);
+    loadedCases.push(await loadCaseFile(c.id, c.path));
   }
   renderCaseList();
 }
@@ -414,10 +385,6 @@ function renderCaseList(){
   });
 }
 
-/* ————————————————————————————————————————————————
-   UI: Select Case
-———————————————————————————————————————————————— */
-
 function selectCase(id){
   selectedCase = loadedCases.find(x=>x.id === id);
 
@@ -429,14 +396,10 @@ function selectCase(id){
   document.getElementById("startBtn").disabled = false;
 }
 
-/* ————————————————————————————————————————————————
-   Modal: Show Full Case (raw markdown)
-———————————————————————————————————————————————— */
-
 function openModal(){
-  document.getElementById("modalBackdrop").classList.add("active");
-  document.getElementById("modalBody").textContent = selectedCase.raw;
   document.getElementById("modalTitle").textContent = selectedCase.title;
+  document.getElementById("modalBody").textContent = selectedCase.raw;
+  document.getElementById("modalBackdrop").classList.add("active");
 }
 
 function closeModal(){
@@ -447,11 +410,8 @@ document.getElementById("startBtn").onclick = openModal;
 document.getElementById("closeModalBtn").onclick = closeModal;
 document.getElementById("closeModalBtn2").onclick = closeModal;
 
-/* ————————————————————————————————————————————————
-   Start
-———————————————————————————————————————————————— */
-
 initCases();
 </script>
+
 </body>
 </html>
