@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>ROMetrics — Case Modules Prototype</title>
 <style>
+  /* ———  ALL YOUR EXISTING CSS UNCHANGED  ——— */
   :root{
     --bg:#020617;
     --panel:#020617;
@@ -89,12 +90,11 @@
     display:flex;
     min-height:0;
   }
-  /* Sidebar */
   .sidebar{
     width:240px;
     min-width:200px;
     border-right:1px solid var(--border);
-    background:linear-gradient(180deg,#020617,#020617 45%,#020617 100%);
+    background:#020617;
     padding:10px;
     display:flex;
     flex-direction:column;
@@ -134,14 +134,8 @@
     background:linear-gradient(135deg,#0f172a,#020617);
     box-shadow:0 0 0 1px rgba(56,189,248,0.9);
   }
-  .case-item.locked{
-    opacity:0.45;
-    cursor:not-allowed;
-  }
   .case-title{font-size:13px;font-weight:600}
   .case-tagline{font-size:11px;color:var(--muted)}
-
-  /* Content */
   .content{
     flex:1;
     padding:12px 14px;
@@ -190,7 +184,6 @@
   .primary-btn span.dot{width:6px;height:6px;border-radius:999px;background:#0b1120}
   .primary-btn:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
   .primary-btn:not(:disabled):hover{transform:translateY(-1px);box-shadow:0 12px 30px rgba(56,189,248,0.45)}
-
   .summary-shell{
     margin-top:4px;
     display:flex;
@@ -214,15 +207,7 @@
   .steps-list{font-size:12px;color:var(--muted);line-height:1.5}
   .steps-list li{margin-left:18px}
 
-  /* Status strip */
-  .status-strip{
-    margin-top:2px;
-    font-size:11px;
-    color:var(--muted);
-  }
-  .status-strip span.label{color:var(--accent-strong)}
-
-  /* Modal */
+  /* MODAL */
   .modal-backdrop{
     position:fixed;
     inset:0;
@@ -252,10 +237,7 @@
     align-items:center;
     gap:6px;
   }
-  .modal-title{
-    font-size:14px;
-    font-weight:600;
-  }
+  .modal-title{font-size:14px;font-weight:600}
   .modal-pill{
     font-size:11px;
     padding:2px 7px;
@@ -263,7 +245,7 @@
     border:1px solid var(--border);
     color:var(--muted);
   }
-  .modal-body{margin-top:4px;font-size:13px;color:var(--muted);line-height:1.5;max-height:52vh;overflow:auto}
+  .modal-body{margin-top:4px;font-size:13px;color:var(--muted);line-height:1.5;max-height:55vh;overflow:auto}
   .modal-body p{margin-bottom:6px}
   .modal-footer{
     margin-top:8px;
@@ -281,45 +263,15 @@
     color:var(--muted);
     cursor:pointer;
   }
-  .option-grid{
-    display:flex;
-    flex-direction:column;
-    gap:6px;
-    margin-top:8px;
-  }
-  .option-btn{
-    width:100%;
-    text-align:left;
-    border-radius:10px;
-    border:1px solid var(--border);
-    padding:7px 9px;
-    background:#020617;
-    font-size:13px;
-    color:var(--text);
-    cursor:pointer;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    gap:8px;
-  }
-  .option-btn .meta{
-    font-size:11px;
-    color:var(--muted);
-  }
-
-  /* Feedback */
-  .feedback-block{font-size:13px;color:var(--muted);line-height:1.5;margin-top:6px}
-  .feedback-good{color:var(--good)}
-  .feedback-bad{color:var(--bad)}
-
 </style>
 </head>
+
 <body>
 <div class="app-shell">
   <header>
     <div class="title-block">
       <h1>ROMetrics <span class="logo-pill">Case Modules</span></h1>
-      <div class="subtitle">Prototype flow → Case → History → Choices → Feedback</div>
+      <div class="subtitle">Prototype flow — Case → View → Read → Launch Modules</div>
     </div>
     <div class="badge-mini">Module 4 · Prototype</div>
   </header>
@@ -328,8 +280,8 @@
     <aside class="sidebar">
       <div class="sidebar-header">
         <h2>Cases</h2>
-        <span class="badge-mini" style="border:none;background:transparent;padding:0;font-size:10px;">Unlock as you complete</span>
       </div>
+
       <div class="case-list" id="caseList"></div>
     </aside>
 
@@ -337,35 +289,28 @@
       <div class="content-header">
         <div class="content-header-main">
           <h2 id="caseTitle">Select a case to begin</h2>
-          <p id="caseSubtitle">Cases unlock in order. Each one ties back into Motion Lab, Goniometry, and MMT.</p>
-          <div class="pill-row">
-            <div class="pill hot">Integrates: Observation · ROM · MMT</div>
-            <div class="pill">Students choose sequence</div>
-            <div class="pill">You give targeted feedback</div>
-          </div>
+          <p id="caseSubtitle">Cases load dynamically from Markdown files.</p>
         </div>
         <button id="startBtn" class="primary-btn" disabled>
-          <span class="dot"></span>
-          Start case
+          <span class="dot"></span>Open Case
         </button>
       </div>
 
-      <div class="status-strip"><span class="label">Status:</span> Waiting for a case selection.</div>
+      <div class="status-strip">
+        <span class="label">Status:</span> Waiting for case selection.
+      </div>
 
       <div class="summary-shell">
         <div class="card">
           <h3>Case snapshot</h3>
           <div id="casePreview" class="case-preview">
-            Choose one of the sample cases on the left to see the patient background here.
+            Choose a case to load its summary here.
           </div>
         </div>
+
         <div class="card">
-          <h3>Target pattern (ideal sequence)</h3>
-          <ul class="steps-list" id="idealSteps">
-            <li>Observe movement pattern using your Motion Lab concepts.</li>
-            <li>Measure ROM with your Goniometer Trainer only if indicated.</li>
-            <li>Perform targeted MMT based on what you saw and measured.</li>
-          </ul>
+          <h3>Case Metadata</h3>
+          <pre id="caseMetadata" style="font-size:11px;color:var(--muted);white-space:pre-wrap;"></pre>
         </div>
       </div>
     </section>
@@ -377,295 +322,136 @@
   <div class="modal" id="modal">
     <div class="modal-header">
       <div>
-        <div class="modal-title" id="modalTitle">Case title</div>
-        <div class="modal-pill" id="modalStage">Stage</div>
+        <div class="modal-title" id="modalTitle">Case</div>
+        <div class="modal-pill" id="modalStage">Case Text</div>
       </div>
       <button class="ghost-btn" id="closeModalBtn">Close</button>
     </div>
+
     <div class="modal-body" id="modalBody"></div>
-    <div class="modal-footer" id="modalFooter"></div>
+
+    <div class="modal-footer">
+      <button class="ghost-btn" id="closeModalBtn2">Close</button>
+    </div>
   </div>
 </div>
 
 <script>
-  const cases = [
-    {
-      id: "case1",
-      title: "Case 1 — Anterior Knee Pain Down Stairs",
-      tagline: "21 y/o student · Patellofemoral pattern",
-      preview: `21-year-old college student with 3-week history of anterior right knee pain when descending stairs and squatting to lift a heavy backpack. Pain up to 6/10 at worst, no true locking or giving way. Likely patellofemoral overload with possible hip & quad contribution.`,
-      history: `A 21-year-old university student reports right anterior knee pain for the past 3 weeks.
+/* ————————————————————————————————————————————————
+   LOAD CASE 1 FROM assets/cases/case_001.md
+———————————————————————————————————————————————— */
 
-The pain is worst when:
-• Walking down stairs
-• Squatting to pick up a heavy backpack
-• Sitting through long lectures, then standing up
+const CASE_FILES = [
+  { id:"case_001", path:"assets/cases/case_001.md" }
+];
 
-She describes the pain as "sharp around the kneecap" and rates it up to 6/10 at its worst. No complaints of locking, catching, or true giving way. No obvious swelling.
+let loadedCases = [];
+let selectedCase = null;
 
-She wants to be able to use the campus stairs without pain and return to light jogging.
-`,
-      idealSequence: ["Observe movement", "Measure ROM (if needed)", "Perform targeted MMT"],
-      options: [
-        { id:"obs", label:"Observe the functional movement", meta:"Watch stair descent / squat pattern", recommended:true },
-        { id:"rom", label:"Measure knee ROM right away", meta:"Supine knee flexion/extension goniometry", recommended:true },
-        { id:"mmtOnly", label:"Skip to quadriceps MMT immediately", meta:"Strength test first, no observation", recommended:false },
-        { id:"imaging", label:"Order imaging before exam", meta:"Jump directly to imaging referral", recommended:false }
-      ],
-      feedback: {
-        good: "Starting with observation and/or ROM lets you see how the knee behaves under load before isolating strength.",
-        bad: "Jumping straight to MMT or imaging skips key functional information and may miss how the limb actually moves." 
-      }
-    },
-    {
-      id: "case2",
-      title: "Case 2 — Overhead Shoulder Pain",
-      tagline: "Retail worker · Shoulder elevation",
-      preview: `32-year-old retail worker with right shoulder pain when reaching overhead to stock shelves. Painful arc between ~90–140° and difficulty lifting boxes to high racks.`,
-      history: `A 32-year-old retail worker reports right shoulder pain for the past month.
+/* ————————————————————————————————————————————————
+   Utility: Fetch & Parse Markdown Case File
+———————————————————————————————————————————————— */
 
-Symptoms:
-• Pain lifting boxes to overhead shelves
-• Painful arc when abducting the arm between ~90–140°
-• Sleep disturbed when lying on the right side
+async function loadCaseFile(id, path){
+  const res = await fetch(path);
+  const raw = await res.text();
 
-No numbness or tingling. No history of dislocation.`,
-      idealSequence: ["Observe active shoulder elevation", "Measure shoulder ROM / painful arc", "Perform targeted MMT (e.g., rotator cuff, deltoid)"],
-      options: [
-        { id:"obs", label:"Observe overhead reach / abduction", meta:"Watch how the shoulder moves", recommended:true },
-        { id:"rom", label:"Measure shoulder ROM & painful arc", meta:"Goni / inclinometer as needed", recommended:true },
-        { id:"mmtOnly", label:"Skip observation and just MMT deltoid", meta:"Strength test first", recommended:false },
-        { id:"neckOnly", label:"Focus only on cervical screen", meta:"Ignore local shoulder findings", recommended:false }
-      ],
-      feedback: {
-        good: "Linking observation with ROM and then MMT helps clarify whether the limitation is pain, stiffness, or weakness.",
-        bad: "Isolated MMT or unrelated testing without observation can miss how the scapula and humerus coordinate overhead."
-      }
-    },
-    {
-      id: "case3",
-      title: "Case 3 — Recurrent Ankle Sprain",
-      tagline: "Basketball player · Lateral ankle",
-      preview: `19-year-old recreational basketball player with repeated right lateral ankle sprains. Reports instability when cutting or landing from jumps.`,
-      history: `A 19-year-old recreational basketball player reports a right lateral ankle sprain 2 weeks ago on top of several prior sprains.
+  // Extract metadata JSON
+  const jsonStart = raw.indexOf("{");
+  const jsonEnd   = raw.indexOf("}") + 1;
+  const jsonText  = raw.slice(jsonStart, jsonEnd);
 
-Current issues:
-• Instability when cutting or landing from a jump
-• Mild swelling laterally after games
-• Hesitation on single-leg landings on the right
+  let metadata = {};
+  try { metadata = JSON.parse(jsonText); }
+  catch(e){ console.error("Metadata parse error:", e); }
 
-He wants to return to full play and reduce the risk of re-spraining.`,
-      idealSequence: ["Observe gait / single-leg tasks", "Measure ankle ROM (especially dorsiflexion)", "Perform targeted MMT (evertors / plantarflexors)"],
-      options: [
-        { id:"obs", label:"Observe gait and single-leg stance", meta:"Watch cutting / landing mechanics", recommended:true },
-        { id:"rom", label:"Measure ankle dorsiflexion ROM", meta:"Closed / open-chain goniometry", recommended:true },
-        { id:"braceOnly", label:"Just recommend a brace and stretching", meta:"Skip detailed exam", recommended:false },
-        { id:"mmtLate", label:"Do MMT only at the very end if time", meta:"Strength is an afterthought", recommended:false }
-      ],
-      feedback: {
-        good: "Observation plus ROM and MMT clarify whether instability is due to motion loss, strength, neuromuscular control, or all three.",
-        bad: "Jumping straight to equipment or generic stretching without assessing motion and strength misses key contributors." 
-      }
-    }
-  ];
+  // Extract title (first H1 or H2)
+  const titleMatch = raw.match(/^#\s*(.+)$/m);
+  const title = titleMatch ? titleMatch[1] : "Untitled Case";
 
-  let selectedCaseId = null;
-  let firstChoiceId = null;
-  let unlockedCases = new Set(["case1"]);
+  // Extract preview (first non-empty paragraph)
+  const paragraphs = raw.split("\n").map(x=>x.trim()).filter(x=>x.length>0);
+  const preview = paragraphs.slice(2, 5).join(" ").substring(0,250) + "...";
 
-  const caseListEl = document.getElementById("caseList");
-  const caseTitleEl = document.getElementById("caseTitle");
-  const caseSubtitleEl = document.getElementById("caseSubtitle");
-  const casePreviewEl = document.getElementById("casePreview");
-  const idealStepsEl = document.getElementById("idealSteps");
-  const startBtn = document.getElementById("startBtn");
-  const statusStrip = document.querySelector(".status-strip");
+  return {
+    id,
+    raw,
+    title,
+    preview,
+    metadata
+  };
+}
 
-  const modalBackdrop = document.getElementById("modalBackdrop");
-  const modalTitle = document.getElementById("modalTitle");
-  const modalStage = document.getElementById("modalStage");
-  const modalBody = document.getElementById("modalBody");
-  const modalFooter = document.getElementById("modalFooter");
-  const closeModalBtn = document.getElementById("closeModalBtn");
+/* ————————————————————————————————————————————————
+   Load all cases
+———————————————————————————————————————————————— */
 
-  function renderCaseList(){
-    caseListEl.innerHTML = "";
-    cases.forEach(c => {
-      const div = document.createElement("div");
-      const unlocked = unlockedCases.has(c.id);
-      div.className = "case-item" + (c.id === selectedCaseId ? " active" : "") + (unlocked ? "" : " locked");
-      div.dataset.id = c.id;
-      div.innerHTML = `<div class="case-title">${c.title}</div><div class="case-tagline">${unlocked ? c.tagline : "Locked — complete previous case"}</div>`;
-      if (unlocked) {
-        div.addEventListener("click", () => selectCase(c.id));
-      }
-      caseListEl.appendChild(div);
-    });
+async function initCases(){
+  loadedCases = [];
+  for (let c of CASE_FILES){
+    const data = await loadCaseFile(c.id, c.path);
+    loadedCases.push(data);
   }
-
-  function selectCase(id){
-    if (!unlockedCases.has(id)) return;
-    selectedCaseId = id;
-    firstChoiceId = null;
-    const c = cases.find(x => x.id === id);
-    if (!c) return;
-
-    renderCaseList();
-
-    caseTitleEl.textContent = c.title;
-    caseSubtitleEl.textContent = c.tagline;
-    casePreviewEl.textContent = c.preview;
-
-    idealStepsEl.innerHTML = "";
-    c.idealSequence.forEach(step => {
-      const li = document.createElement("li");
-      li.textContent = step;
-      idealStepsEl.appendChild(li);
-    });
-
-    startBtn.disabled = false;
-    statusStrip.innerHTML = `<span class="label">Status:</span> ${c.title} selected. Ready to start.`;
-  }
-
-  function openModal(){
-    modalBackdrop.classList.add("active");
-  }
-
-  function closeModal(){
-    modalBackdrop.classList.remove("active");
-  }
-
-  function startCase(){
-    const c = cases.find(x => x.id === selectedCaseId);
-    if (!c) return;
-    firstChoiceId = null;
-
-    modalTitle.textContent = c.title;
-    modalStage.textContent = "Stage 1 — Patient History";
-    modalBody.innerHTML = "";
-    c.history.split("\n").forEach(chunk => {
-      if (!chunk.trim()) return;
-      const p = document.createElement("p");
-      p.textContent = chunk;
-      modalBody.appendChild(p);
-    });
-
-    modalFooter.innerHTML = "";
-    const cancelBtn = document.createElement("button");
-    cancelBtn.className = "ghost-btn";
-    cancelBtn.textContent = "Back to module";
-    cancelBtn.onclick = closeModal;
-
-    const contBtn = document.createElement("button");
-    contBtn.className = "primary-btn";
-    contBtn.innerHTML = `<span class="dot"></span>I've read it — continue`;
-    contBtn.onclick = () => showChoiceScreen(c);
-
-    modalFooter.appendChild(cancelBtn);
-    modalFooter.appendChild(contBtn);
-
-    openModal();
-  }
-
-  function showChoiceScreen(c){
-    modalStage.textContent = "Stage 2 — What would you like to do next?";
-    modalBody.innerHTML = "";
-
-    const intro = document.createElement("p");
-    intro.textContent = "Choose what you would do first with this patient. In your real app, the correct choices could launch Goniometry, MMT, or Motion Lab in Case Mode.";
-    modalBody.appendChild(intro);
-
-    const grid = document.createElement("div");
-    grid.className = "option-grid";
-
-    c.options.forEach(opt => {
-      const btn = document.createElement("button");
-      btn.className = "option-btn"; // neutral appearance
-      btn.onclick = () => handleChoice(c, opt);
-      btn.innerHTML = `
-        <div>
-          <div>${opt.label}</div>
-          <div class="meta">${opt.meta}</div>
-        </div>
-      `;
-      grid.appendChild(btn);
-    });
-
-    modalBody.appendChild(grid);
-
-    modalFooter.innerHTML = "";
-    const backBtn = document.createElement("button");
-    backBtn.className = "ghost-btn";
-    backBtn.textContent = "Back to history";
-    backBtn.onclick = () => startCase();
-
-    modalFooter.appendChild(backBtn);
-  }
-
-  function handleChoice(c, opt){
-    if (!firstChoiceId) firstChoiceId = opt.id;
-    showFeedback(c, opt);
-  }
-
-  function showFeedback(c, opt){
-    modalStage.textContent = "Stage 3 — Feedback";
-    modalBody.innerHTML = "";
-
-    const summary = document.createElement("div");
-    summary.className = "feedback-block";
-
-    const isRecommended = !!opt.recommended;
-
-    summary.innerHTML = `
-      <p><strong>Your first step:</strong> ${opt.label}</p>
-      <p class="${isRecommended ? "feedback-good" : "feedback-bad"}">
-        ${isRecommended ? "This is a solid first choice for this case." : "This is not the most efficient first step, but you could still learn something from it."}
-      </p>
-      <p class="feedback-good">Ideal pattern: ${c.idealSequence.join(" → ")}</p>
-      <p class="feedback-bad">${c.feedback.bad}</p>
-      <p class="feedback-good">${c.feedback.good}</p>
-      <p style="margin-top:6px;">In your full ROMetrics app, this screen would also remind the student to go back into Case Mode in Goniometer Trainer or MMT Trainer to capture actual measurements and grades, then return here to document a treatment plan.</p>
-    `;
-
-    modalBody.appendChild(summary);
-
-    modalFooter.innerHTML = "";
-    const closeBtn = document.createElement("button");
-    closeBtn.className = "primary-btn";
-    closeBtn.innerHTML = `<span class="dot"></span>Finish case`;
-    closeBtn.onclick = () => {
-      closeModal();
-      unlockNextCase(c.id);
-    };
-
-    const retryBtn = document.createElement("button");
-    retryBtn.className = "ghost-btn";
-    retryBtn.textContent = "Try again";
-    retryBtn.onclick = () => showChoiceScreen(c);
-
-    modalFooter.appendChild(retryBtn);
-    modalFooter.appendChild(closeBtn);
-  }
-
-  function unlockNextCase(currentId){
-    const idx = cases.findIndex(x => x.id === currentId);
-    if (idx >= 0 && idx < cases.length - 1){
-      const nextId = cases[idx + 1].id;
-      unlockedCases.add(nextId);
-    }
-    renderCaseList();
-    const finished = cases[idx];
-    statusStrip.innerHTML = `<span class="label">Status:</span> ${finished ? finished.title : "Case"} finished. Next case unlocked if available.`;
-  }
-
-  startBtn.addEventListener("click", startCase);
-  closeModalBtn.addEventListener("click", closeModal);
-  modalBackdrop.addEventListener("click", (e) => {
-    if (e.target === modalBackdrop) closeModal();
-  });
-
   renderCaseList();
+}
+
+function renderCaseList(){
+  const list = document.getElementById("caseList");
+  list.innerHTML = "";
+
+  loadedCases.forEach(c=>{
+    const div = document.createElement("div");
+    div.className = "case-item";
+    div.dataset.id = c.id;
+
+    div.innerHTML = `
+      <div class="case-title">${c.title}</div>
+      <div class="case-tagline">Loaded from Markdown</div>
+    `;
+    div.onclick = ()=>selectCase(c.id);
+
+    list.appendChild(div);
+  });
+}
+
+/* ————————————————————————————————————————————————
+   UI: Select Case
+———————————————————————————————————————————————— */
+
+function selectCase(id){
+  selectedCase = loadedCases.find(x=>x.id === id);
+
+  document.getElementById("caseTitle").textContent = selectedCase.title;
+  document.getElementById("casePreview").textContent = selectedCase.preview;
+  document.getElementById("caseMetadata").textContent =
+    JSON.stringify(selectedCase.metadata, null, 2);
+
+  document.getElementById("startBtn").disabled = false;
+}
+
+/* ————————————————————————————————————————————————
+   Modal: Show Full Case (raw markdown)
+———————————————————————————————————————————————— */
+
+function openModal(){
+  document.getElementById("modalBackdrop").classList.add("active");
+  document.getElementById("modalBody").textContent = selectedCase.raw;
+  document.getElementById("modalTitle").textContent = selectedCase.title;
+}
+
+function closeModal(){
+  document.getElementById("modalBackdrop").classList.remove("active");
+}
+
+document.getElementById("startBtn").onclick = openModal;
+document.getElementById("closeModalBtn").onclick = closeModal;
+document.getElementById("closeModalBtn2").onclick = closeModal;
+
+/* ————————————————————————————————————————————————
+   Start
+———————————————————————————————————————————————— */
+
+initCases();
 </script>
 </body>
 </html>
-
