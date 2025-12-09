@@ -282,13 +282,32 @@ document.addEventListener("pointerdown",e=>{
   });
 });
 
-document.getElementById("ntLog").onclick=()=>{
-  if(!NT_active) return;
-  const x = NT_active.getAttribute("x");
-  const y = NT_active.getAttribute("y");
-  const r = NT_active.getAttribute("transform");
-  console.log("FINAL NUMBER FIX →",{ text:NT_active.textContent, x, y, r });
+document.getElementById("ntLog").onclick = () => {
+  if (!NT_active) return;
+
+  const rawX = NT_active.getAttribute("x") || "0";
+  const rawY = NT_active.getAttribute("y") || "0";
+  const x = Number(rawX).toFixed(1);
+  const y = Number(rawY).toFixed(1);
+
+  const tr = NT_active.getAttribute("transform") || "";
+  let rot = 0;
+  const m = tr.match(/rotate\((-?\d+\.?\d*)\s+(-?\d+\.?\d*)\s+(-?\d+\.?\d*)\)/);
+  if (m) rot = parseFloat(m[1]) || 0;
+
+  const parent   = NT_active.parentNode;
+  const parentId = (parent && parent.id) ? parent.id : "root";
+  const txt      = (NT_active.textContent || "").trim();
+
+  const siblings = parent ? Array.from(parent.querySelectorAll("text")) : [];
+  const same     = siblings.filter(n => (n.textContent || "").trim() === txt);
+  const idx      = same.indexOf(NT_active);
+
+  const key = `${parentId}:${txt}:${idx}`;
+  const snippet = `NUM_TWEAKS["${key}"] = { x:${x}, y:${y}, rot:${rot} };`;
+  console.log("FINAL NUMBER FIX →", snippet);
 };
+
 </script>
 
   <details id="controllers">
