@@ -63,16 +63,17 @@
 | --------------------- | ------ | ------------- | --------------------------- |
 | Flexion               | WNL    | WNL           | —                           |
 | Extension             | WNL    | WNL           | —                           |
-| Left Lateral Flexion  | 45°    | 20° (painful) | Significant limitation      |
+| Left Lateral Flexion  | 45°    | 20° (painful) | Primary limitation      |
 | Right Lateral Flexion | 45°    | 45°           | WNL                         |
-| Left Rotation         | 70°    | 15° (painful) | Primary limitation (severe) |
+| Left Rotation         | 70°    | 30° (painful) | Significant limitation  |
 | Right Rotation        | 70°    | 70°           | WNL                         |
 
 
 ### MMT
 | Muscle Group            | Strength     | Notes                      |
 |-------------------------|--------------|----------------------------|
-| Cervical Flexors        | 5/5          | Normal                     |
+| Cervical Anterior Flexor| 5/5          | Normal                     |
+| Left Cervical Flexor    | 4/5          | Pain-limited                       |
 | Cervical Extensors      | 5/5          | Normal                     |
 | Left Cervical Rotators  | 4/5          | Pain-limited               |
 | Right Cervical Rotators | 5/5          | Normal                     |
@@ -94,13 +95,13 @@
 ## ROMetrics Module Instructions
 
 ### Motion Lab
-- Limit left cervical rotation to 15°
+- Limit left cervical rotation to 30°
 - Limit left cervical flexion to 20°
 - Apply cervical collision override  
 - Student observes restricted AROM  
 
 ### Goniometry Trainer
-- Hard stop at 15° LCR & 20° LCF   
+- Hard stop at 15° LCR & 30° LCF   
 - Student documents limited ROM  
 
 ### MMT Trainer
@@ -112,7 +113,7 @@
 ## Case Completion Requirements
 1. Student reads case to unlock modules  
 2. Observes restricted ROM in Motion Lab  
-3. Measures 15° in Goniometry Trainer for LCR
+3. Measures 30° in Goniometry Trainer for LCR
 4.  Measures 20° in Goniometry Trainer for LCF
 5. Records 4/5 in MMT Trainer  
 6. Writes a diagnosis in the case conclusion area  
