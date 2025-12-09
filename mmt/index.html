@@ -280,14 +280,13 @@ const MMT_CASE_TOKENS = {
         allowedRegions: ["Cervical & Capital"],
         
 impairments: {
-    // MMT Caps (4/5) - ONLY for SCM and Rotation
-    Single_SCM:              { max_hold_time: 4.5 },
-    Cervical_Rotation:          { max_hold_time: 4.5 },
+    // MMT Caps (4/5)
+    Cervical_Rotation: { max_hold_time: 4.5 }, // <--- CLEANED KEY
+    Single_SCM: { max_hold_time: 4.5 },        // <--- CLEANED KEY
     
-    // Default fallback for any unchecked MMT motion (including Cervical Flexion)
     default_unrestricted: { max_hold_time: 99.0 }
 }
-    }
+}
 };
 
 window.MMT_CASE_MODE = {
