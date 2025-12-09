@@ -1928,6 +1928,22 @@ actionDeg.addEventListener("input", ()=> {
 
   // Signed degrees for the chosen direction
   let signed = CURRENT_ACTION.sign * val;
+// === CASE ROM CLAMPS (CERVICAL) ===
+if (window.GONIO_CASE_MODE && window.GONIO_CASE_MODE.active){
+  // Cervical lateral flexion — LEFT (negative side)
+  if (CURRENT_ACTION.key === 'cerv_lat' && signed < 0){
+    const raw     = Math.abs(signed);
+    const clamped = clampAngleForCase(raw, 'cervical_left_lat_flex');
+    signed = -clamped;
+  }
+
+  // Cervical rotation — RIGHT (positive side)
+  if (CURRENT_ACTION.key === 'cerv_rot' && signed > 0){
+    const raw     = Math.abs(signed);
+    const clamped = clampAngleForCase(raw, 'cervical_right_rotation');
+    signed = clamped;
+  }
+}
 
 // === DYNAMIC COUPLING: HIP FLEXION to KNEE FLEXION (Only for Non-Sitting) ===
 if (CURRENT_ACTION.key.startsWith('hip_fe_') && CURRENT_ACTION.sign > 0 && positionSel.value !== 'sitting') {
@@ -2831,8 +2847,8 @@ const clock = new THREE.Clock();
       // Impairments for this case: max measured angles
       // Keys are arbitrary strings you can pass into clampAngleForCase(...)
       impairments: {
-        cervical_left_lat_flex:  { max: 45 },  // 45° left lateral flexion
-        cervical_right_rotation: { max: 70 }   // 70° right rotation
+        cervical_left_lat_flex:  { max: 35 },  // 45° left lateral flexion
+        cervical_right_rotation: { max: 60 }   // 70° right rotation
       }
     }
   };
