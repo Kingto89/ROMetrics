@@ -58,12 +58,16 @@
 ## Objective Examination
 
 ### Cervical ROM
-| Motion         | Normal | Actual            | Notes              |
-|----------------|--------|-------------------|--------------------|
-| Flexion        | WNL    | WNL               | —                  |
-| Extension      | WNL    | Mild stiffness    | —                  |
-| Left Rotation  | ~80°   | 35° (painful)     | Primary limitation |
-| Right Rotation | ~80°   | 60°               | Mild tightness     |
+
+| Motion                | Normal | Actual        | Notes                       |
+| --------------------- | ------ | ------------- | --------------------------- |
+| Flexion               | WNL    | WNL           | —                           |
+| Extension             | WNL    | WNL           | —                           |
+| Left Lateral Flexion  | 45°    | 20° (painful) | Significant limitation      |
+| Right Lateral Flexion | 45°    | 45°           | WNL                         |
+| Left Rotation         | 70°    | 15° (painful) | Primary limitation (severe) |
+| Right Rotation        | 70°    | 70°           | WNL                         |
+
 
 ### MMT
 | Muscle Group            | Strength     | Notes                      |
@@ -90,12 +94,13 @@
 ## ROMetrics Module Instructions
 
 ### Motion Lab
-- Limit left cervical rotation to 35°  
+- Limit left cervical rotation to 15°
+- Limit left cervical flexion to 20°
 - Apply cervical collision override  
 - Student observes restricted AROM  
 
 ### Goniometry Trainer
-- Hard stop at 35°  
+- Hard stop at 15° LCR & 20° LCF   
 - Student documents limited ROM  
 
 ### MMT Trainer
@@ -107,9 +112,10 @@
 ## Case Completion Requirements
 1. Student reads case to unlock modules  
 2. Observes restricted ROM in Motion Lab  
-3. Measures 35° in Goniometry Trainer  
-4. Records 4/5 in MMT Trainer  
-5. Writes a diagnosis in the case conclusion area  
+3. Measures 15° in Goniometry Trainer for LCR
+4.  Measures 20° in Goniometry Trainer for LCF
+5. Records 4/5 in MMT Trainer  
+6. Writes a diagnosis in the case conclusion area  
 
 ---
 
