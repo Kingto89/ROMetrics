@@ -259,19 +259,33 @@ input[type=range]::-moz-range-thumb { width: 24px; height: 24px; background: #e2
 let NT_active = null;
 
 document.addEventListener("pointerdown", (e) => {
-  if (!(e.target.tagName === "text" || e.target.tagName === "TEXT")) return;
+  let t = e.target;
+  if (!t || !t.tagName) return;
 
-  NT_active = e.target;
+  // If we clicked on a <tspan>, climb up to its parent <text>
+  if (t.tagName.toLowerCase() === "tspan" && t.parentNode && t.parentNode.tagName) {
+    t = t.parentNode;
+  }
+
+  if (t.tagName.toLowerCase() !== "text") return;
+
+  NT_active = t;
 
   const tr = NT_active.getAttribute("transform") || "";
   const m  = tr.match(/rotate\((-?\d+\.?\d*)\s+(-?\d+\.?\d*)\s+(-?\d+\.?\d*)\)/);
 
-  document.getElementById("numTunerPanel").style.display = "block";
+  const panel = document.getElementById("numTunerPanel");
+  if (panel) panel.style.display = "block";
 
-  document.getElementById("ntX").value = NT_active.getAttribute("x") || 0;
-  document.getElementById("ntY").value = NT_active.getAttribute("y") || 0;
-  document.getElementById("ntR").value = m ? m[1] : 0;
+  const ntX = document.getElementById("ntX");
+  const ntY = document.getElementById("ntY");
+  const ntR = document.getElementById("ntR");
+
+  if (ntX) ntX.value = NT_active.getAttribute("x") || 0;
+  if (ntY) ntY.value = NT_active.getAttribute("y") || 0;
+  if (ntR) ntR.value = m ? m[1] : 0;
 });
+
 
 ["ntX","ntY","ntR"].forEach(id=>{
   document.getElementById(id).addEventListener("input",()=>{
