@@ -277,17 +277,16 @@ const MMT_CASE_TOKENS = {
         allRegions: ["Cervical & Capital", "Scapula", "Shoulder", "Trunk & Pelvis - Grading Exception", "Elbow", "Wrist", "Hip", "Knee", "Ankle & Foot - Grading Exception for Gastroc"],
         
         // Define ONLY the regions allowed for this case (Upper Extremity)
-        allowedRegions: ["Cervical & Capital", "Scapula", "Shoulder", "Elbow", "Wrist"],
+        allowedRegions: ["Cervical & Capital"],
         
-        impairments: {
-            // --- RIGHT SIDE (IMPAIRED) ---
-            
-            // MMT Caps (4/5)
-            Cervical_Rotation:          { max_hold_time: 4.5 }, 
-            Single_SCM:              { max_hold_time: 4.5 },
-            
-            default_unrestricted: { max_hold_time: 99.0 }
-        }
+impairments: {
+    // MMT Caps (4/5) - ONLY for SCM and Rotation
+    Single_SCM:              { max_hold_time: 4.5 },
+    Cervical_Rotation:          { max_hold_time: 4.5 },
+    
+    // Default fallback for any unchecked MMT motion (including Cervical Flexion)
+    default_unrestricted: { max_hold_time: 99.0 }
+}
     }
 };
 
