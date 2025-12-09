@@ -1926,36 +1926,43 @@ actionDeg.addEventListener("input", ()=> {
     log(`Anticollision limit hit (${CURRENT_ACTION.label}): max ${cap}°`);
   }
 
-  // Signed degrees for the chosen direction
-  // === CASE ROM CLAMPS (CERVICAL, TOKEN MODE ONLY) ===
-  if (window.GONIO_CASE_MODE && window.GONIO_CASE_MODE.active) {
-    const label = (CURRENT_ACTION.label || "").trim().toLowerCase();
-    let mag    = Math.abs(signed);
+  // Signed degrees for the chosen direction   Checkspot
+  let signed = CURRENT_ACTION.sign * val;
 
-    // 1) Cervical Lateral Flexion — Left
-    if (label === "cervical lateral flexion — left") {
-      const limited = clampAngleForCase(mag, "cervical_left_lat_flex");
-      if (limited !== mag) {
-        const s   = signed >= 0 ? 1 : -1; // keep your existing sign
-        mag       = limited;
-        signed    = s * limited;
-        val       = limited;
-        actionDeg.value = String(limited);
+  // === CASE ROM CLAMPS (CERVICAL) ===  CASE CHECKSPOT
+  if (window.GONIO_CASE_MODE && window.GONIO_CASE_MODE.active){
+    const label = (CURRENT_ACTION.label || "").trim();
+
+    // Cervical Lateral Flexion — Left
+    if (
+      CURRENT_ACTION.key.startsWith('cerv_lat') &&
+      label === "Cervical Lateral Flexion — Left"
+    ){
+      const raw     = Math.abs(signed);
+      const clamped = clampAngleForCase(raw, 'cervical_left_lat_flex');
+      if (clamped < raw){
+        signed          = -clamped;      // keep left side
+        val             = clamped;
+        actionDeg.value = String(clamped);
       }
     }
 
-    // 2) Cervical Rotation — Right
-    if (label === "cervical rotation — right") {
-      const limited = clampAngleForCase(mag, "cervical_right_rotation");
-      if (limited !== mag) {
-        const s   = signed >= 0 ? 1 : -1; // keep your existing sign
-        mag       = limited;
-        signed    = s * limited;
-        val       = limited;
-        actionDeg.value = String(limited);
+    // Cervical Rotation — Right
+    if (
+      CURRENT_ACTION.key.startsWith('cerv_rot') &&
+      label === "Cervical Rotation — Right"
+    ){
+      const raw     = Math.abs(signed);
+      const clamped = clampAngleForCase(raw, 'cervical_right_rotation');
+      if (clamped < raw){
+        signed          = (signed >= 0 ? clamped : -clamped);
+        val             = clamped;
+        actionDeg.value = String(clamped);
       }
     }
   }
+
+  // === DYNAMIC COUPLING: HIP FLEXION to KNEE FLEXION (Only for Non-Sitting) ===
 
 
 // === DYNAMIC COUPLING: HIP FLEXION to KNEE FLEXION (Only for Non-Sitting) ===
