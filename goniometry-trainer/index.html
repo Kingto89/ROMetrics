@@ -2918,19 +2918,7 @@ const clock = new THREE.Clock();
       regionSel.disabled = true;
     }
 
-    // 3) Disable all UI buttons that aren’t cervical-related
-    if (cfg.allowedRegions.length === 1 &&
-        cfg.allowedRegions[0].toLowerCase() === "cervical"){
-      const allBtns = document.querySelectorAll("button, [role='button']");
-      allBtns.forEach(btn => {
-        if (!btn.textContent) return;
-        if (!/cervical/i.test(btn.textContent)){
-          btn.disabled = true;
-          btn.style.opacity = "0.4";
-          btn.style.pointerEvents = "none";
-        }
-      });
-    }
+
   })();
   </script>
 </body>
