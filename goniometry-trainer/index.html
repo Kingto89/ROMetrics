@@ -2904,22 +2904,30 @@ const clock = new THREE.Clock();
     // Add top padding so banner doesn’t cover UI
     document.body.style.paddingTop = "32px";
 
-    // 2) Hard lock to cervical region (if region selector exists)
-    const regionSel = document.getElementById("regionSel");
-    if (regionSel && cfg.allowedRegions.length){
-      const firstAllowed = cfg.allowedRegions[0];
-      const option = Array.from(regionSel.options)
-        .find(o => o.value.toLowerCase() === firstAllowed.toLowerCase());
-      if (option){
-        regionSel.value = option.value;
-        const ev = new Event("change", { bubbles:true });
-        regionSel.dispatchEvent(ev);
+    // 2) Lock to cervical region AFTER the dropdown is populated
+    function lockRegionWhenReady(){
+      const regionSel = document.getElementById("regionSel");
+      if (!regionSel || !regionSel.options || !regionSel.options.length){
+        requestAnimationFrame(lockRegionWhenReady);
+        return;
       }
-      regionSel.disabled = true;
+
+      if (cfg.allowedRegions && cfg.allowedRegions.length){
+        const firstAllowed = cfg.allowedRegions[0];
+        const option = Array.from(regionSel.options)
+          .find(o => o.value.toLowerCase() === firstAllowed.toLowerCase());
+        if (option){
+          regionSel.value = option.value;
+          const ev = new Event("change", { bubbles:true });
+          regionSel.dispatchEvent(ev);
+        }
+        regionSel.disabled = true; // now safe to lock
+      }
     }
 
-
+    lockRegionWhenReady();
   })();
+
   </script>
 </body>
 </html>
