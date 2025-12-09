@@ -427,61 +427,6 @@ attachWrongHandlers();
 </script>
 
 
-/* -------- WRONG CHOICE → WARNING MODAL -------- */
-document.querySelectorAll(".wrong").forEach(btn => {
-  btn.onclick = () => {
-    const isMMT = btn.textContent.toLowerCase().includes("mmt");
-
-    const modal = document.querySelector("#modalBackdrop .modal");
-    modal.innerHTML = `
-      <div class="modal-title">Before You Proceed</div>
-
-      <p style="color:#9ca3af;font-size:13px;margin-bottom:10px;">
-        This step isn't normally first in clinical workflow.<br>
-        You may continue, but consider the recommended order.
-      </p>
-
-      <div style="
-        border:1px solid var(--accent);
-        padding:10px;
-        border-radius:8px;
-        background:rgba(56,189,248,0.08);
-        margin-bottom:12px;
-        font-size:13px;
-        line-height:1.45;
-        color:var(--text);
-      ">
-        <strong style="color:var(--accent)">Recommended Flow:</strong><br>
-        • Observation & functional screen<br>
-        • AROM/PROM findings<br>
-        • Goniometry<br>
-        • MMT as needed<br>
-      </div>
-
-      <button class="choice-btn" id="proceedAnyway">Proceed Anyway</button>
-      <button class="choice-btn" id="cancelWarning">Back to Menu</button>
-    `;
-
-    document.getElementById("modalBackdrop").classList.add("active");
-
-    document.getElementById("proceedAnyway").onclick = () => {
-      if (isMMT) {
-        window.location.href =
-          "https://kingto89.github.io/ROMetrics.com/mmt/?caseToken=MMT-CERVICAL-001";
-      } else {
-        document.getElementById("modalBackdrop").classList.remove("active");
-      }
-    };
-
-    document.getElementById("cancelWarning").onclick = () => {
-      resetChoiceModal();
-      document.getElementById("modalBackdrop").classList.add("active");
-    };
-  };
-});
-
-
-
 </script>
 
 </body>
