@@ -33,6 +33,8 @@
     <h2>Bone names</h2>
     <div id="status">Waiting…</div>
     <pre id="bones"></pre>
+    <h2 style="margin-top:10px;">Morph targets (shapekeys)</h2>
+    <pre id="shapes">Scanning…</pre>
   </div>
 
   <script type="module">
@@ -42,6 +44,7 @@
 
     const statusEl = document.getElementById("status");
     const bonesPre = document.getElementById("bones");
+    const shapesPre = document.getElementById("shapes");
     const view = document.getElementById("view");
 
     const renderer = new THREE.WebGLRenderer({ antialias:true });
@@ -91,27 +94,45 @@
       const url = MODEL_CANDIDATES[index];
       statusEl.textContent = "Loading: " + url;
 
-      loader.load(url, (gltf) => {
-        const root = gltf.scene;
-        scene.add(root);
+loader.load(url, (gltf) => {
+  const root = gltf.scene;
+  scene.add(root);
 
-        const bonesSet = new Set();
+  const bonesSet  = new Set();
+  const shapesSet = new Set();
 
-        root.traverse(obj => {
-          if (obj.isSkinnedMesh && obj.skeleton){
-            obj.skeleton.bones.forEach(b => bonesSet.add(b.name));
-          }
-          if (obj.isBone) bonesSet.add(obj.name);
-        });
+  root.traverse(obj => {
+    // Bones
+    if (obj.isSkinnedMesh && obj.skeleton){
+      obj.skeleton.bones.forEach(b => bonesSet.add(b.name));
+    }
+    if (obj.isBone) bonesSet.add(obj.name);
 
-        const bones = Array.from(bonesSet).sort();
-        bonesPre.textContent = bones.join("\n") + "\n\nTotal bones: " + bones.length;
-        statusEl.textContent = "✅ Loaded model. Bones listed below.";
-        console.log("Bones:", bones);
-      }, undefined, (err) => {
-        console.warn("Failed to load", url, err);
-        tryNextModelUrl(index + 1);
+    // Shapekeys / morph targets
+    if (obj.morphTargetDictionary){
+      Object.keys(obj.morphTargetDictionary).forEach(name => {
+        shapesSet.add(name);
       });
+    }
+  });
+
+  const bones  = Array.from(bonesSet).sort();
+  const shapes = Array.from(shapesSet).sort();
+
+  bonesPre.textContent  = bones.join("\n")  + "\n\nTotal bones: "  + bones.length;
+  shapesPre.textContent = shapes.length
+    ? shapes.join("\n") + "\n\nTotal morph targets: " + shapes.length
+    : "None found.";
+
+  statusEl.textContent = "✅ Loaded model. Bones + shapekeys listed.";
+  console.log("Bones:", bones);
+  console.log("Morph targets:", shapes);
+}, undefined, (err) => {
+  statusEl.textContent = "❌ Failed to load " + url;
+  console.warn("Failed to load", url, err);
+  tryNextModelUrl(index + 1);
+});
+
     }
 
     tryNextModelUrl(0);
