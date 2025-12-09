@@ -86,7 +86,7 @@
 
 ---
 
-## Case Clues (No Diagnosis Provided)
+## Case Clues 
 - Direction-specific ROM loss  
 - Pain-limited strength  
 - No sensory involvement  
