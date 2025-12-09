@@ -63,7 +63,7 @@
 | Flexion        | WNL    | WNL               | —                  |
 | Extension      | WNL    | Mild stiffness    | —                  |
 | Left Rotation  | ~80°   | 35° (painful)     | Primary limitation |
-| Right Rotation | ~80°   | 70°               | Mild tightness     |
+| Right Rotation | ~80°   | 60°               | Mild tightness     |
 
 ### MMT
 | Muscle Group            | Strength     | Notes                      |
@@ -90,7 +90,7 @@
 ## ROMetrics Module Instructions
 
 ### Motion Lab
-- Limit left cervical rotation to 45°  
+- Limit left cervical rotation to 35°  
 - Apply cervical collision override  
 - Student observes restricted AROM  
 
