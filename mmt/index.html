@@ -278,7 +278,7 @@ const MMT_CASE_TOKENS = {
         allowedRegions: ["cervical", "scapula", "shoulder", "elbow", "wrist"],
         impairments: {
             Cervical_Rotation_Left:    { max_hold_time: 4.5 }, 
-            Cervical_Flexion:          { max_hold_time: 4.5 }, 
+            Single_SCM:          { max_hold_time: 4.5 }, 
             default_unrestricted:      { max_hold_time: 99.0 }
         }
     }
@@ -3517,83 +3517,7 @@ function onPointerDownTransformControls(event) {
   </div>
 </div>
   <script>
-// =========================================
-// MMT CASE TOKEN DEFINITIONS (Drop-In)
-// =========================================
-const MMT_CASE_TOKENS = {
-    "MMT-CERVICAL-001": {
-        caseId: "case_mmt_001",
-        // Descriptive label for the student (no score given)
-        label: "Cervical Impairment: Left Rotation and Flexion Deficit", 
-        
-        // Regions allowed in the MMT menu (blocks Hip, Knee, Ankle/Foot, Trunk/Pelvis)
-        allowedRegions: ["cervical", "scapula", "shoulder", "elbow", "wrist"],
-        
-        // Impairments for MMT: Max time (seconds) resistance can be held.
-        // Cap at 4.5s ensures the test terminates before Grade 5 (7.0s) is achieved,
-        // resulting in a Grade 4 (4/5) score.
-        impairments: {
-            // 1. Cervical Rotation (Left) -> Capped at 4/5 
-            Cervical_Rotation_Left:    { max_hold_time: 4.5 }, 
-            
-            // 2. Cervical Flexion -> Capped at 4/5 
-            Cervical_Flexion:          { max_hold_time: 4.5 }, 
 
-            // Fallback for all other tests (Full Grade 5 potential, > 7.0s hold)
-            default_unrestricted:      { max_hold_time: 99.0 }
-        }
-    }
-};
-
-window.MMT_CASE_MODE = {
-    active: false,
-    token: null,
-    impairments: {}
-};
-
-// Function to check URL for token and apply case mode restrictions
-(function initMMTCaseMode() {
-    const token = new URLSearchParams(window.location.search).get("caseToken");
-    const cfg = token && MMT_CASE_TOKENS[token];
-    
-    if (!cfg) {
-        window.MMT_CASE_MODE.active = false;
-        return;
-    }
-
-    // --- ACTIVATE CASE MODE ---
-    window.MMT_CASE_MODE.active = true;
-    window.MMT_CASE_MODE.token = token;
-    window.MMT_CASE_MODE.impairments = cfg.impairments;
-
-    // 1. Apply Case Banner
-    const banner = document.createElement("div");
-    banner.textContent = `MMT Case Mode Active: ${cfg.label} (Token: ${token})`;
-    banner.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:9999;padding:6px;font-size:14px;background:#dc2626;color:#fff;text-align:center;";
-    document.body.appendChild(banner);
-
-    // 2. Filter Menu Options (Only keep allowed regions)
-    const regionsToShow = cfg.allowedRegions;
-    const actionSel = document.getElementById("actionSel");
-    
-    if (actionSel) {
-        Array.from(actionSel.options).forEach(opt => {
-            if (opt.tagName === 'OPTGROUP') {
-                const label = (opt.label || "").toLowerCase().replace(/[^a-z]/g, '');
-                
-                // Check if any part of the optgroup label matches the allowed regions
-                const isAllowed = regionsToShow.some(region => label.includes(region));
-                
-                if (!isAllowed) {
-                    opt.style.display = 'none'; // Hide the element visually
-                    Array.from(opt.children).forEach(child => child.disabled = true); // Disable options
-                } else {
-                    opt.style.display = '';
-                }
-            }
-        });
-    }
-})();
 </script>
 </body>
 </html>
