@@ -257,8 +257,8 @@ textarea{
   <div class="modal">
     <div class="modal-title">What do you want to do next?</div>
     <button class="choice-btn" id="correctChoice">Start Goniometry Case Mode</button>
-    <button class="choice-btn wrong">Review Documentation (Incorrect Order)</button>
-    <button class="choice-btn wrong">Jump to Prognosis (Incorrect Order)</button>
+    <button class="choice-btn wrong">Review Documentation)</button>
+    <button class="choice-btn wrong">Jump to Prognosis </button>
   </div>
 </div>
 
@@ -332,10 +332,11 @@ document.getElementById("readBtn").onclick = () => {
   showChoiceModal();
 };
 
-// 3) Wrong choices close modal only
+// 3) Wrong choices → show warning modal
 document.querySelectorAll(".wrong").forEach(btn => {
   btn.onclick = () => {
-    document.getElementById("modalBackdrop").classList.remove("active");
+    showWarning();
+    document.getElementById("modalBackdrop").classList.add("active");
   };
 });
 
@@ -390,6 +391,9 @@ function showWarning(step) {
   document.getElementById("cancelBtn").onclick = () => showChoiceModal();
 }
   
+function proceed() {
+  document.getElementById("modalBackdrop").classList.remove("active");
+}
   
 </script>
 
