@@ -1194,20 +1194,22 @@ actionDeg.addEventListener("input", ()=> {
             
             if (isImpairedMotion) {
                 // 1. TRIGGER GRIMACE
+                const headModel = model.getObjectByName('head');
                 token.painShapeKeys.forEach(s => {
-                    model.getObjectByName('head').morphTargetInfluences[model.getObjectByName('head').morphTargetDictionary[s.key]] = s.value;
+                    headModel.morphTargetInfluences[headModel.morphTargetDictionary[s.key]] = s.value;
                 });
                 // 2. TRIGGER CLUES POP-UP ON FIRST ATTEMPT
-                if (!window.ROM_CASE_MODE.notes.cluesShown) {
+                if (limitHit && !window.ROM_CASE_MODE.notes.cluesShown) { // Check limitHit again
                     alert(token.notes.cluesNote);
                     window.ROM_CASE_MODE.notes.cluesShown = true;
                 }
             }
         } else {
              // DEACTIVATE GRIMACE
-             if (isImpairedMotion) {
+             if (model && isImpairedMotion) {
+                const headModel = model.getObjectByName('head');
                 token.painShapeKeys.forEach(s => {
-                    model.getObjectByName('head').morphTargetInfluences[model.getObjectByName('head').morphTargetDictionary[s.key]] = 0;
+                    headModel.morphTargetInfluences[headModel.morphTargetDictionary[s.key]] = 0;
                 });
             }
         }
@@ -1216,7 +1218,6 @@ actionDeg.addEventListener("input", ()=> {
              log(`Motion Limit Hit (${CURRENT_ACTION.label}): max ${val}°`);
         }
     }
-    // --- END CASE MODE LOGIC ---
 
     // Signed degrees for the chosen direction
     let signed = CURRENT_ACTION.sign * val;
@@ -1434,12 +1435,20 @@ function loadROMCaseMode() {
     COLLIM.trunkLatLMax = 45; // Left side WNL
     COLLIM.save(); // Save updated collision limits
 
-    // --- 2. DISPLAY CONSTANT NOTES (SENSATION) ---
+// --- 2. DISPLAY CONSTANT NOTES (SENSATION) AND BANNER ---
+    
+    // Create the Case Mode Banner
+    const banner = document.createElement("div");
+    banner.textContent = `⚠️ LAB CASE MODE: ${cfg.label}`;
+    banner.style.cssText = "position:fixed; top:0; left:0; right:0; padding:6px; background:#dc2626; color:#fff; text-align:center; font-weight:bold; z-index:100;";
+    document.body.appendChild(banner);
+    
+    // Display Constant Notes (Sensation)
     const constantNote = document.createElement("div");
     constantNote.id = "caseConstantNote";
     // Replace newlines with <br> for HTML display
     constantNote.innerHTML = cfg.notes.constantNote.replace(/\n/g, '<br>').replace(/  +/g, '');
-    constantNote.style.cssText = "position:fixed; top:12px; right:12px; width:220px; padding:10px; background:rgba(30,41,59,0.95); border:1px solid #334155; border-radius:8px; font-size:13px; color:#e2e8f0; z-index:99; white-space:pre-wrap; box-shadow:0 4px 8px rgba(0,0,0,0.3);";
+    constantNote.style.cssText = "position:fixed; top:35px; right:12px; width:220px; padding:10px; background:rgba(30,41,59,0.95); border:1px solid #334155; border-radius:8px; font-size:13px; color:#e2e8f0; z-index:99; white-space:pre-wrap; box-shadow:0 4px 8px rgba(0,0,0,0.3);";
     document.body.appendChild(constantNote);
 
     // Run the UI cleanup function (Step 2A)
