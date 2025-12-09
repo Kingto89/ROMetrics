@@ -2916,27 +2916,50 @@ const clock = new THREE.Clock();
       return;
     }
 
-    // ----- BODY REGION: force to *only* "Cervical Spine" -----
-    const regionOption = Array.from(regionSel.options).find(o =>
-      (o.textContent || "").trim() === "Cervical Spine"
-    );
+    // ----- BODY REGION: ONLY show "Cervical Spine" -----
+    const cervicalLabel = "Cervical Spine";
 
-    if (regionOption){
-      // select cervical
-      regionSel.value = regionOption.value;
+    Array.from(regionSel.options).forEach(opt => {
+      const label = (opt.textContent || "").trim();
+      if (label !== cervicalLabel){
+        opt.remove(); // delete all non-cervical regions
+      }
+    });
+
+    if (regionSel.options.length){
+      regionSel.selectedIndex = 0; // the only remaining option
       regionSel.dispatchEvent(new Event("change", { bubbles:true }));
-
-      // remove everything that isn't "Cervical Spine"
-      Array.from(regionSel.options).forEach(opt => {
-        const label = (opt.textContent || "").trim();
-        if (label !== "Cervical Spine") {
-          opt.remove();
-        }
-      });
     }
+    regionSel.disabled = true; // cannot click Body Region at all
 
-    // lock dropdown so they can't change body region
-    regionSel.disabled = true;
+    // ----- ACTIONS: keep ONLY cervical motions -----
+    Array.from(actionSel.options).forEach(opt => {
+      const label = (opt.textContent || "").trim();
+      const lower = label.toLowerCase();
+      if (!lower) return;
+
+      // keep placeholder like "(Select a motion…)" if present
+      if (lower.includes("select a motion")) return;
+
+      // remove anything that does NOT start with "cervical"
+      if (!lower.startsWith("cervical")){
+        opt.remove();
+      }
+    });
+
+    // Optional: auto-select first cervical motion if no placeholder
+    if (actionSel.options.length){
+      const firstLabel =
+        (actionSel.options[0].textContent || "").toLowerCase();
+      if (!firstLabel.includes("select a motion")){
+        actionSel.selectedIndex = 0;
+        actionSel.dispatchEvent(new Event("change", { bubbles:true }));
+      }
+    }
+  }
+
+  lockCervicalWhenReady();
+
 
 
     // ----- ACTIONS: keep only the exact cervical items you listed -----
