@@ -31,7 +31,7 @@
 
 ---
 
-# Case 1: Cervical ROM Limitation (Diagnosis NOT Included)
+# Case 1: 
 
 ## Patient Profile
 - Name: Sarah B.
