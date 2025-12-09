@@ -256,100 +256,7 @@ input[type=range]::-moz-range-thumb { width: 24px; height: 24px; background: #e2
 </div>
 <script>
   
-let NT_active = null;
-
-document.addEventListener("pointerdown", (e) => {
-  let t = e.target;
-  if (!t || !t.tagName) return;
-
-  // If we clicked on a <tspan>, climb up to its parent <text>
-  if (t.tagName.toLowerCase() === "tspan" && t.parentNode && t.parentNode.tagName) {
-    t = t.parentNode;
-  }
-
-  if (t.tagName.toLowerCase() !== "text") return;
-
-  NT_active = t;
-
-  const tr = NT_active.getAttribute("transform") || "";
-  const m  = tr.match(/rotate\((-?\d+\.?\d*)\s+(-?\d+\.?\d*)\s+(-?\d+\.?\d*)\)/);
-
-  const panel = document.getElementById("numTunerPanel");
-  if (panel) panel.style.display = "block";
-
-  const ntX = document.getElementById("ntX");
-  const ntY = document.getElementById("ntY");
-  const ntR = document.getElementById("ntR");
-
-  if (ntX) ntX.value = NT_active.getAttribute("x") || 0;
-  if (ntY) ntY.value = NT_active.getAttribute("y") || 0;
-  if (ntR) ntR.value = m ? m[1] : 0;
-});
-
-
-["ntX","ntY","ntR"].forEach(id=>{
-  document.getElementById(id).addEventListener("input",()=>{
-    if (!NT_active) return;
-    const x = document.getElementById("ntX").value;
-    const y = document.getElementById("ntY").value;
-    const r = document.getElementById("ntR").value;
-    NT_active.setAttribute("x", x);
-    NT_active.setAttribute("y", y);
-    NT_active.setAttribute("transform", `rotate(${r} ${x} ${y})`);
-  });
-});
-
-document.getElementById("ntLog").onclick = () => {
-  if (!NT_active) return;
-
-  const rawX = NT_active.getAttribute("x") || "0";
-  const rawY = NT_active.getAttribute("y") || "0";
-  const x = Number(rawX).toFixed(1);
-  const y = Number(rawY).toFixed(1);
-
-  const tr = NT_active.getAttribute("transform") || "";
-  let rot = 0;
-  const m = tr.match(/rotate\((-?\d+\.?\d*)\s+(-?\d+\.?\d*)\s+(-?\d+\.?\d*)\)/);
-  if (m) rot = parseFloat(m[1]) || 0;
-
-  const txt   = (NT_active.textContent || "").trim();
-  const parent   = NT_active.parentNode;
-  const parentId = parent && parent.id;
-
-  let key = "";
-
-  // ===== Angle labels (outer / inner rings) =====
-  if (parentId === "numsOut" || parentId === "numsIn") {
-    const kind = parentId === "numsOut" ? "outer" : "inner";
-    const siblings = Array.from(parent.querySelectorAll("text"))
-      .filter(n => (n.textContent || "").trim() === txt);
-    const idx = siblings.indexOf(NT_active);   // disambiguate duplicate “10”s etc.
-    key = `${kind}:${txt}:${idx}`;
-  }
-
-  // ===== Ruler labels on arms A/B (cm / in) =====
-  else if (parentId === "armA_ruler" || parentId === "armB_ruler") {
-    const arm  = parentId === "armA_ruler" ? "A" : "B";
-    const xNum = parseFloat(rawX) || 0;
-    let unit = "";
-    if (txt === "cm" || xNum < 0) unit = "cm";
-    else if (txt === "in" || xNum > 0) unit = "in";
-
-    const siblings = Array.from(parent.querySelectorAll("text"))
-      .filter(n => (n.textContent || "").trim() === txt);
-    const idx = siblings.indexOf(NT_active);
-
-    key = `ruler:${arm}:${unit}:${txt}:${idx}`;
-  }
-
-  // ===== Fallback: generic text =====
-  else {
-    key = `raw:${txt}`;
-  }
-
-  const snippet = `NUM_TWEAKS["${key}"] = { x:${x}, y:${y}, rot:${rot} };`;
-  console.log("FINAL NUMBER FIX →", snippet);
-};
+<!-- ====== NUMBER TUNER DEV TOOL ====== -->
 <style>
   #numTunerPanel{
     position:fixed;right:20px;bottom:20px;
@@ -368,6 +275,43 @@ document.getElementById("ntLog").onclick = () => {
   <button id="ntLog">Log</button>
 </div>
 
+<script>
+let NT_active=null;
+
+document.addEventListener("pointerdown",e=>{
+  if(!(e.target.tagName==="text" || e.target.tagName==="TEXT")) return;
+
+  NT_active = e.target;
+
+  const tr = NT_active.getAttribute("transform") || "";
+  const m = tr.match(/rotate\((-?\d+)\s+(-?\d+)\s+(-?\d+)\)/);
+
+  document.getElementById("numTunerPanel").style.display="block";
+
+  document.getElementById("ntX").value = NT_active.getAttribute("x");
+  document.getElementById("ntY").value = NT_active.getAttribute("y");
+  document.getElementById("ntR").value = m ? m[1] : 0;
+});
+
+["ntX","ntY","ntR"].forEach(id=>{
+  document.getElementById(id).addEventListener("input",()=>{
+    if(!NT_active) return;
+    const x = document.getElementById("ntX").value;
+    const y = document.getElementById("ntY").value;
+    const r = document.getElementById("ntR").value;
+    NT_active.setAttribute("x",x);
+    NT_active.setAttribute("y",y);
+    NT_active.setAttribute("transform",`rotate(${r} ${x} ${y})`);
+  });
+});
+
+document.getElementById("ntLog").onclick=()=>{
+  if(!NT_active) return;
+  const x = NT_active.getAttribute("x");
+  const y = NT_active.getAttribute("y");
+  const r = NT_active.getAttribute("transform");
+  console.log("FINAL NUMBER FIX →",{ text:NT_active.textContent, x, y, r });
+};
 </script>
 
   <details id="controllers">
