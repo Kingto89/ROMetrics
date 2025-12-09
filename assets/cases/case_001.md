@@ -13,10 +13,10 @@
   },
   "limits": {
     "motion_lab_limit": {
-      "cervical_left_rotation": 45
+      "cervical_left_rotation": 35
     },
     "goniometry_limit": {
-      "cervical_left_rotation": 45
+      "cervical_left_rotation": 35
     },
     "mmt_target_grade": {
       "left_cervical_rotators": "4/5"
@@ -62,7 +62,7 @@
 |----------------|--------|-------------------|--------------------|
 | Flexion        | WNL    | WNL               | —                  |
 | Extension      | WNL    | Mild stiffness    | —                  |
-| Left Rotation  | ~80°   | 45° (painful)     | Primary limitation |
+| Left Rotation  | ~80°   | 35° (painful)     | Primary limitation |
 | Right Rotation | ~80°   | 70°               | Mild tightness     |
 
 ### MMT
@@ -95,7 +95,7 @@
 - Student observes restricted AROM  
 
 ### Goniometry Trainer
-- Hard stop at 45°  
+- Hard stop at 35°  
 - Student documents limited ROM  
 
 ### MMT Trainer
@@ -107,7 +107,7 @@
 ## Case Completion Requirements
 1. Student reads case to unlock modules  
 2. Observes restricted ROM in Motion Lab  
-3. Measures 45° in Goniometry Trainer  
+3. Measures 35° in Goniometry Trainer  
 4. Records 4/5 in MMT Trainer  
 5. Writes a diagnosis in the case conclusion area  
 
