@@ -44,16 +44,16 @@
 ---
 
 ## Chief Complaint
-“My neck feels stiff when I try to turn to the right.”
+“My neck feels stiff when I try to turn it.”
 
 ---
 
 ## History of Present Illness
 - Onset 3 days ago after sleeping awkwardly  
 - Pain is dull, localized, non-radiating  
-- Worse with left rotation and prolonged sitting  
+- Worse with right rotation and prolonged sitting  
 - Eased by warm shower and gentle stretching  
-- Denies numbness, tingling, trauma, UE weakness, headaches, dizziness
+- Denies numbness, tingling, trauma, headaches, dizziness
 
 ---
 
