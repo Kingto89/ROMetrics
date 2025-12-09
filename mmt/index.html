@@ -268,18 +268,30 @@ import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 // <--- PLACE TOKEN DEFINITIONS HERE ADDING FOR TOKEN BEGINS---
 
-/* =========================================
-   MMT CASE TOKEN DEFINITIONS (Drop-In)
-   ========================================= */
 const MMT_CASE_TOKENS = {
     "MMT-CERVICAL-001": {
         caseId: "case_mmt_001",
-        label: "Cervical Impairment",  
-        allowedRegions: ["cervical", "scapula", "shoulder", "elbow", "wrist"],
+        label: "Cervical Impairment: Right-Sided ROM/Strength Deficit", 
+        
+        // Define ALL regions available in the UI
+        allRegions: ["Cervical & Capital", "Scapula", "Shoulder", "Trunk & Pelvis - Grading Exception", "Elbow", "Wrist", "Hip", "Knee", "Ankle & Foot - Grading Exception for Gastroc"],
+        
+        // Define ONLY the regions allowed for this case (Upper Extremity)
+        allowedRegions: ["Cervical & Capital", "Scapula", "Shoulder", "Elbow", "Wrist"],
+        
         impairments: {
-            Cervical_Rotation:    { max_hold_time: 4.5 }, 
-            Single_SCM:          { max_hold_time: 4.5 }, 
-            default_unrestricted:      { max_hold_time: 99.0 }
+            // --- RIGHT SIDE (IMPAIRED) ---
+            cervical_right_lat_flex: { max: 20 }, // Impaired (20°)
+            cervical_right_rotation: { max: 30 }, // Impaired (30°)
+            // --- LEFT SIDE (FULL ROM/UNAFFECTED) ---
+            cervical_left_lat_flex: { max: 45 }, // Full ROM (45°)
+            cervical_left_rotation: { max: 70 }, // Full ROM (70°)
+            
+            // MMT Caps (4/5)
+            Cervical_Flexion:          { max_hold_time: 4.5 }, 
+            Single_SCM:              { max_hold_time: 4.5 },
+            
+            default_unrestricted: { max_hold_time: 99.0 }
         }
     }
 };
@@ -290,9 +302,8 @@ window.MMT_CASE_MODE = {
     impairments: {}
 };
 
-/* --- MMT Case Initialization and Menu Filtering --- */
+/* --- MMT Case Initialization and Menu Filtering (REMOVES DISALLOWED OPTIONS) --- */
 
-// Function to check URL for token and apply case mode restrictions
 (function initMMTCaseMode() {
     const token = new URLSearchParams(window.location.search).get("caseToken");
     const cfg = token && MMT_CASE_TOKENS[token];
@@ -307,32 +318,29 @@ window.MMT_CASE_MODE = {
     window.MMT_CASE_MODE.token = token;
     window.MMT_CASE_MODE.impairments = cfg.impairments;
 
-    // 1. Apply Case Banner (Red text at the top)
+    // 1. Apply Case Banner 
     const banner = document.createElement("div");
     banner.textContent = `MMT Case Mode Active: ${cfg.label} (Token: ${token})`;
     banner.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:9999;padding:6px;font-size:14px;font-weight:600;background:#dc2626;color:#fff;text-align:center;";
     document.body.appendChild(banner);
 
-    // 2. Filter Menu Options (Blocks lower body/trunk regions)
-    const regionsToShow = cfg.allowedRegions;
+    // 2. Filter Menu Options by DIRECTLY REMOVING DISALLOWED <OPTGROUP>S
+    const allowed = new Set(cfg.allowedRegions);
     const actionSel = document.getElementById("actionSel");
     
     if (actionSel) {
-        Array.from(actionSel.options).forEach(opt => {
-            if (opt.tagName === 'OPTGROUP') {
-                const label = (opt.label || "").toLowerCase().replace(/[^a-z]/g, '');
-                const isAllowed = regionsToShow.some(region => label.includes(region));
-                
-                if (!isAllowed) {
-                    opt.style.display = 'none';
-                    Array.from(opt.children).forEach(child => child.disabled = true);
-                } else {
-                    opt.style.display = '';
-                }
+        Array.from(actionSel.querySelectorAll('optgroup')).forEach(optgroup => {
+            const label = optgroup.label.trim();
+            
+            if (!allowed.has(label)) {
+                // Directly remove the optgroup from the menu for a guaranteed filter
+                optgroup.remove();
             }
         });
     }
 })();
+
+// ... rest of the script continues below ...
 
 /* // ADDED for TOKEN ENDS
 /* ==== Hard-wired numeric pose (edit these) ==== */
@@ -601,7 +609,6 @@ function getGradeStatus(elapsedSeconds) {
     }
     return { grade: 0, color: 'transparent', text: 'Hold to Apply Resistance (Grade 3, 4, 5)' };
 }
-// --- Updated Checkpoint incl Token ---
 function updateResistanceFill() {
     if (!resistanceTimer) return;
 
@@ -609,19 +616,32 @@ function updateResistanceFill() {
     const status = getGradeStatus(elapsed);
     const maxTime = 7.0; 
     
-    // --- CASE MODE CLAMPING LOGIC (MMT GRADE 4 CAP) ---
+    // --- CASE MODE CLAMPING LOGIC (ENFORCING RIGHT IMPAIRMENT) ---
     let maxAllowedTime = maxTime;
     if (window.MMT_CASE_MODE && window.MMT_CASE_MODE.active) {
         const testKey = actionSel.value;
         let impairmentKey = 'default_unrestricted';
         
-        // Determine if the current test is restricted
+        // 1. MMT Cap Check
         if (testKey === 'Cervical_Flexion') {
             impairmentKey = 'Cervical_Flexion';
-        } else if (testKey === 'Cervical_Rotation') {
-            // Assuming the rotation test is performed to the LEFT side (the side of the deficit)
-            impairmentKey = 'Cervical_Rotation_Left';
+        } else if (testKey === 'Single_SCM') {
+            impairmentKey = 'Single_SCM';
         }
+
+        // 2. ROM Cap Check (Mapping UI Label to Right/Left Keys for ROM tests)
+        // NOTE: This logic is designed for the Motion Lab/Goniometry tools, but is included 
+        // here for consistency if you run ROM tests in this file.
+        if (testKey === 'cerv_lat' || testKey === 'cerv_rot') {
+             const label = CURRENT_ACTION?.label || ""; 
+             
+             // This applies the correct Right-Sided Deficit from the impairment data
+             if (label.includes('Right')) {
+                 impairmentKey = (testKey === 'cerv_lat') ? 'cervical_right_lat_flex' : 'cervical_right_rotation';
+             } else if (label.includes('Left')) {
+                 impairmentKey = (testKey === 'cerv_lat') ? 'cervical_left_lat_flex' : 'cervical_left_rotation';
+             }
+        }
 
         const impairment = window.MMT_CASE_MODE.impairments[impairmentKey];
         if (impairment && typeof impairment.max_hold_time === 'number') {
