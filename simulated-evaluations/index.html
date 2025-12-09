@@ -344,6 +344,52 @@ document.getElementById("correctChoice").onclick = () => {
   window.location.href =
     "https://kingto89.github.io/ROMetrics.com/goniometry-trainer/?caseToken=GONIO-CERVICAL-001";
 };
+/* ==========================================
+   WARNING MODAL (NO ANSWERS, NO NUMBERS)
+========================================== */
+function showWarning(step) {
+  const modal = document.getElementById("modal");
+
+  const recommended = `
+    <div style="
+      border:1px solid var(--accent);
+      padding:10px;
+      border-radius:8px;
+      background:rgba(56,189,248,0.08);
+      margin-bottom:12px;
+      font-size:13px;
+      line-height:1.45;
+      color:var(--text);
+    ">
+      <strong style="color:var(--accent)">Recommended Order:</strong><br>
+      • Goniometry — establishes baseline ROM findings.<br>
+      • Motion Lab — visualizes movement quality and compensations.<br>
+      • MMT — evaluates strength after ROM/motion are understood.<br>
+      <br>
+      Following this order supports normal clinical reasoning.
+    </div>
+  `;
+
+  modal.innerHTML = `
+    <div class="modal-title">Before You Proceed</div>
+
+    <p style="color:#9ca3af;font-size:13px;margin-bottom:10px;">
+      This isn’t the standard first step for clinical workflow.
+      You can continue, but consider the recommended flow.
+    </p>
+
+    ${recommended}
+
+    <button class="choice-btn" id="proceedBtn">Proceed Anyway</button>
+    <button class="choice-btn" id="cancelBtn" style="background:#1b2537;">
+      Close & Choose Again
+    </button>
+  `;
+
+  document.getElementById("proceedBtn").onclick = () => proceed(step);
+  document.getElementById("cancelBtn").onclick = () => showChoiceModal();
+}
+  
   
 </script>
 
