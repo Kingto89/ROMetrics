@@ -407,6 +407,38 @@ document.querySelectorAll(".wrong").forEach(btn => {
     };
   };
 });
+<!-- Warning Modal -->
+<div class="modal-backdrop" id="warningBackdrop" style="display:none;">
+  <div class="modal" id="warningModal">
+    <div class="modal-title">Before You Proceed</div>
+
+    <p style="color:#9ca3af;font-size:13px;margin-bottom:10px;">
+      This isn’t the recommended first step, but you may continue if needed.
+    </p>
+
+    <div style="
+      border:1px solid var(--accent);
+      padding:10px;
+      border-radius:8px;
+      background:rgba(56,189,248,0.08);
+      margin-bottom:12px;
+      font-size:13px;
+      line-height:1.45;
+      color:var(--text);
+    ">
+      <strong style="color:var(--accent)">Recommended Order:</strong><br>
+      • Functional / ROM observation first.<br>
+      • Goniometry second.<br>
+      • MMT third.<br>
+      • Prognosis last.<br>
+    </div>
+
+    <button class="choice-btn" id="warningProceed">Proceed Anyway</button>
+    <button class="choice-btn" id="warningClose" style="background:#1b2537;">
+      Back to Menu
+    </button>
+  </div>
+</div>
 
 </script>
 
