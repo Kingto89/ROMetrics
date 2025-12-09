@@ -1929,7 +1929,7 @@ actionDeg.addEventListener("input", ()=> {
   // Signed degrees for the chosen direction
   let signed = CURRENT_ACTION.sign * val;
 
-  // === CASE ROM CLAMPS (CERVICAL) ===  CASE CHECKSPOT
+  // === CASE ROM CLAMPS (CERVICAL) ===  CASE CHECKSPOT 
   if (window.GONIO_CASE_MODE && window.GONIO_CASE_MODE.active){
     // Cervical lateral flexion — LEFT (negative side)
     if (CURRENT_ACTION.key === 'cerv_lat' && signed < 0){
