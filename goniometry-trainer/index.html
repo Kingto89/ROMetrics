@@ -2888,26 +2888,27 @@ const clock = new THREE.Clock();
   /* =========================
      GONIOMETRY CASE MODE
      ========================= */
+
 const GONIO_CASE_TOKENS = {
-    "GONIO-CERVICAL-001": {
-      caseId: "case_001",          // must match CASE_FILES id above
-      label:  "Cervical ROM Case", // UI label
-      allowedRegions: ["cervical"],
+  "GONIO-CERVICAL-001": {
+    caseId: "case_001",
+    label: "Cervical ROM Case - LLF 20°", // Label adjusted for clarity
+    allowedRegions: ["cervical"],
 
-      // Impairments for this case: max measured angles
-      impairments: {
-        // 1. LEFT Lateral Flexion (Your original limit)
-        cervical_left_lat_flex:  { max: 35 },  
-        // 2. RIGHT Rotation (Your original limit)
-        cervical_right_rotation: { max: 60 },
+    // Impairments for this case: max measured angles
+    impairments: {
+      // 1. LEFT Lateral Flexion (The requested severe limit)
+      cervical_left_lat_flex:  { max: 20 }, // <-- **REQUESTED LIMIT: 20°** // 2. RIGHT Lateral Flexion (Full ROM/Unaffected)
+      cervical_right_lat_flex: { max: 45 }, // Full ROM limit (45°)
 
-        // 3. RIGHT Lateral Flexion (Full ROM/Unaffected)
-        cervical_right_lat_flex: { max: 45 }, // Full ROM limit (e.g., 45°)
-        // 4. LEFT Rotation (Full ROM/Unaffected)
-        cervical_left_rotation:  { max: 70 }, // Full ROM limit (e.g., 70°)
-      }
-    }
-  };
+      // 3. LEFT Rotation (Moderate impairment to accompany LLF)
+      cervical_left_rotation:  { max: 15 }, // Moderate limit (15°) 
+      
+      // 4. RIGHT Rotation (Full ROM/Unaffected)
+      cervical_right_rotation: { max: 70 }, // Full ROM limit (70°) 
+    }
+  }
+};
 
   // Small helper: read a query parameter from the URL.
   function getQueryParam(name){
