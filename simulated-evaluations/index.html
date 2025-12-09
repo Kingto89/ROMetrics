@@ -339,93 +339,74 @@ document.getElementById("caseBtn").onclick = async () => {
   doc.style.pointerEvents = "none";
 };
 
-/* -------- ATTACH WRONG-CHOICE HANDLERS (ALWAYS CALL AFTER MENU CHANGES) -------- */
-function attachWrongHandlers() {
-  document.querySelectorAll("#modalBackdrop .wrong").forEach(btn => {
-    btn.onclick = () => {
-      const isMMT = btn.textContent.toLowerCase().includes("mmt");
+/* -------- MAIN + WARNING MODALS -------- */
+const modalBackdrop   = document.getElementById("modalBackdrop");
+const warningBackdrop = document.getElementById("warningModal");
 
-      const modal = document.querySelector("#modalBackdrop .modal");
-      modal.innerHTML = `
-        <div class="modal-title">Before You Proceed</div>
+let pendingUrl = null;
 
-        <p style="color:#9ca3af;font-size:13px;margin-bottom:10px;">
-          This step isn't normally first in clinical workflow.<br>
-          You may continue, but consider the recommended order.
-        </p>
-
-        <div style="
-          border:1px solid var(--accent);
-          padding:10px;
-          border-radius:8px;
-          background:rgba(56,189,248,0.08);
-          margin-bottom:12px;
-          font-size:13px;
-          line-height:1.45;
-          color:var(--text);
-        ">
-          <strong style="color:var(--accent)">Recommended Flow:</strong><br>
-          • Observation & functional screen<br>
-          • AROM/PROM findings<br>
-          • Goniometry<br>
-          • MMT as needed<br>
-          • Prognosis last
-        </div>
-
-        <button class="choice-btn" id="proceedAnyway">Proceed Anyway</button>
-        <button class="choice-btn" id="cancelWarning">Back to Menu</button>
-      `;
-
-      document.getElementById("modalBackdrop").classList.add("active");
-
-      // Proceed Anyway: only MMT should jump into MMT case mode
-      document.getElementById("proceedAnyway").onclick = () => {
-        if (isMMT) {
-          window.location.href =
-            "https://kingto89.github.io/ROMetrics.com/mmt/?caseToken=MMT-CERVICAL-001";
-        } else {
-          document.getElementById("modalBackdrop").classList.remove("active");
-        }
-      };
-
-      // Back to Menu: show the SECOND-STAGE menu (different from initial)
-      document.getElementById("cancelWarning").onclick = () => {
-        resetChoiceModal();
-        document.getElementById("modalBackdrop").classList.add("active");
-      };
-    };
-  });
-}
-
-/* -------- RESET MAIN MENU MODAL (SECOND-STAGE MENU) -------- */
-function resetChoiceModal() {
-  const modal = document.querySelector("#modalBackdrop .modal");
-  modal.innerHTML = `
-    <div class="modal-title">What do you want to do next?</div>
-    <button class="choice-btn" id="correctChoice">Start Goniometry Case Mode</button>
-    <button class="choice-btn wrong">MMT test</button>
-    <button class="choice-btn wrong">Jump to Prognosis</button>
-  `;
-
-  document.getElementById("correctChoice").onclick = () => {
-    window.location.href =
-      "https://kingto89.github.io/ROMetrics.com/goniometry-trainer/?caseToken=GONIO-CERVICAL-001";
+/* -------- CORRECT FIRST STEP (can wire Motion Lab later) -------- */
+const goFunctionalBtn = document.getElementById("goFunctional");
+if (goFunctionalBtn) {
+  goFunctionalBtn.onclick = () => {
+    // TODO: plug in Motion Lab / functional case link here when ready
+    // window.location.href = "https://kingto89.github.io/ROMetrics.com/motion-lab/?caseToken=MOTION-CERVICAL-001";
+    alert("Functional / ROM observation module will be wired here.");
   };
-
-  // Wire up the new wrong buttons in this menu
-  attachWrongHandlers();
 }
 
-/* -------- READ BUTTON → OPEN INITIAL MENU -------- */
+/* -------- WRONG-ORDER STEPS → SHOW WARNING, THEN GO TO CASE MODE -------- */
+document.querySelectorAll("#modalBackdrop .wrong").forEach(btn => {
+  btn.onclick = () => {
+    const label = btn.textContent.toLowerCase();
+
+    if (label.includes("goniometry")) {
+      pendingUrl = "https://kingto89.github.io/ROMetrics.com/goniometry-trainer/?caseToken=GONIO-CERVICAL-001";
+    } else if (label.includes("mmt")) {
+      pendingUrl = "https://kingto89.github.io/ROMetrics.com/mmt/?caseToken=MMT-CERVICAL-001";
+    } else if (label.includes("prognosis")) {
+      // Fill this in once you have a prognosis case-mode URL
+      pendingUrl = null;
+    }
+
+    // Hide main menu (4 options stay defined in HTML, just not visible)
+    modalBackdrop.classList.remove("active");
+
+    // Show warning overlay
+    if (warningBackdrop) {
+      warningBackdrop.classList.add("active");
+    }
+  };
+});
+
+/* -------- WARNING MODAL: SINGLE “OK” BUTTON THAT CONTINUES -------- */
+const warningProceed = document.getElementById("warningProceed");
+const warningBack    = document.getElementById("warningBack");
+
+if (warningProceed) {
+  // Rename to feel less like a choice
+  warningProceed.textContent = "OK — continue to this step";
+  warningProceed.onclick = () => {
+    if (warningBackdrop) {
+      warningBackdrop.classList.remove("active");
+    }
+    if (pendingUrl) {
+      window.location.href = pendingUrl;
+    }
+  };
+}
+
+if (warningBack) {
+  // No second option — hide Back button
+  warningBack.style.display = "none";
+}
+
+/* -------- READ BUTTON → OPEN MAIN MENU (ALWAYS SAME 4 OPTIONS) -------- */
 document.getElementById("readBtn").onclick = () => {
   if (!caseLoaded) return;
-  document.getElementById("modalBackdrop").classList.add("active");
+  modalBackdrop.classList.add("active");
 };
-
-/* -------- INITIAL WIRING FOR ORIGINAL WRONG BUTTONS -------- */
-attachWrongHandlers();
 </script>
-
 
 </script>
 
