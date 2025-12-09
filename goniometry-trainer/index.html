@@ -2805,188 +2805,138 @@ const clock = new THREE.Clock();
   <div id="noteContent" style="margin-top:10px; font-size:13px; line-height:1.45;"></div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js"></script>
-
-/* =========================
-   GONIOMETRY CASE MODE
-   ========================= */
-
-/**
- * Map of allowed case tokens → case configuration.
- * You can add more tokens/cases later if needed.
- */
-const GONIO_CASE_TOKENS = {
-  "GONIO-CERVICAL-001": {
-    caseId: "case_001",          // must match CASE_FILES id above
-    label:  "Cervical ROM Case", // UI label
-    allowedRegions: ["cervical"],
-
-    // Impairments for this case: max measured angles
-    // Keys are arbitrary strings you can pass into clampAngleForCase(...)
-    impairments: {
-      cervical_left_lat_flex:  { max: 45 },  // 45° left lateral flexion
-      cervical_right_rotation: { max: 70 }   // 70° right rotation
-    }
-  }
-};
-
-/**
- * Small helper: read a query parameter from the URL.
- */
-function getQueryParam(name){
-  const params = new URLSearchParams(window.location.search);
-  return params.get(name);
-}
-
-/**
- * Global case mode state for the Goniometry Trainer.
- * When inactive, everything behaves normally.
- */
-window.GONIO_CASE_MODE = {
-  active: false,
-  token: null,
-  caseId: null,
-  label: null,
-  allowedRegions: [],
-  impairments: {}
-};
-
-/**
- * Helper for the *simulation side*:
- * build a URL that opens the Goniometry Trainer in case mode.
- *
- * Example usage on the last simulation page:
- *   const url = buildGoniometryCaseUrl(
- *     "https://your-site/rometrics/goniometry/index.html",
- *     "GONIO-CERVICAL-001"
- *   );
- *   // use `url` as the href for the link/button you show the student
- */
-window.buildGoniometryCaseUrl = function(baseUrl, caseToken){
-  const u = new URL(baseUrl, window.location.origin);
-  u.searchParams.set("caseToken", caseToken);
-  return u.toString();
-};
-
-/**
- * Angle clamping helper:
- * call this inside your goniometer logic anywhere you compute the
- * *raw* angle and want to enforce case impairment limits.
- *
- * Example:
- *   const raw = computeAngle(...);
- *   const clamped = clampAngleForCase(raw, "cervical_left_lat_flex");
- */
-window.clampAngleForCase = function(rawAngleDeg, impairmentKey){
-  if (!window.GONIO_CASE_MODE.active) return rawAngleDeg;
-  const lim = window.GONIO_CASE_MODE.impairments[impairmentKey];
-  if (!lim || typeof lim.max !== "number") return rawAngleDeg;
-  return Math.min(rawAngleDeg, lim.max);
-};
-
-/**
- * Initialize case mode (runs once on load).
- * - Reads ?caseToken=... from URL.
- * - If valid, locks UI to the allowedRegions and shows a banner.
- */
-(function initGoniometryCaseMode(){
-  const token = getQueryParam("caseToken");
-  const cfg   = token && GONIO_CASE_TOKENS[token];
-  if (!cfg) return; // no (valid) case token → normal behavior
-
-  // Populate global case mode
-  window.GONIO_CASE_MODE.active        = true;
-  window.GONIO_CASE_MODE.token         = token;
-  window.GONIO_CASE_MODE.caseId        = cfg.caseId;
-  window.GONIO_CASE_MODE.label         = cfg.label;
-  window.GONIO_CASE_MODE.allowedRegions = cfg.allowedRegions.slice();
-  window.GONIO_CASE_MODE.impairments    = Object.assign({}, cfg.impairments);
-
-  // --- 1) Banner at top so student knows they’re in a locked case ---
-  const banner = document.createElement("div");
-  banner.id = "goniometry-case-banner";
-  banner.textContent = `Case Mode: ${cfg.label} — token ${token}`;
-  banner.style.position = "fixed";
-  banner.style.top = "0";
-  banner.style.left = "0";
-  banner.style.right = "0";
-  banner.style.zIndex = "9999";
-  banner.style.padding = "8px 12px";
-  banner.style.fontSize = "13px";
-  banner.style.fontWeight = "600";
-  banner.style.textAlign = "center";
-  banner.style.background = "#0f172a";
-  banner.style.color = "#facc15";
-  banner.style.boxShadow = "0 2px 6px rgba(0,0,0,0.4)";
-  document.body.appendChild(banner);
-
-  // Add a bit of top padding so banner doesn’t cover your UI
-  document.body.style.paddingTop = "32px";
-
-  // --- 2) Hard lock to cervical region (if region selector exists) ---
-  const regionSel = document.getElementById("regionSel");
-  if (regionSel && cfg.allowedRegions.length){
-    const firstAllowed = cfg.allowedRegions[0];
-    // Try to set the dropdown to the allowed region
-    const option = Array.from(regionSel.options)
-      .find(o => o.value.toLowerCase() === firstAllowed.toLowerCase());
-    if (option){
-      regionSel.value = option.value;
-      // Fire a change event so your existing code reacts
-      const ev = new Event("change", { bubbles:true });
-      regionSel.dispatchEvent(ev);
-    }
-    // Completely lock the selector
-    regionSel.disabled = true;
-  }
-
-  // --- 3) Disable all UI buttons that *aren’t* cervical-related ---
-  // This is intentionally generic and non-destructive.
-  // It simply looks at button text; if it does not say “Cervical”
-  // while we are in a cervical-only case, it gets disabled.
-  if (cfg.allowedRegions.length === 1 &&
-      cfg.allowedRegions[0].toLowerCase() === "cervical"){
-
-    const allBtns = document.querySelectorAll("button, [role='button']");
-    allBtns.forEach(btn => {
-      if (!btn.textContent) return;
-      // Allow only buttons with “Cervical” in their label
-      if (!/cervical/i.test(btn.textContent)){
-        btn.disabled = true;
-        btn.style.opacity = "0.4";
-        btn.style.pointerEvents = "none";
-      }
-    });
-  }
-
-  // You can add more fine-grained locking here later if needed
-  // (e.g., only allow specific test IDs), but this will not
-  // interfere with your existing logic unless the elements are found.
-})();
-  
-</script>
-  
-</body>
-</html>
-    
-  </script>
   <div id="notePopup" 
      style="display:none; position:fixed; right:16px; bottom:16px;
             width:min(420px,50vw); max-height:70vh;
             background:#0c1628; color:#e2e8f0;
             border:1px solid #334155; border-radius:10px;
             padding:12px; overflow:auto; z-index:200;">
-  <div style="display:flex; align-items:center;">
-    <strong style="font-size:14px;">Goniometer Placement</strong>
-    <button id="closeNote" 
-            style="margin-left:auto; background:transparent; border:0;
-                   color:#9fb0c9; font-size:18px; cursor:pointer;">✕</button>
+    <div style="display:flex; align-items:center;">
+      <strong style="font-size:14px;">Goniometer Placement</strong>
+      <button id="closeNote" 
+              style="margin-left:auto; background:transparent; border:0;
+                     color:#9fb0c9; font-size:18px; cursor:pointer;">✕</button>
+    </div>
+    <div id="noteContent" style="margin-top:10px; font-size:13px; line-height:1.45;"></div>
   </div>
-  <div id="noteContent" style="margin-top:10px; font-size:13px; line-height:1.45;"></div>
-</div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js"></script>
 
-  
-</script>
-  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js"></script>
+  <script>
+  /* =========================
+     GONIOMETRY CASE MODE
+     ========================= */
+
+  const GONIO_CASE_TOKENS = {
+    "GONIO-CERVICAL-001": {
+      caseId: "case_001",          // must match CASE_FILES id above
+      label:  "Cervical ROM Case", // UI label
+      allowedRegions: ["cervical"],
+
+      // Impairments for this case: max measured angles
+      // Keys are arbitrary strings you can pass into clampAngleForCase(...)
+      impairments: {
+        cervical_left_lat_flex:  { max: 45 },  // 45° left lateral flexion
+        cervical_right_rotation: { max: 70 }   // 70° right rotation
+      }
+    }
+  };
+
+  // Small helper: read a query parameter from the URL.
+  function getQueryParam(name){
+    const params = new URLSearchParams(window.location.search);
+    return params.get(name);
+  }
+
+  // Global case mode state for the Goniometry Trainer.
+  // When inactive, everything behaves normally.
+  window.GONIO_CASE_MODE = {
+    active: false,
+    token: null,
+    caseId: null,
+    label: null,
+    allowedRegions: [],
+    impairments: {}
+  };
+
+  // Helper for the simulation side: build a URL with caseToken.
+  window.buildGoniometryCaseUrl = function(baseUrl, caseToken){
+    const u = new URL(baseUrl, window.location.origin);
+    u.searchParams.set("caseToken", caseToken);
+    return u.toString();
+  };
+
+  // Angle clamping helper
+  window.clampAngleForCase = function(rawAngleDeg, impairmentKey){
+    if (!window.GONIO_CASE_MODE.active) return rawAngleDeg;
+    const lim = window.GONIO_CASE_MODE.impairments[impairmentKey];
+    if (!lim || typeof lim.max !== "number") return rawAngleDeg;
+    return Math.min(rawAngleDeg, lim.max);
+  };
+
+  // Initialize case mode (runs once on load)
+  (function initGoniometryCaseMode(){
+    const token = getQueryParam("caseToken");
+    const cfg   = token && GONIO_CASE_TOKENS[token];
+    if (!cfg) return; // no (valid) case token → normal behavior
+
+    // Populate global case mode
+    window.GONIO_CASE_MODE.active         = true;
+    window.GONIO_CASE_MODE.token          = token;
+    window.GONIO_CASE_MODE.caseId         = cfg.caseId;
+    window.GONIO_CASE_MODE.label          = cfg.label;
+    window.GONIO_CASE_MODE.allowedRegions = cfg.allowedRegions.slice();
+    window.GONIO_CASE_MODE.impairments    = Object.assign({}, cfg.impairments);
+
+    // 1) Banner at top
+    const banner = document.createElement("div");
+    banner.id = "goniometry-case-banner";
+    banner.textContent = `Case Mode: ${cfg.label} — token ${token}`;
+    banner.style.position = "fixed";
+    banner.style.top = "0";
+    banner.style.left = "0";
+    banner.style.right = "0";
+    banner.style.zIndex = "9999";
+    banner.style.padding = "8px 12px";
+    banner.style.fontSize = "13px";
+    banner.style.fontWeight = "600";
+    banner.style.textAlign = "center";
+    banner.style.background = "#0f172a";
+    banner.style.color = "#facc15";
+    banner.style.boxShadow = "0 2px 6px rgba(0,0,0,0.4)";
+    document.body.appendChild(banner);
+
+    // Add top padding so banner doesn’t cover UI
+    document.body.style.paddingTop = "32px";
+
+    // 2) Hard lock to cervical region (if region selector exists)
+    const regionSel = document.getElementById("regionSel");
+    if (regionSel && cfg.allowedRegions.length){
+      const firstAllowed = cfg.allowedRegions[0];
+      const option = Array.from(regionSel.options)
+        .find(o => o.value.toLowerCase() === firstAllowed.toLowerCase());
+      if (option){
+        regionSel.value = option.value;
+        const ev = new Event("change", { bubbles:true });
+        regionSel.dispatchEvent(ev);
+      }
+      regionSel.disabled = true;
+    }
+
+    // 3) Disable all UI buttons that aren’t cervical-related
+    if (cfg.allowedRegions.length === 1 &&
+        cfg.allowedRegions[0].toLowerCase() === "cervical"){
+      const allBtns = document.querySelectorAll("button, [role='button']");
+      allBtns.forEach(btn => {
+        if (!btn.textContent) return;
+        if (!/cervical/i.test(btn.textContent)){
+          btn.disabled = true;
+          btn.style.opacity = "0.4";
+          btn.style.pointerEvents = "none";
+        }
+      });
+    }
+  })();
+  </script>
 </body>
 </html>
+
