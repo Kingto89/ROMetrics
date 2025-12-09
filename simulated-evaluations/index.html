@@ -130,6 +130,7 @@ main{flex:1;display:flex;min-height:0}
 }
 .modal-backdrop.active{display:flex}
 .modal{
+  position:relative;          /* keep this */
   max-width:520px;
   width:100%;
   border-radius:14px;
@@ -271,6 +272,8 @@ textarea{
 <div class="modal-backdrop" id="warningModal">
   <div class="modal">
     <div class="modal-title">Before You Proceed</div>
+    <button id="warningClose" style="position:absolute;top:10px;right:12px;background:transparent;border:none;color:#9ca3af;font-size:18px;cursor:pointer;line-height:1;">×</button>
+
 
     <p style="color:#9ca3af;font-size:13px;margin-bottom:10px;">
       This step is normally performed later, but you may continue if needed.
@@ -399,6 +402,16 @@ if (warningProceed) {
 if (warningBack) {
   // No second option — hide Back button
   warningBack.style.display = "none";
+}
+const warningClose = document.getElementById("warningClose");
+if (warningClose) {
+  warningClose.onclick = () => {
+    pendingUrl = null; // cancel the jump
+    if (warningBackdrop) {
+      warningBackdrop.classList.remove("active");
+    }
+    modalBackdrop.classList.add("active"); // reopen the same 4-option menu
+  };
 }
 
 /* -------- READ BUTTON → OPEN MAIN MENU (ALWAYS SAME 4 OPTIONS) -------- */
