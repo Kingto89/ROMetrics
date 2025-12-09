@@ -296,10 +296,25 @@ window.MMT_CASE_MODE = {
 };
 // --- NEW: Global Tracker for Impaired MMT Tests ---
 window.IMPAIRMENT_TRACKER = {
-    // Keys match the impaired test names
-    'Single_SCM': false,
-    'Cervical_Rotation': false
+    // Keys match the impaired test names
+    'Single_SCM': false,
+    'Cervical_Rotation': false
 };
+
+// --- NEW: DETAILED CASE RESULTS TEXT (CONFIRMATORY SENTENCE REMOVED) ---
+const MMT_FULL_RESULTS = `
+MMT Case Summary: Right-Sided Deficit
+
+✅ Impaired Results (4/5 Strength Cap):
+- Right Cervical Rotators (Tested by: Cervical Rotation)
+- Right SCM (Tested by: Single SCM)
+
+✅ Unimpaired Results (5/5 Strength):
+- Cervical Flexors (Full strength)
+- Cervical Extensors (Full strength)
+- All other Upper Extremity groups (Full strength)
+`;
+// ----------------------------------------
 // ---------------------------------------------------
 /* --- MMT Case Initialization and Menu Filtering (REMOVES DISALLOWED OPTIONS) --- */
 
