@@ -348,15 +348,14 @@ const warningBackdrop = document.getElementById("warningModal");
 
 let pendingUrl = null;
 
-/* -------- CORRECT FIRST STEP (can wire Motion Lab later) -------- */
 const goFunctionalBtn = document.getElementById("goFunctional");
 if (goFunctionalBtn) {
   goFunctionalBtn.onclick = () => {
-    // TODO: plug in Motion Lab / functional case link here when ready
-    // window.location.href = "https://kingto89.github.io/ROMetrics.com/motion-lab/?caseToken=MOTION-CERVICAL-001";
-    alert("Functional / ROM observation module will be wired here.");
+    window.location.href =
+      "https://kingto89.github.io/ROMetrics.com/lab/?caseToken=LAB-CERVICAL-001";
   };
 }
+
 
 /* -------- WRONG-ORDER STEPS → SHOW WARNING, THEN GO TO CASE MODE -------- */
 document.querySelectorAll("#modalBackdrop .wrong").forEach(btn => {
