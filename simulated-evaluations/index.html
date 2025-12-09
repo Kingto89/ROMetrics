@@ -302,18 +302,50 @@ document.getElementById("caseBtn").onclick = async () => {
   document.getElementById("snapshotBody").innerHTML = out.join("<br><br>");
 
   caseLoaded = true;
-/* ============================================================
-   CASE READ BUTTON → OPEN STAGE 2 (CHOICE SCREEN)
-============================================================ */
+  document.getElementById("readBtn").disabled = false;
+
+  // Show documentation section but greyed out
+  document.getElementById("docCard").style.opacity = "0.35";
+  document.getElementById("docCard").style.display = "block";
+  document.getElementById("docCard").style.pointerEvents = "none";
+};
+
+
+/* -------- UNLOCK DOCUMENTATION -------- */
+function checkAllComplete(){
+  if(modules.goniometry && modules.mmt && modules.motion){
+    document.getElementById("docCard").style.display = "block";
+  }
+}
+/* ===============================
+   FIX: MAKE READ BUTTON WORK
+   =============================== */
+
+// 1) Modal opener
+function showChoiceModal() {
+  document.getElementById("modalBackdrop").classList.add("active");
+}
+
+// 2) READ BUTTON → triggers modal
 document.getElementById("readBtn").onclick = () => {
   if (!caseLoaded) return;
   showChoiceModal();
 };
 
-function showChoiceModal() {
-  document.getElementById("modalBackdrop").classList.add("active");
-}
+// 3) Wrong choices close modal only
+document.querySelectorAll(".wrong").forEach(btn => {
+  btn.onclick = () => {
+    document.getElementById("modalBackdrop").classList.remove("active");
+  };
+});
+
+// 4) Correct choice → launches case mode
+document.getElementById("correctChoice").onclick = () => {
+  window.location.href =
+    "https://kingto89.github.io/ROMetrics.com/goniometry-trainer/?caseToken=GONIO-CERVICAL-001";
+};
+  
 </script>
+
 </body>
 </html>
-
