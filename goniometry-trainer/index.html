@@ -2883,14 +2883,14 @@ const clock = new THREE.Clock();
   window.GONIO_CASE_MODE.allowedRegions = cfg.allowedRegions.slice();
   window.GONIO_CASE_MODE.impairments    = Object.assign({}, cfg.impairments);
 
-  // 1) Banner at top
+  // 1) Case banner at BOTTOM
   const banner = document.createElement("div");
   banner.id = "goniometry-case-banner";
   banner.textContent = `Case Mode: ${cfg.label} — token ${token}`;
   banner.style.position = "fixed";
-  banner.style.top = "0";
   banner.style.left = "0";
   banner.style.right = "0";
+  banner.style.bottom = "0";
   banner.style.zIndex = "9999";
   banner.style.padding = "8px 12px";
   banner.style.fontSize = "13px";
@@ -2898,98 +2898,50 @@ const clock = new THREE.Clock();
   banner.style.textAlign = "center";
   banner.style.background = "#0f172a";
   banner.style.color = "#facc15";
-  banner.style.boxShadow = "0 2px 6px rgba(0,0,0,0.4)";
+  banner.style.boxShadow = "0 -2px 6px rgba(0,0,0,0.4)";
   document.body.appendChild(banner);
 
-  // Add top padding so banner doesn’t cover UI
-  document.body.style.paddingTop = "32px";
-
-  // 2) After UI is ready, force Body Region + Action to cervical ONLY
-  function lockCervicalWhenReady(){
+  // 2) After UI is ready, force Body Region to ONLY "Cervical Spine"
+  function lockCervicalBodyRegion(){
     const regionSel = document.getElementById("regionSel");
-    const actionSel = document.getElementById("actionSel");
 
-    // Wait until both selects exist AND have options
-    if (!regionSel || !actionSel ||
-        !regionSel.options.length || !actionSel.options.length){
-      requestAnimationFrame(lockCervicalWhenReady);
+    // wait until the dropdown exists and has options
+    if (!regionSel || !regionSel.options || !regionSel.options.length){
+      requestAnimationFrame(lockCervicalBodyRegion);
       return;
     }
 
-    // ----- BODY REGION: ONLY show "Cervical Spine" -----
-    const cervicalLabel = "Cervical Spine";
+    const targetLabel = "Cervical Spine";
+    let hasCervical = false;
 
+    // first pass: check if that label exists
     Array.from(regionSel.options).forEach(opt => {
       const label = (opt.textContent || "").trim();
-      if (label !== cervicalLabel){
-        opt.remove(); // delete all non-cervical regions
-      }
+      if (label === targetLabel) hasCervical = true;
     });
 
-    if (regionSel.options.length){
-      regionSel.selectedIndex = 0; // the only remaining option
-      regionSel.dispatchEvent(new Event("change", { bubbles:true }));
+    if (!hasCervical){
+      // options not fully populated yet → try again
+      requestAnimationFrame(lockCervicalBodyRegion);
+      return;
     }
-    regionSel.disabled = true; // cannot click Body Region at all
 
-    // ----- ACTIONS: keep ONLY cervical motions -----
-    Array.from(actionSel.options).forEach(opt => {
+    // second pass: remove everything that is NOT "Cervical Spine"
+    Array.from(regionSel.options).forEach(opt => {
       const label = (opt.textContent || "").trim();
-      const lower = label.toLowerCase();
-      if (!lower) return;
-
-      // keep placeholder like "(Select a motion…)" if present
-      if (lower.includes("select a motion")) return;
-
-      // remove anything that does NOT start with "cervical"
-      if (!lower.startsWith("cervical")){
+      if (label !== targetLabel){
         opt.remove();
       }
     });
 
-    // Optional: auto-select first cervical motion if no placeholder
-    if (actionSel.options.length){
-      const firstLabel =
-        (actionSel.options[0].textContent || "").toLowerCase();
-      if (!firstLabel.includes("select a motion")){
-        actionSel.selectedIndex = 0;
-        actionSel.dispatchEvent(new Event("change", { bubbles:true }));
-      }
-    }
+    // select Cervical Spine (now the ONLY option), fire change once, then lock
+    regionSel.selectedIndex = 0;
+    regionSel.dispatchEvent(new Event("change", { bubbles:true }));
+    regionSel.disabled = true;
   }
 
-  lockCervicalWhenReady();
-
-
-
-    // ----- ACTIONS: keep only the exact cervical items you listed -----
-    const allowedLabels = new Set([
-      "Cervical Flexion",
-      "Cervical Extension",
-      "Cervical Lateral Flexion — Left",
-      "Cervical Lateral Flexion — Right",
-      "Cervical Rotation — Right",
-      "Cervical Rotation — Left"
-    ].map(s => s.toLowerCase()));
-
-    Array.from(actionSel.options).forEach(opt => {
-      const label = (opt.textContent || "").trim();
-      if (!label) return;                 // skip blanks
-      const lower = label.toLowerCase();
-
-      // keep placeholder "(Select a motion…)" if you have it
-      if (lower === "(select a motion…)") return;
-
-      if (!allowedLabels.has(lower)){
-        opt.remove();                     // remove any non-cervical test
-      }
-    });
-  }
-
-  lockCervicalWhenReady();
+  lockCervicalBodyRegion();
 })();
-
-
 
 
   </script>
