@@ -265,40 +265,49 @@ textarea{
 let caseLoaded = false;
 let modules = { goniometry:false, mmt:false, motion:false };
 
-document.getElementById("caseBtn").onclick = async()=>{
+document.getElementById("caseBtn").onclick = async () => {
   const res = await fetch("../assets/cases/case_001.md");
   const raw = await res.text();
+
+  // split into lines
+  const lines = raw.split("\n");
+
+  // extract only these sections:
+  // ## Patient Profile
+  // ## Chief Complaint
+  // ## History of Present Illness
+  let allowed = ["## Patient Profile", "## Chief Complaint", "## History of Present Illness"];
+  let capture = false;
+  let out = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+
+    if (allowed.includes(line)) {
+      capture = true;
+      out.push(`<strong>${line.replace("## ", "")}</strong>`);
+      continue;
+    }
+
+    // Stop capturing when Objective Exam starts
+    if (line.startsWith("## Objective Examination")) break;
+
+    if (capture && line.length > 0) {
+      out.push(line);
+    }
+  }
+
+  document.getElementById("snapshotBody").innerHTML = out.join("<br><br>");
+
   caseLoaded = true;
-
-  // Extract first visible 3 sections
-  const p = raw.split("\n").filter(l=>l.startsWith("* ")||l.startsWith("##")||l.startsWith(">"));
-  document.getElementById("snapshotBody").innerHTML =
-    p.slice(0,6).join("<br><br>");
-
   document.getElementById("readBtn").disabled = false;
+
+  // Show documentation section but greyed out
+  document.getElementById("docCard").style.opacity = "0.35";
+  document.getElementById("docCard").style.display = "block";
+  document.getElementById("docCard").style.pointerEvents = "none";
 };
 
-/* -------- READ BUTTON → UNLOCK -------- */
-document.getElementById("readBtn").onclick = ()=>{
-  document.getElementById("modalBackdrop").classList.add("active");
-};
-
-/* -------- CORRECT MODULE CHOICE -------- */
-document.getElementById("correctChoice").onclick = ()=>{
-  window.open(
-    "https://kingto89.github.io/ROMetrics.com/goniometry-trainer/?caseToken=GONIO-CERVICAL-001",
-    "_blank"
-  );
-  modules.goniometry = true;
-  document.getElementById("modalBackdrop").classList.remove("active");
-  checkAllComplete();
-};
-
-/* -------- WRONG CHOICE -------- */
-document.querySelectorAll(".wrong").forEach(btn=>{
-  btn.onclick = ()=>{
-    alert("Incorrect order — complete modules in sequence.");
-  };
 });
 
 /* -------- UNLOCK DOCUMENTATION -------- */
