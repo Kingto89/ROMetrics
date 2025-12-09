@@ -2916,15 +2916,28 @@ const clock = new THREE.Clock();
       return;
     }
 
-    // ----- BODY REGION: use the *exact* visible text -----
+    // ----- BODY REGION: force to *only* "Cervical Spine" -----
     const regionOption = Array.from(regionSel.options).find(o =>
       (o.textContent || "").trim() === "Cervical Spine"
     );
+
     if (regionOption){
+      // select cervical
       regionSel.value = regionOption.value;
       regionSel.dispatchEvent(new Event("change", { bubbles:true }));
+
+      // remove everything that isn't "Cervical Spine"
+      Array.from(regionSel.options).forEach(opt => {
+        const label = (opt.textContent || "").trim();
+        if (label !== "Cervical Spine") {
+          opt.remove();
+        }
+      });
     }
+
+    // lock dropdown so they can't change body region
     regionSel.disabled = true;
+
 
     // ----- ACTIONS: keep only the exact cervical items you listed -----
     const allowedLabels = new Set([
