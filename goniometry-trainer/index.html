@@ -2870,63 +2870,94 @@ const clock = new THREE.Clock();
   };
 
   // Initialize case mode (runs once on load)
-  (function initGoniometryCaseMode(){
-    const token = getQueryParam("caseToken");
-    const cfg   = token && GONIO_CASE_TOKENS[token];
-    if (!cfg) return; // no (valid) case token → normal behavior
+(function initGoniometryCaseMode(){
+  const token = getQueryParam("caseToken");
+  const cfg   = token && GONIO_CASE_TOKENS[token];
+  if (!cfg) return; // no (valid) case token → normal behavior
 
-    // Populate global case mode
-    window.GONIO_CASE_MODE.active         = true;
-    window.GONIO_CASE_MODE.token          = token;
-    window.GONIO_CASE_MODE.caseId         = cfg.caseId;
-    window.GONIO_CASE_MODE.label          = cfg.label;
-    window.GONIO_CASE_MODE.allowedRegions = cfg.allowedRegions.slice();
-    window.GONIO_CASE_MODE.impairments    = Object.assign({}, cfg.impairments);
+  // Populate global case mode
+  window.GONIO_CASE_MODE.active         = true;
+  window.GONIO_CASE_MODE.token          = token;
+  window.GONIO_CASE_MODE.caseId         = cfg.caseId;
+  window.GONIO_CASE_MODE.label          = cfg.label;
+  window.GONIO_CASE_MODE.allowedRegions = cfg.allowedRegions.slice();
+  window.GONIO_CASE_MODE.impairments    = Object.assign({}, cfg.impairments);
 
-    // 1) Banner at top
-    const banner = document.createElement("div");
-    banner.id = "goniometry-case-banner";
-    banner.textContent = `Case Mode: ${cfg.label} — token ${token}`;
-    banner.style.position = "fixed";
-    banner.style.top = "0";
-    banner.style.left = "0";
-    banner.style.right = "0";
-    banner.style.zIndex = "9999";
-    banner.style.padding = "8px 12px";
-    banner.style.fontSize = "13px";
-    banner.style.fontWeight = "600";
-    banner.style.textAlign = "center";
-    banner.style.background = "#0f172a";
-    banner.style.color = "#facc15";
-    banner.style.boxShadow = "0 2px 6px rgba(0,0,0,0.4)";
-    document.body.appendChild(banner);
+  // 1) Banner at top
+  const banner = document.createElement("div");
+  banner.id = "goniometry-case-banner";
+  banner.textContent = `Case Mode: ${cfg.label} — token ${token}`;
+  banner.style.position = "fixed";
+  banner.style.top = "0";
+  banner.style.left = "0";
+  banner.style.right = "0";
+  banner.style.zIndex = "9999";
+  banner.style.padding = "8px 12px";
+  banner.style.fontSize = "13px";
+  banner.style.fontWeight = "600";
+  banner.style.textAlign = "center";
+  banner.style.background = "#0f172a";
+  banner.style.color = "#facc15";
+  banner.style.boxShadow = "0 2px 6px rgba(0,0,0,0.4)";
+  document.body.appendChild(banner);
 
-    // Add top padding so banner doesn’t cover UI
-    document.body.style.paddingTop = "32px";
+  // Add top padding so banner doesn’t cover UI
+  document.body.style.paddingTop = "32px";
 
-    // 2) Lock to cervical region AFTER the dropdown is populated
-    function lockRegionWhenReady(){
-      const regionSel = document.getElementById("regionSel");
-      if (!regionSel || !regionSel.options || !regionSel.options.length){
-        requestAnimationFrame(lockRegionWhenReady);
-        return;
-      }
-
-      if (cfg.allowedRegions && cfg.allowedRegions.length){
-        const firstAllowed = cfg.allowedRegions[0];
-        const option = Array.from(regionSel.options)
-          .find(o => o.value.toLowerCase() === firstAllowed.toLowerCase());
-        if (option){
-          regionSel.value = option.value;
-          const ev = new Event("change", { bubbles:true });
-          regionSel.dispatchEvent(ev);
-        }
-        regionSel.disabled = true; // now safe to lock
-      }
+  // 2) Lock to cervical region AFTER the dropdown is populated
+  function lockRegionWhenReady(){
+    const regionSel = document.getElementById("regionSel");
+    if (!regionSel || !regionSel.options || !regionSel.options.length){
+      requestAnimationFrame(lockRegionWhenReady);
+      return;
     }
 
-    lockRegionWhenReady();
-  })();
+    if (cfg.allowedRegions && cfg.allowedRegions.length){
+      const firstAllowed = cfg.allowedRegions[0];
+      const option = Array.from(regionSel.options)
+        .find(o => o.value.toLowerCase() === firstAllowed.toLowerCase());
+      if (option){
+        regionSel.value = option.value;
+        const ev = new Event("change", { bubbles:true });
+        regionSel.dispatchEvent(ev);
+      }
+      regionSel.disabled = true; // now safe to lock
+    }
+  }
+
+  lockRegionWhenReady();
+})();
+
+// 3) Restrict Body Region and Action list to cervical tests only
+function enforceCervicalOnly(){
+  // Lock the region
+  const regionSel = document.getElementById("regionSel");
+  if (regionSel){
+    regionSel.value = "Cervical Spine";
+    const ev = new Event("change", { bubbles:true });
+    regionSel.dispatchEvent(ev);
+    regionSel.disabled = true;
+  }
+
+  // Wait for the Action dropdown to populate
+  const actionSel = document.getElementById("actionSel");
+  if (!actionSel){
+    requestAnimationFrame(enforceCervicalOnly);
+    return;
+  }
+
+  // Keep only cervical actions (any with “Cervical” in text)
+  const opts = Array.from(actionSel.options);
+  opts.forEach(opt=>{
+    const name = (opt.textContent || "").toLowerCase();
+    if (!name.includes("cervical")){
+      opt.remove();
+    }
+  });
+}
+
+enforceCervicalOnly();
+
 
   </script>
 </body>
