@@ -255,6 +255,7 @@ input[type=range]::-moz-range-thumb { width: 24px; height: 24px; background: #e2
   </svg>
 </div>
 <script>
+  
 let NT_active = null;
 
 document.addEventListener("pointerdown", (e) => {
@@ -335,8 +336,6 @@ document.getElementById("ntLog").onclick = () => {
   const snippet = `NUM_TWEAKS["${key}"] = { x:${x}, y:${y}, rot:${rot} };`;
   console.log("FINAL NUMBER FIX →", snippet);
 };
-</script>
-
 
 </script>
 
