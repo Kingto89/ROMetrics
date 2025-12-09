@@ -351,8 +351,10 @@ let pendingUrl = null;
 const goFunctionalBtn = document.getElementById("goFunctional");
 if (goFunctionalBtn) {
   goFunctionalBtn.onclick = () => {
-    window.location.href =
-      "https://kingto89.github.io/ROMetrics.com/lab-motion/?caseToken=LAB-CERVICAL-001";
+    window.open(
+      "https://kingto89.github.io/ROMetrics.com/lab-motion/?caseToken=LAB-CERVICAL-001",
+      "_self"
+    );
   };
 }
 
