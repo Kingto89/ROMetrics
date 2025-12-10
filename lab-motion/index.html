@@ -176,61 +176,57 @@ optgroup{color:#9fb0c9;font-style:normal}
    ROM CASE TOKEN DEFINITIONS (Drop-In)
    ========================================= */
 const ROM_CASE_TOKENS = {
-    "LAB-CERVICAL-001": {
-        caseId: "case_001",
-        label: "Cervical Impairment",
-        
-        // --- UI CONTROL: Only allow Upper Body Motions ---
-        allowedRegions: ["Cervical", "Shoulder", "Elbow", "Wrist"], 
-        disableAdvancedMenu: true, // Hide the Bone (Advanced) details menu
-        
-           // --- IMPAIRMENTS: ROM Limits (Max Measured Angles) ---
-        impairments: {
-            // Right Rotation (normal ~70°, cap at 30° for this case)
-            cervical_right_rotation: { max: 30 },
+  "LAB-CERVICAL-001": {
+    caseId: "case_001",
+    label: "Cervical Impairment",
 
-            // Right Lateral Flexion (normal ~45°, cap at 20° for this case)
-            cervical_right_lat_flex: { max: 20 }
+    // --- UI CONTROL: Only allow Upper Body Motions ---
+    allowedRegions: ["Cervical", "Shoulder", "Elbow", "Wrist"],
+    disableAdvancedMenu: true, // Hide the Bone (Advanced) details menu
 
-            // Left side movements and flexion/extension remain unrestricted (default caps)
-        },
+    // --- IMPAIRMENTS: ROM Limits (Max Measured Angles) ---
+    impairments: {
+      // Right Rotation (normal ~70°, cap at 30° for this case)
+      cerv_rot_r: { max: 30 },
 
-        
-// --- VISUAL FEEDBACK: Shape Keys for Pain Grimace ---
-painShapeKeys: [
-  // Activates a wince effect when limit is hit
-  { key: 'Expressions_browsMidVert_max', value: 0.9 },
-  { key: 'Expressions_eyeSquintL_max',   value: 0.7 },
-  { key: 'Expressions_eyeSquintR_max',   value: 0.7 },
-  { key: 'Expressions_mouthClosed_min',  value: 0.8 }
-],
+      // Right Lateral Flexion (normal ~45°, cap at 20° for this case)
+      cerv_lat_r: { max: 20 }
 
+      // Left side movements and flexion/extension remain unrestricted (default caps)
+    },
 
-        // --- NOTES OVERLAY CONTENT ---
-        notes: {
-            // Constant Floating Note (Sensation)
-            constantNote: `
-                Sensation:
-                - Dermatomes C2–T1 intact
-                - No radiating symptoms
-            `,
-            // Pop-up Note (Case Clues) - triggered on first movement attempt
-            cluesNote: `
-                Case Clues:
-                - Direction-specific ROM loss
-                - Pain-limited strength
-                - No sensory involvement
-                - Mechanical pattern with positional onset
-            `
-        }
+    // --- VISUAL FEEDBACK: Shape Keys for Pain Grimace ---
+    painShapeKeys: [
+      // Activates a wince effect when limit is hit
+      { key: 'Expressions_browsMidVert_max', value: 0.9 }, // Furrow brow
+      { key: 'Expressions_eyeSquintL_max',   value: 0.7 },
+      { key: 'Expressions_eyeSquintR_max',   value: 0.7 },
+      { key: 'Expressions_mouthClosed_min',  value: 0.8 }  // Tighten/compress mouth
+    ],
+
+    // --- NOTES OVERLAY CONTENT ---
+    notes: {
+      constantNote: `
+        Sensation:
+        - Dermatomes C2–T1 intact
+        - No radiating symptoms
+      `,
+      cluesNote: `
+        Case Clues:
+        - Direction-specific ROM loss
+        - Pain-limited strength
+        - No sensory involvement
+        - Mechanical pattern with positional onset
+      `
     }
+  }
 };
 
 window.ROM_CASE_MODE = {
-    active: false,
-    token: null,
-    impairments: {},
-    notes: {}
+  active: false,
+  token: null,
+  impairments: {},
+  notes: {}
 };
 
 
