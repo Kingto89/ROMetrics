@@ -379,13 +379,13 @@ function maybeUnlockDoc(){
 const goFunctionalBtn = document.getElementById("goFunctional");
 if (goFunctionalBtn) {
   goFunctionalBtn.onclick = () => {
-    markModuleDone(MODULE_KEYS.functional);
     window.open(
       "https://kingto89.github.io/ROMetrics.com/lab-motion/?caseToken=LAB-CERVICAL-001",
-      "_self"
+      "_blank"
     );
   };
 }
+
 
 
 
@@ -424,18 +424,12 @@ if (warningProceed) {
     if (warningBackdrop) {
       warningBackdrop.classList.remove("active");
     }
-
-    if (pendingModuleKey){
-      markModuleDone(pendingModuleKey);
-      pendingModuleKey = null;
-    }
-
     if (pendingUrl) {
-      window.open(pendingUrl, "_self");
-      pendingUrl = null;
+      window.open(pendingUrl, "_blank");
     }
   };
 }
+
 
 if (warningBack) {
   // No second option — hide Back button
