@@ -195,22 +195,31 @@ const ROM_CASE_TOKENS = {
       // Left side & flex/ext use default caps
     },
 
-    // --- VISUAL FEEDBACK: Shape Keys for Pain Grimace ---
+     // --- VISUAL FEEDBACK: Shape Keys for Pain Grimace ---
     painShapeKeys: [
-      // Forehead / brow frown
-      { key: 'Expressions_browsMidVert_min', value: 1.0 },   // brows pulled down
-      { key: 'Expressions_browSqueezeL_max', value: 1.0 },   // inner brow pinch
+      // Forehead / brows pulled down and squeezed
+      { key: 'Expressions_browsMidVert_min', value: 1.0 },
+      { key: 'Expressions_browSqueezeL_max', value: 1.0 },
       { key: 'Expressions_browSqueezeR_max', value: 1.0 },
 
-      // Clear squint (no high-pressure eyelash crush)
-      { key: 'Expressions_eyeSquintL_max',   value: 0.8 },
-      { key: 'Expressions_eyeSquintR_max',   value: 0.8 },
+      // Clear squint + partial eye close (actual lid movement)
+      { key: 'Expressions_eyeSquintL_max',   value: 1.0 },
+      { key: 'Expressions_eyeSquintR_max',   value: 1.0 },
+      { key: 'Expressions_eyeClosedL_max',   value: 0.4 },
+      { key: 'Expressions_eyeClosedR_max',   value: 0.4 },
 
-      // Mouth: tense, slightly open, not smiling
-      { key: 'Expressions_mouthOpenTeethClosed_max', value: 0.8 }, // clenched teeth
-      { key: 'Expressions_mouthOpenAggr_max',        value: 0.4 }, // a bit more strain
-      { key: 'Expressions_mouthSmile_min',           value: 0.7 }  // corners pulled down
+      // Mouth: open + pulled sideways (pain / guarding)
+      { key: 'Expressions_mouthOpenAggr_max', value: 1.0 },
+      { key: 'Expressions_mouthOpenLarge_max', value: 0.7 },
+      { key: 'Expressions_mouthHoriz_max',     value: 0.8 },
+
+      // Jaw shifted sideways to match mouth pull
+      { key: 'Expressions_jawHoriz_max',       value: 0.8 },
+
+      // Extra “ouch” detail
+      { key: 'Expressions_nostrilsExpansion_max', value: 0.9 }
     ],
+
 
 
     // --- NOTES OVERLAY CONTENT ---
