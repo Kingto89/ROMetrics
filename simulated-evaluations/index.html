@@ -124,15 +124,16 @@
         <span id="mrnValue">MRN • 001</span>
       </div>
 
-      <div class="patient-card">
-        <div class="patient-main">
-          <div class="avatar" id="patientInitials">SB</div>
-          <div class="patient-meta">
-            <span class="patient-name" id="patientName">Sarah B — 29 y/o</span>
-            <span class="patient-id" id="patientSetting">Outpatient orthopedic visit</span>
-            <span class="patient-id" id="patientPrimary">Primary: Neck stiffness when turning</span>
-          </div>
-        </div>
+   
+        <div class="patient-card">
+    <div class="patient-main">
+      <div class="avatar" id="patientInitials">SB</div>
+      <div class="patient-meta">
+        <span class="patient-name" id="patientName">Sarah B — 29 y/o</span>
+        <span class="patient-id" id="patientPrimary">Primary: Neck stiffness when turning</span>
+      </div>
+    </div>
+    </div>
         <div class="patient-tags" id="patientTags">
           <span class="tag-accent">ROMetrics Simulation</span>
           <span class="tag">Cervical ROM &amp; MMT</span>
@@ -626,8 +627,8 @@ if (docSubmitBtn && docStatus){
       }
 
       // Patient Profile bullets anywhere in file
-      function grabBullet(label) {
-        const re = new RegExp(`^-+\\s*${label}:\\s*(.+)$`, "im");
+       function grabBullet(label) {
+        const re = new RegExp(`^-\\s*${label}:\\s*(.+)$`, "im");
         const m  = rawMd.match(re);
         return m ? m[1].trim() : "";
       }
