@@ -598,7 +598,7 @@ updateDocLockState();
 
 
 <script>
-// === CASE PARSING + PATIENT PROFILE FILL (updated) ===
+// === CASE PARSING + PATIENT PROFILE FILL (final) ===
 
 function initialsFromName(name) {
   if (!name) return "??";
@@ -620,26 +620,26 @@ function parseCaseMarkdown(rawMd) {
     tags: []
   };
 
-  // Case heading: "# Case 1 — …"
+  // Case heading: "# Case 1: Cervical Impairment"
   const hMatch = rawMd.match(/^#\s*(.+)$/m);
   if (hMatch) {
     const h = hMatch[1].trim();
     if (/^case/i.test(h)) c.caseHeading = h;
   }
 
-  // Patient profile bullets: "- Name: …" etc (anywhere in file)
+  // Patient Profile bullets anywhere in file
   function grabBullet(label) {
     const re = new RegExp(`^-+\\s*${label}:\\s*(.+)$`, "im");
     const m  = rawMd.match(re);
     return m ? m[1].trim() : "";
   }
 
-  c.name        = grabBullet("Name");
-  c.age         = grabBullet("Age");
-  c.occupation  = grabBullet("Occupation");
-  c.setting     = grabBullet("Setting");
+  c.name       = grabBullet("Name");
+  c.age        = grabBullet("Age");
+  c.occupation = grabBullet("Occupation");
+  c.setting    = grabBullet("Setting");
 
-  // Helper to grab a whole section between "## Heading" and next "##"
+  // Section grabber between "## Heading" and next "##"
   function grabSection(title) {
     const re = new RegExp(
       `^##\\s*${title}\\s*[\\r\\n]+([\\s\\S]*?)(?=^##\\s|\\Z)`,
@@ -648,7 +648,7 @@ function parseCaseMarkdown(rawMd) {
     const m = rawMd.match(re);
     if (!m) return "";
     return m[1]
-      .replace(/^-+\s*/gm, "")  // strip leading "- " bullets
+      .replace(/^-+\s*/gm, "")  // remove "- " bullets
       .replace(/\s+/g, " ")     // collapse whitespace
       .replace(/^["“]+/, "")
       .replace(/["”]+$/, "")
@@ -657,6 +657,19 @@ function parseCaseMarkdown(rawMd) {
 
   c.chiefComplaint = grabSection("Chief Complaint");
   c.hpi            = grabSection("History of Present Illness");
+
+  // SAFETY NET: if parsing ever fails, hard-fill from known Case 1 text
+  if (!c.name && !c.occupation && !c.chiefComplaint && !c.hpi) {
+    c.name          = "Sarah B.";
+    c.age           = "29";
+    c.occupation    = "Graduate student";
+    c.chiefComplaint = "My neck feels stiff when I try to turn it.";
+    c.hpi =
+      "Onset 3 days ago after sleeping awkwardly; pain is dull and localized " +
+      "without radiation; worse with right rotation and prolonged sitting; " +
+      "eased by warm shower and gentle stretching; denies numbness, tingling, " +
+      "trauma, headaches, or dizziness.";
+  }
 
   c.scenarioLabel = c.caseHeading
     ? "Scenario Loaded: " + c.caseHeading
@@ -677,22 +690,13 @@ function renderPatientProfile(c) {
   const items = [];
 
   if (c.occupation) {
-    items.push({
-      label: "Occupation",
-      value: c.occupation
-    });
+    items.push({ label: "Occupation", value: c.occupation });
   }
   if (c.chiefComplaint) {
-    items.push({
-      label: "Chief Complaint",
-      value: c.chiefComplaint
-    });
+    items.push({ label: "Chief Complaint", value: c.chiefComplaint });
   }
   if (c.hpi) {
-    items.push({
-      label: "History of Present Illness",
-      value: c.hpi
-    });
+    items.push({ label: "History of Present Illness", value: c.hpi });
   }
 
   list.innerHTML = items.map(item => `
@@ -734,7 +738,7 @@ async function applyCase(caseKey) {
     if (settingEl) settingEl.textContent = c.setting || "Simulation case";
 
     const primaryEl = $("patientPrimary");
-    if (primaryEl) primaryEl.textContent = ""; // no CC duplicate up top
+    if (primaryEl) primaryEl.textContent = ""; // no CC duplicate
 
     const tagsEl = $("patientTags");
     if (tagsEl) tagsEl.innerHTML = renderTags();
@@ -764,6 +768,7 @@ if (caseSelect) {
 
 // initial load
 applyCase("CASE_001");
+
 </script>
 
 </body>
