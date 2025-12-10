@@ -265,34 +265,85 @@
             </button>
           </article>
 
-          <!-- Notes / Summary module -->
-          <article class="module" data-route="notes">
-            <div class="module-header">
-              <div>
-                <div class="module-title">SOAP Summary &amp; Case Notes</div>
-                <div class="module-sub">Review decisions and auto-generated SOAP draft.</div>
-              </div>
-            </div>
-            <div class="module-body">
-              When all required modules are complete, the SOAP generator will unlock to record your findings. Submissions are graded to offer feedback.
-            </div>
-            <div class="module-meta">
-              <span>Linked View: Notes / SOAP</span>
-              <span>Status: Locked</span>
-            </div>
-            <button class="module-btn" type="button" data-route="notes">
-              View Summary (Locked)
-              <span class="chevron">🔒</span>
-            </button>
-          </article>
+      <!-- SOAP / Documentation panel (locked until all 3 modules visited) -->
+      <div class="doc-card" id="docCard" style="display:block;opacity:0.35;pointer-events:none;margin-top:10px;">
+        <h3>Case Documentation — SOAP & Goals</h3>
+
+        <div class="doc-section">
+          <label>
+            Subjective Findings
+            <span class="word-hint">(max 100 words)</span>
+          </label>
+          <textarea id="docSubjective"></textarea>
+          <div class="word-counter" data-for="docSubjective"></div>
         </div>
 
-        <div class="hint-strip">
-          <span>
-            <strong>Hint:</strong> Switch the case in the header to see how the patient details.
-          </span>
-          <span>Training Only </span>
+        <div class="doc-section">
+          <label>
+            Objective Findings
+            <span class="word-hint">(max 150 words)</span>
+          </label>
+          <textarea id="docObjective"></textarea>
+          <div class="word-counter" data-for="docObjective"></div>
         </div>
+
+        <div class="doc-section">
+          <label>
+            Assessment / Diagnosis
+            <span class="word-hint">(max 60 words)</span>
+          </label>
+          <textarea id="docDx"></textarea>
+          <div class="word-counter" data-for="docDx"></div>
+        </div>
+
+        <div class="doc-section">
+          <label>
+            Treatment Plan
+            <span class="word-hint">(max 150 words)</span>
+          </label>
+          <textarea id="docPlan"></textarea>
+          <div class="word-counter" data-for="docPlan"></div>
+        </div>
+
+        <div class="doc-section">
+          <label>
+            Goals
+            <span class="word-hint">(max 100 words)</span>
+          </label>
+          <textarea id="docGoals"></textarea>
+          <div class="word-counter" data-for="docGoals"></div>
+        </div>
+
+        <div class="doc-section">
+          <label>
+            Prognosis
+            <span class="word-hint">(max 60 words)</span>
+          </label>
+          <textarea id="docPrognosis"></textarea>
+          <div class="word-counter" data-for="docPrognosis"></div>
+        </div>
+
+        <div class="doc-section">
+          <label>Submission Status</label>
+          <div id="gradeBar" class="grade-bar">
+            <div id="gradeFill" class="grade-fill"></div>
+          </div>
+          <div id="gradeLabel" class="grade-label">Not graded yet</div>
+
+          <button id="docSubmitBtn" class="module-btn" type="button" style="margin-top:8px;">
+            Submit Documentation
+            <span class="chevron">✓</span>
+          </button>
+          <div id="docSubmitStatus" style="margin-top:6px;font-size:12px;color:var(--muted);"></div>
+        </div>
+      </div>
+
+      <div class="hint-strip">
+        <span>
+          <strong>Hint:</strong> Switch the case in the header to see how the patient details.
+        </span>
+        <span>Training Only </span>
+      </div>
       </div>
     </section>
   </main>
@@ -301,135 +352,251 @@
   <script>
     const $ = (id) => document.getElementById(id);
 
-    const CASE_FILES = {
-      CASE_001: {
-        file: "../assets/cases/case_001.md",
-        label: "CASE_001 • GONIO-CERVICAL-001",
-        scenarioSummary: "Cervical ROM & pain-limited MMT"
-      },
-      CASE_002: {
-        file: "../assets/cases/case_002.md",
-        label: "CASE_002 • HIP-FLEX-001",
-        scenarioSummary: "Right hip flexion weakness with visible ROM loss"
-      },
-      CASE_003: {
-        file: "../assets/cases/case_003.md",
-        label: "CASE_003 • LUMBAR-RED-FLAG-001",
-        scenarioSummary: "Lumbar ROM limits and bilateral distal leg weakness"
-      }
-    };
-
-
-// === Case 001 tokenized module links (open in new tab) ===
-const MODULE_URLS = {
+//DROP IN START//
+  const ROUTES = {
+  // we’re using token URLs from the old logic for CASE 001
   motion: "https://kingto89.github.io/ROMetrics.com/lab-motion/?caseToken=LAB-CERVICAL-001",
   gonio:  "https://kingto89.github.io/ROMetrics.com/goniometry-trainer/?caseToken=GONIO-CERVICAL-001",
   mmt:    "https://kingto89.github.io/ROMetrics.com/mmt/?caseToken=MMT-CERVICAL-001",
-  notes:  "#" // SOAP page handled separately
+  notes:  "#soap" // handled inside openRoute, not a real URL
 };
 
-let visitedMotion = false;
-let visitedGonio  = false;
-let visitedMMT    = false;
+// visit tracking → unlock SOAP only after all 3 are true
+let visitedMotion  = false;
+let visitedGonio   = false;
+let visitedMMT     = false;
 
-// localStorage flags so the SOAP / doc view can unlock after required modules
-const MODULE_KEYS = {
-  motion: "case_001_labDone",
-  gonio:  "case_001_gonioDone",
-  mmt:    "case_001_mmtDone"
-};
+// lock / unlock SOAP doc panel
+function updateDocLockState() {
+  const card = $("docCard");
+  if (!card) return;
 
-function markVisited(key){
-  if (!MODULE_KEYS[key]) return;
-  localStorage.setItem(MODULE_KEYS[key], "1");
+  const allVisited = visitedMotion && visitedGonio && visitedMMT;
+
+  if (allVisited) {
+    card.style.opacity = "1";
+    card.style.pointerEvents = "auto";
+  } else {
+    card.style.opacity = "0.35";
+    card.style.pointerEvents = "none";
+  }
 }
 
-// Optional: hook into your existing warning modal if it's present
-const warningBackdrop = document.getElementById("warningModal");
-const warningProceed  = document.getElementById("warningProceed");
-const warningBack     = document.getElementById("warningBack");
-const warningClose    = document.getElementById("warningClose");
+// simple warning text reused for going out of order
+function showSequenceWarning(stepLabel) {
+  return window.confirm(
+    `You are trying to open "${stepLabel}" before completing Motion Lab.\n\n` +
+    "Recommended sequence:\n" +
+    "• Functional / Motion Lab first\n" +
+    "• Goniometry after ROM\n" +
+    "• MMT after objective ROM\n" +
+    "• SOAP / Notes last\n\n" +
+    "Press OK to continue anyway, or Cancel to go back."
+  );
+}
 
-let pendingModuleKey = null;
+// main route handler for module tiles
+function openRoute(key) {
+  if (!key) return;
 
-function openModuleNow(key){
-  const url = MODULE_URLS[key];
-  if (!url || url === "#") {
-    alert("This linked view is not wired yet in the prototype.");
+  if (key === "motion") {
+    visitedMotion = true;
+    updateDocLockState();
+    window.open(ROUTES.motion, "_blank");
     return;
   }
 
-  if (key === "motion") visitedMotion = true;
-  if (key === "gonio")  visitedGonio  = true;
-  if (key === "mmt")    visitedMMT    = true;
-
-  markVisited(key);
-  window.open(url, "_blank");   // always open in new tab/window
-}
-
-function requestModuleWithWarning(key){
-  // Motion Lab can always go straight through
-  if (key === "motion" || visitedMotion){
-    openModuleNow(key);
-    return;
-  }
-
-  // If no warning modal markup on this page, fall back to alert-only warning
-  if (!warningBackdrop || !warningProceed){
-    alert(
-      "Recommended order:\n" +
-      "1) Functional / ROM observation (Motion Lab)\n" +
-      "2) Goniometry\n" +
-      "3) MMT\n\n" +
-      "You may continue to this step for practice."
-    );
-    openModuleNow(key);
-    return;
-  }
-
-  // Use existing warning modal if present
-  pendingModuleKey = key;
-  warningBackdrop.classList.add("active");
-}
-
-// Wire warning modal buttons (if the HTML for them exists)
-if (warningProceed){
-  warningProceed.onclick = () => {
-    warningBackdrop.classList.remove("active");
-    if (pendingModuleKey){
-      openModuleNow(pendingModuleKey);
-      pendingModuleKey = null;
+  if (key === "gonio") {
+    if (!visitedMotion) {
+      const ok = showSequenceWarning("Goniometry");
+      if (!ok) return;
     }
-  };
-}
-if (warningBack){
-  warningBack.onclick = () => {
-    pendingModuleKey = null;
-    warningBackdrop.classList.remove("active");
-  };
-}
-if (warningClose){
-  warningClose.onclick = () => {
-    pendingModuleKey = null;
-    warningBackdrop.classList.remove("active");
-  };
+    visitedGonio = true;
+    updateDocLockState();
+    window.open(ROUTES.gonio, "_blank");
+    return;
+  }
+
+  if (key === "mmt") {
+    if (!visitedMotion) {
+      const ok = showSequenceWarning("MMT");
+      if (!ok) return;
+    }
+    visitedMMT = true;
+    updateDocLockState();
+    window.open(ROUTES.mmt, "_blank");
+    return;
+  }
+
+  // SOAP / Notes tile → only unlock if all 3 visited
+  if (key === "notes") {
+    const allVisited = visitedMotion && visitedGonio && visitedMMT;
+    if (!allVisited) {
+      alert(
+        "Complete Motion Lab, Goniometry, and MMT before writing SOAP / Notes.\n\n" +
+        "Use the other three modules first, then return here to document."
+      );
+      return;
+    }
+    const card = $("docCard");
+    if (card) {
+      card.style.display = "block";
+      card.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    return;
+  }
 }
 
-// Attach to the new UI tiles
+// re-attach handlers for module tiles
 document.querySelectorAll("[data-route]").forEach(el => {
-  el.addEventListener("click", (evt) => {
+  el.addEventListener("click", (e) => {
+    e.preventDefault();
     const key = el.getAttribute("data-route");
-    if (!key) return;
+    openRoute(key);
+  });
+});
 
-    if (key === "notes"){
-      // SOAP / documentation page will handle 3-attempt logic + unlock
-      alert("SOAP / Notes unlock after Motion Lab, Goniometry, and MMT are completed and documentation is submitted.");
+/* ---------- DOC WORD LIMITS + 3-ATTEMPT GRADE BAR (same as old logic) ---------- */
+
+const WORD_LIMITS = {
+  docSubjective: 100,
+  docObjective:  150,
+  docDx:         60,
+  docPlan:       150,
+  docGoals:      100,
+  docPrognosis:  60
+};
+
+function attachWordLimiter(id, limit){
+  const field = document.getElementById(id);
+  if (!field) return;
+
+  const counter = document.querySelector(`.word-counter[data-for="${id}"]`);
+
+  function update(){
+    const text  = field.value.trim();
+    const words = text.length ? text.split(/\s+/) : [];
+
+    if (words.length > limit){
+      field.value = words.slice(0, limit).join(" ");
+    }
+
+    const count = field.value.trim()
+      ? field.value.trim().split(/\s+/).length
+      : 0;
+
+    if (counter){
+      counter.textContent = `${count}/${limit} words`;
+    }
+  }
+
+  field.addEventListener("input", update);
+  update();
+}
+
+Object.entries(WORD_LIMITS).forEach(([id, limit]) => {
+  attachWordLimiter(id, limit);
+});
+
+// grade bar + attempts (per-browser) — still case_001 for now
+const gradeFill     = document.getElementById("gradeFill");
+const gradeLabel    = document.getElementById("gradeLabel");
+const docSubmitBtn  = document.getElementById("docSubmitBtn");
+const docStatus     = document.getElementById("docSubmitStatus");
+
+const ATTEMPT_KEY = "case_001_docAttempts";
+
+function getAttempts(){
+  return parseInt(localStorage.getItem(ATTEMPT_KEY) || "0", 10);
+}
+function setAttempts(n){
+  localStorage.setItem(ATTEMPT_KEY, String(n));
+}
+
+function applyGradeFromAttempts(used){
+  if (!gradeFill || !gradeLabel) return;
+
+  if (used <= 0){
+    gradeFill.style.width = "0%";
+    gradeFill.style.background = "#f97373";
+    gradeLabel.textContent = "Not graded yet";
+    return;
+  }
+
+  if (used === 1){
+    gradeFill.style.width = "33%";
+    gradeFill.style.background = "#f97373"; // red
+    gradeLabel.textContent = "Novice level (auto-estimate)";
+  } else if (used === 2){
+    gradeFill.style.width = "66%";
+    gradeFill.style.background = "#f97316"; // orange
+    gradeLabel.textContent = "Apprentice level (auto-estimate)";
+  } else {
+    gradeFill.style.width = "100%";
+    gradeFill.style.background = "#22c55e"; // green
+    gradeLabel.textContent = "Clinical level (auto-estimate)";
+  }
+}
+
+function checkAttemptLock(){
+  const used = getAttempts();
+  applyGradeFromAttempts(used);
+
+  if (used >= 3 && docSubmitBtn && docStatus){
+    docSubmitBtn.disabled = true;
+    docStatus.textContent = "You have used all 3 submission attempts for this case.";
+    docStatus.style.color = "#f97373";
+  }
+}
+
+checkAttemptLock();
+
+if (docSubmitBtn && docStatus){
+  docSubmitBtn.onclick = () => {
+    const used = getAttempts();
+
+    const docIds = [
+      "docSubjective",
+      "docObjective",
+      "docDx",
+      "docPlan",
+      "docGoals",
+      "docPrognosis"
+    ];
+
+    const hasContent = docIds.some(id => {
+      const el = document.getElementById(id);
+      return el && el.value.trim().length > 0;
+    });
+
+    if (!hasContent){
+      docStatus.textContent = "Write your documentation before submitting.";
+      docStatus.style.color = "#f97373";
       return;
     }
 
-    requestModuleWithWarning(key);
-  });
-});
+    if (used >= 3){
+      checkAttemptLock();
+      return;
+    }
+
+    const nextCount = used + 1;
+    setAttempts(nextCount);
+    applyGradeFromAttempts(nextCount);
+
+    docStatus.textContent =
+      `Documentation submitted. Attempt ${nextCount} of 3.`;
+    docStatus.style.color = "var(--good)";
+
+    if (nextCount >= 3){
+      docSubmitBtn.disabled = true;
+    }
+  };
+}
+
+// make sure SOAP starts in locked state matching visit flags
+updateDocLockState();
+//DROP IN END//
 
 
 function initialsFromName(name) {
