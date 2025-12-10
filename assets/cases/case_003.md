@@ -29,44 +29,37 @@
     }
   }
 }
-```
 
 ---
 
-# Case 3: Cluster Impairment
+# Case 3: Cluster Impairment (Red Flag)
 
 ## Patient Profile
-
-* Name: Thomas K.
-* Age: 52
-* Occupation: Accountant (desk job)
-* Setting: Outpatient orthopedic PT evaluation
+- Name: Thomas K.
+- Age: 52
+- Occupation: Accountant (desk job)
+- Setting: Outpatient orthopedic PT evaluation
 
 ---
 
 ## Chief Complaint
-
 “My low back pain came on suddenly and now both my legs feel weak and strange, and I’m having trouble going to the bathroom.”
 
 ---
 
 ## History of Present Illness
-
-* Onset **4 days ago**, after lifting a heavy box from the floor
-* Initially felt a sharp pain in the **central low back**, now:
-
-  * Constant, deep ache in **lumbosacral region**, 7–8/10
-  * Pain **does NOT change** much with position (standing, sitting, lying)
-* New symptoms in the last **24–48 hours**:
-
-  * **Bilateral leg weakness**, especially when trying to lift the front of his feet
-  * Describes **“numbness in the groin/saddle area”**
-  * Reports **difficulty starting urination** and a feeling of incomplete emptying
-* No previous history of significant back pain
-* Denies recent trauma beyond the lift, but:
-
-  * Woke up last night multiple times because pain would not let him sleep
-* No fever, but appears **visibly distressed and worried**
+- Onset **4 days ago**, after lifting a heavy box from the floor  
+- Initially felt a sharp pain in the **central low back**, now:
+  - Constant, deep ache in **lumbosacral region**, 7–8/10  
+  - Pain **does NOT change** much with position (standing, sitting, lying)  
+- New symptoms in the last **24–48 hours**:
+  - **Bilateral leg weakness**, especially when trying to lift the front of his feet  
+  - Describes **“numbness in the groin/saddle area”**  
+  - Reports **difficulty starting urination** and a feeling of incomplete emptying  
+- No previous history of significant back pain  
+- Denies recent trauma beyond the lift, but:
+  - Woke up last night multiple times because pain would not let him sleep  
+- No fever, but appears **visibly distressed and worried**  
 
 ---
 
@@ -83,10 +76,9 @@
 | Rotation R/L      | 30°                           | 20° each              | Pain, but less provocative                        |
 
 **Visible impairment:**
-
-* Moves **very slowly** and guarded in all planes
-* Uses his hands on thighs for any attempt at flexion
-* Facial grimacing with small movements; **no clear mechanical “position of relief”**
+- Moves **very slowly** and guarded in all planes  
+- Uses his hands on thighs for any attempt at flexion  
+- Facial grimacing with small movements; **no clear mechanical “position of relief”**  
 
 ---
 
@@ -101,86 +93,66 @@
 | Great Toe Extension                | **3-/5**       | **3-/5**      | Difficulty holding against resistance |
 
 ### Sensation / Neuro Screen
-
-* Light touch:
-
-  * **Decreased sensation in perianal / saddle region (S3–S5)**
-  * Diminished along **posterior thighs** bilaterally
-* Reflexes:
-
-  * Patellar reflexes: 1+ (reduced) bilaterally
-  * Achilles reflexes: **0–1+** (markedly reduced/absent) bilaterally
-* Reports **numbness/tingling in inner thighs and perineal region**
+- Light touch:
+  - **Decreased sensation in perianal / saddle region (S3–S5)**  
+  - Diminished along **posterior thighs** bilaterally  
+- Reflexes:
+  - Patellar reflexes: 1+ (reduced) bilaterally  
+  - Achilles reflexes: **0–1+** (markedly reduced/absent) bilaterally  
+- Reports **numbness/tingling in inner thighs and perineal region**  
 
 ---
 
 ## Case Clues
-
-* **Severe, constant low back pain** not clearly mechanical
-* **Marked lumbar ROM loss** in flexion and extension
-* **Bilateral leg weakness**, especially distal (ankle DF, great toe extension)
-* **Saddle anesthesia / altered perineal sensation**
-* New onset **bladder dysfunction (difficulty initiating urination)**
-* Combination of symptoms strongly suggestive of **cauda equina involvement → EMERGENT REFERRAL**
+- **Severe, constant low back pain** not clearly mechanical  
+- **Marked lumbar ROM loss** in flexion and extension  
+- **Bilateral leg weakness**, especially distal (ankle DF, great toe extension)  
+- **Saddle anesthesia / altered perineal sensation**  
+- New onset **bladder dysfunction (difficulty initiating urination)**  
+- Combination of symptoms strongly suggestive of **cauda equina involvement → EMERGENT REFERRAL**  
 
 ---
 
 ## ROMetrics Module Instructions
 
 ### Motion Lab
-
-* Limit:
-
-  * **Lumbar flexion** to **20°**
-  * **Lumbar extension** to **5°**
-* Visual behavior:
-
-  * Show patient model moving **very stiffly** in the lumbar spine
-  * Use **slow, guarded movement** with visible discomfort cues
-* Goal for the student:
-
-  * Recognize that although ROM is limited, the **pattern of pain + neuro findings is more concerning than the ROM numbers themselves**.
+- Limit:
+  - **Lumbar flexion** to **20°**  
+  - **Lumbar extension** to **5°**  
+- Visual behavior:
+  - Show patient model moving **very stiffly** in the lumbar spine  
+  - Use **slow, guarded movement** with visible discomfort cues  
+- Goal for the student:
+  - Recognize that although ROM is limited, the **pattern of pain + neuro findings is more concerning than the ROM numbers themselves**.  
 
 ### Goniometry Trainer
-
-* Hard stops at:
-
-  * **20° lumbar flexion**
-  * **5° lumbar extension**
-* Student documents:
-
-  * Limited lumbar ROM but is prompted (by case text) to consider that **ROM findings alone do not explain severity + neuro signs**.
+- Hard stops at:
+  - **20° lumbar flexion**  
+  - **5° lumbar extension**  
+- Student documents:
+  - Limited lumbar ROM but is prompted (by case text) to consider that **ROM findings alone do not explain severity + neuro signs**.  
 
 ### MMT Trainer
-
-* Cap:
-
-  * **Bilateral ankle dorsiflexors** at **3-/5**
-* Other MMT groups:
-
-  * Slightly reduced but not grossly asymmetric (4-/5 to 4/5)
-* Intent:
-
-  * Make **distal bilateral weakness** clear, especially in dorsiflexors and great toe extension.
+- Cap:
+  - **Bilateral ankle dorsiflexors** at **3-/5**  
+- Other MMT groups:
+  - Slightly reduced but not grossly asymmetric (4-/5 to 4/5)  
+- Intent:
+  - Make **distal bilateral weakness** clear, especially in dorsiflexors and great toe extension.  
 
 ---
 
 ## Case Completion Requirements
-
-1. Student reads the full case to unlock modules.
+1. Student reads the full case to unlock modules.  
 2. In **Motion Lab**, observes:
-
-   * Markedly limited lumbar ROM with stiff, guarded movement.
+   - Markedly limited lumbar ROM with stiff, guarded movement.  
 3. In **Goniometry Trainer**, measures and records:
-
-   * **20° lumbar flexion**
-   * **5° lumbar extension**
+   - **20° lumbar flexion**  
+   - **5° lumbar extension**  
 4. In **MMT Trainer**, records:
-
-   * **Bilateral ankle dorsiflexors = 3-/5**, with additional mild generalized LE weakness.
+   - **Bilateral ankle dorsiflexors = 3-/5**, with additional mild generalized LE weakness.  
 5. **Critical step:**
-
-   * Identifies the cluster of red flags (saddle anesthesia, bilateral distal weakness, bladder changes) and **chooses “Refer for urgent medical evaluation (suspected cauda equina)”** rather than proceeding with conservative PT plan.
+   - Identifies the cluster of red flags (saddle anesthesia, bilateral distal weakness, bladder changes) and **chooses “Refer for urgent medical evaluation (suspected cauda equina)”** rather than proceeding with conservative PT plan.  
 
 ---
 
