@@ -118,34 +118,32 @@
 
   <main>
     <!-- LEFT: PATIENT SUMMARY + PROFILE -->
-    <aside class="sidebar">
-      <div class="sidebar-title">
-        <span>Active Chart</span>
-        <span id="mrnValue">MRN • 001</span>
-      </div>
+<aside class="sidebar">
+  <div class="sidebar-title">
+    <span>Active Chart</span>
+    <span id="mrnValue">MRN • 001</span>
+  </div>
 
-   
-     <div class="patient-card">
-  <div class="patient-main">
-    <div class="avatar" id="patientInitials">SB</div>
-    <div class="patient-meta">
-      <span class="patient-name" id="patientName">Sarah B — 29 y/o</span>
+  <div class="patient-card">
+    <div class="patient-main">
+      <div class="avatar" id="patientInitials">SB</div>
+      <div class="patient-meta">
+        <span class="patient-name" id="patientName">Sarah B — 29 y/o</span> 
+        </div>
+    </div>
+  </div>
+  
+  <div class="patient-tags" id="patientTags">
+    <span class="tag-accent">ROMetrics Simulation</span>
+    <span class="tag">Cervical ROM &amp; MMT</span>
+  </div>
+
+  <div>
+    <div class="sidebar-section-title">Patient Profile</div>
+    <div class="encounter-list" id="patientProfileList">
       </div>
   </div>
-</div>
-<div class="patient-tags" id="patientTags">
-  <span class="tag-accent">ROMetrics Simulation</span>
-  <span class="tag">Cervical ROM &amp; MMT</span>
-</div>
-      </div>
-
-      <div>
-        <div class="sidebar-section-title">Patient Profile</div>
-        <div class="encounter-list" id="patientProfileList">
-          <!-- Filled from MD -->
-        </div>
-      </div>
-    </aside>
+</aside>
 
     <!-- RIGHT: WORKSPACE -->
     <section class="workspace">
@@ -347,22 +345,28 @@
   </main>
 
 
-  <script>
- <script>
+<script>
   const $ = (id) => document.getElementById(id);
 
-  // Define CASE_FILES globally or ensure it's loaded before applyCase is called.
-  // Assuming CASE_FILES structure from your options is:
-  // const CASE_FILES = {
-  //   "CASE_001": { file: "path/to/case_001.md", label: "001 • GONIO-CERVICAL-001", scenarioSummary: "Cervical ROM & pain-limited MMT" },
-  //   // ... other cases
-  // };
-  // Since you didn't provide CASE_FILES, I will use a placeholder structure for the script to function:
-  const CASE_FILES = {
-    "CASE_001": { file: "case_001.md", label: "001 • GONIO-CERVICAL-001", scenarioSummary: "Cervical ROM & pain-limited MMT" },
-    "CASE_002": { file: "case_002.md", label: "002 • GONIO-SHOULDER-001", scenarioSummary: "Shoulder ROM & MMT" },
-    "CASE_003": { file: "case_003.md", label: "003 • REFERRAL", scenarioSummary: "Cluster Impairment/Refer Out" },
-  };
+  // Define the CASE_FILES object here so it's globally available for switching and initial load
+const CASE_FILES = {
+  "CASE_001": {
+    file: "../assets/cases/case_001.md",
+    label: "CASE_001 • GONIO-CERVICAL-001",
+    scenarioSummary: "Cervical ROM & pain-limited MMT"
+  },
+  "CASE_002": {
+    file: "../assets/cases/case_002.md",
+    label: "CASE_002 • GONIO-SHOULDER-001",
+    scenarioSummary: "Shoulder ROM & MMT"
+  },
+  "CASE_003": {
+    file: "../assets/cases/case_003.md",
+    label: "CASE_003 • REFERRAL",
+    scenarioSummary: "Cluster impairment / refer out"
+  }
+};
+
 
 
   //DROP IN START//
@@ -611,7 +615,7 @@
   updateDocLockState();
   //DROP IN END//
 
-  // === CASE PARSING + PATIENT PROFILE FILL (final) ===
+// === CASE PARSING + PATIENT PROFILE FILL (final) ===
 
   function initialsFromName(name) {
     if (!name) return "??";
@@ -675,8 +679,11 @@
     c.chiefComplaint = grabSection("Chief Complaint");
     c.hpi            = grabSection("History of Present Illness");
 
-    // REMOVED SAFETY NET / HARD-FILL BLOCK
-    // Your automation relies on the MD parsing working above.
+    // If parsing fails for basic data, this ensures the chart doesn't break entirely, 
+    // but relies on MD parsing for the actual content.
+    if (!c.name) c.name = "Patient Name";
+    if (!c.age) c.age = "??";
+
 
     c.scenarioLabel = c.caseHeading
       ? "Scenario Loaded: " + c.caseHeading
@@ -684,6 +691,7 @@
 
     return c;
   }
+  // ... rest of script ...
 
   function renderTags() {
     return '<span class="tag-accent">ROMetrics Simulation</span>';
