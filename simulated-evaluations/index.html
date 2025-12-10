@@ -863,28 +863,29 @@
   </main>
 
   <script>
-
 // Function to get elements by ID
 const $ = (id) => document.getElementById(id);
 
-// Define case tokens (replace with your actual file paths)
+// Define case tokens and file paths for all cases
 const CASE_FILES = {
   CASE_001: {
-    file: "../assets/cases/case_001.md", // Path to your Markdown file
+    file: "../assets/cases/case_001.md",
     caseId: "CASE_001 • GONIO-CERVICAL-001",
     collision: "Cervical region override enabled",
     rom: "Left rotation, lateral flexion focus",
     mmt: "Left cervical rotators • 4/5 goal"
   },
+  // --- ADDED CASE 2 ---
   CASE_002: {
-    file: "../assets/cases/case_002.md",
+    file: "../assets/cases/case_002.md", 
     caseId: "CASE_002 • GH-ABD-001",
     collision: "Shoulder girdle mechanics emphasis",
     rom: "Limited active abduction with scapular substitution",
     mmt: "Middle deltoid • 3+/5 goal"
   },
+  // --- ADDED CASE 3 ---
   CASE_003: {
-    file: "../assets/cases/case_003.md",
+    file: "../assets/cases/case_003.md", 
     caseId: "CASE_003 • KNEE-EXT-001",
     collision: "Lower extremity weight-bearing focus",
     rom: "Reduced terminal knee extension, quad lag",
@@ -902,11 +903,9 @@ const ROUTES = {
 // Function to parse the Markdown content for specific fields
 function parseCaseMarkdown(rawMd) {
   const lines = rawMd.split("\n").map(line => line.trim());
-  
-  // Use a map to extract specific fields based on labels in the MD file
   const extracted = {};
 
-  // Simple, robust extraction for required fields (assuming MD uses **Label:** format)
+  // Extraction logic: Assumes fields are defined with **Label:** in the MD file
   for (const line of lines) {
     if (line.startsWith("* **Patient Initials:**")) {
       extracted.initials = line.replace("* **Patient Initials:**", "").trim();
@@ -934,7 +933,7 @@ function parseCaseMarkdown(rawMd) {
     }
   }
 
-  // Fallback values if MD parsing fails (to ensure keys exist)
+  // Fallback values for missing data
   extracted.initials = extracted.initials || '??';
   extracted.name = extracted.name || 'Patient Name (Age)';
   extracted.setting = extracted.setting || 'Setting';
@@ -967,7 +966,7 @@ async function applyCase(caseKey) {
     c.collisionRules = caseData.collision;
     c.romTargets = caseData.rom;
     c.mmtTargetGrade = caseData.mmt;
-    c.mrn = "MRN • " + caseKey.split('_')[1]; // Simple MRN generation
+    c.mrn = "MRN • " + caseKey.split('_')[1]; // Generate MRN from CASE_00X
     
     // 3. Render HTML
     $("mrnValue").textContent = c.mrn;
@@ -992,8 +991,7 @@ async function applyCase(caseKey) {
 
   } catch (error) {
     console.error("Error loading case:", error);
-    // You might want to update the UI to show an error message here
-    alert("Error loading case content. Check the Markdown file path and format.");
+    alert(`Error loading case content for ${caseKey}. Check file path and format.`);
   }
 }
 
