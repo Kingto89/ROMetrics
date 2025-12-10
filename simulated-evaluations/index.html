@@ -320,12 +320,117 @@
     };
 
 
-const ROUTES = {
-  mmt: "mmt_tokens_index.html",
-  motion: "motion_lab_index.html",
-  gonio: "goniometry_trainer.html",
-  notes: "#"
+// === Case 001 tokenized module links (open in new tab) ===
+const MODULE_URLS = {
+  motion: "https://kingto89.github.io/ROMetrics.com/lab-motion/?caseToken=LAB-CERVICAL-001",
+  gonio:  "https://kingto89.github.io/ROMetrics.com/goniometry-trainer/?caseToken=GONIO-CERVICAL-001",
+  mmt:    "https://kingto89.github.io/ROMetrics.com/mmt/?caseToken=MMT-CERVICAL-001",
+  notes:  "#" // SOAP page handled separately
 };
+
+let visitedMotion = false;
+let visitedGonio  = false;
+let visitedMMT    = false;
+
+// localStorage flags so the SOAP / doc view can unlock after required modules
+const MODULE_KEYS = {
+  motion: "case_001_labDone",
+  gonio:  "case_001_gonioDone",
+  mmt:    "case_001_mmtDone"
+};
+
+function markVisited(key){
+  if (!MODULE_KEYS[key]) return;
+  localStorage.setItem(MODULE_KEYS[key], "1");
+}
+
+// Optional: hook into your existing warning modal if it's present
+const warningBackdrop = document.getElementById("warningModal");
+const warningProceed  = document.getElementById("warningProceed");
+const warningBack     = document.getElementById("warningBack");
+const warningClose    = document.getElementById("warningClose");
+
+let pendingModuleKey = null;
+
+function openModuleNow(key){
+  const url = MODULE_URLS[key];
+  if (!url || url === "#") {
+    alert("This linked view is not wired yet in the prototype.");
+    return;
+  }
+
+  if (key === "motion") visitedMotion = true;
+  if (key === "gonio")  visitedGonio  = true;
+  if (key === "mmt")    visitedMMT    = true;
+
+  markVisited(key);
+  window.open(url, "_blank");   // always open in new tab/window
+}
+
+function requestModuleWithWarning(key){
+  // Motion Lab can always go straight through
+  if (key === "motion" || visitedMotion){
+    openModuleNow(key);
+    return;
+  }
+
+  // If no warning modal markup on this page, fall back to alert-only warning
+  if (!warningBackdrop || !warningProceed){
+    alert(
+      "Recommended order:\n" +
+      "1) Functional / ROM observation (Motion Lab)\n" +
+      "2) Goniometry\n" +
+      "3) MMT\n\n" +
+      "You may continue to this step for practice."
+    );
+    openModuleNow(key);
+    return;
+  }
+
+  // Use existing warning modal if present
+  pendingModuleKey = key;
+  warningBackdrop.classList.add("active");
+}
+
+// Wire warning modal buttons (if the HTML for them exists)
+if (warningProceed){
+  warningProceed.onclick = () => {
+    warningBackdrop.classList.remove("active");
+    if (pendingModuleKey){
+      openModuleNow(pendingModuleKey);
+      pendingModuleKey = null;
+    }
+  };
+}
+if (warningBack){
+  warningBack.onclick = () => {
+    pendingModuleKey = null;
+    warningBackdrop.classList.remove("active");
+  };
+}
+if (warningClose){
+  warningClose.onclick = () => {
+    pendingModuleKey = null;
+    warningBackdrop.classList.remove("active");
+  };
+}
+
+// Attach to the new UI tiles
+document.querySelectorAll("[data-route]").forEach(el => {
+  el.addEventListener("click", (evt) => {
+    const key = el.getAttribute("data-route");
+    if (!key) return;
+
+    if (key === "notes"){
+      // SOAP / documentation page will handle 3-attempt logic + unlock
+      alert("SOAP / Notes unlock after Motion Lab, Goniometry, and MMT are completed and documentation is submitted.");
+      return;
+    }
+
+    requestModuleWithWarning(key);
+  });
+});
+
 
 function initialsFromName(name) {
   if (!name) return "??";
@@ -496,21 +601,6 @@ async function applyCase(caseKey) {
   }
 }
 
-function openRoute(key) {
-  const url = ROUTES[key];
-  if (!url || url === "#") {
-    alert("This linked view is not wired yet in the prototype.");
-    return;
-  }
-  window.location.href = url;
-}
-
-document.querySelectorAll("[data-route]").forEach(el => {
-  el.addEventListener("click", () => {
-    const key = el.getAttribute("data-route");
-    openRoute(key);
-  });
-});
 
 const caseSelect = $("caseSelect");
 if (caseSelect) {
