@@ -36,9 +36,8 @@
 
 ## Patient Profile
 - Name: Thomas K.
-- Age: 52
+- Age: 42
 - Occupation: Accountant (desk job)
-- Setting: Outpatient orthopedic PT evaluation
 
 ---
 
@@ -50,15 +49,15 @@
 ## History of Present Illness
 - Onset **4 days ago**, after lifting a heavy box from the floor  
 - Initially felt a sharp pain in the **central low back**, now:
-  - Constant, deep ache in **lumbosacral region**, 7–8/10  
-  - Pain **does NOT change** much with position (standing, sitting, lying)  
+- Constant, deep ache in **lumbosacral region**, 7–8/10  
+- Pain **does NOT change** much with position (standing, sitting, lying)  
 - New symptoms in the last **24–48 hours**:
-  - **Bilateral leg weakness**, especially when trying to lift the front of his feet  
-  - Describes **“numbness in the groin/saddle area”**  
-  - Reports **difficulty starting urination** and a feeling of incomplete emptying  
+- **Bilateral leg weakness**, especially when trying to lift the front of his feet  
+- Describes **“numbness in the groin/saddle area”**  
+- Reports **difficulty starting urination** and a feeling of incomplete emptying  
 - No previous history of significant back pain  
 - Denies recent trauma beyond the lift, but:
-  - Woke up last night multiple times because pain would not let him sleep  
+- Woke up last night multiple times because pain would not let him sleep  
 - No fever, but appears **visibly distressed and worried**  
 
 ---
