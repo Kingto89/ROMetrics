@@ -33,7 +33,7 @@
 
 ---
 
-# Case 3:
+# Case 3: Cluster Impairment
 
 ## Patient Profile
 
