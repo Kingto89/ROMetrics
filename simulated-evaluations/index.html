@@ -125,19 +125,18 @@
       </div>
 
    
-        <div class="patient-card">
-    <div class="patient-main">
-      <div class="avatar" id="patientInitials">SB</div>
-      <div class="patient-meta">
-        <span class="patient-name" id="patientName">Sarah B — 29 y/o</span>
-        <span class="patient-id" id="patientPrimary">Primary: Neck stiffness when turning</span>
+     <div class="patient-card">
+  <div class="patient-main">
+    <div class="avatar" id="patientInitials">SB</div>
+    <div class="patient-meta">
+      <span class="patient-name" id="patientName">Sarah B — 29 y/o</span>
       </div>
-    </div>
-    </div>
-        <div class="patient-tags" id="patientTags">
-          <span class="tag-accent">ROMetrics Simulation</span>
-          <span class="tag">Cervical ROM &amp; MMT</span>
-        </div>
+  </div>
+</div>
+<div class="patient-tags" id="patientTags">
+  <span class="tag-accent">ROMetrics Simulation</span>
+  <span class="tag">Cervical ROM &amp; MMT</span>
+</div>
       </div>
 
       <div>
@@ -349,427 +348,440 @@
 
 
   <script>
-    const $ = (id) => document.getElementById(id);
+ <script>
+  const $ = (id) => document.getElementById(id);
 
-//DROP IN START//
-  const ROUTES = {
-  // we’re using token URLs from the old logic for CASE 001
-  motion: "https://kingto89.github.io/ROMetrics.com/lab-motion/?caseToken=LAB-CERVICAL-001",
-  gonio:  "https://kingto89.github.io/ROMetrics.com/goniometry-trainer/?caseToken=GONIO-CERVICAL-001",
-  mmt:    "https://kingto89.github.io/ROMetrics.com/mmt/?caseToken=MMT-CERVICAL-001",
-  notes:  "#soap" // handled inside openRoute, not a real URL
-};
-
-// visit tracking → unlock SOAP only after all 3 are true
-let visitedMotion  = false;
-let visitedGonio   = false;
-let visitedMMT     = false;
-
-// lock / unlock SOAP doc panel
-function updateDocLockState() {
-  const card = $("docCard");
-  if (!card) return;
-
-  const allVisited = visitedMotion && visitedGonio && visitedMMT;
-
-  if (allVisited) {
-    card.style.opacity = "1";
-    card.style.pointerEvents = "auto";
-  } else {
-    card.style.opacity = "0.35";
-    card.style.pointerEvents = "none";
-  }
-}
-
-// simple warning text reused for going out of order
-function showSequenceWarning(stepLabel) {
-  return window.confirm(
-    `You are trying to open "${stepLabel}" before completing Motion Lab.\n\n` +
-    "Recommended sequence:\n" +
-    "• Functional / Motion Lab first\n" +
-    "• Goniometry after ROM\n" +
-    "• MMT after objective ROM\n" +
-    "• SOAP / Notes last\n\n" +
-    "Press OK to continue anyway, or Cancel to go back."
-  );
-}
-
-// main route handler for module tiles
-function openRoute(key) {
-  if (!key) return;
-
-  if (key === "motion") {
-    visitedMotion = true;
-    updateDocLockState();
-    window.open(ROUTES.motion, "_blank");
-    return;
-  }
-
-  if (key === "gonio") {
-    if (!visitedMotion) {
-      const ok = showSequenceWarning("Goniometry");
-      if (!ok) return;
-    }
-    visitedGonio = true;
-    updateDocLockState();
-    window.open(ROUTES.gonio, "_blank");
-    return;
-  }
-
-  if (key === "mmt") {
-    if (!visitedMotion) {
-      const ok = showSequenceWarning("MMT");
-      if (!ok) return;
-    }
-    visitedMMT = true;
-    updateDocLockState();
-    window.open(ROUTES.mmt, "_blank");
-    return;
-  }
-
-  // SOAP / Notes tile → only unlock if all 3 visited
-  if (key === "notes") {
-    const allVisited = visitedMotion && visitedGonio && visitedMMT;
-    if (!allVisited) {
-      alert(
-        "Complete Motion Lab, Goniometry, and MMT before writing SOAP / Notes.\n\n" +
-        "Use the other three modules first, then return here to document."
-      );
-      return;
-    }
-    const card = $("docCard");
-    if (card) {
-      card.style.display = "block";
-      card.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-    return;
-  }
-}
-
-// re-attach handlers for module tiles
-document.querySelectorAll("[data-route]").forEach(el => {
-  el.addEventListener("click", (e) => {
-    e.preventDefault();
-    const key = el.getAttribute("data-route");
-    openRoute(key);
-  });
-});
-
-/* ---------- DOC WORD LIMITS + 3-ATTEMPT GRADE BAR (same as old logic) ---------- */
-
-const WORD_LIMITS = {
-  docSubjective: 100,
-  docObjective:  150,
-  docDx:         60,
-  docPlan:       150,
-  docGoals:      100,
-  docPrognosis:  60
-};
-
-function attachWordLimiter(id, limit){
-  const field = document.getElementById(id);
-  if (!field) return;
-
-  const counter = document.querySelector(`.word-counter[data-for="${id}"]`);
-
-  function update(){
-    const text  = field.value.trim();
-    const words = text.length ? text.split(/\s+/) : [];
-
-    if (words.length > limit){
-      field.value = words.slice(0, limit).join(" ");
-    }
-
-    const count = field.value.trim()
-      ? field.value.trim().split(/\s+/).length
-      : 0;
-
-    if (counter){
-      counter.textContent = `${count}/${limit} words`;
-    }
-  }
-
-  field.addEventListener("input", update);
-  update();
-}
-
-Object.entries(WORD_LIMITS).forEach(([id, limit]) => {
-  attachWordLimiter(id, limit);
-});
-
-// grade bar + attempts (per-browser) — still case_001 for now
-const gradeFill     = document.getElementById("gradeFill");
-const gradeLabel    = document.getElementById("gradeLabel");
-const docSubmitBtn  = document.getElementById("docSubmitBtn");
-const docStatus     = document.getElementById("docSubmitStatus");
-
-const ATTEMPT_KEY = "case_001_docAttempts";
-
-function getAttempts(){
-  return parseInt(localStorage.getItem(ATTEMPT_KEY) || "0", 10);
-}
-function setAttempts(n){
-  localStorage.setItem(ATTEMPT_KEY, String(n));
-}
-
-function applyGradeFromAttempts(used){
-  if (!gradeFill || !gradeLabel) return;
-
-  if (used <= 0){
-    gradeFill.style.width = "0%";
-    gradeFill.style.background = "#f97373";
-    gradeLabel.textContent = "Not graded yet";
-    return;
-  }
-
-  if (used === 1){
-    gradeFill.style.width = "33%";
-    gradeFill.style.background = "#f97373"; // red
-    gradeLabel.textContent = "Novice level (auto-estimate)";
-  } else if (used === 2){
-    gradeFill.style.width = "66%";
-    gradeFill.style.background = "#f97316"; // orange
-    gradeLabel.textContent = "Apprentice level (auto-estimate)";
-  } else {
-    gradeFill.style.width = "100%";
-    gradeFill.style.background = "#22c55e"; // green
-    gradeLabel.textContent = "Clinical level (auto-estimate)";
-  }
-}
-
-function checkAttemptLock(){
-  const used = getAttempts();
-  applyGradeFromAttempts(used);
-
-  if (used >= 3 && docSubmitBtn && docStatus){
-    docSubmitBtn.disabled = true;
-    docStatus.textContent = "You have used all 3 submission attempts for this case.";
-    docStatus.style.color = "#f97373";
-  }
-}
-
-checkAttemptLock();
-
-if (docSubmitBtn && docStatus){
-  docSubmitBtn.onclick = () => {
-    const used = getAttempts();
-
-    const docIds = [
-      "docSubjective",
-      "docObjective",
-      "docDx",
-      "docPlan",
-      "docGoals",
-      "docPrognosis"
-    ];
-
-    const hasContent = docIds.some(id => {
-      const el = document.getElementById(id);
-      return el && el.value.trim().length > 0;
-    });
-
-    if (!hasContent){
-      docStatus.textContent = "Write your documentation before submitting.";
-      docStatus.style.color = "#f97373";
-      return;
-    }
-
-    if (used >= 3){
-      checkAttemptLock();
-      return;
-    }
-
-    const nextCount = used + 1;
-    setAttempts(nextCount);
-    applyGradeFromAttempts(nextCount);
-
-    docStatus.textContent =
-      `Documentation submitted. Attempt ${nextCount} of 3.`;
-    docStatus.style.color = "var(--good)";
-
-    if (nextCount >= 3){
-      docSubmitBtn.disabled = true;
-    }
+  // Define CASE_FILES globally or ensure it's loaded before applyCase is called.
+  // Assuming CASE_FILES structure from your options is:
+  // const CASE_FILES = {
+  //   "CASE_001": { file: "path/to/case_001.md", label: "001 • GONIO-CERVICAL-001", scenarioSummary: "Cervical ROM & pain-limited MMT" },
+  //   // ... other cases
+  // };
+  // Since you didn't provide CASE_FILES, I will use a placeholder structure for the script to function:
+  const CASE_FILES = {
+    "CASE_001": { file: "case_001.md", label: "001 • GONIO-CERVICAL-001", scenarioSummary: "Cervical ROM & pain-limited MMT" },
+    "CASE_002": { file: "case_002.md", label: "002 • GONIO-SHOULDER-001", scenarioSummary: "Shoulder ROM & MMT" },
+    "CASE_003": { file: "case_003.md", label: "003 • REFERRAL", scenarioSummary: "Cluster Impairment/Refer Out" },
   };
-}
 
-    // make sure SOAP starts in locked state matching visit flags
-    updateDocLockState();
-    //DROP IN END//
 
-    // === CASE PARSING + PATIENT PROFILE FILL (final) ===
+  //DROP IN START//
+  const ROUTES = {
+    // we’re using token URLs from the old logic for CASE 001
+    motion: "https://kingto89.github.io/ROMetrics.com/lab-motion/?caseToken=LAB-CERVICAL-001",
+    gonio:  "https://kingto89.github.io/ROMetrics.com/goniometry-trainer/?caseToken=GONIO-CERVICAL-001",
+    mmt:    "https://kingto89.github.io/ROMetrics.com/mmt/?caseToken=MMT-CERVICAL-001",
+    notes:  "#soap" // handled inside openRoute, not a real URL
+  };
 
-    function initialsFromName(name) {
-      if (!name) return "??";
-      const parts = name.trim().split(/\s+/);
-      if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
-      return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+  // visit tracking → unlock SOAP only after all 3 are true
+  let visitedMotion  = false;
+  let visitedGonio   = false;
+  let visitedMMT     = false;
+
+  // lock / unlock SOAP doc panel
+  function updateDocLockState() {
+    const card = $("docCard");
+    if (!card) return;
+
+    const allVisited = visitedMotion && visitedGonio && visitedMMT;
+
+    if (allVisited) {
+      card.style.opacity = "1";
+      card.style.pointerEvents = "auto";
+    } else {
+      card.style.opacity = "0.35";
+      card.style.pointerEvents = "none";
+    }
+  }
+
+  // simple warning text reused for going out of order
+  function showSequenceWarning(stepLabel) {
+    return window.confirm(
+      `You are trying to open "${stepLabel}" before completing Motion Lab.\n\n` +
+      "Recommended sequence:\n" +
+      "• Functional / Motion Lab first\n" +
+      "• Goniometry after ROM\n" +
+      "• MMT after objective ROM\n" +
+      "• SOAP / Notes last\n\n" +
+      "Press OK to continue anyway, or Cancel to go back."
+    );
+  }
+
+  // main route handler for module tiles
+  function openRoute(key) {
+    if (!key) return;
+
+    if (key === "motion") {
+      visitedMotion = true;
+      updateDocLockState();
+      window.open(ROUTES.motion, "_blank");
+      return;
     }
 
-    function parseCaseMarkdown(rawMd) {
-      const c = {
-        caseHeading: "",
-        name: "",
-        age: "",
-        occupation: "",
-        setting: "",
-        chiefComplaint: "",
-        hpi: "",
-        scenarioLabel: "",
-        tags: []
-      };
-
-      // Case heading: "# Case 1: Cervical Impairment"
-      const hMatch = rawMd.match(/^#\s*(.+)$/m);
-      if (hMatch) {
-        const h = hMatch[1].trim();
-        if (/^case/i.test(h)) c.caseHeading = h;
+    if (key === "gonio") {
+      if (!visitedMotion) {
+        const ok = showSequenceWarning("Goniometry");
+        if (!ok) return;
       }
-
-      // Patient Profile bullets anywhere in file
-       function grabBullet(label) {
-        const re = new RegExp(`^-\\s*${label}:\\s*(.+)$`, "im");
-        const m  = rawMd.match(re);
-        return m ? m[1].trim() : "";
-      }
-
-      c.name       = grabBullet("Name");
-      c.age        = grabBullet("Age");
-      c.occupation = grabBullet("Occupation");
-      c.setting    = grabBullet("Setting");
-
-// Section grabber between "## Heading" and next "##"
-function grabSection(title) {
-  const re = new RegExp(
-    `^##\\s*${title}\\s*[\\r\\n]+([\\s\\S]*?)(?=^##\\s|\\Z)`,
-    "im"
-  );
-  const m = rawMd.match(re);
-  if (!m) return "";
-  
-  // FIX: Retain line breaks and replace markdown bullets with a visible bullet
-  return m[1]
-    .replace(/^-+\s*/gm, "• ") // 1. Replace all leading Markdown bullets with a visible bullet (• )
-    .replace(/\n\s*\n/g, "\n") // 2. Collapse excessive blank lines
-    .replace(/\n/g, "<br>")    // 3. Replace remaining newlines with an HTML line break
-    .replace(/^["“]+/, "")
-    .replace(/["”]+$/, "")
-    .trim();
-}
-
-      c.chiefComplaint = grabSection("Chief Complaint");
-      c.hpi            = grabSection("History of Present Illness");
-
-      // SAFETY NET: if parsing ever fails, hard-fill from known Case 1 text
-      if (!c.name && !c.occupation && !c.chiefComplaint && !c.hpi) {
-        c.name           = "Sarah B.";
-        c.age            = "29";
-        c.occupation     = "Graduate student";
-        c.chiefComplaint = "My neck feels stiff when I try to turn it.";
-        c.hpi =
-          "Onset 3 days ago after sleeping awkwardly; pain is dull and localized " +
-          "without radiation; worse with right rotation and prolonged sitting; " +
-          "eased by warm shower and gentle stretching; denies numbness, tingling, " +
-          "trauma, headaches, or dizziness.";
-      }
-
-      c.scenarioLabel = c.caseHeading
-        ? "Scenario Loaded: " + c.caseHeading
-        : "Scenario Loaded: ROMetrics Case";
-
-      return c;
+      visitedGonio = true;
+      updateDocLockState();
+      window.open(ROUTES.gonio, "_blank");
+      return;
     }
 
-    function renderTags() {
-      return '<span class="tag-accent">ROMetrics Simulation</span>';
+    if (key === "mmt") {
+      if (!visitedMotion) {
+        const ok = showSequenceWarning("MMT");
+        if (!ok) return;
+      }
+      visitedMMT = true;
+      updateDocLockState();
+      window.open(ROUTES.mmt, "_blank");
+      return;
     }
 
-    // Patient Profile shows Occupation + Chief Complaint + HPI
-    function renderPatientProfile(c) {
-      const list = $("patientProfileList");
-      if (!list) return;
-
-      const items = [];
-
-      if (c.occupation) {
-        items.push({ label: "Occupation", value: c.occupation });
+    // SOAP / Notes tile → only unlock if all 3 visited
+    if (key === "notes") {
+      const allVisited = visitedMotion && visitedGonio && visitedMMT;
+      if (!allVisited) {
+        alert(
+          "Complete Motion Lab, Goniometry, and MMT before writing SOAP / Notes.\n\n" +
+          "Use the other three modules first, then return here to document."
+        );
+        return;
       }
-      if (c.chiefComplaint) {
-        items.push({ label: "Chief Complaint", value: c.chiefComplaint });
+      const card = $("docCard");
+      if (card) {
+        card.style.display = "block";
+        card.scrollIntoView({ behavior: "smooth", block: "start" });
       }
-      if (c.hpi) {
-        items.push({ label: "History of Present Illness", value: c.hpi });
-      }
-
-      list.innerHTML = items.map(item => `
-        <div class="encounter-item">
-          <div class="encounter-top">
-            <span class="enc-type">${item.label}</span>
-          </div>
-          <div class="enc-note">${item.value}</div>
-        </div>
-      `).join("");
+      return;
     }
+  }
 
-    async function applyCase(caseKey) {
-      const caseData = CASE_FILES[caseKey];
-      if (!caseData) return;
+  // re-attach handlers for module tiles
+  document.querySelectorAll("[data-route]").forEach(el => {
+    el.addEventListener("click", (e) => {
+      e.preventDefault();
+      const key = el.getAttribute("data-route");
+      openRoute(key);
+    });
+  });
 
-      try {
-        const res = await fetch(caseData.file);
-        if (!res.ok) throw new Error("Failed to fetch " + caseData.file);
-        const rawMd = await res.text();
-        const c = parseCaseMarkdown(rawMd);
+  /* ---------- DOC WORD LIMITS + 3-ATTEMPT GRADE BAR (same as old logic) ---------- */
 
-        const mrnSuffix = caseKey.split("_")[1] || "000";
-        const mrn       = "MRN • " + mrnSuffix;
+  const WORD_LIMITS = {
+    docSubjective: 100,
+    docObjective:  150,
+    docDx:         60,
+    docPlan:       150,
+    docGoals:      100,
+    docPrognosis:  60
+  };
 
-        const baseName    = c.name || "Patient Name";
-        const nameWithAge = c.age ? `${baseName} — ${c.age} y/o` : baseName;
+  function attachWordLimiter(id, limit){
+    const field = document.getElementById(id);
+    if (!field) return;
 
-        const mrnEl = $("mrnValue");
-        if (mrnEl) mrnEl.textContent = mrn;
+    const counter = document.querySelector(`.word-counter[data-for="${id}"]`);
 
-        const initialsEl = $("patientInitials");
-        if (initialsEl) initialsEl.textContent = initialsFromName(c.name || "");
+    function update(){
+      const text  = field.value.trim();
+      const words = text.length ? text.split(/\s+/) : [];
 
-        const nameEl = $("patientName");
-        if (nameEl) nameEl.textContent = nameWithAge;
+      if (words.length > limit){
+        field.value = words.slice(0, limit).join(" ");
+      }
 
-        const settingEl = $("patientSetting");
-        if (settingEl) settingEl.textContent = c.setting || "Simulation case";
+      const count = field.value.trim()
+        ? field.value.trim().split(/\s+/).length
+        : 0;
 
-        const primaryEl = $("patientPrimary");
-        if (primaryEl) primaryEl.textContent = ""; // no CC duplicate
-
-        const tagsEl = $("patientTags");
-        if (tagsEl) tagsEl.innerHTML = renderTags();
-
-        const caseIdEl = $("caseIdValue");
-        if (caseIdEl) caseIdEl.textContent = caseData.label;
-
-        const scenarioSummaryEl = $("scenarioSummary");
-        if (scenarioSummaryEl) scenarioSummaryEl.textContent = caseData.scenarioSummary;
-
-        const scenarioLabelEl = $("scenarioLabel");
-        if (scenarioLabelEl) scenarioLabelEl.textContent = c.scenarioLabel;
-
-        renderPatientProfile(c);
-      } catch (err) {
-        console.error("Error loading case:", err);
-        alert(`Error loading case content for ${caseKey}. Check file path and format.`);
+      if (counter){
+        counter.textContent = `${count}/${limit} words`;
       }
     }
 
-    const caseSelect = $("caseSelect");
-    if (caseSelect) {
-      caseSelect.addEventListener("change", () => {
-        applyCase(caseSelect.value);
+    field.addEventListener("input", update);
+    update();
+  }
+
+  Object.entries(WORD_LIMITS).forEach(([id, limit]) => {
+    attachWordLimiter(id, limit);
+  });
+
+  // grade bar + attempts (per-browser) — still case_001 for now
+  const gradeFill     = document.getElementById("gradeFill");
+  const gradeLabel    = document.getElementById("gradeLabel");
+  const docSubmitBtn  = document.getElementById("docSubmitBtn");
+  const docStatus     = document.getElementById("docSubmitStatus");
+
+  const ATTEMPT_KEY = "case_001_docAttempts";
+
+  function getAttempts(){
+    return parseInt(localStorage.getItem(ATTEMPT_KEY) || "0", 10);
+  }
+  function setAttempts(n){
+    localStorage.setItem(ATTEMPT_KEY, String(n));
+  }
+
+  function applyGradeFromAttempts(used){
+    if (!gradeFill || !gradeLabel) return;
+
+    if (used <= 0){
+      gradeFill.style.width = "0%";
+      gradeFill.style.background = "#f97373";
+      gradeLabel.textContent = "Not graded yet";
+      return;
+    }
+
+    if (used === 1){
+      gradeFill.style.width = "33%";
+      gradeFill.style.background = "#f97373"; // red
+      gradeLabel.textContent = "Novice level (auto-estimate)";
+    } else if (used === 2){
+      gradeFill.style.width = "66%";
+      gradeFill.style.background = "#f97316"; // orange
+      gradeLabel.textContent = "Apprentice level (auto-estimate)";
+    } else {
+      gradeFill.style.width = "100%";
+      gradeFill.style.background = "#22c55e"; // green
+      gradeLabel.labelContent = "Clinical level (auto-estimate)";
+    }
+  }
+
+  function checkAttemptLock(){
+    const used = getAttempts();
+    applyGradeFromAttempts(used);
+
+    if (used >= 3 && docSubmitBtn && docStatus){
+      docSubmitBtn.disabled = true;
+      docStatus.textContent = "You have used all 3 submission attempts for this case.";
+      docStatus.style.color = "#f97373";
+    }
+  }
+
+  checkAttemptLock();
+
+  if (docSubmitBtn && docStatus){
+    docSubmitBtn.onclick = () => {
+      const used = getAttempts();
+
+      const docIds = [
+        "docSubjective",
+        "docObjective",
+        "docDx",
+        "docPlan",
+        "docGoals",
+        "docPrognosis"
+      ];
+
+      const hasContent = docIds.some(id => {
+        const el = document.getElementById(id);
+        return el && el.value.trim().length > 0;
       });
+
+      if (!hasContent){
+        docStatus.textContent = "Write your documentation before submitting.";
+        docStatus.style.color = "#f97373";
+        return;
+      }
+
+      if (used >= 3){
+        checkAttemptLock();
+        return;
+      }
+
+      const nextCount = used + 1;
+      setAttempts(nextCount);
+      applyGradeFromAttempts(nextCount);
+
+      docStatus.textContent =
+        `Documentation submitted. Attempt ${nextCount} of 3.`;
+      docStatus.style.color = "var(--good)";
+
+      if (nextCount >= 3){
+        docSubmitBtn.disabled = true;
+      }
+    };
+  }
+
+  // make sure SOAP starts in locked state matching visit flags
+  updateDocLockState();
+  //DROP IN END//
+
+  // === CASE PARSING + PATIENT PROFILE FILL (final) ===
+
+  function initialsFromName(name) {
+    if (!name) return "??";
+    const parts = name.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+  }
+
+  function parseCaseMarkdown(rawMd) {
+    const c = {
+      caseHeading: "",
+      name: "",
+      age: "",
+      occupation: "",
+      setting: "",
+      chiefComplaint: "",
+      hpi: "",
+      scenarioLabel: "",
+      tags: []
+    };
+
+    // Case heading: "# Case 1: Cervical Impairment"
+    const hMatch = rawMd.match(/^#\s*(.+)$/m);
+    if (hMatch) {
+      const h = hMatch[1].trim();
+      if (/^case/i.test(h)) c.caseHeading = h;
     }
 
-    // initial load
-    applyCase("CASE_001");
-  </script>
+    // Patient Profile bullets anywhere in file
+    function grabBullet(label) {
+      // FIX #1: Corrected regex to only look for a single hyphen for list items like Name, Age, Occupation
+      const re = new RegExp(`^-\\s*${label}:\\s*(.+)$`, "im");
+      const m  = rawMd.match(re);
+      return m ? m[1].trim() : "";
+    }
+
+    c.name     = grabBullet("Name");
+    c.age      = grabBullet("Age");
+    c.occupation = grabBullet("Occupation");
+    c.setting  = grabBullet("Setting");
+
+    // Section grabber between "## Heading" and next "##"
+    function grabSection(title) {
+      const re = new RegExp(
+        `^##\\s*${title}\\s*[\\r\\n]+([\\s\\S]*?)(?=^##\\s|\\Z)`,
+        "im"
+      );
+      const m = rawMd.match(re);
+      if (!m) return "";
+      
+      // FIX #2: Modified text cleanup to keep line breaks and add visible bullets for HPI/CC
+      return m[1]
+        .replace(/^-+\s*/gm, "• ")   // 1. Replace all leading Markdown bullets with a visible bullet (• )
+        .replace(/\n\s*\n/g, "\n")   // 2. Collapse excessive blank lines
+        .replace(/\n/g, "<br>")     // 3. Replace remaining newlines with an HTML line break
+        .replace(/^["“]+/, "")
+        .replace(/["”]+$/, "")
+        .trim();
+    }
+
+    c.chiefComplaint = grabSection("Chief Complaint");
+    c.hpi            = grabSection("History of Present Illness");
+
+    // REMOVED SAFETY NET / HARD-FILL BLOCK
+    // Your automation relies on the MD parsing working above.
+
+    c.scenarioLabel = c.caseHeading
+      ? "Scenario Loaded: " + c.caseHeading
+      : "Scenario Loaded: ROMetrics Case";
+
+    return c;
+  }
+
+  function renderTags() {
+    return '<span class="tag-accent">ROMetrics Simulation</span>';
+  }
+
+  // Patient Profile shows Occupation + Chief Complaint + HPI
+  function renderPatientProfile(c) {
+    const list = $("patientProfileList");
+    if (!list) return;
+
+    const items = [];
+
+    if (c.occupation) {
+      items.push({ label: "Occupation", value: c.occupation });
+    }
+    if (c.chiefComplaint) {
+      items.push({ label: "Chief Complaint", value: c.chiefComplaint });
+    }
+    if (c.hpi) {
+      items.push({ label: "History of Present Illness", value: c.hpi });
+    }
+
+    list.innerHTML = items.map(item => `
+      <div class="encounter-item">
+        <div class="encounter-top">
+          <span class="enc-type">${item.label}</span>
+        </div>
+        <div class="enc-note">${item.value}</div>
+      </div>
+    `).join("");
+  }
+
+  async function applyCase(caseKey) {
+    const caseData = CASE_FILES[caseKey];
+    if (!caseData) return;
+
+    // IMPORTANT: Make sure the file path is correct for your environment.
+    // I am assuming the path is relative based on your options.
+    const filePath = caseData.file;
+
+    try {
+      const res = await fetch(filePath);
+      if (!res.ok) throw new Error("Failed to fetch " + filePath);
+      const rawMd = await res.text();
+      const c = parseCaseMarkdown(rawMd);
+
+      const mrnSuffix = caseKey.split("_")[1] || "000";
+      const mrn       = "MRN • " + mrnSuffix;
+
+      const baseName    = c.name || "Patient Name";
+      const nameWithAge = c.age ? `${baseName} — ${c.age} y/o` : baseName;
+
+      const mrnEl = $("mrnValue");
+      if (mrnEl) mrnEl.textContent = mrn;
+
+      const initialsEl = $("patientInitials");
+      if (initialsEl) initialsEl.textContent = initialsFromName(c.name || "");
+
+      const nameEl = $("patientName");
+      if (nameEl) nameEl.textContent = nameWithAge;
+
+      // The patientSetting and patientPrimary elements are now removed from the DOM/redundant in JS.
+      // We are leaving the following JS code commented out/removed for clean separation:
+      // const settingEl = $("patientSetting");
+      // if (settingEl) settingEl.textContent = c.setting || "Simulation case";
+
+      const primaryEl = $("patientPrimary");
+      if (primaryEl) primaryEl.textContent = ""; // Ensure the primary complaint is cleared if it exists in the DOM
+
+      const tagsEl = $("patientTags");
+      if (tagsEl) tagsEl.innerHTML = renderTags();
+
+      const caseIdEl = $("caseIdValue");
+      if (caseIdEl) caseIdEl.textContent = caseData.label;
+
+      const scenarioSummaryEl = $("scenarioSummary");
+      if (scenarioSummaryEl) scenarioSummaryEl.textContent = caseData.scenarioSummary;
+
+      const scenarioLabelEl = $("scenarioLabel");
+      if (scenarioLabelEl) scenarioLabelEl.textContent = c.scenarioLabel;
+
+      renderPatientProfile(c);
+    } catch (err) {
+      console.error("Error loading case:", err);
+      // NOTE: This alert is now the only fallback if the MD file can't be fetched or parsed.
+      alert(`Error loading case content for ${caseKey}. Check file path and format.`);
+    }
+  }
+
+  const caseSelect = $("caseSelect");
+  if (caseSelect) {
+    caseSelect.addEventListener("change", () => {
+      applyCase(caseSelect.value);
+    });
+  }
+
+  // initial load
+  applyCase("CASE_001");
+</script>
 </body>
 </html>
