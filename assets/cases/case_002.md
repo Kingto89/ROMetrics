@@ -39,10 +39,9 @@
 # Case 2: Hip Impairment
 
 ## Patient Profile
-- Name: Marcus J.
-- Age: 41
+- Name: Maria J.
+- Age: 31
 - Occupation: City bus driver
-- Setting: Outpatient orthopedic visit
 
 ---
 
@@ -56,9 +55,9 @@
 - Felt a sharp pull in the **front of the right hip**  
 - Pain is dull/achy, 4–6/10, localized to anterior hip/groin  
 - Worse with:
-  - Stepping up onto high stairs  
-  - Marching / high-knee positions  
-  - Lifting right leg to put on pants or get into car  
+- Stepping up onto high stairs  
+- Marching / high-knee positions  
+- Lifting right leg to put on pants or get into car  
 - Better with rest and heat  
 - Denies numbness, tingling, low back pain, locking/catching, or systemic red flags  
 
