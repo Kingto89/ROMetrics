@@ -188,7 +188,6 @@
               </div>
               <div>
                 <div class="field-label">Required Modules</div>
-                <div class="field-value" id="requiredModulesValue">Motion Lab • Goniometry Trainer • MMT Trainer</div>
               </div>
               <div>
                 <div class="field-label">Case Tags</div>
@@ -438,11 +437,6 @@ function parseCaseMarkdown(rawMd) {
     .replace(/["”]+$/, "")
     .trim();
 
-  // Required modules from subheadings under ROMetrics Module Instructions
-  c.requiredModules = modules.length
-    ? modules.join(" • ")
-    : "Motion Lab • Goniometry Trainer • MMT Trainer";
-
   // Scenario pill at top
   c.scenarioLabel = c.caseHeading
     ? "Scenario Loaded: " + c.caseHeading
@@ -517,8 +511,6 @@ function parseCaseMarkdown(rawMd) {
           ? "Simulation: " + c.setting
           : "Simulation: PT Evaluation";
         $("chiefComplaintValue").textContent = c.chiefComplaint || "N/A";
-        $("requiredModulesValue").textContent = c.requiredModules;
-        $("caseTagsSummary").textContent = (c.tags && c.tags.length)
           ? c.tags.join(" • ")
           : "ROMetrics Simulation";
 
