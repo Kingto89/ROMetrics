@@ -724,40 +724,18 @@
           <span class="badge">Click a module to open the ROMetrics view</span>
         </div>
 
-        <div class="module-grid">
-          <!-- MMT Assessment module -->
-          <article class="module" data-route="mmt">
-            <div class="module-header">
-              <div>
-                <div class="module-title">MMT Assessment — Region-Specific</div>
-                <div class="module-sub">Launch the ROMetrics MMT Trainer with case tokens.</div>
-              </div>
-              <span class="module-chip">Step 4 • Required</span>
-            </div>
-            <div class="module-body">
-              Use the MMT Trainer to position the model, set resistance vectors, and record the target grade based on the selected case. Token logic will enforce case limits.
-            </div>
-            <div class="module-meta">
-              <span>Linked View: <strong>MMT Trainer Prototype</strong></span>
-              <span>Status: Not yet attempted</span>
-            </div>
-            <button class="module-btn" type="button" data-route="mmt">
-              Open MMT Assessment
-              <span class="chevron">↗</span>
-            </button>
-          </article>
 
           <!-- Motion Lab module -->
           <article class="module" data-route="motion">
             <div class="module-header">
               <div>
                 <div class="module-title">Motion Lab — Active ROM</div>
-                <div class="module-sub">Visualize active vs. passive motion for the primary region.</div>
+                <div class="module-sub">Visualize motion for the primary region.</div>
               </div>
               <span class="module-chip">Step 2</span>
             </div>
             <div class="module-body">
-              Preview motions, observe planes and axes, and understand expected ROM before measuring with the goniometer.
+              Gather case clues. Preview motions/functional limitations, and understand expected ROM before measuring with the goniometer.
             </div>
             <div class="module-meta">
               <span>Linked View: Motion Lab</span>
@@ -774,12 +752,12 @@
             <div class="module-header">
               <div>
                 <div class="module-title">Goniometry Trainer — Primary Region</div>
-                <div class="module-sub">Measure and record ROM with case limits.</div>
+                <div class="module-sub">Measure and record ROM.</div>
               </div>
               <span class="module-chip">Step 3</span>
             </div>
             <div class="module-body">
-              Place landmarks, align the goniometer, and capture values. Case tokens will clamp ROM to simulate impairment for the selected case.
+              Place landmarks, align the goniometer, and capture ROM values.
             </div>
             <div class="module-meta">
               <span>Linked View: Goniometry Trainer</span>
@@ -790,7 +768,29 @@
               <span class="chevron">↗</span>
             </button>
           </article>
-
+    <div class="module-grid">
+          <!-- MMT Assessment module -->
+          <article class="module" data-route="mmt">
+            <div class="module-header">
+              <div>
+                <div class="module-title">MMT Assessment </div>
+                <div class="module-sub">Launch the ROMetrics MMT Trainer with case tokens.</div>
+              </div>
+              <span class="module-chip">Step 4 • Required</span>
+            </div>
+            <div class="module-body">
+              Use the MMT Trainer to position the model, see resistance vectors, and record the target grade based on the selected case. 
+              
+            </div>
+            <div class="module-meta">
+              <span>Linked View: <strong>MMT Trainer Prototype</strong></span>
+              <span>Status: Not yet attempted</span>
+            </div>
+            <button class="module-btn" type="button" data-route="mmt">
+              Open MMT Assessment
+              <span class="chevron">↗</span>
+            </button>
+          </article>
           <!-- Notes / Summary module -->
           <article class="module" data-route="notes">
             <div class="module-header">
@@ -801,10 +801,10 @@
               <span class="module-chip">Step 5 • Read Only</span>
             </div>
             <div class="module-body">
-              When all required modules are complete, the SOAP generator will summarize your findings for debriefing and grading.
+              When all required modules are complete, the SOAP generator will unlock to record your findings. Submission are graded to offer feedback.
             </div>
             <div class="module-meta">
-              <span>Linked View: Notes / SOAP Prototype</span>
+              <span>Linked View: Notes / SOAP </span>
               <span>Status: Locked</span>
             </div>
             <button class="module-btn" type="button" data-route="notes">
@@ -816,9 +816,9 @@
 
         <div class="hint-strip">
           <span>
-            <strong>Hint:</strong> Switch the case in the header to see how the patient and visit details update. In your real build, you can map each case to different Motion Lab / Goniometry / MMT token rules.
+            <strong>Hint:</strong> Switch the case in the header to see how the patient details.
           </span>
-          <span>Training Only • No real patient data</span>
+          <span>Training Only </span>
         </div>
       </div>
     </section>
