@@ -1181,6 +1181,7 @@ function applyAnatomicBaseline(){
 
   // Always return to anatomic when changing actions; then freeze bind
   actionSel.addEventListener("change", ()=>{
+    resetPainExpression(); 
     resetAllBonesToInitial();
     applyAnatomicBaseline();
     CURRENT_ACTION = null;
