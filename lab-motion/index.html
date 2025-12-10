@@ -184,16 +184,16 @@ const ROM_CASE_TOKENS = {
     allowedRegions: ["Cervical", "Shoulder", "Elbow", "Wrist"],
     disableAdvancedMenu: true, // Hide the Bone (Advanced) details menu
 
-          // --- IMPAIRMENTS: ROM Limits (Max Measured Angles) ---
-        impairments: {
-            // Cervical Rotation — cap at 30°
-            cerv_rot: { max: 30 },
+        // --- IMPAIRMENTS: ROM Limits (Max Measured Angles) ---
+    impairments: {
+      // Right Cervical Rotation (normal ~70°, cap at 30°)
+      cerv_rot_r: { max: 30 },
 
-            // Cervical Lateral Flexion — cap at 20°
-            cerv_lat: { max: 20 }
+      // Right Cervical Lateral Flexion (normal ~45°, cap at 20°)
+      cerv_lat_r: { max: 20 }
 
-            // Other motions use default caps
-        },
+      // Left side & flex/ext use default caps
+    },
 
 
     // --- VISUAL FEEDBACK: Shape Keys for Pain Grimace ---
@@ -513,6 +513,24 @@ if(/^foot_invev_/.test(key)){
 
   let model = null, skeleton = null;
   const initialBoneRot = new Map();
+  let FACE_MESH = null;
+  function findFaceMesh(){
+    if (!model) return null;
+    if (FACE_MESH) return FACE_MESH;
+
+    let candidate = null;
+    model.traverse(o => {
+      if (o.isSkinnedMesh && o.morphTargetDictionary){
+        const lname = (o.name || "").toLowerCase();
+        if (!candidate) candidate = o;
+        if (lname.includes("head") || lname.includes("face")){
+          candidate = o;
+        }
+      }
+    });
+    FACE_MESH = candidate;
+    return FACE_MESH;
+  }
 
   function pickModelUrl(){
     const u = new URL(location.href);
@@ -1174,53 +1192,67 @@ actionDeg.addEventListener("input", ()=> {
     let limitHit = false;
 
     // --- CASE MODE LOGIC: GRIMACE & LIMITS ---
-    if (window.ROM_CASE_MODE.active) {
-        const token = window.ROM_CASE_MODE.token;
-        let cap = capFor(CURRENT_ACTION);
+    if (window.ROM_CASE_MODE.active && window.ROM_CASE_MODE.token) {
+      const token = window.ROM_CASE_MODE.token;
+      let cap = capFor(CURRENT_ACTION);
 
-        // Check if current motion is one of the impaired ones
-        if (CURRENT_ACTION.key === 'cerv_rot' || CURRENT_ACTION.key === 'cerv_lat') {
-            const side = CURRENT_ACTION.label.includes('Right') ? 'r' : 'l';
-            const key = `${CURRENT_ACTION.key}_${side}`; 
-            
-            // Re-check cap against the specific impairment key if one exists
-            if (token.impairments[key]) {
-                cap = token.impairments[key].max;
-                isImpairedMotion = true;
-            }
+      // For this lab case we only impair:
+      //   - Cervical Rotation — Right
+      //   - Cervical Lateral Flexion — Right
+      if (CURRENT_ACTION.key === 'cerv_rot' || CURRENT_ACTION.key === 'cerv_lat') {
+        const isRight = CURRENT_ACTION.label.includes('Right'); // menu label includes "Right"
+        if (isRight) {
+          // Map to impairment keys: cerv_rot_r / cerv_lat_r
+          const impKey =
+            CURRENT_ACTION.key === 'cerv_rot' ? 'cerv_rot_r' : 'cerv_lat_r';
+          const imp = token.impairments && token.impairments[impKey];
+          if (imp && typeof imp.max === 'number') {
+            cap = imp.max;
+            isImpairedMotion = true;
+          }
         }
+      }
 
-        // Apply Hard Stop and Grimace Trigger
-        if (typeof cap === 'number' && val > cap) {
-            val = cap; actionDeg.value = String(val);
-            limitHit = true;
-            
-            if (isImpairedMotion) {
-                // 1. TRIGGER GRIMACE
-                const headModel = model.getObjectByName('head');
-                token.painShapeKeys.forEach(s => {
-                    headModel.morphTargetInfluences[headModel.morphTargetDictionary[s.key]] = s.value;
-                });
-                // 2. TRIGGER CLUES POP-UP ON FIRST ATTEMPT
-                if (limitHit && !window.ROM_CASE_MODE.notes.cluesShown) { // Check limitHit again
-                    alert(token.notes.cluesNote);
-                    window.ROM_CASE_MODE.notes.cluesShown = true;
-                }
-            }
-        } else {
-             // DEACTIVATE GRIMACE
-             if (model && isImpairedMotion) {
-                const headModel = model.getObjectByName('head');
-                token.painShapeKeys.forEach(s => {
-                    headModel.morphTargetInfluences[headModel.morphTargetDictionary[s.key]] = 0;
-                });
-            }
+      // Apply Hard Stop and Grimace Trigger
+      if (typeof cap === 'number' && val > cap) {
+        val = cap;
+        actionDeg.value = String(val);
+        limitHit = true;
+
+        if (isImpairedMotion) {
+          const face = findFaceMesh();
+          if (face && face.morphTargetDictionary && face.morphTargetInfluences) {
+            token.painShapeKeys.forEach(s => {
+              const idx = face.morphTargetDictionary[s.key];
+              if (idx !== undefined) {
+                face.morphTargetInfluences[idx] = s.value;
+              }
+            });
+          }
+
+          if (!window.ROM_CASE_MODE.notes.cluesShown) {
+            alert(token.notes.cluesNote);
+            window.ROM_CASE_MODE.notes.cluesShown = true;
+          }
         }
-        
-        if (limitHit) {
-             log(`Motion Limit Hit (${CURRENT_ACTION.label}): max ${val}°`);
+      } else if (isImpairedMotion) {
+        // Slider back under the cap → relax the grimace
+        const face = findFaceMesh();
+        if (face && face.morphTargetDictionary && face.morphTargetInfluences) {
+          token.painShapeKeys.forEach(s => {
+            const idx = face.morphTargetDictionary[s.key];
+            if (idx !== undefined) {
+              face.morphTargetInfluences[idx] = 0;
+            }
+          });
         }
+      }
+
+      if (limitHit) {
+        log(`Motion Limit Hit (${CURRENT_ACTION.label}): max ${val}°`);
+      }
     }
+
 
     // Signed degrees for the chosen direction
     let signed = CURRENT_ACTION.sign * val;
@@ -1300,6 +1332,7 @@ actionDeg.addEventListener("input", ()=> {
       MODEL_URL,
       (gltf) => {
         model = gltf.scene;
+        FACE_MESH = null;
         model.traverse(o => {
           if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; }
           if (o.isSkinnedMesh && !skeleton) skeleton = o.skeleton;
