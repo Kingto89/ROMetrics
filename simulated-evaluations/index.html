@@ -863,129 +863,170 @@
   </main>
 
   <script>
-    const $ = (id) => document.getElementById(id);
 
-    // Simple routing stub for now. Replace URLs with your real indices.
-    const ROUTES = {
-      mmt:   "mmt_tokens_index.html",   // TODO: set to your actual MMT prototype file
-      motion:"motion_lab_index.html",   // TODO
-      gonio: "goniometry_trainer.html", // TODO
-      notes: "#"                        // placeholder for future SOAP / notes page
-    };
+// Function to get elements by ID
+const $ = (id) => document.getElementById(id);
 
-    const CASES = {
-      CASE_001: {
-        mrn: "MRN • 002918",
-        initials: "SB",
-        name: "Sarah B — 29 y/o",
-        setting: "Outpatient • Ortho",
-        primary: "Primary: Cervical stiffness",
-        tags: ["Cervical ROM Case","Simulation Only","MMT + Goniometry"],
-        visitType: "Simulation: Ortho PT Evaluation",
-        chiefComplaint: "Neck stiffness when turning to the left",
-        primaryRegion: "Cervical Spine",
-        requiredModules: "Motion Lab • Goniometry • MMT Trainer",
-        caseIdLabel: "CASE_001 • GONIO-CERVICAL-001",
-        collisionRules: "Cervical region override enabled",
-        romTargets: "Left rotation, lateral flexion focus",
-        mmtTargetGrade: "Left cervical rotators • 4/5 goal",
-        scenarioLabel: "Scenario Loaded: Cervical ROM & MMT",
-        caseFlow: "Reading → Motion Lab → Goniometry → MMT"
-      },
-      CASE_002: {
-        mrn: "MRN • 004112",
-        initials: "JM",
-        name: "Jordan M — 64 y/o",
-        setting: "Outpatient • Shoulder Rehab",
-        primary: "Primary: Pain with shoulder elevation",
-        tags: ["Shoulder Abduction Case","Simulation Only","MMT + ROM"],
-        visitType: "Simulation: Shoulder Dysfunction Evaluation",
-        chiefComplaint: "Difficulty lifting arm overhead to reach top shelf",
-        primaryRegion: "Left Glenohumeral Joint",
-        requiredModules: "Motion Lab • Goniometry • MMT Trainer",
-        caseIdLabel: "CASE_002 • GH-ABD-001",
-        collisionRules: "Shoulder girdle mechanics emphasis",
-        romTargets: "Limited active abduction with scapular substitution",
-        mmtTargetGrade: "Middle deltoid • 3+/5 goal",
-        scenarioLabel: "Scenario Loaded: Shoulder Abduction",
-        caseFlow: "Reading → Motion Lab → Goniometry → MMT"
-      },
-      CASE_003: {
-        mrn: "MRN • 007305",
-        initials: "LC",
-        name: "Logan C — 52 y/o",
-        setting: "Outpatient • Post-op Knee",
-        primary: "Primary: Difficulty with stairs post TKA",
-        tags: ["Knee Extension Case","Post-op","Strength & ROM"],
-        visitType: "Simulation: Post-op Knee Evaluation",
-        chiefComplaint: "Knee feels weak when going down stairs",
-        primaryRegion: "Right Knee",
-        requiredModules: "Motion Lab • Goniometry • MMT Trainer",
-        caseIdLabel: "CASE_003 • KNEE-EXT-001",
-        collisionRules: "Lower extremity weight-bearing focus",
-        romTargets: "Reduced terminal knee extension, quad lag",
-        mmtTargetGrade: "Quadriceps • 4-/5 goal",
-        scenarioLabel: "Scenario Loaded: Knee Extension",
-        caseFlow: "Reading → Motion Lab → Goniometry → MMT"
-      }
-    };
+// Define case tokens (replace with your actual file paths)
+const CASE_FILES = {
+  CASE_001: {
+    file: "../assets/cases/case_001.md", // Path to your Markdown file
+    caseId: "CASE_001 • GONIO-CERVICAL-001",
+    collision: "Cervical region override enabled",
+    rom: "Left rotation, lateral flexion focus",
+    mmt: "Left cervical rotators • 4/5 goal"
+  },
+  CASE_002: {
+    file: "../assets/cases/case_002.md",
+    caseId: "CASE_002 • GH-ABD-001",
+    collision: "Shoulder girdle mechanics emphasis",
+    rom: "Limited active abduction with scapular substitution",
+    mmt: "Middle deltoid • 3+/5 goal"
+  },
+  CASE_003: {
+    file: "../assets/cases/case_003.md",
+    caseId: "CASE_003 • KNEE-EXT-001",
+    collision: "Lower extremity weight-bearing focus",
+    rom: "Reduced terminal knee extension, quad lag",
+    mmt: "Quadriceps • 4-/5 goal"
+  }
+};
 
-    function renderTags(tags){
-      return tags.map((t,idx)=>{
-        const cls = idx === 0 ? "tag-accent" : "tag";
-        return `<span class="${cls}">${t}</span>`;
-      }).join(" ");
+const ROUTES = {
+  mmt: "mmt_tokens_index.html",
+  motion: "motion_lab_index.html",
+  gonio: "goniometry_trainer.html",
+  notes: "#"
+};
+
+// Function to parse the Markdown content for specific fields
+function parseCaseMarkdown(rawMd) {
+  const lines = rawMd.split("\n").map(line => line.trim());
+  
+  // Use a map to extract specific fields based on labels in the MD file
+  const extracted = {};
+
+  // Simple, robust extraction for required fields (assuming MD uses **Label:** format)
+  for (const line of lines) {
+    if (line.startsWith("* **Patient Initials:**")) {
+      extracted.initials = line.replace("* **Patient Initials:**", "").trim();
+    } else if (line.startsWith("* **Patient Name/Age:**")) {
+      extracted.name = line.replace("* **Patient Name/Age:**", "").trim();
+    } else if (line.startsWith("* **Setting:**")) {
+      extracted.setting = line.replace("* **Setting:**", "").trim();
+    } else if (line.startsWith("* **Primary:**")) {
+      extracted.primary = "Primary: " + line.replace("* **Primary:**", "").trim();
+    } else if (line.startsWith("* **Scenario/Case:**")) {
+      extracted.scenarioLabel = "Scenario Loaded: " + line.replace("* **Scenario/Case:**", "").trim();
+    } else if (line.startsWith("* **Visit Type:**")) {
+      extracted.visitType = "Simulation: " + line.replace("* **Visit Type:**", "").trim();
+    } else if (line.startsWith("* **Chief Complaint:**")) {
+      extracted.chiefComplaint = line.replace("* **Chief Complaint:**", "").trim();
+    } else if (line.startsWith("* **Primary Region:**")) {
+      extracted.primaryRegion = line.replace("* **Primary Region:**", "").trim();
+    } else if (line.startsWith("* **Required Modules:**")) {
+      extracted.requiredModules = line.replace("* **Required Modules:**", "").trim();
+    } else if (line.startsWith("* **Case Tags:**")) {
+      const tagsString = line.replace("* **Case Tags:**", "").trim();
+      extracted.tags = tagsString.split(',').map(t => t.trim());
+    } else if (line.startsWith("* **Case Flow:**")) {
+      extracted.caseFlow = line.replace("* **Case Flow:**", "").trim();
     }
+  }
 
-    function applyCase(caseKey){
-      const c = CASES[caseKey];
-      if (!c) return;
+  // Fallback values if MD parsing fails (to ensure keys exist)
+  extracted.initials = extracted.initials || '??';
+  extracted.name = extracted.name || 'Patient Name (Age)';
+  extracted.setting = extracted.setting || 'Setting';
+  extracted.primary = extracted.primary || 'Primary: N/A';
+  extracted.scenarioLabel = extracted.scenarioLabel || 'Scenario Loaded: N/A';
+  extracted.visitType = extracted.visitType || 'Simulation: Evaluation';
+  extracted.chiefComplaint = extracted.chiefComplaint || 'N/A';
+  extracted.primaryRegion = extracted.primaryRegion || 'N/A';
+  extracted.requiredModules = extracted.requiredModules || 'N/A';
+  extracted.tags = extracted.tags || ['No Tags'];
+  extracted.caseFlow = extracted.caseFlow || 'N/A';
+  
+  return extracted;
+}
 
-      $("mrnValue").textContent = c.mrn;
-      $("patientInitials").textContent = c.initials;
-      $("patientName").textContent = c.name;
-      $("patientSetting").textContent = c.setting;
-      $("patientPrimary").textContent = c.primary;
-      $("patientTags").innerHTML = renderTags(c.tags);
+// Main function to load and apply case data
+async function applyCase(caseKey) {
+  const caseData = CASE_FILES[caseKey];
+  if (!caseData) return;
 
-      $("visitTypeValue").textContent = c.visitType;
-      $("chiefComplaintValue").textContent = c.chiefComplaint;
-      $("primaryRegionValue").textContent = c.primaryRegion;
-      $("requiredModulesValue").textContent = c.requiredModules;
+  // 1. Fetch and Parse Markdown
+  try {
+    const res = await fetch(caseData.file);
+    if (!res.ok) throw new Error(`Failed to fetch ${caseData.file}`);
+    const rawMd = await res.text();
+    const c = parseCaseMarkdown(rawMd);
 
-      $("caseIdValue").textContent = c.caseIdLabel;
-      $("collisionRulesValue").textContent = c.collisionRules;
-      $("romTargetsValue").textContent = c.romTargets;
-      $("mmtTargetValue").textContent = c.mmtTargetGrade;
+    // 2. Apply static token data (from CASE_FILES object)
+    c.caseIdLabel = caseData.caseId;
+    c.collisionRules = caseData.collision;
+    c.romTargets = caseData.rom;
+    c.mmtTargetGrade = caseData.mmt;
+    c.mrn = "MRN • " + caseKey.split('_')[1]; // Simple MRN generation
+    
+    // 3. Render HTML
+    $("mrnValue").textContent = c.mrn;
+    $("patientInitials").textContent = c.initials;
+    $("patientName").textContent = c.name;
+    $("patientSetting").textContent = c.setting;
+    $("patientPrimary").textContent = c.primary;
+    $("patientTags").innerHTML = renderTags(c.tags);
 
-      $("scenarioLabel").textContent = c.scenarioLabel;
-      $("caseFlowLabel").textContent = c.caseFlow;
-    }
+    $("visitTypeValue").textContent = c.visitType;
+    $("chiefComplaintValue").textContent = c.chiefComplaint;
+    $("primaryRegionValue").textContent = c.primaryRegion;
+    $("requiredModulesValue").textContent = c.requiredModules;
 
-    function openRoute(key){
-      const url = ROUTES[key];
-      if (!url || url === "#"){
-        alert("This linked view is not wired yet in the prototype.");
-        return;
-      }
-      window.location.href = url;
-    }
+    $("caseIdValue").textContent = c.caseIdLabel;
+    $("collisionRulesValue").textContent = c.collisionRules;
+    $("romTargetsValue").textContent = c.romTargets;
+    $("mmtTargetValue").textContent = c.mmtTargetGrade;
 
-    document.querySelectorAll("[data-route]").forEach(el=>{
-      el.addEventListener("click",e=>{
-        const key = el.getAttribute("data-route");
-        // Allow inner button click to still trigger same route
-        openRoute(key);
-      });
-    });
+    $("scenarioLabel").textContent = c.scenarioLabel;
+    $("caseFlowLabel").textContent = c.caseFlow;
 
-    const caseSelect = document.getElementById("caseSelect");
-    caseSelect.addEventListener("change",()=>{
-      applyCase(caseSelect.value);
-    });
+  } catch (error) {
+    console.error("Error loading case:", error);
+    // You might want to update the UI to show an error message here
+    alert("Error loading case content. Check the Markdown file path and format.");
+  }
+}
 
-    // Initialize with default case
-    applyCase("CASE_001");
+function renderTags(tags) {
+  return tags.map((t, idx) => {
+    const cls = idx === 0 ? "tag-accent" : "tag";
+    return `<span class="${cls}">${t}</span>`;
+  }).join(" ");
+}
+
+function openRoute(key) {
+  const url = ROUTES[key];
+  if (!url || url === "#") {
+    alert("This linked view is not wired yet in the prototype.");
+    return;
+  }
+  window.location.href = url;
+}
+
+document.querySelectorAll("[data-route]").forEach(el => {
+  el.addEventListener("click", e => {
+    const key = el.getAttribute("data-route");
+    openRoute(key);
+  });
+});
+
+const caseSelect = document.getElementById("caseSelect");
+caseSelect.addEventListener("change", () => {
+  applyCase(caseSelect.value);
+});
+
+// Initialize with default case
+applyCase("CASE_001");
   </script>
 </body>
 </html>
