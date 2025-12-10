@@ -260,7 +260,7 @@
       display:flex;
       flex-direction:column;
       gap:6px;
-      max-height:180px;
+      max-height:200px;
       overflow:auto;
       padding-right:4px;
     }
@@ -270,19 +270,10 @@
       border:1px solid rgba(31,41,55,0.9);
       padding:6px 7px;
       font-size:11px;
-      cursor:pointer;
       display:flex;
       flex-direction:column;
       gap:1px;
       background:linear-gradient(to right,rgba(15,23,42,0.95),rgba(15,23,42,0.88));
-      transition:border .18s ease,box-shadow .18s ease,transform .18s ease,background .18s ease;
-    }
-
-    .encounter-item:hover{
-      border-color:rgba(56,189,248,0.8);
-      box-shadow:0 0 0 1px rgba(56,189,248,0.4);
-      transform:translateY(-1px);
-      background:radial-gradient(circle at left,rgba(56,189,248,0.18),rgba(15,23,42,0.95));
     }
 
     .encounter-top{
@@ -453,7 +444,7 @@
       font-size:11px;
     }
 
-    /* Simulation module tiles (the main part) */
+    /* Simulation module tiles */
     .module-grid{
       display:grid;
       grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
@@ -607,7 +598,7 @@
     <div class="header-right">
       <div class="pill">
         <span class="pill-dot"></span>
-        <span id="scenarioLabel">Scenario Loaded: Cervical ROM &amp; MMT</span>
+        <span id="scenarioLabel">Scenario Loaded: Case 1</span>
       </div>
       <div class="case-selector">
         <label for="caseSelect">Case</label>
@@ -622,11 +613,11 @@
   </header>
 
   <main>
-    <!-- LEFT: PATIENT SUMMARY + ENCOUNTERS -->
+    <!-- LEFT: PATIENT SUMMARY + PROFILE -->
     <aside class="sidebar">
       <div class="sidebar-title">
         <span>Active Chart</span>
-        <span id="mrnValue">MRN • 002918</span>
+        <span id="mrnValue">MRN • 001</span>
       </div>
 
       <div class="patient-card">
@@ -634,41 +625,20 @@
           <div class="avatar" id="patientInitials">SB</div>
           <div class="patient-meta">
             <span class="patient-name" id="patientName">Sarah B — 29 y/o</span>
-            <span class="patient-id" id="patientSetting">Outpatient • Ortho</span>
-            <span class="patient-id" id="patientPrimary">Primary: Cervical stiffness</span>
+            <span class="patient-id" id="patientSetting">Outpatient orthopedic visit</span>
+            <span class="patient-id" id="patientPrimary">Primary: Neck stiffness when turning</span>
           </div>
         </div>
         <div class="patient-tags" id="patientTags">
-          <span class="tag-accent">Cervical ROM Case</span>
-          <span class="tag">Simulation Only</span>
-          <span class="tag">MMT + Goniometry</span>
+          <span class="tag-accent">ROMetrics Simulation</span>
+          <span class="tag">Cervical ROM &amp; MMT</span>
         </div>
       </div>
 
       <div>
-        <div class="sidebar-section-title">Recent Encounters</div>
-        <div class="encounter-list">
-          <button class="encounter-item" type="button">
-            <div class="encounter-top">
-              <span class="enc-type">Simulation Visit • PT Eval</span>
-              <span class="enc-date">Today • 10:30</span>
-            </div>
-            <div class="enc-note">Baseline cervical ROM, pain report, MMT planned.</div>
-          </button>
-          <button class="encounter-item" type="button">
-            <div class="encounter-top">
-              <span class="enc-type">Case Overview</span>
-              <span class="enc-date">Today • 10:15</span>
-            </div>
-            <div class="enc-note">Scenario instructions viewed.</div>
-          </button>
-          <button class="encounter-item" type="button">
-            <div class="encounter-top">
-              <span class="enc-type">Prior Episode (Mock)</span>
-              <span class="enc-date">6 mo ago</span>
-            </div>
-            <div class="enc-note">Historic note for comparison only.</div>
-          </button>
+        <div class="sidebar-section-title">Patient Profile</div>
+        <div class="encounter-list" id="patientProfileList">
+          <!-- Filled from MD -->
         </div>
       </div>
     </aside>
@@ -714,19 +684,19 @@
             <div class="field-grid">
               <div>
                 <div class="field-label">Visit Type</div>
-                <div class="field-value" id="visitTypeValue">Simulation: Ortho PT Evaluation</div>
+                <div class="field-value" id="visitTypeValue">Simulation: Outpatient orthopedic visit</div>
               </div>
               <div>
                 <div class="field-label">Chief Complaint</div>
-                <div class="field-value" id="chiefComplaintValue">Neck stiffness when turning to the left</div>
-              </div>
-              <div>
-                <div class="field-label">Primary Region</div>
-                <div class="field-value" id="primaryRegionValue">Cervical Spine</div>
+                <div class="field-value" id="chiefComplaintValue">My neck feels stiff when I try to turn it.</div>
               </div>
               <div>
                 <div class="field-label">Required Modules</div>
-                <div class="field-value" id="requiredModulesValue">Motion Lab • Goniometry • MMT Trainer</div>
+                <div class="field-value" id="requiredModulesValue">Motion Lab • Goniometry Trainer • MMT Trainer</div>
+              </div>
+              <div>
+                <div class="field-label">Case Tags</div>
+                <div class="field-value" id="caseTagsSummary">ROMetrics Simulation • Ortho</div>
               </div>
             </div>
           </div>
@@ -742,16 +712,8 @@
                 <div class="field-value" id="caseIdValue">CASE_001 • GONIO-CERVICAL-001</div>
               </div>
               <div>
-                <div class="field-label">Collision Rules</div>
-                <div class="field-value" id="collisionRulesValue">Cervical region override enabled</div>
-              </div>
-              <div>
-                <div class="field-label">ROM Targets</div>
-                <div class="field-value" id="romTargetsValue">Right rotation &amp; right lateral flexion focus</div>
-              </div>
-              <div>
-                <div class="field-label">MMT Target Grade</div>
-                <div class="field-value" id="mmtTargetValue">Right cervical rotators • 4/5 goal</div>
+                <div class="field-label">Scenario</div>
+                <div class="field-value" id="scenarioSummary">Cervical ROM &amp; pain-limited MMT</div>
               </div>
             </div>
           </div>
@@ -763,7 +725,7 @@
         </div>
 
         <div class="module-grid">
-          <!-- MMT Assessment module (this should route to your token-page prototype) -->
+          <!-- MMT Assessment module -->
           <article class="module" data-route="mmt">
             <div class="module-header">
               <div>
@@ -773,7 +735,7 @@
               <span class="module-chip">Step 4 • Required</span>
             </div>
             <div class="module-body">
-              Use the **MMT Trainer** to position the model, set resistance vectors, and record the target grade based on the selected case. Token logic will enforce case limits.
+              Use the MMT Trainer to position the model, set resistance vectors, and record the target grade based on the selected case. Token logic will enforce case limits.
             </div>
             <div class="module-meta">
               <span>Linked View: <strong>MMT Trainer Prototype</strong></span>
@@ -829,7 +791,7 @@
             </button>
           </article>
 
-          <!-- Notes / Summary module (placeholder) -->
+          <!-- Notes / Summary module -->
           <article class="module" data-route="notes">
             <div class="module-header">
               <div>
@@ -863,31 +825,23 @@
   </main>
 
   <script>
-    // Function to get elements by ID
     const $ = (id) => document.getElementById(id);
 
-    // Define case tokens and file paths for all cases
     const CASE_FILES = {
       CASE_001: {
         file: "../assets/cases/case_001.md",
-        caseId: "CASE_001 • GONIO-CERVICAL-001",
-        collision: "Cervical region override enabled",
-        rom: "Right cervical rotation & right lateral flexion limits",
-        mmt: "Right cervical rotators • 4/5 goal"
+        label: "CASE_001 • GONIO-CERVICAL-001",
+        scenarioSummary: "Cervical ROM & pain-limited MMT"
       },
       CASE_002: {
         file: "../assets/cases/case_002.md",
-        caseId: "CASE_002 • HIP-FLEX-001",
-        collision: "Right hip collision override enabled",
-        rom: "Right hip flexion, extension & abduction limits",
-        mmt: "Right hip flexors (iliopsoas) • 3/5 goal"
+        label: "CASE_002 • HIP-FLEX-001",
+        scenarioSummary: "Right hip flexion weakness with visible ROM loss"
       },
       CASE_003: {
         file: "../assets/cases/case_003.md",
-        caseId: "CASE_003 • LUMBAR-RED-FLAG-001",
-        collision: "Lumbar region guard — red-flag scenario",
-        rom: "Severely limited lumbar flexion/extension",
-        mmt: "Bilateral ankle dorsiflexors • 3-/5 red-flag finding"
+        label: "CASE_003 • LUMBAR-RED-FLAG-001",
+        scenarioSummary: "Lumbar ROM limits with red-flag neuro signs"
       }
     };
 
@@ -898,106 +852,176 @@
       notes: "#"
     };
 
-    // Function to parse the Markdown content for specific fields
-    function parseCaseMarkdown(rawMd) {
-      const lines = rawMd.split("\n").map(line => line.trim());
-      const extracted = {};
+    function initialsFromName(name) {
+      if (!name) return "??";
+      const parts = name.trim().split(/\s+/);
+      if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+      return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+    }
 
-      // Extraction logic: Assumes fields are defined with **Label:** in the MD file
-      for (const line of lines) {
-        if (line.startsWith("* **Patient Initials:**")) {
-          extracted.initials = line.replace("* **Patient Initials:**", "").trim();
-        } else if (line.startsWith("* **Patient Name/Age:**")) {
-          extracted.name = line.replace("* **Patient Name/Age:**", "").trim();
-        } else if (line.startsWith("* **Setting:**")) {
-          extracted.setting = line.replace("* **Setting:**", "").trim();
-        } else if (line.startsWith("* **Primary:**")) {
-          extracted.primary = "Primary: " + line.replace("* **Primary:**", "").trim();
-        } else if (line.startsWith("* **Scenario/Case:**")) {
-          extracted.scenarioLabel = "Scenario Loaded: " + line.replace("* **Scenario/Case:**", "").trim();
-        } else if (line.startsWith("* **Visit Type:**")) {
-          extracted.visitType = "Simulation: " + line.replace("* **Visit Type:**", "").trim();
-        } else if (line.startsWith("* **Chief Complaint:**")) {
-          extracted.chiefComplaint = line.replace("* **Chief Complaint:**", "").trim();
-        } else if (line.startsWith("* **Primary Region:**")) {
-          extracted.primaryRegion = line.replace("* **Primary Region:**", "").trim();
-        } else if (line.startsWith("* **Required Modules:**")) {
-          extracted.requiredModules = line.replace("* **Required Modules:**", "").trim();
-        } else if (line.startsWith("* **Case Tags:**")) {
-          const tagsString = line.replace("* **Case Tags:**", "").trim();
-          extracted.tags = tagsString.split(',').map(t => t.trim());
-        } else if (line.startsWith("* **Case Flow:**")) {
-          extracted.caseFlow = line.replace("* **Case Flow:**", "").trim();
+    function parseCaseMarkdown(rawMd) {
+      const lines = rawMd.split("\n");
+      const c = {
+        name: "",
+        age: "",
+        occupation: "",
+        setting: "",
+        chiefComplaint: "",
+        requiredModules: "",
+        scenarioLabel: "",
+        tags: []
+      };
+
+      let currentH2 = "";
+      let inChief = false;
+      let inModules = false;
+      const modules = [];
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+
+        if (line.startsWith("# Case")) {
+          c.caseHeading = line.replace(/^#\s*/, "").trim();
+          continue;
+        }
+
+        if (line.startsWith("## ")) {
+          currentH2 = line.substring(3).trim();
+          inChief = currentH2.startsWith("Chief Complaint");
+          inModules = currentH2.startsWith("ROMetrics Module Instructions");
+          if (!currentH2.startsWith("ROMetrics Module Instructions")) {
+            inModules = false;
+          }
+          continue;
+        }
+
+        // Patient Profile bullets
+        if (line.startsWith("- Name:")) {
+          c.name = line.split(":")[1].trim();
+          continue;
+        }
+        if (line.startsWith("- Age:")) {
+          c.age = line.split(":")[1].trim();
+          continue;
+        }
+        if (line.startsWith("- Occupation:")) {
+          c.occupation = line.split(":")[1].trim();
+          continue;
+        }
+        if (line.startsWith("- Setting:")) {
+          c.setting = line.split(":")[1].trim();
+          continue;
+        }
+
+        // Chief Complaint text (first non-empty line after heading)
+        if (inChief && line.length > 0 && !line.startsWith("---")) {
+          if (!c.chiefComplaint) {
+            c.chiefComplaint = line
+              .replace(/^["“]+/, "")
+              .replace(/["”]+$/, "")
+              .trim();
+          }
+          continue;
+        }
+
+        // ROMetrics Module Instructions -> subheadings as modules
+        if (inModules && line.startsWith("### ")) {
+          const mod = line.substring(4).trim();
+          if (mod) modules.push(mod);
+          continue;
         }
       }
 
-      // Fallback values for missing data
-      extracted.initials = extracted.initials || '??';
-      extracted.name = extracted.name || 'Patient Name (Age)';
-      extracted.setting = extracted.setting || 'Setting';
-      extracted.primary = extracted.primary || 'Primary: N/A';
-      extracted.scenarioLabel = extracted.scenarioLabel || 'Scenario Loaded: N/A';
-      extracted.visitType = extracted.visitType || 'Simulation: Evaluation';
-      extracted.chiefComplaint = extracted.chiefComplaint || 'N/A';
-      extracted.primaryRegion = extracted.primaryRegion || 'N/A';
-      extracted.requiredModules = extracted.requiredModules || 'N/A';
-      extracted.tags = extracted.tags || ['No Tags'];
-      extracted.caseFlow = extracted.caseFlow || 'N/A';
+      c.requiredModules = modules.length
+        ? modules.join(" • ")
+        : "Motion Lab • Goniometry Trainer • MMT Trainer";
 
-      return extracted;
+      c.scenarioLabel = c.caseHeading
+        ? "Scenario Loaded: " + c.caseHeading
+        : "Scenario Loaded: ROMetrics Case";
+
+      // Simple auto-tags
+      c.tags = [];
+      if (c.setting) c.tags.push(c.setting);
+      if (modules.length) c.tags.push(...modules);
+
+      return c;
     }
 
-    // Main function to load and apply case data
+    function renderTags(tags) {
+      if (!tags || !tags.length) {
+        return `<span class="tag-accent">ROMetrics Simulation</span>`;
+      }
+      return tags.map((t, idx) => {
+        const cls = idx === 0 ? "tag-accent" : "tag";
+        return `<span class="${cls}">${t}</span>`;
+      }).join(" ");
+    }
+
+    function renderPatientProfile(c) {
+      const list = $("patientProfileList");
+      if (!list) return;
+
+      const rows = [];
+      if (c.age) rows.push({ label: "Age", value: `${c.age} years` });
+      if (c.occupation) rows.push({ label: "Occupation", value: c.occupation });
+      if (c.setting) rows.push({ label: "Setting", value: c.setting });
+      if (c.chiefComplaint) rows.push({ label: "Focus", value: c.chiefComplaint });
+
+      list.innerHTML = rows.map(r => `
+        <div class="encounter-item">
+          <div class="encounter-top">
+            <span class="enc-type">${r.label}</span>
+          </div>
+          <div class="enc-note">${r.value}</div>
+        </div>
+      `).join("");
+    }
+
     async function applyCase(caseKey) {
       const caseData = CASE_FILES[caseKey];
       if (!caseData) return;
 
-      // 1. Fetch and Parse Markdown
       try {
         const res = await fetch(caseData.file);
         if (!res.ok) throw new Error(`Failed to fetch ${caseData.file}`);
         const rawMd = await res.text();
         const c = parseCaseMarkdown(rawMd);
 
-        // 2. Apply static token data (from CASE_FILES object)
-        c.caseIdLabel = caseData.caseId;
-        c.collisionRules = caseData.collision;
-        c.romTargets = caseData.rom;
-        c.mmtTargetGrade = caseData.mmt;
-        c.mrn = "MRN • " + caseKey.split('_')[1]; // Generate MRN from CASE_00X
+        const mrnSuffix = caseKey.split("_")[1] || "000";
+        const mrn = "MRN • " + mrnSuffix;
 
-        // 3. Render HTML
-        $("mrnValue").textContent = c.mrn;
-        $("patientInitials").textContent = c.initials;
-        $("patientName").textContent = c.name;
-        $("patientSetting").textContent = c.setting;
-        $("patientPrimary").textContent = c.primary;
+        const nameAge = c.name && c.age
+          ? `${c.name} — ${c.age} y/o`
+          : (c.name || "Patient Name");
+
+        $("mrnValue").textContent = mrn;
+        $("patientInitials").textContent = initialsFromName(c.name || "");
+        $("patientName").textContent = nameAge;
+        $("patientSetting").textContent = c.setting || "Simulation case";
+        $("patientPrimary").textContent = c.chiefComplaint
+          ? "Primary: " + c.chiefComplaint
+          : "Primary: —";
         $("patientTags").innerHTML = renderTags(c.tags);
 
-        $("visitTypeValue").textContent = c.visitType;
-        $("chiefComplaintValue").textContent = c.chiefComplaint;
-        $("primaryRegionValue").textContent = c.primaryRegion;
+        $("visitTypeValue").textContent = c.setting
+          ? "Simulation: " + c.setting
+          : "Simulation: PT Evaluation";
+        $("chiefComplaintValue").textContent = c.chiefComplaint || "N/A";
         $("requiredModulesValue").textContent = c.requiredModules;
+        $("caseTagsSummary").textContent = (c.tags && c.tags.length)
+          ? c.tags.join(" • ")
+          : "ROMetrics Simulation";
 
-        $("caseIdValue").textContent = c.caseIdLabel;
-        $("collisionRulesValue").textContent = c.collisionRules;
-        $("romTargetsValue").textContent = c.romTargets;
-        $("mmtTargetValue").textContent = c.mmtTargetGrade;
-
+        $("caseIdValue").textContent = caseData.label;
+        $("scenarioSummary").textContent = caseData.scenarioSummary;
         $("scenarioLabel").textContent = c.scenarioLabel;
-        $("caseFlowLabel").textContent = c.caseFlow;
 
-      } catch (error) {
-        console.error("Error loading case:", error);
+        renderPatientProfile(c);
+      } catch (err) {
+        console.error("Error loading case:", err);
         alert(`Error loading case content for ${caseKey}. Check file path and format.`);
       }
-    }
-
-    function renderTags(tags) {
-      return tags.map((t, idx) => {
-        const cls = idx === 0 ? "tag-accent" : "tag";
-        return `<span class="${cls}">${t}</span>`;
-      }).join(" ");
     }
 
     function openRoute(key) {
@@ -1010,18 +1034,18 @@
     }
 
     document.querySelectorAll("[data-route]").forEach(el => {
-      el.addEventListener("click", e => {
+      el.addEventListener("click", () => {
         const key = el.getAttribute("data-route");
         openRoute(key);
       });
     });
 
-    const caseSelect = document.getElementById("caseSelect");
+    const caseSelect = $("caseSelect");
     caseSelect.addEventListener("change", () => {
       applyCase(caseSelect.value);
     });
 
-    // Initialize with default case
+    // Init
     applyCase("CASE_001");
   </script>
 </body>
