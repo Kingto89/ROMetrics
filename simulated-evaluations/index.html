@@ -197,7 +197,7 @@
             </div>
           </div>
 
-          <div class="info-card">
+           <div class="info-card">
             <div class="info-title">
               <span>Simulation Status</span>
               <span class="badge">Live Sandbox</span>
@@ -220,7 +220,7 @@
           <span class="badge">Click a module to open the ROMetrics view</span>
         </div>
 
-
+        <div class="module-grid">
           <!-- Motion Lab module -->
           <article class="module" data-route="motion">
             <div class="module-header">
@@ -228,10 +228,9 @@
                 <div class="module-title">Motion Lab — Active ROM</div>
                 <div class="module-sub">Visualize motion for the primary region.</div>
               </div>
-              <span class="module-chip">Step 2</span>
             </div>
             <div class="module-body">
-              Gather case clues. Preview motions/functional limitations, and understand expected ROM before measuring with the goniometer.
+              Gather case clues. Preview motions and functional limitations, and understand expected ROM before measuring with the goniometer.
             </div>
             <div class="module-meta">
               <span>Linked View: Motion Lab</span>
@@ -250,7 +249,6 @@
                 <div class="module-title">Goniometry Trainer — Primary Region</div>
                 <div class="module-sub">Measure and record ROM.</div>
               </div>
-              <span class="module-chip">Step 3</span>
             </div>
             <div class="module-body">
               Place landmarks, align the goniometer, and capture ROM values.
@@ -264,19 +262,17 @@
               <span class="chevron">↗</span>
             </button>
           </article>
-    <div class="module-grid">
+
           <!-- MMT Assessment module -->
           <article class="module" data-route="mmt">
             <div class="module-header">
               <div>
-                <div class="module-title">MMT Assessment </div>
+                <div class="module-title">MMT Assessment</div>
                 <div class="module-sub">Launch the ROMetrics MMT Trainer with case tokens.</div>
               </div>
-              <span class="module-chip">Step 4 • Required</span>
             </div>
             <div class="module-body">
-              Use the MMT Trainer to position the model, see resistance vectors, and record the target grade based on the selected case. 
-              
+              Use the MMT Trainer to position the model, see resistance vectors, and record the target grade based on the selected case.
             </div>
             <div class="module-meta">
               <span>Linked View: <strong>MMT Trainer Prototype</strong></span>
@@ -287,6 +283,7 @@
               <span class="chevron">↗</span>
             </button>
           </article>
+
           <!-- Notes / Summary module -->
           <article class="module" data-route="notes">
             <div class="module-header">
@@ -294,13 +291,12 @@
                 <div class="module-title">SOAP Summary &amp; Case Notes</div>
                 <div class="module-sub">Review decisions and auto-generated SOAP draft.</div>
               </div>
-              <span class="module-chip">Step 5 • Read Only</span>
             </div>
             <div class="module-body">
-              When all required modules are complete, the SOAP generator will unlock to record your findings. Submission are graded to offer feedback.
+              When all required modules are complete, the SOAP generator will unlock to record your findings. Submissions are graded to offer feedback.
             </div>
             <div class="module-meta">
-              <span>Linked View: Notes / SOAP </span>
+              <span>Linked View: Notes / SOAP</span>
               <span>Status: Locked</span>
             </div>
             <button class="module-btn" type="button" data-route="notes">
@@ -319,6 +315,7 @@
       </div>
     </section>
   </main>
+
 
   <script>
     const $ = (id) => document.getElementById(id);
