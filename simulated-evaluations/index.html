@@ -386,7 +386,14 @@ function parseCaseMarkdown(rawMd) {
       if (!/^[-#]/.test(line)) chiefLines.push(line);
     }
   }
-
+    // History of Present Illness block
+    if (inHpi) {
+      // strip leading "- " if present, keep as sentences
+      const cleaned = line.replace(/^-+\s*/, "").trim();
+      if (cleaned) hpiLines.push(cleaned);
+      continue;
+    }
+  }
   c.chiefComplaint = chiefLines.join(" ")
     .replace(/^["“]+/, "")
     .replace(/["”]+$/, "")
