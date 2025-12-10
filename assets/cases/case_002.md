@@ -37,7 +37,7 @@
 
 ---
 
-# Case 2:
+# Case 2: Hip Impairment
 
 ## Patient Profile
 
