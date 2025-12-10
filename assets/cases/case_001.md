@@ -33,7 +33,7 @@
 
 ---
 
-# Case 1: 
+# Case 1: Cervical Impairment
 
 ## Patient Profile
 - Name: Sarah B.
