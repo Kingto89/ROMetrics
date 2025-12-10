@@ -1203,6 +1203,21 @@ function applyAnatomicBaseline(){
     }
     syncActionUI(true);
   });
+///checkpoint 
+function resetPainExpression(){
+  if (!window.ROM_CASE_MODE.active || !window.ROM_CASE_MODE.token || !model) return;
+  const token = window.ROM_CASE_MODE.token;
+
+  model.traverse(o => {
+    if (!o.isSkinnedMesh || !o.morphTargetDictionary || !o.morphTargetInfluences) return;
+    token.painShapeKeys.forEach(s => {
+      const idx = o.morphTargetDictionary[s.key];
+      if (idx !== undefined) {
+        o.morphTargetInfluences[idx] = 0;
+      }
+    });
+  });
+}
 
 actionDeg.addEventListener("input", ()=> {
     if (!CURRENT_ACTION) return;
