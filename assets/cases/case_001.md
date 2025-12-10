@@ -1,7 +1,7 @@
 {
   "case_id": "case_001",
   "unlocks": {
-    "goniometry_trainer": true,
+    "goniometry_trainer": true, 
     "motion_lab": true,
     "mmt_trainer": true
   },
