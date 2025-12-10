@@ -199,6 +199,28 @@ select{
   color:var(--text);
   padding:6px 8px;
 }
+.grade-bar{
+  width:100%;
+  height:10px;
+  border-radius:999px;
+  background:#020617;
+  border:1px solid var(--border);
+  overflow:hidden;
+  margin-top:4px;
+}
+
+.grade-fill{
+  height:100%;
+  width:0%;
+  background:#f97373; /* will change via JS */
+  transition:width 0.25s ease, background-color 0.25s ease;
+}
+
+.grade-label{
+  margin-top:4px;
+  font-size:12px;
+  color:var(--muted);
+}
   
 </style>
 </head>
@@ -292,13 +314,12 @@ select{
   </div>
 
   <div class="doc-section">
-    <label>Submit Documentation for Grading</label>
-    <select id="docLevel">
-      <option value="">Select level</option>
-      <option value="novice">Novice</option>
-      <option value="apprentice">Apprentice</option>
-      <option value="clinical">Clinical</option>
-    </select>
+    <label>Submission Status</label>
+    <div id="gradeBar" class="grade-bar">
+      <div id="gradeFill" class="grade-fill"></div>
+    </div>
+    <div id="gradeLabel" class="grade-label">Not graded yet</div>
+
     <button id="docSubmitBtn" class="primary-btn" style="margin-top:8px;">
       Submit Documentation
     </button>
@@ -504,11 +525,20 @@ document.querySelectorAll("#modalBackdrop .wrong").forEach(btn => {
       pendingUrl = url;
 
     } else if (label.includes("prognosis")) {
-      // no case mode wired yet
-      pendingUrl = null;
+      const allDone = visitedFunctional && visitedGoniometry && visitedMMT;
+
+      // If they haven't done all 3, block and tell them why
+      if (!allDone) {
+        alert("Complete Functional / ROM, Goniometry, and MMT before writing your prognosis. The prognosis is part of the documentation section.");
+        return;
+      }
+
+      // All 3 done → just close the menu, no warning, no URL
+      modalBackdrop.classList.remove("active");
+      return;
     }
 
-    // If we got here, we still need to show the warning
+    // If we got here (gonio or MMT needing warning), we still need to show the warning
     modalBackdrop.classList.remove("active");
     if (warningBackdrop) {
       warningBackdrop.classList.add("active");
@@ -610,10 +640,13 @@ function attachWordLimiter(id, limit){
 Object.entries(WORD_LIMITS).forEach(([id, limit]) => {
   attachWordLimiter(id, limit);
 });
-/* -------- DOC SUBMISSION (MAX 3 ATTEMPTS) -------- */
-const docLevel     = document.getElementById("docLevel");
-const docSubmitBtn = document.getElementById("docSubmitBtn");
-const docStatus    = document.getElementById("docSubmitStatus");
+
+/* -------- DOC SUBMISSION (MAX 3 ATTEMPTS + GRADE BAR) -------- */
+const gradeBar      = document.getElementById("gradeBar");
+const gradeFill     = document.getElementById("gradeFill");
+const gradeLabel    = document.getElementById("gradeLabel");
+const docSubmitBtn  = document.getElementById("docSubmitBtn");
+const docStatus     = document.getElementById("docSubmitStatus");
 
 // simple per-browser limit for this case
 const ATTEMPT_KEY = "case_001_docAttempts";
@@ -624,8 +657,35 @@ function setAttempts(n){
   localStorage.setItem(ATTEMPT_KEY, String(n));
 }
 
+function applyGradeFromAttempts(used){
+  if (!gradeFill || !gradeLabel) return;
+
+  if (used <= 0){
+    gradeFill.style.width = "0%";
+    gradeFill.style.background = "#f97373";
+    gradeLabel.textContent = "Not graded yet";
+    return;
+  }
+
+  if (used === 1){
+    gradeFill.style.width = "33%";
+    gradeFill.style.background = "#f97373"; // red
+    gradeLabel.textContent = "Novice level (auto-estimate)";
+  } else if (used === 2){
+    gradeFill.style.width = "66%";
+    gradeFill.style.background = "#f97316"; // orange
+    gradeLabel.textContent = "Apprentice level (auto-estimate)";
+  } else {
+    gradeFill.style.width = "100%";
+    gradeFill.style.background = "#22c55e"; // green
+    gradeLabel.textContent = "Clinical level (auto-estimate)";
+  }
+}
+
 function checkAttemptLock(){
   const used = getAttempts();
+  applyGradeFromAttempts(used);
+
   if (used >= 3 && docSubmitBtn && docStatus){
     docSubmitBtn.disabled = true;
     docStatus.textContent = "You have used all 3 submission attempts for this case.";
@@ -636,7 +696,7 @@ function checkAttemptLock(){
 // run once on load
 checkAttemptLock();
 
-if (docSubmitBtn && docLevel && docStatus){
+if (docSubmitBtn && docStatus){
   docSubmitBtn.onclick = () => {
     const used = getAttempts();
     if (used >= 3){
@@ -644,22 +704,12 @@ if (docSubmitBtn && docLevel && docStatus){
       return;
     }
 
-    const val = docLevel.value;
-    if (!val){
-      docStatus.textContent = "Select a level before submitting.";
-      docStatus.style.color = "#f97373";
-      return;
-    }
-
-    let label = "Novice";
-    if (val === "apprentice") label = "Apprentice";
-    if (val === "clinical")   label = "Clinical";
-
     const nextCount = used + 1;
     setAttempts(nextCount);
+    applyGradeFromAttempts(nextCount);
 
     docStatus.textContent =
-      `Documentation submitted as: ${label}. Attempt ${nextCount} of 3.`;
+      `Documentation submitted. Attempt ${nextCount} of 3.`;
     docStatus.style.color = "var(--good)";
 
     if (nextCount >= 3){
