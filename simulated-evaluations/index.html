@@ -329,6 +329,8 @@ function initialsFromName(name) {
   return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
 }
 
+
+
 function parseCaseMarkdown(rawMd) {
   const lines = rawMd.split(/\r?\n/);
   const c = {
@@ -338,18 +340,22 @@ function parseCaseMarkdown(rawMd) {
     occupation: "",
     setting: "",
     chiefComplaint: "",
+    hpi: "",
     scenarioLabel: "",
-    tags: [] // no setting/modules here → no duplicates
+    tags: []
   };
 
   let inChief = false;
+  let inHpi = false;
   let chiefLines = [];
+  let hpiLines = [];
 
   for (let i = 0; i < lines.length; i++) {
     const raw = lines[i];
     const line = raw.trim();
     if (!line) {
       if (inChief && chiefLines.length) inChief = false;
+      if (inHpi && hpiLines.length) inHpi = false;
       continue;
     }
 
@@ -358,13 +364,15 @@ function parseCaseMarkdown(rawMd) {
       const heading = line.replace(/^#+\s*/, "").trim();
       if (!c.caseHeading && /^Case/i.test(heading)) c.caseHeading = heading;
       inChief = false;
+      inHpi = false;
       continue;
     }
 
-    // "## Chief Complaint"
+    // H2s
     if (line.startsWith("## ")) {
       const h2 = line.replace(/^##\s*/, "").trim();
       inChief = /^chief complaint/i.test(h2);
+      inHpi   = /history of present illness/i.test(h2);
       continue;
     }
 
@@ -381,11 +389,12 @@ function parseCaseMarkdown(rawMd) {
       }
     }
 
-    // Chief Complaint text
+    // Chief Complaint block
     if (inChief) {
       if (!/^[-#]/.test(line)) chiefLines.push(line);
+      continue;
     }
-  }
+
     // History of Present Illness block
     if (inHpi) {
       // strip leading "- " if present, keep as sentences
@@ -394,25 +403,22 @@ function parseCaseMarkdown(rawMd) {
       continue;
     }
   }
+
   c.chiefComplaint = chiefLines.join(" ")
     .replace(/^["“]+/, "")
     .replace(/["”]+$/, "")
     .trim();
 
+  c.hpi = hpiLines.join(" ").trim();
+
   c.scenarioLabel = c.caseHeading
     ? "Scenario Loaded: " + c.caseHeading
     : "Scenario Loaded: ROMetrics Case";
 
-  // tags left empty so we don’t duplicate setting anywhere
   return c;
 }
 
-function renderTags(tags) {
-  // always just one generic tag → no setting / region duplicates
-  return `<span class="tag-accent">ROMetrics Simulation</span>`;
-}
-
-// Patient Profile = everything except name/age/setting (those live ONLY in top card)
+// Patient Profile = Occupation + Chief Complaint + HPI (no name/age/setting here)
 function renderPatientProfile(c) {
   const list = $("patientProfileList");
   if (!list) return;
@@ -420,6 +426,7 @@ function renderPatientProfile(c) {
   const rows = [];
   if (c.occupation) rows.push({ label: "Occupation", value: c.occupation });
   if (c.chiefComplaint) rows.push({ label: "Chief Complaint", value: c.chiefComplaint });
+  if (c.hpi) rows.push({ label: "History of Present Illness", value: c.hpi });
 
   list.innerHTML = rows.map(r => `
     <div class="encounter-item">
@@ -430,6 +437,7 @@ function renderPatientProfile(c) {
     </div>
   `).join("");
 }
+
 
 async function applyCase(caseKey) {
   const caseData = CASE_FILES[caseKey];
