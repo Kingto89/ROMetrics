@@ -195,41 +195,37 @@ const ROM_CASE_TOKENS = {
       // Left side & flex/ext use default caps
     },
 
-
     // --- VISUAL FEEDBACK: Shape Keys for Pain Grimace ---
     painShapeKeys: [
-      // Brows crushed together + down
-      { key: 'Expressions_browsMidVert_max',   value: 1.0 },
-      { key: 'Expressions_browSqueezeL_max',   value: 1.0 },
-      { key: 'Expressions_browSqueezeR_max',   value: 1.0 },
+      // Forehead / brow frown
+      { key: 'Expressions_browsMidVert_min', value: 1.0 },   // brows pulled down
+      { key: 'Expressions_browSqueezeL_max', value: 1.0 },   // inner brow pinch
+      { key: 'Expressions_browSqueezeR_max', value: 1.0 },
 
-      // Strong eye squeeze
-      { key: 'Expressions_eyeSquintL_max',     value: 1.0 },
-      { key: 'Expressions_eyeSquintR_max',     value: 1.0 },
-      { key: 'Expressions_eyeClosedPressureL_max', value: 0.8 },
-      { key: 'Expressions_eyeClosedPressureR_max', value: 0.8 },
+      // Clear squint (no high-pressure eyelash crush)
+      { key: 'Expressions_eyeSquintL_max',   value: 0.8 },
+      { key: 'Expressions_eyeSquintR_max',   value: 0.8 },
 
-      // Aggressive mouth / jaw
-      { key: 'Expressions_mouthOpenAggr_max',  value: 1.0 },
-      { key: 'Expressions_mouthOpenLarge_max', value: 0.8 },
-      { key: 'Expressions_mouthClosed_min',    value: 0.6 },
-
-      // Flared nostrils for “ouch”
-      { key: 'Expressions_nostrilsExpansion_max', value: 0.9 }
+      // Mouth: tense, slightly open, not smiling
+      { key: 'Expressions_mouthOpenTeethClosed_max', value: 0.8 }, // clenched teeth
+      { key: 'Expressions_mouthOpenAggr_max',        value: 0.4 }, // a bit more strain
+      { key: 'Expressions_mouthSmile_min',           value: 0.7 }  // corners pulled down
     ],
+
 
     // --- NOTES OVERLAY CONTENT ---
     notes: {
       constantNote: `
         Sensation:
-        - Dermatomes C2–T1 intact
+        - Dermatomes intact
         - No radiating symptoms
       `,
       cluesNote: `
         Case Clues:
         - Direction-specific ROM loss
-        - Pain-limited strength
-        - No sensory involvement
+        - Pain-limited ROM
+        - 6/10 pain score 
+        - Moderate irritability
         - Mechanical pattern with positional onset
       `
     }
