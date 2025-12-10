@@ -348,6 +348,7 @@ const modalBackdrop   = document.getElementById("modalBackdrop");
 const warningBackdrop = document.getElementById("warningModal");
 
 let pendingUrl = null;
+let functionalVisited = false;
 let pendingModuleKey = null;
 
 const MODULE_KEYS = {
@@ -379,6 +380,7 @@ function maybeUnlockDoc(){
 const goFunctionalBtn = document.getElementById("goFunctional");
 if (goFunctionalBtn) {
   goFunctionalBtn.onclick = () => {
+    functionalVisited = true;  // remember they did Functional
     window.open(
       "https://kingto89.github.io/ROMetrics.com/lab-motion/?caseToken=LAB-CERVICAL-001",
       "_blank"
@@ -387,31 +389,45 @@ if (goFunctionalBtn) {
 }
 
 
-
-
 /* -------- WRONG-ORDER STEPS → SHOW WARNING, THEN GO TO CASE MODE -------- */
 document.querySelectorAll("#modalBackdrop .wrong").forEach(btn => {
   btn.onclick = () => {
     const label = btn.textContent.toLowerCase();
 
     if (label.includes("goniometry")) {
-      pendingUrl       = "https://kingto89.github.io/ROMetrics.com/goniometry-trainer/?caseToken=GONIO-CERVICAL-001";
-      pendingModuleKey = MODULE_KEYS.goniometry;
+      const url = "https://kingto89.github.io/ROMetrics.com/goniometry-trainer/?caseToken=GONIO-CERVICAL-001";
+
+      // If Functional already done → no warning, open in new tab
+      if (functionalVisited) {
+        window.open(url, "_blank");
+        return;
+      }
+
+      pendingUrl = url;
+
     } else if (label.includes("mmt")) {
-      pendingUrl       = "https://kingto89.github.io/ROMetrics.com/mmt/?caseToken=MMT-CERVICAL-001";
-      pendingModuleKey = MODULE_KEYS.mmt;
+      const url = "https://kingto89.github.io/ROMetrics.com/mmt/?caseToken=MMT-CERVICAL-001";
+
+      if (functionalVisited) {
+        window.open(url, "_blank");
+        return;
+      }
+
+      pendingUrl = url;
+
     } else if (label.includes("prognosis")) {
-      pendingUrl       = null;
-      pendingModuleKey = null;
+      // no case mode wired yet
+      pendingUrl = null;
     }
 
+    // If we got here, we still need to show the warning
     modalBackdrop.classList.remove("active");
-
     if (warningBackdrop) {
       warningBackdrop.classList.add("active");
     }
   };
 });
+
 
 
 /* -------- WARNING MODAL: SINGLE “OK” BUTTON THAT CONTINUES -------- */
@@ -425,10 +441,11 @@ if (warningProceed) {
       warningBackdrop.classList.remove("active");
     }
     if (pendingUrl) {
-      window.open(pendingUrl, "_blank");
+      window.open(pendingUrl, "_blank");  // new tab, not over simulator
     }
   };
 }
+
 
 
 if (warningBack) {
