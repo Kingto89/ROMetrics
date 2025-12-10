@@ -336,7 +336,6 @@
         scenarioSummary: "Lumbar ROM limits with red-flag neuro signs"
       }
     };
-
 const ROUTES = {
   mmt: "mmt_tokens_index.html",
   motion: "motion_lab_index.html",
@@ -361,7 +360,7 @@ function parseCaseMarkdown(rawMd) {
     setting: "",
     chiefComplaint: "",
     scenarioLabel: "",
-    tags: []
+    tags: [] // no setting/modules here → no duplicates
   };
 
   let inChief = false;
@@ -403,7 +402,7 @@ function parseCaseMarkdown(rawMd) {
       }
     }
 
-    // Chief Complaint block
+    // Chief Complaint text
     if (inChief) {
       if (!/^[-#]/.test(line)) chiefLines.push(line);
     }
@@ -418,24 +417,16 @@ function parseCaseMarkdown(rawMd) {
     ? "Scenario Loaded: " + c.caseHeading
     : "Scenario Loaded: ROMetrics Case";
 
-  // Tags: setting only (no module names, no duplication)
-  c.tags = [];
-  if (c.setting) c.tags.push(c.setting);
-
+  // tags left empty so we don’t duplicate setting anywhere
   return c;
 }
 
 function renderTags(tags) {
-  if (!tags || !tags.length) {
-    return `<span class="tag-accent">ROMetrics Simulation</span>`;
-  }
-  return tags.map((t, idx) => {
-    const cls = idx === 0 ? "tag-accent" : "tag";
-    return `<span class="${cls}">${t}</span>`;
-  }).join(" ");
+  // always just one generic tag → no setting / region duplicates
+  return `<span class="tag-accent">ROMetrics Simulation</span>`;
 }
 
-// Patient Profile: no name, no age, no setting (those live in the top chart only)
+// Patient Profile = everything except name/age/setting (those live ONLY in top card)
 function renderPatientProfile(c) {
   const list = $("patientProfileList");
   if (!list) return;
@@ -472,26 +463,23 @@ async function applyCase(caseKey) {
       ? `${baseName} — ${c.age} y/o`
       : baseName;
 
+    // TOP CARD — ONLY name, age, setting, generic tag (no CC here)
     $("mrnValue").textContent = mrn;
     $("patientInitials").textContent = initialsFromName(c.name || "");
     $("patientName").textContent = nameWithAge;
     $("patientSetting").textContent = c.setting || "Simulation case";
-
-    // No chief complaint line in the top card
     if ($("patientPrimary")) $("patientPrimary").textContent = "";
-
     $("patientTags").innerHTML = renderTags(c.tags);
 
-    $("visitTypeValue").textContent = c.setting
-      ? "Simulation: " + c.setting
-      : "Simulation: PT Evaluation";
-
-    $("chiefComplaintValue").textContent = c.chiefComplaint || "N/A";
+    // VISIT SNAPSHOT — no CC text, no setting reuse
+    $("visitTypeValue").textContent = "Simulation Case";
+    $("chiefComplaintValue").textContent = "See Patient Profile";
 
     $("caseIdValue").textContent = caseData.label;
     $("scenarioSummary").textContent = caseData.scenarioSummary;
     $("scenarioLabel").textContent = c.scenarioLabel;
 
+    // Patient Profile holds Occupation + Chief Complaint (single place for CC)
     renderPatientProfile(c);
   } catch (err) {
     console.error("Error loading case:", err);
@@ -519,6 +507,7 @@ const caseSelect = $("caseSelect");
 caseSelect.addEventListener("change", () => {
   applyCase(caseSelect.value);
 });
+
 
 
     // Init
