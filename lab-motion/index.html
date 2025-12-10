@@ -184,21 +184,27 @@ const ROM_CASE_TOKENS = {
         allowedRegions: ["Cervical", "Shoulder", "Elbow", "Wrist"], 
         disableAdvancedMenu: true, // Hide the Bone (Advanced) details menu
         
-        // --- IMPAIRMENTS: ROM Limits (Max Measured Angles) ---
+           // --- IMPAIRMENTS: ROM Limits (Max Measured Angles) ---
         impairments: {
-            cerv_rot_r: { max: 30 },  // Right Rotation (70 -> 30)
-            cerv_lat_r: { max: 20 },  // Right Lateral Flexion (45 -> 20)
-            // Left side movements and Flexion/Extension remain unrestricted (will use default caps)
+            // Right Rotation (normal ~70°, cap at 30° for this case)
+            cervical_right_rotation: { max: 30 },
+
+            // Right Lateral Flexion (normal ~45°, cap at 20° for this case)
+            cervical_right_lat_flex: { max: 20 }
+
+            // Left side movements and flexion/extension remain unrestricted (default caps)
         },
+
         
-        // --- VISUAL FEEDBACK: Shape Keys for Pain Grimace ---
-        painShapeKeys: [
-            // Activates a wince effect when limit is hit
-            { key: 'Expressions_browsMidVert_max', value: 0.9 }, // Furrow brow
-            { key: 'Expressions_eyeSquintL_max', value: 0.7 },
-            { key: 'Expressions_eyeSquintR_max', value: 0.7 },
-            { key: 'Expressions_mouthClosed_min', value: 0.8 } // Tighten/compress mouth
-        ],
+// --- VISUAL FEEDBACK: Shape Keys for Pain Grimace ---
+painShapeKeys: [
+  // Activates a wince effect when limit is hit
+  { key: 'Expressions_browsMidVert_max', value: 0.9 },
+  { key: 'Expressions_eyeSquintL_max',   value: 0.7 },
+  { key: 'Expressions_eyeSquintR_max',   value: 0.7 },
+  { key: 'Expressions_mouthClosed_min',  value: 0.8 }
+],
+
 
         // --- NOTES OVERLAY CONTENT ---
         notes: {
