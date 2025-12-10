@@ -39,7 +39,6 @@
 - Name: Sarah B.
 - Age: 29
 - Occupation: Graduate student
-- Setting: Outpatient orthopedic visit
 
 ---
 
