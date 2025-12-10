@@ -7,7 +7,7 @@
   <meta name="description" content="ROMetrics Module Flow and Documentation Sandbox." />
   <style>
     /* ------------------------------------- */
-    /* ROMetrics Dark Style         */
+    /* ROMetrics Dark Style (From Reference) */
     /* ------------------------------------- */
     :root{
       --bg:#020617;
@@ -27,7 +27,7 @@
       --shadow:0 18px 40px rgba(15,23,42,0.85);
       --radius-lg:18px;
       --radius-md:12px;
-      --bad:#f97316; /* added for grade bar */
+      --bad:#f97316;
     }
 
     *{box-sizing:border-box;margin:0;padding:0}
@@ -43,7 +43,7 @@
       flex-direction:column;
     }
 
-    /* Header Styles (copied from prototype) */
+    /* --- HEADER STYLES --- */
     header{
       padding:10px 20px;
       border-bottom:1px solid #0f172a;
@@ -111,13 +111,20 @@
       background:radial-gradient(circle at top left,rgba(56,189,248,0.18),rgba(15,23,42,0.9));
     }
     
+    .pill-dot{
+      width:8px;
+      height:8px;
+      border-radius:999px;
+      background:var(--good);
+      box-shadow:0 0 14px rgba(34,197,94,0.9);
+    }
+    
     .pill-text {
         font-size: 11px;
-        text-transform: uppercase;
-        letter-spacing: 0.14em;
     }
 
-    /* Main Layout */
+
+    /* --- MAIN LAYOUT --- */
     main{
       flex:1;
       display:flex;
@@ -128,7 +135,7 @@
       width:100%;
     }
 
-    /* Sidebar Styles */
+    /* --- SIDEBAR STYLES (Patient Summary Mockup) --- */
     .sidebar{
       width:260px;
       min-width:220px;
@@ -170,11 +177,30 @@
       transform:translateY(-1px);
       background:radial-gradient(circle at left,rgba(56,189,248,0.18),rgba(15,23,42,0.95));
     }
-
     .case-title{font-size:14px;font-weight:600}
     .case-tagline{font-size:11px;color:var(--muted)}
+    
+    .patient-mock-card {
+        border-radius:var(--radius-md);
+        border:1px solid var(--border);
+        padding:10px;
+        background:radial-gradient(circle at top,#0b1120,#020617);
+        display:flex;
+        flex-direction:column;
+        gap:6px;
+    }
+    .patient-name-mock {
+        font-weight: 600;
+        font-size: 12px;
+    }
+    .patient-id-mock {
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.2;
+    }
 
-    /* Workspace Styles */
+
+    /* --- WORKSPACE STYLES (Main Content Area) --- */
     .workspace{
       flex:1;
       display:flex;
@@ -193,71 +219,196 @@
       justify-content:space-between;
       align-items:center;
       gap:10px;
+      border-bottom:1px solid var(--border);
+      padding-bottom:10px;
     }
 
     .tabs{
       display:flex;
-      gap:6px;
+      gap:12px;
       flex-wrap:wrap;
+      font-size:12px;
+      font-weight:600;
     }
-
     .tab{
-      font-size:11px;
-      text-transform:uppercase;
-      letter-spacing:0.16em;
-      padding:6px 10px 5px;
-      border-radius:999px;
-      border:1px solid rgba(31,41,55,0.9);
-      color:#9ca3af;
-      background:radial-gradient(circle at top,#020617,#020617);
-      cursor:pointer;
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      transition:border .18s ease,box-shadow .18s ease,background .18s ease,color .18s ease,transform .16s ease;
+        color:var(--muted);
+        cursor:pointer;
+        padding-bottom:10px;
+        position:relative;
     }
     .tab.active{
-      border-color:rgba(56,189,248,1);
-      color:#e0f2fe;
-      background:radial-gradient(circle at top,rgba(56,189,248,0.18),rgba(15,23,42,0.98));
-      box-shadow:0 0 0 1px rgba(56,189,248,0.6),0 0 20px rgba(56,189,248,0.4);
-      transform:translateY(-1px);
+        color:var(--ink);
+    }
+    .tab.active::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--accent);
+        border-radius: 999px;
+        box-shadow: 0 0 10px var(--accent);
+    }
+    .workspace-header-right {
+        font-size: 11px;
+        color: var(--muted);
     }
 
     .workspace-body{
       flex:1;
-      border-radius:var(--radius-md);
-      border:1px solid #111827;
-      padding:12px;
-      background:radial-gradient(circle at top,#020617,#020617);
       display:flex;
       flex-direction:column;
       gap:12px;
       min-height:0;
     }
-    
+
+    /* Info Cards (Visit Snapshot & Simulation Status) */
+    .info-row {
+        display: flex;
+        gap: 12px;
+    }
+
     .info-card{
+      flex:1;
+      min-width:280px;
       border-radius:var(--radius-md);
       border:1px solid #111827;
-      padding:12px; /* Increased padding slightly */
+      padding:10px;
       background:linear-gradient(to bottom right,rgba(15,23,42,0.96),rgba(15,23,42,0.92));
       display:flex;
       flex-direction:column;
-      gap:8px;
+      gap:6px;
     }
-
-    .info-title{
-      font-size:14px;
-      font-weight:600;
+    .info-title-card{
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:0.16em;
+      color:#9ca3af;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom: 4px;
+    }
+    .field-grid{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:6px 10px;
+      font-size:11px;
+      margin-top:2px;
+    }
+    .field-label{
+      color:#9ca3af;
+      font-size:10px;
+      text-transform:uppercase;
+      letter-spacing:0.12em;
+      margin-bottom:1px;
+    }
+    .field-value{
       color:#e5e7eb;
+      font-size:11px;
+    }
+    .badge{
+      font-size:10px;
+      padding:2px 7px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.7);
+      color:#cbd5f5;
+      background:rgba(15,23,42,0.9);
     }
     
+    /* Module Cards (Objective Tools) */
+    .module-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+      gap:12px;
+      margin-top:4px;
+    }
+    .module{
+      position:relative;
+      border-radius:16px;
+      border:1px solid rgba(31,41,55,0.95);
+      padding:12px;
+      background:radial-gradient(circle at top left,rgba(15,23,42,0.95),rgba(15,23,42,0.92));
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      cursor:pointer;
+      overflow:hidden;
+      transition:border .18s ease,box-shadow .18s ease,transform .16s ease,background .18s ease;
+    }
+    .module:hover{
+      border-color:rgba(56,189,248,0.95);
+      box-shadow:0 18px 45px rgba(15,23,42,0.9),0 0 0 1px rgba(56,189,248,0.4);
+      transform:translateY(-3px);
+      background:radial-gradient(circle at top left,rgba(15,23,42,0.98),rgba(15,23,42,0.96));
+    }
+    .module-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:10px;
+    }
+    .module-title{
+      font-size:13px;
+      font-weight:600;
+    }
+    .module-sub{
+      font-size:11px;
+      color:#9ca3af;
+    }
+    .module-chip{
+      font-size:10px;
+      padding:3px 8px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.7);
+      color:#e0f2fe;
+      background:rgba(15,23,42,0.9);
+    }
+    .module-body{
+      font-size:11px;
+      color:#9ca3af;
+      margin-top:2px;
+    }
+    .module-meta{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-top:6px;
+      font-size:10px;
+      color:#64748b;
+    }
+    .module-btn{
+      align-self:flex-start;
+      margin-top:6px;
+      font-size:11px;
+      padding:6px 12px;
+      border-radius:999px;
+      border:1px solid rgba(56,189,248,1);
+      background:radial-gradient(circle at top left,#0ea5e9,#0369a1);
+      color:#0b1120;
+      font-weight:600;
+      letter-spacing:0.08em;
+      text-transform:uppercase;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      cursor:pointer;
+      box-shadow:0 12px 35px rgba(8,47,73,0.9);
+      transition:transform .12s ease,box-shadow .12s ease,filter .12s ease;
+    }
+    .module:hover .module-btn{
+      transform:translateY(-1px);
+      box-shadow:0 16px 40px rgba(8,47,73,1);
+      filter:brightness(1.02);
+    }
+
     /* Documentation Card - special look */
     .doc-card{
       margin-top:10px;
-      border:1px solid rgba(56,189,248,0.6); /* Blue border highlight */
-      padding:18px; /* Extra padding */
-      border-radius:14px; /* Slightly larger radius */
+      border:1px solid rgba(56,189,248,0.6);
+      padding:18px;
+      border-radius:14px;
       background:linear-gradient(to bottom right,rgba(15,23,42,0.98),rgba(10,17,32,0.98));
       box-shadow:0 0 30px rgba(56,189,248,0.2);
       display:none; /* Controlled by JS */
@@ -268,7 +419,6 @@
         color:var(--accent);
         margin-bottom:10px;
     }
-
     .doc-section{
       margin-bottom:14px;
       padding-bottom:14px;
@@ -278,7 +428,6 @@
         border-bottom: none;
         padding-bottom: 0;
     }
-
     .doc-section label{
       display:block;
       margin-bottom:4px;
@@ -312,11 +461,11 @@
       color:#64748b;
     }
 
-    /* Primary Button Style */
+    /* Primary Button Style (Used for documentation submit) */
     .primary-btn{
       border:1px solid rgba(56,189,248,1);
       border-radius:999px;
-      padding:6px 16px; /* slightly taller padding */
+      padding:6px 16px;
       background:radial-gradient(circle at top left,#0ea5e9,#0369a1);
       color:#0b1120;
       font-weight:600;
@@ -337,7 +486,7 @@
       box-shadow:none;
       border-color:var(--border);
     }
-
+    
     /* Grade Bar */
     .grade-bar{
       width:100%;
@@ -351,7 +500,7 @@
     .grade-fill{
       height:100%;
       width:0%;
-      background:var(--danger); /* will change via JS */
+      background:var(--danger);
       transition:width 0.25s ease, background-color 0.25s ease;
     }
     .grade-label{
@@ -360,7 +509,7 @@
       color:var(--muted);
     }
     
-    /* Modal Styles (Adjusted for look) */
+    /* Modal Styles */
     .modal-backdrop{
       position:fixed;inset:0;
       background:rgba(0,0,0,0.8);
@@ -409,10 +558,6 @@
     #warningModal .modal-title {
         color: var(--danger);
     }
-    #warningModal p {
-        font-size: 13px;
-        color: var(--muted);
-    }
     #warningModal button#warningClose {
         top: 15px;
         right: 15px;
@@ -425,19 +570,6 @@
         border-color: var(--danger);
         font-weight: 700;
     }
-    #warningModal #warningBack {
-        background: #1b2537;
-    }
-
-    @media (max-width:900px){
-      main{
-        flex-direction:column;
-      }
-      .sidebar{
-        width:100%;
-        max-width:none;
-      }
-    }
     
   </style>
 </head>
@@ -447,26 +579,37 @@
     <div class="brand">
       <div class="brand-mark">R+</div>
       <div class="brand-title">
-        <span class="app">ROMetrics CASE SANDBOX</span>
-        <span class="sub">Module flow — training only</span>
+        <span class="app">ROMetrics EHR Sandbox</span>
+        <span class="sub">Simulation chart view — training only</span>
       </div>
     </div>
     <div class="header-right">
       <div class="pill">
-        <span class="pill-text">Module 4 — Documentation</span>
+        <span class="pill-dot"></span>
+        <span class="pill-text">Case Flow: Reading → Motion Lab → Goniometry → MMT</span>
       </div>
-      <span>Clinician: Student User • Prototype</span>
+      <span>Clinician: Student User • v0.1</span>
     </div>
   </header>
 
   <main>
     <aside class="sidebar">
       <div class="sidebar-title">
-        <span>Available Case</span>
+        <span>Active Chart</span>
+        <span>MRN • 002918</span>
       </div>
 
+      <div class="patient-mock-card">
+        <div class="patient-name-mock">Sarah B — 29 y/o</div>
+        <div class="patient-id-mock">Outpatient • Ortho</div>
+        <div class="patient-id-mock">Primary: Cervical stiffness</div>
+      </div>
+      
+      <div class="sidebar-title" style="margin-top: 10px;">
+        <span>Case Control</span>
+      </div>
       <div class="case-item" id="caseBtn">
-        <div class="case-title">Case 1</div>
+        <div class="case-title">Case 1 — Cervical ROM/MMT</div>
         <div class="case-tagline">Click to load the patient chart (from markdown)</div>
       </div>
     </aside>
@@ -474,27 +617,119 @@
     <section class="workspace">
       <div class="workspace-header">
         <div class="tabs">
-          <button class="tab active" type="button">
-            Case Flow Overview
-          </button>
+          <span class="tab active">OVERVIEW</span>
+          <span class="tab">SUBJECTIVE</span>
+          <span class="tab">OBJECTIVE</span>
+          <span class="tab">ASSESSMENT</span>
+          <span class="tab">PLAN / ORDERS</span>
         </div>
       </div>
 
       <div class="workspace-body">
         
-        <h2 id="caseTitle" class="info-title" style="margin-bottom:0;">Select a case to begin</h2>
+        <h2 id="caseTitle" style="font-size:16px; font-weight:600; margin-bottom:4px;">Select a case to begin</h2>
         
-        <div class="info-card" id="caseSnapshot">
-          <div class="info-title" style="text-transform:uppercase; font-size:11px; color:var(--muted); letter-spacing:0.12em;">
-            Case Snapshot / Chart Review
-          </div>
-          <div id="snapshotBody" style="font-size:13px; color:var(--ink);">Select a case.</div>
+        <div class="info-row">
+            <div class="info-card">
+                <div class="info-title-card">
+                    <span>Visit Snapshot</span>
+                    <span class="badge" id="visitStepBadge">Step 1 of 4</span>
+                </div>
+                <div class="field-grid">
+                    <div><div class="field-label">Visit Type</div><div class="field-value">Simulation: Ortho PT Evaluation</div></div>
+                    <div><div class="field-label">Chief Complaint</div><div class="field-value">Neck stiffness when turning to the left</div></div>
+                    <div><div class="field-label">Primary Region</div><div class="field-value">Cervical Spine</div></div>
+                    <div><div class="field-label">Required Modules</div><div class="field-value">Motion Lab • Goniometry • MMT Trainer</div></div>
+                </div>
+                <button id="readBtn" class="primary-btn" disabled style="align-self: flex-start; margin-top: 12px; font-size: 12px; padding: 7px 18px;">
+                    Mark Case as Read → Launch Modules
+                </button>
+            </div>
+
+            <div class="info-card" style="min-width:280px;">
+                <div class="info-title-card">
+                    <span>Simulation Status</span>
+                    <span class="badge">Live Sandbox</span>
+                </div>
+                <div class="field-grid">
+                    <div><div class="field-label">Case ID</div><div class="field-value">CASE_001 • GONIO-CERVICAL-001</div></div>
+                    <div><div class="field-label">Collision Rules</div><div class="field-value">Cervical region override enabled</div></div>
+                    <div><div class="field-label">ROM Targets</div><div class="field-value">Left rotation, lateral flexion focus</div></div>
+                    <div><div class="field-label">MMT Target Grade</div><div class="field-value">Left cervical rotators • 4/5 goal</div></div>
+                </div>
+                <div style="height: 38px;"></div> </div>
         </div>
 
-        <button id="readBtn" class="primary-btn" disabled style="align-self: flex-start; margin-top: 4px;">Mark Case as Read → Launch Modules</button>
+        <div class="info-title-card" style="margin-top:8px;">
+            <span>Objective Tools — Launch From Chart</span>
+            <span class="badge" style="border-color:var(--accent);">Click a module to open the ROMetrics view</span>
+        </div>
+
+        <div class="module-grid">
+          <article class="module" data-route="motion" id="functionalModule">
+            <div class="module-header">
+              <div>
+                <div class="module-title">Motion Lab — Active ROM</div>
+                <div class="module-sub">Visualize active vs. passive motion for the primary region.</div>
+              </div>
+              <span class="module-chip">Step 2</span>
+            </div>
+            <div class="module-body">
+              Preview motions, observe planes and axes, and understand expected ROM before measuring with the goniometer.
+            </div>
+            <div class="module-meta">
+              <span>Linked View: Motion Lab</span>
+              <span id="functionalStatus">Status: Not yet attempted</span>
+            </div>
+            <button class="module-btn" type="button" id="goFunctional">
+              Open Motion Lab
+            </button>
+          </article>
+
+          <article class="module" data-route="gonio" id="gonioModule">
+            <div class="module-header">
+              <div>
+                <div class="module-title">Goniometry Trainer — Primary Region</div>
+                <div class="module-sub">Measure and record ROM with case limits.</div>
+              </div>
+              <span class="module-chip">Step 3</span>
+            </div>
+            <div class="module-body">
+              Place landmarks, align the goniometer, and capture values. Case tokens will clamp ROM to simulate impairment for the selected case.
+            </div>
+            <div class="module-meta">
+              <span>Linked View: Goniometry Trainer</span>
+              <span id="gonioStatus">Status: Pending</span>
+            </div>
+            <button class="module-btn wrong" type="button" data-route="gonio_launch">
+              Open Goniometry
+            </button>
+          </article>
+          
+          <article class="module" data-route="mmt" id="mmtModule">
+            <div class="module-header">
+              <div>
+                <div class="module-title">MMT Assessment — Region-Specific</div>
+                <div class="module-sub">Launch the ROMetrics MMT Trainer with case tokens.</div>
+              </div>
+              <span class="module-chip">Step 4 • Required</span>
+            </div>
+            <div class="module-body">
+              Use the **MMT Trainer** to position the model, set resistance vectors, and record the target grade based on the selected case. Token logic will enforce case limits.
+            </div>
+            <div class="module-meta">
+              <span>Linked View: **MMT Trainer Prototype**</span>
+              <span id="mmtStatus">Status: Not yet attempted</span>
+            </div>
+            <button class="module-btn wrong" type="button" data-route="mmt_launch">
+              Open MMT Assessment
+            </button>
+          </article>
+
+        </div>
 
         <div class="doc-card" id="docCard">
-          <h3>Case Documentation — SOAP Draft</h3>
+          <h3>SOAP Summary &amp; Case Notes (Documentation Draft)</h3>
 
           <div class="doc-section">
             <label>
@@ -571,11 +806,11 @@
     <div class="modal">
       <div class="modal-title">Select Next Module:</div>
 
-      <button class="choice-btn" id="goFunctional">1. Functional / ROM Observation</button>
+      <button class="choice-btn" id="goFunctionalModal">1. Functional / ROM Observation</button>
 
-      <button class="choice-btn wrong">2. Goniometry</button>
-      <button class="choice-btn wrong">3. MMT Test</button>
-      <button class="choice-btn wrong">4. Prognosis (Part of Documentation)</button>
+      <button class="choice-btn wrong" data-route="gonio_modal">2. Goniometry</button>
+      <button class="choice-btn wrong" data-route="mmt_modal">3. MMT Test</button>
+      <button class="choice-btn wrong" data-route="prognosis_modal">4. Prognosis (Part of Documentation)</button>
     </div>
   </div>
 
@@ -610,9 +845,6 @@
       </div>
 
       <button class="choice-btn" id="warningProceed">Proceed Anyway</button>
-      <button class="choice-btn" id="warningBack" style="background:#1b2537; display: none;">
-        Back to Menu
-      </button>
     </div>
   </div>
 
@@ -629,21 +861,33 @@
       if (!doc) return;
 
       const allVisited = visitedFunctional && visitedGoniometry && visitedMMT;
+      const readBtn = document.getElementById("readBtn");
+      const caseTitle = document.getElementById("caseTitle");
 
       if (allVisited){
         // UNLOCK
         doc.style.opacity = "1";
         doc.style.pointerEvents = "auto";
-        document.getElementById("caseTitle").textContent = "Case 1: Documentation Unlocked";
+        caseTitle.textContent = "Case 1: Documentation Unlocked (Step 5)";
+        readBtn.textContent = "Module Flow Complete";
+        readBtn.disabled = true;
       } else {
         // LOCK
         doc.style.opacity = "0.35";
         doc.style.pointerEvents = "none";
-        document.getElementById("caseTitle").textContent = "Case 1: Review Chart & Launch Modules";
+        caseTitle.textContent = "Case 1: Review Chart & Launch Modules";
+        if(caseLoaded) {
+            readBtn.textContent = "Mark Case as Read → Launch Modules";
+        }
       }
+      
+      // Update Module Statuses
+      document.getElementById("functionalStatus").textContent = visitedFunctional ? "Status: Complete" : "Status: Not yet attempted";
+      document.getElementById("gonioStatus").textContent = visitedGoniometry ? "Status: Complete" : "Status: Pending";
+      document.getElementById("mmtStatus").textContent = visitedMMT ? "Status: Complete" : "Status: Not yet attempted";
     }
 
-
+    // This handles loading the text content into the snapshot card
     document.getElementById("caseBtn").onclick = async () => {
       // Set to the actual case file path
       const res = await fetch("../assets/cases/case_001.md");
@@ -659,7 +903,7 @@
 
         if (allowed.includes(line)) {
           capture = true;
-          out.push(`<strong style="color:var(--accent);">${line.replace("## ", "")}</strong>`);
+          out.push(`<strong style="color:var(--accent);">— ${line.replace("## ", "")} —</strong>`);
           continue;
         }
 
@@ -686,116 +930,93 @@
     const warningBackdrop = document.getElementById("warningModal");
 
     let pendingUrl = null;
-    let functionalVisited = false;
-    let pendingModuleKey = null;
-
-    const MODULE_KEYS = {
-      functional: "case_001_labDone",
-      goniometry: "case_001_gonioDone",
-      mmt:        "case_001_mmtDone"
+    let functionalVisited = false; // Used in your original logic
+    
+    // Module URLs
+    const MODULE_URLS = {
+        functional: "https://kingto89.github.io/ROMetrics.com/lab-motion/?caseToken=LAB-CERVICAL-001",
+        gonio: "https://kingto89.github.io/ROMetrics.com/goniometry-trainer/?caseToken=GONIO-CERVICAL-001",
+        mmt: "https://kingto89.github.io/ROMetrics.com/mmt/?caseToken=MMT-CERVICAL-001"
     };
 
-    function markModuleDone(key){
-      if (!key) return;
-      localStorage.setItem(key, "1");
-    }
 
-    function maybeUnlockDoc(){
-      const doc = document.getElementById("docCard");
-      if (!doc) return;
+    /* --- Functional Button (Step 2 - always correct first step) --- */
+    const goFunctional = document.getElementById("goFunctional");
+    const goFunctionalModal = document.getElementById("goFunctionalModal");
 
-      const allDone =
-        localStorage.getItem(MODULE_KEYS.functional) &&
-        localStorage.getItem(MODULE_KEYS.goniometry) &&
-        localStorage.getItem(MODULE_KEYS.mmt);
-
-      if (allDone){
-        doc.style.opacity = "1";
-        doc.style.pointerEvents = "auto";
-      }
-    }
-
-    const goFunctionalBtn = document.getElementById("goFunctional");
-    if (goFunctionalBtn) {
-      goFunctionalBtn.onclick = () => {
+    const launchFunctional = () => {
         visitedFunctional  = true;
         functionalVisited  = true;
         updateDocLockState();
         modalBackdrop.classList.remove("active");
-
-        window.open(
-          "https://kingto89.github.io/ROMetrics.com/lab-motion/?caseToken=LAB-CERVICAL-001",
-          "_blank"
-        );
-      };
+        window.open(MODULE_URLS.functional, "_blank");
     }
 
+    if (goFunctional) goFunctional.onclick = launchFunctional;
+    if (goFunctionalModal) goFunctionalModal.onclick = launchFunctional;
 
 
+    /* --- Wrong-order steps (Modularized) --- */
+    const handleWrongStep = (moduleType) => {
+        const url = MODULE_URLS[moduleType];
 
-    /* -------- WRONG-ORDER STEPS → SHOW WARNING, THEN GO TO CASE MODE -------- */
-    document.querySelectorAll("#modalBackdrop .wrong").forEach(btn => {
-      btn.onclick = () => {
-        const label = btn.textContent.toLowerCase();
-
-        if (label.includes("goniometry")) {
-          const url = "https://kingto89.github.io/ROMetrics.com/goniometry-trainer/?caseToken=GONIO-CERVICAL-001";
-
-          // If Functional already done → no warning, open in new tab
-          if (functionalVisited) {
-            visitedGoniometry = true;
+        // 1. Check if Functional is done (The prerequisite in your logic)
+        if (functionalVisited) {
+            if (moduleType === 'gonio') visitedGoniometry = true;
+            if (moduleType === 'mmt') visitedMMT = true;
+            
             updateDocLockState();
             modalBackdrop.classList.remove("active");
             window.open(url, "_blank");
             return;
-          }
-
-          pendingUrl = url;
-
-        } else if (label.includes("mmt")) {
-          const url = "https://kingto89.github.io/ROMetrics.com/mmt/?caseToken=MMT-CERVICAL-001";
-
-          if (functionalVisited) {
-            visitedMMT = true;
-            updateDocLockState();
-            modalBackdrop.classList.remove("active");
-            window.open(url, "_blank");
-            return;
-          }
-
-          pendingUrl = url;
-
-        } else if (label.includes("prognosis")) {
-          const allDone = visitedFunctional && visitedGoniometry && visitedMMT;
-
-          // If they haven't done all 3, block and tell them why
-          if (!allDone) {
-            alert("Complete Functional / ROM, Goniometry, and MMT before writing your prognosis. The prognosis is part of the documentation section.");
-            return;
-          }
-
-          // All 3 done → just close the menu, no warning, no URL
-          modalBackdrop.classList.remove("active");
-          return;
         }
 
-        // If we got here (gonio or MMT needing warning), we still need to show the warning
+        // 2. If Functional not done, show Warning Modal
+        pendingUrl = url;
         modalBackdrop.classList.remove("active");
         if (warningBackdrop) {
-          warningBackdrop.classList.add("active");
+            warningBackdrop.classList.add("active");
+        }
+    };
+    
+    // Modal buttons (gonio/mmt)
+    document.querySelectorAll("#modalBackdrop .wrong").forEach(btn => {
+      btn.onclick = (e) => {
+        const route = e.target.getAttribute('data-route');
+
+        if (route === 'gonio_modal') {
+            handleWrongStep('gonio');
+        } else if (route === 'mmt_modal') {
+            handleWrongStep('mmt');
+        } else if (route === 'prognosis_modal') {
+            const allDone = visitedFunctional && visitedGoniometry && visitedMMT;
+            if (!allDone) {
+                alert("Complete Functional / ROM, Goniometry, and MMT before writing your prognosis. The prognosis is part of the documentation section.");
+                return;
+            }
+            modalBackdrop.classList.remove("active");
+            // No URL, prognosis is in the documentation area
         }
       };
     });
+    
+    // Module Launch Buttons (gonio/mmt on main screen)
+    document.querySelectorAll(".module-btn.wrong").forEach(btn => {
+        btn.onclick = (e) => {
+            const route = e.target.getAttribute('data-route');
+            if (route === 'gonio_launch') {
+                handleWrongStep('gonio');
+            } else if (route === 'mmt_launch') {
+                handleWrongStep('mmt');
+            }
+        };
+    });
 
 
-
-    /* -------- WARNING MODAL: SINGLE “OK” BUTTON THAT CONTINUES -------- */
+    /* -------- WARNING MODAL: PROCEED ACTION -------- */
     const warningProceed = document.getElementById("warningProceed");
-    const warningBack    = document.getElementById("warningBack");
-    const warningClose = document.getElementById("warningClose");
 
     if (warningProceed) {
-      warningProceed.textContent = "OK — continue to this step";
       warningProceed.onclick = () => {
         if (warningBackdrop) {
           warningBackdrop.classList.remove("active");
@@ -809,20 +1030,20 @@
         updateDocLockState();
 
         if (pendingUrl) {
-          window.open(pendingUrl, "_blank");  // new tab, not over simulator
+          window.open(pendingUrl, "_blank");
         }
       };
     }
 
 
+    const warningClose = document.getElementById("warningClose");
     if (warningClose) {
       warningClose.onclick = () => {
         pendingUrl = null;
-        pendingModuleKey = null; // cancel any planned module
         if (warningBackdrop) {
           warningBackdrop.classList.remove("active");
         }
-        modalBackdrop.classList.add("active"); // reopen the same 4-option menu
+        modalBackdrop.classList.add("active"); // reopen the main menu
       };
     }
 
