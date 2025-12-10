@@ -644,13 +644,46 @@ const CASE_FILES = {
       if (/^case/i.test(h)) c.caseHeading = h;
     }
 
-    // Patient Profile bullets anywhere in file
-    function grabBullet(label) {
-      // FIX #1: Corrected regex to only look for a single hyphen for list items like Name, Age, Occupation
-      const re = new RegExp(`^-\\s*${label}:\\s*(.+)$`, "im");
-      const m  = rawMd.match(re);
-      return m ? m[1].trim() : "";
-    }
+ // Section grabber between "## Heading" and next "##"
+function grabSection(title) {
+  const re = new RegExp(
+    `^##\\s*${title}\\s*[\\r\\n]+([\\s\\S]*?)(?=^##\\s|\\Z)`,
+    "im"
+  );
+  const m = rawMd.match(re);
+  if (!m) return "";
+
+  // The captured text might contain the horizontal rule (---) used in your MD.
+  let content = m[1]; 
+  
+  // 1. Remove Horizontal Rules (---) and ensure clean leading/trailing quotes
+  content = content
+    .replace(/^\s*---+\s*$/gm, "") // Remove standalone horizontal rules (---)
+    .replace(/^["“]+/, "")
+    .replace(/["”]+$/, "")
+    .trim();
+
+  // 2. Process for Display: Convert Markdown bullets and clean up spacing
+  content = content
+    // Convert all Markdown list items (- , * ) to HTML bulleted lists (li/ul)
+    .replace(/^(?:[-*]\s*)/gm, "<li>")
+    .replace(/\n\s*<li>/g, "</li><li>"); // Turn list items into proper HTML list
+
+  // If the content starts with <li>, wrap it in <ul> tags.
+  if (content.startsWith("<li>")) {
+    content = "<ul>" + content + "</li></ul>";
+  }
+
+  // 3. Simple text replacement for non-list content (just using <br>)
+  // If we didn't use <ul>/<li> above, fall back to <br> but aggressively clean up.
+  if (!content.startsWith("<ul>")) {
+     content = content
+        .replace(/\n\s*\n/g, "<br><br>") // Double line breaks for paragraphs
+        .replace(/\n/g, "<br>");        // Single line breaks
+  }
+  
+  return content;
+}
 
     c.name     = grabBullet("Name");
     c.age      = grabBullet("Age");
