@@ -859,94 +859,110 @@
       return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
     }
 
-    function parseCaseMarkdown(rawMd) {
-      const lines = rawMd.split("\n");
-      const c = {
-        name: "",
-        age: "",
-        occupation: "",
-        setting: "",
-        chiefComplaint: "",
-        requiredModules: "",
-        scenarioLabel: "",
-        tags: []
-      };
+function parseCaseMarkdown(rawMd) {
+  const lines = rawMd.split(/\r?\n/);
+  const c = {
+    caseHeading: "",
+    name: "",
+    age: "",
+    occupation: "",
+    setting: "",
+    chiefComplaint: "",
+    requiredModules: "",
+    scenarioLabel: "",
+    tags: []
+  };
 
-      let currentH2 = "";
-      let inChief = false;
-      let inModules = false;
-      const modules = [];
+  let inChief = false;
+  let chiefLines = [];
+  let inModules = false;
+  const modules = [];
 
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i].trim();
-
-        if (line.startsWith("# Case")) {
-          c.caseHeading = line.replace(/^#\s*/, "").trim();
-          continue;
-        }
-
-        if (line.startsWith("## ")) {
-          currentH2 = line.substring(3).trim();
-          inChief = currentH2.startsWith("Chief Complaint");
-          inModules = currentH2.startsWith("ROMetrics Module Instructions");
-          if (!currentH2.startsWith("ROMetrics Module Instructions")) {
-            inModules = false;
-          }
-          continue;
-        }
-
-        // Patient Profile bullets
-        if (line.startsWith("- Name:")) {
-          c.name = line.split(":")[1].trim();
-          continue;
-        }
-        if (line.startsWith("- Age:")) {
-          c.age = line.split(":")[1].trim();
-          continue;
-        }
-        if (line.startsWith("- Occupation:")) {
-          c.occupation = line.split(":")[1].trim();
-          continue;
-        }
-        if (line.startsWith("- Setting:")) {
-          c.setting = line.split(":")[1].trim();
-          continue;
-        }
-
-        // Chief Complaint text (first non-empty line after heading)
-        if (inChief && line.length > 0 && !line.startsWith("---")) {
-          if (!c.chiefComplaint) {
-            c.chiefComplaint = line
-              .replace(/^["“]+/, "")
-              .replace(/["”]+$/, "")
-              .trim();
-          }
-          continue;
-        }
-
-        // ROMetrics Module Instructions -> subheadings as modules
-        if (inModules && line.startsWith("### ")) {
-          const mod = line.substring(4).trim();
-          if (mod) modules.push(mod);
-          continue;
-        }
+  for (let i = 0; i < lines.length; i++) {
+    const raw = lines[i];
+    const line = raw.trim();
+    if (!line) {
+      // stop collecting chief complaint once we hit a blank after capturing something
+      if (inChief && chiefLines.length) {
+        inChief = false;
       }
-
-      c.requiredModules = modules.length
-        ? modules.join(" • ")
-        : "Motion Lab • Goniometry Trainer • MMT Trainer";
-
-      c.scenarioLabel = c.caseHeading
-        ? "Scenario Loaded: " + c.caseHeading
-        : "Scenario Loaded: ROMetrics Case";
-
-      // Simple auto-tags
-      c.tags = [];
-      if (c.setting) c.tags.push(c.setting);
-      if (modules.length) c.tags.push(...modules);
-
-      return c;
+      continue;
     }
+
+    // Top-level case heading: "# Case 1:", "# Case 2: Hip", etc.
+    if (line.startsWith("# ")) {
+      const heading = line.replace(/^#+\s*/, "").trim();
+      if (!c.caseHeading && /^Case/i.test(heading)) {
+        c.caseHeading = heading;
+      }
+      inChief = false;
+      inModules = false;
+      continue;
+    }
+
+    // H2s: "## Patient Profile", "## Chief Complaint", "## ROMetrics Module Instructions", etc.
+    if (line.startsWith("## ")) {
+      const h2 = line.replace(/^##\s*/, "").trim();
+      inChief = /^chief complaint/i.test(h2);
+      inModules = /rometrics\s+module/i.test(h2); // case-insensitive, forgiving
+      continue;
+    }
+
+    // Patient Profile bullets: "- Name: ...", "- Age: ...", "- Occupation: ...", "- Setting: ..."
+    if (line.startsWith("- ")) {
+      const m = line.match(/^-+\s*([A-Za-z ]+):\s*(.+)$/);
+      if (m) {
+        const key = m[1].trim().toLowerCase();
+        const value = m[2].trim();
+        if (key === "name") c.name = value;
+        else if (key === "age") c.age = value;
+        else if (key === "occupation") c.occupation = value;
+        else if (key === "setting") c.setting = value;
+      }
+    }
+
+    // Chief Complaint text = first non-heading/text block under that H2
+    if (inChief) {
+      if (!/^[-#]/.test(line)) { // ignore new headings / bullets
+        chiefLines.push(line);
+      }
+      continue;
+    }
+
+    // ROMetrics Module Instructions -> collect "### ..." subheadings
+    if (inModules) {
+      if (line.startsWith("### ")) {
+        const mod = line.replace(/^###\s*/, "").trim();
+        if (mod) modules.push(mod);
+      }
+      continue;
+    }
+  }
+
+  // Finalize chief complaint (join multi-line, strip quotes)
+  c.chiefComplaint = chiefLines.join(" ")
+    .replace(/^["“]+/, "")
+    .replace(/["”]+$/, "")
+    .trim();
+
+  // Required modules from subheadings under ROMetrics Module Instructions
+  c.requiredModules = modules.length
+    ? modules.join(" • ")
+    : "Motion Lab • Goniometry Trainer • MMT Trainer";
+
+  // Scenario pill at top
+  c.scenarioLabel = c.caseHeading
+    ? "Scenario Loaded: " + c.caseHeading
+    : "Scenario Loaded: ROMetrics Case";
+
+  // Simple auto-tags
+  c.tags = [];
+  if (c.setting) c.tags.push(c.setting);
+  if (modules.length) c.tags.push(...modules);
+
+  return c;
+}
+
 
     function renderTags(tags) {
       if (!tags || !tags.length) {
