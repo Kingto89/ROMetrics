@@ -179,6 +179,27 @@ textarea{
   color:var(--text);
   padding:8px;
 }
+.word-hint{
+  font-size:11px;
+  color:var(--muted);
+  margin-left:6px;
+}
+
+.word-counter{
+  margin-top:4px;
+  font-size:11px;
+  color:var(--muted);
+}
+
+select{
+  width:100%;
+  border-radius:8px;
+  border:1px solid var(--border);
+  background:#020617;
+  color:var(--text);
+  padding:6px 8px;
+}
+  
 </style>
 </head>
 
@@ -213,41 +234,78 @@ textarea{
     </div>
 
     <button id="readBtn" class="primary-btn" disabled>Mark Case as Read</button>
+<div class="doc-card" id="docCard">
+  <h3>Case Documentation</h3>
 
-    <!-- Documentation Card (hidden) -->
-    <div class="doc-card" id="docCard">
-      <h3>Case Documentation</h3>
+  <div class="doc-section">
+    <label>
+      Subjective Findings
+      <span class="word-hint">(max 100 words)</span>
+    </label>
+    <textarea id="docSubjective"></textarea>
+    <div class="word-counter" data-for="docSubjective"></div>
+  </div>
 
-      <div class="doc-section">
-        <label>ROM Findings</label>
-        <textarea id="docROM"></textarea>
-      </div>
+  <div class="doc-section">
+    <label>
+      Objective Findings
+      <span class="word-hint">(max 150 words)</span>
+    </label>
+    <textarea id="docObjective"></textarea>
+    <div class="word-counter" data-for="docObjective"></div>
+  </div>
 
-      <div class="doc-section">
-        <label>MMT Findings</label>
-        <textarea id="docMMT"></textarea>
-      </div>
+  <div class="doc-section">
+    <label>
+      Diagnosis
+      <span class="word-hint">(max 60 words)</span>
+    </label>
+    <textarea id="docDx"></textarea>
+    <div class="word-counter" data-for="docDx"></div>
+  </div>
 
-      <div class="doc-section">
-        <label>Your Diagnosis</label>
-        <textarea id="docDx"></textarea>
-      </div>
+  <div class="doc-section">
+    <label>
+      Treatment Plan
+      <span class="word-hint">(max 150 words)</span>
+    </label>
+    <textarea id="docPlan"></textarea>
+    <div class="word-counter" data-for="docPlan"></div>
+  </div>
 
-      <div class="doc-section">
-        <label>Treatment Plan</label>
-        <textarea id="docPlan"></textarea>
-      </div>
+  <div class="doc-section">
+    <label>
+      Goals
+      <span class="word-hint">(max 100 words)</span>
+    </label>
+    <textarea id="docGoals"></textarea>
+    <div class="word-counter" data-for="docGoals"></div>
+  </div>
 
-      <div class="doc-section">
-        <label>Goals</label>
-        <textarea id="docGoals"></textarea>
-      </div>
+  <div class="doc-section">
+    <label>
+      Prognosis
+      <span class="word-hint">(max 60 words)</span>
+    </label>
+    <textarea id="docPrognosis"></textarea>
+    <div class="word-counter" data-for="docPrognosis"></div>
+  </div>
 
-      <div class="doc-section">
-        <label>Prognosis</label>
-        <textarea id="docPrognosis"></textarea>
-      </div>
-    </div>
+  <div class="doc-section">
+    <label>Submit Documentation for Grading</label>
+    <select id="docLevel">
+      <option value="">Select level</option>
+      <option value="novice">Novice</option>
+      <option value="apprentice">Apprentice</option>
+      <option value="clinical">Clinical</option>
+    </select>
+    <button id="docSubmitBtn" class="primary-btn" style="margin-top:8px;">
+      Submit Documentation
+    </button>
+    <div id="docSubmitStatus" style="margin-top:6px;font-size:12px;color:var(--muted);"></div>
+  </div>
+</div>
+
 
   </section>
 </main>
@@ -306,6 +364,27 @@ textarea{
 <script>
 /* -------- LOAD CASE FILE -------- */
 let caseLoaded = false;
+let visitedFunctional = false;
+let visitedGoniometry = false;
+let visitedMMT        = false;
+
+function updateDocLockState(){
+  const doc = document.getElementById("docCard");
+  if (!doc) return;
+
+  const allVisited = visitedFunctional && visitedGoniometry && visitedMMT;
+
+  if (allVisited){
+    // UNLOCK
+    doc.style.opacity = "1";
+    doc.style.pointerEvents = "auto";
+  } else {
+    // LOCK
+    doc.style.opacity = "0.35";
+    doc.style.pointerEvents = "none";
+  }
+}
+
 
 document.getElementById("caseBtn").onclick = async () => {
   const res = await fetch("../assets/cases/case_001.md");
@@ -335,13 +414,13 @@ document.getElementById("caseBtn").onclick = async () => {
   caseLoaded = true;
   document.getElementById("readBtn").disabled = false;
 
-  // Grey-out documentation, then try to unlock if all modules done
+  // Show documentation card and apply lock/unlock state
   const doc = document.getElementById("docCard");
   doc.style.display = "block";
-  doc.style.opacity = "0.35";
-  doc.style.pointerEvents = "none";
-  maybeUnlockDoc();
+  updateDocLockState();
 };
+
+
 
 /* -------- MAIN + WARNING MODALS -------- */
 const modalBackdrop   = document.getElementById("modalBackdrop");
@@ -380,13 +459,18 @@ function maybeUnlockDoc(){
 const goFunctionalBtn = document.getElementById("goFunctional");
 if (goFunctionalBtn) {
   goFunctionalBtn.onclick = () => {
-    functionalVisited = true;  // remember they did Functional
+    visitedFunctional  = true;
+    functionalVisited  = true;   // ← ADD THIS LINE
+    updateDocLockState();
+
     window.open(
       "https://kingto89.github.io/ROMetrics.com/lab-motion/?caseToken=LAB-CERVICAL-001",
       "_blank"
     );
   };
 }
+
+
 
 
 /* -------- WRONG-ORDER STEPS → SHOW WARNING, THEN GO TO CASE MODE -------- */
@@ -399,6 +483,8 @@ document.querySelectorAll("#modalBackdrop .wrong").forEach(btn => {
 
       // If Functional already done → no warning, open in new tab
       if (functionalVisited) {
+        visitedGoniometry = true;
+        updateDocLockState();
         window.open(url, "_blank");
         return;
       }
@@ -409,6 +495,8 @@ document.querySelectorAll("#modalBackdrop .wrong").forEach(btn => {
       const url = "https://kingto89.github.io/ROMetrics.com/mmt/?caseToken=MMT-CERVICAL-001";
 
       if (functionalVisited) {
+        visitedMMT = true;
+        updateDocLockState();
         window.open(url, "_blank");
         return;
       }
@@ -440,6 +528,14 @@ if (warningProceed) {
     if (warningBackdrop) {
       warningBackdrop.classList.remove("active");
     }
+
+    if (pendingUrl && pendingUrl.includes("goniometry-trainer")) {
+      visitedGoniometry = true;
+    } else if (pendingUrl && pendingUrl.includes("mmt/?caseToken")) {
+      visitedMMT = true;
+    }
+    updateDocLockState();
+
     if (pendingUrl) {
       window.open(pendingUrl, "_blank");  // new tab, not over simulator
     }
@@ -470,6 +566,108 @@ document.getElementById("readBtn").onclick = () => {
   if (!caseLoaded) return;
   modalBackdrop.classList.add("active");
 };
+
+/* -------- WORD LIMITS FOR DOC FIELDS -------- */
+const WORD_LIMITS = {
+  docSubjective: 100,
+  docObjective:  150,
+  docDx:         60,
+  docPlan:       150,
+  docGoals:      100,
+  docPrognosis:  60
+};
+
+function attachWordLimiter(id, limit){
+  const field = document.getElementById(id);
+  if (!field) return;
+
+  const counter = document.querySelector(`.word-counter[data-for="${id}"]`);
+
+  function update(){
+    const text  = field.value.trim();
+    const words = text.length ? text.split(/\s+/) : [];
+
+    // Hard cap: trim extra words
+    if (words.length > limit){
+      field.value = words.slice(0, limit).join(" ");
+    }
+
+    const count = field.value.trim()
+      ? field.value.trim().split(/\s+/).length
+      : 0;
+
+    if (counter){
+      counter.textContent = `${count}/${limit} words`;
+    }
+  }
+
+  field.addEventListener("input", update);
+  // Initialize counter on load
+  update();
+}
+
+// Attach limiters for all doc fields
+Object.entries(WORD_LIMITS).forEach(([id, limit]) => {
+  attachWordLimiter(id, limit);
+});
+/* -------- DOC SUBMISSION (MAX 3 ATTEMPTS) -------- */
+const docLevel     = document.getElementById("docLevel");
+const docSubmitBtn = document.getElementById("docSubmitBtn");
+const docStatus    = document.getElementById("docSubmitStatus");
+
+// simple per-browser limit for this case
+const ATTEMPT_KEY = "case_001_docAttempts";
+function getAttempts(){
+  return parseInt(localStorage.getItem(ATTEMPT_KEY) || "0", 10);
+}
+function setAttempts(n){
+  localStorage.setItem(ATTEMPT_KEY, String(n));
+}
+
+function checkAttemptLock(){
+  const used = getAttempts();
+  if (used >= 3 && docSubmitBtn && docStatus){
+    docSubmitBtn.disabled = true;
+    docStatus.textContent = "You have used all 3 submission attempts for this case.";
+    docStatus.style.color = "#f97373";
+  }
+}
+
+// run once on load
+checkAttemptLock();
+
+if (docSubmitBtn && docLevel && docStatus){
+  docSubmitBtn.onclick = () => {
+    const used = getAttempts();
+    if (used >= 3){
+      checkAttemptLock();
+      return;
+    }
+
+    const val = docLevel.value;
+    if (!val){
+      docStatus.textContent = "Select a level before submitting.";
+      docStatus.style.color = "#f97373";
+      return;
+    }
+
+    let label = "Novice";
+    if (val === "apprentice") label = "Apprentice";
+    if (val === "clinical")   label = "Clinical";
+
+    const nextCount = used + 1;
+    setAttempts(nextCount);
+
+    docStatus.textContent =
+      `Documentation submitted as: ${label}. Attempt ${nextCount} of 3.`;
+    docStatus.style.color = "var(--good)";
+
+    if (nextCount >= 3){
+      docSubmitBtn.disabled = true;
+    }
+  };
+}
+  
 </script>
 
 </body>
