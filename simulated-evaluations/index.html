@@ -699,6 +699,26 @@ checkAttemptLock();
 if (docSubmitBtn && docStatus){
   docSubmitBtn.onclick = () => {
     const used = getAttempts();
+        // Block empty submissions
+    const docIds = [
+      "docSubjective",
+      "docObjective",
+      "docDx",
+      "docPlan",
+      "docGoals",
+      "docPrognosis"
+    ];
+    const hasContent = docIds.some(id => {
+      const el = document.getElementById(id);
+      return el && el.value.trim().length > 0;
+    });
+
+    if (!hasContent){
+      docStatus.textContent = "Write your documentation before submitting.";
+      docStatus.style.color = "#f97373";
+      return;
+    }
+
     if (used >= 3){
       checkAttemptLock();
       return;
