@@ -598,7 +598,7 @@ updateDocLockState();
 
 
 <script>
-// === CASE PARSING + PATIENT PROFILE FILL ===
+// === CASE PARSING + PATIENT PROFILE FILL (updated) ===
 
 function initialsFromName(name) {
   if (!name) return "??";
@@ -608,7 +608,6 @@ function initialsFromName(name) {
 }
 
 function parseCaseMarkdown(rawMd) {
-  const lines = rawMd.split(/\r?\n/);
   const c = {
     caseHeading: "",
     name: "",
@@ -621,75 +620,43 @@ function parseCaseMarkdown(rawMd) {
     tags: []
   };
 
-  let section = null;          // "profile" | "chief" | "hpi"
-  const chiefLines = [];
-  const hpiLines   = [];
-
-  for (let i = 0; i < lines.length; i++) {
-    const raw = lines[i];
-    const line = raw.trim();
-    if (!line) continue;
-
-    // Case title
-    if (line.startsWith("# ")) {
-      const heading = line.replace(/^#+\s*/, "").trim();
-      if (!c.caseHeading && /^case/i.test(heading)) {
-        c.caseHeading = heading;
-      }
-      section = null;
-      continue;
-    }
-
-    // Section headers
-    if (line.startsWith("## ")) {
-      const h2 = line.replace(/^##\s*/, "").trim();
-
-      if (/^patient profile/i.test(h2)) {
-        section = "profile";
-      } else if (/^chief complaint/i.test(h2)) {
-        section = "chief";
-      } else if (/history of present illness/i.test(h2)) {
-        section = "hpi";
-      } else {
-        section = null;
-      }
-      continue;
-    }
-
-    // Patient Profile bullets only while in that section
-    if (section === "profile" && line.startsWith("- ")) {
-      const m = line.match(/^-+\s*([A-Za-z ]+):\s*(.+)$/);
-      if (m) {
-        const key = m[1].trim().toLowerCase();
-        const value = m[2].trim();
-        if (key === "name")        c.name        = value;
-        else if (key === "age")    c.age         = value;
-        else if (key === "occupation") c.occupation = value;
-        else if (key === "setting")    c.setting    = value;
-      }
-      continue;
-    }
-
-    // Chief Complaint text
-    if (section === "chief") {
-      if (!/^##\s/.test(line)) chiefLines.push(line);
-      continue;
-    }
-
-    // HPI text
-    if (section === "hpi") {
-      const cleaned = line.replace(/^-+\s*/, "").trim();
-      if (cleaned) hpiLines.push(cleaned);
-      continue;
-    }
+  // Case heading: "# Case 1 — …"
+  const hMatch = rawMd.match(/^#\s*(.+)$/m);
+  if (hMatch) {
+    const h = hMatch[1].trim();
+    if (/^case/i.test(h)) c.caseHeading = h;
   }
 
-  c.chiefComplaint = chiefLines.join(" ")
-    .replace(/^["“]+/, "")
-    .replace(/["”]+$/, "")
-    .trim();
+  // Patient profile bullets: "- Name: …" etc (anywhere in file)
+  function grabBullet(label) {
+    const re = new RegExp(`^-+\\s*${label}:\\s*(.+)$`, "im");
+    const m  = rawMd.match(re);
+    return m ? m[1].trim() : "";
+  }
 
-  c.hpi = hpiLines.join(" ").trim();
+  c.name        = grabBullet("Name");
+  c.age         = grabBullet("Age");
+  c.occupation  = grabBullet("Occupation");
+  c.setting     = grabBullet("Setting");
+
+  // Helper to grab a whole section between "## Heading" and next "##"
+  function grabSection(title) {
+    const re = new RegExp(
+      `^##\\s*${title}\\s*[\\r\\n]+([\\s\\S]*?)(?=^##\\s|\\Z)`,
+      "im"
+    );
+    const m = rawMd.match(re);
+    if (!m) return "";
+    return m[1]
+      .replace(/^-+\s*/gm, "")  // strip leading "- " bullets
+      .replace(/\s+/g, " ")     // collapse whitespace
+      .replace(/^["“]+/, "")
+      .replace(/["”]+$/, "")
+      .trim();
+  }
+
+  c.chiefComplaint = grabSection("Chief Complaint");
+  c.hpi            = grabSection("History of Present Illness");
 
   c.scenarioLabel = c.caseHeading
     ? "Scenario Loaded: " + c.caseHeading
@@ -699,26 +666,41 @@ function parseCaseMarkdown(rawMd) {
 }
 
 function renderTags() {
-  // single generic tag, no duplicates
   return '<span class="tag-accent">ROMetrics Simulation</span>';
 }
 
-// Patient Profile shows Occupation + Chief Complaint + HPI ONLY
+// Patient Profile shows Occupation + Chief Complaint + HPI
 function renderPatientProfile(c) {
   const list = $("patientProfileList");
   if (!list) return;
 
-  const rows = [];
-  if (c.occupation)     rows.push({ label: "Occupation", value: c.occupation });
-  if (c.chiefComplaint) rows.push({ label: "Chief Complaint", value: c.chiefComplaint });
-  if (c.hpi)            rows.push({ label: "History of Present Illness", value: c.hpi });
+  const items = [];
 
-  list.innerHTML = rows.map(r => `
+  if (c.occupation) {
+    items.push({
+      label: "Occupation",
+      value: c.occupation
+    });
+  }
+  if (c.chiefComplaint) {
+    items.push({
+      label: "Chief Complaint",
+      value: c.chiefComplaint
+    });
+  }
+  if (c.hpi) {
+    items.push({
+      label: "History of Present Illness",
+      value: c.hpi
+    });
+  }
+
+  list.innerHTML = items.map(item => `
     <div class="encounter-item">
       <div class="encounter-top">
-        <span class="enc-type">${r.label}</span>
+        <span class="enc-type">${item.label}</span>
       </div>
-      <div class="enc-note">${r.value}</div>
+      <div class="enc-note">${item.value}</div>
     </div>
   `).join("");
 }
@@ -734,9 +716,9 @@ async function applyCase(caseKey) {
     const c = parseCaseMarkdown(rawMd);
 
     const mrnSuffix = caseKey.split("_")[1] || "000";
-    const mrn = "MRN • " + mrnSuffix;
+    const mrn       = "MRN • " + mrnSuffix;
 
-    const baseName = c.name || "Patient Name";
+    const baseName    = c.name || "Patient Name";
     const nameWithAge = c.age ? `${baseName} — ${c.age} y/o` : baseName;
 
     const mrnEl = $("mrnValue");
@@ -751,8 +733,8 @@ async function applyCase(caseKey) {
     const settingEl = $("patientSetting");
     if (settingEl) settingEl.textContent = c.setting || "Simulation case";
 
-    const primaryEl = $("patientPrimary"); // keep but blank (no CC duplicate)
-    if (primaryEl) primaryEl.textContent = "";
+    const primaryEl = $("patientPrimary");
+    if (primaryEl) primaryEl.textContent = ""; // no CC duplicate up top
 
     const tagsEl = $("patientTags");
     if (tagsEl) tagsEl.innerHTML = renderTags();
@@ -766,7 +748,6 @@ async function applyCase(caseKey) {
     const scenarioLabelEl = $("scenarioLabel");
     if (scenarioLabelEl) scenarioLabelEl.textContent = c.scenarioLabel;
 
-    // finally fill the Patient Profile box
     renderPatientProfile(c);
   } catch (err) {
     console.error("Error loading case:", err);
@@ -785,6 +766,5 @@ if (caseSelect) {
 applyCase("CASE_001");
 </script>
 
-  </script>
 </body>
 </html>
