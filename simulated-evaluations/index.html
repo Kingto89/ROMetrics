@@ -438,33 +438,44 @@ async function applyCase(caseKey) {
     const mrn = "MRN • " + mrnSuffix;
 
     const baseName = c.name || "Patient Name";
-    const nameWithAge = c.age
-      ? `${baseName} — ${c.age} y/o`
-      : baseName;
+    const nameWithAge = c.age ? `${baseName} — ${c.age} y/o` : baseName;
 
-    // TOP CARD — ONLY name, age, setting, generic tag (no CC here)
-    $("mrnValue").textContent = mrn;
-    $("patientInitials").textContent = initialsFromName(c.name || "");
-    $("patientName").textContent = nameWithAge;
-    $("patientSetting").textContent = c.setting || "Simulation case";
-    if ($("patientPrimary")) $("patientPrimary").textContent = "";
-    $("patientTags").innerHTML = renderTags(c.tags);
+    const mrnEl = $("mrnValue");
+    if (mrnEl) mrnEl.textContent = mrn;
 
-    // VISIT SNAPSHOT — no CC text, no setting reuse
-    $("visitTypeValue").textContent = "Simulation Case";
-    $("chiefComplaintValue").textContent = "See Patient Profile";
+    const initialsEl = $("patientInitials");
+    if (initialsEl) initialsEl.textContent = initialsFromName(c.name || "");
 
-    $("caseIdValue").textContent = caseData.label;
-    $("scenarioSummary").textContent = caseData.scenarioSummary;
-    $("scenarioLabel").textContent = c.scenarioLabel;
+    const nameEl = $("patientName");
+    if (nameEl) nameEl.textContent = nameWithAge;
 
-    // Patient Profile holds Occupation + Chief Complaint (single place for CC)
+    const settingEl = $("patientSetting");
+    if (settingEl) settingEl.textContent = c.setting || "Simulation case";
+
+    // no chief complaint in the top card
+    const primaryEl = $("patientPrimary");
+    if (primaryEl) primaryEl.textContent = "";
+
+    const tagsEl = $("patientTags");
+    if (tagsEl) tagsEl.innerHTML = renderTags(c.tags);
+
+    const caseIdEl = $("caseIdValue");
+    if (caseIdEl) caseIdEl.textContent = caseData.label;
+
+    const scenarioSummaryEl = $("scenarioSummary");
+    if (scenarioSummaryEl) scenarioSummaryEl.textContent = caseData.scenarioSummary;
+
+    const scenarioLabelEl = $("scenarioLabel");
+    if (scenarioLabelEl) scenarioLabelEl.textContent = c.scenarioLabel;
+
+    // Patient Profile: Occupation + Chief Complaint only
     renderPatientProfile(c);
   } catch (err) {
     console.error("Error loading case:", err);
     alert(`Error loading case content for ${caseKey}. Check file path and format.`);
   }
 }
+
 
 function openRoute(key) {
   const url = ROUTES[key];
