@@ -335,11 +335,12 @@ document.getElementById("caseBtn").onclick = async () => {
   caseLoaded = true;
   document.getElementById("readBtn").disabled = false;
 
-  // Grey-out documentation
+  // Grey-out documentation, then try to unlock if all modules done
   const doc = document.getElementById("docCard");
-  doc.style.opacity = "0.35";
   doc.style.display = "block";
+  doc.style.opacity = "0.35";
   doc.style.pointerEvents = "none";
+  maybeUnlockDoc();
 };
 
 /* -------- MAIN + WARNING MODALS -------- */
@@ -347,10 +348,38 @@ const modalBackdrop   = document.getElementById("modalBackdrop");
 const warningBackdrop = document.getElementById("warningModal");
 
 let pendingUrl = null;
+let pendingModuleKey = null;
+
+const MODULE_KEYS = {
+  functional: "case_001_labDone",
+  goniometry: "case_001_gonioDone",
+  mmt:        "case_001_mmtDone"
+};
+
+function markModuleDone(key){
+  if (!key) return;
+  localStorage.setItem(key, "1");
+}
+
+function maybeUnlockDoc(){
+  const doc = document.getElementById("docCard");
+  if (!doc) return;
+
+  const allDone =
+    localStorage.getItem(MODULE_KEYS.functional) &&
+    localStorage.getItem(MODULE_KEYS.goniometry) &&
+    localStorage.getItem(MODULE_KEYS.mmt);
+
+  if (allDone){
+    doc.style.opacity = "1";
+    doc.style.pointerEvents = "auto";
+  }
+}
 
 const goFunctionalBtn = document.getElementById("goFunctional");
 if (goFunctionalBtn) {
   goFunctionalBtn.onclick = () => {
+    markModuleDone(MODULE_KEYS.functional);
     window.open(
       "https://kingto89.github.io/ROMetrics.com/lab-motion/?caseToken=LAB-CERVICAL-001",
       "_self"
@@ -359,43 +388,51 @@ if (goFunctionalBtn) {
 }
 
 
+
 /* -------- WRONG-ORDER STEPS → SHOW WARNING, THEN GO TO CASE MODE -------- */
 document.querySelectorAll("#modalBackdrop .wrong").forEach(btn => {
   btn.onclick = () => {
     const label = btn.textContent.toLowerCase();
 
     if (label.includes("goniometry")) {
-      pendingUrl = "https://kingto89.github.io/ROMetrics.com/goniometry-trainer/?caseToken=GONIO-CERVICAL-001";
+      pendingUrl       = "https://kingto89.github.io/ROMetrics.com/goniometry-trainer/?caseToken=GONIO-CERVICAL-001";
+      pendingModuleKey = MODULE_KEYS.goniometry;
     } else if (label.includes("mmt")) {
-      pendingUrl = "https://kingto89.github.io/ROMetrics.com/mmt/?caseToken=MMT-CERVICAL-001";
+      pendingUrl       = "https://kingto89.github.io/ROMetrics.com/mmt/?caseToken=MMT-CERVICAL-001";
+      pendingModuleKey = MODULE_KEYS.mmt;
     } else if (label.includes("prognosis")) {
-      // Fill this in once you have a prognosis case-mode URL
-      pendingUrl = null;
+      pendingUrl       = null;
+      pendingModuleKey = null;
     }
 
-    // Hide main menu (4 options stay defined in HTML, just not visible)
     modalBackdrop.classList.remove("active");
 
-    // Show warning overlay
     if (warningBackdrop) {
       warningBackdrop.classList.add("active");
     }
   };
 });
 
+
 /* -------- WARNING MODAL: SINGLE “OK” BUTTON THAT CONTINUES -------- */
 const warningProceed = document.getElementById("warningProceed");
 const warningBack    = document.getElementById("warningBack");
 
 if (warningProceed) {
-  // Rename to feel less like a choice
   warningProceed.textContent = "OK — continue to this step";
   warningProceed.onclick = () => {
     if (warningBackdrop) {
       warningBackdrop.classList.remove("active");
     }
+
+    if (pendingModuleKey){
+      markModuleDone(pendingModuleKey);
+      pendingModuleKey = null;
+    }
+
     if (pendingUrl) {
-      window.location.href = pendingUrl;
+      window.open(pendingUrl, "_self");
+      pendingUrl = null;
     }
   };
 }
@@ -407,13 +444,15 @@ if (warningBack) {
 const warningClose = document.getElementById("warningClose");
 if (warningClose) {
   warningClose.onclick = () => {
-    pendingUrl = null; // cancel the jump
+    pendingUrl = null;
+    pendingModuleKey = null; // cancel any planned module
     if (warningBackdrop) {
       warningBackdrop.classList.remove("active");
     }
     modalBackdrop.classList.add("active"); // reopen the same 4-option menu
   };
 }
+
 
 /* -------- READ BUTTON → OPEN MAIN MENU (ALWAYS SAME 4 OPTIONS) -------- */
 document.getElementById("readBtn").onclick = () => {
