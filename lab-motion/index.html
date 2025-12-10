@@ -198,11 +198,24 @@ const ROM_CASE_TOKENS = {
 
     // --- VISUAL FEEDBACK: Shape Keys for Pain Grimace ---
     painShapeKeys: [
-      // Activates a wince effect when limit is hit
-      { key: 'Expressions_browsMidVert_max', value: 0.9 }, // Furrow brow
-      { key: 'Expressions_eyeSquintL_max',   value: 0.7 },
-      { key: 'Expressions_eyeSquintR_max',   value: 0.7 },
-      { key: 'Expressions_mouthClosed_min',  value: 0.8 }  // Tighten/compress mouth
+      // Brows crushed together + down
+      { key: 'Expressions_browsMidVert_max',   value: 1.0 },
+      { key: 'Expressions_browSqueezeL_max',   value: 1.0 },
+      { key: 'Expressions_browSqueezeR_max',   value: 1.0 },
+
+      // Strong eye squeeze
+      { key: 'Expressions_eyeSquintL_max',     value: 1.0 },
+      { key: 'Expressions_eyeSquintR_max',     value: 1.0 },
+      { key: 'Expressions_eyeClosedPressureL_max', value: 0.8 },
+      { key: 'Expressions_eyeClosedPressureR_max', value: 0.8 },
+
+      // Aggressive mouth / jaw
+      { key: 'Expressions_mouthOpenAggr_max',  value: 1.0 },
+      { key: 'Expressions_mouthOpenLarge_max', value: 0.8 },
+      { key: 'Expressions_mouthClosed_min',    value: 0.6 },
+
+      // Flared nostrils for “ouch”
+      { key: 'Expressions_nostrilsExpansion_max', value: 0.9 }
     ],
 
     // --- NOTES OVERLAY CONTENT ---
