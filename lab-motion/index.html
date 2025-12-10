@@ -184,16 +184,17 @@ const ROM_CASE_TOKENS = {
     allowedRegions: ["Cervical", "Shoulder", "Elbow", "Wrist"],
     disableAdvancedMenu: true, // Hide the Bone (Advanced) details menu
 
-    // --- IMPAIRMENTS: ROM Limits (Max Measured Angles) ---
-    impairments: {
-      // Right Rotation (normal ~70°, cap at 30° for this case)
-      cerv_rot_r: { max: 30 },
+          // --- IMPAIRMENTS: ROM Limits (Max Measured Angles) ---
+        impairments: {
+            // Cervical Rotation — cap at 30°
+            cerv_rot: { max: 30 },
 
-      // Right Lateral Flexion (normal ~45°, cap at 20° for this case)
-      cerv_lat_r: { max: 20 }
+            // Cervical Lateral Flexion — cap at 20°
+            cerv_lat: { max: 20 }
 
-      // Left side movements and flexion/extension remain unrestricted (default caps)
-    },
+            // Other motions use default caps
+        },
+
 
     // --- VISUAL FEEDBACK: Shape Keys for Pain Grimace ---
     painShapeKeys: [
@@ -223,12 +224,12 @@ const ROM_CASE_TOKENS = {
 };
 
 window.ROM_CASE_MODE = {
-  active: false,
-  token: null,
-  impairments: {},
-  notes: {}
+    active: false,
+    token: null,
+    impairments: {},
+    notes: {},
+    painShapeKeys: []
 };
-
 
     
 /* ===== UI ===== */
