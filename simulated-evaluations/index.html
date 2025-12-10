@@ -1,1201 +1,745 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ROMetrics — Case Modules Prototype</title>
-  <meta name="description" content="ROMetrics Module Flow and Documentation Sandbox." />
-  <style>
-    /* ------------------------------------- */
-    /* ROMetrics Dark Style (From Reference) */
-    /* ------------------------------------- */
-    :root{
-      --bg:#020617;
-      --bg-soft:#020617;
-      --panel:#020617;
-      --panel-soft:#020617;
-      --surface:#020617;
-      --surface-soft:#020617;
-      --ink:#e5e7eb;
-      --muted:#9ca3af;
-      --accent:#38bdf8;
-      --accent-soft:rgba(56,189,248,0.12);
-      --accent-strong:#0ea5e9;
-      --border:#1f2937;
-      --danger:#f97373;
-      --good:#22c55e;
-      --shadow:0 18px 40px rgba(15,23,42,0.85);
-      --radius-lg:18px;
-      --radius-md:12px;
-      --bad:#f97316;
-    }
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>ROMetrics — Case Modules Prototype</title>
 
-    *{box-sizing:border-box;margin:0;padding:0}
-    html,body{
-      height:100%;
-      font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-      background:radial-gradient(circle at top,#1f2937 0,#020617 52%,#000 100%);
-      color:var(--ink);
-    }
+<style>
+/* ——————————— ORIGINAL ROMETRICS DARK STYLE ——————————— */
+:root{
+  --bg:#020617;
+  --panel:#020617;
+  --panel-soft:#020617;
+  --accent:#38bdf8;
+  --accent-soft:rgba(56,189,248,0.16);
+  --accent-strong:#0ea5e9;
+  --danger:#f97373;
+  --text:#e5e7eb;
+  --muted:#9ca3af;
+  --border:#1f2937;
+  --good:#22c55e;
+  --bad:#f97316;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{
+  min-height:100%;
+  overflow-y:auto;
+  background:radial-gradient(circle at top,#1f2937 0,#020617 55%);
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  color:var(--text);
+}
 
-    body{
-      display:flex;
-      flex-direction:column;
-    }
+body{
+  display:flex;
+  align-items:stretch;
+  justify-content:center;
+}
+.app-shell{
+  margin:10px;
+  flex:1;
+  max-width:1100px;
+  border-radius:16px;
+  border:1px solid rgba(148,163,184,.35);
+  background:linear-gradient(135deg,rgba(15,23,42,0.97),rgba(15,23,42,0.99));
+  box-shadow:0 18px 45px rgba(15,23,42,0.95);
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+header{
+  padding:10px 14px;
+  border-bottom:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+h1{font-size:16px;letter-spacing:.08em;text-transform:uppercase;display:flex;gap:8px}
+.logo-pill{
+  padding:3px 9px;
+  border-radius:999px;
+  background:var(--accent-soft);
+  font-size:11px;
+  color:var(--accent-strong);
+}
+.subtitle{font-size:12px;color:var(--muted)}
+.badge-mini{
+  font-size:11px;
+  padding:2px 8px;
+  border-radius:999px;
+  border:1px solid rgba(148,163,184,.35);
+  color:var(--muted);
+}
 
-    /* --- HEADER STYLES --- */
-    header{
-      padding:10px 20px;
-      border-bottom:1px solid #0f172a;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      backdrop-filter:blur(16px);
-      background:linear-gradient(to right,rgba(15,23,42,0.95),rgba(15,23,42,0.7));
-    }
+main{flex:1;display:flex;min-height:0}
+.sidebar{
+  width:240px;
+  border-right:1px solid var(--border);
+  padding:10px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.case-item{
+  border-radius:10px;
+  border:1px solid var(--border);
+  padding:8px;
+  background:rgba(15,23,42,0.88);
+  cursor:pointer;
+  transition:.12s;
+}
+.case-item:hover{
+  border-color:var(--accent);
+  transform:translateY(-1px);
+}
+.case-title{font-size:13px;font-weight:600}
+.case-tagline{font-size:11px;color:var(--muted)}
 
-    .brand{
-      display:flex;
-      align-items:center;
-      gap:12px;
-    }
+.content{
+  flex:1;
+  padding:14px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
 
-    .brand-mark{
-      width:32px;
-      height:32px;
-      border-radius:999px;
-      border:1px solid rgba(148,163,184,0.5);
-      background:conic-gradient(from 210deg,#38bdf8,#0ea5e9,#22c55e,#38bdf8);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      box-shadow:0 0 20px rgba(56,189,248,0.6);
-      font-size:11px;
-      font-weight:700;
-      color:#0b1120;
-    }
+.card{
+  border-radius:12px;
+  border:1px solid var(--border);
+  background:var(--panel-soft);
+  padding:12px;
+}
+.card h3{font-size:14px;margin-bottom:6px}
 
-    .brand-title{
-      line-height:1.1;
-    }
-    .brand-title span{
-      display:block;
-    }
-    .brand-title .app{
-      font-weight:700;
-      letter-spacing:0.08em;
-      text-transform:uppercase;
-      font-size:12px;
-      color:#e5e7eb;
-    }
-    .brand-title .sub{
-      font-size:11px;
-      color:var(--muted);
-    }
+.primary-btn{
+  border:none;
+  border-radius:999px;
+  padding:7px 13px;
+  background:linear-gradient(135deg,var(--accent),var(--accent-strong));
+  color:#0b1120;
+  font-weight:600;
+  cursor:pointer;
+}
+.primary-btn:disabled{opacity:.4;cursor:not-allowed}
 
-    .header-right{
-      display:flex;
-      align-items:center;
-      gap:16px;
-      font-size:12px;
-      color:var(--muted);
-    }
+/* Modal */
+.modal-backdrop{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,0.75);
+  display:none;align-items:center;justify-content:center;
+}
+.modal-backdrop.active{display:flex}
+.modal{
+  position:relative;          /* keep this */
+  max-width:520px;
+  width:100%;
+  border-radius:14px;
+  border:1px solid var(--border);
+  background:#020617;
+  padding:15px;
+}
+.modal-title{font-size:15px;font-weight:700;margin-bottom:8px}
+.choice-btn{
+  width:100%;
+  margin-top:8px;
+  padding:10px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:#0f172a;
+  color:var(--text);
+  cursor:pointer;
+}
+.choice-btn:hover{border-color:var(--accent)}
 
-    .pill{
-      border-radius:999px;
-      border:1px solid var(--border);
-      padding:4px 10px;
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      background:radial-gradient(circle at top left,rgba(56,189,248,0.18),rgba(15,23,42,0.9));
-    }
-    
-    .pill-dot{
-      width:8px;
-      height:8px;
-      border-radius:999px;
-      background:var(--good);
-      box-shadow:0 0 14px rgba(34,197,94,0.9);
-    }
-    
-    .pill-text {
-        font-size: 11px;
-    }
+/* Documentation Card */
+.doc-card{
+  margin-top:14px;
+  border:1px solid var(--border);
+  padding:14px;
+  border-radius:12px;
+  background:#0f172a;
+  display:none;
+}
+.doc-section{
+  margin-bottom:14px;
+}
+.doc-section label{
+  display:block;
+  margin-bottom:4px;
+  font-size:13px;
+  color:var(--muted);
+}
+textarea{
+  width:100%;
+  height:70px;
+  resize:none;
+  border-radius:8px;
+  border:1px solid var(--border);
+  background:#020617;
+  color:var(--text);
+  padding:8px;
+}
+.word-hint{
+  font-size:11px;
+  color:var(--muted);
+  margin-left:6px;
+}
 
+.word-counter{
+  margin-top:4px;
+  font-size:11px;
+  color:var(--muted);
+}
 
-    /* --- MAIN LAYOUT --- */
-    main{
-      flex:1;
-      display:flex;
-      padding:16px;
-      gap:16px;
-      max-width:1200px;
-      margin:0 auto;
-      width:100%;
-    }
+select{
+  width:100%;
+  border-radius:8px;
+  border:1px solid var(--border);
+  background:#020617;
+  color:var(--text);
+  padding:6px 8px;
+}
+.grade-bar{
+  width:100%;
+  height:10px;
+  border-radius:999px;
+  background:#020617;
+  border:1px solid var(--border);
+  overflow:hidden;
+  margin-top:4px;
+}
 
-    /* --- SIDEBAR STYLES (Patient Summary Mockup) --- */
-    .sidebar{
-      width:260px;
-      min-width:220px;
-      max-width:260px;
-      background:radial-gradient(circle at top left,#020617,#020617);
-      border-radius:var(--radius-lg);
-      border:1px solid #111827;
-      padding:14px 12px 12px;
-      box-shadow:var(--shadow);
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-    }
+.grade-fill{
+  height:100%;
+  width:0%;
+  background:#f97373; /* will change via JS */
+  transition:width 0.25s ease, background-color 0.25s ease;
+}
 
-    .sidebar-title{
-      font-size:11px;
-      text-transform:uppercase;
-      letter-spacing:0.16em;
-      color:var(--muted);
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-    }
-
-    .case-item{
-      border-radius:var(--radius-md);
-      border:1px solid var(--border);
-      padding:10px;
-      background:radial-gradient(circle at top,#0b1120,#020617);
-      display:flex;
-      flex-direction:column;
-      gap:6px;
-      cursor:pointer;
-      transition:border .18s ease,box-shadow .18s ease,transform .18s ease,background .18s ease;
-    }
-    .case-item:hover{
-      border-color:rgba(56,189,248,0.8);
-      box-shadow:0 0 0 1px rgba(56,189,248,0.4);
-      transform:translateY(-1px);
-      background:radial-gradient(circle at left,rgba(56,189,248,0.18),rgba(15,23,42,0.95));
-    }
-    .case-title{font-size:14px;font-weight:600}
-    .case-tagline{font-size:11px;color:var(--muted)}
-    
-    .patient-mock-card {
-        border-radius:var(--radius-md);
-        border:1px solid var(--border);
-        padding:10px;
-        background:radial-gradient(circle at top,#0b1120,#020617);
-        display:flex;
-        flex-direction:column;
-        gap:6px;
-    }
-    .patient-name-mock {
-        font-weight: 600;
-        font-size: 12px;
-    }
-    .patient-id-mock {
-        color: var(--muted);
-        font-size: 11px;
-        line-height: 1.2;
-    }
-
-
-    /* --- WORKSPACE STYLES (Main Content Area) --- */
-    .workspace{
-      flex:1;
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-      border-radius:var(--radius-lg);
-      border:1px solid #111827;
-      padding:14px 14px 16px;
-      background:radial-gradient(circle at top,#020617,#020617);
-      box-shadow:var(--shadow);
-      min-width:0;
-    }
-
-    .workspace-header{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
-      border-bottom:1px solid var(--border);
-      padding-bottom:10px;
-    }
-
-    .tabs{
-      display:flex;
-      gap:12px;
-      flex-wrap:wrap;
-      font-size:12px;
-      font-weight:600;
-    }
-    .tab{
-        color:var(--muted);
-        cursor:pointer;
-        padding-bottom:10px;
-        position:relative;
-    }
-    .tab.active{
-        color:var(--ink);
-    }
-    .tab.active::after {
-        content: "";
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: 2px;
-        background: var(--accent);
-        border-radius: 999px;
-        box-shadow: 0 0 10px var(--accent);
-    }
-    .workspace-header-right {
-        font-size: 11px;
-        color: var(--muted);
-    }
-
-    .workspace-body{
-      flex:1;
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-      min-height:0;
-    }
-
-    /* Info Cards (Visit Snapshot & Simulation Status) */
-    .info-row {
-        display: flex;
-        gap: 12px;
-    }
-
-    .info-card{
-      flex:1;
-      min-width:280px;
-      border-radius:var(--radius-md);
-      border:1px solid #111827;
-      padding:10px;
-      background:linear-gradient(to bottom right,rgba(15,23,42,0.96),rgba(15,23,42,0.92));
-      display:flex;
-      flex-direction:column;
-      gap:6px;
-    }
-    .info-title-card{
-      font-size:11px;
-      text-transform:uppercase;
-      letter-spacing:0.16em;
-      color:#9ca3af;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      margin-bottom: 4px;
-    }
-    .field-grid{
-      display:grid;
-      grid-template-columns:repeat(2,minmax(0,1fr));
-      gap:6px 10px;
-      font-size:11px;
-      margin-top:2px;
-    }
-    .field-label{
-      color:#9ca3af;
-      font-size:10px;
-      text-transform:uppercase;
-      letter-spacing:0.12em;
-      margin-bottom:1px;
-    }
-    .field-value{
-      color:#e5e7eb;
-      font-size:11px;
-    }
-    .badge{
-      font-size:10px;
-      padding:2px 7px;
-      border-radius:999px;
-      border:1px solid rgba(148,163,184,0.7);
-      color:#cbd5f5;
-      background:rgba(15,23,42,0.9);
-    }
-    
-    /* Module Cards (Objective Tools) */
-    .module-grid{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-      gap:12px;
-      margin-top:4px;
-    }
-    .module{
-      position:relative;
-      border-radius:16px;
-      border:1px solid rgba(31,41,55,0.95);
-      padding:12px;
-      background:radial-gradient(circle at top left,rgba(15,23,42,0.95),rgba(15,23,42,0.92));
-      display:flex;
-      flex-direction:column;
-      gap:6px;
-      cursor:pointer;
-      overflow:hidden;
-      transition:border .18s ease,box-shadow .18s ease,transform .16s ease,background .18s ease;
-    }
-    .module:hover{
-      border-color:rgba(56,189,248,0.95);
-      box-shadow:0 18px 45px rgba(15,23,42,0.9),0 0 0 1px rgba(56,189,248,0.4);
-      transform:translateY(-3px);
-      background:radial-gradient(circle at top left,rgba(15,23,42,0.98),rgba(15,23,42,0.96));
-    }
-    .module-header{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap:10px;
-    }
-    .module-title{
-      font-size:13px;
-      font-weight:600;
-    }
-    .module-sub{
-      font-size:11px;
-      color:#9ca3af;
-    }
-    .module-chip{
-      font-size:10px;
-      padding:3px 8px;
-      border-radius:999px;
-      border:1px solid rgba(148,163,184,0.7);
-      color:#e0f2fe;
-      background:rgba(15,23,42,0.9);
-    }
-    .module-body{
-      font-size:11px;
-      color:#9ca3af;
-      margin-top:2px;
-    }
-    .module-meta{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      margin-top:6px;
-      font-size:10px;
-      color:#64748b;
-    }
-    .module-btn{
-      align-self:flex-start;
-      margin-top:6px;
-      font-size:11px;
-      padding:6px 12px;
-      border-radius:999px;
-      border:1px solid rgba(56,189,248,1);
-      background:radial-gradient(circle at top left,#0ea5e9,#0369a1);
-      color:#0b1120;
-      font-weight:600;
-      letter-spacing:0.08em;
-      text-transform:uppercase;
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      cursor:pointer;
-      box-shadow:0 12px 35px rgba(8,47,73,0.9);
-      transition:transform .12s ease,box-shadow .12s ease,filter .12s ease;
-    }
-    .module:hover .module-btn{
-      transform:translateY(-1px);
-      box-shadow:0 16px 40px rgba(8,47,73,1);
-      filter:brightness(1.02);
-    }
-
-    /* Documentation Card - special look */
-    .doc-card{
-      margin-top:10px;
-      border:1px solid rgba(56,189,248,0.6);
-      padding:18px;
-      border-radius:14px;
-      background:linear-gradient(to bottom right,rgba(15,23,42,0.98),rgba(10,17,32,0.98));
-      box-shadow:0 0 30px rgba(56,189,248,0.2);
-      display:none; /* Controlled by JS */
-      transition:opacity 0.3s ease;
-    }
-    .doc-card h3{
-        font-size:15px;
-        color:var(--accent);
-        margin-bottom:10px;
-    }
-    .doc-section{
-      margin-bottom:14px;
-      padding-bottom:14px;
-      border-bottom:1px solid var(--border);
-    }
-    .doc-section:last-child {
-        border-bottom: none;
-        padding-bottom: 0;
-    }
-    .doc-section label{
-      display:block;
-      margin-bottom:4px;
-      font-size:11px;
-      text-transform:uppercase;
-      letter-spacing:0.12em;
-      color:#9ca3af;
-    }
-    .word-hint{
-      font-size:10px;
-      color:#64748b;
-      margin-left:6px;
-      font-weight:400;
-      text-transform:none;
-      letter-spacing:normal;
-    }
-    textarea{
-      width:100%;
-      height:70px;
-      resize:none;
-      border-radius:8px;
-      border:1px solid var(--border);
-      background:#020617;
-      color:var(--ink);
-      padding:8px;
-      font-size:13px;
-    }
-    .word-counter{
-      margin-top:4px;
-      font-size:10px;
-      color:#64748b;
-    }
-
-    /* Primary Button Style (Used for documentation submit) */
-    .primary-btn{
-      border:1px solid rgba(56,189,248,1);
-      border-radius:999px;
-      padding:6px 16px;
-      background:radial-gradient(circle at top left,#0ea5e9,#0369a1);
-      color:#0b1120;
-      font-weight:600;
-      letter-spacing:0.08em;
-      text-transform:uppercase;
-      cursor:pointer;
-      box-shadow:0 10px 30px rgba(8,47,73,0.8);
-      transition:transform .12s ease,box-shadow .12s ease,filter .12s ease;
-    }
-    .primary-btn:hover:not(:disabled){
-      transform:translateY(-1px);
-      box-shadow:0 14px 35px rgba(8,47,73,1);
-      filter:brightness(1.02);
-    }
-    .primary-btn:disabled{
-      opacity:.4;
-      cursor:not-allowed;
-      box-shadow:none;
-      border-color:var(--border);
-    }
-    
-    /* Grade Bar */
-    .grade-bar{
-      width:100%;
-      height:10px;
-      border-radius:999px;
-      background:rgba(31,41,55,0.7);
-      border:1px solid var(--border);
-      overflow:hidden;
-      margin-top:4px;
-    }
-    .grade-fill{
-      height:100%;
-      width:0%;
-      background:var(--danger);
-      transition:width 0.25s ease, background-color 0.25s ease;
-    }
-    .grade-label{
-      margin-top:6px;
-      font-size:11px;
-      color:var(--muted);
-    }
-    
-    /* Modal Styles */
-    .modal-backdrop{
-      position:fixed;inset:0;
-      background:rgba(0,0,0,0.8);
-      display:none;align-items:center;justify-content:center;
-      backdrop-filter: blur(4px);
-      z-index: 1000;
-    }
-    .modal-backdrop.active{display:flex}
-    .modal{
-      position:relative;
-      max-width:480px;
-      width:90%;
-      border-radius:var(--radius-lg);
-      border:1px solid #111827;
-      background:radial-gradient(circle at top,#0b1120,#020617);
-      padding:20px;
-      box-shadow:var(--shadow);
-    }
-    .modal-title{
-        font-size:16px;
-        font-weight:700;
-        margin-bottom:12px;
-        color:var(--accent);
-    }
-    .choice-btn{
-      width:100%;
-      margin-top:8px;
-      padding:10px;
-      border:1px solid var(--border);
-      border-radius:8px;
-      background:rgba(15,23,42,0.9);
-      color:var(--ink);
-      cursor:pointer;
-      font-size:13px;
-      transition:border .18s ease,transform .12s ease;
-    }
-    .choice-btn:hover{
-        border-color:var(--accent);
-        transform:translateY(-1px);
-    }
-    .choice-btn.wrong {
-        opacity: 0.8;
-    }
-    
-    /* Warning Modal Specifics */
-    #warningModal .modal-title {
-        color: var(--danger);
-    }
-    #warningModal button#warningClose {
-        top: 15px;
-        right: 15px;
-        color: var(--muted);
-        font-size: 24px;
-    }
-    #warningModal #warningProceed {
-        background: radial-gradient(circle at top left, var(--danger), #c026d3);
-        color: #0b1120;
-        border-color: var(--danger);
-        font-weight: 700;
-    }
-    
-  </style>
+.grade-label{
+  margin-top:4px;
+  font-size:12px;
+  color:var(--muted);
+}
+  
+</style>
 </head>
 
 <body>
-  <header>
-    <div class="brand">
-      <div class="brand-mark">R+</div>
-      <div class="brand-title">
-        <span class="app">ROMetrics EHR Sandbox</span>
-        <span class="sub">Simulation chart view — training only</span>
-      </div>
+<div class="app-shell">
+
+<header>
+  <div>
+    <h1>ROMetrics <span class="logo-pill">Case Modules</span></h1>
+    <div class="subtitle">Prototype flow — Case → View → Read → Launch Modules</div>
+  </div>
+  <div class="badge-mini">Module 4</div>
+</header>
+
+<main>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="case-item" id="caseBtn">
+      <div class="case-title">Case 1</div>
+      <div class="case-tagline">Loaded from Markdown</div>
     </div>
-    <div class="header-right">
-      <div class="pill">
-        <span class="pill-dot"></span>
-        <span class="pill-text">Case Flow: Reading → Motion Lab → Goniometry → MMT</span>
-      </div>
-      <span>Clinician: Student User • v0.1</span>
+  </aside>
+
+  <!-- Main Content -->
+  <section class="content">
+
+    <h2 id="caseTitle">Select a case to begin</h2>
+
+    <div class="card" id="caseSnapshot">
+      <h3>Case Snapshot</h3>
+      <div id="snapshotBody">Select a case.</div>
     </div>
-  </header>
 
-  <main>
-    <aside class="sidebar">
-      <div class="sidebar-title">
-        <span>Active Chart</span>
-        <span>MRN • 002918</span>
-      </div>
+    <button id="readBtn" class="primary-btn" disabled>Mark Case as Read</button>
+<div class="doc-card" id="docCard">
+  <h3>Case Documentation</h3>
 
-      <div class="patient-mock-card">
-        <div class="patient-name-mock">Sarah B — 29 y/o</div>
-        <div class="patient-id-mock">Outpatient • Ortho</div>
-        <div class="patient-id-mock">Primary: Cervical stiffness</div>
-      </div>
-      
-      <div class="sidebar-title" style="margin-top: 10px;">
-        <span>Case Control</span>
-      </div>
-      <div class="case-item" id="caseBtn">
-        <div class="case-title">Case 1 — Cervical ROM/MMT</div>
-        <div class="case-tagline">Click to load the patient chart (from markdown)</div>
-      </div>
-    </aside>
-
-    <section class="workspace">
-      <div class="workspace-header">
-        <div class="tabs">
-          <span class="tab active">OVERVIEW</span>
-          <span class="tab">SUBJECTIVE</span>
-          <span class="tab">OBJECTIVE</span>
-          <span class="tab">ASSESSMENT</span>
-          <span class="tab">PLAN / ORDERS</span>
-        </div>
-      </div>
-
-      <div class="workspace-body">
-        
-        <h2 id="caseTitle" style="font-size:16px; font-weight:600; margin-bottom:4px;">Select a case to begin</h2>
-        
-        <div class="info-row">
-            <div class="info-card">
-                <div class="info-title-card">
-                    <span>Visit Snapshot</span>
-                    <span class="badge" id="visitStepBadge">Step 1 of 4</span>
-                </div>
-                <div class="field-grid">
-                    <div><div class="field-label">Visit Type</div><div class="field-value">Simulation: Ortho PT Evaluation</div></div>
-                    <div><div class="field-label">Chief Complaint</div><div class="field-value">Neck stiffness when turning to the left</div></div>
-                    <div><div class="field-label">Primary Region</div><div class="field-value">Cervical Spine</div></div>
-                    <div><div class="field-label">Required Modules</div><div class="field-value">Motion Lab • Goniometry • MMT Trainer</div></div>
-                </div>
-                <button id="readBtn" class="primary-btn" disabled style="align-self: flex-start; margin-top: 12px; font-size: 12px; padding: 7px 18px;">
-                    Mark Case as Read → Launch Modules
-                </button>
-            </div>
-
-            <div class="info-card" style="min-width:280px;">
-                <div class="info-title-card">
-                    <span>Simulation Status</span>
-                    <span class="badge">Live Sandbox</span>
-                </div>
-                <div class="field-grid">
-                    <div><div class="field-label">Case ID</div><div class="field-value">CASE_001 • GONIO-CERVICAL-001</div></div>
-                    <div><div class="field-label">Collision Rules</div><div class="field-value">Cervical region override enabled</div></div>
-                    <div><div class="field-label">ROM Targets</div><div class="field-value">Left rotation, lateral flexion focus</div></div>
-                    <div><div class="field-label">MMT Target Grade</div><div class="field-value">Left cervical rotators • 4/5 goal</div></div>
-                </div>
-                <div style="height: 38px;"></div> </div>
-        </div>
-
-        <div class="info-title-card" style="margin-top:8px;">
-            <span>Objective Tools — Launch From Chart</span>
-            <span class="badge" style="border-color:var(--accent);">Click a module to open the ROMetrics view</span>
-        </div>
-
-        <div class="module-grid">
-          <article class="module" data-route="motion" id="functionalModule">
-            <div class="module-header">
-              <div>
-                <div class="module-title">Motion Lab — Active ROM</div>
-                <div class="module-sub">Visualize active vs. passive motion for the primary region.</div>
-              </div>
-              <span class="module-chip">Step 2</span>
-            </div>
-            <div class="module-body">
-              Preview motions, observe planes and axes, and understand expected ROM before measuring with the goniometer.
-            </div>
-            <div class="module-meta">
-              <span>Linked View: Motion Lab</span>
-              <span id="functionalStatus">Status: Not yet attempted</span>
-            </div>
-            <button class="module-btn" type="button" id="goFunctional">
-              Open Motion Lab
-            </button>
-          </article>
-
-          <article class="module" data-route="gonio" id="gonioModule">
-            <div class="module-header">
-              <div>
-                <div class="module-title">Goniometry Trainer — Primary Region</div>
-                <div class="module-sub">Measure and record ROM with case limits.</div>
-              </div>
-              <span class="module-chip">Step 3</span>
-            </div>
-            <div class="module-body">
-              Place landmarks, align the goniometer, and capture values. Case tokens will clamp ROM to simulate impairment for the selected case.
-            </div>
-            <div class="module-meta">
-              <span>Linked View: Goniometry Trainer</span>
-              <span id="gonioStatus">Status: Pending</span>
-            </div>
-            <button class="module-btn wrong" type="button" data-route="gonio_launch">
-              Open Goniometry
-            </button>
-          </article>
-          
-          <article class="module" data-route="mmt" id="mmtModule">
-            <div class="module-header">
-              <div>
-                <div class="module-title">MMT Assessment — Region-Specific</div>
-                <div class="module-sub">Launch the ROMetrics MMT Trainer with case tokens.</div>
-              </div>
-              <span class="module-chip">Step 4 • Required</span>
-            </div>
-            <div class="module-body">
-              Use the **MMT Trainer** to position the model, set resistance vectors, and record the target grade based on the selected case. Token logic will enforce case limits.
-            </div>
-            <div class="module-meta">
-              <span>Linked View: **MMT Trainer Prototype**</span>
-              <span id="mmtStatus">Status: Not yet attempted</span>
-            </div>
-            <button class="module-btn wrong" type="button" data-route="mmt_launch">
-              Open MMT Assessment
-            </button>
-          </article>
-
-        </div>
-
-        <div class="doc-card" id="docCard">
-          <h3>SOAP Summary &amp; Case Notes (Documentation Draft)</h3>
-
-          <div class="doc-section">
-            <label>
-              Subjective Findings
-              <span class="word-hint">(max 100 words)</span>
-            </label>
-            <textarea id="docSubjective"></textarea>
-            <div class="word-counter" data-for="docSubjective"></div>
-          </div>
-
-          <div class="doc-section">
-            <label>
-              Objective Findings
-              <span class="word-hint">(max 150 words)</span>
-            </label>
-            <textarea id="docObjective"></textarea>
-            <div class="word-counter" data-for="docObjective"></div>
-          </div>
-
-          <div class="doc-section">
-            <label>
-              Diagnosis
-              <span class="word-hint">(max 60 words)</span>
-            </label>
-            <textarea id="docDx"></textarea>
-            <div class="word-counter" data-for="docDx"></div>
-          </div>
-
-          <div class="doc-section">
-            <label>
-              Treatment Plan
-              <span class="word-hint">(max 150 words)</span>
-            </label>
-            <textarea id="docPlan"></textarea>
-            <div class="word-counter" data-for="docPlan"></div>
-          </div>
-
-          <div class="doc-section">
-            <label>
-              Goals
-              <span class="word-hint">(max 100 words)</span>
-            </label>
-            <textarea id="docGoals"></textarea>
-            <div class="word-counter" data-for="docGoals"></div>
-          </div>
-
-          <div class="doc-section">
-            <label>
-              Prognosis
-              <span class="word-hint">(max 60 words)</span>
-            </label>
-            <textarea id="docPrognosis"></textarea>
-            <div class="word-counter" data-for="docPrognosis"></div>
-          </div>
-
-          <div class="doc-section">
-            <label>Submission Status</label>
-            <div id="gradeBar" class="grade-bar">
-              <div id="gradeFill" class="grade-fill"></div>
-            </div>
-            <div id="gradeLabel" class="grade-label">Not graded yet</div>
-
-            <button id="docSubmitBtn" class="primary-btn" style="margin-top:12px;">
-              Submit Documentation
-            </button>
-            <div id="docSubmitStatus" style="margin-top:10px;font-size:12px;color:var(--muted);"></div>
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <div class="modal-backdrop" id="modalBackdrop">
-    <div class="modal">
-      <div class="modal-title">Select Next Module:</div>
-
-      <button class="choice-btn" id="goFunctionalModal">1. Functional / ROM Observation</button>
-
-      <button class="choice-btn wrong" data-route="gonio_modal">2. Goniometry</button>
-      <button class="choice-btn wrong" data-route="mmt_modal">3. MMT Test</button>
-      <button class="choice-btn wrong" data-route="prognosis_modal">4. Prognosis (Part of Documentation)</button>
-    </div>
+  <div class="doc-section">
+    <label>
+      Subjective Findings
+      <span class="word-hint">(max 100 words)</span>
+    </label>
+    <textarea id="docSubjective"></textarea>
+    <div class="word-counter" data-for="docSubjective"></div>
   </div>
 
-  <div class="modal-backdrop" id="warningModal">
-    <div class="modal">
-      <div class="modal-title">Before You Proceed</div>
-      <button id="warningClose" type="button" style="position:absolute;top:10px;right:12px;background:transparent;border:none;color:#9ca3af;font-size:18px;cursor:pointer;line-height:1;">×</button>
-
-
-      <p>
-        This step is normally performed later in the clinical flow, but you may continue if needed.
-      </p>
-
-      <div style="
-        border:1px solid var(--border);
-        padding:10px;
-        border-radius:8px;
-        background:rgba(15,23,42,0.9);
-        margin-top:12px;
-        margin-bottom:12px;
-        font-size:13px;
-        color:var(--text);
-      ">
-        <strong style="color:var(--accent);">Recommended Flow:</strong>
-        <ul style="margin-top:4px; margin-left:15px;">
-            <li>Functional / ROM observation first</li>
-            <li>AROM/PROM screen second</li>
-            <li>Goniometry after ROM</li>
-            <li>MMT after objective ROM</li>
-            <li>Prognosis last (Documentation)</li>
-        </ul>
-      </div>
-
-      <button class="choice-btn" id="warningProceed">Proceed Anyway</button>
-    </div>
+  <div class="doc-section">
+    <label>
+      Objective Findings
+      <span class="word-hint">(max 150 words)</span>
+    </label>
+    <textarea id="docObjective"></textarea>
+    <div class="word-counter" data-for="docObjective"></div>
   </div>
 
+  <div class="doc-section">
+    <label>
+      Diagnosis
+      <span class="word-hint">(max 60 words)</span>
+    </label>
+    <textarea id="docDx"></textarea>
+    <div class="word-counter" data-for="docDx"></div>
+  </div>
 
-  <script>
-    /* -------- LOAD CASE FILE -------- */
-    let caseLoaded = false;
-    let visitedFunctional = false;
-    let visitedGoniometry = false;
-    let visitedMMT        = false;
+  <div class="doc-section">
+    <label>
+      Treatment Plan
+      <span class="word-hint">(max 150 words)</span>
+    </label>
+    <textarea id="docPlan"></textarea>
+    <div class="word-counter" data-for="docPlan"></div>
+  </div>
 
-    function updateDocLockState(){
-      const doc = document.getElementById("docCard");
-      if (!doc) return;
+  <div class="doc-section">
+    <label>
+      Goals
+      <span class="word-hint">(max 100 words)</span>
+    </label>
+    <textarea id="docGoals"></textarea>
+    <div class="word-counter" data-for="docGoals"></div>
+  </div>
 
-      const allVisited = visitedFunctional && visitedGoniometry && visitedMMT;
-      const readBtn = document.getElementById("readBtn");
-      const caseTitle = document.getElementById("caseTitle");
+  <div class="doc-section">
+    <label>
+      Prognosis
+      <span class="word-hint">(max 60 words)</span>
+    </label>
+    <textarea id="docPrognosis"></textarea>
+    <div class="word-counter" data-for="docPrognosis"></div>
+  </div>
 
-      if (allVisited){
-        // UNLOCK
-        doc.style.opacity = "1";
-        doc.style.pointerEvents = "auto";
-        caseTitle.textContent = "Case 1: Documentation Unlocked (Step 5)";
-        readBtn.textContent = "Module Flow Complete";
-        readBtn.disabled = true;
-      } else {
-        // LOCK
-        doc.style.opacity = "0.35";
-        doc.style.pointerEvents = "none";
-        caseTitle.textContent = "Case 1: Review Chart & Launch Modules";
-        if(caseLoaded) {
-            readBtn.textContent = "Mark Case as Read → Launch Modules";
-        }
-      }
-      
-      // Update Module Statuses
-      document.getElementById("functionalStatus").textContent = visitedFunctional ? "Status: Complete" : "Status: Not yet attempted";
-      document.getElementById("gonioStatus").textContent = visitedGoniometry ? "Status: Complete" : "Status: Pending";
-      document.getElementById("mmtStatus").textContent = visitedMMT ? "Status: Complete" : "Status: Not yet attempted";
+  <div class="doc-section">
+    <label>Submission Status</label>
+    <div id="gradeBar" class="grade-bar">
+      <div id="gradeFill" class="grade-fill"></div>
+    </div>
+    <div id="gradeLabel" class="grade-label">Not graded yet</div>
+
+    <button id="docSubmitBtn" class="primary-btn" style="margin-top:8px;">
+      Submit Documentation
+    </button>
+    <div id="docSubmitStatus" style="margin-top:6px;font-size:12px;color:var(--muted);"></div>
+  </div>
+</div>
+
+
+  </section>
+</main>
+</div>
+
+<!-- Main Menu Modal -->
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal">
+    <div class="modal-title">What do you want to do next?</div>
+
+    <!-- Correct first step -->
+    <button class="choice-btn" id="goFunctional">Functional / ROM Observation</button>
+
+    <!-- Wrong-order steps -->
+    <button class="choice-btn wrong">Goniometry</button>
+    <button class="choice-btn wrong">MMT Test</button>
+    <button class="choice-btn wrong">Prognosis</button>
+  </div>
+</div>
+
+<!-- Warning Modal -->
+<div class="modal-backdrop" id="warningModal">
+  <div class="modal">
+    <div class="modal-title">Before You Proceed</div>
+    <button id="warningClose" style="position:absolute;top:10px;right:12px;background:transparent;border:none;color:#9ca3af;font-size:18px;cursor:pointer;line-height:1;">×</button>
+
+
+    <p style="color:#9ca3af;font-size:13px;margin-bottom:10px;">
+      This step is normally performed later, but you may continue if needed.
+    </p>
+
+    <div style="
+      border:1px solid var(--accent);
+      padding:10px;
+      border-radius:8px;
+      background:rgba(56,189,248,0.08);
+      margin-bottom:12px;
+      font-size:13px;
+      color:var(--text);
+    ">
+      • Functional / ROM observation first<br>
+      • AROM/PROM screen second<br>
+      • Goniometry after ROM<br>
+      • MMT after objective ROM<br>
+      • Prognosis last
+    </div>
+
+    <button class="choice-btn" id="warningProceed">Proceed Anyway</button>
+    <button class="choice-btn" id="warningBack" style="background:#1b2537;">
+      Back to Menu
+    </button>
+  </div>
+</div>
+
+
+<script>
+/* -------- LOAD CASE FILE -------- */
+let caseLoaded = false;
+let visitedFunctional = false;
+let visitedGoniometry = false;
+let visitedMMT        = false;
+
+function updateDocLockState(){
+  const doc = document.getElementById("docCard");
+  if (!doc) return;
+
+  const allVisited = visitedFunctional && visitedGoniometry && visitedMMT;
+
+  if (allVisited){
+    // UNLOCK
+    doc.style.opacity = "1";
+    doc.style.pointerEvents = "auto";
+  } else {
+    // LOCK
+    doc.style.opacity = "0.35";
+    doc.style.pointerEvents = "none";
+  }
+}
+
+
+document.getElementById("caseBtn").onclick = async () => {
+  const res = await fetch("../assets/cases/case_001.md");
+  const raw = await res.text();
+  const lines = raw.split("\n");
+
+  let allowed = ["## Patient Profile", "## Chief Complaint", "## History of Present Illness"];
+  let capture = false;
+  let out = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+
+    if (allowed.includes(line)) {
+      capture = true;
+      out.push(`<strong>${line.replace("## ", "")}</strong>`);
+      continue;
     }
 
-    // This handles loading the text content into the snapshot card
-    document.getElementById("caseBtn").onclick = async () => {
-      // Set to the actual case file path
-      const res = await fetch("../assets/cases/case_001.md");
-      const raw = await res.text();
-      const lines = raw.split("\n");
+    if (line.startsWith("## Objective Examination")) break;
 
-      let allowed = ["## Patient Profile", "## Chief Complaint", "## History of Present Illness"];
-      let capture = false;
-      let out = [];
+    if (capture && line.length > 0) out.push(line);
+  }
 
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i].trim();
+  document.getElementById("snapshotBody").innerHTML = out.join("<br><br>");
 
-        if (allowed.includes(line)) {
-          capture = true;
-          out.push(`<strong style="color:var(--accent);">— ${line.replace("## ", "")} —</strong>`);
-          continue;
-        }
+  caseLoaded = true;
+  document.getElementById("readBtn").disabled = false;
 
-        if (line.startsWith("## Objective Examination")) break;
-
-        if (capture && line.length > 0) out.push(line);
-      }
-
-      document.getElementById("snapshotBody").innerHTML = out.join("<br><br>");
-
-      caseLoaded = true;
-      document.getElementById("readBtn").disabled = false;
-
-      // Show documentation card and apply lock/unlock state
-      const doc = document.getElementById("docCard");
-      doc.style.display = "block";
-      updateDocLockState();
-    };
+  // Show documentation card and apply lock/unlock state
+  const doc = document.getElementById("docCard");
+  doc.style.display = "block";
+  updateDocLockState();
+};
 
 
 
-    /* -------- MAIN + WARNING MODALS -------- */
-    const modalBackdrop   = document.getElementById("modalBackdrop");
-    const warningBackdrop = document.getElementById("warningModal");
+/* -------- MAIN + WARNING MODALS -------- */
+const modalBackdrop   = document.getElementById("modalBackdrop");
+const warningBackdrop = document.getElementById("warningModal");
 
-    let pendingUrl = null;
-    let functionalVisited = false; // Used in your original logic
-    
-    // Module URLs
-    const MODULE_URLS = {
-        functional: "https://kingto89.github.io/ROMetrics.com/lab-motion/?caseToken=LAB-CERVICAL-001",
-        gonio: "https://kingto89.github.io/ROMetrics.com/goniometry-trainer/?caseToken=GONIO-CERVICAL-001",
-        mmt: "https://kingto89.github.io/ROMetrics.com/mmt/?caseToken=MMT-CERVICAL-001"
-    };
+let pendingUrl = null;
+let functionalVisited = false;
+let pendingModuleKey = null;
+
+const MODULE_KEYS = {
+  functional: "case_001_labDone",
+  goniometry: "case_001_gonioDone",
+  mmt:        "case_001_mmtDone"
+};
+
+function markModuleDone(key){
+  if (!key) return;
+  localStorage.setItem(key, "1");
+}
+
+function maybeUnlockDoc(){
+  const doc = document.getElementById("docCard");
+  if (!doc) return;
+
+  const allDone =
+    localStorage.getItem(MODULE_KEYS.functional) &&
+    localStorage.getItem(MODULE_KEYS.goniometry) &&
+    localStorage.getItem(MODULE_KEYS.mmt);
+
+  if (allDone){
+    doc.style.opacity = "1";
+    doc.style.pointerEvents = "auto";
+  }
+}
+
+const goFunctionalBtn = document.getElementById("goFunctional");
+if (goFunctionalBtn) {
+  goFunctionalBtn.onclick = () => {
+    visitedFunctional  = true;
+    functionalVisited  = true;   // ← ADD THIS LINE
+    updateDocLockState();
+
+    window.open(
+      "https://kingto89.github.io/ROMetrics.com/lab-motion/?caseToken=LAB-CERVICAL-001",
+      "_blank"
+    );
+  };
+}
 
 
-    /* --- Functional Button (Step 2 - always correct first step) --- */
-    const goFunctional = document.getElementById("goFunctional");
-    const goFunctionalModal = document.getElementById("goFunctionalModal");
 
-    const launchFunctional = () => {
-        visitedFunctional  = true;
-        functionalVisited  = true;
+
+/* -------- WRONG-ORDER STEPS → SHOW WARNING, THEN GO TO CASE MODE -------- */
+document.querySelectorAll("#modalBackdrop .wrong").forEach(btn => {
+  btn.onclick = () => {
+    const label = btn.textContent.toLowerCase();
+
+    if (label.includes("goniometry")) {
+      const url = "https://kingto89.github.io/ROMetrics.com/goniometry-trainer/?caseToken=GONIO-CERVICAL-001";
+
+      // If Functional already done → no warning, open in new tab
+      if (functionalVisited) {
+        visitedGoniometry = true;
         updateDocLockState();
-        modalBackdrop.classList.remove("active");
-        window.open(MODULE_URLS.functional, "_blank");
-    }
-
-    if (goFunctional) goFunctional.onclick = launchFunctional;
-    if (goFunctionalModal) goFunctionalModal.onclick = launchFunctional;
-
-
-    /* --- Wrong-order steps (Modularized) --- */
-    const handleWrongStep = (moduleType) => {
-        const url = MODULE_URLS[moduleType];
-
-        // 1. Check if Functional is done (The prerequisite in your logic)
-        if (functionalVisited) {
-            if (moduleType === 'gonio') visitedGoniometry = true;
-            if (moduleType === 'mmt') visitedMMT = true;
-            
-            updateDocLockState();
-            modalBackdrop.classList.remove("active");
-            window.open(url, "_blank");
-            return;
-        }
-
-        // 2. If Functional not done, show Warning Modal
-        pendingUrl = url;
-        modalBackdrop.classList.remove("active");
-        if (warningBackdrop) {
-            warningBackdrop.classList.add("active");
-        }
-    };
-    
-    // Modal buttons (gonio/mmt)
-    document.querySelectorAll("#modalBackdrop .wrong").forEach(btn => {
-      btn.onclick = (e) => {
-        const route = e.target.getAttribute('data-route');
-
-        if (route === 'gonio_modal') {
-            handleWrongStep('gonio');
-        } else if (route === 'mmt_modal') {
-            handleWrongStep('mmt');
-        } else if (route === 'prognosis_modal') {
-            const allDone = visitedFunctional && visitedGoniometry && visitedMMT;
-            if (!allDone) {
-                alert("Complete Functional / ROM, Goniometry, and MMT before writing your prognosis. The prognosis is part of the documentation section.");
-                return;
-            }
-            modalBackdrop.classList.remove("active");
-            // No URL, prognosis is in the documentation area
-        }
-      };
-    });
-    
-    // Module Launch Buttons (gonio/mmt on main screen)
-    document.querySelectorAll(".module-btn.wrong").forEach(btn => {
-        btn.onclick = (e) => {
-            const route = e.target.getAttribute('data-route');
-            if (route === 'gonio_launch') {
-                handleWrongStep('gonio');
-            } else if (route === 'mmt_launch') {
-                handleWrongStep('mmt');
-            }
-        };
-    });
-
-
-    /* -------- WARNING MODAL: PROCEED ACTION -------- */
-    const warningProceed = document.getElementById("warningProceed");
-
-    if (warningProceed) {
-      warningProceed.onclick = () => {
-        if (warningBackdrop) {
-          warningBackdrop.classList.remove("active");
-        }
-
-        if (pendingUrl && pendingUrl.includes("goniometry-trainer")) {
-          visitedGoniometry = true;
-        } else if (pendingUrl && pendingUrl.includes("mmt/?caseToken")) {
-          visitedMMT = true;
-        }
-        updateDocLockState();
-
-        if (pendingUrl) {
-          window.open(pendingUrl, "_blank");
-        }
-      };
-    }
-
-
-    const warningClose = document.getElementById("warningClose");
-    if (warningClose) {
-      warningClose.onclick = () => {
-        pendingUrl = null;
-        if (warningBackdrop) {
-          warningBackdrop.classList.remove("active");
-        }
-        modalBackdrop.classList.add("active"); // reopen the main menu
-      };
-    }
-
-
-    /* -------- READ BUTTON → OPEN MAIN MENU (ALWAYS SAME 4 OPTIONS) -------- */
-    document.getElementById("readBtn").onclick = () => {
-      if (!caseLoaded) return;
-      modalBackdrop.classList.add("active");
-    };
-
-    /* -------- WORD LIMITS FOR DOC FIELDS -------- */
-    const WORD_LIMITS = {
-      docSubjective: 100,
-      docObjective:  150,
-      docDx:         60,
-      docPlan:       150,
-      docGoals:      100,
-      docPrognosis:  60
-    };
-
-    function attachWordLimiter(id, limit){
-      const field = document.getElementById(id);
-      if (!field) return;
-
-      const counter = document.querySelector(`.word-counter[data-for="${id}"]`);
-
-      function update(){
-        const text  = field.value.trim();
-        const words = text.length ? text.split(/\s+/) : [];
-
-        // Hard cap: trim extra words
-        if (words.length > limit){
-          field.value = words.slice(0, limit).join(" ");
-        }
-
-        const count = field.value.trim()
-          ? field.value.trim().split(/\s+/).length
-          : 0;
-
-        if (counter){
-          counter.textContent = `${count}/${limit} words`;
-        }
-      }
-
-      field.addEventListener("input", update);
-      // Initialize counter on load
-      update();
-    }
-
-    // Attach limiters for all doc fields
-    Object.entries(WORD_LIMITS).forEach(([id, limit]) => {
-      attachWordLimiter(id, limit);
-    });
-
-    /* -------- DOC SUBMISSION (MAX 3 ATTEMPTS + GRADE BAR) -------- */
-    const gradeBar      = document.getElementById("gradeBar");
-    const gradeFill     = document.getElementById("gradeFill");
-    const gradeLabel    = document.getElementById("gradeLabel");
-    const docSubmitBtn  = document.getElementById("docSubmitBtn");
-    const docStatus     = document.getElementById("docSubmitStatus");
-
-    // simple per-browser limit for this case
-    const ATTEMPT_KEY = "case_001_docAttempts";
-    function getAttempts(){
-      return parseInt(localStorage.getItem(ATTEMPT_KEY) || "0", 10);
-    }
-    function setAttempts(n){
-      localStorage.setItem(ATTEMPT_KEY, String(n));
-    }
-
-    function applyGradeFromAttempts(used){
-      if (!gradeFill || !gradeLabel) return;
-
-      if (used <= 0){
-        gradeFill.style.width = "0%";
-        gradeFill.style.background = "var(--danger)";
-        gradeLabel.textContent = "Not graded yet";
+        window.open(url, "_blank");
         return;
       }
 
-      if (used === 1){
-        gradeFill.style.width = "33%";
-        gradeFill.style.background = "var(--danger)"; // red
-        gradeLabel.textContent = "Novice level (auto-estimate)";
-      } else if (used === 2){
-        gradeFill.style.width = "66%";
-        gradeFill.style.background = "var(--bad)"; // orange
-        gradeLabel.textContent = "Apprentice level (auto-estimate)";
-      } else {
-        gradeFill.style.width = "100%";
-        gradeFill.style.background = "var(--good)"; // green
-        gradeLabel.textContent = "Clinical level (auto-estimate)";
+      pendingUrl = url;
+
+    } else if (label.includes("mmt")) {
+      const url = "https://kingto89.github.io/ROMetrics.com/mmt/?caseToken=MMT-CERVICAL-001";
+
+      if (functionalVisited) {
+        visitedMMT = true;
+        updateDocLockState();
+        window.open(url, "_blank");
+        return;
       }
-    }
 
-    function checkAttemptLock(){
-      const used = getAttempts();
-      applyGradeFromAttempts(used);
+      pendingUrl = url;
 
-      if (used >= 3 && docSubmitBtn && docStatus){
-        docSubmitBtn.disabled = true;
-        docStatus.textContent = "You have used all 3 submission attempts for this case.";
-        docStatus.style.color = "var(--danger)";
+    } else if (label.includes("prognosis")) {
+      const allDone = visitedFunctional && visitedGoniometry && visitedMMT;
+
+      // If they haven't done all 3, block and tell them why
+      if (!allDone) {
+        alert("Complete Functional / ROM, Goniometry, and MMT before writing your prognosis. The prognosis is part of the documentation section.");
+        return;
       }
+
+      // All 3 done → just close the menu, no warning, no URL
+      modalBackdrop.classList.remove("active");
+      return;
     }
 
-    // run once on load
-    checkAttemptLock();
-
-    if (docSubmitBtn && docStatus){
-      docSubmitBtn.onclick = () => {
-        const used = getAttempts();
-            // Block empty submissions
-        const docIds = [
-          "docSubjective",
-          "docObjective",
-          "docDx",
-          "docPlan",
-          "docGoals",
-          "docPrognosis"
-        ];
-        const hasContent = docIds.some(id => {
-          const el = document.getElementById(id);
-          return el && el.value.trim().length > 0;
-        });
-
-        if (!hasContent){
-          docStatus.textContent = "Write your documentation before submitting.";
-          docStatus.style.color = "var(--danger)";
-          return;
-        }
-
-        if (used >= 3){
-          checkAttemptLock();
-          return;
-        }
-
-        const nextCount = used + 1;
-        setAttempts(nextCount);
-        applyGradeFromAttempts(nextCount);
-
-        docStatus.textContent =
-          `Documentation submitted. Attempt ${nextCount} of 3.`;
-        docStatus.style.color = "var(--good)";
-
-        if (nextCount >= 3){
-          docSubmitBtn.disabled = true;
-        }
-      };
+    // If we got here (gonio or MMT needing warning), we still need to show the warning
+    modalBackdrop.classList.remove("active");
+    if (warningBackdrop) {
+      warningBackdrop.classList.add("active");
     }
-      
-  </script>
+  };
+});
+
+
+
+/* -------- WARNING MODAL: SINGLE “OK” BUTTON THAT CONTINUES -------- */
+const warningProceed = document.getElementById("warningProceed");
+const warningBack    = document.getElementById("warningBack");
+
+if (warningProceed) {
+  warningProceed.textContent = "OK — continue to this step";
+  warningProceed.onclick = () => {
+    if (warningBackdrop) {
+      warningBackdrop.classList.remove("active");
+    }
+
+    if (pendingUrl && pendingUrl.includes("goniometry-trainer")) {
+      visitedGoniometry = true;
+    } else if (pendingUrl && pendingUrl.includes("mmt/?caseToken")) {
+      visitedMMT = true;
+    }
+    updateDocLockState();
+
+    if (pendingUrl) {
+      window.open(pendingUrl, "_blank");  // new tab, not over simulator
+    }
+  };
+}
+
+
+
+if (warningBack) {
+  // No second option — hide Back button
+  warningBack.style.display = "none";
+}
+const warningClose = document.getElementById("warningClose");
+if (warningClose) {
+  warningClose.onclick = () => {
+    pendingUrl = null;
+    pendingModuleKey = null; // cancel any planned module
+    if (warningBackdrop) {
+      warningBackdrop.classList.remove("active");
+    }
+    modalBackdrop.classList.add("active"); // reopen the same 4-option menu
+  };
+}
+
+
+/* -------- READ BUTTON → OPEN MAIN MENU (ALWAYS SAME 4 OPTIONS) -------- */
+document.getElementById("readBtn").onclick = () => {
+  if (!caseLoaded) return;
+  modalBackdrop.classList.add("active");
+};
+
+/* -------- WORD LIMITS FOR DOC FIELDS -------- */
+const WORD_LIMITS = {
+  docSubjective: 100,
+  docObjective:  150,
+  docDx:         60,
+  docPlan:       150,
+  docGoals:      100,
+  docPrognosis:  60
+};
+
+function attachWordLimiter(id, limit){
+  const field = document.getElementById(id);
+  if (!field) return;
+
+  const counter = document.querySelector(`.word-counter[data-for="${id}"]`);
+
+  function update(){
+    const text  = field.value.trim();
+    const words = text.length ? text.split(/\s+/) : [];
+
+    // Hard cap: trim extra words
+    if (words.length > limit){
+      field.value = words.slice(0, limit).join(" ");
+    }
+
+    const count = field.value.trim()
+      ? field.value.trim().split(/\s+/).length
+      : 0;
+
+    if (counter){
+      counter.textContent = `${count}/${limit} words`;
+    }
+  }
+
+  field.addEventListener("input", update);
+  // Initialize counter on load
+  update();
+}
+
+// Attach limiters for all doc fields
+Object.entries(WORD_LIMITS).forEach(([id, limit]) => {
+  attachWordLimiter(id, limit);
+});
+
+/* -------- DOC SUBMISSION (MAX 3 ATTEMPTS + GRADE BAR) -------- */
+const gradeBar      = document.getElementById("gradeBar");
+const gradeFill     = document.getElementById("gradeFill");
+const gradeLabel    = document.getElementById("gradeLabel");
+const docSubmitBtn  = document.getElementById("docSubmitBtn");
+const docStatus     = document.getElementById("docSubmitStatus");
+
+// simple per-browser limit for this case
+const ATTEMPT_KEY = "case_001_docAttempts";
+function getAttempts(){
+  return parseInt(localStorage.getItem(ATTEMPT_KEY) || "0", 10);
+}
+function setAttempts(n){
+  localStorage.setItem(ATTEMPT_KEY, String(n));
+}
+
+function applyGradeFromAttempts(used){
+  if (!gradeFill || !gradeLabel) return;
+
+  if (used <= 0){
+    gradeFill.style.width = "0%";
+    gradeFill.style.background = "#f97373";
+    gradeLabel.textContent = "Not graded yet";
+    return;
+  }
+
+  if (used === 1){
+    gradeFill.style.width = "33%";
+    gradeFill.style.background = "#f97373"; // red
+    gradeLabel.textContent = "Novice level (auto-estimate)";
+  } else if (used === 2){
+    gradeFill.style.width = "66%";
+    gradeFill.style.background = "#f97316"; // orange
+    gradeLabel.textContent = "Apprentice level (auto-estimate)";
+  } else {
+    gradeFill.style.width = "100%";
+    gradeFill.style.background = "#22c55e"; // green
+    gradeLabel.textContent = "Clinical level (auto-estimate)";
+  }
+}
+
+function checkAttemptLock(){
+  const used = getAttempts();
+  applyGradeFromAttempts(used);
+
+  if (used >= 3 && docSubmitBtn && docStatus){
+    docSubmitBtn.disabled = true;
+    docStatus.textContent = "You have used all 3 submission attempts for this case.";
+    docStatus.style.color = "#f97373";
+  }
+}
+
+// run once on load
+checkAttemptLock();
+
+if (docSubmitBtn && docStatus){
+  docSubmitBtn.onclick = () => {
+    const used = getAttempts();
+        // Block empty submissions
+    const docIds = [
+      "docSubjective",
+      "docObjective",
+      "docDx",
+      "docPlan",
+      "docGoals",
+      "docPrognosis"
+    ];
+    const hasContent = docIds.some(id => {
+      const el = document.getElementById(id);
+      return el && el.value.trim().length > 0;
+    });
+
+    if (!hasContent){
+      docStatus.textContent = "Write your documentation before submitting.";
+      docStatus.style.color = "#f97373";
+      return;
+    }
+
+    if (used >= 3){
+      checkAttemptLock();
+      return;
+    }
+
+    const nextCount = used + 1;
+    setAttempts(nextCount);
+    applyGradeFromAttempts(nextCount);
+
+    docStatus.textContent =
+      `Documentation submitted. Attempt ${nextCount} of 3.`;
+    docStatus.style.color = "var(--good)";
+
+    if (nextCount >= 3){
+      docSubmitBtn.disabled = true;
+    }
+  };
+}
+  
+</script>
 
 </body>
 </html>
+
