@@ -32,7 +32,7 @@
 
 ---
 
-# Case 3: Cluster Impairment (Red Flag)
+# Case 3: Cluster Impairment 
 
 ## Patient Profile
 - Name: Thomas K.
