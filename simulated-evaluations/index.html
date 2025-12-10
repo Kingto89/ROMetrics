@@ -337,19 +337,19 @@
       }
     };
 
-    const ROUTES = {
-      mmt: "mmt_tokens_index.html",
-      motion: "motion_lab_index.html",
-      gonio: "goniometry_trainer.html",
-      notes: "#"
-    };
+const ROUTES = {
+  mmt: "mmt_tokens_index.html",
+  motion: "motion_lab_index.html",
+  gonio: "goniometry_trainer.html",
+  notes: "#"
+};
 
-    function initialsFromName(name) {
-      if (!name) return "??";
-      const parts = name.trim().split(/\s+/);
-      if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
-      return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
-    }
+function initialsFromName(name) {
+  if (!name) return "??";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+}
 
 function parseCaseMarkdown(rawMd) {
   const lines = rawMd.split(/\r?\n/);
@@ -360,47 +360,37 @@ function parseCaseMarkdown(rawMd) {
     occupation: "",
     setting: "",
     chiefComplaint: "",
-    requiredModules: "",
     scenarioLabel: "",
     tags: []
   };
 
   let inChief = false;
   let chiefLines = [];
-  let inModules = false;
-  const modules = [];
 
   for (let i = 0; i < lines.length; i++) {
     const raw = lines[i];
     const line = raw.trim();
     if (!line) {
-      // stop collecting chief complaint once we hit a blank after capturing something
-      if (inChief && chiefLines.length) {
-        inChief = false;
-      }
+      if (inChief && chiefLines.length) inChief = false;
       continue;
     }
 
-    // Top-level case heading: "# Case 1:", "# Case 2: Hip", etc.
+    // "# Case 1: …"
     if (line.startsWith("# ")) {
       const heading = line.replace(/^#+\s*/, "").trim();
-      if (!c.caseHeading && /^Case/i.test(heading)) {
-        c.caseHeading = heading;
-      }
+      if (!c.caseHeading && /^Case/i.test(heading)) c.caseHeading = heading;
       inChief = false;
-      inModules = false;
       continue;
     }
 
-    // H2s: "## Patient Profile", "## Chief Complaint", "## ROMetrics Module Instructions", etc.
+    // "## Chief Complaint"
     if (line.startsWith("## ")) {
       const h2 = line.replace(/^##\s*/, "").trim();
       inChief = /^chief complaint/i.test(h2);
-      inModules = /rometrics\s+module/i.test(h2); // case-insensitive, forgiving
       continue;
     }
 
-    // Patient Profile bullets: "- Name: ...", "- Age: ...", "- Occupation: ...", "- Setting: ..."
+    // Patient Profile bullets: "- Name: …"
     if (line.startsWith("- ")) {
       const m = line.match(/^-+\s*([A-Za-z ]+):\s*(.+)$/);
       if (m) {
@@ -413,138 +403,123 @@ function parseCaseMarkdown(rawMd) {
       }
     }
 
-    // Chief Complaint text = first non-heading/text block under that H2
+    // Chief Complaint block
     if (inChief) {
-      if (!/^[-#]/.test(line)) { // ignore new headings / bullets
-        chiefLines.push(line);
-      }
-      continue;
-    }
-
-    // ROMetrics Module Instructions -> collect "### ..." subheadings
-    if (inModules) {
-      if (line.startsWith("### ")) {
-        const mod = line.replace(/^###\s*/, "").trim();
-        if (mod) modules.push(mod);
-      }
-      continue;
+      if (!/^[-#]/.test(line)) chiefLines.push(line);
     }
   }
 
-  // Finalize chief complaint (join multi-line, strip quotes)
   c.chiefComplaint = chiefLines.join(" ")
     .replace(/^["“]+/, "")
     .replace(/["”]+$/, "")
     .trim();
 
-  // Scenario pill at top
   c.scenarioLabel = c.caseHeading
     ? "Scenario Loaded: " + c.caseHeading
     : "Scenario Loaded: ROMetrics Case";
 
-  // Simple auto-tags
+  // Tags: setting only (no module names, no duplication)
   c.tags = [];
   if (c.setting) c.tags.push(c.setting);
-  if (modules.length) c.tags.push(...modules);
 
   return c;
 }
 
+function renderTags(tags) {
+  if (!tags || !tags.length) {
+    return `<span class="tag-accent">ROMetrics Simulation</span>`;
+  }
+  return tags.map((t, idx) => {
+    const cls = idx === 0 ? "tag-accent" : "tag";
+    return `<span class="${cls}">${t}</span>`;
+  }).join(" ");
+}
 
-    function renderTags(tags) {
-      if (!tags || !tags.length) {
-        return `<span class="tag-accent">ROMetrics Simulation</span>`;
-      }
-      return tags.map((t, idx) => {
-        const cls = idx === 0 ? "tag-accent" : "tag";
-        return `<span class="${cls}">${t}</span>`;
-      }).join(" ");
-    }
+// Patient Profile: no name, no age, no setting (those live in the top chart only)
+function renderPatientProfile(c) {
+  const list = $("patientProfileList");
+  if (!list) return;
 
-    function renderPatientProfile(c) {
-      const list = $("patientProfileList");
-      if (!list) return;
+  const rows = [];
+  if (c.occupation) rows.push({ label: "Occupation", value: c.occupation });
+  if (c.chiefComplaint) rows.push({ label: "Chief Complaint", value: c.chiefComplaint });
 
-      const rows = [];
-      if (c.age) rows.push({ label: "Age", value: `${c.age} years` });
-      if (c.occupation) rows.push({ label: "Occupation", value: c.occupation });
-      if (c.setting) rows.push({ label: "Setting", value: c.setting });
-      if (c.chiefComplaint) rows.push({ label: "Focus", value: c.chiefComplaint });
+  list.innerHTML = rows.map(r => `
+    <div class="encounter-item">
+      <div class="encounter-top">
+        <span class="enc-type">${r.label}</span>
+      </div>
+      <div class="enc-note">${r.value}</div>
+    </div>
+  `).join("");
+}
 
-      list.innerHTML = rows.map(r => `
-        <div class="encounter-item">
-          <div class="encounter-top">
-            <span class="enc-type">${r.label}</span>
-          </div>
-          <div class="enc-note">${r.value}</div>
-        </div>
-      `).join("");
-    }
+async function applyCase(caseKey) {
+  const caseData = CASE_FILES[caseKey];
+  if (!caseData) return;
 
-    async function applyCase(caseKey) {
-      const caseData = CASE_FILES[caseKey];
-      if (!caseData) return;
+  try {
+    const res = await fetch(caseData.file);
+    if (!res.ok) throw new Error(`Failed to fetch ${caseData.file}`);
+    const rawMd = await res.text();
+    const c = parseCaseMarkdown(rawMd);
 
-      try {
-        const res = await fetch(caseData.file);
-        if (!res.ok) throw new Error(`Failed to fetch ${caseData.file}`);
-        const rawMd = await res.text();
-        const c = parseCaseMarkdown(rawMd);
+    const mrnSuffix = caseKey.split("_")[1] || "000";
+    const mrn = "MRN • " + mrnSuffix;
 
-        const mrnSuffix = caseKey.split("_")[1] || "000";
-        const mrn = "MRN • " + mrnSuffix;
+    const baseName = c.name || "Patient Name";
+    const nameWithAge = c.age
+      ? `${baseName} — ${c.age} y/o`
+      : baseName;
 
-        const nameAge = c.name && c.age
-          ? `${c.name} — ${c.age} y/o`
-          : (c.name || "Patient Name");
+    $("mrnValue").textContent = mrn;
+    $("patientInitials").textContent = initialsFromName(c.name || "");
+    $("patientName").textContent = nameWithAge;
+    $("patientSetting").textContent = c.setting || "Simulation case";
 
-        $("mrnValue").textContent = mrn;
-        $("patientInitials").textContent = initialsFromName(c.name || "");
-        $("patientName").textContent = nameAge;
-        $("patientSetting").textContent = c.setting || "Simulation case";
-        $("patientPrimary").textContent = c.chiefComplaint
-          ? "Primary: " + c.chiefComplaint
-          : "Primary: —";
-        $("patientTags").innerHTML = renderTags(c.tags);
+    // No chief complaint line in the top card
+    if ($("patientPrimary")) $("patientPrimary").textContent = "";
 
-        $("visitTypeValue").textContent = c.setting
-          ? "Simulation: " + c.setting
-          : "Simulation: PT Evaluation";
-        $("chiefComplaintValue").textContent = c.chiefComplaint || "N/A";
-          ? c.tags.join(" • ")
-          : "ROMetrics Simulation";
+    $("patientTags").innerHTML = renderTags(c.tags);
 
-        $("caseIdValue").textContent = caseData.label;
-        $("scenarioSummary").textContent = caseData.scenarioSummary;
-        $("scenarioLabel").textContent = c.scenarioLabel;
+    $("visitTypeValue").textContent = c.setting
+      ? "Simulation: " + c.setting
+      : "Simulation: PT Evaluation";
 
-        renderPatientProfile(c);
-      } catch (err) {
-        console.error("Error loading case:", err);
-        alert(`Error loading case content for ${caseKey}. Check file path and format.`);
-      }
-    }
+    $("chiefComplaintValue").textContent = c.chiefComplaint || "N/A";
 
-    function openRoute(key) {
-      const url = ROUTES[key];
-      if (!url || url === "#") {
-        alert("This linked view is not wired yet in the prototype.");
-        return;
-      }
-      window.location.href = url;
-    }
+    $("caseIdValue").textContent = caseData.label;
+    $("scenarioSummary").textContent = caseData.scenarioSummary;
+    $("scenarioLabel").textContent = c.scenarioLabel;
 
-    document.querySelectorAll("[data-route]").forEach(el => {
-      el.addEventListener("click", () => {
-        const key = el.getAttribute("data-route");
-        openRoute(key);
-      });
-    });
+    renderPatientProfile(c);
+  } catch (err) {
+    console.error("Error loading case:", err);
+    alert(`Error loading case content for ${caseKey}. Check file path and format.`);
+  }
+}
 
-    const caseSelect = $("caseSelect");
-    caseSelect.addEventListener("change", () => {
-      applyCase(caseSelect.value);
-    });
+function openRoute(key) {
+  const url = ROUTES[key];
+  if (!url || url === "#") {
+    alert("This linked view is not wired yet in the prototype.");
+    return;
+  }
+  window.location.href = url;
+}
+
+document.querySelectorAll("[data-route]").forEach(el => {
+  el.addEventListener("click", () => {
+    const key = el.getAttribute("data-route");
+    openRoute(key);
+  });
+});
+
+const caseSelect = $("caseSelect");
+caseSelect.addEventListener("change", () => {
+  applyCase(caseSelect.value);
+});
+
 
     // Init
     applyCase("CASE_001");
