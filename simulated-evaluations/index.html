@@ -638,21 +638,24 @@ if (docSubmitBtn && docStatus){
       c.occupation = grabBullet("Occupation");
       c.setting    = grabBullet("Setting");
 
-      // Section grabber between "## Heading" and next "##"
-      function grabSection(title) {
-        const re = new RegExp(
-          `^##\\s*${title}\\s*[\\r\\n]+([\\s\\S]*?)(?=^##\\s|\\Z)`,
-          "im"
-        );
-        const m = rawMd.match(re);
-        if (!m) return "";
-        return m[1]
-          .replace(/^-+\s*/gm, "")  // strip "- " bullets
-          .replace(/\s+/g, " ")     // collapse whitespace
-          .replace(/^["“]+/, "")
-          .replace(/["”]+$/, "")
-          .trim();
-      }
+// Section grabber between "## Heading" and next "##"
+function grabSection(title) {
+  const re = new RegExp(
+    `^##\\s*${title}\\s*[\\r\\n]+([\\s\\S]*?)(?=^##\\s|\\Z)`,
+    "im"
+  );
+  const m = rawMd.match(re);
+  if (!m) return "";
+  
+  // FIX: Retain line breaks and replace markdown bullets with a visible bullet
+  return m[1]
+    .replace(/^-+\s*/gm, "• ") // 1. Replace all leading Markdown bullets with a visible bullet (• )
+    .replace(/\n\s*\n/g, "\n") // 2. Collapse excessive blank lines
+    .replace(/\n/g, "<br>")    // 3. Replace remaining newlines with an HTML line break
+    .replace(/^["“]+/, "")
+    .replace(/["”]+$/, "")
+    .trim();
+}
 
       c.chiefComplaint = grabSection("Chief Complaint");
       c.hpi            = grabSection("History of Present Illness");
