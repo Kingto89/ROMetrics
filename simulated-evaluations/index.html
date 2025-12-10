@@ -77,6 +77,10 @@
     .module:hover .module-btn{transform:translateY(-1px);box-shadow:0 16px 40px rgba(8,47,73,1);filter:brightness(1.02);}
     .hint-strip{margin-top:2px;font-size:10px;color:#64748b;display:flex;justify-content:space-between;align-items:center;}
     .hint-strip strong{color:#e5e7eb;font-weight:500;}
+    .doc-card{margin-top:14px;border:1px solid var(--border);padding:18px;border-radius:12px;background:#020617;display:none;width:100%;max-width:100%;}
+    .doc-section{margin-bottom:18px;font-size:12px;}
+    .doc-section label{display:block;margin-bottom:6px;font-size:13px;color:var(--muted);}
+    textarea{width:100%;min-height:180px;resize:vertical;border-radius:10px;border:1px solid var(--border);background:#020617;color:var(--ink);padding:10px;font-size:12px;line-height:1.4;}
     @media (max-width:900px){
       main{flex-direction:column;}
       .sidebar{width:100%;max-width:none;}
@@ -265,8 +269,8 @@
             </button>
           </article>
 
-      <!-- SOAP / Documentation panel (locked until all 3 modules visited) -->
-      <div class="doc-card" id="docCard" style="display:block;opacity:0.35;pointer-events:none;margin-top:10px;">
+           <!-- SOAP / Documentation panel (locked until all 3 modules visited) -->
+      <div class="doc-card" id="docCard">
         <h3>Case Documentation — SOAP & Goals</h3>
 
         <div class="doc-section">
