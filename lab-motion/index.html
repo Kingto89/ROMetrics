@@ -1234,33 +1234,35 @@ actionDeg.addEventListener("input", ()=> {
         actionDeg.value = String(val);
         limitHit = true;
 
-        if (isImpairedMotion) {
-          const face = findFaceMesh();
-          if (face && face.morphTargetDictionary && face.morphTargetInfluences) {
+        if (isImpairedMotion && model) {
+          // Apply grimace to ANY skinned mesh that has these shapekeys
+          model.traverse(o => {
+            if (!o.isSkinnedMesh || !o.morphTargetDictionary || !o.morphTargetInfluences) return;
             token.painShapeKeys.forEach(s => {
-              const idx = face.morphTargetDictionary[s.key];
+              const idx = o.morphTargetDictionary[s.key];
               if (idx !== undefined) {
-                face.morphTargetInfluences[idx] = s.value;
+                o.morphTargetInfluences[idx] = s.value;
               }
             });
-          }
+          });
 
           if (!window.ROM_CASE_MODE.notes.cluesShown) {
             alert(token.notes.cluesNote);
             window.ROM_CASE_MODE.notes.cluesShown = true;
           }
         }
-      } else if (isImpairedMotion) {
-        // Slider back under the cap → relax the grimace
-        const face = findFaceMesh();
-        if (face && face.morphTargetDictionary && face.morphTargetInfluences) {
+
+      } else if (isImpairedMotion && model) {
+        // Slider back under the cap → relax grimace on all relevant meshes
+        model.traverse(o => {
+          if (!o.isSkinnedMesh || !o.morphTargetDictionary || !o.morphTargetInfluences) return;
           token.painShapeKeys.forEach(s => {
-            const idx = face.morphTargetDictionary[s.key];
+            const idx = o.morphTargetDictionary[s.key];
             if (idx !== undefined) {
-              face.morphTargetInfluences[idx] = 0;
+              o.morphTargetInfluences[idx] = 0;
             }
           });
-        }
+        });
       }
 
       if (limitHit) {
