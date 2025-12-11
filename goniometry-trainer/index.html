@@ -2156,12 +2156,28 @@ if (CURRENT_ACTION.key==='hip_irer_l' || CURRENT_ACTION.key==='hip_irer_r'){
   // === Generic path (everything else) ===
   applyPairAngle(CURRENT_ACTION.key, CURRENT_ACTION.cfg, signed);
 });
-document.getElementById("autoMoveBtn").onclick = () => {
-    // FIX: Explicitly check if an action is loaded AND if the slider is enabled/ready
-    if (!CURRENT_ACTION || actionDeg.disabled) {
-        log("Cannot run action: No motion selected or slider is disabled.");
-        return; // BLOCK EXECUTION if no action is ready
+
+
+    document.getElementById("autoMoveBtn").onclick = () => {
+  // Failsafe: if CURRENT_ACTION got cleared, rebuild it from the dropdown
+  if (!CURRENT_ACTION) {
+    const v = actionSel.value || "";
+    if (v.startsWith("sep:")) {
+      const [, key, signStr, maxStr] = v.split(":");
+      const cfg = cfgFromKey(key);
+      if (cfg) {
+        CURRENT_ACTION = {
+          mode: "sep",
+          key,
+          cfg,
+          sign: parseInt(signStr, 10),
+          max: parseFloat(maxStr),
+          label: actionSel.options[actionSel.selectedIndex]?.textContent || key
+        };
+        syncActionUI(true);
+      }
     }
+  }
   // 🔒 Hold seated/90–90 posture at the moment the run starts (Hip IR/ER only)
   if (/^hip_irer_/.test(CURRENT_ACTION.key)){
     const side = CURRENT_ACTION.key.endsWith('_l') ? 'l' : 'r';
