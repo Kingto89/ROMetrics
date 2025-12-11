@@ -366,13 +366,13 @@ const CASE_CONFIG = {
     caseId: "case_001",
     label: "Cervical ROM Case",
 
-    // ROM limits for this case
-   impairments: [
-  { motion: "cervical_right_lat_flex", max: 20 },
-  { motion: "cervical_left_lat_flex",  max: 45 },
-  { motion: "cervical_right_rotation", max: 30 },
-  { motion: "cervical_left_rotation",  max: 70 }
-],
+// All impairment rules live here, keyed by motion name
+const CASE_IMPAIRMENTS = {
+  "cervical_right_lat_flex": { max: 20 },
+  "cervical_left_lat_flex":  { max: 45 },
+  "cervical_right_rotation": { max: 30 },
+  "cervical_left_rotation":  { max: 70 }
+};
 
 
     // Menu locking for this case
@@ -511,27 +511,30 @@ function applyCaseMenuLock(menuCfg){
   lockActions();
 }
 
-// Generic clamp using case impairment rules
 window.applyActiveCaseClamp = function(rawVal){
   const mode = window.GONIO_CASE_MODE;
-  if (!mode || !mode.active || !Array.isArray(mode.impairmentRules)){
-    return rawVal;
-  }
+  if (!mode?.active) return rawVal;
+  const impairments = mode.impairmentRules || {};
 
-  // Safely read CURRENT_ACTION without throwing if it's missing
   let current = null;
-  if (typeof CURRENT_ACTION !== "undefined" && CURRENT_ACTION){
-    current = CURRENT_ACTION;
-  }
+  try {
+    if (typeof CURRENT_ACTION !== "undefined" && CURRENT_ACTION)
+      current = CURRENT_ACTION;
+  } catch(e) {}
+
   if (!current) return rawVal;
 
-  const key   = current.key   || "";
-  const label = current.label || "";
-  const side =
-    label.includes("Right") ? "Right" :
-    label.includes("Left")  ? "Left"  : null;
+  const key = current.key || "";
+  const rule = impairments[key];
+  if (!rule || typeof rule.max !== "number") return rawVal;
 
-  let clamped = rawVal;
+  const clamped = Math.min(rawVal, rule.max);
+  if (clamped < rawVal) {
+    console.log(`Case clamp → ${key} limited to ${rule.max}°`);
+    return clamped;
+  }
+  return rawVal;
+};
 
   for (const rule of (mode.impairmentRules || [])){
     if (!rule) continue;
