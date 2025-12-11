@@ -3083,25 +3083,42 @@ const clock = new THREE.Clock();
   const limitInput = panel.querySelector('[data-ci="limit"]');
   const btn       = panel.querySelector('[data-ci="btn"]');
 
-  // Keep UI in sync with CURRENT_ACTION
+  // Keep UI in sync with CURRENT_ACTION (global, not window.*)
   setInterval(() => {
-    const ca = (typeof window.CURRENT_ACTION !== "undefined") ? window.CURRENT_ACTION : null;
+    let ca = null;
+    try {
+      if (typeof CURRENT_ACTION !== "undefined" && CURRENT_ACTION) {
+        ca = CURRENT_ACTION;
+      }
+    } catch (e) {
+      ca = null;
+    }
+
     if (!ca){
       keySpan.textContent = "(none)";
       labelSpan.textContent = "(select a motion)";
       return;
     }
-    keySpan.textContent = ca.key || "(no key)";
+    keySpan.textContent = ca.key   || "(no key)";
     labelSpan.textContent = ca.label || "";
   }, 300);
 
   btn.onclick = () => {
-    const ca = (typeof window.CURRENT_ACTION !== "undefined") ? window.CURRENT_ACTION : null;
+    let ca = null;
+    try {
+      if (typeof CURRENT_ACTION !== "undefined" && CURRENT_ACTION) {
+        ca = CURRENT_ACTION;
+      }
+    } catch (e) {
+      ca = null;
+    }
+
     if (!ca){
       console.warn("Case Impair Tuner: no CURRENT_ACTION selected.");
       alert("No motion selected. Pick a motion first.");
       return;
     }
+
     const limit = parseFloat(limitInput.value) || 0;
 
     // Ready-to-paste impairment rule line
@@ -3109,7 +3126,7 @@ const clock = new THREE.Clock();
 
     console.log("=== CASE IMPAIR SNIPPET ===");
     console.log(snippet);
-    console.log("Paste this into CASE_CONFIG[\"GONIO-CERVICAL-001\"].impairments");
+    console.log('Paste this into CASE_CONFIG["GONIO-CERVICAL-001"].impairments');
     alert("Rule logged to console.\nCheck dev tools → Console and copy the line.");
   };
 })();
