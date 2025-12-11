@@ -367,12 +367,13 @@ const CASE_CONFIG = {
     label: "Cervical ROM Case",
 
     // ROM limits for this case
-    impairments: [
-      { motion: "cerv_lat", side: "Right", max: 20 }, // severe limit
-      { motion: "cerv_lat", side: "Left",  max: 45 }, // normal
-      { motion: "cerv_rot", side: "Right", max: 30 }, // moderate limit
-      { motion: "cerv_rot", side: "Left",  max: 70 }  // normal
-    ],
+   impairments: [
+  { motion: "cervical_right_lat_flex", max: 20 },
+  { motion: "cervical_left_lat_flex",  max: 45 },
+  { motion: "cervical_right_rotation", max: 30 },
+  { motion: "cervical_left_rotation",  max: 70 }
+],
+
 
     // Menu locking for this case
     menu: {
