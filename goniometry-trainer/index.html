@@ -1925,93 +1925,63 @@ actionDeg.addEventListener("input", ()=> {
     val = cap; actionDeg.value = String(val);
     log(`Anticollision limit hit (${CURRENT_ACTION.label}): max ${cap}°`);
   }
-  // --- TOKEN MODE RANGE CLAMP (reuses seated/standing pattern) ---CHECKPOINT
-  if (window.GONIO_TOKEN_MODE && window.GONIO_TOKEN_MODE.active){
-    const t = window.GONIO_TOKEN_MODE;
+  // Signed degrees for the chosen direction line from original logic
+  let signed = CURRENT_ACTION.sign * val;
 
-    // explicit token window [min,max] if provided
-    if (typeof t.min === 'number' || typeof t.max === 'number'){
-      let tMin = (typeof t.min === 'number') ? t.min : 0;
-      let tMax = (typeof t.max === 'number') ? t.max : CURRENT_ACTION.max;
+  // === CASE ROM CLAMPS (GENERIC, PER ACTION & SIDE) ===
+  if (window.GONIO_CASE_MODE && window.GONIO_CASE_MODE.active){
+    const label     = (CURRENT_ACTION.label || "").toLowerCase();
+    const actionKey = CURRENT_ACTION.key;
 
-      // keep inside this motion’s legal window
-      tMin = Math.max(0, tMin);
-      tMax = Math.min(CURRENT_ACTION.max, tMax);
+    // Map: actionKey + side → impairmentKey
+    // Numeric limits live in your active case (via clampAngleForCase).
+    const CASE_ROUTE = {
+      // Cervical case routing
+      cerv_lat: {
+        right: "cervical_right_lat_flex",
+        left:  "cervical_left_lat_flex"
+      },
+      cerv_rot: {
+        right: "cervical_right_rotation",
+        left:  "cervical_left_rotation"
+      },
 
-      if (val < tMin) val = tMin;
-      if (val > tMax) val = tMax;
+      // Hip case routing (case_002)
+      hip_flex: {
+        right: "hip_right_flexion"     // 50° in your case_002 limits
+        // left side is normal in this case → no clamp entry needed
+      },
+      hip_ext: {
+        right: "hip_right_extension"   // 5°
+      },
+      hip_abd: {
+        right: "hip_right_abduction"   // 20°
+      }
+    };
 
-      actionDeg.value = String(val);
-      log(`Token clamp → ${tMin}–${tMax}° (${CURRENT_ACTION.label})`);
-    } else {
-      // no explicit window: fall back to seated/standing COLLIM cap
-      if (typeof cap === 'number' && val > cap){
-        val = cap;
-        actionDeg.value = String(val);
-        log(`Token anticollision clamp → ${cap}° (${CURRENT_ACTION.label})`);
+    let impairmentKey = null;
+    const route = CASE_ROUTE[actionKey];
+
+    if (route){
+      if (label.includes("right") && route.right){
+        impairmentKey = route.right;
+      } else if (label.includes("left") && route.left){
+        impairmentKey = route.left;
+      }
+    }
+
+    if (impairmentKey){
+      const clamped = clampAngleForCase(val, impairmentKey);
+
+      if (clamped < val){
+        val    = clamped;
+        signed = CURRENT_ACTION.sign * val;
+        actionDeg.value = String(clamped);
+        log(`Case clamp → ${clamped}° for ${impairmentKey} (${CURRENT_ACTION.label})`);
       }
     }
   }
 
-  // Signed degrees for the chosen direction line from original logic
-  let signed = CURRENT_ACTION.sign * val;
- // === CASE ROM CLAMPS (CERVICAL) ===
-if (window.GONIO_CASE_MODE && window.GONIO_CASE_MODE.active){
-    let clamped = val;
-    let impairmentKey = null;
-
-
-// --- FINAL CLAMPING LOGIC FOR RIGHT-SIDED IMPAIRMENT ---
-// 1. CERVICAL LATERAL FLEXION
-if (CURRENT_ACTION.key === 'cerv_lat'){
-    // User selects "Right" (IMPAIRED side)
-    if (CURRENT_ACTION.label.includes('Right')) {
-        impairmentKey = 'cervical_right_lat_flex'; // Applies 20° limit
-    } 
-    // User selects "Left" (FULL ROM side)
-    else if (CURRENT_ACTION.label.includes('Left')) {
-        impairmentKey = 'cervical_left_lat_flex'; // Applies 45° limit
-    }
-}
-
-// 2. CERVICAL ROTATION
-else if (CURRENT_ACTION.key === 'cerv_rot'){
-    // User selects "Right" (IMPAIRED side)
-    if (CURRENT_ACTION.label.includes('Right')) {
-        impairmentKey = 'cervical_right_rotation'; // Applies 30° limit
-    } 
-    // User selects "Left" (FULL ROM side)
-    else if (CURRENT_ACTION.label.includes('Left')) {
-        impairmentKey = 'cervical_left_rotation'; // Applies 70° limit
-    }
-}
-// Apply clamp if a key was found (using the magnitude 'val')
-if (impairmentKey){
-    clamped = clampAngleForCase(val, impairmentKey);
-    
-    // If the angle was clamped, update the UI slider value and the signed angle.
-    if (clamped < val){
-        val = clamped;
-        signed = CURRENT_ACTION.sign * val;
-        actionDeg.value = String(clamped);
-        log(`Case clamp → ${clamped}° for ${impairmentKey} (${CURRENT_ACTION.label})`);
-    }
-}
-
-
-    // Apply clamp if a key was found (using the magnitude 'val')
-    if (impairmentKey){
-        clamped = clampAngleForCase(val, impairmentKey);
-        
-        // If the angle was clamped, update the UI slider value and the signed angle.
-        if (clamped < val){
-            val = clamped;
-            signed = CURRENT_ACTION.sign * val;
-            actionDeg.value = String(clamped);
-            log(`Case clamp → ${clamped}° for ${impairmentKey} (${CURRENT_ACTION.label})`);
-        }
-    }
-}
 
 // === DYNAMIC COUPLING: HIP FLEXION to KNEE FLEXION (Only for Non-Sitting) ===
 if (CURRENT_ACTION.key.startsWith('hip_fe_') && CURRENT_ACTION.sign > 0 && positionSel.value !== 'sitting') {
@@ -2911,26 +2881,43 @@ const GONIO_CASE_TOKENS = {
     caseId: "case_001",
     label: "Cervical ROM Case", // Label adjusted for clarity
     allowedRegions: ["cervical"],
-// Impairments for this case: max measured angles
-// Impairments for this case: max measured angles
-impairments: {
-    // 1. RIGHT Lateral Flexion (SEVERE LIMIT)
+    impairments: {
     cervical_right_lat_flex: { max: 20 }, // Impaired side (20°)
-
-    // 2. LEFT Lateral Flexion (Full ROM/Unaffected)
     cervical_left_lat_flex: { max: 45 }, // Full ROM limit (45°)
-
-    // 3. RIGHT Rotation (MODERATE LIMIT)
     cervical_right_rotation: { max: 30 }, // Impaired side (30°)
-
-    // 4. LEFT Rotation (Full ROM/Unaffected)
     cervical_left_rotation: { max: 70 }, // Full ROM limit (70°)
-    
-    // Ensure the required default is still present for MMT token scaling
     default_unrestricted: { max: 99.0 }
+    }
+  },
+const GONIO_CASE_TOKENS = {
+  "GONIO-CERVICAL-001": {
+    caseId: "case_001",
+    label: "Cervical ROM Case - LLF 20°",
+    allowedRegions: ["cervical"],
+    impairments: {
+      cervical_left_lat_flex:  { max: 20 },
+      cervical_right_lat_flex: { max: 45 },
+      cervical_left_rotation:  { max: 15 },
+      cervical_right_rotation: { max: 60 }
+      // ...whatever else you already had here...
+    }
+  },
+
+  // NEW HIP ROM-ONLY CASE TOKEN (GONIOMETRY / ROM ONLY)
+  "GONIO-HIP-001": {
+    caseId: "case_002",
+    label: "Hip ROM Case - Right Flexion 50°",
+    allowedRegions: ["hip"],
+
+    // ROM limits used by Case Mode clamps (Goniometry only)
+    impairments: {
+      hip_right_flexion:   { max: 50 },
+      hip_right_extension: { max: 5  },
+      hip_right_abduction: { max: 20 }
     }
   }
 };
+  
 
   // Small helper: read a query parameter from the URL.
   function getQueryParam(name){
@@ -2996,82 +2983,103 @@ impairments: {
   banner.style.boxShadow = "0 -2px 6px rgba(0,0,0,0.4)";
   document.body.appendChild(banner);
 
-  // === 2) BODY REGION: auto-select ONLY "Cervical Spine" and lock ===
-  function lockCervicalBodyRegion(){
+// === CASE-BASED GONIO MENU LOCKS (BY TOKEN) ===
+(function(){
+
+  // Per-token allowed regions + actions (use your exact option text)
+  const GONIO_MENU_LOCKS = {
+    // Cervical case token
+    "GONIO-CERVICAL-001": {
+      regions: ["Cervical Spine"],
+      actions: [
+        // put the EXACT motion labels from your <select>
+        "Cervical Flexion",
+        "Cervical Extension",
+        "Cervical Left Lateral Flexion",
+        "Cervical Right Lateral Flexion",
+        "Cervical Left Rotation",
+        "Cervical Right Rotation"
+      ]
+    },
+
+    // Hip case token (change token string if yours is different)
+    "GONIO-HIP-002": {
+      regions: ["Hip"],
+      actions: [
+        // ONLY the motions you want open for this hip case
+        "Hip Flexion — Right",
+        "Hip Extension — Right",
+        "Hip Abduction — Right"
+        "Hip Flexion — Left",
+        "Hip Extension — Left",
+        "Hip Abduction — Left"
+      ]
+    }
+  };
+
+  function applyCaseMenuLock(){
+    // Only touch menus when a ROM/GONIO case token is active
+    if (!window.GONIO_CASE_MODE || !window.GONIO_CASE_MODE.active) return;
+
+    const tokenId = window.GONIO_CASE_MODE.tokenId;   // your active token id
+    const cfg     = GONIO_MENU_LOCKS[tokenId];
+    if (!cfg) return; // no menu rules for this token → leave menus normal
+
     const regionSel = document.getElementById("regionSel");
-
-    // wait until dropdown exists and has options
-    if (!regionSel || !regionSel.options || !regionSel.options.length){
-      requestAnimationFrame(lockCervicalBodyRegion);
-      return;
-    }
-
-    const targetLabel = "Cervical Spine";
-    let hasCervical = false;
-
-    // check if that label exists
-    Array.from(regionSel.options).forEach(opt => {
-      const label = (opt.textContent || "").trim();
-      if (label === targetLabel) hasCervical = true;
-    });
-
-    if (!hasCervical){
-      // options not fully populated yet → try again
-      requestAnimationFrame(lockCervicalBodyRegion);
-      return;
-    }
-
-    // remove everything that is NOT "Cervical Spine"
-    Array.from(regionSel.options).forEach(opt => {
-      const label = (opt.textContent || "").trim();
-      if (label !== targetLabel){
-        opt.remove();
-      }
-    });
-
-    // select Cervical Spine (now the ONLY option), fire change once, then lock
-    regionSel.selectedIndex = 0;
-    regionSel.dispatchEvent(new Event("change", { bubbles:true }));
-    regionSel.disabled = true;
-  }
-
-  // === 3) ACTIONS: only keep motions that start with "Cervical" ===
-  function lockCervicalActionsOnly(){
     const actionSel = document.getElementById("actionSel");
 
-    if (!actionSel || !actionSel.options || !actionSel.options.length){
-      requestAnimationFrame(lockCervicalActionsOnly);
+    // wait until dropdowns are populated
+    if (!regionSel || !actionSel ||
+        !regionSel.options || !regionSel.options.length ||
+        !actionSel.options || !actionSel.options.length){
+      requestAnimationFrame(applyCaseMenuLock);
       return;
     }
 
-    Array.from(actionSel.options).forEach(opt => {
-      const label = (opt.textContent || "").trim().toLowerCase();
-      if (!label) return;
+    // --- REGION LOCK: keep only regions listed for this token ---
+    if (cfg.regions && cfg.regions.length){
+      const allowedRegions = cfg.regions.map(r => r.toLowerCase());
 
-      // keep placeholder like "(Select a motion…)" if you have it
-      if (label.includes("select a motion")) return;
+      Array.from(regionSel.options).forEach(opt => {
+        const label = (opt.textContent || "").trim().toLowerCase();
+        if (!allowedRegions.includes(label)){
+          opt.remove();
+        }
+      });
 
-      // remove anything that does NOT start with "cervical"
-      if (!label.startsWith("cervical")){
-        opt.remove();
+      if (regionSel.options.length){
+        regionSel.selectedIndex = 0;
+        regionSel.dispatchEvent(new Event("change", { bubbles:true }));
+        regionSel.disabled = true;
       }
-    });
+    }
 
-    // Optional: auto-select first cervical motion if no placeholder is left
-    if (actionSel.options.length){
-      const firstLabel =
-        (actionSel.options[0].textContent || "").toLowerCase();
-      if (!firstLabel.includes("select a motion")){
+    // --- ACTION LOCK: keep only motions listed for this token ---
+    if (cfg.actions && cfg.actions.length){
+      const allowedActions = cfg.actions.map(a => a.toLowerCase());
+
+      Array.from(actionSel.options).forEach(opt => {
+        const label = (opt.textContent || "").trim().toLowerCase();
+        if (!label) return;
+
+        // keep placeholder like "(Select a motion…)" if you have it
+        if (label.includes("select a motion")) return;
+
+        if (!allowedActions.includes(label)){
+          opt.remove();
+        }
+      });
+
+      if (actionSel.options.length){
         actionSel.selectedIndex = 0;
         actionSel.dispatchEvent(new Event("change", { bubbles:true }));
       }
     }
   }
 
-  lockCervicalBodyRegion();
-  lockCervicalActionsOnly();
+  // Auto-run when in ROM/GONIO case mode; does nothing in normal mode
+  requestAnimationFrame(applyCaseMenuLock);
 })();
-
 
   </script>
 </body>
