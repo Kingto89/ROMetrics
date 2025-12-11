@@ -1995,6 +1995,16 @@ actionDeg.addEventListener("input", ()=> {
       impairmentKey = 'hip_right_abduction';    // 20°
     }
 
+    // --- Trunk case (Case 3) ---
+if (!impairmentKey && CURRENT_ACTION.key === 'trunk_flexion') {
+    if (signed > 0) impairmentKey = 'trunk_flexion';    // 20°
+}
+
+if (!impairmentKey && CURRENT_ACTION.key === 'trunk_extension') {
+    if (signed < 0) impairmentKey = 'trunk_extension';  // 5°
+}
+
+
     // Apply clamp if a key was found (using the magnitude 'val')
     if (impairmentKey){
       const magBefore = Math.abs(val);
@@ -2953,16 +2963,22 @@ const clock = new THREE.Clock();
     allowedRegions: ["hip"],
     // Goniometry-specific limits for this case
     impairments: {
-      // 1. RIGHT Hip Flexion
       hip_right_flexion:  { max: 50 }, // 50° vs 120° normal
-
-      // 2. RIGHT Hip Extension
       hip_right_extension:{ max: 5 },  // 5° vs 15° normal
-
-      // 3. RIGHT Hip Abduction
       hip_right_abduction:{ max: 20 }, // 20° vs 45° normal
+      default_unrestricted: { max: 99.0 }
+    }
+  }
 
-      // Everything else stays normal unless you add it later
+  // Case 3 — Trunk (Thoracic & Lumbar) impairment
+  "GONIO-TRUNK-003": {
+    caseId: "case_003",
+    label: "Trunk ROM Case – Flex 20° / Ext 5°",
+    allowedRegions: ["trunk"],
+    // Goniometry-specific limits for this case
+    impairments: {
+      trunk_flexion:      { max: 20 },
+      trunk_extension:    { max: 5 },
       default_unrestricted: { max: 99.0 }
     }
   }
@@ -3028,10 +3044,10 @@ if (cfg.caseId === "case_002"){
   bannerText = "Case 2 – Hip Impairment: ...";
 }
 
-// Case 3 — whatever you want next
-if (cfg.caseId === "case_003"){
-  bannerText = "Case 3 – Knee Impairment: ...";
+if (cfg.caseId === "case_003") {
+  bannerText = "Case 3 – Cluster Impairment";
 }
+
 
 banner.textContent = bannerText;
   banner.style.position = "fixed";
@@ -3068,12 +3084,16 @@ if (!regionSel || !regionSel.options || !regionSel.options.length){
     const regionKeyToLabel = {
       cervical: "Cervical Spine",
       hip:      "Hip"
+      trunk: "Thoracic & Lumbar Spine",
+
       // later: knee:"Knee", ankle:"Ankle", etc.
     };
 
     const regionKeyToWord = {
       cervical: "cervical",
       hip:      "hip"
+      trunk: "trunk",
+
       // later: knee:"knee", ankle:"ankle", etc. to match your action text
     };
 
