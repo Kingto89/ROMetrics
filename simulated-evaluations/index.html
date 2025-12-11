@@ -655,38 +655,55 @@ function parseCaseMarkdown(rawMd) {
   c.occupation = grabBullet("Occupation");
   c.setting    = grabBullet("Setting");
 
-  // Section grabber: from "## <title>" to next "##"
+
+    // Section grabber: from "## <title>" to next "##"
   function grabSection(title) {
-    const marker = `## ${title}`;
-    const start  = rawMd.indexOf(marker);
-    if (start === -1) return "";
+    // Allow things like "## History of Present Illness (HPI)"
+    const reHeader = new RegExp(
+      `^##\\s*${title}(?:\\s*\\([^)]*\\))?\\s*$`,
+      "im"
+    );
+    const headerMatch = rawMd.match(reHeader);
+    if (!headerMatch) return "";
 
-    let sectionText = rawMd.slice(start + marker.length);
+    const startIdx = headerMatch.index + headerMatch[0].length;
 
-    // stop at next H2
-    const nextIdx = sectionText.indexOf("\n## ");
-    if (nextIdx !== -1) {
-      sectionText = sectionText.slice(0, nextIdx);
+    // Take everything after this heading until the next H2
+    let sectionText = rawMd.slice(startIdx);
+    const nextH2 = sectionText.search(/\n##\s/);
+    if (nextH2 !== -1) {
+      sectionText = sectionText.slice(0, nextH2);
     }
 
-    // split into lines, drop blanks and --- rules
     const lines = sectionText
       .split(/\r?\n/)
       .map(l => l.trim())
-      .filter(l => l.length && !/^---+$/.test(l));
+      .filter(l => l.length && !/^---+$/.test(l)); // drop horizontal rules
 
     if (!lines.length) return "";
 
-    // strip bullets and quotes, then join into one sentence-style block
-    const cleanedLines = lines.map(l =>
-      l
-        .replace(/^[\-•]+\s*/, "")  // remove "- " or "• "
-        .replace(/^["“]+/, "")      // leading quotes
-        .replace(/["”]+$/, "")      // trailing quotes
-    );
+    const cleanedLines = lines.map(l => {
+      // Strip bold markers if they exist
+      l = l.replace(/\*\*/g, "");
 
-    return cleanedLines.join(" ");
+      // Turn markdown bullets (-, *, •) into a clean "• "
+      const bulletMatch = l.match(/^[-*•]+\s*(.+)$/);
+      if (bulletMatch) {
+        return "• " + bulletMatch[1]
+          .replace(/^["“]+/, "")
+          .replace(/["”]+$/, "");
+      }
+
+      // Non-bullet line: just clean quotes
+      return l
+        .replace(/^["“]+/, "")
+        .replace(/["”]+$/, "");
+    });
+
+    // Keep each HPI / CC line on its own line inside the card
+    return cleanedLines.join("<br>");
   }
+
 
   c.chiefComplaint            = grabSection("Chief Complaint");
   c.historyOfPresentIllness   = grabSection("History of Present Illness");
