@@ -366,13 +366,13 @@ const CASE_CONFIG = {
     caseId: "case_001",
     label: "Cervical ROM Case",
 
-// All impairment rules live here, keyed by motion name
-const CASE_IMPAIRMENTS = {
-  "cervical_right_lat_flex": { max: 20 },
-  "cervical_left_lat_flex":  { max: 45 },
-  "cervical_right_rotation": { max: 30 },
-  "cervical_left_rotation":  { max: 70 }
-};
+    // ROM limits for this case
+   impairments: [
+  { motion: "cervical_right_lat_flex", max: 20 },
+  { motion: "cervical_left_lat_flex",  max: 45 },
+  { motion: "cervical_right_rotation", max: 30 },
+  { motion: "cervical_left_rotation",  max: 70 }
+],
 
 
     // Menu locking for this case
@@ -511,30 +511,27 @@ function applyCaseMenuLock(menuCfg){
   lockActions();
 }
 
+// Generic clamp using case impairment rules
 window.applyActiveCaseClamp = function(rawVal){
   const mode = window.GONIO_CASE_MODE;
-  if (!mode?.active) return rawVal;
-  const impairments = mode.impairmentRules || {};
+  if (!mode || !mode.active || !Array.isArray(mode.impairmentRules)){
+    return rawVal;
+  }
 
+  // Safely read CURRENT_ACTION without throwing if it's missing
   let current = null;
-  try {
-    if (typeof CURRENT_ACTION !== "undefined" && CURRENT_ACTION)
-      current = CURRENT_ACTION;
-  } catch(e) {}
-
+  if (typeof CURRENT_ACTION !== "undefined" && CURRENT_ACTION){
+    current = CURRENT_ACTION;
+  }
   if (!current) return rawVal;
 
-  const key = current.key || "";
-  const rule = impairments[key];
-  if (!rule || typeof rule.max !== "number") return rawVal;
+  const key   = current.key   || "";
+  const label = current.label || "";
+  const side =
+    label.includes("Right") ? "Right" :
+    label.includes("Left")  ? "Left"  : null;
 
-  const clamped = Math.min(rawVal, rule.max);
-  if (clamped < rawVal) {
-    console.log(`Case clamp → ${key} limited to ${rule.max}°`);
-    return clamped;
-  }
-  return rawVal;
-};
+  let clamped = rawVal;
 
   for (const rule of (mode.impairmentRules || [])){
     if (!rule) continue;
@@ -3086,46 +3083,52 @@ const clock = new THREE.Clock();
   const limitInput = panel.querySelector('[data-ci="limit"]');
   const btn       = panel.querySelector('[data-ci="btn"]');
 
-  // Keep UI in sync with CURRENT_ACTION (global, not window.*)
+  // Keep UI in sync with the Action menu directly
   setInterval(() => {
-    let ca = null;
-    try {
-      if (typeof CURRENT_ACTION !== "undefined" && CURRENT_ACTION) {
-        ca = CURRENT_ACTION;
-      }
-    } catch (e) {
-      ca = null;
-    }
-
-    if (!ca){
+    const actionSel = document.getElementById("actionSel");
+    if (!actionSel || !actionSel.options || actionSel.selectedIndex < 0) {
       keySpan.textContent = "(none)";
       labelSpan.textContent = "(select a motion)";
       return;
     }
-    keySpan.textContent = ca.key   || "(no key)";
-    labelSpan.textContent = ca.label || "";
-  }, 300);
 
-  btn.onclick = () => {
-    let ca = null;
-    try {
-      if (typeof CURRENT_ACTION !== "undefined" && CURRENT_ACTION) {
-        ca = CURRENT_ACTION;
-      }
-    } catch (e) {
-      ca = null;
+    const opt   = actionSel.options[actionSel.selectedIndex];
+    const key   = opt.value || "";
+    const label = (opt.textContent || "").trim();
+
+    if (!key) {
+      keySpan.textContent = "(none)";
+      labelSpan.textContent = "(select a motion)";
+      return;
     }
 
-    if (!ca){
-      console.warn("Case Impair Tuner: no CURRENT_ACTION selected.");
-      alert("No motion selected. Pick a motion first.");
+    keySpan.textContent   = key;
+    labelSpan.textContent = label;
+  }, 300);
+
+
+   btn.onclick = () => {
+    const actionSel = document.getElementById("actionSel");
+    if (!actionSel || !actionSel.options || actionSel.selectedIndex < 0) {
+      console.warn("Case Impair Tuner: no action selected in menu.");
+      alert("No motion selected. Pick a motion from the Action menu first.");
+      return;
+    }
+
+    const opt   = actionSel.options[actionSel.selectedIndex];
+    const key   = opt.value || "";
+    const label = (opt.textContent || "").trim();
+
+    if (!key) {
+      console.warn("Case Impair Tuner: selected option has no value.");
+      alert("Selected motion has no key. Try another motion.");
       return;
     }
 
     const limit = parseFloat(limitInput.value) || 0;
 
     // Ready-to-paste impairment rule line
-    const snippet = `{ motion: "${ca.key}", max: ${limit} }, // ${ca.label}`;
+    const snippet = `{ motion: "${key}", max: ${limit} }, // ${label}`;
 
     console.log("=== CASE IMPAIR SNIPPET ===");
     console.log(snippet);
