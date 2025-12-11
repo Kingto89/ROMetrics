@@ -524,8 +524,8 @@ window.applyActiveCaseClamp = function(rawVal){
     return rawVal;
   }
 
-  const key   = (window.CURRENT_ACTION && CURRENT_ACTION.key)   || "";
-  const label = (window.CURRENT_ACTION && CURRENT_ACTION.label) || "";
+  const key   = (CURRENT_ACTION && CURRENT_ACTION.key)   || "";
+  const label = (CURRENT_ACTION && CURRENT_ACTION.label) || "";
   const side =
     label.includes("Right") ? "Right" :
     label.includes("Left")  ? "Left"  : null;
