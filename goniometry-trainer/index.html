@@ -1896,8 +1896,8 @@ function buildSeparatedCatalog(list){
     });
     return cat;
   }
-///line 1900 changed for case//
-window.CURRENT_ACTION = null;
+    
+let CURRENT_ACTION = null;
   function cfgFromKey(k){ return [...UPPER,...LOWER].find(x=>x.key===k) || null; }
 
 function fillActionMenu() {
