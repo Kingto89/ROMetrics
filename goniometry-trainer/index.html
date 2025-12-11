@@ -1919,31 +1919,15 @@ actionDeg.addEventListener("input", ()=> {
 
   let val = Math.max(0, Math.min(CURRENT_ACTION.max, parseFloat(actionDeg.value)||0));
 
-  // Anticollision cap (keep this early)
-  const cap = capFor(CURRENT_ACTION);
-  if (typeof cap === 'number' && val > cap){
-    val = cap; actionDeg.value = String(val);
-    log(`Anticollision limit hit (${CURRENT_ACTION.label}): max ${cap}°`);
-  }
-// 2. HIP — Case-mode clamps for Right hip (Case 2: Maria J.)
-if (!impairmentKey && CURRENT_ACTION.key === 'hip_fe_r') {
-    // Flexion (signed > 0) vs Extension (signed < 0)
-    if (signed > 0) {
-        impairmentKey = 'hip_right_flexion';   // 50° max
-    } else if (signed < 0) {
-        impairmentKey = 'hip_right_extension'; // 5° max
-    }
-}
+  // Anticollision cap (keep this early)
+  const cap = capFor(CURRENT_ACTION);
+  if (typeof cap === 'number' && val > cap){
+    val = cap;
+    actionDeg.value = String(val);
+    log(`Anticollision limit hit (${CURRENT_ACTION.label}): max ${cap}°`);
+  }
 
-// 3. HIP — Right abduction only (adduction remains normal)
-if (!impairmentKey && CURRENT_ACTION.key === 'hip_aa_r') {
-    // For the right hip, Abduction uses the negative side (sign < 0)
-    if (signed < 0) {
-        impairmentKey = 'hip_right_abduction'; // 20° max
-    }
-}
-  
-  // --- TOKEN MODE RANGE CLAMP (reuses seated/standing pattern) ---CHECKPOINT
+  // --- TOKEN MODE RANGE CLAMP (reuses seated/standing pattern) --- CHECKPOINT
   if (window.GONIO_TOKEN_MODE && window.GONIO_TOKEN_MODE.active){
     const t = window.GONIO_TOKEN_MODE;
 
@@ -2024,6 +2008,7 @@ if (!impairmentKey && CURRENT_ACTION.key === 'hip_aa_r') {
       }
     }
   }
+
 
 
 // === DYNAMIC COUPLING: HIP FLEXION to KNEE FLEXION (Only for Non-Sitting) ===
