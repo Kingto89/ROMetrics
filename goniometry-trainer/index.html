@@ -510,48 +510,45 @@ function applyCaseMenuLock(menuCfg){
   lockActions();
 }
 
-// Generic clamp using CaseImpairmentsXXX rules.
-// We'll hook this into your ROM logic in the next step.
+// Generic clamp using case impairment rules
 window.applyActiveCaseClamp = function(rawVal){
-    const mode = window.GONIO_CASE_MODE;
-    if (!mode || !mode.active || !Array.isArray(mode.impairmentRules)){
-        return rawVal;
+  const mode = window.GONIO_CASE_MODE;
+  if (!mode || !mode.active || !Array.isArray(mode.impairmentRules)){
+    return rawVal;
+  }
+
+  // Safely read CURRENT_ACTION without throwing if it's missing
+  let current = null;
+  if (typeof CURRENT_ACTION !== "undefined" && CURRENT_ACTION){
+    current = CURRENT_ACTION;
+  }
+  if (!current) return rawVal;
+
+  const key   = current.key   || "";
+  const label = current.label || "";
+  const side =
+    label.includes("Right") ? "Right" :
+    label.includes("Left")  ? "Left"  : null;
+
+  let clamped = rawVal;
+
+  for (const rule of (mode.impairmentRules || [])){
+    if (!rule) continue;
+    if (rule.motion !== key) continue;
+    if (rule.side && rule.side !== side) continue;
+
+    if (typeof rule.max === "number" && clamped > rule.max){
+      clamped = rule.max;
     }
+  }
 
-    // 🛑 UNIVERSAL FIX 1: Safely reference CURRENT_ACTION
-    // This addresses the dev mode error 'CURRENT_ACTION is not defined'
-    const current = (typeof CURRENT_ACTION !== "undefined")
-        ? CURRENT_ACTION
-        : (window.CURRENT_ACTION || null);
+  if (clamped !== rawVal && typeof window.log === "function"){
+    window.log(`Case clamp → ${clamped}° (${key} ${side || ""})`);
+  }
 
-    if (!current) return rawVal;
-
-    const key   = current.key   || "";
-    const label = current.label || "";
-    const side =
-        label.includes("Right") ? "Right" :
-        label.includes("Left")  ? "Left"  : null;
-
-    let initialVal = rawVal; // Store the original value for logging/comparison
-    let clamped = rawVal;
-
-
-    for (const rule of mode.impairmentRules){
-        if (rule.motion !== key) continue;
-        if (rule.side && rule.side !== side) continue;
-
-        if (typeof rule.max === "number" && clamped > rule.max){
-            clamped = rule.max;
-        }
-    }
-
-    // 🛑 UNIVERSAL FIX 2: Replaced undefined variable 'val' with 'initialVal'.
-    if (clamped !== initialVal && typeof window.log === "function"){
-        window.log(`Case clamp → ${clamped}° (${key} ${side || ""})`);
-    }
-
-    return clamped;
+  return clamped;
 };
+
 
 /* 4) INIT ON LOAD (single place) */
 
