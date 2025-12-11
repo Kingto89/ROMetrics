@@ -388,6 +388,37 @@ const CASE_CONFIG = {
 };
 
 
+// Generic case ROM clamp, using CASE_CONFIG.impairments
+function applyCaseImpairments(rawVal){
+  // No active case → no clamp
+  if (!window.GONIO_CASE_MODE || !window.GONIO_CASE_MODE.active) {
+    return rawVal;
+  }
+
+  const token = window.GONIO_CASE_MODE.token;
+  const cfg   = CASE_CONFIG && CASE_CONFIG[token];
+  if (!cfg || !Array.isArray(cfg.impairments)) {
+    return rawVal;
+  }
+
+  // Get current motion key (what the tuner printed, like "sep:cerv_lat:1:45")
+  if (typeof CURRENT_ACTION === "undefined" || !CURRENT_ACTION) {
+    return rawVal;
+  }
+  const key = CURRENT_ACTION.key;
+
+  // Find matching rule
+  const rule = cfg.impairments.find(r => r.motion === key);
+  if (!rule || typeof rule.max !== "number") {
+    return rawVal;
+  }
+
+  const clamped = Math.min(rawVal, rule.max);
+  if (clamped < rawVal && typeof log === "function") {
+    log(`Case clamp → ${clamped}° for ${key} (${CURRENT_ACTION.label})`);
+  }
+  return clamped;
+}
 
 /* 2) RUNTIME STATE */
 
@@ -2136,16 +2167,14 @@ actionDeg.addEventListener("input", ()=> {
 
   let val = Math.max(0, Math.min(CURRENT_ACTION.max, parseFloat(actionDeg.value)||0));
 
-  // Apply active case clamp (if any)
-  if (window.GONIO_CASE_MODE && window.GONIO_CASE_MODE.active &&
-      typeof window.applyActiveCaseClamp === "function"){
-    const caseVal = window.applyActiveCaseClamp(val);
-    if (caseVal !== val){
-      val = caseVal;
+  // --- CASE MODE ROM CLAMP (uses CASE_CONFIG.impairments) ---
+  if (window.GONIO_CASE_MODE && window.GONIO_CASE_MODE.active){
+    const cVal = applyCaseImpairments(val);
+    if (cVal !== val){
+      val = cVal;
       actionDeg.value = String(val);
     }
   }
-
   // Signed degrees for the chosen direction
   let signed = CURRENT_ACTION.sign * val;
 
