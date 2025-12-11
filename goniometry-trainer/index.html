@@ -3055,15 +3055,14 @@ banner.textContent = bannerText;
     const regionKey = allowed[0]; // e.g. "cervical", "hip"
     if (!regionKey) return;
 
-    const regionSel = document.getElementById("regionSel");
-    const actionSel = document.getElementById("actionSel");
+   const regionSel = document.getElementById("regionSel");
+const actionSel = document.getElementById("actionSel");
 
-    // wait until both dropdowns exist and have options
-    if (!regionSel || !regionSel.options || !regionSel.options.length ||
-        !actionSel || !actionSel.options || !actionSel.options.length){
-      requestAnimationFrame(lockBodyRegionAndActionsForCase);
-      return;
-    }
+// wait until REGION dropdown exists and has options
+if (!regionSel || !regionSel.options || !regionSel.options.length){
+  requestAnimationFrame(lockBodyRegionAndActionsForCase);
+  return;
+}
 
     // Map case region → region label + word to search for in actions
     const regionKeyToLabel = {
@@ -3106,6 +3105,14 @@ banner.textContent = bannerText;
     regionSel.selectedIndex = 0;
     regionSel.dispatchEvent(new Event("change", { bubbles:true }));
     regionSel.disabled = true;
+        // if actions not ready yet, wait and then do the action filter
+    if (!actionSel || !actionSel.options || !actionSel.options.length){
+      requestAnimationFrame(lockBodyRegionAndActionsForCase);
+      return;
+    }
+
+    // 2b) ACTIONS: keep all motions whose label CONTAINS the region word
+
 
     // 2b) ACTIONS: keep all motions whose label CONTAINS the region word
     Array.from(actionSel.options).forEach(opt => {
