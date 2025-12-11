@@ -470,16 +470,13 @@ function applyCaseMenuLock(menuCfg){
 
     Array.from(regionSel.options).forEach(opt => {
       const label = (opt.textContent || "").trim().toLowerCase();
-      const val   = (opt.value || "").toLowerCase();
 
-      // remove anything not matching label OR not in allowedValues (if provided)
-      const labelOk = (label === targetRegionLabel);
-      const valueOk = (!allowedValues.length ||
-                      allowedValues.includes(val));
-      if (!(labelOk && valueOk)){
+      // keep ONLY the target label (e.g., "cervical spine")
+      if (label !== targetRegionLabel){
         opt.remove();
       }
     });
+
 
     regionSel.selectedIndex = 0;
     regionSel.dispatchEvent(new Event("change", { bubbles:true }));
