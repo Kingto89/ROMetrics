@@ -2876,74 +2876,80 @@ const clock = new THREE.Clock();
      GONIOMETRY CASE MODE
      ========================= */
 
-// Small helper: read a query parameter from the URL.
-function getQueryParam(name){
-  const params = new URLSearchParams(window.location.search);
-  return params.get(name);
-}
-
-// Global case mode state for the Goniometry Trainer.
-// When inactive, everything behaves normally.
-window.GONIO_CASE_MODE = {
-  active: false,
-  token: null,
-  caseId: null,
-  label: null,
-  allowedRegions: [],
-  impairments: {}
-};
-
-// Helper for the simulation side: build a URL with caseToken.
-window.buildGoniometryCaseUrl = function(baseUrl, caseToken){
-  const u = new URL(baseUrl, window.location.origin);
-  u.searchParams.set("caseToken", caseToken);
-  return u.toString();
-};
-
-// === GONIOMETRY CASE TOKENS (CERVICAL + HIP, EXTEND HERE LATER) ===
 const GONIO_CASE_TOKENS = {
   "GONIO-CERVICAL-001": {
     caseId: "case_001",
-    banner: "CASE MODE — Cervical ROM (severe LLF limit)",
-    regionLock: { label: "Cervical Spine", prefix: "cervical" },
+    label: "Cervical ROM Case", // Label adjusted for clarity
+    allowedRegions: ["cervical"],
     impairments: {
-      // use the same keys you already clamp against
-      cervical_left_lat_flex:  { max: 45 },
-      cervical_right_lat_flex: { max: 20 },
-      cervical_left_rotation:  { max: 70 },
-      cervical_right_rotation: { max: 30 }
+    cervical_right_lat_flex: { max: 20 }, // Impaired side (20°)
+    cervical_left_lat_flex: { max: 45 }, // Full ROM limit (45°)
+    cervical_right_rotation: { max: 30 }, // Impaired side (30°)
+    cervical_left_rotation: { max: 70 }, // Full ROM limit (70°)
+    default_unrestricted: { max: 99.0 }
+    }
+  },
+const GONIO_CASE_TOKENS = {
+  "GONIO-CERVICAL-001": {
+    caseId: "case_001",
+    label: "Cervical ROM Case - LLF 20°",
+    allowedRegions: ["cervical"],
+    impairments: {
+      cervical_left_lat_flex:  { max: 20 },
+      cervical_right_lat_flex: { max: 45 },
+      cervical_left_rotation:  { max: 15 },
+      cervical_right_rotation: { max: 60 }
+      // ...whatever else you already had here...
     }
   },
 
-  "GONIO-HIP-002": {
+  // NEW HIP ROM-ONLY CASE TOKEN (GONIOMETRY / ROM ONLY)
+  "GONIO-HIP-001": {
     caseId: "case_002",
-    banner: "CASE MODE — Right Hip ROM (50° flex, 5° ext, 20° abd)",
-    regionLock: { label: "Hip", prefix: "hip" },
+    label: "Hip ROM Case - Right Flexion 50°",
+    allowedRegions: ["hip"],
+
+    // ROM limits used by Case Mode clamps (Goniometry only)
     impairments: {
-      // hip case limits (RIGHT side)
       hip_right_flexion:   { max: 50 },
-      hip_right_extension: { max: 5 },
+      hip_right_extension: { max: 5  },
       hip_right_abduction: { max: 20 }
     }
   }
-
-  // Add future cases here, e.g.:
-  // "GONIO-HIP-003": {
-  //   caseId: "case_003",
-  //   banner: "CASE MODE — ...",
-  //   regionLock: { label: "Hip", prefix: "hip" },
-  //   impairments: { ... }
-  // }
 };
+  
 
-// Angle clamping helper (used by your CASE ROM CLAMPS block)
-window.clampAngleForCase = function(rawAngleDeg, impairmentKey){
-  if (!window.GONIO_CASE_MODE || !window.GONIO_CASE_MODE.active) return rawAngleDeg;
-  const impair = window.GONIO_CASE_MODE.impairments || {};
-  const lim    = impair[impairmentKey];
-  if (!lim || typeof lim.max !== "number") return rawAngleDeg;
-  return Math.min(rawAngleDeg, lim.max);
-};
+  // Small helper: read a query parameter from the URL.
+  function getQueryParam(name){
+    const params = new URLSearchParams(window.location.search);
+    return params.get(name);
+  }
+
+  // Global case mode state for the Goniometry Trainer.
+  // When inactive, everything behaves normally.
+  window.GONIO_CASE_MODE = {
+    active: false,
+    token: null,
+    caseId: null,
+    label: null,
+    allowedRegions: [],
+    impairments: {}
+  };
+
+  // Helper for the simulation side: build a URL with caseToken.
+  window.buildGoniometryCaseUrl = function(baseUrl, caseToken){
+    const u = new URL(baseUrl, window.location.origin);
+    u.searchParams.set("caseToken", caseToken);
+    return u.toString();
+  };
+
+  // Angle clamping helper
+  window.clampAngleForCase = function(rawAngleDeg, impairmentKey){
+    if (!window.GONIO_CASE_MODE.active) return rawAngleDeg;
+    const lim = window.GONIO_CASE_MODE.impairments[impairmentKey];
+    if (!lim || typeof lim.max !== "number") return rawAngleDeg;
+    return Math.min(rawAngleDeg, lim.max);
+  };
 
 // Initialize case mode (runs once on load)
 (function initGoniometryCaseMode(){
@@ -2951,27 +2957,13 @@ window.clampAngleForCase = function(rawAngleDeg, impairmentKey){
   const cfg   = token && GONIO_CASE_TOKENS[token];
   if (!cfg) return; // no (valid) case token → normal behavior
 
-  // Populate global case mode from this config
+  // Populate global case mode
   window.GONIO_CASE_MODE.active         = true;
   window.GONIO_CASE_MODE.token          = token;
   window.GONIO_CASE_MODE.caseId         = cfg.caseId;
-  window.GONIO_CASE_MODE.label          = cfg.banner;
-  window.GONIO_CASE_MODE.allowedRegions = (cfg.regionLock && cfg.regionLock.label)
-    ? [cfg.regionLock.label]
-    : [];
-  window.GONIO_CASE_MODE.impairments    = Object.assign({}, cfg.impairments || {});
-
-  // Show the banner for THIS case
-  if (typeof showCaseBanner === "function" && cfg.banner){
-    showCaseBanner(cfg.banner);
-  }
-
-  // Lock menus for THIS case
-  if (typeof lockRegionAndActions === "function" && cfg.regionLock){
-    lockRegionAndActions(cfg.regionLock.label, cfg.regionLock.prefix);
-  }
-})();
-
+  window.GONIO_CASE_MODE.label          = cfg.label;
+  window.GONIO_CASE_MODE.allowedRegions = cfg.allowedRegions.slice();
+  window.GONIO_CASE_MODE.impairments    = Object.assign({}, cfg.impairments);
 
   // === 1) Case banner at BOTTOM ===
   const banner = document.createElement("div");
