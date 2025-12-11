@@ -358,6 +358,225 @@ function applyNumTweaks(){
 }
 
 window.addEventListener("load", applyNumTweaks);
+/* ========================= CASE MODE — SINGLE AREA ========================= */
+/* All case defs + engine live here, like NUM_TWEAKS. */
+
+/* 1) CASE DEFINITIONS (CERVICAL CASE 001) */
+
+const CaseImpairments001 = [
+  // motion = CURRENT_ACTION.key, side = "Right"/"Left" from label, max = ROM cap
+  { motion: "cerv_lat", side: "Right", max: 20 }, // severe limit
+  { motion: "cerv_lat", side: "Left",  max: 45 }, // normal
+  { motion: "cerv_rot", side: "Right", max: 30 }, // moderate limit
+  { motion: "cerv_rot", side: "Left",  max: 70 }  // normal
+];
+
+const CaseMenuLock001 = {
+  // Region dropdown text and value(s)
+  regionLabel: "Cervical Spine",      // visible text in <option>
+  allowedRegionValues: ["cervical"],  // regionSel.value for allowed region(s)
+
+  // Action filter: keep actions whose label starts with this (lowercase)
+  actionPrefix: "cervical"
+};
+
+const CaseModeBanner001 = {
+  text: "Case Mode: Cervical ROM Case — token GONIO-CERVICAL-001"
+};
+
+/* Registry: add new cases here only */
+const CASE_CONFIG = {
+  "GONIO-CERVICAL-001": {
+    caseId:  "case_001",
+    label:   "Cervical ROM Case",
+    impairments: CaseImpairments001,
+    menu:       CaseMenuLock001,
+    banner:     CaseModeBanner001
+  }
+};
+
+
+/* 2) RUNTIME STATE */
+
+window.GONIO_CASE_MODE = {
+  active: false,
+  token: null,
+  caseId: null,
+  label: null,
+  impairmentRules: null,  // array like CaseImpairments001
+  menu: null,             // CaseMenuLock001
+  bannerText: null
+};
+
+
+/* 3) HELPERS */
+
+function getCaseTokenFromQuery(){
+  const params = new URLSearchParams(window.location.search);
+  return params.get("caseToken");
+}
+
+// For sim side to build links
+window.buildGoniometryCaseUrl = function(baseUrl, caseToken){
+  const u = new URL(baseUrl, window.location.origin);
+  u.searchParams.set("caseToken", caseToken);
+  return u.toString();
+};
+
+function mountCaseBanner(text){
+  const banner = document.createElement("div");
+  banner.id = "goniometry-case-banner";
+  banner.textContent = text;
+  banner.style.position = "fixed";
+  banner.style.left = "0";
+  banner.style.right = "0";
+  banner.style.bottom = "0";
+  banner.style.zIndex = "9999";
+  banner.style.padding = "8px 12px";
+  banner.style.fontSize = "13px";
+  banner.style.fontWeight = "600";
+  banner.style.textAlign = "center";
+  banner.style.background = "#0f172a";
+  banner.style.color = "#facc15";
+  banner.style.boxShadow = "0 -2px 6px rgba(0,0,0,0.4)";
+  document.body.appendChild(banner);
+}
+
+function applyCaseMenuLock(menuCfg){
+  if (!menuCfg) return;
+
+  const targetRegionLabel = (menuCfg.regionLabel || "").toLowerCase();
+  const allowedValues     = menuCfg.allowedRegionValues || [];
+  const actionPrefix      = (menuCfg.actionPrefix || "").toLowerCase();
+
+  // ---- Lock REGION select ----
+  function lockRegion(){
+    const regionSel = document.getElementById("regionSel");
+    if (!regionSel || !regionSel.options || !regionSel.options.length){
+      requestAnimationFrame(lockRegion);
+      return;
+    }
+
+    let hasTarget = false;
+    Array.from(regionSel.options).forEach(opt => {
+      const label = (opt.textContent || "").trim().toLowerCase();
+      if (label === targetRegionLabel) hasTarget = true;
+    });
+
+    if (!hasTarget){
+      requestAnimationFrame(lockRegion);
+      return;
+    }
+
+    Array.from(regionSel.options).forEach(opt => {
+      const label = (opt.textContent || "").trim().toLowerCase();
+      const val   = (opt.value || "").toLowerCase();
+
+      // remove anything not matching label OR not in allowedValues (if provided)
+      const labelOk = (label === targetRegionLabel);
+      const valueOk = (!allowedValues.length ||
+                      allowedValues.includes(val));
+      if (!(labelOk && valueOk)){
+        opt.remove();
+      }
+    });
+
+    regionSel.selectedIndex = 0;
+    regionSel.dispatchEvent(new Event("change", { bubbles:true }));
+    regionSel.disabled = true;
+  }
+
+  // ---- Lock ACTION select ----
+  function lockActions(){
+    const actionSel = document.getElementById("actionSel");
+    if (!actionSel || !actionSel.options || !actionSel.options.length){
+      requestAnimationFrame(lockActions);
+      return;
+    }
+
+    Array.from(actionSel.options).forEach(opt => {
+      const label = (opt.textContent || "").trim().toLowerCase();
+      if (!label) return;
+
+      // keep placeholder like "(Select a motion…)"
+      if (label.includes("select a motion")) return;
+
+      if (!label.startsWith(actionPrefix)){
+        opt.remove();
+      }
+    });
+
+    if (actionSel.options.length){
+      const firstLabel =
+        (actionSel.options[0].textContent || "").toLowerCase();
+      if (!firstLabel.includes("select a motion")){
+        actionSel.selectedIndex = 0;
+        actionSel.dispatchEvent(new Event("change", { bubbles:true }));
+      }
+    }
+  }
+
+  lockRegion();
+  lockActions();
+}
+
+// Generic clamp using CaseImpairmentsXXX rules.
+// We'll hook this into your ROM logic in the next step.
+window.applyActiveCaseClamp = function(rawVal){
+  const mode = window.GONIO_CASE_MODE;
+  if (!mode || !mode.active || !Array.isArray(mode.impairmentRules)){
+    return rawVal;
+  }
+
+  const key   = (window.CURRENT_ACTION && CURRENT_ACTION.key)   || "";
+  const label = (window.CURRENT_ACTION && CURRENT_ACTION.label) || "";
+  const side =
+    label.includes("Right") ? "Right" :
+    label.includes("Left")  ? "Left"  : null;
+
+  let val     = rawVal;
+  let clamped = rawVal;
+
+  for (const rule of mode.impairmentRules){
+    if (rule.motion !== key) continue;
+    if (rule.side && rule.side !== side) continue;
+
+    if (typeof rule.max === "number" && clamped > rule.max){
+      clamped = rule.max;
+    }
+  }
+
+  if (clamped !== val && typeof window.log === "function"){
+    window.log(`Case clamp → ${clamped}° (${key} ${side || ""})`);
+  }
+
+  return clamped;
+};
+
+
+/* 4) INIT ON LOAD (single place) */
+
+(function initCaseMode(){
+  const token = getCaseTokenFromQuery();
+  if (!token) return;
+
+  const cfg = CASE_CONFIG[token];
+  if (!cfg) return;
+
+  window.GONIO_CASE_MODE.active          = true;
+  window.GONIO_CASE_MODE.token           = token;
+  window.GONIO_CASE_MODE.caseId          = cfg.caseId || null;
+  window.GONIO_CASE_MODE.label           = cfg.label  || token;
+  window.GONIO_CASE_MODE.impairmentRules = cfg.impairments || null;
+  window.GONIO_CASE_MODE.menu            = cfg.menu || null;
+  window.GONIO_CASE_MODE.bannerText      =
+    (cfg.banner && cfg.banner.text) ||
+    ("Case Mode: " + window.GONIO_CASE_MODE.label + " — " + token);
+
+  // Banner + menu lock
+  mountCaseBanner(window.GONIO_CASE_MODE.bannerText);
+  applyCaseMenuLock(window.GONIO_CASE_MODE.menu);
+})();
 
 </script>
 
@@ -1925,7 +2144,9 @@ actionDeg.addEventListener("input", ()=> {
     val = cap; actionDeg.value = String(val);
     log(`Anticollision limit hit (${CURRENT_ACTION.label}): max ${cap}°`);
   }
-
+///CASE RELATED LOGIS ONE LINE BELOW??
+    // Apply active case clamp (if any)
+  val = applyActiveCaseClamp(val);
   // Signed degrees for the chosen direction
   let signed = CURRENT_ACTION.sign * val;
 
