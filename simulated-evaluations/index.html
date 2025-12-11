@@ -623,7 +623,6 @@ const CASE_FILES = {
     if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
     return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
   }
-
 function parseCaseMarkdown(rawMd) {
   const c = {
     caseHeading: "",
@@ -632,7 +631,7 @@ function parseCaseMarkdown(rawMd) {
     occupation: "",
     setting: "",
     chiefComplaint: "",
-    hpi: "",
+    historyOfPresentIllness: "",
     scenarioLabel: "",
     tags: []
   };
@@ -644,7 +643,7 @@ function parseCaseMarkdown(rawMd) {
     if (/^case/i.test(h)) c.caseHeading = h;
   }
 
-  // Patient Profile bullets anywhere in file: "- Name: …"
+  // Simple bullet grabber for Patient Profile
   function grabBullet(label) {
     const re = new RegExp(`^-\\s*${label}:\\s*(.+)$`, "im");
     const m  = rawMd.match(re);
@@ -656,28 +655,41 @@ function parseCaseMarkdown(rawMd) {
   c.occupation = grabBullet("Occupation");
   c.setting    = grabBullet("Setting");
 
-  // Section grabber between "## Heading" and next "##"
+  // Section grabber: from "## <title>" to next "##"
   function grabSection(title) {
-    // allow extra text like "(HPI)" after the heading
-    const re = new RegExp(
-      `^##\\s*${title}(?:\\s*\\([^)]*\\))?\\s*[\\r\\n]+([\\s\\S]*?)(?=^##\\s|\\Z)`,
-      "im"
-    );
-    const m = rawMd.match(re);
-    if (!m) return "";
+    const marker = `## ${title}`;
+    const start  = rawMd.indexOf(marker);
+    if (start === -1) return "";
 
-    return m[1]
-      .replace(/^---.*$/gm, "")        // drop horizontal rules
-      .replace(/^\s*[-•]+\s*/gm, "• ") // normalise bullets to "• "
-      .replace(/\n\s*\n/g, "\n")       // collapse extra blank lines
-      .replace(/\n/g, "<br>")          // show line breaks in sidebar
-      .replace(/^["“]+/, "")
-      .replace(/["”]+$/, "")
-      .trim();
+    let sectionText = rawMd.slice(start + marker.length);
+
+    // stop at next H2
+    const nextIdx = sectionText.indexOf("\n## ");
+    if (nextIdx !== -1) {
+      sectionText = sectionText.slice(0, nextIdx);
+    }
+
+    // split into lines, drop blanks and --- rules
+    const lines = sectionText
+      .split(/\r?\n/)
+      .map(l => l.trim())
+      .filter(l => l.length && !/^---+$/.test(l));
+
+    if (!lines.length) return "";
+
+    // strip bullets and quotes, then join into one sentence-style block
+    const cleanedLines = lines.map(l =>
+      l
+        .replace(/^[\-•]+\s*/, "")  // remove "- " or "• "
+        .replace(/^["“]+/, "")      // leading quotes
+        .replace(/["”]+$/, "")      // trailing quotes
+    );
+
+    return cleanedLines.join(" ");
   }
 
-  c.chiefComplaint = grabSection("Chief Complaint");
-  c.hpi            = grabSection("History of Present Illness");
+  c.chiefComplaint            = grabSection("Chief Complaint");
+  c.historyOfPresentIllness   = grabSection("History of Present Illness");
 
   if (!c.name) c.name = "Patient Name";
   if (!c.age)  c.age  = "??";
@@ -689,38 +701,40 @@ function parseCaseMarkdown(rawMd) {
   return c;
 }
 
-  // ... rest of script ...
+function renderTags() {
+  return '<span class="tag-accent">ROMetrics Simulation</span>';
+}
 
-  function renderTags() {
-    return '<span class="tag-accent">ROMetrics Simulation</span>';
+// Patient Profile shows Occupation + Chief Complaint + full HPI as clean text
+function renderPatientProfile(c) {
+  const list = $("patientProfileList");
+  if (!list) return;
+
+  const items = [];
+
+  if (c.occupation) {
+    items.push({ label: "Occupation", value: c.occupation });
+  }
+  if (c.chiefComplaint) {
+    items.push({ label: "Chief Complaint", value: c.chiefComplaint });
+  }
+  if (c.historyOfPresentIllness) {
+    items.push({
+      label: "History of Present Illness",
+      value: c.historyOfPresentIllness
+    });
   }
 
-  // Patient Profile shows Occupation + Chief Complaint + HPI
-  function renderPatientProfile(c) {
-    const list = $("patientProfileList");
-    if (!list) return;
-
-    const items = [];
-
-    if (c.occupation) {
-      items.push({ label: "Occupation", value: c.occupation });
-    }
-    if (c.chiefComplaint) {
-      items.push({ label: "Chief Complaint", value: c.chiefComplaint });
-    }
-    if (c.hpi) {
-      items.push({ label: "History of Present Illness", value: c.hpi });
-    }
-
-    list.innerHTML = items.map(item => `
-      <div class="encounter-item">
-        <div class="encounter-top">
-          <span class="enc-type">${item.label}</span>
-        </div>
-        <div class="enc-note">${item.value}</div>
+  list.innerHTML = items.map(item => `
+    <div class="encounter-item">
+      <div class="encounter-top">
+        <span class="enc-type">${item.label}</span>
       </div>
-    `).join("");
-  }
+      <div class="enc-note">${item.value}</div>
+    </div>
+  `).join("");
+}
+
 
   async function applyCase(caseKey) {
     const caseData = CASE_FILES[caseKey];
