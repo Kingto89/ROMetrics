@@ -827,7 +827,7 @@ async function loadNoteFile() {
     noteContent.innerHTML = "<i>No placement guide available for this action.</i>";
     return;
   }
-  // FIX: Corrected directory order 
+  // FIX: Corrected directory order and mixed-up names based on your GitHub link.
   const filePath = `https://kingto89.github.io/ROMetrics.com/goniometry-trainer/goniometer-placement-guide/${NOTE_MAP[region]}`;
 
   try {
@@ -1431,8 +1431,8 @@ function freezeBindBaseFor(key, cfg) {
     {key:'trunk_rot', pair:'Trunk — Rotation (L / R)',      side:'', plane:'transverse', neutral:0, min:-45, max:45,  hints:[/^spine01$/i]},
 
     {key:'cerv_fe',   pair:'Cervical Flex / Ext',           side:'', plane:'sagittal',  neutral:0, min:-60, max:50, hints:[/^head$/i]},
-    {key:'cerv_lat',  pair:'Cervical Lat Flex (L / R)',          side:'', plane:'frontal',    neutral:0, min:-45,  max:45,  hints:[/^head$/i]},
-    {key:'cerv_rot',  pair:'Cervical Rotation (L / R)',          side:'', plane:'transverse', neutral:0, min:-70,  max:70,  hints:[/^head$/i]},
+    {key:'cerv_lat',  pair:'Cervical Lat Flex (L / R)',          side:'', plane:'frontal',    neutral:0, min:-45,  max:45,  hints:[/^neck$|cspine|head/i]},
+    {key:'cerv_rot',  pair:'Cervical Rotation (L / R)',          side:'', plane:'transverse', neutral:0, min:-80,  max:80,  hints:[/^neck$|cspine|head/i]},
 
     {key:'clavicle_L', pair:'Clavicle L — Elevation / Depression', side:'l', plane:'frontal', neutral:0, min:-20, max:45, hints:[/clavicle|collar|shoulder|upperarm/i]},
     {key:'clavicle_R', pair:'Clavicle R — Elevation / Depression', side:'r', plane:'frontal', neutral:0, min:-20, max:45, hints:[/clavicle|collar|shoulder|upperarm/i]},
@@ -1925,6 +1925,9 @@ actionDeg.addEventListener("input", ()=> {
     val = cap; actionDeg.value = String(val);
     log(`Anticollision limit hit (${CURRENT_ACTION.label}): max ${cap}°`);
   }
+
+  // Signed degrees for the chosen direction
+  let signed = CURRENT_ACTION.sign * val;
 
 // === DYNAMIC COUPLING: HIP FLEXION to KNEE FLEXION (Only for Non-Sitting) ===
 if (CURRENT_ACTION.key.startsWith('hip_fe_') && CURRENT_ACTION.sign > 0 && positionSel.value !== 'sitting') {
@@ -2777,7 +2780,6 @@ const clock = new THREE.Clock();
      }
   }
 
-
   renderer.render(scene, camera);
   requestAnimationFrame(animate);
 })();
@@ -2798,25 +2800,7 @@ const clock = new THREE.Clock();
   <div id="noteContent" style="margin-top:10px; font-size:13px; line-height:1.45;"></div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js"></script>
-  <div id="notePopup" 
-     style="display:none; position:fixed; right:16px; bottom:16px;
-            width:min(420px,50vw); max-height:70vh;
-            background:#0c1628; color:#e2e8f0;
-            border:1px solid #334155; border-radius:10px;
-            padding:12px; overflow:auto; z-index:200;">
-    <div style="display:flex; align-items:center;">
-      <strong style="font-size:14px;">Goniometer Placement</strong>
-      <button id="closeNote" 
-              style="margin-left:auto; background:transparent; border:0;
-                     color:#9fb0c9; font-size:18px; cursor:pointer;">✕</button>
-    </div>
-    <div id="noteContent" style="margin-top:10px; font-size:13px; line-height:1.45;"></div>
-  </div>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js"></script>
-  <script>
-
-
-  </script>
+</script>
+  
 </body>
 </html>
