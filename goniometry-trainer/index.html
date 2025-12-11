@@ -3022,6 +3022,94 @@ const clock = new THREE.Clock();
   <div id="noteContent" style="margin-top:10px; font-size:13px; line-height:1.45;"></div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js"></script>
+
+  /* ========================= CASE IMPAIRMENT TUNER (DEV) ========================= */
+
+(function initCaseImpairTuner(){
+  if (!window || !document) return;
+
+  const panel = document.createElement("div");
+  panel.id = "caseImpairTuner";
+  panel.style.position = "fixed";
+  panel.style.right = "12px";
+  panel.style.bottom = "48px";
+  panel.style.zIndex = "9999";
+  panel.style.padding = "8px 10px";
+  panel.style.background = "rgba(15,23,42,0.96)";
+  panel.style.border = "1px solid #334155";
+  panel.style.borderRadius = "8px";
+  panel.style.fontFamily = "system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
+  panel.style.fontSize = "11px";
+  panel.style.color = "#e5e7eb";
+  panel.style.boxShadow = "0 8px 20px rgba(0,0,0,0.5)";
+  panel.style.maxWidth = "260px";
+
+  panel.innerHTML = `
+    <div style="font-weight:600; letter-spacing:0.06em; text-transform:uppercase; font-size:10px; margin-bottom:4px; color:#facc15;">
+      Case Impair Tuner
+    </div>
+    <div style="margin-bottom:4px;">
+      <div style="opacity:0.7;">Motion key:</div>
+      <div data-ci="key" style="font-family:monospace; font-size:10px; word-break:break-all;">(none)</div>
+    </div>
+    <div style="margin-bottom:4px;">
+      <div style="opacity:0.7;">Label:</div>
+      <div data-ci="label" style="font-size:10px; line-height:1.2; max-height:32px; overflow:hidden;">(select a motion)</div>
+    </div>
+    <div style="margin-bottom:6px;">
+      <label style="opacity:0.8; display:block; margin-bottom:2px;">Limit (°):</label>
+      <input data-ci="limit" type="number" value="20" min="0" max="180"
+        style="width:80px; padding:2px 4px; font-size:11px; border-radius:4px; border:1px solid #475569; background:#020617; color:#e5e7eb;">
+    </div>
+    <button data-ci="btn"
+      style="width:100%; padding:4px 6px; border-radius:6px; border:none; cursor:pointer;
+             font-size:11px; font-weight:600; letter-spacing:0.04em; text-transform:uppercase;
+             background:#22c55e; color:#020617;">
+      Log Case Rule to Console
+    </button>
+    <div style="margin-top:4px; opacity:0.6; font-size:9px;">
+      Copy from console into CASE_CONFIG.impairments.
+    </div>
+  `;
+
+  document.body.appendChild(panel);
+
+  const keySpan   = panel.querySelector('[data-ci="key"]');
+  const labelSpan = panel.querySelector('[data-ci="label"]');
+  const limitInput = panel.querySelector('[data-ci="limit"]');
+  const btn       = panel.querySelector('[data-ci="btn"]');
+
+  // Keep UI in sync with CURRENT_ACTION
+  setInterval(() => {
+    const ca = (typeof window.CURRENT_ACTION !== "undefined") ? window.CURRENT_ACTION : null;
+    if (!ca){
+      keySpan.textContent = "(none)";
+      labelSpan.textContent = "(select a motion)";
+      return;
+    }
+    keySpan.textContent = ca.key || "(no key)";
+    labelSpan.textContent = ca.label || "";
+  }, 300);
+
+  btn.onclick = () => {
+    const ca = (typeof window.CURRENT_ACTION !== "undefined") ? window.CURRENT_ACTION : null;
+    if (!ca){
+      console.warn("Case Impair Tuner: no CURRENT_ACTION selected.");
+      alert("No motion selected. Pick a motion first.");
+      return;
+    }
+    const limit = parseFloat(limitInput.value) || 0;
+
+    // Ready-to-paste impairment rule line
+    const snippet = `{ motion: "${ca.key}", max: ${limit} }, // ${ca.label}`;
+
+    console.log("=== CASE IMPAIR SNIPPET ===");
+    console.log(snippet);
+    console.log("Paste this into CASE_CONFIG[\"GONIO-CERVICAL-001\"].impairments");
+    alert("Rule logged to console.\nCheck dev tools → Console and copy the line.");
+  };
+})();
+
 </script>
   
 </body>
