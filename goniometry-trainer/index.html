@@ -1947,8 +1947,11 @@ function syncActionUI(forceZero=false){
     actionDeg.disabled = false;
 }
 
-
+///midified 1950 t0 53 for case mose//
 regionSel.onchange = () => {
+  // 🚫 Skip this entire block if case mode already locked the region
+  if (window.GONIO_CASE_MODE && window.GONIO_CASE_MODE.active) return;
+
   const r = regionSel.value;
 
   if (r === "cervical_spine") {
