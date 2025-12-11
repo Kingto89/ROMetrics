@@ -2140,38 +2140,16 @@ actionDeg.addEventListener("input", ()=> {
 
   let val = Math.max(0, Math.min(CURRENT_ACTION.max, parseFloat(actionDeg.value)||0));
 
-  // Anticollision cap (keep this early)
-  const cap = capFor(CURRENT_ACTION);
-  if (typeof cap === 'number' && val > cap){
-    val = cap; actionDeg.value = String(val);
-    log(`Anticollision limit hit (${CURRENT_ACTION.label}): max ${cap}°`);
-  }
-///CASE RELATED LOGIS to lin 2173//
-    // Apply active case clamp (if any)
+  // Apply active case clamp (if any)
+  if (window.GONIO_CASE_MODE && window.GONIO_CASE_MODE.active &&
+      typeof window.applyActiveCaseClamp === "function"){
+    const caseVal = window.applyActiveCaseClamp(val);
+    if (caseVal !== val){
+      val = caseVal;
+      actionDeg.value = String(val);
+    }
+  }
 
-  // ... (inside actionDeg.addEventListener("input", ...) )
-
-  let val = Math.max(0, Math.min(CURRENT_ACTION.max, parseFloat(actionDeg.value)||0));
-
-  // Anticollision cap (keep this early)
-  const cap = capFor(CURRENT_ACTION);
-  if (typeof cap === 'number' && val > cap){
-    val = cap; actionDeg.value = String(val);
-    log(`Anticollision limit hit (${CURRENT_ACTION.label}): max ${cap}°`);
-  }
-  
-// 🛑 UNIVERSAL FIX: Apply case clamp and enforce the limit on the slider (UI)
-  const clampedVal = applyActiveCaseClamp(val);
-  
-  // Check if the case clamp reduced the value (clampedVal < val), and if so,
-  // enforce the limit on the slider's visual position.
-  if (clampedVal < val) {
-    actionDeg.value = String(clampedVal);
-    // The log message is already handled inside applyActiveCaseClamp
-  }
-  
-  val = clampedVal; // Finally, update the local motion variable with the clamped value.
-// ... (rest of the function continues below)
   // Signed degrees for the chosen direction
   let signed = CURRENT_ACTION.sign * val;
 
