@@ -358,42 +358,36 @@ function applyNumTweaks(){
 }
 
 window.addEventListener("load", applyNumTweaks);
-/* ========================= CASE MODE — SINGLE AREA ========================= */
-/* All case defs + engine live here, like NUM_TWEAKS. */
-
-/* 1) CASE DEFINITIONS (CERVICAL CASE 001) */
-
-const CaseImpairments001 = [
-  // motion = CURRENT_ACTION.key, side = "Right"/"Left" from label, max = ROM cap
-  { motion: "cerv_lat", side: "Right", max: 20 }, // severe limit
-  { motion: "cerv_lat", side: "Left",  max: 45 }, // normal
-  { motion: "cerv_rot", side: "Right", max: 30 }, // moderate limit
-  { motion: "cerv_rot", side: "Left",  max: 70 }  // normal
-];
-
-const CaseMenuLock001 = {
-  // Region dropdown text and value(s)
-  regionLabel: "Cervical Spine",      // visible text in <option>
-  allowedRegionValues: ["cervical"],  // regionSel.value for allowed region(s)
-
-  // Action filter: keep actions whose label starts with this (lowercase)
-  actionPrefix: "cervical"
-};
-
-const CaseModeBanner001 = {
-  text: "Case Mode: Cervical ROM Case — token GONIO-CERVICAL-001"
-};
+/* 1) CASE DEFINITIONS (all cases live inside CASE_CONFIG) */
 
 /* Registry: add new cases here only */
 const CASE_CONFIG = {
   "GONIO-CERVICAL-001": {
-    caseId:  "case_001",
-    label:   "Cervical ROM Case",
-    impairments: CaseImpairments001,
-    menu:       CaseMenuLock001,
-    banner:     CaseModeBanner001
+    caseId: "case_001",
+    label: "Cervical ROM Case",
+
+    // ROM limits for this case
+    impairments: [
+      { motion: "cerv_lat", side: "Right", max: 20 }, // severe limit
+      { motion: "cerv_lat", side: "Left",  max: 45 }, // normal
+      { motion: "cerv_rot", side: "Right", max: 30 }, // moderate limit
+      { motion: "cerv_rot", side: "Left",  max: 70 }  // normal
+    ],
+
+    // Menu locking for this case
+    menu: {
+      regionLabel: "Cervical Spine",      // visible text in <option>
+      allowedRegionValues: ["cervical"],  // regionSel.value for allowed region(s)
+      actionPrefix: "cervical"            // filter actions containing "cervical"
+    },
+
+    // Banner text
+    banner: {
+      text: "Case Mode: Cervical ROM Case — token GONIO-CERVICAL-001"
+    }
   }
 };
+
 
 
 /* 2) RUNTIME STATE */
