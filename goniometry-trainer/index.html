@@ -2929,7 +2929,55 @@ impairments: {
     // Ensure the required default is still present for MMT token scaling
     default_unrestricted: { max: 99.0 }
     }
+  },
+  // Case 2: Hip Impairment (Maria J.)
+  "GONIO-HIP-002": {
+    caseId: "case_002",
+    label: "Hip ROM & Weakness Case (Maria J.)",
+    allowedRegions: ["hip", "thoracic_lumbar_spine"], // Allow Hip & T/L Spine
+    // The key must match the logic in the actionDeg 'input' listener (key is 'hip_fe_r', 'hip_aa_r', etc.)
+    impairments: {
+      // Goniometry Limits (Right Side Impaired)
+      hip_fe_r_flexion: { max: 50 },
+      hip_fe_r_extension: { max: 5 },
+      hip_aa_r_abduction: { max: 20 },
+      
+      // Left side (Full ROM) - Used if you expand to compare left motion on same joint
+      hip_fe_l_flexion: { max: 120 },
+      hip_aa_l_abduction: { max: 45 },
+      
+      // Collision Override needs to be active for the hip custom limits to apply.
+      // The region lock will also automatically set the default collision for hip, 
+      // which is then overridden by the custom hip flexion/extension limits above.
+      collision_override_region: "hip",
+      
+      default_unrestricted: { max: 99.0 }
+    }
+  },
+  
+  // Case 3: Cluster Impairment (Tania K.)
+  "GONIO-LUMBAR-003": {
+    caseId: "case_003",
+    label: "Lumbar Stiffness & Cluster Red Flag (Tania K.)",
+    allowedRegions: ["thoracic_lumbar_spine"], // Only allow T/L Spine
+    // The key must match the logic in the actionDeg 'input' listener (key is 'trunk_fe' for T/L Spine F/E)
+    impairments: {
+      // Lumbar Flexion (trunk_fe, positive sign, max is Flexion)
+      trunk_fe_flexion: { max: 20 },
+      
+      // Lumbar Extension (trunk_fe, negative sign, max is Extension magnitude)
+      trunk_fe_extension: { max: 5 },
+      
+      // Lateral Flexion R/L (trunk_lat) - Normal/Mild loss in notes (15°)
+      trunk_lat_right: { max: 15 }, 
+      trunk_lat_left: { max: 15 },
+      
+      collision_override_region: "lumbar",
+      
+      default_unrestricted: { max: 99.0 }
+    }
   }
+};
 };
 
   // Small helper: read a query parameter from the URL.
