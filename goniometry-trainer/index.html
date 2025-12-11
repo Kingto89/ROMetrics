@@ -1974,11 +1974,9 @@ if (!impairmentKey && CURRENT_ACTION.key === 'hip_aa_r') {
   // Signed degrees for the chosen direction line from original logic
   let signed = CURRENT_ACTION.sign * val;
 
-
-    // === CASE ROM CLAMPS (CERVICAL + HIP) ===
-  let impairmentKey = null;
-
+  // === CASE ROM CLAMPS (CERVICAL + HIP) ===
   if (window.GONIO_CASE_MODE && window.GONIO_CASE_MODE.active){
+    let impairmentKey = null;
 
     // --- Cervical case (Case 1) ---
     // 1. Cervical Lateral Flexion (Right vs Left)
@@ -2002,31 +2000,31 @@ if (!impairmentKey && CURRENT_ACTION.key === 'hip_aa_r') {
     // Right hip Flexion vs Extension (same paired control: hip_fe_r)
     if (!impairmentKey && CURRENT_ACTION.key === 'hip_fe_r'){
       if (signed > 0){
-        impairmentKey = 'hip_right_flexion';   // 50°
+        impairmentKey = 'hip_right_flexion';    // 50°
       } else if (signed < 0){
-        impairmentKey = 'hip_right_extension'; // 5°
+        impairmentKey = 'hip_right_extension';  // 5°
       }
     }
 
     // Right hip Abduction only (adduction stays normal)
     if (!impairmentKey && CURRENT_ACTION.key === 'hip_aa_r' && signed < 0){
-      impairmentKey = 'hip_right_abduction';   // 20°
+      impairmentKey = 'hip_right_abduction';    // 20°
+    }
+
+    // Apply clamp if a key was found (using the magnitude 'val')
+    if (impairmentKey){
+      const magBefore = Math.abs(val);
+      const clamped   = clampAngleForCase(magBefore, impairmentKey);
+
+      if (clamped < magBefore){
+        val    = clamped;
+        signed = CURRENT_ACTION.sign * val;
+        actionDeg.value = String(clamped);
+        log(`Case clamp → ${clamped}° for ${impairmentKey} (${CURRENT_ACTION.label})`);
+      }
     }
   }
 
-  // Apply clamp if a key was found (using the magnitude 'val')
-  if (impairmentKey){
-    const magBefore = Math.abs(val);
-    const clamped   = clampAngleForCase(magBefore, impairmentKey);
-
-    if (clamped < magBefore){
-      // Slider always uses positive magnitude; sign comes from CURRENT_ACTION.sign
-      val    = clamped;
-      signed = CURRENT_ACTION.sign * val;
-      actionDeg.value = String(clamped);
-      log(`Case clamp → ${clamped}° for ${impairmentKey} (${CURRENT_ACTION.label})`);
-    }
-  }
 
 // === DYNAMIC COUPLING: HIP FLEXION to KNEE FLEXION (Only for Non-Sitting) ===
 if (CURRENT_ACTION.key.startsWith('hip_fe_') && CURRENT_ACTION.sign > 0 && positionSel.value !== 'sitting') {
