@@ -77,7 +77,7 @@
 
 **Visible impairment:**
 - In standing marching, **left knee lifts near hip height**, right knee only reaches **mid-shin**.  
-- Patient compensates with **forward trunk lean** and sometimes pushes on the right thigh with his hand to help lift.  
+- Patient compensates with **forward trunk lean** and sometimes pushes on the right thigh with her hand to help lift.  
 
 ---
 
