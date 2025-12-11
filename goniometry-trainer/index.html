@@ -2146,10 +2146,31 @@ actionDeg.addEventListener("input", ()=> {
     val = cap; actionDeg.value = String(val);
     log(`Anticollision limit hit (${CURRENT_ACTION.label}): max ${cap}°`);
   }
-///CASE RELATED LOGIS ONE LINE BELOW??
+///CASE RELATED LOGIS to lin 2171//
     // Apply active case clamp (if any)
-  val = applyActiveCaseClamp(val);
-  // Signed degrees for the chosen direction
+
+  // ... (inside actionDeg.addEventListener("input", ...) )
+
+  let val = Math.max(0, Math.min(CURRENT_ACTION.max, parseFloat(actionDeg.value)||0));
+
+  // Anticollision cap (keep this early)
+  const cap = capFor(CURRENT_ACTION);
+  if (typeof cap === 'number' && val > cap){
+    val = cap; actionDeg.value = String(val);
+    log(`Anticollision limit hit (${CURRENT_ACTION.label}): max ${cap}°`);
+  }
+  
+  // 🛑 UNIVERSAL FIX: Apply case clamp and enforce the limit on the slider (UI)
+  const valBeforeCaseClamp = val;
+  val = applyActiveCaseClamp(val);
+  
+  // Check if the case clamp reduced the value, and if so, update the slider's position.
+  if (val < valBeforeCaseClamp) {
+    actionDeg.value = String(val);
+    // The log message is already handled inside applyActiveCaseClamp
+  }
+// ... (rest of the function continues below)
+  // Signed degrees for the chosen direction
   let signed = CURRENT_ACTION.sign * val;
 
 // === DYNAMIC COUPLING: HIP FLEXION to KNEE FLEXION (Only for Non-Sitting) ===
