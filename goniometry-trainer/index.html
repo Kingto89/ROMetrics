@@ -2028,8 +2028,6 @@ if (!impairmentKey && CURRENT_ACTION.key === 'hip_aa_r') {
     }
   }
 
-}
-
 // === DYNAMIC COUPLING: HIP FLEXION to KNEE FLEXION (Only for Non-Sitting) ===
 if (CURRENT_ACTION.key.startsWith('hip_fe_') && CURRENT_ACTION.sign > 0 && positionSel.value !== 'sitting') {
     const side = CURRENT_ACTION.key.endsWith('_l') ? 'l' : 'r';
