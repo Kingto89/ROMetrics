@@ -383,7 +383,7 @@ const CASE_CONFIG = {
 
     // Banner text
     banner: {
-      text: "Case Mode: Cervical ROM Case — token GONIO-CERVICAL-001"
+      text: "Case Mode: Cervical ROM Case — GONIO-CERVICAL-001"
     }
   }
 };
@@ -511,37 +511,46 @@ function applyCaseMenuLock(menuCfg){
 }
 
 // Generic clamp using CaseImpairmentsXXX rules.
-// We'll hook this into your ROM logic in the next step.
 window.applyActiveCaseClamp = function(rawVal){
-  const mode = window.GONIO_CASE_MODE;
-  if (!mode || !mode.active || !Array.isArray(mode.impairmentRules)){
+  try {
+    const mode = window.GONIO_CASE_MODE;
+    // If case mode is off or misconfigured, do nothing.
+    if (!mode || !mode.active || !Array.isArray(mode.impairmentRules)){
+      return rawVal;
+    }
+
+    const key   = (typeof CURRENT_ACTION === "object" && CURRENT_ACTION && CURRENT_ACTION.key)   || "";
+    const label = (typeof CURRENT_ACTION === "object" && CURRENT_ACTION && CURRENT_ACTION.label) || "";
+    const labelLower = String(label).toLowerCase();
+
+    const side =
+      labelLower.includes("right") ? "Right" :
+      labelLower.includes("left")  ? "Left"  : null;
+
+    let clamped = rawVal;
+
+    for (const rule of mode.impairmentRules){
+      if (!rule) continue;
+      if (rule.motion !== key) continue;
+      if (rule.side && rule.side !== side) continue;
+
+      if (typeof rule.max === "number" && clamped > rule.max){
+        clamped = rule.max;
+      }
+    }
+
+    if (clamped !== rawVal && typeof window.log === "function"){
+      window.log(`Case clamp → ${clamped}° (${key} ${side || ""})`);
+    }
+
+    return clamped;
+  } catch (err){
+    // If anything goes wrong, never break ROM — just fall back.
+    console.warn("applyActiveCaseClamp error", err);
     return rawVal;
   }
-
-  const key   = (CURRENT_ACTION && CURRENT_ACTION.key)   || "";
-  const label = (CURRENT_ACTION && CURRENT_ACTION.label) || "";
-  const side =
-    label.includes("Right") ? "Right" :
-    label.includes("Left")  ? "Left"  : null;
-
-  let val     = rawVal;
-  let clamped = rawVal;
-
-  for (const rule of mode.impairmentRules){
-    if (rule.motion !== key) continue;
-    if (rule.side && rule.side !== side) continue;
-
-    if (typeof rule.max === "number" && clamped > rule.max){
-      clamped = rule.max;
-    }
-  }
-
-  if (clamped !== val && typeof window.log === "function"){
-    window.log(`Case clamp → ${clamped}° (${key} ${side || ""})`);
-  }
-
-  return clamped;
 };
+
 
 
 /* 4) INIT ON LOAD (single place) */
@@ -2122,23 +2131,18 @@ if (key==='hip_irer_l' || key==='hip_irer_r'){
     }
     syncActionUI(true);
   });
+  // Apply active case clamp (if any)
+  if (typeof window.applyActiveCaseClamp === "function"){
+    const clamped = applyActiveCaseClamp(val);
+    if (clamped !== val){
+      val = clamped;
+      actionDeg.value = String(val);
+    }
+  }
 
-actionDeg.addEventListener("input", ()=> {
-  if (!CURRENT_ACTION) return;
+  // Signed degrees for the chosen direction line from original logic
+  let signed = CURRENT_ACTION.sign * val;
 
-  let val = Math.max(0, Math.min(CURRENT_ACTION.max, parseFloat(actionDeg.value)||0));
-
-  // Anticollision cap (keep this early)
-  const cap = capFor(CURRENT_ACTION);
-  if (typeof cap === 'number' && val > cap){
-    val = cap; actionDeg.value = String(val);
-    log(`Anticollision limit hit (${CURRENT_ACTION.label}): max ${cap}°`);
-  }
-///CASE RELATED LOGIS ONE LINE BELOW??
-    // Apply active case clamp (if any)
-  val = applyActiveCaseClamp(val);
-  // Signed degrees for the chosen direction
-  let signed = CURRENT_ACTION.sign * val;
 
 // === DYNAMIC COUPLING: HIP FLEXION to KNEE FLEXION (Only for Non-Sitting) ===
 if (CURRENT_ACTION.key.startsWith('hip_fe_') && CURRENT_ACTION.sign > 0 && positionSel.value !== 'sitting') {
