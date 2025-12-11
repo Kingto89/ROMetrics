@@ -3048,94 +3048,91 @@ banner.textContent = bannerText;
   banner.style.boxShadow = "0 -2px 6px rgba(0,0,0,0.4)";
   document.body.appendChild(banner);
 
-// === 2) BODY REGION: auto-select ONLY the case region and lock ===
-function lockBodyRegionForCase(){
-  const regionSel = document.getElementById("regionSel");
-  const allowed   = (window.GONIO_CASE_MODE && window.GONIO_CASE_MODE.allowedRegions) || [];
+  // === 2) BODY REGION + ACTIONS: driven by case region ===
+  function lockBodyRegionAndActionsForCase(){
+    const mode    = window.GONIO_CASE_MODE || {};
+    const allowed = mode.allowedRegions || [];
+    const regionKey = allowed[0]; // e.g. "cervical", "hip"
+    if (!regionKey) return;
 
-  if (!regionSel || !regionSel.options || !regionSel.options.length){
-    requestAnimationFrame(lockBodyRegionForCase);
-    return;
-  }
-  if (!allowed.length) return;
+    const regionSel = document.getElementById("regionSel");
+    const actionSel = document.getElementById("actionSel");
 
-  // Map case region keys → visible labels in the dropdown
-  const regionKeyToLabel = {
-    cervical: "Cervical Spine",
-    hip:      "Hip"
-    // add more later (knee, ankle, etc.) as needed
-  };
-
-  const firstKey    = allowed[0];
-  const targetLabel = regionKeyToLabel[firstKey];
-  if (!targetLabel) return;
-
-  let hasTarget = false;
-  Array.from(regionSel.options).forEach(opt => {
-    const label = (opt.textContent || "").trim();
-    if (label === targetLabel) hasTarget = true;
-  });
-
-  if (!hasTarget){
-    // options not fully populated yet → try again
-    requestAnimationFrame(lockBodyRegionForCase);
-    return;
-  }
-
-  // Remove everything that is NOT the target region
-  Array.from(regionSel.options).forEach(opt => {
-    const label = (opt.textContent || "").trim();
-    if (label !== targetLabel){
-      opt.remove();
+    // wait until both dropdowns exist and have options
+    if (!regionSel || !regionSel.options || !regionSel.options.length ||
+        !actionSel || !actionSel.options || !actionSel.options.length){
+      requestAnimationFrame(lockBodyRegionAndActionsForCase);
+      return;
     }
-  });
 
-  // Select the case region (now the ONLY option), fire change once, then lock
-  regionSel.selectedIndex = 0;
-  regionSel.dispatchEvent(new Event("change", { bubbles:true }));
-  regionSel.disabled = true;
-}
+    // Map case region → region label + word to search for in actions
+    const regionKeyToLabel = {
+      cervical: "Cervical Spine",
+      hip:      "Hip"
+      // later: knee:"Knee", ankle:"Ankle", etc.
+    };
 
-// === 3) ACTIONS: only keep motions for the case region (cervical / hip, etc.) ===
-function lockActionsForCase(){
-  const actionSel = document.getElementById("actionSel");
-  const allowed   = (window.GONIO_CASE_MODE && window.GONIO_CASE_MODE.allowedRegions) || [];
+    const regionKeyToWord = {
+      cervical: "cervical",
+      hip:      "hip"
+      // later: knee:"knee", ankle:"ankle", etc. to match your action text
+    };
 
-  if (!actionSel || !actionSel.options || !actionSel.options.length){
-    requestAnimationFrame(lockActionsForCase);
-    return;
-  }
-  if (!allowed.length) return;
+    const targetLabel = regionKeyToLabel[regionKey];
+    const matchWord   = (regionKeyToWord[regionKey] || "").toLowerCase();
+    if (!targetLabel || !matchWord) return;
 
-  const firstKey = allowed[0];           // e.g. "cervical" or "hip"
-  const prefix   = firstKey.toLowerCase();
+    // 2a) LOCK BODY REGION
+    let hasTarget = false;
+    Array.from(regionSel.options).forEach(opt => {
+      const label = (opt.textContent || "").trim();
+      if (label === targetLabel) hasTarget = true;
+    });
 
-  Array.from(actionSel.options).forEach(opt => {
-    const label = (opt.textContent || "").trim().toLowerCase();
-    if (!label) return;
-
-    // keep placeholder like "(Select a motion…)" if you have it
-    if (label.includes("select a motion")) return;
-
-    // remove anything that does NOT start with the case region name
-    if (!label.startsWith(prefix)){
-      opt.remove();
+    if (!hasTarget){
+      // region list not fully populated yet
+      requestAnimationFrame(lockBodyRegionAndActionsForCase);
+      return;
     }
-  });
 
-  // Optional: auto-select first remaining motion if no placeholder is left
-  if (actionSel.options.length){
-    const firstLabel =
-      (actionSel.options[0].textContent || "").toLowerCase();
-    if (!firstLabel.includes("select a motion")){
-      actionSel.selectedIndex = 0;
-      actionSel.dispatchEvent(new Event("change", { bubbles:true }));
+    // Remove every region that does NOT match targetLabel
+    Array.from(regionSel.options).forEach(opt => {
+      const label = (opt.textContent || "").trim();
+      if (label !== targetLabel){
+        opt.remove();
+      }
+    });
+
+    regionSel.selectedIndex = 0;
+    regionSel.dispatchEvent(new Event("change", { bubbles:true }));
+    regionSel.disabled = true;
+
+    // 2b) ACTIONS: keep all motions whose label CONTAINS the region word
+    Array.from(actionSel.options).forEach(opt => {
+      const label = (opt.textContent || "").trim().toLowerCase();
+      if (!label) return;
+
+      // keep placeholder like "(Select a motion…)" if you have it
+      if (label.includes("select a motion")) return;
+
+      // remove anything that does NOT mention the region word
+      if (!label.includes(matchWord)){
+        opt.remove();
+      }
+    });
+
+    // auto-select first real action if placeholder isn't first
+    if (actionSel.options.length){
+      const firstLabel =
+        (actionSel.options[0].textContent || "").toLowerCase();
+      if (!firstLabel.includes("select a motion")){
+        actionSel.selectedIndex = 0;
+        actionSel.dispatchEvent(new Event("change", { bubbles:true }));
+      }
     }
   }
-}
 
-lockBodyRegionForCase();
-lockActionsForCase();
+  lockBodyRegionAndActionsForCase();
 
 })();
 
