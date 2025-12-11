@@ -624,73 +624,71 @@ const CASE_FILES = {
     return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
   }
 
-  function parseCaseMarkdown(rawMd) {
-    const c = {
-      caseHeading: "",
-      name: "",
-      age: "",
-      occupation: "",
-      setting: "",
-      chiefComplaint: "",
-      hpi: "",
-      scenarioLabel: "",
-      tags: []
-    };
+function parseCaseMarkdown(rawMd) {
+  const c = {
+    caseHeading: "",
+    name: "",
+    age: "",
+    occupation: "",
+    setting: "",
+    chiefComplaint: "",
+    hpi: "",
+    scenarioLabel: "",
+    tags: []
+  };
 
-    // Case heading: "# Case 1: Cervical Impairment"
-    const hMatch = rawMd.match(/^#\s*(.+)$/m);
-    if (hMatch) {
-      const h = hMatch[1].trim();
-      if (/^case/i.test(h)) c.caseHeading = h;
-    }
-// Patient Profile bullets anywhere in file
-function grabBullet(label) {
-  const re = new RegExp(`^-\\s*${label}:\\s*(.+)$`, "im");
-  const m  = rawMd.match(re);
-  return m ? m[1].trim() : "";
-}
-
-c.name       = grabBullet("Name");
-c.age        = grabBullet("Age");
-c.occupation = grabBullet("Occupation");
-c.setting    = grabBullet("Setting");
-
-// Section grabber between "## Heading" and next "##"
-function grabSection(title) {
-  // Allow extra text like "(HPI)" after the heading
-  const re = new RegExp(
-    `^##\\s*${title}(?:\\s*\\([^)]*\\))?\\s*[\\r\\n]+([\\s\\S]*?)(?=^##\\s|\\Z)`,
-    "im"
-  );
-  const m = rawMd.match(re);
-  if (!m) return "";
-
-  return m[1]
-    .replace(/^---.*$/gm, "")        // drop horizontal rules inside the block
-    .replace(/^\s*[-•]+\s*/gm, "• ") // normalise any bullet lines to "• "
-    .replace(/\n\s*\n/g, "\n")       // collapse extra blank lines
-    .replace(/\n/g, "<br>")          // show line breaks in the sidebar
-    .replace(/^["“]+/, "")
-    .replace(/["”]+$/, "")
-    .trim();
-}
-
-c.chiefComplaint = grabSection("Chief Complaint");
-c.hpi            = grabSection("History of Present Illness");
-
-
-    // If parsing fails for basic data, this ensures the chart doesn't break entirely, 
-    // but relies on MD parsing for the actual content.
-    if (!c.name) c.name = "Patient Name";
-    if (!c.age) c.age = "??";
-
-
-    c.scenarioLabel = c.caseHeading
-      ? "Scenario Loaded: " + c.caseHeading
-      : "Scenario Loaded: ROMetrics Case";
-
-    return c;
+  // Case heading: "# Case 1: Cervical Impairment"
+  const hMatch = rawMd.match(/^#\s*(.+)$/m);
+  if (hMatch) {
+    const h = hMatch[1].trim();
+    if (/^case/i.test(h)) c.caseHeading = h;
   }
+
+  // Patient Profile bullets anywhere in file: "- Name: …"
+  function grabBullet(label) {
+    const re = new RegExp(`^-\\s*${label}:\\s*(.+)$`, "im");
+    const m  = rawMd.match(re);
+    return m ? m[1].trim() : "";
+  }
+
+  c.name       = grabBullet("Name");
+  c.age        = grabBullet("Age");
+  c.occupation = grabBullet("Occupation");
+  c.setting    = grabBullet("Setting");
+
+  // Section grabber between "## Heading" and next "##"
+  function grabSection(title) {
+    // allow extra text like "(HPI)" after the heading
+    const re = new RegExp(
+      `^##\\s*${title}(?:\\s*\\([^)]*\\))?\\s*[\\r\\n]+([\\s\\S]*?)(?=^##\\s|\\Z)`,
+      "im"
+    );
+    const m = rawMd.match(re);
+    if (!m) return "";
+
+    return m[1]
+      .replace(/^---.*$/gm, "")        // drop horizontal rules
+      .replace(/^\s*[-•]+\s*/gm, "• ") // normalise bullets to "• "
+      .replace(/\n\s*\n/g, "\n")       // collapse extra blank lines
+      .replace(/\n/g, "<br>")          // show line breaks in sidebar
+      .replace(/^["“]+/, "")
+      .replace(/["”]+$/, "")
+      .trim();
+  }
+
+  c.chiefComplaint = grabSection("Chief Complaint");
+  c.hpi            = grabSection("History of Present Illness");
+
+  if (!c.name) c.name = "Patient Name";
+  if (!c.age)  c.age  = "??";
+
+  c.scenarioLabel = c.caseHeading
+    ? "Scenario Loaded: " + c.caseHeading
+    : "Scenario Loaded: ROMetrics Case";
+
+  return c;
+}
+
   // ... rest of script ...
 
   function renderTags() {
