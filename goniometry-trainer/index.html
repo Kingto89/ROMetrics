@@ -2146,7 +2146,7 @@ actionDeg.addEventListener("input", ()=> {
     val = cap; actionDeg.value = String(val);
     log(`Anticollision limit hit (${CURRENT_ACTION.label}): max ${cap}°`);
   }
-///CASE RELATED LOGIS to lin 2171//
+///CASE RELATED LOGIS to lin 2173//
     // Apply active case clamp (if any)
 
   // ... (inside actionDeg.addEventListener("input", ...) )
@@ -2160,15 +2160,17 @@ actionDeg.addEventListener("input", ()=> {
     log(`Anticollision limit hit (${CURRENT_ACTION.label}): max ${cap}°`);
   }
   
-  // 🛑 UNIVERSAL FIX: Apply case clamp and enforce the limit on the slider (UI)
-  const valBeforeCaseClamp = val;
-  val = applyActiveCaseClamp(val);
+// 🛑 UNIVERSAL FIX: Apply case clamp and enforce the limit on the slider (UI)
+  const clampedVal = applyActiveCaseClamp(val);
   
-  // Check if the case clamp reduced the value, and if so, update the slider's position.
-  if (val < valBeforeCaseClamp) {
-    actionDeg.value = String(val);
+  // Check if the case clamp reduced the value (clampedVal < val), and if so,
+  // enforce the limit on the slider's visual position.
+  if (clampedVal < val) {
+    actionDeg.value = String(clampedVal);
     // The log message is already handled inside applyActiveCaseClamp
   }
+  
+  val = clampedVal; // Finally, update the local motion variable with the clamped value.
 // ... (rest of the function continues below)
   // Signed degrees for the chosen direction
   let signed = CURRENT_ACTION.sign * val;
