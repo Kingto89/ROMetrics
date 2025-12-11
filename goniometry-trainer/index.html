@@ -511,21 +511,28 @@ function applyCaseMenuLock(menuCfg){
 }
 
 // Generic clamp using CaseImpairmentsXXX rules.
-// We'll hook this into your ROM logic in the next step.
-window.applyActiveCaseClamp = function(rawVal){
-  const mode = window.GONIO_CASE_MODE;
-  if (!mode || !mode.active || !Array.isArray(mode.impairmentRules)){
-    return rawVal;
-  }
+window.applyActiveCaseClamp = function (rawVal) {
+  try {
+    const mode = window.GONIO_CASE_MODE;
+    if (!mode || !mode.active || !Array.isArray(mode.impairmentRules)) {
+      return rawVal;
+    }
 
-  const key   = (CURRENT_ACTION && CURRENT_ACTION.key)   || "";
-  const label = (CURRENT_ACTION && CURRENT_ACTION.label) || "";
-  const side =
-    label.includes("Right") ? "Right" :
-    label.includes("Left")  ? "Left"  : null;
+    // ✅ Safely reference CURRENT_ACTION whether it's local or global
+    const current = (typeof CURRENT_ACTION !== "undefined")
+      ? CURRENT_ACTION
+      : (window.CURRENT_ACTION || null);
 
-  let val     = rawVal;
-  let clamped = rawVal;
+    if (!current) return rawVal;
+
+    const key   = current.key   || "";
+    const label = current.label || "";
+    const side =
+      label.includes("Right") ? "Right" :
+      label.includes("Left")  ? "Left"  : null;
+
+    let clamped = rawVal;
+
 
   for (const rule of mode.impairmentRules){
     if (rule.motion !== key) continue;
@@ -1889,8 +1896,8 @@ function buildSeparatedCatalog(list){
     });
     return cat;
   }
-
-  let CURRENT_ACTION = null;
+///line 1900 changed for case//
+window.CURRENT_ACTION = null;
   function cfgFromKey(k){ return [...UPPER,...LOWER].find(x=>x.key===k) || null; }
 
 function fillActionMenu() {
