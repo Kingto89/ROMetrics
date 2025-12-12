@@ -1490,8 +1490,6 @@ actionDeg.addEventListener("input", ()=> {
       limitHit = true;
 
       if (isImpairedMotion && model) {
-        const shapes = token.painShapeKeys || [];
-
         // Apply grimace to ANY skinned mesh that has these shapekeys
         model.traverse(o => {
           if (!o.isSkinnedMesh || !o.morphTargetDictionary || !o.morphTargetInfluences) return;
@@ -1510,8 +1508,6 @@ actionDeg.addEventListener("input", ()=> {
       }
 
     } else if (isImpairedMotion && model) {
-    const shapes = token.painShapeKeys || [];
-  
       // Slider back under the cap → relax grimace on all relevant meshes
       model.traverse(o => {
         if (!o.isSkinnedMesh || !o.morphTargetDictionary || !o.morphTargetInfluences) return;
