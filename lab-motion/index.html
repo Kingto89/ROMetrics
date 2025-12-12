@@ -1824,16 +1824,31 @@ else if (caseId === "case_003") {
   const imp = cfg.impairments || {};
   COLLIM.enabled = true;
 
-  // Flexion (e.g. 20°)
+  // Flexion (20°)
   if (imp.trunk_flexion?.max !== undefined)
     COLLIM.trunkFlexMax = imp.trunk_flexion.max;
 
-  // Extension (e.g. 5°)
+  // Extension (5°)
   if (imp.trunk_extension?.max !== undefined)
     COLLIM.trunkExtMax = imp.trunk_extension.max;
 
+  // Lateral Flexion L/R (15° each)
+  if (imp.trunk_lat_left?.max !== undefined)
+    COLLIM.trunkLatLMax = imp.trunk_lat_left.max;
+
+  if (imp.trunk_lat_right?.max !== undefined)
+    COLLIM.trunkLatRMax = imp.trunk_lat_right.max;
+
+  // Rotation L/R (20° each)
+  if (imp.trunk_rot_left?.max !== undefined)
+    COLLIM.trunkRotLMax = imp.trunk_rot_left.max;
+
+  if (imp.trunk_rot_right?.max !== undefined)
+    COLLIM.trunkRotRMax = imp.trunk_rot_right.max;
+
   COLLIM.save();
-      }
+}
+
   // ==========================
   // FUTURE CASES (3–15)
   // ==========================
