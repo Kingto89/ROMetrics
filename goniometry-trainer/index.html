@@ -2980,10 +2980,20 @@ const clock = new THREE.Clock();
   label: "Cluster Impairment",
   allowedRegions: ["thoracic_lumbar_spine"],
   impairments: {
-    trunk_flexion:  { max: 20 },
-    trunk_extension:{ max: 5 }
+    // Lumbar/Trunk Flexion & Extension
+    trunk_flexion:        { max: 20 }, // Flexion 20°
+    trunk_extension:      { max: 5  }, // Extension 5°
+
+    // Lateral Flexion (R/L)
+    trunk_lat_right:      { max: 15 }, // Right lat flex 15°
+    trunk_lat_left:       { max: 15 }, // Left  lat flex 15°
+
+    // Rotation (R/L)
+    trunk_rotation_right: { max: 20 }, // Right rotation 20°
+    trunk_rotation_left:  { max: 20 }  // Left  rotation 20°
   }
 }
+
 
   // You can keep stacking more cases here later:
   // "GONIO-XXXX-003": { caseId:"case_003", label:"...", allowedRegions:["..."], impairments:{ ... } }
