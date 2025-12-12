@@ -1392,10 +1392,13 @@ function resetPainExpression(){
   });
 }
 
-actionDeg.addEventListener("input", ()=> {
+actionDeg.addEventListener("input", () => {
   if (!CURRENT_ACTION) return;
 
-  let val = Math.max(0, Math.min(CURRENT_ACTION.max, parseFloat(actionDeg.value)||0));
+  let val = Math.max(
+    0,
+    Math.min(CURRENT_ACTION.max, parseFloat(actionDeg.value) || 0)
+  );
   let isImpairedMotion = false;
   let limitHit = false;
 
@@ -1403,23 +1406,22 @@ actionDeg.addEventListener("input", ()=> {
   if (window.ROM_CASE_MODE.active && window.ROM_CASE_MODE.token) {
     const token  = window.ROM_CASE_MODE.token;
     const caseId = token.caseId || "";
-    let cap = capFor(CURRENT_ACTION);
+    let cap      = capFor(CURRENT_ACTION);
 
     // ==========================
-    // CASE 1 — Cervical (original)
+    // CASE 1 — Cervical
     // ==========================
     if (caseId === "case_001") {
-      // For this lab case we only impair:
+      // Impair:
       //   - Cervical Rotation — Right
       //   - Cervical Lateral Flexion — Right
-      if (CURRENT_ACTION.key === 'cerv_rot' || CURRENT_ACTION.key === 'cerv_lat') {
-        const isRight = CURRENT_ACTION.label.includes('Right'); // menu label includes "Right"
+      if (CURRENT_ACTION.key === "cerv_rot" || CURRENT_ACTION.key === "cerv_lat") {
+        const isRight = CURRENT_ACTION.label.includes("Right");
         if (isRight) {
-          // Map to impairment keys: cerv_rot_r / cerv_lat_r
           const impKey =
-            CURRENT_ACTION.key === 'cerv_rot' ? 'cerv_rot_r' : 'cerv_lat_r';
+            CURRENT_ACTION.key === "cerv_rot" ? "cerv_rot_r" : "cerv_lat_r";
           const imp = token.impairments && token.impairments[impKey];
-          if (imp && typeof imp.max === 'number') {
+          if (imp && typeof imp.max === "number") {
             cap = imp.max;
             isImpairedMotion = true;
           }
@@ -1431,66 +1433,67 @@ actionDeg.addEventListener("input", ()=> {
     // CASE 2 — Right Hip ROM loss
     // ==========================
     else if (caseId === "case_002") {
-      // Hip Flexion / Extension — same slider (hip_fe_r)
-      if (CURRENT_ACTION.key === 'hip_fe_r') {
-        const isFlex = CURRENT_ACTION.label.includes('Flexion');
-        const isExt  = CURRENT_ACTION.label.includes('Extension');
+      // Hip Flexion / Extension (same control: hip_fe_r)
+      if (CURRENT_ACTION.key === "hip_fe_r") {
+        const isFlex = CURRENT_ACTION.label.includes("Flexion");
+        const isExt  = CURRENT_ACTION.label.includes("Extension");
 
         let impKey = null;
-        if (isFlex) impKey = 'hip_flex_r';  // e.g. 50°
-        else if (isExt) impKey = 'hip_ext_r'; // e.g. 5°
+        if (isFlex)      impKey = "hip_flex_r";
+        else if (isExt)  impKey = "hip_ext_r";
 
         if (impKey) {
           const imp = token.impairments && token.impairments[impKey];
-          if (imp && typeof imp.max === 'number') {
+          if (imp && typeof imp.max === "number") {
             cap = imp.max;
             isImpairedMotion = true;
           }
         }
       }
-
-      // Hip Abduction — only limit Abduction side (hip_aa_r)
-      else if (CURRENT_ACTION.key === 'hip_aa_r') {
-        const isAbd = CURRENT_ACTION.label.includes('Abduction');
+      // Hip Abduction — only limit Abduction
+      else if (CURRENT_ACTION.key === "hip_aa_r") {
+        const isAbd = CURRENT_ACTION.label.includes("Abduction");
         if (isAbd) {
-          const imp = token.impairments && token.impairments['hip_abd_r']; // e.g. 20°
-          if (imp && typeof imp.max === 'number') {
+          const imp = token.impairments && token.impairments["hip_abd_r"];
+          if (imp && typeof imp.max === "number") {
             cap = imp.max;
             isImpairedMotion = true;
           }
         }
       }
-      // (Adduction & rotations stay normal for this case.)
- 
- // CASE 3 — Lumbar trunk flexion / extension:
-      // Maps to impairments: trunk_flexion / trunk_extension
-      } else if (CURRENT_ACTION.key === 'trunk_fe') {
-        const isFlex = CURRENT_ACTION.label.includes('Flexion');
-        const impKey = isFlex ? 'trunk_flexion' : 'trunk_extension';
+      // Adduction + rotations stay normal.
+    }
+
+    // ==========================
+    // CASE 3 — Lumbar Cluster (trunk flex/ext)
+    // ==========================
+    else if (caseId === "case_003") {
+      // Your trunk FE control key:
+      if (CURRENT_ACTION.key === "trunk_fe") {
+        const isFlex = CURRENT_ACTION.label.includes("Flexion");
+        const impKey = isFlex ? "trunk_flexion" : "trunk_extension";
         const imp    = token.impairments && token.impairments[impKey];
-        if (imp && typeof imp.max === 'number') {
+
+        if (imp && typeof imp.max === "number") {
           cap = imp.max;
           isImpairedMotion = true;
         }
       }
+      // Lat flex / rotation stay WNL
+    }
+
     // ==========================
-    // FUTURE CASES (3–15)
-    // Add more blocks here:
-    //
-    // else if (caseId === "case_003") { ... }
+    // Add future cases here
     // else if (caseId === "case_004") { ... }
-    //
-    // No other logic in this handler needs to change.
     // ==========================
 
-    // Apply Hard Stop and Grimace Trigger (unchanged)
-    if (typeof cap === 'number' && val > cap) {
+    // --- Hard Stop + Grimace ---
+    if (typeof cap === "number" && val > cap) {
       val = cap;
       actionDeg.value = String(val);
       limitHit = true;
 
       if (isImpairedMotion && model) {
-        // Apply grimace to ANY skinned mesh that has these shapekeys
         model.traverse(o => {
           if (!o.isSkinnedMesh || !o.morphTargetDictionary || !o.morphTargetInfluences) return;
           token.painShapeKeys.forEach(s => {
@@ -1501,14 +1504,15 @@ actionDeg.addEventListener("input", ()=> {
           });
         });
 
-        if (!window.ROM_CASE_MODE.notes.cluesShown) {
+        // First-time clue popup per case
+        if (!window.ROM_CASE_MODE.notes.cluesShown && token.notes && token.notes.cluesNote) {
           alert(token.notes.cluesNote);
           window.ROM_CASE_MODE.notes.cluesShown = true;
         }
       }
 
     } else if (isImpairedMotion && model) {
-      // Slider back under the cap → relax grimace on all relevant meshes
+      // Slider back under cap → relax grimace
       model.traverse(o => {
         if (!o.isSkinnedMesh || !o.morphTargetDictionary || !o.morphTargetInfluences) return;
         token.painShapeKeys.forEach(s => {
@@ -1523,10 +1527,15 @@ actionDeg.addEventListener("input", ()=> {
     if (limitHit) {
       log(`Motion Limit Hit (${CURRENT_ACTION.label}): max ${val}°`);
     }
+  }
 
-
-  // Signed degrees for the chosen direction
+  // -----------------------------
+  // Your existing ROM application
+  // -----------------------------
   let signed = CURRENT_ACTION.sign * val;
+  // keep the rest of your original logic here (applying signed → bones, UI, etc.)
+});
+
 
   // === Smooth IR/ER path (compose with Abd/Add from same baseline) ===
   if (CURRENT_ACTION.key==='sh_irer_l' || CURRENT_ACTION.key==='sh_irer_r'){
