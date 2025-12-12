@@ -377,6 +377,12 @@ const CASE_FILES = {
     mmt:    "https://kingto89.github.io/ROMetrics.com/mmt/?caseToken=MMT-CERVICAL-001",
     notes:  "#soap" // handled inside openRoute, not a real URL
   };
+    const CASE_GONIO_URLS = {
+    "CASE_001": "https://kingto89.github.io/ROMetrics.com/goniometry-trainer/?caseToken=GONIO-CERVICAL-001",
+    "CASE_002": "https://kingto89.github.io/ROMetrics.com/goniometry-trainer/?caseToken=GONIO-HIP-002",
+    "CASE_003": "https://kingto89.github.io/ROMetrics.com/goniometry-trainer/?caseToken=GONIO-CLUSTER-003"
+  };
+
 
   function getCurrentCaseKey(){
     const sel = document.getElementById("caseSelect");
@@ -433,20 +439,16 @@ const CASE_FILES = {
         if (!ok) return;
       }
 
-      const caseKey = getCurrentCaseKey();
-      let url = ROUTES.gonio; // default = CASE_001
+      const sel = document.getElementById("caseSelect");
+      const caseKey = sel ? sel.value : "CASE_001";
 
-      if (caseKey === "CASE_002") {
-        url = "https://kingto89.github.io/ROMetrics.com/goniometry-trainer/?caseToken=GONIO-HIP-002";
-      } else if (caseKey === "CASE_003") {
-        url = "https://kingto89.github.io/ROMetrics.com/goniometry-trainer/?caseToken=GONIO-CLUSTER-003";
-      }
+      const url = CASE_GONIO_URLS[caseKey] || CASE_GONIO_URLS["CASE_001"];
 
       visitedGonio = true;
       updateDocLockState();
       window.open(url, "_blank");
       return;
-    }
+    } 
 
 
     if (key === "mmt") {
