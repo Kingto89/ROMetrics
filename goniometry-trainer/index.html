@@ -2978,9 +2978,9 @@ const clock = new THREE.Clock();
   },
 
   // Case 3 — Cluster impairment 
-"GONIO-LUMBAR-003": {
+"GONIO-CLUSTER-003": {
   caseId: "case_003",
-  label: "Cluster Impaairment",
+  label: "Cluster Impairment",
   allowedRegions: ["lumbar"],
   impairments: {
     lumbar_flexion:  { max: 20 },
@@ -3051,7 +3051,7 @@ if (cfg.caseId === "case_002"){
 
 // Case 3 — Cluster Treatment
 if (cfg.caseId === "case_003"){
-  bannerText = "Case 3 – Cluster Treatment";
+  bannerText = "Case 3 – Cluster Impairment";
 }
 
 
@@ -3090,7 +3090,7 @@ if (!regionSel || !regionSel.options || !regionSel.options.length){
     const regionKeyToLabel = {
       cervical: "Cervical Spine",
       hip:      "Hip",
-        thoracic_lumbar_spine: "Thoracic–Lumbar Spine" 
+      thoracic_lumbar_spine: "Thoracic–Lumbar Spine" 
       
       // later: knee:"Knee", ankle:"Ankle", etc.
     };
