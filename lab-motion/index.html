@@ -240,7 +240,75 @@ const ROM_CASE_TOKENS = {
         - Mechanical pattern with positional onset
       `
     }
-  }
+  },
+  // =======================================
+  // Case 2 — stub token for Hip scenario
+  // (LAB-MOTION token that matches your EHR "Case 2")
+  // =======================================
+  "LAB-HIP-002": {
+    caseId: "case_002",
+    label: "Right Hip Impairment",
+
+    // For now, just mark this as a hip-focused case.
+    // We'll wire specific hip impairments + behavior in Step 2.
+    allowedRegions: ["Hip", "Knee", "Ankle", "Foot"],
+    disableAdvancedMenu: true,
+
+    // Minimal impairments so current loader logic stays safe.
+    // (We’ll replace this with real hip limits later.)
+      impairments: {
+      trunk_flexion:       { max: 20 }, // Lumbar Flexion
+      trunk_extension:     { max: 10  }, // Lumbar Extension
+      hip_right_abduction: { max: 20 }, // Hip abd (cluster piece)
+      trunk_lat:           { max: 15 }, // R/L both 15°
+      trunk_rot:           { max: 20 }  // R/L both 20°
+    },
+
+
+    painShapeKeys: [
+        // Forehead / brow crease → “ow” face
+    { key: 'Expressions_browSqueezeL_max', value: 1.2 },
+    { key: 'Expressions_browSqueezeR_max', value: 1.1 },
+    { key: 'Expressions_browsMidVert_max', value: 0.8 },
+
+    // Guarded squint (not full screaming)
+    { key: 'Expressions_eyeSquintL_max',   value: 0.6 },
+    { key: 'Expressions_eyeSquintR_max',   value: 0.6 },
+
+    // Cheeks tighten a bit with effort
+    { key: 'Expressions_cheekSneerL_max',  value: 0.4 },
+    { key: 'Expressions_cheekSneerR_max',  value: 0.25 },
+
+    // Mouth slightly open + pulled to one side
+    { key: 'Expressions_mouthOpenAggr_max', value: 0.12 },
+    { key: 'Expressions_mouthHoriz_max',     value: 0.28 },
+
+    // Jaw follows that pull
+    { key: 'Expressions_jawHoriz_max',       value: 0.22 },
+
+    // Small nostril flare (effort / guarded breathing)
+    { key: 'Expressions_nostrilsExpansion_max', value: 0.12 }
+    ],
+
+    notes: {
+      constantNote: `
+        Sensation:
+        - Decreased sensation in perianal / saddle region (S3–S5)
+        - Diminished along posterior thighs bilaterally
+        Reflexes:
+        - Patellar reflexes: 1+ (reduced) bilaterally
+        - Achilles reflexes: 0–1+ (markedly reduced/absent) bilaterally
+      `,
+      cluesNote: `
+        Case Clues:
+        - Hip-focused ROM loss
+        - Movement is very slow, guarded, and stiff
+        - Bilateral leg weakness
+        - Saddle anesthesia / altered perineal sensation
+        - New onset bladder dysfunction (difficulty initiating urination)
+      `
+    }
+  } 
 };
 
 window.ROM_CASE_MODE = {
@@ -590,24 +658,53 @@ function populateBones(){
   boneSel2.appendChild(spineGroup2);
   boneSel2.appendChild(rightGroup2);
 // ==========================================================
-//  NEW ROM CASE LOGIC HERE (REPLACEMENT FOR STEP 2A)
-// ==========================================================
+// --- CASE MODE: REGION / ADVANCED UI FROM CASE CONFIG ---
+if (window.ROM_CASE_MODE && window.ROM_CASE_MODE.active && window.ROM_CASE_MODE.token) {
+  const cfg      = window.ROM_CASE_MODE.token;
+  const allowed  = cfg.allowedRegions || [];
 
-    // --- CASE MODE: DISABLE LOWER BODY SEGMENT & ADVANCED MENU ---
-    if (window.ROM_CASE_MODE.active) {
-        // Disable and hide Lower Body segment button
-        segLower.disabled = true;
-        segLower.style.display = 'none';
+  // Reset to defaults first (normal mode remains untouched if case mode is off)
+  segUpper.disabled = false;
+  segLower.disabled = false;
+  segUpper.style.display = "";
+  segLower.style.display = "";
 
-        // Hide the Bone (Advanced) details menu
-        const advancedDetails = document.querySelector('details');
-        if (advancedDetails) {
-            advancedDetails.style.display = 'none';
-        }
+  const UPPER_GROUPS = ["Trunk", "Cervical", "Shoulder", "Elbow", "Wrist"];
+  const LOWER_GROUPS = ["Hip", "Knee", "Ankle", "Foot"];
 
-        // Ensure the Motion Segment starts on Upper Body
-        segUpper.click();
+  const hasUpper = allowed.some(r => UPPER_GROUPS.includes(r));
+  const hasLower = allowed.some(r => LOWER_GROUPS.includes(r));
+
+  if (!hasUpper) {
+    segUpper.disabled = true;
+    segUpper.style.display = "none";
+  }
+  if (!hasLower) {
+    segLower.disabled = true;
+    segLower.style.display = "none";
+  }
+
+  // Pick starting segment based on what this case allows
+  if (hasUpper && !hasLower) {
+    segUpper.click();
+  } else if (!hasUpper && hasLower) {
+    segLower.click();
+  } else if (hasUpper && hasLower) {
+    // both allowed → default to Upper
+    segUpper.click();
+  }
+
+  // Advanced (Bone) menu honor per-case flag
+  const advancedDetails = document.querySelector("details");
+  if (advancedDetails) {
+    if (cfg.disableAdvancedMenu) {
+      advancedDetails.style.display = "none";
+    } else {
+      advancedDetails.style.display = "";
     }
+  }
+}
+
   // ----- Collect bones first so we can sort by ORDER_MAP -----
   const spineArr = [];
   const leftArr  = [];
