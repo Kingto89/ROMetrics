@@ -240,6 +240,64 @@ const ROM_CASE_TOKENS = {
         - Mechanical pattern with positional onset
       `
     }
+  },
+   // =====================================
+  // CASE 2 — HIP IMPAIRMENT (RIGHT HIP)
+  // =====================================
+  "LAB-HIP-002": {
+    caseId: "case_002",
+    label: "Hip ROM Loss — Right",
+
+    // Let lower-body motions be available for this lab case
+    allowedRegions: ["Hip", "Knee", "Ankle", "Foot"],
+
+    // --- IMPAIRMENTS: ROM Limits (for future use in lab logic) ---
+    impairments: {
+      // Right Hip Flexion (normal ~120°, case = 50°)
+      hip_flex_r: { max: 50 },
+
+      // Right Hip Extension (normal ~15°, case = 5°)
+      hip_ext_r:  { max: 5 },
+
+      // Right Hip Abduction (normal ~45°, case = 20°)
+      hip_abd_r:  { max: 20 }
+    },
+
+    painShapeKeys: [
+  // ===== Brow Raise / Shock =====
+  { key: 'Expressions_browsMidVert_max', value: 1.0 },     // Center brows raised high
+  { key: 'Expressions_browOutVertL_max', value: 0.8 },     // Outer brow raise L
+  { key: 'Expressions_browOutVertR_max', value: 0.8 },     // Outer brow raise R
+
+  // ===== Mouth Open (shock/pain) =====
+  { key: 'Expressions_mouthOpenAggr_max',  value: 0.9 },   // Large open mouth
+  { key: 'Expressions_mouthOpenLarge_max', value: 0.7 },   // Adds width + stretch
+
+  // ===== Mouth shaping for pain =====
+  { key: 'Expressions_mouthHoriz_max',     value: 0.3 },   // Horizontal pull
+  { key: 'Expressions_jawOut_max',         value: 0.4 },   // Jaw thrust forward
+  { key: 'Expressions_jawHoriz_max',       value: 0.3 },   // Jaw shifts sideways slightly
+
+  // ===== Nose tension (subtle pain effect) =====
+  { key: 'Expressions_nostrilsExpansion_max', value: 0.2 } // Flared nostrils for pain
+]
+
+    // --- NOTES OVERLAY CONTENT (LAB TEXT) ---
+    notes: {
+      // ✅ Sensation block (from Case 2)
+      constantNote: `
+        Sensation:
+        - Dermatomes intact
+        - No radiating symptoms
+      `,
+
+      // ✅ Hip ROM loss section + Case Clues block (from Case 2)
+      cluesNote: `
+        - Dull/achy anterior right hip/groin pain (4–6/10)
+        - Marked right hip ROM loss 
+        - No numbness, tingling, low back pain, or systemic red flags
+      `
+    }
   }
 };
 
@@ -326,6 +384,8 @@ const COLLIM = {
   // ===== Existing upper body =====
   trunkLatLMax: 40,
   trunkLatRMax: 40,
+  cervLatLMax: 45,   // Cervical lat flex left WNL
+  cervLatRMax: 45,   // Cervical lat flex right WNL
   cervRotLMax: 80,
   cervRotRMax: 80,
   shExtLMax: 60, shExtRMax: 60,
@@ -427,6 +487,9 @@ if (/^el_fe_/.test(key)) {
     }
     // Trunk lateral (existing)
     if(key==='trunk_lat') return (sign>0) ? COLLIM.trunkLatLMax : COLLIM.trunkLatRMax;
+      // Cervical lateral flexion
+    if(key==='cerv_lat')  return (sign>0) ? COLLIM.cervLatLMax  : COLLIM.cervLatRMax;
+
     // Hip Flexion (both)
 if(/^hip_fe_/.test(key)){
   if (sign > 0) return key.endsWith('_l') ? COLLIM.hipFlexLMax : COLLIM.hipFlexRMax;
@@ -593,21 +656,68 @@ function populateBones(){
 //  NEW ROM CASE LOGIC HERE (REPLACEMENT FOR STEP 2A)
 // ==========================================================
 
-    // --- CASE MODE: DISABLE LOWER BODY SEGMENT & ADVANCED MENU ---
-    if (window.ROM_CASE_MODE.active) {
-        // Disable and hide Lower Body segment button
-        segLower.disabled = true;
-        segLower.style.display = 'none';
+// --- CASE MODE: SEGMENT + ADVANCED MENU (per case) ---
+if (window.ROM_CASE_MODE.active && window.ROM_CASE_MODE.token) {
+  const t  = window.ROM_CASE_MODE.token;
+  const id = t.caseId || "";
 
-        // Hide the Bone (Advanced) details menu
-        const advancedDetails = document.querySelector('details');
-        if (advancedDetails) {
-            advancedDetails.style.display = 'none';
-        }
+  // 1) Reset both segments to normal first (so normal mode is clean)
+  segUpper.disabled = false;
+  segLower.disabled = false;
+  segUpper.style.display = "";
+  segLower.style.display = "";
 
-        // Ensure the Motion Segment starts on Upper Body
-        segUpper.click();
+  const advancedDetails = document.querySelector("details");
+  if (advancedDetails) advancedDetails.style.display = "";
+
+  // 2) Case-specific behavior
+  if (id === "case_001") {
+    // ✅ CASE 1 — Cervical (Upper only)
+    segUpper.disabled = false;
+    segUpper.style.display = "";
+    segLower.disabled = true;
+    segLower.style.display = "none";
+    segUpper.click();               // open Upper body segment
+
+    if (advancedDetails) advancedDetails.style.display = "none";
+
+  } else if (id === "case_002") {
+    // ✅ CASE 2 — Hip (Lower only)
+    segLower.disabled = false;
+    segLower.style.display = "";
+    segUpper.disabled = true;
+    segUpper.style.display = "none";
+    segLower.click();               // open Lower body segment
+
+    if (advancedDetails) {
+      // default: hide advanced; set disableAdvancedMenu = false to keep it
+      advancedDetails.style.display =
+        (t.disableAdvancedMenu === false) ? "" : "none";
     }
+
+  } else {
+    // ✅ FUTURE CASES (3–15) – optional flags, or leave both unlocked
+    if (t.lockSegment === "upper") {
+      segUpper.disabled = false;
+      segUpper.style.display = "";
+      segLower.disabled = true;
+      segLower.style.display = "none";
+      segUpper.click();
+    } else if (t.lockSegment === "lower") {
+      segLower.disabled = false;
+      segLower.style.display = "";
+      segUpper.disabled = true;
+      segUpper.style.display = "none";
+      segLower.click();
+    }
+
+    if (advancedDetails) {
+      if (t.disableAdvancedMenu === true) advancedDetails.style.display = "none";
+      // else leave it visible
+    }
+  }
+}
+
   // ----- Collect bones first so we can sort by ORDER_MAP -----
   const spineArr = [];
   const leftArr  = [];
@@ -1205,6 +1315,7 @@ function applyAnatomicBaseline(){
     syncActionUI(true);
   });
 ///checkpoint 
+
 function resetPainExpression(){
   if (!window.ROM_CASE_MODE.active || !window.ROM_CASE_MODE.token || !model) return;
   const token = window.ROM_CASE_MODE.token;
@@ -1221,17 +1332,22 @@ function resetPainExpression(){
 }
 
 actionDeg.addEventListener("input", ()=> {
-    if (!CURRENT_ACTION) return;
+  if (!CURRENT_ACTION) return;
 
-    let val = Math.max(0, Math.min(CURRENT_ACTION.max, parseFloat(actionDeg.value)||0));
-    let isImpairedMotion = false;
-    let limitHit = false;
+  let val = Math.max(0, Math.min(CURRENT_ACTION.max, parseFloat(actionDeg.value)||0));
+  let isImpairedMotion = false;
+  let limitHit = false;
 
-    // --- CASE MODE LOGIC: GRIMACE & LIMITS ---
-    if (window.ROM_CASE_MODE.active && window.ROM_CASE_MODE.token) {
-      const token = window.ROM_CASE_MODE.token;
-      let cap = capFor(CURRENT_ACTION);
+  // --- CASE MODE LOGIC: GRIMACE & LIMITS ---
+  if (window.ROM_CASE_MODE.active && window.ROM_CASE_MODE.token) {
+    const token  = window.ROM_CASE_MODE.token;
+    const caseId = token.caseId || "";
+    let cap = capFor(CURRENT_ACTION);
 
+    // ==========================
+    // CASE 1 — Cervical (original)
+    // ==========================
+    if (caseId === "case_001") {
       // For this lab case we only impair:
       //   - Cervical Rotation — Right
       //   - Cervical Lateral Flexion — Right
@@ -1248,52 +1364,98 @@ actionDeg.addEventListener("input", ()=> {
           }
         }
       }
+    }
 
-      // Apply Hard Stop and Grimace Trigger
-      if (typeof cap === 'number' && val > cap) {
-        val = cap;
-        actionDeg.value = String(val);
-        limitHit = true;
+    // ==========================
+    // CASE 2 — Right Hip ROM loss
+    // ==========================
+    else if (caseId === "case_002") {
+      // Hip Flexion / Extension — same slider (hip_fe_r)
+      if (CURRENT_ACTION.key === 'hip_fe_r') {
+        const isFlex = CURRENT_ACTION.label.includes('Flexion');
+        const isExt  = CURRENT_ACTION.label.includes('Extension');
 
-        if (isImpairedMotion && model) {
-          // Apply grimace to ANY skinned mesh that has these shapekeys
-          model.traverse(o => {
-            if (!o.isSkinnedMesh || !o.morphTargetDictionary || !o.morphTargetInfluences) return;
-            token.painShapeKeys.forEach(s => {
-              const idx = o.morphTargetDictionary[s.key];
-              if (idx !== undefined) {
-                o.morphTargetInfluences[idx] = s.value;
-              }
-            });
-          });
+        let impKey = null;
+        if (isFlex) impKey = 'hip_flex_r';  // e.g. 50°
+        else if (isExt) impKey = 'hip_ext_r'; // e.g. 5°
 
-          if (!window.ROM_CASE_MODE.notes.cluesShown) {
-            alert(token.notes.cluesNote);
-            window.ROM_CASE_MODE.notes.cluesShown = true;
+        if (impKey) {
+          const imp = token.impairments && token.impairments[impKey];
+          if (imp && typeof imp.max === 'number') {
+            cap = imp.max;
+            isImpairedMotion = true;
           }
         }
+      }
 
-      } else if (isImpairedMotion && model) {
-        // Slider back under the cap → relax grimace on all relevant meshes
+      // Hip Abduction — only limit Abduction side (hip_aa_r)
+      else if (CURRENT_ACTION.key === 'hip_aa_r') {
+        const isAbd = CURRENT_ACTION.label.includes('Abduction');
+        if (isAbd) {
+          const imp = token.impairments && token.impairments['hip_abd_r']; // e.g. 20°
+          if (imp && typeof imp.max === 'number') {
+            cap = imp.max;
+            isImpairedMotion = true;
+          }
+        }
+      }
+      // (Adduction & rotations stay normal for this case.)
+    }
+
+    // ==========================
+    // FUTURE CASES (3–15)
+    // Add more blocks here:
+    //
+    // else if (caseId === "case_003") { ... }
+    // else if (caseId === "case_004") { ... }
+    //
+    // No other logic in this handler needs to change.
+    // ==========================
+
+    // Apply Hard Stop and Grimace Trigger (unchanged)
+    if (typeof cap === 'number' && val > cap) {
+      val = cap;
+      actionDeg.value = String(val);
+      limitHit = true;
+
+      if (isImpairedMotion && model) {
+        // Apply grimace to ANY skinned mesh that has these shapekeys
         model.traverse(o => {
           if (!o.isSkinnedMesh || !o.morphTargetDictionary || !o.morphTargetInfluences) return;
           token.painShapeKeys.forEach(s => {
             const idx = o.morphTargetDictionary[s.key];
             if (idx !== undefined) {
-              o.morphTargetInfluences[idx] = 0;
+              o.morphTargetInfluences[idx] = s.value;
             }
           });
         });
+
+        if (!window.ROM_CASE_MODE.notes.cluesShown) {
+          alert(token.notes.cluesNote);
+          window.ROM_CASE_MODE.notes.cluesShown = true;
+        }
       }
 
-      if (limitHit) {
-        log(`Motion Limit Hit (${CURRENT_ACTION.label}): max ${val}°`);
-      }
+    } else if (isImpairedMotion && model) {
+      // Slider back under the cap → relax grimace on all relevant meshes
+      model.traverse(o => {
+        if (!o.isSkinnedMesh || !o.morphTargetDictionary || !o.morphTargetInfluences) return;
+        token.painShapeKeys.forEach(s => {
+          const idx = o.morphTargetDictionary[s.key];
+          if (idx !== undefined) {
+            o.morphTargetInfluences[idx] = 0;
+          }
+        });
+      });
     }
 
+    if (limitHit) {
+      log(`Motion Limit Hit (${CURRENT_ACTION.label}): max ${val}°`);
+    }
+  }
 
-    // Signed degrees for the chosen direction
-    let signed = CURRENT_ACTION.sign * val;
+  // Signed degrees for the chosen direction
+  let signed = CURRENT_ACTION.sign * val;
 
   // === Smooth IR/ER path (compose with Abd/Add from same baseline) ===
   if (CURRENT_ACTION.key==='sh_irer_l' || CURRENT_ACTION.key==='sh_irer_r'){
@@ -1479,51 +1641,129 @@ resetModel.onclick = ()=>{
 // =======================================================
 
 function loadROMCaseMode() {
-    const token = new URLSearchParams(window.location.search).get("caseToken");
-    const cfg = token && ROM_CASE_TOKENS[token];
+  const token = new URLSearchParams(window.location.search).get("caseToken");
+  const cfg   = token && ROM_CASE_TOKENS[token];
 
-    if (!cfg) return;
+  if (!cfg) return;
 
-    window.ROM_CASE_MODE.active = true;
-    window.ROM_CASE_MODE.token = cfg;
-    window.ROM_CASE_MODE.impairments = cfg.impairments;
-    window.ROM_CASE_MODE.notes = cfg.notes;
-    
-    // --- 1. APPLY INITIAL POSE & COLLISION ---
+  window.ROM_CASE_MODE.active       = true;
+  window.ROM_CASE_MODE.token        = cfg;
+  window.ROM_CASE_MODE.impairments  = cfg.impairments || {};
+  window.ROM_CASE_MODE.notes        = cfg.notes || {};
+  const caseId = cfg.caseId || "";
+
+  // --- 1. APPLY INITIAL POSE & COLLISION (case-specific) ---
+  resetModel.click(); // start from your default baseline
+
+  // ==========================
+  // CASE 1 — Cervical AROM
+  // ==========================
+  if (caseId === "case_001") {
     // Enforce seated pose for cervical AROM
-    resetModel.click(); // Reset to default
-    // Set position to seated on the plinth edge
-    mx.value="0"; my.value="-0.25"; mz.value="0.35"; ms.value="100"; myaw.value="180"; 
-    if (model) {
-        model.position.set(0, -0.25, 0.35); 
-        model.scale.setScalar(1.0);
-        model.rotation.y = THREE.MathUtils.degToRad(180);
-    }
-    
-    // Set up collision limits
-    COLLIM.enabled = true; // Global collision enabled
-    COLLIM.cervRotRMax = cfg.impairments.cerv_rot_r.max; // 30 degrees
-    COLLIM.cervRotLMax = 80; // Left side WNL
-    // NOTE: In the Motion Lab code, cerv_lat uses trunkLatRMax/LMax keys.
-    COLLIM.trunkLatRMax = cfg.impairments.cerv_lat_r.max; // 20 degrees
-    COLLIM.trunkLatLMax = 45; // Left side WNL
-    COLLIM.save(); // Save updated collision limits
+    mx.value  = "0";
+    my.value  = "-0.25";
+    mz.value  = "0.35";
+    ms.value  = "100";
+    myaw.value = "180";
 
-// --- 2. DISPLAY CONSTANT NOTES (SENSATION) AND BANNER ---
-    
-    // Create the Case Mode Banner
-    const banner = document.createElement("div");
-    banner.textContent = ` LAB CASE MODE: ${cfg.label}`;
-    banner.style.cssText = "position:fixed; top:0; left:0; right:0; padding:6px; background:#dc2626; color:#fff; text-align:center; font-weight:bold; z-index:100;";
-    document.body.appendChild(banner);
-    
-    // Display Constant Notes (Sensation)
+    if (model) {
+      model.position.set(0, -0.25, 0.35);
+      model.scale.setScalar(1.0);
+      model.rotation.y = THREE.MathUtils.degToRad(180);
+    }
+
+      // Set up cervical collision limits (Case 1 only)
+    const imp = cfg.impairments || {};
+    COLLIM.enabled = true;
+    // Rotation
+    if (imp.cerv_rot_r && typeof imp.cerv_rot_r.max === "number") {
+      COLLIM.cervRotRMax = imp.cerv_rot_r.max;   // e.g. 30°
+    }
+    COLLIM.cervRotLMax = 80;                     // Left rotation WNL
+    // Lateral flexion
+    if (imp.cerv_lat_r && typeof imp.cerv_lat_r.max === "number") {
+      COLLIM.cervLatRMax = imp.cerv_lat_r.max;   // e.g. 20°
+    }
+    COLLIM.cervLatLMax = 45;                     // Left lat flex WNL
+    COLLIM.save();
+  }
+
+
+  // ==========================
+  // CASE 2 — Right Hip ROM Loss
+  // ==========================
+  else if (caseId === "case_002") {
+    // Pose: neutral standing / standard lab view
+    // (You can tweak these later without changing other cases.)
+    mx.value  = "0";
+    my.value  = "0";
+    mz.value  = "0.6";
+    ms.value  = "125";
+    myaw.value = "0";
+
+    if (model) {
+      model.position.set(0, 0, 0.6);
+      model.scale.setScalar(1.25);
+      model.rotation.y = 0;
+    }
+
+    // Hip collision overrides from case_002 impairments
+    const imp = cfg.impairments || {};
+
+    COLLIM.enabled     = true;
+    // Right hip flexion  (e.g. 50°)
+    if (imp.hip_flex_r?.max !== undefined)
+      COLLIM.hipFlexRMax = imp.hip_flex_r.max;
+
+    // Right hip extension (e.g. 5°)
+    if (imp.hip_ext_r?.max !== undefined)
+      COLLIM.hipExtRMax = imp.hip_ext_r.max;
+
+    // Right hip abduction (e.g. 20°)
+    if (imp.hip_abd_r?.max !== undefined)
+      COLLIM.hipAbdRMax = imp.hip_abd_r.max;
+
+    // Left side + adduction stay at your default WNL values
+    COLLIM.save();
+  }
+
+  // ==========================
+  // FUTURE CASES (3–15)
+  // ==========================
+  // else if (caseId === "case_003") {
+  //   // set pose + COLLIM overrides for that case here
+  // }
+  // else if (caseId === "case_004") { ... }
+  //
+  // No other parts of the script need to change when adding new cases.
+  // ==========================
+
+  // --- 2. DISPLAY CONSTANT NOTES (SENSATION) AND BANNER ---
+
+  // Case Mode Banner
+  const banner = document.createElement("div");
+  banner.textContent = ` LAB CASE MODE: ${cfg.label}`;
+  banner.style.cssText =
+    "position:fixed; top:0; left:0; right:0; padding:6px; " +
+    "background:#dc2626; color:#fff; text-align:center; " +
+    "font-weight:bold; z-index:100;";
+  document.body.appendChild(banner);
+
+  // Constant Notes (Sensation) card
+  if (cfg.notes && cfg.notes.constantNote) {
     const constantNote = document.createElement("div");
     constantNote.id = "caseConstantNote";
-    // Replace newlines with <br> for HTML display
-    constantNote.innerHTML = cfg.notes.constantNote.replace(/\n/g, '<br>').replace(/  +/g, '');
-    constantNote.style.cssText = "position:fixed; top:35px; right:12px; width:220px; padding:10px; background:rgba(30,41,59,0.95); border:1px solid #334155; border-radius:8px; font-size:13px; color:#e2e8f0; z-index:99; white-space:pre-wrap; box-shadow:0 4px 8px rgba(0,0,0,0.3);";
+    constantNote.innerHTML = cfg.notes.constantNote
+      .replace(/\n/g, "<br>")
+      .replace(/  +/g, "");
+    constantNote.style.cssText =
+      "position:fixed; top:35px; right:12px; width:220px; padding:10px; " +
+      "background:rgba(30,41,59,0.95); border:1px solid #334155; " +
+      "border-radius:8px; font-size:13px; color:#e2e8f0; z-index:99; " +
+      "white-space:pre-wrap; box-shadow:0 4px 8px rgba(0,0,0,0.3);";
     document.body.appendChild(constantNote);
+  }
+}
 
     // Run the UI cleanup function (Step 2A)
     populateBones(); 
@@ -1769,6 +2009,8 @@ function ensureCollisionTuner() {
     assign("trunkLatRMax", "#colTrunkLatR");
     assign("cervRotLMax", "#cervL");
     assign("cervRotRMax", "#cervR");
+    assign("cervLatLMax", "#cervLatL");
+    assign("cervLatRMax", "#cervLatR");
     assign("shAddLMax", "#shAddL");
     assign("shAddRMax", "#shAddR");
     assign("shAbdLMax", "#shAbdL");
@@ -1793,6 +2035,8 @@ function ensureCollisionTuner() {
     $("#colTrunkLatR").value = COLLIM.trunkLatRMax;
     $("#cervL").value = COLLIM.cervRotLMax;
     $("#cervR").value = COLLIM.cervRotRMax;
+    $("#cervLatL").value = COLLIM.cervLatLMax;
+    $("#cervLatR").value = COLLIM.cervLatRMax;
     $("#shAddL").value = COLLIM.shAddLMax;
     $("#shAddR").value = COLLIM.shAddRMax;
     $("#shAbdL").value = COLLIM.shAbdLMax;
