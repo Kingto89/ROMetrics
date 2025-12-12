@@ -1994,18 +1994,35 @@ actionDeg.addEventListener("input", ()=> {
     if (!impairmentKey && CURRENT_ACTION.key === 'hip_aa_r' && signed < 0){
       impairmentKey = 'hip_right_abduction';    // 20°
     }
+// --- Trunk case (Case 3: Cluster Case) ---
+    // Check if we are in Case 3 AND the motion is in the Thoracic/Lumbar Spine region
+    if (!impairmentKey && window.GONIO_CASE_MODE.caseId === 'case_003') {
 
-// --- Lumbar case (Case 3 — Cluster) ---
-if (!impairmentKey && CURRENT_ACTION.key === 'lumbar_flexion') {
-    if (signed > 0) impairmentKey = 'lumbar_flexion';   // 20°
-}
-
-if (!impairmentKey && CURRENT_ACTION.key === 'lumbar_extension') {
-    if (signed < 0) impairmentKey = 'lumbar_extension'; // 5°
-}
-
-
-
+        // 1. Flexion / Extension (Trunk Flexion is Positive sign, Extension is Negative)
+        if (CURRENT_ACTION.key === 'trunk_fe'){
+            if (signed > 0){
+                impairmentKey = 'trunk_flexion';       // Max 20°
+            } else if (signed < 0){
+                impairmentKey = 'trunk_extension';     // Max 5°
+            }
+        }
+        // 2. Lateral Flexion (Right is Positive sign, Left is Negative)
+        else if (CURRENT_ACTION.key === 'trunk_lat'){
+            if (signed > 0){
+                impairmentKey = 'trunk_right_lat_flex'; // Max 15°
+            } else if (signed < 0){
+                impairmentKey = 'trunk_left_lat_flex';  // Max 15°
+            }
+        }
+        // 3. Rotation (Left is Positive sign, Right is Negative)
+        else if (CURRENT_ACTION.key === 'trunk_rot'){
+            if (signed > 0){
+                impairmentKey = 'trunk_left_rotation';  // Max 20°
+            } else if (signed < 0){
+                impairmentKey = 'trunk_right_rotation'; // Max 20°
+            }
+        }
+    }
     // Apply clamp if a key was found (using the magnitude 'val')
     if (impairmentKey){
       const magBefore = Math.abs(val);
@@ -2284,11 +2301,7 @@ log("Anatomic baseline applied on load.");
   /* ===== Advanced controls wiring ===== */
   boneSel.onchange = ()=>{ rx.value="0"; ry.value="0"; rz.value="0"; setBoneRotationFromUI(); };
   [rx,ry,rz].forEach(el=> el.addEventListener("input", setBoneRotationFromUI));
-/* ===== Advanced controls wiring ===== */
-  boneSel.onchange = ()=>{ rx.value="0"; ry.value="0"; rz.value="0"; setBoneRotationFromUI(); };
-  [rx,ry,rz].forEach(el=> el.addEventListener("input", setBoneRotationFromUI));
 
-  // --- PASTE THIS BLOCK BELOW ---
   
   // 1. Model Controller Logic
   const mdl = { 
@@ -2964,26 +2977,37 @@ const clock = new THREE.Clock();
     allowedRegions: ["hip"],
     // Goniometry-specific limits for this case
     impairments: {
+      // 1. RIGHT Hip Flexion
       hip_right_flexion:  { max: 50 }, // 50° vs 120° normal
+
+      // 2. RIGHT Hip Extension
       hip_right_extension:{ max: 5 },  // 5° vs 15° normal
+
+      // 3. RIGHT Hip Abduction
       hip_right_abduction:{ max: 20 }, // 20° vs 45° normal
+
+      // Everything else stays normal unless you add it later
       default_unrestricted: { max: 99.0 }
     }
   }
 
-// Case 3 — Cluster (Lumbar Impairment)
 "GONIO-CLUSTER-003": {
   caseId: "case_003",
-  label: "Cluster ROM Case – Lumbar Flex 20° / Ext 5°",
-  allowedRegions: ["thoracic_lumbar_spine"],
+  label: "Cluster Case",
+  // CRITICAL: MUST use the correct region key to load the right motions
+  allowedRegions: ["thoracic_lumbar_spine"], 
   impairments: {
-    lumbar_flexion:      { max: 20 },
-    lumbar_extension:    { max: 5 },
+    // These keys are what the clamping logic needs to check against:
+    trunk_flexion: { max: 20 },
+    trunk_extension: { max: 5 },
+    trunk_right_lat_flex: { max: 15 },
+    trunk_left_lat_flex: { max: 15 },
+    trunk_left_rotation: { max: 20 },
+    trunk_right_rotation: { max: 20 },
     default_unrestricted: { max: 99.0 }
   }
 }
-
-  // You can keep stacking more cases here later:
+    // You can keep stacking more cases here later:
   // "GONIO-XXXX-003": { caseId:"case_003", label:"...", allowedRegions:["..."], impairments:{ ... } }
 };
   
@@ -3044,10 +3068,10 @@ if (cfg.caseId === "case_002"){
   bannerText = "Case 2 – Hip Impairment: ...";
 }
 
-if (cfg.caseId === "case_003") {
-  bannerText = "Case 3 – Cluster Impairment";
+// Case 3 — Cluster Case
+if (cfg.caseId === "case_003"){
+  bannerText = "Case 3 – Cluster Impairment: ...";
 }
-
 
 banner.textContent = bannerText;
   banner.style.position = "fixed";
@@ -3084,16 +3108,14 @@ if (!regionSel || !regionSel.options || !regionSel.options.length){
     const regionKeyToLabel = {
       cervical: "Cervical Spine",
       hip:      "Hip"
-      trunk: "Thoracic & Lumbar Spine",
-
+      thoracic_lumbar_spine: "trunk"
       // later: knee:"Knee", ankle:"Ankle", etc.
     };
 
     const regionKeyToWord = {
       cervical: "cervical",
       hip:      "hip"
-      trunk: "trunk",
-
+      thoracic_lumbar_spine: "trunk"
       // later: knee:"knee", ankle:"ankle", etc. to match your action text
     };
 
