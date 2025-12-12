@@ -1995,13 +1995,13 @@ actionDeg.addEventListener("input", ()=> {
       impairmentKey = 'hip_right_abduction';    // 20°
     }
 
-        // --- Lumbar case (Case 3: Cluster Treatment) ---
-    // Lumbar Flexion vs Extension (paired control: lumbar_fe)
-    if (!impairmentKey && CURRENT_ACTION.key === 'lumbar_fe'){
+        // --- Trunk case (Case 3: Cluster Treatment) ---
+    // Trunk Flexion vs Extension (paired control: trunk_fe)
+    if (!impairmentKey && CURRENT_ACTION.key === 'trunk_fe'){
       if (signed > 0){
-        impairmentKey = 'lumbar_flexion';   // 20°
+        impairmentKey = 'trunk_flexion';   // 20°
       } else if (signed < 0){
-        impairmentKey = 'lumbar_extension'; // 5°
+        impairmentKey = 'trunk_extension'; // 5°
       }
     }
 
@@ -2983,8 +2983,8 @@ const clock = new THREE.Clock();
   label: "Cluster Impairment",
   allowedRegions: ["thoracic_lumbar_spine"],
   impairments: {
-    lumbar_flexion:  { max: 20 },
-    lumbar_extension:{ max: 5 }
+    trunk_flexion:  { max: 20 },
+    trunk_extension:{ max: 5 }
   }
 }
 
