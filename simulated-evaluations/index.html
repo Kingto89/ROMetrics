@@ -378,6 +378,10 @@ const CASE_FILES = {
     notes:  "#soap" // handled inside openRoute, not a real URL
   };
 
+  function getCurrentCaseKey(){
+    const sel = document.getElementById("caseSelect");
+    return sel ? sel.value : "CASE_001";
+  }
   // visit tracking → unlock SOAP only after all 3 are true
   let visitedMotion  = false;
   let visitedGonio   = false;
@@ -423,16 +427,27 @@ const CASE_FILES = {
       return;
     }
 
-    if (key === "gonio") {
+       if (key === "gonio") {
       if (!visitedMotion) {
         const ok = showSequenceWarning("Goniometry");
         if (!ok) return;
       }
+
+      const caseKey = getCurrentCaseKey();
+      let url = ROUTES.gonio; // default = CASE_001
+
+      if (caseKey === "CASE_002") {
+        url = "https://kingto89.github.io/ROMetrics.com/goniometry-trainer/?caseToken=GONIO-HIP-002";
+      } else if (caseKey === "CASE_003") {
+        url = "https://kingto89.github.io/ROMetrics.com/goniometry-trainer/?caseToken=GONIO-CLUSTER-003";
+      }
+
       visitedGonio = true;
       updateDocLockState();
-      window.open(ROUTES.gonio, "_blank");
+      window.open(url, "_blank");
       return;
     }
+
 
     if (key === "mmt") {
       if (!visitedMotion) {
