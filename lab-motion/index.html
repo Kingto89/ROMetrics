@@ -435,6 +435,8 @@ const COLLIM = {
   trunkLatRMax: 40,
   trunkFlexMax: 80,
   trunkExtMax: 60,
+  trunkRotLMax: 45,
+  trunkRotRMax: 45,
   cervLatLMax: 45,   // Cervical lat flex left WNL
   cervLatRMax: 45,   // Cervical lat flex right WNL
   cervRotLMax: 80,
@@ -485,7 +487,7 @@ const COLLIM = {
 COLLIM.load();
 
 function capFor(action){
-  COLLIM.load();  // ✅ refresh saved limits before applying
+   if (!window.ROM_CASE_MODE?.active) COLLIM.load(); // ✅ only reload saved limits in NORMAL mode
   if(!COLLIM.enabled || !action) return null; // no cap
   const { key, sign } = action; // sign: +1 or -1
     // Cervical rotation L/R
@@ -540,6 +542,8 @@ if (/^el_fe_/.test(key)) {
     if(key==='trunk_lat') return (sign>0) ? COLLIM.trunkLatLMax : COLLIM.trunkLatRMax;
     // Trunk flexion / extension
     if(key==='trunk_fe') return (sign>0) ? COLLIM.trunkFlexMax : COLLIM.trunkExtMax;
+        // Trunk rotation
+    if(key==='trunk_rot') return (sign>0) ? COLLIM.trunkRotLMax : COLLIM.trunkRotRMax;
 
       // Cervical lateral flexion
     if(key==='cerv_lat')  return (sign>0) ? COLLIM.cervLatLMax  : COLLIM.cervLatRMax;
@@ -1687,6 +1691,12 @@ function loadROMCaseMode() {
   const cfg   = token && ROM_CASE_TOKENS[token];
 
   if (!cfg) return;
+    // ✅ Capture NORMAL limits once, then apply case overrides on top (NO saving)
+  COLLIM.load();
+  window._COLLIM_BASELINE = Object.fromEntries(
+    Object.entries(COLLIM).filter(([k,v]) => typeof v === "number")
+  );
+  Object.assign(COLLIM, window._COLLIM_BASELINE);
 
   window.ROM_CASE_MODE.active       = true;
   window.ROM_CASE_MODE.token        = cfg;
@@ -1758,7 +1768,6 @@ if (id === "case_001") {            // Cervical
       COLLIM.cervLatRMax = imp.cerv_lat_r.max;   // e.g. 20°
     }
     COLLIM.cervLatLMax = 45;                     // Left lat flex WNL
-    COLLIM.save();
   }
 
 
@@ -1797,7 +1806,6 @@ if (id === "case_001") {            // Cervical
       COLLIM.hipAbdRMax = imp.hip_abd_r.max;
 
     // Left side + adduction stay at your default WNL values
-    COLLIM.save();
   }
 // ==========================
 // CASE 3 — Cluster Impairment (TRUNK)
@@ -1842,7 +1850,6 @@ else if (caseId === "case_003") {
   if (imp.trunk_rot_right?.max !== undefined)
     COLLIM.trunkRotRMax = imp.trunk_rot_right.max;
 
-  COLLIM.save();
 }
 
   // ==========================
