@@ -191,8 +191,6 @@ const ROM_CASE_TOKENS = {
 
       // Right Cervical Lateral Flexion (normal ~45°, cap at 20°)
       cerv_lat_r: { max: 20 }
-
-      // Left side & flex/ext use default caps
     },
 
     // --- VISUAL FEEDBACK: Shape Keys for Pain Grimace ---
@@ -246,19 +244,16 @@ const ROM_CASE_TOKENS = {
   // =====================================
   "LAB-HIP-002": {
     caseId: "case_002",
-    label: "Hip ROM Loss — Right",
+    label: "Hip ROM Loss",
 
     // Let lower-body motions be available for this lab case
     allowedRegions: ["Hip", "Knee", "Ankle", "Foot"],
-
     // --- IMPAIRMENTS: ROM Limits (for future use in lab logic) ---
     impairments: {
       // Right Hip Flexion (normal ~120°, case = 50°)
       hip_flex_r: { max: 50 },
-
       // Right Hip Extension (normal ~15°, case = 5°)
       hip_ext_r:  { max: 5 },
-
       // Right Hip Abduction (normal ~45°, case = 20°)
       hip_abd_r:  { max: 20 }
     },
@@ -275,7 +270,7 @@ const ROM_CASE_TOKENS = {
 
   // ===== Mouth shaping for pain =====
   { key: 'Expressions_mouthHoriz_max',     value: 0.3 },   // Horizontal pull
-  { key: 'Expressions_jawOut_max',         value: 0.4 },   // Jaw thrust forward
+  { key: 'Expressions_jawOut_max',         value: 0.2 },   // Jaw thrust forward
   { key: 'Expressions_jawHoriz_max',       value: 0.3 },   // Jaw shifts sideways slightly
 
   // ===== Nose tension (subtle pain effect) =====
@@ -297,7 +292,58 @@ const ROM_CASE_TOKENS = {
         - No numbness, tingling, low back pain, or systemic red flags
       `
     }
-  }
+  },
+    // =====================================
+  // CASE 3 — CLUSTER IMPAIRMENT 
+  // ===================================== 
+  "LAB-CLUSTER-003": {
+    caseId: "case_003",
+    label: "Cluster Impairment",
+
+    // Only need trunk motions for this lab case
+    allowedRegions: ["Trunk"],
+    disableAdvancedMenu: true,
+
+    // --- IMPAIRMENTS USED BY MOTION LAB ---
+    // These map to CURRENT_ACTION.key === 'trunk_fe'
+    impairments: {
+      trunk_flexion:   { max: 20 }, // Lumbar flexion 20°
+      trunk_extension: { max: 5  }  // Lumbar extension 5°
+    },
+
+    // Re-use the same grimace pattern (painful, guarded trunk)
+    painShapeKeys: [
+      { key: 'Expressions_browSqueezeR_max',      value: 1.5 },
+      { key: 'Expressions_eyeSquintL_max',        value: 0.5 },
+      { key: 'Expressions_cheekSneerL_max',       value: 0.5 },
+      { key: 'Expressions_cheekSneerR_max',       value: 0.2 },
+      { key: 'Expressions_mouthOpenAggr_max',     value: 0.04 },
+      { key: 'Expressions_mouthOpenLarge_max',    value: 0.04 },
+      { key: 'Expressions_mouthHoriz_max',        value: 0.4 },
+      { key: 'Expressions_jawHoriz_max',          value: 0.3 },
+      { key: 'Expressions_jawOut_max',            value: 0.1 },
+      { key: 'Expressions_nostrilsExpansion_max', value: 0.1 }
+    ],
+
+    // --- NOTES OVERLAY CONTENT ---
+    notes: {
+      constantNote: `
+        Sensation:
+        - Decreased perianal / saddle region (S3–S5)
+        - Diminished along posterior thighs bilaterally
+        - Reports numbness/tingling in inner thighs & perineal region
+      `,
+      cluesNote: `
+        Case Clues:
+        - Severe, constant low back pain not clearly mechanical
+        - Marked lumbar ROM loss 
+        - Bilateral distal weakness 
+        - Saddle anesthesia
+        - New bladder involvement (difficulty initiating urination)
+      `
+    }
+  },
+  
 };
 
 window.ROM_CASE_MODE = {
@@ -693,8 +739,24 @@ if (window.ROM_CASE_MODE.active && window.ROM_CASE_MODE.token) {
       advancedDetails.style.display =
         (t.disableAdvancedMenu === false) ? "" : "none";
     }
+   
+  } else if (id === "case_003") {
+    // ✅ CASE 3 — Cluster Impairment (Lumbar + Neuro)
+    // Both segments available, but start on Trunk (Upper)
+    segUpper.disabled = false;
+    segUpper.style.display = "";
+    segLower.disabled = false;
+    segLower.style.display = "";
+    segUpper.click();               // default to Trunk / Upper view
+
+    if (advancedDetails) {
+      // same pattern as Case 2: hide unless explicitly allowed on the token
+      advancedDetails.style.display =
+        (t.disableAdvancedMenu === false) ? "" : "none";
+    }
 
   } else {
+    
     // ✅ FUTURE CASES (3–15) – optional flags, or leave both unlocked
     if (t.lockSegment === "upper") {
       segUpper.disabled = false;
@@ -1399,8 +1461,18 @@ actionDeg.addEventListener("input", ()=> {
         }
       }
       // (Adduction & rotations stay normal for this case.)
-    }
-
+ 
+ // CASE 3 — Lumbar trunk flexion / extension:
+      // Maps to impairments: trunk_flexion / trunk_extension
+      } else if (CURRENT_ACTION.key === 'trunk_fe') {
+        const isFlex = CURRENT_ACTION.label.includes('Flexion');
+        const impKey = isFlex ? 'trunk_flexion' : 'trunk_extension';
+        const imp    = token.impairments && token.impairments[impKey];
+        if (imp && typeof imp.max === 'number') {
+          cap = imp.max;
+          isImpairedMotion = true;
+        }
+      }
     // ==========================
     // FUTURE CASES (3–15)
     // Add more blocks here:
@@ -1451,7 +1523,7 @@ actionDeg.addEventListener("input", ()=> {
     if (limitHit) {
       log(`Motion Limit Hit (${CURRENT_ACTION.label}): max ${val}°`);
     }
-  }
+
 
   // Signed degrees for the chosen direction
   let signed = CURRENT_ACTION.sign * val;
@@ -1723,6 +1795,39 @@ function loadROMCaseMode() {
       COLLIM.hipAbdRMax = imp.hip_abd_r.max;
 
     // Left side + adduction stay at your default WNL values
+    COLLIM.save();
+  }
+  // ==========================
+  // CASE 3 — Lumbar Cluster ROM Loss
+  // ==========================
+  else if (caseId === "case_003") {
+    // Pose: neutral standing / standard lab view (same as hip)
+    mx.value   = "0";
+    my.value   = "0";
+    mz.value   = "0.6";
+    ms.value   = "125";
+    myaw.value = "0";
+
+    if (model) {
+      model.position.set(0, 0, 0.6);
+      model.scale.setScalar(1.25);
+      model.rotation.y = 0;
+    }
+
+    // Lumbar collision overrides from case_003 impairments
+    const imp = cfg.impairments || {};
+
+    COLLIM.enabled = true;
+
+    // Lumbar trunk flexion (e.g. 20°)
+    if (imp.trunk_flexion?.max !== undefined)
+      COLLIM.lumbarFlexMax = imp.trunk_flexion.max;
+
+    // Lumbar trunk extension (e.g. 5°)
+    if (imp.trunk_extension?.max !== undefined)
+      COLLIM.lumbarExtMax = imp.trunk_extension.max;
+
+    // Lateral flexion / rotation remain at your default WNL values
     COLLIM.save();
   }
 
