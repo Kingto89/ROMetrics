@@ -1395,28 +1395,54 @@ actionDeg.addEventListener("input", ()=> {
       // (Adduction & rotations stay normal for this case.)
     }
 
-    // ==========================
-    // CASE 3 — Cluster impairment (TRUNK)
-    // ==========================
-    else if (caseId === "case_003") {
+// ==========================
+// CASE 3 — Cluster impairment (TRUNK)
+// ==========================
+else if (caseId === "case_003") {
 
-      // Trunk Flexion / Extension — same slider (trunk_fe)
-      if (CURRENT_ACTION.key === 'trunk_fe') {
-        const isFlex = CURRENT_ACTION.label.includes('Flexion');
-        const isExt  = CURRENT_ACTION.label.includes('Extension');
+  // Trunk Flexion / Extension — same slider (trunk_fe)
+  if (CURRENT_ACTION.key === 'trunk_fe') {
+    const isFlex = CURRENT_ACTION.label.includes('Flexion');
+    const isExt  = CURRENT_ACTION.label.includes('Extension');
 
-        let impKey = null;
-        if (isFlex) impKey = 'trunk_flexion';        // e.g. 20°
-        else if (isExt) impKey = 'trunk_extension';  // e.g. 5°
+    let impKey = null;
+    if (isFlex) impKey = 'trunk_flexion';        // 20°
+    else if (isExt) impKey = 'trunk_extension';  // 5°
 
-        if (impKey) {
-          const imp = token.impairments && token.impairments[impKey];
-          if (imp && typeof imp.max === 'number') {
-            cap = imp.max;
-            isImpairedMotion = true;
-          }
-        }
-      }
+    const imp = token.impairments && token.impairments[impKey];
+    if (imp && typeof imp.max === 'number') {
+      cap = imp.max;
+      isImpairedMotion = true;
+    }
+  }
+
+  // Trunk Lateral Flexion — (trunk_lat) labels include Left/Right
+  else if (CURRENT_ACTION.key === 'trunk_lat') {
+    const isLeft  = CURRENT_ACTION.label.includes('Left');
+    const isRight = CURRENT_ACTION.label.includes('Right');
+
+    const impKey = isLeft ? 'trunk_lat_left' : (isRight ? 'trunk_lat_right' : null);
+    const imp = impKey && token.impairments && token.impairments[impKey];
+    if (imp && typeof imp.max === 'number') {
+      cap = imp.max;            // 15°
+      isImpairedMotion = true;
+    }
+  }
+
+  // Trunk Rotation — (trunk_rot) labels include Left/Right
+  else if (CURRENT_ACTION.key === 'trunk_rot') {
+    const isLeft  = CURRENT_ACTION.label.includes('Left');
+    const isRight = CURRENT_ACTION.label.includes('Right');
+
+    const impKey = isLeft ? 'trunk_rot_left' : (isRight ? 'trunk_rot_right' : null);
+    const imp = impKey && token.impairments && token.impairments[impKey];
+    if (imp && typeof imp.max === 'number') {
+      cap = imp.max;            // 20°
+      isImpairedMotion = true;
+    }
+  }
+}
+
 
       // (Trunk lat/rot stay normal for this case.)
     }
