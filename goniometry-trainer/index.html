@@ -2004,7 +2004,15 @@ actionDeg.addEventListener("input", ()=> {
         impairmentKey = 'trunk_extension'; // 5°
       }
     }
+// Trunk Lateral Flexion (R/L share same limit 15°)
+    if (!impairmentKey && CURRENT_ACTION.key === 'trunk_lat'){
+      impairmentKey = 'trunk_lat';
+    }
 
+    // Trunk Rotation (R/L share same limit 20°)
+    if (!impairmentKey && CURRENT_ACTION.key === 'trunk_rot'){
+      impairmentKey = 'trunk_rot';
+    }
     // Apply clamp if a key was found (using the magnitude 'val')
     if (impairmentKey){
       const magBefore = Math.abs(val);
@@ -2982,15 +2990,10 @@ const clock = new THREE.Clock();
   impairments: {
     // Lumbar/Trunk Flexion & Extension
     trunk_flexion:        { max: 20 }, // Flexion 20°
-    trunk_extension:      { max: 5  }, // Extension 5°
-
-    // Lateral Flexion (R/L)
-    trunk_lat_right:      { max: 15 }, // Right lat flex 15°
-    trunk_lat_left:       { max: 15 }, // Left  lat flex 15°
-
-    // Rotation (R/L)
-    trunk_rotation_right: { max: 20 }, // Right rotation 20°
-    trunk_rotation_left:  { max: 20 }  // Left  rotation 20°
+    trunk_extension:      { max: 10  }, // Extension 10°
+    hip_right_abduction: { max: 20 },
+    trunk_lat:           { max: 15 },
+    trunk_rot:           { max: 20 }
   }
 }
 
