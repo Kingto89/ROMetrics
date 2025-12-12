@@ -256,13 +256,13 @@ const ROM_CASE_TOKENS = {
 
     // Minimal impairments so current loader logic stays safe.
     // (We’ll replace this with real hip limits later.)
-      impairments: {
-      trunk_flexion:       { max: 20 }, // Lumbar Flexion
-      trunk_extension:     { max: 10  }, // Lumbar Extension
-      hip_right_abduction: { max: 20 }, // Hip abd (cluster piece)
-      trunk_lat:           { max: 15 }, // R/L both 15°
-      trunk_rot:           { max: 20 }  // R/L both 20°
-    },
+    impairments: {
+     hip_right_flexion:        { max: 50 }, // 120° → 50°
+    hip_right_extension:      { max: 5  }, // 15° → 5°
+    hip_right_abduction:      { max: 20 }, // 45° → 20°
+    hip_right_internal_rot:   { max: 35 }, // 40° → 35°
+    hip_right_external_rot:   { max: 40 } 
+      },
 
 
     painShapeKeys: [
@@ -293,20 +293,14 @@ const ROM_CASE_TOKENS = {
     notes: {
       constantNote: `
         Sensation:
-        - Decreased sensation in perianal / saddle region (S3–S5)
-        - Diminished along posterior thighs bilaterally
-        Reflexes:
-        - Patellar reflexes: 1+ (reduced) bilaterally
-        - Achilles reflexes: 0–1+ (markedly reduced/absent) bilaterally
+        - Dermatomes L2–S1 intact
+        - No radiating symptoms
       `,
       cluesNote: `
         Case Clues:
         - Hip-focused ROM loss
-        - Movement is very slow, guarded, and stiff
-        - Bilateral leg weakness
-        - Saddle anesthesia / altered perineal sensation
-        - New onset bladder dysfunction (difficulty initiating urination)
-      `
+        - Pain 2/10 at rest, 4/10 when active
+      ` - low irritability 
     }
   } 
 };
@@ -1324,26 +1318,64 @@ actionDeg.addEventListener("input", ()=> {
     let isImpairedMotion = false;
     let limitHit = false;
 
-    // --- CASE MODE LOGIC: GRIMACE & LIMITS ---
+       // --- CASE MODE LOGIC: GRIMACE & LIMITS ---
     if (window.ROM_CASE_MODE.active && window.ROM_CASE_MODE.token) {
       const token = window.ROM_CASE_MODE.token;
       let cap = capFor(CURRENT_ACTION);
 
-      // For this lab case we only impair:
-      //   - Cervical Rotation — Right
-      //   - Cervical Lateral Flexion — Right
+      // Which specific motion is impaired for this case?
+      let impKey = null;
+
+      // ========= CASE 1 — CERVICAL (RIGHT ONLY) =========
+      //   - Cervical Rotation — Right  → cerv_rot_r
+      //   - Cervical Lat Flex — Right  → cerv_lat_r
       if (CURRENT_ACTION.key === 'cerv_rot' || CURRENT_ACTION.key === 'cerv_lat') {
         const isRight = CURRENT_ACTION.label.includes('Right'); // menu label includes "Right"
         if (isRight) {
-          // Map to impairment keys: cerv_rot_r / cerv_lat_r
-          const impKey =
-            CURRENT_ACTION.key === 'cerv_rot' ? 'cerv_rot_r' : 'cerv_lat_r';
-          const imp = token.impairments && token.impairments[impKey];
-          if (imp && typeof imp.max === 'number') {
-            cap = imp.max;
-            isImpairedMotion = true;
+          impKey = (CURRENT_ACTION.key === 'cerv_rot') ? 'cerv_rot_r' : 'cerv_lat_r';
+        }
+      }
+
+      // ========= CASE 3 — HIP CLUSTER (RIGHT HIP ONLY) =========
+      // Uses these impairment keys in the token:
+      //   hip_right_flexion, hip_right_extension,
+      //   hip_right_abduction, hip_right_internal_rot, hip_right_external_rot
+      if (!impKey) {
+        // Right Hip Flexion / Extension
+        if (CURRENT_ACTION.key === 'hip_fe_r') {
+          if (CURRENT_ACTION.label.includes('Flexion')) {
+            impKey = 'hip_right_flexion';
+          } else if (CURRENT_ACTION.label.includes('Extension')) {
+            impKey = 'hip_right_extension';
           }
         }
+
+        // Right Hip Abduction (Adduction is WNL → no case limit)
+        else if (CURRENT_ACTION.key === 'hip_aa_r') {
+          if (CURRENT_ACTION.label.includes('Abduction')) {
+            impKey = 'hip_right_abduction';
+          }
+        }
+
+        // Right Hip IR / ER
+        else if (CURRENT_ACTION.key === 'hip_irer_r') {
+          if (CURRENT_ACTION.label.includes('Internal')) {
+            impKey = 'hip_right_internal_rot';
+          } else if (CURRENT_ACTION.label.includes('External')) {
+            impKey = 'hip_right_external_rot';
+          }
+        }
+      }
+
+      // If this motion has a case-specific cap, apply it
+      if (
+        impKey &&
+        token.impairments &&
+        token.impairments[impKey] &&
+        typeof token.impairments[impKey].max === 'number'
+      ) {
+        cap = token.impairments[impKey].max;
+        isImpairedMotion = true;
       }
 
       // Apply Hard Stop and Grimace Trigger
@@ -1388,9 +1420,9 @@ actionDeg.addEventListener("input", ()=> {
       }
     }
 
-
     // Signed degrees for the chosen direction
     let signed = CURRENT_ACTION.sign * val;
+
 
   // === Smooth IR/ER path (compose with Abd/Add from same baseline) ===
   if (CURRENT_ACTION.key==='sh_irer_l' || CURRENT_ACTION.key==='sh_irer_r'){
@@ -1574,53 +1606,93 @@ resetModel.onclick = ()=>{
 // =======================================================
 // ➡️ INSERT NEW loadROMCaseMode FUNCTION (STEP 2B) HERE
 // =======================================================
-
 function loadROMCaseMode() {
-    const token = new URLSearchParams(window.location.search).get("caseToken");
-    const cfg = token && ROM_CASE_TOKENS[token];
+  const tokenName = new URLSearchParams(window.location.search).get("caseToken");
+  const cfg = tokenName && ROM_CASE_TOKENS[tokenName];
 
-    if (!cfg) return;
+  if (!cfg) return;
 
-    window.ROM_CASE_MODE.active = true;
-    window.ROM_CASE_MODE.token = cfg;
-    window.ROM_CASE_MODE.impairments = cfg.impairments;
-    window.ROM_CASE_MODE.notes = cfg.notes;
-    
-    // --- 1. APPLY INITIAL POSE & COLLISION ---
-    // Enforce seated pose for cervical AROM
-    resetModel.click(); // Reset to default
-    // Set position to seated on the plinth edge
-    mx.value="0"; my.value="-0.25"; mz.value="0.35"; ms.value="100"; myaw.value="180"; 
-    if (model) {
-        model.position.set(0, -0.25, 0.35); 
-        model.scale.setScalar(1.0);
-        model.rotation.y = THREE.MathUtils.degToRad(180);
-    }
-    
-    // Set up collision limits
-    COLLIM.enabled = true; // Global collision enabled
-    COLLIM.cervRotRMax = cfg.impairments.cerv_rot_r.max; // 30 degrees
-    COLLIM.cervRotLMax = 80; // Left side WNL
-    // NOTE: In the Motion Lab code, cerv_lat uses trunkLatRMax/LMax keys.
-    COLLIM.trunkLatRMax = cfg.impairments.cerv_lat_r.max; // 20 degrees
-    COLLIM.trunkLatLMax = 45; // Left side WNL
-    COLLIM.save(); // Save updated collision limits
+  const imps = cfg.impairments || {};
 
-// --- 2. DISPLAY CONSTANT NOTES (SENSATION) AND BANNER ---
-    
-    // Create the Case Mode Banner
-    const banner = document.createElement("div");
-    banner.textContent = ` LAB CASE MODE: ${cfg.label}`;
-    banner.style.cssText = "position:fixed; top:0; left:0; right:0; padding:6px; background:#dc2626; color:#fff; text-align:center; font-weight:bold; z-index:100;";
-    document.body.appendChild(banner);
-    
-    // Display Constant Notes (Sensation)
+  window.ROM_CASE_MODE.active        = true;
+  window.ROM_CASE_MODE.token         = cfg;
+  window.ROM_CASE_MODE.impairments   = imps;
+  window.ROM_CASE_MODE.notes         = cfg.notes || {};
+  window.ROM_CASE_MODE.painShapeKeys = cfg.painShapeKeys || [];
+
+  // --- 1. APPLY INITIAL POSE (generic, case-configurable) ---
+  resetModel.click();
+
+  const pose = cfg.initialModel || {};
+  const px   = (pose.x     !== undefined) ? pose.x     : 0;
+  const py   = (pose.y     !== undefined) ? pose.y     : -0.25;
+  const pz   = (pose.z     !== undefined) ? pose.z     : 0.35;
+  const sPct = (pose.scale !== undefined) ? pose.scale : 100;
+  const yaw  = (pose.yaw   !== undefined) ? pose.yaw   : 180;
+
+  mx.value   = String(px);
+  my.value   = String(py);
+  mz.value   = String(pz);
+  ms.value   = String(sPct);
+  myaw.value = String(yaw);
+
+  if (model) {
+    model.position.set(px, py, pz);
+    model.scale.setScalar(sPct / 100);
+    model.rotation.y = THREE.MathUtils.degToRad(yaw);
+  }
+
+  // --- 2. COLLISION LIMITS (read from case impairments when present) ---
+  COLLIM.enabled = true;
+
+  // Cervical rotation (Case 1 or future cases using these keys)
+  if (imps.cerv_rot_r && typeof imps.cerv_rot_r.max === "number") {
+    COLLIM.cervRotRMax = imps.cerv_rot_r.max;
+  }
+  if (imps.cerv_rot_l && typeof imps.cerv_rot_l.max === "number") {
+    COLLIM.cervRotLMax = imps.cerv_rot_l.max;
+  }
+
+  // Cervical lateral flexion → mapped to trunkLat caps in this rig
+  if (imps.cerv_lat_r && typeof imps.cerv_lat_r.max === "number") {
+    COLLIM.trunkLatRMax = imps.cerv_lat_r.max;
+  }
+  if (imps.cerv_lat_l && typeof imps.cerv_lat_l.max === "number") {
+    COLLIM.trunkLatLMax = imps.cerv_lat_l.max;
+  }
+
+  // Lumbar / trunk cluster (Case 2: single value used for both sides)
+  if (imps.trunk_lat && typeof imps.trunk_lat.max === "number") {
+    COLLIM.trunkLatLMax = COLLIM.trunkLatRMax = imps.trunk_lat.max;
+  }
+
+  // (Future cases: add more mappings here as needed, reading from `imps.*`)
+
+  COLLIM.save();
+
+  // --- 3. BANNER + CONSTANT NOTE (generic) ---
+  const banner = document.createElement("div");
+  banner.textContent = ` LAB CASE MODE: ${cfg.label}`;
+  banner.style.cssText =
+    "position:fixed; top:0; left:0; right:0; padding:6px; " +
+    "background:#dc2626; color:#fff; text-align:center; " +
+    "font-weight:bold; z-index:100;";
+  document.body.appendChild(banner);
+
+  if (cfg.notes && cfg.notes.constantNote) {
     const constantNote = document.createElement("div");
     constantNote.id = "caseConstantNote";
-    // Replace newlines with <br> for HTML display
-    constantNote.innerHTML = cfg.notes.constantNote.replace(/\n/g, '<br>').replace(/  +/g, '');
-    constantNote.style.cssText = "position:fixed; top:35px; right:12px; width:220px; padding:10px; background:rgba(30,41,59,0.95); border:1px solid #334155; border-radius:8px; font-size:13px; color:#e2e8f0; z-index:99; white-space:pre-wrap; box-shadow:0 4px 8px rgba(0,0,0,0.3);";
+    constantNote.innerHTML = cfg.notes.constantNote
+      .replace(/\n/g, "<br>")
+      .replace(/  +/g, "");
+    constantNote.style.cssText =
+      "position:fixed; top:35px; right:12px; width:220px; padding:10px; " +
+      "background:rgba(30,41,59,0.95); border:1px solid #334155; " +
+      "border-radius:8px; font-size:13px; color:#e2e8f0; z-index:99; " +
+      "white-space:pre-wrap; box-shadow:0 4px 8px rgba(0,0,0,0.3);";
     document.body.appendChild(constantNote);
+  }
+}
 
     // Run the UI cleanup function (Step 2A)
     populateBones(); 
