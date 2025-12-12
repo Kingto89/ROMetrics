@@ -2283,9 +2283,6 @@ log("Anatomic baseline applied on load.");
   /* ===== Advanced controls wiring ===== */
   boneSel.onchange = ()=>{ rx.value="0"; ry.value="0"; rz.value="0"; setBoneRotationFromUI(); };
   [rx,ry,rz].forEach(el=> el.addEventListener("input", setBoneRotationFromUI));
-/* ===== Advanced controls wiring ===== */
-  boneSel.onchange = ()=>{ rx.value="0"; ry.value="0"; rz.value="0"; setBoneRotationFromUI(); };
-  [rx,ry,rz].forEach(el=> el.addEventListener("input", setBoneRotationFromUI));
 
   // --- PASTE THIS BLOCK BELOW ---
   
