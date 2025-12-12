@@ -1995,6 +1995,16 @@ actionDeg.addEventListener("input", ()=> {
       impairmentKey = 'hip_right_abduction';    // 20°
     }
 
+        // --- Lumbar case (Case 3: Cluster Treatment) ---
+    // Lumbar Flexion vs Extension (paired control: lumbar_fe)
+    if (!impairmentKey && CURRENT_ACTION.key === 'lumbar_fe'){
+      if (signed > 0){
+        impairmentKey = 'lumbar_flexion';   // 20°
+      } else if (signed < 0){
+        impairmentKey = 'lumbar_extension'; // 5°
+      }
+    }
+
     // Apply clamp if a key was found (using the magnitude 'val')
     if (impairmentKey){
       const magBefore = Math.abs(val);
@@ -2967,6 +2977,17 @@ const clock = new THREE.Clock();
     }
   }
 
+  // Case 3 — Cluster impairment 
+"GONIO-LUMBAR-003": {
+  caseId: "case_003",
+  label: "Cluster Impaairment",
+  allowedRegions: ["lumbar"],
+  impairments: {
+    lumbar_flexion:  { max: 20 },
+    lumbar_extension:{ max: 5 }
+  }
+}
+
   // You can keep stacking more cases here later:
   // "GONIO-XXXX-003": { caseId:"case_003", label:"...", allowedRegions:["..."], impairments:{ ... } }
 };
@@ -3028,10 +3049,11 @@ if (cfg.caseId === "case_002"){
   bannerText = "Case 2 – Hip Impairment: ...";
 }
 
-// Case 3 — whatever you want next
+// Case 3 — Cluster Treatment
 if (cfg.caseId === "case_003"){
-  bannerText = "Case 3 – Knee Impairment: ...";
+  bannerText = "Case 3 – Cluster Treatment";
 }
+
 
 banner.textContent = bannerText;
   banner.style.position = "fixed";
@@ -3067,13 +3089,16 @@ if (!regionSel || !regionSel.options || !regionSel.options.length){
     // Map case region → region label + word to search for in actions
     const regionKeyToLabel = {
       cervical: "Cervical Spine",
-      hip:      "Hip"
+      hip:      "Hip",
+        thoracic_lumbar_spine: "Thoracic–Lumbar Spine" 
+      
       // later: knee:"Knee", ankle:"Ankle", etc.
     };
 
     const regionKeyToWord = {
       cervical: "cervical",
-      hip:      "hip"
+      hip:      "hip",
+      thoracic_lumbar_spine: "trunk" 
       // later: knee:"knee", ankle:"ankle", etc. to match your action text
     };
 
