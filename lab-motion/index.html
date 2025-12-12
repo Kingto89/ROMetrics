@@ -191,6 +191,8 @@ const ROM_CASE_TOKENS = {
 
       // Right Cervical Lateral Flexion (normal ~45°, cap at 20°)
       cerv_lat_r: { max: 20 }
+
+      // Left side & flex/ext use default caps
     },
 
     // --- VISUAL FEEDBACK: Shape Keys for Pain Grimace ---
@@ -244,16 +246,19 @@ const ROM_CASE_TOKENS = {
   // =====================================
   "LAB-HIP-002": {
     caseId: "case_002",
-    label: "Hip ROM Loss",
+    label: "Hip ROM Loss — Right",
 
     // Let lower-body motions be available for this lab case
     allowedRegions: ["Hip", "Knee", "Ankle", "Foot"],
+
     // --- IMPAIRMENTS: ROM Limits (for future use in lab logic) ---
     impairments: {
       // Right Hip Flexion (normal ~120°, case = 50°)
       hip_flex_r: { max: 50 },
+
       // Right Hip Extension (normal ~15°, case = 5°)
       hip_ext_r:  { max: 5 },
+
       // Right Hip Abduction (normal ~45°, case = 20°)
       hip_abd_r:  { max: 20 }
     },
@@ -270,7 +275,7 @@ const ROM_CASE_TOKENS = {
 
   // ===== Mouth shaping for pain =====
   { key: 'Expressions_mouthHoriz_max',     value: 0.3 },   // Horizontal pull
-  { key: 'Expressions_jawOut_max',         value: 0.2 },   // Jaw thrust forward
+  { key: 'Expressions_jawOut_max',         value: 0.4 },   // Jaw thrust forward
   { key: 'Expressions_jawHoriz_max',       value: 0.3 },   // Jaw shifts sideways slightly
 
   // ===== Nose tension (subtle pain effect) =====
@@ -292,26 +297,24 @@ const ROM_CASE_TOKENS = {
         - No numbness, tingling, low back pain, or systemic red flags
       `
     }
+};
   },
-    // =====================================
-  // CASE 3 — CLUSTER IMPAIRMENT 
-  // ===================================== 
+
+  // =====================================
+  // CASE 3 — CLUSTER IMPAIRMENT (TRUNK)
+  // =====================================
   "LAB-CLUSTER-003": {
     caseId: "case_003",
     label: "Cluster Impairment",
 
-    // Only need trunk motions for this lab case
     allowedRegions: ["Hip", "Knee", "Ankle", "Foot"],
     disableAdvancedMenu: true,
 
-    // --- IMPAIRMENTS USED BY MOTION LAB ---
-    // These map to CURRENT_ACTION.key === 'trunk_fe'
     impairments: {
       trunk_flexion:   { max: 20 }, // Lumbar flexion 20°
       trunk_extension: { max: 5  }  // Lumbar extension 5°
     },
 
-    // Re-use the same grimace pattern (painful, guarded trunk)
     painShapeKeys: [
       { key: 'Expressions_browSqueezeR_max',      value: 1.5 },
       { key: 'Expressions_eyeSquintL_max',        value: 0.5 },
@@ -325,7 +328,6 @@ const ROM_CASE_TOKENS = {
       { key: 'Expressions_nostrilsExpansion_max', value: 0.1 }
     ],
 
-    // --- NOTES OVERLAY CONTENT ---
     notes: {
       constantNote: `
         Sensation:
@@ -336,14 +338,13 @@ const ROM_CASE_TOKENS = {
       cluesNote: `
         Case Clues:
         - Severe, constant low back pain not clearly mechanical
-        - Marked lumbar ROM loss 
-        - Bilateral distal weakness 
+        - Marked lumbar ROM loss
+        - Bilateral distal weakness
         - Saddle anesthesia
         - New bladder involvement (difficulty initiating urination)
       `
     }
-  },
-  
+  }
 };
 
 window.ROM_CASE_MODE = {
@@ -429,6 +430,8 @@ const COLLIM = {
   // ===== Existing upper body =====
   trunkLatLMax: 40,
   trunkLatRMax: 40,
+  trunkFlexMax: 80,
+  trunkExtMax: 60,
   cervLatLMax: 45,   // Cervical lat flex left WNL
   cervLatRMax: 45,   // Cervical lat flex right WNL
   cervRotLMax: 80,
@@ -532,6 +535,9 @@ if (/^el_fe_/.test(key)) {
     }
     // Trunk lateral (existing)
     if(key==='trunk_lat') return (sign>0) ? COLLIM.trunkLatLMax : COLLIM.trunkLatRMax;
+    // Trunk flexion / extension
+    if(key==='trunk_fe') return (sign>0) ? COLLIM.trunkFlexMax : COLLIM.trunkExtMax;
+
       // Cervical lateral flexion
     if(key==='cerv_lat')  return (sign>0) ? COLLIM.cervLatLMax  : COLLIM.cervLatRMax;
 
@@ -701,83 +707,6 @@ function populateBones(){
 //  NEW ROM CASE LOGIC HERE (REPLACEMENT FOR STEP 2A)
 // ==========================================================
 
-// --- CASE MODE: SEGMENT + ADVANCED MENU (per case) ---
-if (window.ROM_CASE_MODE.active && window.ROM_CASE_MODE.token) {
-  const t  = window.ROM_CASE_MODE.token;
-  const id = t.caseId || "";
-
-  // 1) Reset both segments to normal first (so normal mode is clean)
-  segUpper.disabled = false;
-  segLower.disabled = false;
-  segUpper.style.display = "";
-  segLower.style.display = "";
-
-  const advancedDetails = document.querySelector("details");
-  if (advancedDetails) advancedDetails.style.display = "";
-
-  // 2) Case-specific behavior
-  if (id === "case_001") {
-    // ✅ CASE 1 — Cervical (Upper only)
-    segUpper.disabled = false;
-    segUpper.style.display = "";
-    segLower.disabled = true;
-    segLower.style.display = "none";
-    segUpper.click();               // open Upper body segment
-
-    if (advancedDetails) advancedDetails.style.display = "none";
-
-  } else if (id === "case_002") {
-    // ✅ CASE 2 — Hip (Lower only)
-    segLower.disabled = false;
-    segLower.style.display = "";
-    segUpper.disabled = true;
-    segUpper.style.display = "none";
-    segLower.click();               // open Lower body segment
-
-    if (advancedDetails) {
-      // default: hide advanced; set disableAdvancedMenu = false to keep it
-      advancedDetails.style.display =
-        (t.disableAdvancedMenu === false) ? "" : "none";
-    }
-   
-  } else if (id === "case_003") {
-    // ✅ CASE 3 — Cluster Impairment (Lumbar + Neuro)
-    // Both segments available, but start on Trunk (Upper)
-    segUpper.disabled = false;
-    segUpper.style.display = "";
-    segLower.disabled = false;
-    segLower.style.display = "";
-    segUpper.click();               // default to Trunk / Upper view
-
-    if (advancedDetails) {
-      // same pattern as Case 2: hide unless explicitly allowed on the token
-      advancedDetails.style.display =
-        (t.disableAdvancedMenu === false) ? "" : "none";
-    }
-
-  } else {
-    
-    // ✅ FUTURE CASES (3–15) – optional flags, or leave both unlocked
-    if (t.lockSegment === "upper") {
-      segUpper.disabled = false;
-      segUpper.style.display = "";
-      segLower.disabled = true;
-      segLower.style.display = "none";
-      segUpper.click();
-    } else if (t.lockSegment === "lower") {
-      segLower.disabled = false;
-      segLower.style.display = "";
-      segUpper.disabled = true;
-      segUpper.style.display = "none";
-      segLower.click();
-    }
-
-    if (advancedDetails) {
-      if (t.disableAdvancedMenu === true) advancedDetails.style.display = "none";
-      // else leave it visible
-    }
-  }
-}
 
   // ----- Collect bones first so we can sort by ORDER_MAP -----
   const spineArr = [];
@@ -1461,24 +1390,41 @@ actionDeg.addEventListener("input", ()=> {
         }
       }
       // (Adduction & rotations stay normal for this case.)
- } 
- // CASE 3 — Lumbar trunk flexion / extension:
-      // Maps to impairments: trunk_flexion / trunk_extension
-      } else if (CURRENT_ACTION.key === 'trunk_fe') {
+    }
+
+    // ==========================
+    // CASE 3 — Cluster impairment (TRUNK)
+    // ==========================
+    else if (caseId === "case_003") {
+
+      // Trunk Flexion / Extension — same slider (trunk_fe)
+      if (CURRENT_ACTION.key === 'trunk_fe') {
         const isFlex = CURRENT_ACTION.label.includes('Flexion');
-        const impKey = isFlex ? 'trunk_flexion' : 'trunk_extension';
-        const imp    = token.impairments && token.impairments[impKey];
-        if (imp && typeof imp.max === 'number') {
-          cap = imp.max;
-          isImpairedMotion = true;
+        const isExt  = CURRENT_ACTION.label.includes('Extension');
+
+        let impKey = null;
+        if (isFlex) impKey = 'trunk_flexion';        // e.g. 20°
+        else if (isExt) impKey = 'trunk_extension';  // e.g. 5°
+
+        if (impKey) {
+          const imp = token.impairments && token.impairments[impKey];
+          if (imp && typeof imp.max === 'number') {
+            cap = imp.max;
+            isImpairedMotion = true;
+          }
         }
       }
+
+      // (Trunk lat/rot stay normal for this case.)
+    }
+
+
     // ==========================
-    // FUTURE CASES (3–15)
+    // FUTURE CASES 
     // Add more blocks here:
     //
-    // else if (caseId === "case_003") { ... }
-    // else if (caseId === "case_004") { ... }
+    // else if (caseId === "case_00") { ... }
+    // else if (caseId === "case_00") { ... }
     //
     // No other logic in this handler needs to change.
     // ==========================
@@ -1523,7 +1469,7 @@ actionDeg.addEventListener("input", ()=> {
     if (limitHit) {
       log(`Motion Limit Hit (${CURRENT_ACTION.label}): max ${val}°`);
     }
-
+  }
 
   // Signed degrees for the chosen direction
   let signed = CURRENT_ACTION.sign * val;
@@ -1719,6 +1665,37 @@ function loadROMCaseMode() {
 
   window.ROM_CASE_MODE.active       = true;
   window.ROM_CASE_MODE.token        = cfg;
+  // --- CASE UI LOCKS (STEP 2A) ---
+const t  = cfg;
+const id = cfg.caseId || "";
+
+// reset UI
+segUpper.disabled = false; segLower.disabled = false;
+segUpper.style.display = ""; segLower.style.display = "";
+
+const advancedDetails = document.querySelector("details");
+if (advancedDetails) advancedDetails.style.display = "";
+
+// case-specific locks
+if (id === "case_001") {            // Cervical
+  segLower.disabled = true;
+  segLower.style.display = "none";
+  segUpper.click();
+  if (advancedDetails) advancedDetails.style.display = "none";
+
+} else if (id === "case_002") {     // Hip
+  segUpper.disabled = true;
+  segUpper.style.display = "none";
+  segLower.click();
+  if (advancedDetails) advancedDetails.style.display =
+    (t.disableAdvancedMenu === false) ? "" : "none";
+
+} else if (id === "case_003") {     // Cluster / Trunk
+  segUpper.click();
+  if (advancedDetails) advancedDetails.style.display =
+    (t.disableAdvancedMenu === false) ? "" : "none";
+}
+
   window.ROM_CASE_MODE.impairments  = cfg.impairments || {};
   window.ROM_CASE_MODE.notes        = cfg.notes || {};
   const caseId = cfg.caseId || "";
@@ -1797,40 +1774,37 @@ function loadROMCaseMode() {
     // Left side + adduction stay at your default WNL values
     COLLIM.save();
   }
-  // ==========================
-  // CASE 3 — Lumbar Cluster ROM Loss
-  // ==========================
-  else if (caseId === "case_003") {
-    // Pose: neutral standing / standard lab view (same as hip)
-    mx.value   = "0";
-    my.value   = "0";
-    mz.value   = "0.6";
-    ms.value   = "125";
-    myaw.value = "0";
+// ==========================
+// CASE 3 — Cluster Impairment (TRUNK)
+// ==========================
+else if (caseId === "case_003") {
+  // Pose: neutral standing / standard lab view
+  mx.value   = "0";
+  my.value   = "0";
+  mz.value   = "0.6";
+  ms.value   = "125";
+  myaw.value = "0";
 
-    if (model) {
-      model.position.set(0, 0, 0.6);
-      model.scale.setScalar(1.25);
-      model.rotation.y = 0;
-    }
-
-    // Lumbar collision overrides from case_003 impairments
-    const imp = cfg.impairments || {};
-
-    COLLIM.enabled = true;
-
-    // Lumbar trunk flexion (e.g. 20°)
-    if (imp.trunk_flexion?.max !== undefined)
-      COLLIM.lumbarFlexMax = imp.trunk_flexion.max;
-
-    // Lumbar trunk extension (e.g. 5°)
-    if (imp.trunk_extension?.max !== undefined)
-      COLLIM.lumbarExtMax = imp.trunk_extension.max;
-
-    // Lateral flexion / rotation remain at your default WNL values
-    COLLIM.save();
+  if (model) {
+    model.position.set(0, 0, 0.6);
+    model.scale.setScalar(1.25);
+    model.rotation.y = 0;
   }
 
+  // Trunk collision overrides from case_003 impairments
+  const imp = cfg.impairments || {};
+  COLLIM.enabled = true;
+
+  // Flexion (e.g. 20°)
+  if (imp.trunk_flexion?.max !== undefined)
+    COLLIM.trunkFlexMax = imp.trunk_flexion.max;
+
+  // Extension (e.g. 5°)
+  if (imp.trunk_extension?.max !== undefined)
+    COLLIM.trunkExtMax = imp.trunk_extension.max;
+
+  COLLIM.save();
+      }
   // ==========================
   // FUTURE CASES (3–15)
   // ==========================
@@ -1851,7 +1825,12 @@ function loadROMCaseMode() {
     "position:fixed; top:0; left:0; right:0; padding:6px; " +
     "background:#dc2626; color:#fff; text-align:center; " +
     "font-weight:bold; z-index:100;";
+if (!document.getElementById("caseBanner")) {
+  banner.id = "caseBanner";
   document.body.appendChild(banner);
+} else {
+  document.getElementById("caseBanner").textContent = ` LAB CASE MODE: ${cfg.label}`;
+}
 
   // Constant Notes (Sensation) card
   if (cfg.notes && cfg.notes.constantNote) {
@@ -1865,7 +1844,9 @@ function loadROMCaseMode() {
       "background:rgba(30,41,59,0.95); border:1px solid #334155; " +
       "border-radius:8px; font-size:13px; color:#e2e8f0; z-index:99; " +
       "white-space:pre-wrap; box-shadow:0 4px 8px rgba(0,0,0,0.3);";
-    document.body.appendChild(constantNote);
+const existing = document.getElementById("caseConstantNote");
+if (existing) existing.remove();
+document.body.appendChild(constantNote);
   }
 
     // Run the UI cleanup function (Step 2A)
