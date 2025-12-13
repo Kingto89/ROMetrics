@@ -310,14 +310,14 @@ const MMT_CASE_TOKENS = {
     // MUST match your <optgroup label="..."> text in the Action/Test dropdown
     allowedRegions: ["Hip", "Knee"],
 
-   impairments: {
-  // RIGHT deficits only (MUST match actionSel option values)
-  Iliopsoas:  { side: "R", max_hold_time: 3.0 },  // ~3/5
-  Glute_Med:  { side: "R", max_hold_time: 3.5 },  // ~3+/5 (will still grade as 3 with your thresholds)
-  Glute_Max:  { side: "R", max_hold_time: 4.0 },  // ~4-/5
+ impairments: {
+  Iliopsoas: { max_hold_time: 3.0 },  // ~3/5
+  Glute_Med: { max_hold_time: 3.5 },  // ~3+/5 (still grades 3 with your thresholds)
+  Glute_Max: { max_hold_time: 4.0 },  // ~4-/5
 
   default_unrestricted: { max_hold_time: 99.0 }
 },
+
 
 requiredTests: ["Iliopsoas", "Glute_Med", "Glute_Max", "Quadriceps", "Hamstrings"],
 
