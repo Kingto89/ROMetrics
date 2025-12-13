@@ -538,7 +538,7 @@ const CASE_FILES = {
   const docSubmitBtn  = document.getElementById("docSubmitBtn");
   const docStatus     = document.getElementById("docSubmitStatus");
 
-  const ATTEMPT_KEY = "case_001_docAttempts";
+const ATTEMPT_KEY = `docAttempts_${getCurrentCaseKey()}`;
 
   function getAttempts(){
     return parseInt(localStorage.getItem(ATTEMPT_KEY) || "0", 10);
@@ -568,7 +568,7 @@ const CASE_FILES = {
     } else {
       gradeFill.style.width = "100%";
       gradeFill.style.background = "#22c55e"; // green
-      gradeLabel.labelContent = "Clinical level (auto-estimate)";
+      gradeLabel.textContent = "Clinical level (auto-estimate)";
     }
   }
 
@@ -587,6 +587,7 @@ const CASE_FILES = {
 
   if (docSubmitBtn && docStatus){
     docSubmitBtn.onclick = () => {
+      const ATTEMPT_KEY = `docAttempts_${getCurrentCaseKey()}`;
       const used = getAttempts();
 
       const docIds = [
@@ -629,13 +630,44 @@ window.__GRADE_PAYLOAD_TEXT =
       setAttempts(nextCount);
       applyGradeFromAttempts(nextCount);
 
-      docStatus.textContent =
-        `Documentation submitted. Attempt ${nextCount} of 3.`;
-      docStatus.style.color = "var(--good)";
+     docStatus.innerHTML =
+  `Documentation submitted. Attempt ${nextCount} of 3. ` +
+  `<a href="#" id="viewDocHistory" style="color:var(--accent);text-decoration:underline;">View history</a>`;
+
+// save a snapshot (per case)
+const caseKey = (document.getElementById("caseSelect")?.value) || "CASE_001";
+const snapKey = `docHistory_${caseKey}`;
+const snapshot = {
+  at: new Date().toLocaleString(),
+  subjective: (document.getElementById("docSubjective")?.value || "").trim(),
+  objective:  (document.getElementById("docObjective")?.value || "").trim(),
+  assessment: (document.getElementById("docDx")?.value || "").trim(),
+  plan:       (document.getElementById("docPlan")?.value || "").trim(),
+  goals:      (document.getElementById("docGoals")?.value || "").trim(),
+  prognosis:  (document.getElementById("docPrognosis")?.value || "").trim()
+};
+
+try{
+  const arr = JSON.parse(localStorage.getItem(snapKey) || "[]");
+  arr.push(snapshot);
+  localStorage.setItem(snapKey, JSON.stringify(arr));
+}catch(e){}
+
 
       if (nextCount >= 3){
         docSubmitBtn.disabled = true;
       }
+
+    // click "View history" to review saved submissions
+document.getElementById("viewDocHistory")?.addEventListener("click", (e)=>{
+  e.preventDefault();
+  const caseKey = (document.getElementById("caseSelect")?.value) || "CASE_001";
+  const snapKey = `docHistory_${caseKey}`;
+  const arr = JSON.parse(localStorage.getItem(snapKey) || "[]");
+  const text = arr.map((s,i)=>`#${i+1} — ${s.at}\nASSESSMENT:\n${s.assessment || "(blank)"}\n`).join("\n");
+  alert(text || "No saved submissions yet.");
+});
+  
     };
   }
 
@@ -809,6 +841,26 @@ function renderPatientProfile(c) {
 
       const nameEl = $("patientName");
       if (nameEl) nameEl.textContent = nameWithAge;
+// restore referral badge after refresh (per case)
+try{
+  const saved = localStorage.getItem(`refBadge_${caseKey}`);
+  if (saved){
+    const data = JSON.parse(saved);
+    const nameEl2 = document.getElementById("patientName");
+    if (nameEl2){
+      let badge = document.getElementById("refBadge");
+      if (!badge){
+        badge = document.createElement("div");
+        badge.id = "refBadge";
+        badge.style.marginTop = "4px";
+        badge.style.fontSize = "11px";
+        badge.style.color = "var(--muted)";
+        nameEl2.insertAdjacentElement("afterend", badge);
+      }
+      badge.textContent = `Referred: ${data.to} • ${data.date}`;
+    }
+  }
+}catch(e){}
 
       // The patientSetting and patientPrimary elements are now removed from the DOM/redundant in JS.
       // We are leaving the following JS code commented out/removed for clean separation:
@@ -911,6 +963,14 @@ document.getElementById("refSubmitBtn")?.addEventListener("click", ()=>{
 - Request: ${req}`;
 
   pushDoc(note);
+  // ALSO write referral into visible Assessment so it's included when docs are submitted
+const dx = document.getElementById("docDx"); // Assessment / Diagnosis box
+if (dx){
+  const line = `Orders/Referrals: Referred to ${to} (${urg}) — ${reason}; Request: ${req}.`;
+  dx.value = (dx.value.trim() ? (dx.value.trim() + "\n") : "") + line;
+  dx.dispatchEvent(new Event("input")); // updates word counter / limiter
+}
+
     // --- show referral history under patient name ---
   const nameEl = document.getElementById("patientName");
   if (nameEl){
@@ -925,6 +985,12 @@ document.getElementById("refSubmitBtn")?.addEventListener("click", ()=>{
     }
     badge.textContent = `Referred: ${to} • ${new Date().toLocaleDateString()}`;
   }
+// persist referral badge per case
+const caseKey = (document.getElementById("caseSelect")?.value) || "CASE_001";
+localStorage.setItem(
+  `refBadge_${caseKey}`,
+  JSON.stringify({ to, date: new Date().toLocaleDateString() })
+);
 
   // store latest referral summary for grading
   window.__LAST_REFERRAL_NOTE = note;
