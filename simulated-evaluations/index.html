@@ -608,13 +608,6 @@ function checkAttemptLock(){
 checkAttemptLock();
 
 
-
-    if (used >= 3 && docSubmitBtn && docStatus){
-      docSubmitBtn.disabled = true;
-      docStatus.textContent = "You have used all 3 submission attempts for this case.";
-      docStatus.style.color = "#f97373";
-    }
-
   if (docSubmitBtn && docStatus){
     docSubmitBtn.onclick = () => {
       const used = getAttempts();
