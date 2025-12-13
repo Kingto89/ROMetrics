@@ -269,94 +269,226 @@ import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 // <--- PLACE TOKEN DEFINITIONS HERE ADDING FOR TOKEN BEGINS---
 
 const MMT_CASE_TOKENS = {
-    "MMT-CERVICAL-001": {
-        caseId: "case_mmt_001",
-        label: "Cervical Impairment", 
-        
-        // Define ALL regions available in the UI
-        allRegions: ["Cervical & Capital", "Scapula", "Shoulder", "Trunk & Pelvis - Grading Exception", "Elbow", "Wrist", "Hip", "Knee", "Ankle & Foot - Grading Exception for Gastroc"],
-        
-        // Define ONLY the regions allowed for this case (Upper Extremity)
-        allowedRegions: ["Cervical & Capital"],
-        
-impairments: {
-    // MMT Caps (4/5)
-    Cervical_Rotation: { max_hold_time: 4.5 }, // <--- CLEANED KEY
-    Single_SCM: { max_hold_time: 4.5 },        // <--- CLEANED KEY
-    
-    default_unrestricted: { max_hold_time: 99.0 }
-}
-}
+  // =========================
+  // CASE 1
+  // =========================
+  "MMT-CERVICAL-001": {
+    caseId: "case_mmt_001",
+    label: "Cervical Impairment",
+
+    // Define ALL regions available in the UI (if you use this)
+    allRegions: [
+      "Cervical & Capital",
+      "Scapula",
+      "Shoulder",
+      "Trunk & Pelvis - Grading Exception",
+      "Elbow",
+      "Wrist",
+      "Hip",
+      "Knee",
+      "Ankle & Foot - Grading Exception for Gastroc"
+    ],
+
+    // Define ONLY the regions allowed for this case
+    allowedRegions: ["Cervical & Capital"],
+
+    impairments: {
+      Cervical_Rotation: { max_hold_time: 4.5 },
+      Single_SCM:        { max_hold_time: 4.5 },
+
+      default_unrestricted: { max_hold_time: 99.0 }
+    }
+  },
+
+  // =========================
+  // CASE 2  (HIP)
+  // =========================
+  "MMT-HIP-002": {
+    caseId: "case_mmt_002",
+    label: "Hip Case (R weakness)",
+
+    // MUST match your <optgroup label="..."> text in the Action/Test dropdown
+    allowedRegions: ["Hip", "Knee"],
+
+    impairments: {
+      // RIGHT deficits only
+      Iliopsoas:     { side: "R", max_hold_time: 3.0 },  // 3/5
+      Hip_Abductors: { side: "R", max_hold_time: 3.5 },  // 3+/5
+      Hip_Extensors: { side: "R", max_hold_time: 4.0 },  // 4-/5
+
+      default_unrestricted: { max_hold_time: 99.0 }
+    },
+
+    // Tests required before case results show (must match your actionSel values)
+    requiredTests: ["Iliopsoas", "Hip_Abductors", "Hip_Extensors", "Quadriceps", "Hamstrings"],
+
+    resultsText: `
+MMT Case Summary — Hip
+
+RIGHT:
+- Hip Flexors (Iliopsoas, seated): 3/5 — Full AG to ~50°, breaks with resistance
+- Hip Abductors (sidelying): 3+/5 — Holds light resistance, fatigues quickly
+- Hip Extensors (prone): 4-/5 — Mild weakness, no major pain
+- Quadriceps (seated): 5/5
+- Hamstrings (prone): 5/5
+
+LEFT:
+- All listed muscle groups: 5/5
+`.trim()
+  }
+
+  // =========================
+  // DROP MORE CASES BELOW
+  // Keep the comma rules:
+  // - Add a comma AFTER each case object
+  // - EXCEPT the very last case before the closing }
+  // =========================
+
+  // "MMT-CLUSTER-003": {
+  //   caseId: "case_mmt_003",
+  //   label: "Cluster Case",
+  //   allowedRegions: ["..."],
+  //   impairments: {
+  //     // Your keys here...
+  //     default_unrestricted: { max_hold_time: 99.0 }
+  //   },
+  //   requiredTests: ["..."],
+  //   resultsText: `...`.trim()
+  // }
 };
 
-window.MMT_CASE_MODE = {
-    active: false,
-    token: null,
-    impairments: {}
-};
+
+  
 // --- NEW: Global Tracker for Impaired MMT Tests ---
 window.IMPAIRMENT_TRACKER = {
-    // Keys match the impaired test names
-    'Single_SCM': false,
-    'Cervical_Rotation': false
+  // CASE 1
+  "Single_SCM": false,
+  "Cervical_Rotation": false,
+
+  // CASE 2 (HIP)
+  "Iliopsoas": false,
+  "Hip_Abductors": false,
+  "Hip_Extensors": false
+
+  // DROP MORE TRACKED TEST KEYS BELOW (add comma above if you add new lines)
+  // "CASE3_TEST_KEY_1": false,
+  // "CASE3_TEST_KEY_2": false
 };
 
-// --- NEW: DETAILED CASE RESULTS TEXT (CONFIRMATORY SENTENCE REMOVED) ---
-const MMT_FULL_RESULTS = `
-MMT Case Summary: Right-Sided Deficit
+
+// --- NEW: DETAILED CASE RESULTS TEXT (PER-CASE; NO BLEED) ---
+const MMT_FULL_RESULTS = {
+  "MMT-CERVICAL-001": `
+MMT Case Summary: Right-Sided Cervical Deficit
 
 ✅ Impaired Results (4/5 Strength):
-- Right Cervical Rotators (Tested by: Cervical Rotation)
-- Right Lateral Flexion (Tested by: Single SCM)
+- Right Cervical Rotators (Tested by: Cervical_Rotation)
+- Right Lateral Flexion (Tested by: Single_SCM)
 
 ✅ Unimpaired Results (5/5 Strength):
 - Cervical Flexors (Full strength)
 - Cervical Extensors (Full strength)
-- All other Upper Extremity groups (Full strength)
-`;
-// ----------------------------------------
+- All other groups (Full strength)
+`.trim(),
+
+  "MMT-HIP-002": `
+MMT Case Summary — Hip
+
+RIGHT:
+- Hip Flexors (Iliopsoas, seated): 3/5 — Full AG to ~50°, breaks with resistance
+- Hip Abductors (sidelying): 3+/5 — Holds light resistance, fatigues quickly
+- Hip Extensors (prone): 4-/5 — Mild weakness, no major pain
+- Quadriceps (seated): 5/5
+- Hamstrings (prone): 5/5
+
+LEFT:
+- All listed muscle groups: 5/5
+`.trim(),
+
+  // ---------- SLOT FOR NEW CASES ----------
+  // "MMT-_____-___": `
+  // MMT Case Summary — ______
+  // ✅ Impaired:
+  // - ...
+  // ✅ Unimpaired:
+  // - ...
+  // `.trim(),
+};
+
 // ---------------------------------------------------
-/* --- MMT Case Initialization and Menu Filtering (REMOVES DISALLOWED OPTIONS) --- */
+function initMMTCaseMode() {
+  const token = new URLSearchParams(window.location.search).get("caseToken");
+  const cfg = token && MMT_CASE_TOKENS[token];
 
-(function initMMTCaseMode() {
-    const token = new URLSearchParams(window.location.search).get("caseToken");
-    const cfg = token && MMT_CASE_TOKENS[token];
-    
-    if (!cfg) {
-        window.MMT_CASE_MODE.active = false;
-        return;
+  // ---------- RESET (prevents bleed between cases / refreshes) ----------
+  window.MMT_CASE_MODE = { active:false, token:null, impairments:{} };
+
+  // OPTIONAL: reset tracker completely each load (safe)
+  // window.IMPAIRMENT_TRACKER = {};
+
+  if (!cfg) return;
+
+  // ---------- ACTIVATE CASE MODE ----------
+  window.MMT_CASE_MODE.active = true;
+  window.MMT_CASE_MODE.token = token;
+  window.MMT_CASE_MODE.impairments = cfg.impairments || {};
+
+  // ---------- CASE BANNER (replace if already exists) ----------
+  const existing = document.getElementById("mmtCaseBanner");
+  if (existing) existing.remove();
+
+  const banner = document.createElement("div");
+  banner.id = "mmtCaseBanner";
+  banner.textContent = `MMT Case Mode Active: ${cfg.label} (Token: ${token})`;
+  banner.style.cssText =
+    "position:fixed;top:0;left:0;right:0;z-index:9999;padding:6px;font-size:14px;font-weight:600;background:#dc2626;color:#fff;text-align:center;";
+  document.body.appendChild(banner);
+
+  // ---------- FILTER MENU OPTIONS ----------
+  // Supports:
+  // - cfg.allowedRegions (recommended)
+  // - cfg.allRegions (optional; not required)
+  const allowed = new Set(cfg.allowedRegions || []);
+  const actionSel = document.getElementById("actionSel");
+
+  if (actionSel && allowed.size) {
+    // If you ever need to restore the full dropdown later (switching cases without reload),
+    // you can save the original HTML once:
+    if (!actionSel.dataset.originalHtml) {
+      actionSel.dataset.originalHtml = actionSel.innerHTML;
+    } else {
+      // restore baseline before filtering again (prevents cumulative removals)
+      actionSel.innerHTML = actionSel.dataset.originalHtml;
     }
 
-    // --- ACTIVATE CASE MODE AND APPLY FILTERS/BANNER ---
-    window.MMT_CASE_MODE.active = true;
-    window.MMT_CASE_MODE.token = token;
-    window.MMT_CASE_MODE.impairments = cfg.impairments;
+    Array.from(actionSel.querySelectorAll("optgroup")).forEach((optgroup) => {
+      const label = (optgroup.label || "").trim();
+      if (!allowed.has(label)) optgroup.remove();
+    });
 
-    // 1. Apply Case Banner 
-    const banner = document.createElement("div");
-    banner.textContent = `MMT Case Mode Active: ${cfg.label} (Token: ${token})`;
-    banner.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:9999;padding:6px;font-size:14px;font-weight:600;background:#dc2626;color:#fff;text-align:center;";
-    document.body.appendChild(banner);
-
-    // 2. Filter Menu Options by DIRECTLY REMOVING DISALLOWED <OPTGROUP>S
-    const allowed = new Set(cfg.allowedRegions);
-    const actionSel = document.getElementById("actionSel");
-    
-    if (actionSel) {
-        Array.from(actionSel.querySelectorAll('optgroup')).forEach(optgroup => {
-            const label = optgroup.label.trim();
-            
-            if (!allowed.has(label)) {
-                // Directly remove the optgroup from the menu for a guaranteed filter
-                optgroup.remove();
-            }
-        });
+    // If the current selection got removed, reset safely
+    if (!actionSel.querySelector('option[value="' + actionSel.value + '"]')) {
+      actionSel.value = "";
     }
-})();
+  }
 
-// ... rest of the script continues below ...
+  // ---------- REQUIRED TESTS + TRACKER (PER-CASE, NO BLEED) ----------
+  // Case can define requiredTests; tracker auto-builds keys for those tests.
+  if (Array.isArray(cfg.requiredTests)) {
+    window.MMT_CASE_MODE.requiredTests = cfg.requiredTests.slice();
+    window.IMPAIRMENT_TRACKER = window.IMPAIRMENT_TRACKER || {};
+    cfg.requiredTests.forEach((k) => (window.IMPAIRMENT_TRACKER[k] = false));
+  } else {
+    window.MMT_CASE_MODE.requiredTests = [];
+    // leave tracker as-is if no requiredTests
+  }
 
-/* // ADDED for TOKEN ENDS
+  // ---------- RESULTS TEXT (PER-CASE, USING YOUR MMT_FULL_RESULTS MAP) ----------
+  window.MMT_CASE_MODE.resultsText =
+    (typeof MMT_FULL_RESULTS === "object" && MMT_FULL_RESULTS[token]) ? MMT_FULL_RESULTS[token] : (cfg.resultsText || "");
+}
+
+
 /* ==== Hard-wired numeric pose (edit these) ==== */
 const POSE = {
   x: -0.10,   // left(-) / right(+)
