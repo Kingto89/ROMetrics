@@ -460,7 +460,16 @@ const CASE_FILES = {
       }
       visitedMMT = true;
       updateDocLockState();
-      window.open(ROUTES.mmt, "_blank");
+const caseKey = getCurrentCaseKey();
+
+const CASE_MMT_URLS = {
+  "CASE_001": "https://kingto89.github.io/ROMetrics.com/mmt/?caseToken=MMT-CERVICAL-001",
+  "CASE_002": "https://kingto89.github.io/ROMetrics.com/mmt/?caseToken=MMT-HIP-002",
+  "CASE_003": "https://kingto89.github.io/ROMetrics.com/mmt/?caseToken=MMT-CLUSTER-003"
+};
+
+const url = CASE_MMT_URLS[caseKey] || CASE_MMT_URLS["CASE_001"];
+window.open(url, "_blank");
       return;
     }
 
