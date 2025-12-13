@@ -1,489 +1,665 @@
-# ROMetrics Exercise Library
-*A compact, parse-friendly exercise catalog you can keep in `/assets/` and load into the Exercises modal.*
+# ROMetrics Exercise Library (Minimal)
+*Simple, dose-focused, parse-friendly catalog for `/assets/`.*
 
-## How to use this file
-- Each exercise has a unique **ID** you can store in your case plans.
-- The modal can filter by:
-  - **Region** (Hip, Trunk, Knee, etc.)
-  - **Category** (Mobility/ROM, Strength, Neuromuscular Control, Balance)
-  - **Impairment Tags** (e.g., `hip_abductor_weak`, `lumbar_stability_deficit`)
-  - **Equipment**
-- Keep your index short by only storing selected **IDs + dose fields** in the case plan.
-
----
-
-## Dose presets (optional “quick fill”)
-- **Mobility/ROM (stretch):** 2–4 sets × 20–45 sec hold, 1–2x/day
-- **Mobility/ROM (joint/active):** 2–3 sets × 8–12 reps, 1–2x/day
-- **Strength (basic):** 2–4 sets × 6–12 reps, 2–4x/week
-- **Strength endurance:** 2–4 sets × 12–20 reps, 2–4x/week
-- **Neuromuscular control:** 2–4 sets × 30–60 sec or 6–10 quality reps, 3–6x/week
-- **Balance:** 3–5 bouts × 20–45 sec, 3–6x/week
-- **Aerobic (if included):** 10–30 min, 3–5x/week (case-dependent)
-
-**Pain rule default:** Mild discomfort is OK; stop if sharp/worsening pain, numbness/tingling, dizziness, or symptoms radiate.
+## Format (what each exercise includes)
+Each entry is a tiny YAML block with ONLY:
+- `id`
+- `name`
+- `region`
+- `type` (ROM | Strength | Neuro | Balance)
+- `tags` (for matching cases)
+- `dose` (sets / reps / hold / frequency)
 
 ---
 
-## Catalog (quick reference)
-> Tip: Use this for search results; the full entries are below.
-
+## Quick Index (IDs)
 ### Cervical / Thoracic
-| ID | Name | Category | Primary tags |
-|---|---|---|---|
-| CERV_MOB_001 | Cervical AROM: rotation | Mobility/ROM | cervical_rotation_limit |
-| CERV_MOB_002 | Cervical AROM: side-bend | Mobility/ROM | cervical_lat_flex_limit |
-| CERV_MOB_003 | Chin tucks (deep neck flexors) | Neuromuscular control | dnfl_weak, forward_head |
-| CERV_STR_001 | Isometric cervical flex/ext/rot | Strength | cervical_stability_deficit |
-| THX_MOB_001 | Thoracic extension over towel/foam | Mobility/ROM | thoracic_extension_limit |
-| THX_NMC_001 | Wall angels | Neuromuscular control | scap_control_deficit, thoracic_mobility_need |
+| ID | Name | Type |
+|---|---|---|
+| CERV_ROM_001 | Cervical AROM — Rotation | ROM |
+| CERV_ROM_002 | Cervical AROM — Side-bend | ROM |
+| CERV_NEURO_001 | Chin tuck (deep neck flexors) | Neuro |
+| CERV_STR_001 | Cervical isometrics (flex/ext/rot) | Strength |
+| THX_ROM_001 | Thoracic extension over towel/foam | ROM |
+| THX_NEURO_001 | Wall angels | Neuro |
 
 ### Shoulder / Scapular
-| ID | Name | Category | Primary tags |
-|---|---|---|---|
-| SH_MOB_001 | Pendulums | Mobility/ROM | pain_irritable_shoulder |
-| SH_MOB_002 | Table slides: flexion | Mobility/ROM | shoulder_flexion_limit |
-| SH_MOB_003 | Sleeper stretch (posterior capsule) | Mobility/ROM | gh_ir_limit |
-| SH_STR_001 | ER/IR band: neutral | Strength | rc_weak |
-| SH_STR_002 | Scaption (thumb up) | Strength | deltoid_weak, rc_weak |
-| SCAP_NMC_001 | Serratus punches | Neuromuscular control | scap_winging, serratus_weak |
-| SCAP_NMC_002 | Prone “T/Y” | Neuromuscular control | mid_low_trap_weak |
+| ID | Name | Type |
+|---|---|---|
+| SH_ROM_001 | Pendulums | ROM |
+| SH_ROM_002 | Table slides — Flexion | ROM |
+| SH_ROM_003 | Sleeper stretch | ROM |
+| SH_STR_001 | Band ER/IR (neutral) | Strength |
+| SH_STR_002 | Scaption (thumb up) | Strength |
+| SCAP_NEURO_001 | Serratus punches | Neuro |
+| SCAP_NEURO_002 | Prone T / Y | Neuro |
 
 ### Elbow / Wrist / Hand
-| ID | Name | Category | Primary tags |
-|---|---|---|---|
-| ELB_STR_001 | Biceps curl (band/dumbbell) | Strength | elbow_flexor_weak |
-| ELB_STR_002 | Triceps pressdown (band) | Strength | elbow_extensor_weak |
-| WR_MOB_001 | Wrist ext/flex AROM | Mobility/ROM | wrist_rom_limit |
-| WR_STR_001 | Wrist extensor eccentrics | Strength | lateral_epicondylalgia |
-| HAND_NMC_001 | Tendon glides | Mobility/ROM | hand_stiffness, edema_management |
-| HAND_STR_001 | Putty grip/pinch | Strength | grip_weak |
+| ID | Name | Type |
+|---|---|---|
+| ELB_STR_001 | Biceps curl (band/db) | Strength |
+| ELB_STR_002 | Triceps pressdown (band) | Strength |
+| WR_ROM_001 | Wrist AROM (flex/ext) | ROM |
+| WR_STR_001 | Wrist extensor eccentrics | Strength |
+| HAND_ROM_001 | Tendon glides | ROM |
+| HAND_STR_001 | Putty grip/pinch | Strength |
 
 ### Trunk / Core
-| ID | Name | Category | Primary tags |
-|---|---|---|---|
-| TRK_NMC_001 | Abdominal brace + breathing | Neuromuscular control | trunk_control_deficit |
-| TRK_STR_001 | Bridge | Strength | glute_weak, trunk_endurance_low |
-| TRK_STR_002 | Side plank (modified) | Strength | lateral_chain_weak |
-| TRK_STR_003 | Bird-dog | Neuromuscular control | lumbar_stability_deficit |
-| TRK_STR_004 | McGill curl-up | Neuromuscular control | lumbar_stability_deficit |
-| TRK_MOB_001 | Cat-cow | Mobility/ROM | lumbar_stiffness |
-| TRK_MOB_002 | Open book rotation | Mobility/ROM | thoracolumbar_rotation_limit |
+| ID | Name | Type |
+|---|---|---|
+| TRK_NEURO_001 | Abdominal brace + breathing | Neuro |
+| TRK_STR_001 | Bridge | Strength |
+| TRK_STR_002 | Side plank (modified) | Strength |
+| TRK_NEURO_002 | Bird-dog | Neuro |
+| TRK_NEURO_003 | McGill curl-up | Neuro |
+| TRK_ROM_001 | Cat-cow | ROM |
+| TRK_ROM_002 | Open book rotation | ROM |
 
 ### Hip
-| ID | Name | Category | Primary tags |
-|---|---|---|---|
-| HIP_STR_001 | Clamshell | Strength | hip_abductor_weak |
-| HIP_STR_002 | Side-lying hip abduction | Strength | hip_abductor_weak |
-| HIP_STR_003 | Hip hinge to wall | Neuromuscular control | hip_hinge_mechanics |
-| HIP_STR_004 | Sit-to-stand | Strength | functional_strength_low |
-| HIP_NMC_001 | Single-leg balance (hip strategy) | Balance | hip_control_deficit |
-| HIP_MOB_001 | Hip flexor stretch (half-kneel) | Mobility/ROM | hip_extension_limit |
-| HIP_MOB_002 | Figure-4 stretch | Mobility/ROM | hip_er_limit, piriformis_tight |
-| HIP_MOB_003 | Hamstring stretch (supine strap) | Mobility/ROM | hamstring_tight |
+| ID | Name | Type |
+|---|---|---|
+| HIP_STR_001 | Clamshell | Strength |
+| HIP_STR_002 | Side-lying hip abduction | Strength |
+| HIP_NEURO_001 | Hip hinge to wall | Neuro |
+| HIP_STR_003 | Sit-to-stand | Strength |
+| HIP_BAL_001 | Single-leg balance (hip strategy) | Balance |
+| HIP_ROM_001 | Hip flexor stretch (half-kneel) | ROM |
+| HIP_ROM_002 | Figure-4 stretch | ROM |
+| HIP_ROM_003 | Hamstring stretch (strap) | ROM |
+| HIP_STR_004 | Monster walks | Strength |
+| HIP_NEURO_002 | Step-down (control) | Neuro |
+| HIP_STR_005 | Single-leg RDL | Strength |
+| HIP_ROM_004 | Adductor rock-backs | ROM |
 
 ### Knee
-| ID | Name | Category | Primary tags |
-|---|---|---|---|
-| KNEE_STR_001 | Quad set | Strength | quad_inhibition |
-| KNEE_STR_002 | Straight leg raise | Strength | quad_weak |
-| KNEE_STR_003 | Terminal knee extension (band) | Strength | knee_extension_control |
-| KNEE_STR_004 | Step-up (low) | Strength | functional_strength_low |
-| KNEE_NMC_001 | Mini-squat (hip-knee alignment) | Neuromuscular control | dynamic_valgus |
-| KNEE_MOB_001 | Heel slides | Mobility/ROM | knee_flexion_limit |
-| KNEE_MOB_002 | Knee extension hang | Mobility/ROM | knee_extension_limit |
+| ID | Name | Type |
+|---|---|---|
+| KNEE_STR_001 | Quad set | Strength |
+| KNEE_STR_002 | Straight leg raise | Strength |
+| KNEE_STR_003 | Terminal knee extension (band) | Strength |
+| KNEE_STR_004 | Step-up (low) | Strength |
+| KNEE_NEURO_001 | Mini-squat (alignment) | Neuro |
+| KNEE_ROM_001 | Heel slides | ROM |
+| KNEE_ROM_002 | Knee extension hang | ROM |
+| KNEE_STR_005 | Wall sit | Strength |
+| KNEE_STR_006 | Hamstring curls | Strength |
+| KNEE_NEURO_002 | Lateral step-over | Neuro |
+| KNEE_BAL_001 | SL balance + reach | Balance |
 
 ### Ankle / Foot
-| ID | Name | Category | Primary tags |
-|---|---|---|---|
-| ANK_MOB_001 | Ankle DF knee-to-wall | Mobility/ROM | ankle_df_limit |
-| ANK_STR_001 | Calf raises (double → single) | Strength | plantarflexor_weak |
-| ANK_STR_002 | Tibialis raises | Strength | dorsiflexor_weak |
-| ANK_STR_003 | Band inversion/eversion | Strength | ankle_stability_deficit |
-| ANK_NMC_001 | Single-leg balance | Balance | balance_deficit |
-| FT_STR_001 | Short-foot (arch doming) | Neuromuscular control | arch_control_deficit |
-| FT_MOB_001 | Toe yoga | Neuromuscular control | intrinsic_foot_weak |
+| ID | Name | Type |
+|---|---|---|
+| ANK_ROM_001 | Ankle DF knee-to-wall | ROM |
+| ANK_STR_001 | Calf raises (double → single) | Strength |
+| ANK_STR_002 | Tibialis raises | Strength |
+| ANK_STR_003 | Band inversion/eversion | Strength |
+| ANK_BAL_001 | Single-leg balance | Balance |
+| FT_NEURO_001 | Short-foot (arch doming) | Neuro |
+| FT_NEURO_002 | Toe yoga | Neuro |
+| ANK_STR_004 | Eccentric heel lowers | Strength |
+| FT_STR_001 | Towel scrunches | Strength |
+| FT_BAL_001 | Heel-to-toe walk | Balance |
 
 ---
 
-## Full entries (structured)
-> Format: each exercise is a small YAML block + notes. Easy to parse later.
+## Entries (minimal YAML blocks)
 
-### CERV_MOB_001 — Cervical AROM: rotation
+### Cervical / Thoracic
 ```yaml
-id: CERV_MOB_001
+id: CERV_ROM_001
 name: Cervical AROM — Rotation
 region: cervical
-category: Mobility/ROM
-equipment: none
-impairment_tags: [cervical_rotation_limit, neck_stiffness]
-default_dose: "2–3 sets × 8–12 reps each direction, 1–2x/day"
-setup: "Sit tall; shoulders relaxed."
-action: "Turn head slowly to look over shoulder; return to center."
-cues: ["Keep chin level", "Move within comfortable range", "Avoid shrugging"]
-progressions: ["Add gentle end-range pause 2–3 sec"]
-regressions: ["Smaller range; supported back"]
-avoid_if: ["dizziness/vertebrobasilar symptoms", "acute trauma without clearance"]
-```
-Notes: Good for early mobility when pain is low–moderate.
+type: ROM
+tags: [cervical_rotation_limit, neck_stiffness]
+dose: { sets: "2-3", reps: "8-12/side", hold_sec: "0", frequency: "1-2x/day" }
+````
 
-### CERV_MOB_002 — Cervical AROM: side-bend
 ```yaml
-id: CERV_MOB_002
+id: CERV_ROM_002
 name: Cervical AROM — Side-bend
 region: cervical
-category: Mobility/ROM
-equipment: none
-impairment_tags: [cervical_lat_flex_limit, neck_stiffness]
-default_dose: "2–3 sets × 8–12 reps each side, 1–2x/day"
-setup: "Sit tall; keep shoulders down."
-action: "Bring ear toward shoulder without rotating."
-cues: ["Don’t lift the shoulder", "Small smooth motion"]
-progressions: ["End-range pause 2–3 sec"]
-regressions: ["Do lying down with head supported"]
-avoid_if: ["radiating symptoms that worsen"]
+type: ROM
+tags: [cervical_lat_flex_limit, neck_stiffness]
+dose: { sets: "2-3", reps: "8-12/side", hold_sec: "0", frequency: "1-2x/day" }
 ```
 
-### CERV_MOB_003 — Chin tucks (deep neck flexors)
 ```yaml
-id: CERV_MOB_003
-name: Chin tuck (Deep neck flexor activation)
+id: CERV_NEURO_001
+name: Chin tuck (deep neck flexors)
 region: cervical
-category: Neuromuscular control
-equipment: none
-impairment_tags: [dnfl_weak, forward_head, cervical_stability_deficit]
-default_dose: "2–3 sets × 8–10 reps, 3–5 sec holds, daily"
-setup: "Supine or seated; neutral spine."
-action: "Gently glide chin straight back (make a 'double chin')."
-cues: ["No neck flexion crunch", "Keep jaw relaxed"]
-progressions: ["Add head lift 1–2 cm if tolerated"]
-regressions: ["Smaller glide; supine only"]
-avoid_if: ["headache flare not improving with regression"]
+type: Neuro
+tags: [dnfl_weak, forward_head, cervical_stability_deficit]
+dose: { sets: "2-3", reps: "8-10", hold_sec: "3-5", frequency: "daily" }
 ```
 
-### CERV_STR_001 — Cervical isometrics (flex/ext/rot)
 ```yaml
 id: CERV_STR_001
-name: Cervical isometrics — flex/ext/rotation
+name: Cervical isometrics (flex/ext/rot)
 region: cervical
-category: Strength
-equipment: none
-impairment_tags: [cervical_stability_deficit]
-default_dose: "2–3 sets × 5 reps each direction, 5–10 sec holds, 3–5x/week"
-setup: "Sit tall."
-action: "Press head gently into hand (no movement)."
-cues: ["Submax effort ~30–50%", "No pain spike"]
-progressions: ["Increase hold time", "Add more directions"]
-regressions: ["Shorter holds"]
-avoid_if: ["acute radicular worsening"]
+type: Strength
+tags: [cervical_stability_deficit]
+dose: { sets: "2-3", reps: "5 each direction", hold_sec: "5-10", frequency: "3-5x/week" }
 ```
 
-### THX_MOB_001 — Thoracic extension over towel/foam
 ```yaml
-id: THX_MOB_001
+id: THX_ROM_001
 name: Thoracic extension over towel/foam
 region: thoracic
-category: Mobility/ROM
-equipment: towel_roll_or_foam_roller
-impairment_tags: [thoracic_extension_limit, kyphosis_posture]
-default_dose: "2–3 sets × 6–10 slow reps, 1x/day"
-setup: "Roll at mid-back; support head if needed."
-action: "Gently extend over roll; return."
-cues: ["Don’t flare ribs excessively"]
-progressions: ["Move roller one level up/down"]
-regressions: ["Use towel roll instead of foam"]
-avoid_if: ["osteoporosis fracture risk without modification"]
+type: ROM
+tags: [thoracic_extension_limit, posture_kyphosis]
+dose: { sets: "2-3", reps: "6-10", hold_sec: "0", frequency: "1x/day" }
 ```
 
-### THX_NMC_001 — Wall angels
 ```yaml
-id: THX_NMC_001
+id: THX_NEURO_001
 name: Wall angels
 region: thoracic
-category: Neuromuscular control
-equipment: wall
-impairment_tags: [scap_control_deficit, thoracic_mobility_need]
-default_dose: "2–3 sets × 6–10 reps, 3–5x/week"
-setup: "Back to wall; ribs down; elbows at 90."
-action: "Slide arms up/down while keeping contact."
-cues: ["Keep ribs down", "No shoulder shrug"]
-progressions: ["Add mini-band"]
-regressions: ["Smaller range"]
-avoid_if: ["sharp shoulder pain"]
+type: Neuro
+tags: [scap_control_deficit, thoracic_mobility_need]
+dose: { sets: "2-3", reps: "6-10", hold_sec: "0", frequency: "3-5x/week" }
 ```
 
 ---
 
-## Shoulder / Scapular entries
+### Shoulder / Scapular
 
-### SH_MOB_001 — Pendulums
 ```yaml
-id: SH_MOB_001
+id: SH_ROM_001
 name: Pendulums
 region: shoulder
-category: Mobility/ROM
-equipment: none
-impairment_tags: [pain_irritable_shoulder]
-default_dose: "1–2 min total, 1–3x/day"
-setup: "Support with other arm on table; trunk hinged."
-action: "Let arm hang and make small circles."
-cues: ["Motion from body, not shoulder muscles"]
-progressions: ["Slightly larger circles"]
-regressions: ["Smaller circles"]
-avoid_if: ["dizziness; unable to safely hinge"]
+type: ROM
+tags: [pain_irritable_shoulder]
+dose: { sets: "1-2", reps: "60-120 sec", hold_sec: "0", frequency: "1-3x/day" }
 ```
 
-### SH_MOB_002 — Table slides: flexion
 ```yaml
-id: SH_MOB_002
-name: Table slides — Shoulder flexion
+id: SH_ROM_002
+name: Table slides — Flexion
 region: shoulder
-category: Mobility/ROM
-equipment: table_towel
-impairment_tags: [shoulder_flexion_limit]
-default_dose: "2–3 sets × 8–12 reps, daily"
-setup: "Seated; forearm on towel."
-action: "Slide arm forward, allowing trunk to follow; return."
-cues: ["Relax shoulder; smooth motion"]
-progressions: ["Hold 5–10 sec at end range"]
-regressions: ["Shorter slide"]
-avoid_if: ["acute post-op restrictions unless cleared"]
+type: ROM
+tags: [shoulder_flexion_limit]
+dose: { sets: "2-3", reps: "8-12", hold_sec: "0-10", frequency: "daily" }
 ```
 
-### SH_MOB_003 — Sleeper stretch
 ```yaml
-id: SH_MOB_003
-name: Sleeper stretch (posterior capsule)
+id: SH_ROM_003
+name: Sleeper stretch
 region: shoulder
-category: Mobility/ROM
-equipment: none
-impairment_tags: [gh_ir_limit, posterior_shoulder_tight]
-default_dose: "2–3 sets × 20–30 sec holds, 1x/day"
-setup: "Side-lying on involved side; shoulder 90/90."
-action: "Gently guide forearm toward table (IR)."
-cues: ["No pinching; gentle only"]
-progressions: ["Add 5 sec contract-relax"]
-regressions: ["Reduce shoulder flexion angle"]
-avoid_if: ["anterior instability symptoms"]
+type: ROM
+tags: [gh_ir_limit, posterior_shoulder_tight]
+dose: { sets: "2-3", reps: "1", hold_sec: "20-30", frequency: "1x/day" }
 ```
 
-### SH_STR_001 — Band ER/IR (neutral)
 ```yaml
 id: SH_STR_001
-name: Band ER/IR — neutral
+name: Band ER/IR (neutral)
 region: shoulder
-category: Strength
-equipment: resistance_band
-impairment_tags: [rc_weak]
-default_dose: "2–4 sets × 8–15 reps, 2–4x/week"
-setup: "Elbow at side; towel roll under elbow."
-action: "Rotate forearm out (ER) or in (IR) against band."
-cues: ["Keep elbow tucked", "No trunk twist"]
-progressions: ["Increase band", "Add abduction angle"]
-regressions: ["Less band tension"]
-avoid_if: ["pain > mild"]
+type: Strength
+tags: [rc_weak]
+dose: { sets: "2-4", reps: "8-15", hold_sec: "0", frequency: "2-4x/week" }
 ```
 
-### SH_STR_002 — Scaption (thumb up)
 ```yaml
 id: SH_STR_002
 name: Scaption (thumb up)
 region: shoulder
-category: Strength
-equipment: light_dumbbell_optional
-impairment_tags: [deltoid_weak, rc_weak]
-default_dose: "2–4 sets × 8–12 reps, 2–4x/week"
-setup: "Arms ~30° forward of frontal plane."
-action: "Raise to ~90° if tolerated; lower slowly."
-cues: ["Thumb up", "No shrug"]
-progressions: ["Add weight", "Slow eccentric 3 sec"]
-regressions: ["Lower range"]
-avoid_if: ["impingement symptoms worsen"]
+type: Strength
+tags: [deltoid_weak, rc_weak]
+dose: { sets: "2-4", reps: "8-12", hold_sec: "0", frequency: "2-4x/week" }
 ```
 
-### SCAP_NMC_001 — Serratus punches
 ```yaml
-id: SCAP_NMC_001
+id: SCAP_NEURO_001
 name: Serratus punches
 region: scapular
-category: Neuromuscular control
-equipment: band_or_dumbbell_optional
-impairment_tags: [scap_winging, serratus_weak]
-default_dose: "2–3 sets × 10–15 reps, 3–5x/week"
-setup: "Supine or standing; arm to ceiling/front."
-action: "Reach forward (protract) without shrug; return."
-cues: ["Reach long", "Keep neck relaxed"]
-progressions: ["Add band", "Wall slide + punch"]
-regressions: ["No resistance"]
-avoid_if: ["sharp anterior shoulder pain"]
+type: Neuro
+tags: [scap_winging, serratus_weak]
+dose: { sets: "2-3", reps: "10-15", hold_sec: "0", frequency: "3-5x/week" }
 ```
 
-### SCAP_NMC_002 — Prone T/Y
 ```yaml
-id: SCAP_NMC_002
-name: Prone T / Y (mid-low trap)
+id: SCAP_NEURO_002
+name: Prone T / Y
 region: scapular
-category: Neuromuscular control
-equipment: light_weights_optional
-impairment_tags: [mid_low_trap_weak, scap_control_deficit]
-default_dose: "2–3 sets × 8–12 reps, 2–4x/week"
-setup: "Prone; forehead supported."
-action: "Lift arms to T or Y with thumbs up; lower slow."
-cues: ["Shoulders down/back", "No lumbar extension"]
-progressions: ["Add weight", "Longer holds"]
-regressions: ["Reduce lever arm; no weight"]
-avoid_if: ["neck irritation"]
+type: Neuro
+tags: [mid_low_trap_weak, scap_control_deficit]
+dose: { sets: "2-3", reps: "8-12", hold_sec: "0-3", frequency: "2-4x/week" }
 ```
 
 ---
 
-## Trunk / Hip / Knee / Ankle (more entries)
+### Elbow / Wrist / Hand
 
-### TRK_NMC_001 — Abdominal brace + breathing
 ```yaml
-id: TRK_NMC_001
-name: Abdominal brace + diaphragmatic breathing
-region: trunk
-category: Neuromuscular control
-equipment: none
-impairment_tags: [trunk_control_deficit, lumbar_stability_deficit]
-default_dose: "2–3 min practice, daily"
-setup: "Supine; knees bent."
-action: "Gentle brace (360°) while breathing; no breath-hold."
-cues: ["Ribs down", "Breathe into belt line"]
-progressions: ["Add marching"]
-regressions: ["Shorter bouts"]
-avoid_if: ["none typical"]
+id: ELB_STR_001
+name: Biceps curl (band/db)
+region: elbow
+type: Strength
+tags: [elbow_flexor_weak]
+dose: { sets: "2-4", reps: "8-12", hold_sec: "0", frequency: "2-4x/week" }
 ```
 
-### TRK_STR_003 — Bird-dog
 ```yaml
-id: TRK_STR_003
+id: ELB_STR_002
+name: Triceps pressdown (band)
+region: elbow
+type: Strength
+tags: [elbow_extensor_weak]
+dose: { sets: "2-4", reps: "8-12", hold_sec: "0", frequency: "2-4x/week" }
+```
+
+```yaml
+id: WR_ROM_001
+name: Wrist AROM (flex/ext)
+region: wrist
+type: ROM
+tags: [wrist_rom_limit]
+dose: { sets: "2-3", reps: "10-15", hold_sec: "0", frequency: "1-2x/day" }
+```
+
+```yaml
+id: WR_STR_001
+name: Wrist extensor eccentrics
+region: wrist
+type: Strength
+tags: [lateral_epicondylalgia]
+dose: { sets: "2-3", reps: "8-12", hold_sec: "3 sec lower", frequency: "3-5x/week" }
+```
+
+```yaml
+id: HAND_ROM_001
+name: Tendon glides
+region: hand
+type: ROM
+tags: [hand_stiffness, edema_management]
+dose: { sets: "2-4", reps: "5-10", hold_sec: "0", frequency: "1-3x/day" }
+```
+
+```yaml
+id: HAND_STR_001
+name: Putty grip/pinch
+region: hand
+type: Strength
+tags: [grip_weak]
+dose: { sets: "2-3", reps: "10-15", hold_sec: "0-2", frequency: "3-5x/week" }
+```
+
+---
+
+### Trunk / Core
+
+```yaml
+id: TRK_NEURO_001
+name: Abdominal brace + breathing
+region: trunk
+type: Neuro
+tags: [trunk_control_deficit, lumbar_stability_deficit]
+dose: { sets: "1", reps: "2-3 min", hold_sec: "n/a", frequency: "daily" }
+```
+
+```yaml
+id: TRK_STR_001
+name: Bridge
+region: trunk
+type: Strength
+tags: [glute_weak, trunk_endurance_low]
+dose: { sets: "2-4", reps: "8-12", hold_sec: "2-5", frequency: "2-4x/week" }
+```
+
+```yaml
+id: TRK_STR_002
+name: Side plank (modified)
+region: trunk
+type: Strength
+tags: [lateral_chain_weak]
+dose: { sets: "2-4", reps: "1", hold_sec: "15-30", frequency: "2-4x/week" }
+```
+
+```yaml
+id: TRK_NEURO_002
 name: Bird-dog
 region: trunk
-category: Neuromuscular control
-equipment: none
-impairment_tags: [lumbar_stability_deficit]
-default_dose: "2–4 sets × 6–10 reps/side, 3–5x/week"
-setup: "Quadruped; neutral spine."
-action: "Extend opposite arm/leg; hold 2–5 sec; return."
-cues: ["No trunk rotation", "Reach long"]
-progressions: ["Longer holds", "Add band"]
-regressions: ["Only arms or only legs"]
-avoid_if: ["wrist pain (modify support)"]
+type: Neuro
+tags: [lumbar_stability_deficit]
+dose: { sets: "2-4", reps: "6-10/side", hold_sec: "2-5", frequency: "3-5x/week" }
 ```
 
-### HIP_STR_001 — Clamshell
+```yaml
+id: TRK_NEURO_003
+name: McGill curl-up
+region: trunk
+type: Neuro
+tags: [lumbar_stability_deficit]
+dose: { sets: "2-4", reps: "6-10", hold_sec: "5-10", frequency: "3-5x/week" }
+```
+
+```yaml
+id: TRK_ROM_001
+name: Cat-cow
+region: trunk
+type: ROM
+tags: [lumbar_stiffness]
+dose: { sets: "2-3", reps: "8-12", hold_sec: "0", frequency: "daily" }
+```
+
+```yaml
+id: TRK_ROM_002
+name: Open book rotation
+region: trunk
+type: ROM
+tags: [thoracolumbar_rotation_limit]
+dose: { sets: "2-3", reps: "6-10/side", hold_sec: "1-3", frequency: "daily" }
+```
+
+---
+
+### Hip
+
 ```yaml
 id: HIP_STR_001
 name: Clamshell
 region: hip
-category: Strength
-equipment: miniband_optional
-impairment_tags: [hip_abductor_weak]
-default_dose: "2–4 sets × 10–20 reps, 2–4x/week"
-setup: "Side-lying; hips/knees bent; feet together."
-action: "Open top knee without rolling pelvis back; return slow."
-cues: ["Keep pelvis stacked", "Feel glute med"]
-progressions: ["Add band", "Increase hold at top"]
-regressions: ["Smaller range"]
-avoid_if: ["lateral hip pain flare"]
+type: Strength
+tags: [hip_abductor_weak]
+dose: { sets: "2-4", reps: "10-20", hold_sec: "0-2", frequency: "2-4x/week" }
 ```
 
-### HIP_STR_004 — Sit-to-stand
 ```yaml
-id: HIP_STR_004
+id: HIP_STR_002
+name: Side-lying hip abduction
+region: hip
+type: Strength
+tags: [hip_abductor_weak]
+dose: { sets: "2-4", reps: "8-15", hold_sec: "0-2", frequency: "2-4x/week" }
+```
+
+```yaml
+id: HIP_NEURO_001
+name: Hip hinge to wall
+region: hip
+type: Neuro
+tags: [hip_hinge_mechanics]
+dose: { sets: "2-4", reps: "6-10", hold_sec: "0", frequency: "2-4x/week" }
+```
+
+```yaml
+id: HIP_STR_003
 name: Sit-to-stand
 region: hip
-category: Strength
-equipment: chair
-impairment_tags: [functional_strength_low, hip_knee_control_deficit]
-default_dose: "2–4 sets × 6–12 reps, 2–4x/week"
-setup: "Feet under knees; chest up."
-action: "Stand up; sit down slow."
-cues: ["Knees track over toes", "Drive through heels"]
-progressions: ["Lower chair", "Add weight"]
-regressions: ["Use hands", "Higher chair"]
-avoid_if: ["uncontrolled knee pain"]
+type: Strength
+tags: [functional_strength_low, hip_knee_control_deficit]
+dose: { sets: "2-4", reps: "6-12", hold_sec: "0", frequency: "2-4x/week" }
 ```
 
-### KNEE_NMC_001 — Mini-squat alignment
 ```yaml
-id: KNEE_NMC_001
-name: Mini-squat (hip-knee alignment)
+id: HIP_BAL_001
+name: Single-leg balance (hip strategy)
+region: hip
+type: Balance
+tags: [hip_control_deficit, balance_deficit]
+dose: { sets: "3-5", reps: "1", hold_sec: "20-45", frequency: "3-6x/week" }
+```
+
+```yaml
+id: HIP_ROM_001
+name: Hip flexor stretch (half-kneel)
+region: hip
+type: ROM
+tags: [hip_extension_limit]
+dose: { sets: "2-4", reps: "1", hold_sec: "20-45", frequency: "daily" }
+```
+
+```yaml
+id: HIP_ROM_002
+name: Figure-4 stretch
+region: hip
+type: ROM
+tags: [hip_er_limit, piriformis_tight]
+dose: { sets: "2-4", reps: "1", hold_sec: "20-45", frequency: "daily" }
+```
+
+```yaml
+id: HIP_ROM_003
+name: Hamstring stretch (strap)
+region: hip
+type: ROM
+tags: [hamstring_tight]
+dose: { sets: "2-4", reps: "1", hold_sec: "20-45", frequency: "daily" }
+```
+
+```yaml
+id: HIP_STR_004
+name: Monster walks
+region: hip
+type: Strength
+tags: [hip_abductor_weak, dynamic_valgus]
+dose: { sets: "2-4", reps: "10-20 steps each way", hold_sec: "0", frequency: "2-4x/week" }
+```
+
+```yaml
+id: HIP_NEURO_002
+name: Step-down (control)
+region: hip
+type: Neuro
+tags: [hip_knee_control_deficit, dynamic_valgus]
+dose: { sets: "2-4", reps: "6-10/side", hold_sec: "0", frequency: "2-4x/week" }
+```
+
+```yaml
+id: HIP_STR_005
+name: Single-leg RDL
+region: hip
+type: Strength
+tags: [posterior_chain_weak, hip_control_deficit]
+dose: { sets: "2-4", reps: "6-10/side", hold_sec: "0", frequency: "2-4x/week" }
+```
+
+```yaml
+id: HIP_ROM_004
+name: Adductor rock-backs
+region: hip
+type: ROM
+tags: [hip_ir_limit, groin_tight]
+dose: { sets: "2-3", reps: "8-12/side", hold_sec: "0-2", frequency: "daily" }
+```
+
+---
+
+### Knee
+
+```yaml
+id: KNEE_STR_001
+name: Quad set
 region: knee
-category: Neuromuscular control
-equipment: none
-impairment_tags: [dynamic_valgus, hip_knee_control_deficit]
-default_dose: "2–4 sets × 6–10 quality reps, 3–5x/week"
-setup: "Feet hip-width."
-action: "Squat 20–45° maintaining alignment."
-cues: ["Tripod foot", "Knees track mid-foot"]
-progressions: ["Add band cue at knees", "Single-leg progression"]
-regressions: ["Reduce depth"]
-avoid_if: ["sharp joint-line pain"]
+type: Strength
+tags: [quad_inhibition]
+dose: { sets: "2-4", reps: "8-15", hold_sec: "3-5", frequency: "daily" }
 ```
 
-### ANK_MOB_001 — DF knee-to-wall
 ```yaml
-id: ANK_MOB_001
-name: Ankle dorsiflexion knee-to-wall
-region: ankle
-category: Mobility/ROM
-equipment: wall
-impairment_tags: [ankle_df_limit]
-default_dose: "2–3 sets × 8–12 reps, daily"
-setup: "Foot flat; knee toward wall."
-action: "Drive knee to wall without heel lift; return."
-cues: ["Keep heel down", "Slow controlled"]
-progressions: ["Increase distance"]
-regressions: ["Closer to wall"]
-avoid_if: ["acute ankle injury without clearance"]
+id: KNEE_STR_002
+name: Straight leg raise
+region: knee
+type: Strength
+tags: [quad_weak]
+dose: { sets: "2-4", reps: "8-12", hold_sec: "0", frequency: "3-5x/week" }
 ```
 
-### ANK_STR_001 — Calf raises
+```yaml
+id: KNEE_STR_003
+name: Terminal knee extension (band)
+region: knee
+type: Strength
+tags: [knee_extension_control]
+dose: { sets: "2-4", reps: "10-15", hold_sec: "0-2", frequency: "3-5x/week" }
+```
+
+```yaml
+id: KNEE_STR_004
+name: Step-up (low)
+region: knee
+type: Strength
+tags: [functional_strength_low]
+dose: { sets: "2-4", reps: "6-12/side", hold_sec: "0", frequency: "2-4x/week" }
+```
+
+```yaml
+id: KNEE_NEURO_001
+name: Mini-squat (alignment)
+region: knee
+type: Neuro
+tags: [dynamic_valgus, hip_knee_control_deficit]
+dose: { sets: "2-4", reps: "6-10 quality", hold_sec: "0-2", frequency: "3-5x/week" }
+```
+
+```yaml
+id: KNEE_ROM_001
+name: Heel slides
+region: knee
+type: ROM
+tags: [knee_flexion_limit]
+dose: { sets: "2-3", reps: "10-15", hold_sec: "0", frequency: "1-2x/day" }
+```
+
+```yaml
+id: KNEE_ROM_002
+name: Knee extension hang
+region: knee
+type: ROM
+tags: [knee_extension_limit]
+dose: { sets: "2-4", reps: "1", hold_sec: "30-120", frequency: "1-2x/day" }
+```
+
+```yaml
+id: KNEE_STR_005
+name: Wall sit
+region: knee
+type: Strength
+tags: [quad_endurance_low]
+dose: { sets: "2-4", reps: "1", hold_sec: "15-45", frequency: "2-4x/week" }
+```
+
+```yaml
+id: KNEE_STR_006
+name: Hamstring curls
+region: knee
+type: Strength
+tags: [hamstring_weak]
+dose: { sets: "2-4", reps: "8-15", hold_sec: "0", frequency: "2-4x/week" }
+```
+
+```yaml
+id: KNEE_NEURO_002
+name: Lateral step-over
+region: knee
+type: Neuro
+tags: [dynamic_valgus, balance_deficit]
+dose: { sets: "2-4", reps: "6-10/side", hold_sec: "0", frequency: "2-4x/week" }
+```
+
+```yaml
+id: KNEE_BAL_001
+name: SL balance + reach
+region: knee
+type: Balance
+tags: [balance_deficit, hip_knee_control_deficit]
+dose: { sets: "3-5", reps: "3-6 reaches/side", hold_sec: "0-2", frequency: "3-6x/week" }
+```
+
+---
+
+### Ankle / Foot
+
+```yaml
+id: ANK_ROM_001
+name: Ankle DF knee-to-wall
+region: ankle
+type: ROM
+tags: [ankle_df_limit]
+dose: { sets: "2-3", reps: "8-12", hold_sec: "0", frequency: "daily" }
+```
+
 ```yaml
 id: ANK_STR_001
 name: Calf raises (double → single)
 region: ankle
-category: Strength
-equipment: step_optional
-impairment_tags: [plantarflexor_weak]
-default_dose: "2–4 sets × 8–15 reps, 2–4x/week"
-setup: "Hands on counter for balance if needed."
-action: "Rise onto toes; lower slow."
-cues: ["Full range", "Control the descent"]
-progressions: ["Single-leg", "Step for more ROM"]
-regressions: ["Partial range", "Seated raises"]
-avoid_if: ["Achilles pain flare"]
+type: Strength
+tags: [plantarflexor_weak]
+dose: { sets: "2-4", reps: "8-15", hold_sec: "0", frequency: "2-4x/week" }
 ```
 
----
+```yaml
+id: ANK_STR_002
+name: Tibialis raises
+region: ankle
+type: Strength
+tags: [dorsiflexor_weak]
+dose: { sets: "2-4", reps: "10-20", hold_sec: "0", frequency: "2-4x/week" }
+```
 
-## Add-on pools (for expanding later)
-Below are extra IDs you can implement over time without bloating your main UI.
+```yaml
+id: ANK_STR_003
+name: Band inversion/eversion
+region: ankle
+type: Strength
+tags: [ankle_stability_deficit]
+dose: { sets: "2-4", reps: "10-15 each way", hold_sec: "0", frequency: "2-4x/week" }
+```
 
-### Hip extra pool
-- HIP_STR_005 — Monster walks (Strength; hip_abductor_weak, dynamic_valgus)
-- HIP_STR_006 — Step-down (Neuromuscular; hip_knee_control_deficit)
-- HIP_STR_007 — Single-leg RDL (Strength; posterior_chain_weak)
-- HIP_MOB_004 — Adductor rock-backs (Mobility; hip_ir_limit, groin_tight)
+```yaml
+id: ANK_BAL_001
+name: Single-leg balance
+region: ankle
+type: Balance
+tags: [balance_deficit]
+dose: { sets: "3-5", reps: "1", hold_sec: "20-45", frequency: "3-6x/week" }
+```
 
-### Knee extra pool
-- KNEE_STR_005 — Wall sit (Endurance; quad_endurance_low)
-- KNEE_STR_006 — Hamstring curls (Strength; hamstring_weak)
-- KNEE_NMC_002 — Lateral step-over (NMC; dynamic_valgus)
-- KNEE_BAL_001 — SL balance + reach (Balance; balance_deficit)
+```yaml
+id: FT_NEURO_001
+name: Short-foot (arch doming)
+region: foot
+type: Neuro
+tags: [arch_control_deficit, intrinsic_foot_weak]
+dose: { sets: "2-4", reps: "8-12", hold_sec: "3-5", frequency: "3-6x/week" }
+```
 
-### Ankle/Foot extra pool
-- ANK_STR_004 — Eccentric heel lowers (Strength; achilles_tendinopathy)
-- FT_STR_002 — Towel scrunches (Strength; intrinsic_foot_weak)
-- FT_NMC_002 — Heel-to-toe walk (Balance; balance_deficit)
+```yaml
+id: FT_NEURO_002
+name: Toe yoga
+region: foot
+type: Neuro
+tags: [intrinsic_foot_weak]
+dose: { sets: "2-4", reps: "8-12", hold_sec: "0-2", frequency: "3-6x/week" }
+```
 
----
+```yaml
+id: ANK_STR_004
+name: Eccentric heel lowers
+region: ankle
+type: Strength
+tags: [achilles_tendinopathy, plantarflexor_weak]
+dose: { sets: "2-4", reps: "8-15", hold_sec: "3 sec lower", frequency: "3-5x/week" }
+```
 
-## Notes for parsing later (no code here)
-- Each exercise entry is a YAML block inside triple backticks.
-- Your index can load this file and build:
-  - a searchable list (by `name`, `tags`, `region`, `category`)
-  - a “3 recommended exercises” set by matching impairment tags for the active case.
+```yaml
+id: FT_STR_001
+name: Towel scrunches
+region: foot
+type: Strength
+tags: [intrinsic_foot_weak]
+dose: { sets: "2-3", reps: "30-60 sec", hold_sec: "n/a", frequency: "3-5x/week" }
+```
+
+```yaml
+id: FT_BAL_001
+name: Heel-to-toe walk
+region: foot
+type: Balance
+tags: [balance_deficit]
+dose: { sets: "2-4", reps: "10-20 steps", hold_sec: "n/a", frequency: "3-6x/week" }
+```
+
+```
+::contentReference[oaicite:0]{index=0}
+```
