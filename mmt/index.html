@@ -927,12 +927,21 @@ function stopResistanceTest() {
     resistanceText.textContent = 'Hold to Apply Resistance (Grade 3, 4, 5)';
 }
 
-// Wire the Resistance Button for Press-and-Hold
+// Wire the Resistance Button for Press-and-Hold (NO BUBBLE)
 if (testButton) {
-    testButton.addEventListener('pointerdown', startResistanceTest);
-    testButton.addEventListener('pointerup', stopResistanceTest);
-    testButton.addEventListener('pointerleave', stopResistanceTest);
+
+  const down = (e) => { e.preventDefault(); e.stopPropagation(); startResistanceTest(e); };
+  const up   = (e) => { e.preventDefault(); e.stopPropagation(); stopResistanceTest(e); };
+
+  testButton.addEventListener('pointerdown', down, true);
+  testButton.addEventListener('pointerup', up, true);
+  testButton.addEventListener('pointercancel', up, true);
+  testButton.addEventListener('pointerleave', up, true);
+
+  // Kill click so it never triggers other UI logic
+  testButton.addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); }, true);
 }
+
 /* ==================================== */  
 
 // Enable only the relevant grading menu for the selected test:
