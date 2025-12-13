@@ -79,6 +79,8 @@
     .workspace-body{flex:1;border-radius:var(--radius-md);border:1px solid #111827;padding:12px;background:radial-gradient(circle at top,#020617,#020617);display:flex;flex-direction:column;gap:12px;min-height:0;overflow-y:auto;}
     .doc-section{margin-bottom:18px;font-size:12px;}
     .doc-section label{display:block;margin-bottom:6px;font-size:13px;color:var(--muted);}
+    .docSubmitRow{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .docAttemptsInline{ font-size:12px; opacity:.85; }
     .module-grid .doc-card{grid-column:1/-1;}
     .doc-card{margin-top:14px;border:1px solid var(--border);padding:20px 22px;border-radius:12px;background:#0f172a;display:block;width:100%;max-width:100%;box-sizing:border-box;overflow-y:auto;max-height:420px;}
     textarea{width:100%;min-height:210px;resize:vertical;border-radius:10px;border:1px solid var(--border);background:#020617;color:var(--text);padding:10px 12px;font-size:12px;line-height:1.4;}
@@ -322,11 +324,19 @@
           </div>
           <div id="gradeLabel" class="grade-label">Not graded yet</div>
 
-          <button id="docSubmitBtn" class="module-btn" type="button" style="margin-top:8px;">
-            Submit Documentation
-            <span class="chevron">✓</span>
-          </button>
-          <div id="docSubmitStatus" style="margin-top:6px;font-size:12px;color:var(--muted);"></div>
+<div class="docSubmitRow" style="margin-top:8px;">
+  <button id="docSubmitBtn" class="module-btn" type="button">
+    Submit Documentation
+    <span class="chevron">✓</span>
+  </button>
+
+  <span id="docAttemptsInline" class="docAttemptsInline">
+    Submissions: 0/3 used (3 left)
+  </span>
+</div>
+
+<div id="docSubmitStatus" style="margin-top:6px;font-size:12px;color:var(--muted);"></div>
+
         </div>
       </div>
       </div>
@@ -536,6 +546,7 @@ const CASE_FILES = {
   const gradeFill     = document.getElementById("gradeFill");
   const gradeLabel    = document.getElementById("gradeLabel");
   const docSubmitBtn  = document.getElementById("docSubmitBtn");
+  const docAttemptsInline = document.getElementById("docAttemptsInline");
   const docStatus     = document.getElementById("docSubmitStatus");
 
 function attemptKey(){
@@ -574,10 +585,23 @@ function setAttempts(n){
       gradeLabel.textContent = "Clinical level (auto-estimate)";
     }
   }
+function checkAttemptLock(){
+  const used = getAttempts();
+  const left = Math.max(0, 3 - used);
 
-  function checkAttemptLock(){
-    const used = getAttempts();
-    applyGradeFromAttempts(used);
+  if (docAttemptsInline) {
+    docAttemptsInline.textContent = `Submissions: ${used}/3 used (${left} left)`;
+  }
+
+  applyGradeFromAttempts(used);
+  // ... keep the rest of your lock/disable logic below
+}
+
+// call it ONCE after the function (initial page load)
+checkAttemptLock();
+
+}
+
 
     if (used >= 3 && docSubmitBtn && docStatus){
       docSubmitBtn.disabled = true;
@@ -894,9 +918,34 @@ try{
 
   const caseSelect = $("caseSelect");
   if (caseSelect) {
-    caseSelect.addEventListener("change", () => {
-      applyCase(caseSelect.value);
-    });
+ caseSelect.addEventListener("change", () => {
+  // 1) re-lock SOAP for the new case
+  visitedMotion = false;
+  visitedGonio  = false;
+  visitedMMT    = false;
+  updateDocLockState();
+
+  // 2) close/hide the documentation panel if it was open
+  const card = document.getElementById("docCard");
+  if (card) card.style.display = "none";
+
+  // 3) clear SOAP fields + status (so it "reloads" clean per case)
+  ["docSubjective","docObjective","docDx","docPlan","docGoals","docPrognosis"].forEach(id=>{
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
+
+  const status = document.getElementById("docSubmitStatus");
+  if (status){ status.textContent = ""; status.style.color = ""; }
+
+  const bundle = document.getElementById("docBundle");
+  if (bundle) bundle.value = "";
+
+  // 4) load the new case + refresh attempt lock display for that case
+  applyCase(caseSelect.value);
+  if (typeof checkAttemptLock === "function") checkAttemptLock();
+});
+
   }
 
   // initial load
