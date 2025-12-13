@@ -210,15 +210,12 @@
             <div class="module-header">
               <div>
                 <div class="module-title">Motion Lab — Active ROM</div>
-                <div class="module-sub">Visualize motion for the primary region.</div>
               </div>
             </div>
             <div class="module-body">
               Gather case clues. Preview motions and functional limitations, and understand expected ROM before measuring with the goniometer.
             </div>
             <div class="module-meta">
-              <span>Linked View: Motion Lab</span>
-              <span>Status: Optional demo</span>
             </div>
             <button class="module-btn" type="button" data-route="motion">
               Open Motion Lab
@@ -231,15 +228,12 @@
             <div class="module-header">
               <div>
                 <div class="module-title">Goniometry Trainer — Primary Region</div>
-                <div class="module-sub">Measure and record ROM.</div>
               </div>
             </div>
             <div class="module-body">
               Place landmarks, align the goniometer, and capture ROM values.
             </div>
             <div class="module-meta">
-              <span>Linked View: Goniometry Trainer</span>
-              <span>Status: Pending</span>
             </div>
             <button class="module-btn" type="button" data-route="gonio">
               Open Goniometry
@@ -252,15 +246,12 @@
             <div class="module-header">
               <div>
                 <div class="module-title">MMT Assessment</div>
-                <div class="module-sub">Launch the ROMetrics MMT Trainer with case tokens.</div>
               </div>
             </div>
             <div class="module-body">
               Use the MMT Trainer to position the model, see resistance vectors, and record the target grade based on the selected case.
             </div>
             <div class="module-meta">
-              <span>Linked View: <strong>MMT Trainer Prototype</strong></span>
-              <span>Status: Not yet attempted</span>
             </div>
             <button class="module-btn" type="button" data-route="mmt">
               Open MMT Assessment
@@ -353,17 +344,17 @@ const CASE_FILES = {
   "CASE_001": {
     file: "../assets/cases/case_001.md",
     label: "CASE_001 • GONIO-CERVICAL-001",
-    scenarioSummary: "Cervical ROM & pain-limited MMT"
+    scenarioSummary: "Cervical Impairment"
   },
   "CASE_002": {
     file: "../assets/cases/case_002.md",
     label: "CASE_002 • GONIO-SHOULDER-001",
-    scenarioSummary: "Shoulder ROM & MMT"
+    scenarioSummary: "Hip Impairment"
   },
   "CASE_003": {
     file: "../assets/cases/case_003.md",
-    label: "CASE_003 • REFERRAL",
-    scenarioSummary: "Cluster impairment / refer out"
+    label: "CASE_003 • Cluster",
+    scenarioSummary: "Cluster impairment "
   }
 };
 
@@ -426,12 +417,23 @@ const CASE_FILES = {
   function openRoute(key) {
     if (!key) return;
 
-    if (key === "motion") {
-      visitedMotion = true;
-      updateDocLockState();
-      window.open(ROUTES.motion, "_blank");
-      return;
-    }
+   if (key === "motion") {
+  const caseKey = getCurrentCaseKey();
+
+  const CASE_MOTION_URLS = {
+    "CASE_001": "https://kingto89.github.io/ROMetrics.com/lab-motion/index.html?caseToken=LAB-CERVICAL-001",
+    "CASE_002": "https://kingto89.github.io/ROMetrics.com/lab-motion/index.html?caseToken=LAB-HIP-002",
+    "CASE_003": "https://kingto89.github.io/ROMetrics.com/lab-motion/index.html?caseToken=LAB-CLUSTER-003"
+  };
+
+  const url = CASE_MOTION_URLS[caseKey] || CASE_MOTION_URLS["CASE_001"];
+
+  visitedMotion = true;
+  updateDocLockState();
+  window.open(url, "_blank");
+  return;
+}
+
 
        if (key === "gonio") {
       if (!visitedMotion) {
