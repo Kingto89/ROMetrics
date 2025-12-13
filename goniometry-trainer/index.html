@@ -884,29 +884,9 @@ const COLLIM = {
   footInvLMax: 35,  footInvRMax: 35,
   footEvLMax: 20,   footEvRMax: 20,
 
-  load() {
-    try {
-      const raw = localStorage.getItem('rometrics_collim');
-      if (!raw) return;
-      const o = JSON.parse(raw);
-      Object.keys(this).forEach(k=>{
-        if(k!=='enabled'&&k!=='load'&&k!=='save')
-          if(typeof o[k]==='number') this[k]=o[k];
-      });
-    } catch(e){}
-  },
-  save() {
-    try {
-      const o={};
-      Object.keys(this).forEach(k=>{
-        if(typeof this[k]==='number') o[k]=this[k];
-      });
-      localStorage.setItem('rometrics_collim', JSON.stringify(o));
-    } catch(e){}
-  }
+  load() {},
+  save() {}
 };
-localStorage.removeItem('rometrics_collim'); // <--- ADD THIS LINE HERE
-COLLIM.load();
 
 function capFor(action){
   COLLIM.load();  // ✅ refresh saved limits before applying
