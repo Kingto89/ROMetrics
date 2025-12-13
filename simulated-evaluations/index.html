@@ -837,6 +837,7 @@ function renderPatientProfile(c) {
   // initial load
   applyCase("CASE_001");
 
+window.addEventListener("DOMContentLoaded", () => {  
 // ---- Referral popup wiring + documentation bundle ----
 window.__DOC_LOG = window.__DOC_LOG || [];
 
@@ -900,6 +901,7 @@ document.getElementById("refSubmitBtn")?.addEventListener("click", ()=>{
 
   pushDoc(note);
   closeRefModal();
+});
 });
   
 </script>
