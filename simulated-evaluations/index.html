@@ -1148,17 +1148,25 @@ function scoreExercise(ex, tags){
 }
 
 function buildExerciseLine(ex){
-  const cues = (ex.cues || []).slice(0, 3).join("; ");
-  const avoid = (ex.avoid_if || []).slice(0, 2).join("; ");
-  return (
-    `• ${ex.id} — ${ex.name}\n` +
-    (ex.default_dose ? `  Dose: ${ex.default_dose}\n` : "") +
-    (ex.setup ? `  Setup: ${ex.setup}\n` : "") +
-    (ex.action ? `  Action: ${ex.action}\n` : "") +
-    (cues ? `  Cues: ${cues}\n` : "") +
-    (avoid ? `  Avoid if: ${avoid}\n` : "")
-  ).trim();
+  const lines = [];
+
+  // main bullet (one line)
+  lines.push(`• ${ex.id} — ${ex.name}`);
+
+  // sub-bullets (each on its own line)
+  if (ex.default_dose) lines.push(`  - Dose: ${ex.default_dose}`);
+  if (ex.setup)        lines.push(`  - Setup: ${ex.setup}`);
+  if (ex.action)       lines.push(`  - Action: ${ex.action}`);
+
+  const cues  = (ex.cues || []).filter(Boolean);
+  const avoid = (ex.avoid_if || []).filter(Boolean);
+
+  if (cues.length)  lines.push(`  - Cues: ${cues.slice(0,3).join("; ")}`);
+  if (avoid.length) lines.push(`  - Avoid if: ${avoid.slice(0,2).join("; ")}`);
+
+  return lines.join("\n");
 }
+
 
 function ensureExerciseModal(){
   let m = document.getElementById("exModal");
