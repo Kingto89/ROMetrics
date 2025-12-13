@@ -472,16 +472,31 @@ function initMMTCaseMode() {
     }
   }
 
-  // ---------- REQUIRED TESTS + TRACKER (PER-CASE, NO BLEED) ----------
-  // Case can define requiredTests; tracker auto-builds keys for those tests.
-  if (Array.isArray(cfg.requiredTests)) {
-    window.MMT_CASE_MODE.requiredTests = cfg.requiredTests.slice();
-    window.IMPAIRMENT_TRACKER = window.IMPAIRMENT_TRACKER || {};
-    cfg.requiredTests.forEach((k) => (window.IMPAIRMENT_TRACKER[k] = false));
-  } else {
-    window.MMT_CASE_MODE.requiredTests = [];
-    // leave tracker as-is if no requiredTests
-  }
+       // REQUIRED TESTS (fallback to impairments if requiredTests not defined)
+      let req = window.MMT_CASE_MODE.requiredTests || [];
+
+      // If a case didn’t define requiredTests (your Cervical case), auto-build from impairments
+      if (!Array.isArray(req) || req.length === 0) {
+        const imps = window.MMT_CASE_MODE.impairments || {};
+        req = Object.keys(imps).filter(k => k !== "default_unrestricted");
+        window.MMT_CASE_MODE.requiredTests = req; // lock it in so it’s consistent
+      }
+
+      const allDone = req.length > 0 && req.every(k => window.IMPAIRMENT_TRACKER[k] === true);
+
+      // ✅ POP THE SUMMARY NOTE WHEN ALL REQUIRED TESTS ARE DONE
+      if (allDone && !window.MMT_CASE_MODE._resultsShown) {
+        window.MMT_CASE_MODE._resultsShown = true;
+
+        const md = window.MMT_CASE_MODE.resultsText || "Case complete.";
+        $("noteTitle").textContent = "MMT Case Summary";
+        $("noteBody").innerHTML =
+          (typeof mdToHtml === "function") ? mdToHtml(md) : md.replace(/\n/g, "<br>");
+
+        $("notePanel").classList.remove("hide");
+        $("notePanel").style.display = "flex";
+      }
+
 
   // ---------- RESULTS TEXT (PER-CASE, USING YOUR MMT_FULL_RESULTS MAP) ----------
   window.MMT_CASE_MODE.resultsText =
