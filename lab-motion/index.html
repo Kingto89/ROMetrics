@@ -450,7 +450,7 @@ const COLLIM = {
   wrSupLMax: 45, wrSupRMax: 45,
 
   // ===== NEW lower body defaults =====
-  hipFlexLMax: 110, hipFlexRMax: 110,
+  hipFlexLMax: 105, hipFlexRMax: 105,
   hipExtLMax: 30,  hipExtRMax: 30,
   hipAbdLMax: 45,  hipAbdRMax: 45,
   hipAddLMax: 25,  hipAddRMax: 25,
@@ -1051,8 +1051,8 @@ function freezeBindBaseFor(key, cfg) {
 
     {key:'sh_fe_l',   pair:'Shoulder L — Flex / Ext',            side:'l', plane:'sagittal',  neutral:0, min:-60,  max:130, hints:[/upperarm|humerus|shoulder|arm(?!.*lower)/i]},
     {key:'sh_fe_r',   pair:'Shoulder R — Flex / Ext',            side:'r', plane:'sagittal',  neutral:0, min:-60,  max:130, hints:[/upperarm|humerus|shoulder|arm(?!.*lower)/i]},
-    {key:'sh_aa_l',   pair:'Shoulder L — Abd / Add',             side:'l', plane:'frontal',   neutral:0, min:-30,  max:150, hints:[/upperarm|humerus|shoulder|arm(?!.*lower)/i]},
-    {key:'sh_aa_r',   pair:'Shoulder R — Abd / Add',             side:'r', plane:'frontal',   neutral:0, min:-30,  max:150, hints:[/upperarm|humerus|shoulder|arm(?!.*lower)/i]},
+    {key:'sh_aa_l',   pair:'Shoulder L — Abd / Add',             side:'l', plane:'frontal',   neutral:0, min:-25,  max:150, hints:[/upperarm|humerus|shoulder|arm(?!.*lower)/i]},
+    {key:'sh_aa_r',   pair:'Shoulder R — Abd / Add',             side:'r', plane:'frontal',   neutral:0, min:-25,  max:150, hints:[/upperarm|humerus|shoulder|arm(?!.*lower)/i]},
     {key:'sh_irer_l', pair:'Shoulder L — Internal / External',   side:'l', plane:'transverse',neutral:0, min:-80,  max:80,  hints:[/upperarm|humerus|shoulder|arm(?!.*lower)/i]},
     {key:'sh_irer_r', pair:'Shoulder R — Internal / External',   side:'r', plane:'transverse',neutral:0, min:-80,  max:80,  hints:[/upperarm|humerus|shoulder|arm(?!.*lower)/i]},
 
@@ -1072,8 +1072,8 @@ function freezeBindBaseFor(key, cfg) {
 
 ];   
   const LOWER = [
-    {key:'hip_fe_l',   pair:'Hip L — Flex / Ext',                side:'l', plane:'sagittal',  neutral:0, min:-30,  max:120, hints:[/thigh|femur/i]},
-    {key:'hip_fe_r',   pair:'Hip R — Flex / Ext',                side:'r', plane:'sagittal',  neutral:0, min:-30,  max:120, hints:[/thigh|femur/i]},
+    {key:'hip_fe_l',   pair:'Hip L — Flex / Ext',                side:'l', plane:'sagittal',  neutral:0, min:-30,  max:105, hints:[/thigh|femur/i]},
+    {key:'hip_fe_r',   pair:'Hip R — Flex / Ext',                side:'r', plane:'sagittal',  neutral:0, min:-30,  max:105, hints:[/thigh|femur/i]},
     {key:'hip_aa_l',   pair:'Hip L — Abd / Add',                 side:'l', plane:'frontal',   neutral:0, min:-24,  max:45,  hints:[/thigh|femur/i]},
     {key:'hip_aa_r', pair:'Hip R — Add / Abd', side:'r', plane:'frontal', neutral:0, min:-24, max:45, hints:[/thigh|femur/i]},
     {key:'hip_irer_l', pair:'Hip L — Internal / External',       side:'l', plane:'transverse',neutral:0, min:-45,  max:45,  hints:[/thigh|femur/i]},
