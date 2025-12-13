@@ -85,6 +85,7 @@
     @media (max-width:900px){
       main{flex-direction:column;}
       .sidebar{width:100%;max-width:none;}
+      #simStatusCard .field-grid{grid-template-columns:1fr;}
       .field-grid{grid-template-columns:1fr;}
     }
   </style>
@@ -168,7 +169,7 @@
 
            <div class="info-card">
             <div class="info-title">
-              <span>Simulation Status</span>
+            <div class="info-card" id="simStatusCard">
               <span class="badge">Live Sandbox</span>
             </div>
             <div class="field-grid">
