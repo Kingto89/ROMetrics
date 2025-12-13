@@ -123,7 +123,7 @@
         <select id="caseSelect">
           <option value="CASE_001">Case 1 — Cervical Impairment </option>
           <option value="CASE_002">Case 2 — Right Impairment </option>
-          <option value="CASE_003">Case 3 — Cluster Impairment/ Refer Out</option>
+          <option value="CASE_003">Case 3 — Cluster Impairment</option>
         </select>
       </div>
       <span>Clinician: Student User • v0.1</span>
@@ -164,7 +164,7 @@
       <div class="workspace-header">
         <div class="tabs">
   <button class="tab active" type="button"><span class="icon"></span>Overview</button>
-  <button class="tab" type="button"><span class="icon"></span>Orders / Referrals</button>
+  <button class="tab" type="button"data-ref="open"><span class="icon"></span>Orders / Referrals</button>
   <button class="tab" type="button"><span class="icon"></span>Exercises</button>
 </div>
 
@@ -836,6 +836,131 @@ function renderPatientProfile(c) {
 
   // initial load
   applyCase("CASE_001");
+
+// ---- Referral popup wiring + documentation bundle ----
+window.__DOC_LOG = window.__DOC_LOG || [];
+
+function closeRefModal(){
+  const m = document.getElementById("refModal");
+  if (m) m.style.display = "none";
+}
+
+function openRefModal(){
+  const m = document.getElementById("refModal");
+  if (m) m.style.display = "flex";
+}
+
+function ensureDocBundle(){
+  let t = document.getElementById("docBundle");
+  if (t) return t;
+
+  // hidden textarea so AI can read it later
+  t = document.createElement("textarea");
+  t.id = "docBundle";
+  t.readOnly = true;
+  t.style.position = "absolute";
+  t.style.left = "-9999px";
+  t.style.top = "-9999px";
+  document.body.appendChild(t);
+  return t;
+}
+
+function pushDoc(text){
+  const box = ensureDocBundle();
+  box.value = (box.value ? box.value + "\n\n" : "") + text;
+}
+
+document.querySelector('[data-ref="open"]')?.addEventListener("click", (e)=>{
+  e.preventDefault();
+  openRefModal();
+});
+
+document.getElementById("refBackdrop")?.addEventListener("click", closeRefModal);
+document.getElementById("refClose")?.addEventListener("click", closeRefModal);
+document.getElementById("refCancel")?.addEventListener("click", closeRefModal);
+
+document.getElementById("refSubmitBtn")?.addEventListener("click", ()=>{
+  const to = document.getElementById("refTo")?.value || "";
+  const urg = document.getElementById("refUrgency")?.value || "";
+  const reason = document.getElementById("refReason")?.value || "";
+  const req = document.getElementById("refRequest")?.value || "";
+
+  if (!to || !urg || !reason || !req){
+    alert("Pick Referral To, Urgency, Reason, and Request.");
+    return;
+  }
+
+  const stamp = new Date().toLocaleString();
+  const note =
+`ORDERS / REFERRALS (${stamp})
+- Refer to: ${to}
+- Urgency: ${urg}
+- Reason: ${reason}
+- Request: ${req}`;
+
+  pushDoc(note);
+  closeRefModal();
+});
+  
 </script>
+<!-- Orders / Referrals popup -->
+<div id="refModal" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:9999;">
+  <div id="refBackdrop" style="position:absolute;inset:0;background:rgba(0,0,0,.55);"></div>
+
+  <div style="position:relative;width:min(520px,92vw);border:1px solid var(--border);border-radius:14px;background:#0b1120;padding:14px;box-shadow:var(--shadow);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <div style="font-weight:700;color:var(--ink);">Orders / Referrals</div>
+      <button id="refClose" type="button" style="border:1px solid var(--border);background:#020617;color:var(--ink);border-radius:10px;padding:6px 10px;cursor:pointer;">✕</button>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div>
+        <div class="field-label">Referral To</div>
+        <select id="refTo" style="width:100%;margin-top:4px;padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:#020617;color:var(--ink);">
+          <option value="">Select…</option>
+          <option>Primary Care (PCP)</option>
+          <option>Orthopedics</option>
+          <option>Neurology</option>
+          <option>Emergency Department (ED)</option>
+        </select>
+      </div>
+
+      <div>
+        <div class="field-label">Urgency</div>
+        <select id="refUrgency" style="width:100%;margin-top:4px;padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:#020617;color:var(--ink);">
+          <option value="">Select…</option>
+          <option>Routine</option>
+          <option>Same-day</option>
+          <option>Immediate (ED now)</option>
+        </select>
+      </div>
+
+      <div style="grid-column:1/-1;">
+        <div class="field-label">Reason</div>
+        <select id="refReason" style="width:100%;margin-top:4px;padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:#020617;color:var(--ink);">
+          <option value="">Select…</option>
+          <option>Red flags / systemic concern</option>
+          <option>Neuro signs</option>
+          <option>Worsening symptoms</option>
+          <option>Suspected fracture / trauma concern</option>
+        </select>
+      </div>
+
+      <div style="grid-column:1/-1;">
+        <div class="field-label">Request</div>
+        <select id="refRequest" style="width:100%;margin-top:4px;padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:#020617;color:var(--ink);">
+          <option value="">Select…</option>
+          <option>Imaging (X-ray)</option>
+          <option>Imaging (MRI)</option>
+          <option>Lab work (ESR/CRP/CBC)</option>
+          <option>Specialist consult</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:12px;justify-content:flex-end;">
+      <button id="refSubmitBtn" class="module-btn" type="button">Submit</button>
+      <button id="refCancel" type="button" style="border:1px solid var(--border);background:#020617;color:var(--ink);border-radius:999px;padding:6px 12px;cursor:pointer;">Cancel</button
+  
 </body>
 </html>
