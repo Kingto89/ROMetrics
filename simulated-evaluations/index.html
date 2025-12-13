@@ -596,12 +596,12 @@ function checkAttemptLock(){
   applyGradeFromAttempts(used);
 
   if (used >= 3 && docSubmitBtn && docStatus){
-    docSubmitBtn.disabled = true;
-    docStatus.textContent = "You have used all 3 submission attempts for this case.";
-    docStatus.style.color = "#f97373";
-  } else if (docSubmitBtn) {
-    docSubmitBtn.disabled = false;
-  }
+  docSubmitBtn.disabled = true;
+  docStatus.textContent = "You have used all 3 submission attempts for this case.";
+  docStatus.style.color = "#f97373";
+} else if (docSubmitBtn) {
+  docSubmitBtn.disabled = false;
+}
 }
 
 // call once on load
