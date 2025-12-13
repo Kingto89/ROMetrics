@@ -1037,6 +1037,363 @@ localStorage.setItem(
 
   closeRefModal();
 });
+
+/* ===================== EXERCISES TAB → POPUP + WRITE TO PLAN ===================== */
+
+let __EX_LIB_CACHE = null;
+
+function stripQuotes(v){
+  v = (v || "").trim();
+  if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
+    return v.slice(1, -1);
+  }
+  return v;
+}
+
+function parseYamlArray(v){
+  v = (v || "").trim();
+  if (!v.startsWith("[") || !v.endsWith("]")) return null;
+  const inner = v.slice(1, -1).trim();
+  if (!inner) return [];
+  return inner.split(",").map(s => stripQuotes(s.trim())).filter(Boolean);
+}
+
+function parseSimpleYaml(yamlText){
+  const obj = {};
+  const lines = (yamlText || "").split(/\r?\n/);
+  for (const raw of lines){
+    const line = raw.trim();
+    if (!line || line.startsWith("#")) continue;
+
+    const idx = line.indexOf(":");
+    if (idx === -1) continue;
+
+    const key = line.slice(0, idx).trim();
+    let val = line.slice(idx + 1).trim();
+
+    // arrays like [a,b] or ["a","b"]
+    const arr = parseYamlArray(val);
+    if (arr !== null){
+      obj[key] = arr;
+      continue;
+    }
+
+    // normal string
+    obj[key] = stripQuotes(val);
+  }
+  return obj;
+}
+
+function parseExerciseLibraryMarkdown(md){
+  const out = [];
+  const re = /```yaml([\s\S]*?)```/g;
+  let m;
+  while ((m = re.exec(md))){
+    const yaml = (m[1] || "").trim();
+    const ex = parseSimpleYaml(yaml);
+
+    // normalize fields we rely on
+    if (!ex.id) continue;
+    ex.name = ex.name || ex.id;
+    ex.region = (ex.region || "").toLowerCase();
+    ex.category = ex.category || "";
+    ex.impairment_tags = Array.isArray(ex.impairment_tags) ? ex.impairment_tags : [];
+    ex.default_dose = ex.default_dose || "";
+    ex.setup = ex.setup || "";
+    ex.action = ex.action || "";
+    ex.cues = Array.isArray(ex.cues) ? ex.cues : (ex.cues ? [String(ex.cues)] : []);
+    ex.avoid_if = Array.isArray(ex.avoid_if) ? ex.avoid_if : (ex.avoid_if ? [String(ex.avoid_if)] : []);
+    out.push(ex);
+  }
+  return out;
+}
+
+async function loadExerciseLibrary(){
+  if (__EX_LIB_CACHE) return __EX_LIB_CACHE;
+
+  // repo path you specified
+  const path = "../assets/rometrics_exercise_library.md";
+  const res = await fetch(path);
+  if (!res.ok) throw new Error("Failed to fetch exercise library: " + path);
+
+  const md = await res.text();
+  __EX_LIB_CACHE = parseExerciseLibraryMarkdown(md);
+  return __EX_LIB_CACHE;
+}
+
+function caseImpairmentTags(caseKey){
+  // Uses your CASE_FILES scenarioSummary so it stays aligned with your current case picker.
+  const summary = (CASE_FILES?.[caseKey]?.scenarioSummary || "").toLowerCase();
+
+  if (summary.includes("cervical")) {
+    return ["cervical_lat_flex_limit","neck_stiffness","cervical_rotation_limit","dnfl_weak","forward_head","cervical_stability_deficit"];
+  }
+  if (summary.includes("hip")) {
+    return ["hip_flexion_limit","hip_ir_limit","hip_abductor_weak","hip_knee_control_deficit","functional_strength_low"];
+  }
+  if (summary.includes("cluster")) {
+    return ["scap_control_deficit","thoracic_mobility_need","lumbar_stability_deficit","dynamic_valgus","balance_deficit","functional_strength_low"];
+  }
+  return [];
+}
+
+function scoreExercise(ex, tags){
+  if (!tags.length) return 0;
+  let score = 0;
+  const set = new Set(tags);
+  for (const t of (ex.impairment_tags || [])){
+    if (set.has(t)) score++;
+  }
+  return score;
+}
+
+function buildExerciseLine(ex){
+  const cues = (ex.cues || []).slice(0, 3).join("; ");
+  const avoid = (ex.avoid_if || []).slice(0, 2).join("; ");
+  return (
+    `• ${ex.id} — ${ex.name}\n` +
+    (ex.default_dose ? `  Dose: ${ex.default_dose}\n` : "") +
+    (ex.setup ? `  Setup: ${ex.setup}\n` : "") +
+    (ex.action ? `  Action: ${ex.action}\n` : "") +
+    (cues ? `  Cues: ${cues}\n` : "") +
+    (avoid ? `  Avoid if: ${avoid}\n` : "")
+  ).trim();
+}
+
+function ensureExerciseModal(){
+  let m = document.getElementById("exModal");
+  if (m) return m;
+
+  m = document.createElement("div");
+  m.id = "exModal";
+  m.style.position = "fixed";
+  m.style.inset = "0";
+  m.style.display = "none";
+  m.style.alignItems = "center";
+  m.style.justifyContent = "center";
+  m.style.zIndex = "10000";
+
+  m.innerHTML = `
+    <div id="exBackdrop" style="position:absolute;inset:0;background:rgba(0,0,0,.55);"></div>
+
+    <div style="position:relative;width:min(780px,94vw);max-height:min(84vh,820px);overflow:hidden;border:1px solid var(--border);border-radius:14px;background:#0b1120;box-shadow:var(--shadow);display:flex;flex-direction:column;">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid var(--border);">
+        <div style="font-weight:700;color:var(--ink);">Exercises</div>
+        <button id="exClose" type="button" style="border:1px solid var(--border);background:#020617;color:var(--ink);border-radius:10px;padding:6px 10px;cursor:pointer;">✕</button>
+      </div>
+
+      <div style="padding:12px 14px;border-bottom:1px solid var(--border);display:flex;gap:10px;flex-wrap:wrap;">
+        <input id="exSearch" placeholder="Search exercise name / ID / tag…" style="flex:1;min-width:220px;padding:9px 10px;border-radius:10px;border:1px solid var(--border);background:#020617;color:var(--ink);" />
+        <select id="exRegion" style="min-width:160px;padding:9px 10px;border-radius:10px;border:1px solid var(--border);background:#020617;color:var(--ink);">
+          <option value="">All regions</option>
+        </select>
+        <select id="exCategory" style="min-width:190px;padding:9px 10px;border-radius:10px;border:1px solid var(--border);background:#020617;color:var(--ink);">
+          <option value="">All categories</option>
+        </select>
+      </div>
+
+      <div style="padding:12px 14px;overflow:auto;min-height:0;">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">
+          Recommended for <strong id="exCaseLabel" style="color:var(--ink);"></strong> (top matches)
+        </div>
+        <div id="exRecommended" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin-bottom:14px;"></div>
+
+        <div style="font-size:11px;color:var(--muted);margin:10px 0 8px;">All exercises</div>
+        <div id="exList" style="display:flex;flex-direction:column;gap:10px;"></div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(m);
+
+  // close wiring
+  function close(){
+    m.style.display = "none";
+  }
+  m.querySelector("#exBackdrop")?.addEventListener("click", close);
+  m.querySelector("#exClose")?.addEventListener("click", close);
+
+  return m;
+}
+
+function openExerciseModal(){
+  const m = ensureExerciseModal();
+  m.style.display = "flex";
+  renderExerciseModal().catch(err => {
+    console.error(err);
+    alert("Could not load exercises. Check that ../assets/rometrics_exercise_library.md exists.");
+  });
+}
+
+function addExerciseToPlan(ex){
+  // 1) Write into Treatment Plan box
+  const plan = document.getElementById("docPlan");
+  if (plan){
+    const line = buildExerciseLine(ex);
+    plan.value = (plan.value.trim() ? (plan.value.trim() + "\n\n") : "") + line;
+    plan.dispatchEvent(new Event("input")); // keep your word counter/limiter in sync
+  }
+
+  // 2) Append into same docBundle stream used by referrals
+  if (typeof pushDoc === "function"){
+    const stamp = new Date().toLocaleString();
+    pushDoc(`EXERCISE ADDED (${stamp})\n${buildExerciseLine(ex)}`);
+  }
+}
+
+function exCardHTML(ex, showScore){
+  const cues = (ex.cues || []).slice(0, 3).join(" • ");
+  const tags = (ex.impairment_tags || []).slice(0, 6).join(", ");
+  const scoreChip = showScore ? `<span style="font-size:10px;border:1px solid rgba(56,189,248,0.55);color:#e0f2fe;background:rgba(15,23,42,0.9);padding:2px 7px;border-radius:999px;">match</span>` : "";
+
+  return `
+    <div style="border:1px solid rgba(31,41,55,0.95);border-radius:12px;background:rgba(15,23,42,0.92);padding:10px;display:flex;flex-direction:column;gap:6px;">
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;">
+        <div>
+          <div style="font-weight:700;color:var(--ink);font-size:12px;">${ex.id} — ${ex.name}</div>
+          <div style="color:var(--muted);font-size:11px;">${ex.region || "—"} • ${ex.category || "—"}</div>
+        </div>
+        ${scoreChip}
+      </div>
+
+      ${ex.default_dose ? `<div style="font-size:11px;color:var(--muted);"><strong style="color:var(--ink);font-weight:600;">Dose:</strong> ${ex.default_dose}</div>` : ""}
+      ${cues ? `<div style="font-size:11px;color:var(--muted);"><strong style="color:var(--ink);font-weight:600;">Cues:</strong> ${cues}</div>` : ""}
+      ${tags ? `<div style="font-size:10px;color:#64748b;">tags: ${tags}</div>` : ""}
+
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:6px;">
+        <button type="button" data-add="${ex.id}" class="module-btn" style="padding:6px 10px;font-size:10px;">Add to Plan ✓</button>
+      </div>
+    </div>
+  `;
+}
+
+async function renderExerciseModal(){
+  const lib = await loadExerciseLibrary();
+  const caseKey = (document.getElementById("caseSelect")?.value) || "CASE_001";
+  const tags = caseImpairmentTags(caseKey);
+
+  const m = ensureExerciseModal();
+  const caseLabel = m.querySelector("#exCaseLabel");
+  if (caseLabel) caseLabel.textContent = (CASE_FILES?.[caseKey]?.label || caseKey);
+
+  // fill filter dropdowns (once)
+  const regionSel = m.querySelector("#exRegion");
+  const catSel = m.querySelector("#exCategory");
+
+  const regions = Array.from(new Set(lib.map(x => (x.region || "").toLowerCase()).filter(Boolean))).sort();
+  const cats    = Array.from(new Set(lib.map(x => (x.category || "").trim()).filter(Boolean))).sort();
+
+  if (regionSel && regionSel.options.length <= 1){
+    regions.forEach(r => {
+      const o = document.createElement("option");
+      o.value = r;
+      o.textContent = r;
+      regionSel.appendChild(o);
+    });
+  }
+  if (catSel && catSel.options.length <= 1){
+    cats.forEach(c => {
+      const o = document.createElement("option");
+      o.value = c;
+      o.textContent = c;
+      catSel.appendChild(o);
+    });
+  }
+
+  // recommended top 3 (by tag match score)
+  const scored = lib
+    .map(ex => ({ ex, s: scoreExercise(ex, tags) }))
+    .filter(x => x.s > 0)
+    .sort((a,b) => b.s - a.s);
+
+  const recommended = scored.slice(0, 3).map(x => x.ex);
+
+  const recWrap = m.querySelector("#exRecommended");
+  if (recWrap){
+    recWrap.innerHTML = recommended.length
+      ? recommended.map(ex => exCardHTML(ex, true)).join("")
+      : `<div style="font-size:12px;color:var(--muted);padding:8px 2px;">No tag-matched recommendations for this case yet.</div>`;
+  }
+
+  // list rendering (search + filters)
+  const search = m.querySelector("#exSearch");
+  const list = m.querySelector("#exList");
+
+  function applyFilters(){
+    const q = (search?.value || "").trim().toLowerCase();
+    const r = (regionSel?.value || "").trim().toLowerCase();
+    const c = (catSel?.value || "").trim();
+
+    const filtered = lib.filter(ex => {
+      if (r && (ex.region || "").toLowerCase() !== r) return false;
+      if (c && (ex.category || "") !== c) return false;
+      if (!q) return true;
+
+      const hay = [
+        ex.id, ex.name, ex.region, ex.category,
+        ...(ex.impairment_tags || [])
+      ].join(" ").toLowerCase();
+
+      return hay.includes(q);
+    });
+
+    if (list){
+      list.innerHTML = filtered.map(ex => exCardHTML(ex, false)).join("") || (
+        `<div style="font-size:12px;color:var(--muted);padding:8px 2px;">No exercises match your filters.</div>`
+      );
+
+      // hook add buttons
+      list.querySelectorAll("[data-add]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const id = btn.getAttribute("data-add");
+          const ex = lib.find(x => x.id === id);
+          if (ex) addExerciseToPlan(ex);
+        });
+      });
+    }
+
+    // also hook add buttons in recommended section
+    recWrap?.querySelectorAll("[data-add]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-add");
+        const ex = lib.find(x => x.id === id);
+        if (ex) addExerciseToPlan(ex);
+      });
+    });
+  }
+
+  // bind once, then render
+  if (search && !search.__bound){
+    search.__bound = true;
+    search.addEventListener("input", applyFilters);
+  }
+  if (regionSel && !regionSel.__bound){
+    regionSel.__bound = true;
+    regionSel.addEventListener("change", applyFilters);
+  }
+  if (catSel && !catSel.__bound){
+    catSel.__bound = true;
+    catSel.addEventListener("change", applyFilters);
+  }
+
+  applyFilters();
+}
+
+// Wire the existing “Exercises” tab button to open the modal
+(function wireExercisesTab(){
+  const tabButtons = Array.from(document.querySelectorAll(".tabs .tab"));
+  const exTab = tabButtons.find(b => (b.textContent || "").toLowerCase().includes("exercises"));
+  if (exTab && !exTab.__bound){
+    exTab.__bound = true;
+    exTab.addEventListener("click", (e) => {
+      e.preventDefault();
+      openExerciseModal();
+    });
+  }
+})();
+
+/* =================== END EXERCISES =================== */
+  
 });
   
 </script>
