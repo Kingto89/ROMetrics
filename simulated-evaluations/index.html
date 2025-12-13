@@ -1038,7 +1038,83 @@ localStorage.setItem(
   closeRefModal();
 });
 });
-  
+//Exercise button//
+  const EX_LIB_URL = "./assets/rometrics_exercise_library.md";
+let EX_LIB = null;
+
+function parseExerciseLibrary(md){
+  // pulls each ```yaml ... ``` block into a plain object
+  const blocks = [...md.matchAll(/```yaml\s*([\s\S]*?)```/g)].map(m => m[1]);
+  return blocks.map(y => {
+    const obj = {};
+    y.split("\n").forEach(line=>{
+      const m = line.match(/^([a-zA-Z0-9_]+)\s*:\s*(.*)\s*$/);
+      if(!m) return;
+      let k = m[1], v = m[2];
+      // basic array support: [a,b,c]
+      if(v.startsWith("[") && v.endsWith("]")){
+        v = v.slice(1,-1).split(",").map(s=>s.trim()).filter(Boolean);
+      }
+      obj[k] = v;
+    });
+    return obj;
+  }).filter(x => x.id && x.name);
+}
+
+async function getExerciseLibrary(){
+  if (EX_LIB) return EX_LIB;
+  const res = await fetch(EX_LIB_URL, { cache: "no-store" });
+  const md = await res.text();
+  EX_LIB = parseExerciseLibrary(md);
+  return EX_LIB;
+}
+
+// NOTE: replace these 2 lines with *your* active case + impairment source if named differently
+function getActiveCaseKeySafe(){ return (typeof getCurrentCaseKey==="function") ? getCurrentCaseKey() : "case_unknown"; }
+function getActiveImpairmentTagsSafe(){ return (window.ACTIVE_IMPAIRMENT_TAGS || []); } // you’ll map this to your case data
+
+function pickTop3Exercises(lib, impairmentTags){
+  // score exercises by matching impairment_tags
+  const tags = new Set((impairmentTags||[]).map(String));
+  const scored = lib.map(ex=>{
+    const exTags = Array.isArray(ex.impairment_tags) ? ex.impairment_tags : [];
+    const score = exTags.reduce((s,t)=> s + (tags.has(t) ? 1 : 0), 0);
+    return { ex, score };
+  }).sort((a,b)=> b.score - a.score);
+  return scored.slice(0,3).map(x=>x.ex);
+}
+
+const btnExercises = document.getElementById("btnExercises");
+const exModal = document.getElementById("exModal");
+const exClose = document.getElementById("exClose");
+const exBody = document.getElementById("exBody");
+
+if (btnExercises && exModal && exClose && exBody){
+  exClose.onclick = () => exModal.style.display = "none";
+
+  btnExercises.onclick = async () => {
+    const lib = await getExerciseLibrary();
+
+    const caseKey = getActiveCaseKeySafe();
+    const impair = getActiveImpairmentTagsSafe();
+
+    const top3 = pickTop3Exercises(lib, impair);
+
+    exBody.innerHTML =
+      `<div style="opacity:.85;margin-bottom:8px;">Active case: <b>${caseKey}</b></div>` +
+      `<div style="opacity:.85;margin-bottom:10px;">Matched tags: ${impair.length ? impair.join(", ") : "—"}</div>` +
+      top3.map(ex => `
+        <div style="border:1px solid #1f2937;border-radius:12px;padding:10px;margin:8px 0;background:#0b1220;">
+          <div style="font-weight:700;">${ex.name} <span style="opacity:.7;font-weight:500;">(${ex.category || "Exercise"})</span></div>
+          <div style="opacity:.85;margin-top:4px;">${ex.default_dose || ""}</div>
+          <div style="opacity:.7;margin-top:6px;font-size:11px;">ID: ${ex.id}</div>
+        </div>
+      `).join("");
+
+    exModal.style.display = "block";
+  };
+}
+
 </script>
 <!-- Orders / Referrals popup -->
 <div id="refModal" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:9999;">
@@ -1098,6 +1174,17 @@ localStorage.setItem(
     <div style="display:flex;gap:10px;margin-top:12px;justify-content:flex-end;">
       <button id="refSubmitBtn" class="module-btn" type="button">Submit</button>
       <button id="refCancel" type="button" style="border:1px solid var(--border);background:#020617;color:var(--ink);border-radius:999px;padding:6px 12px;cursor:pointer;">Cancel</button
-  
+//Exercise//
+<div id="exModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;">
+  <div style="max-width:920px;margin:60px auto;background:#0f172a;border:1px solid #1f2937;border-radius:14px;padding:14px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+      <div style="font-weight:700;">Exercises (auto-suggest)</div>
+      <button id="exClose" class="module-btn" type="button" style="padding:6px 10px;">Close</button>
+    </div>
+    <div id="exBody" style="margin-top:10px;color:#e5e7eb;font-size:12px;"></div>
+  </div>
+</div>
+
+      
 </body>
 </html>
