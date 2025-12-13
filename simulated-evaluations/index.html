@@ -1057,32 +1057,58 @@ function parseYamlArray(v){
   if (!inner) return [];
   return inner.split(",").map(s => stripQuotes(s.trim())).filter(Boolean);
 }
-
 function parseSimpleYaml(yamlText){
   const obj = {};
   const lines = (yamlText || "").split(/\r?\n/);
-  for (const raw of lines){
+
+  for (let i=0; i<lines.length; i++){
+    const raw = lines[i];
     const line = raw.trim();
     if (!line || line.startsWith("#")) continue;
 
+    // key: value OR key:
     const idx = line.indexOf(":");
     if (idx === -1) continue;
 
     const key = line.slice(0, idx).trim();
     let val = line.slice(idx + 1).trim();
 
-    // arrays like [a,b] or ["a","b"]
-    const arr = parseYamlArray(val);
-    if (arr !== null){
-      obj[key] = arr;
+    // key:  (YAML block list)
+    if (!val){
+      // collect "- item" lines under it
+      const arr = [];
+      let j = i + 1;
+      while (j < lines.length){
+        const t = lines[j].trim();
+        if (!t) { j++; continue; }
+        if (t.includes(":") && !t.startsWith("-")) break;   // next key
+        const m = t.match(/^-+\s*(.+)$/);
+        if (m) arr.push(stripQuotes(m[1].trim()));
+        j++;
+      }
+      if (arr.length) obj[key] = arr;
+      i = j - 1;
       continue;
     }
 
-    // normal string
+    // inline arrays like [a,b] or ["a","b"]
+    const inlineArr = parseYamlArray(val);
+    if (inlineArr !== null){
+      obj[key] = inlineArr;
+      continue;
+    }
+
     obj[key] = stripQuotes(val);
   }
+
+  // ---- aliases (so your MD can stay simple) ----
+  if (!obj.default_dose && obj.dose) obj.default_dose = obj.dose;
+  if (!obj.category && obj.type) obj.category = obj.type;
+  if (!obj.impairment_tags && obj.tags) obj.impairment_tags = obj.tags;
+
   return obj;
 }
+
 
 function parseExerciseLibraryMarkdown(md){
   const out = [];
