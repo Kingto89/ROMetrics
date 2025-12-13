@@ -89,6 +89,20 @@
   main{flex-direction:column;}
   .sidebar{width:100%;max-width:none;}
 }
+/* FIX: allow inner scroll areas to actually scroll inside flex layout */
+main{ min-height:0; }
+.sidebar{ min-height:0; }
+.workspace{ min-height:0; }
+.workspace-body{ min-height:0; overflow-y:auto; }
+
+/* FIX: your textarea uses --text (not defined). Use --ink */
+textarea{ color: var(--ink); }
+
+/* OPTIONAL: keep the Simulation card from stretching too wide */
+#simStatusCard{ flex: 0 0 380px; max-width: 440px; }
+@media (max-width:900px){
+  #simStatusCard{ flex: 1 1 auto; max-width: none; }
+}
 
   </style>
 </head>
