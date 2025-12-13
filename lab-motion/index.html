@@ -1000,6 +1000,16 @@ function freezeBindBaseFor(key, cfg) {
 
 
     function applyPairAngle(key, cfg, deg) {
+      // ✅ GLOBAL COLLIM CAP (applies in normal + case mode, for ALL rotations)
+  if (COLLIM.enabled) {
+    const s = (deg >= 0) ? +1 : -1;
+    const cap = capFor({ key, sign: s }); // uses COLLIM values
+    if (typeof cap === "number") {
+      const mag = Math.min(Math.abs(deg), cap);
+      deg = mag * s;
+    }
+  }
+  
   const bind = resolveBind(key, cfg);
   if (!bind) return;
 
