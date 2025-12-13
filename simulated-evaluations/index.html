@@ -978,6 +978,164 @@ document.querySelector('[data-ref="open"]')?.addEventListener("click", (e)=>{
   e.preventDefault();
   openRefModal();
 });
+// ===== Exercises modal wiring (matches referral modal behavior) =====
+const EX_LIB_URL = "./assets/rometrics_exercise_library.md";
+let __EX_LIB_CACHE = null;
+
+function __parseYamlBlocks(md){
+  const blocks = [...md.matchAll(/```yaml\s*([\s\S]*?)```/g)].map(m => m[1]);
+  return blocks.map(y => {
+    const o = {};
+    y.split("\n").forEach(line=>{
+      const m = line.match(/^([a-zA-Z0-9_]+)\s*:\s*(.*)\s*$/);
+      if(!m) return;
+      let k=m[1], v=m[2].trim();
+      if(v.startsWith("[") && v.endsWith("]")){
+        v = v.slice(1,-1).split(",").map(s=>s.trim()).filter(Boolean);
+      }
+      o[k]=v;
+    });
+    return o;
+  }).filter(x=>x.id && x.name);
+}
+
+async function __getExerciseLib(){
+  if (__EX_LIB_CACHE) return __EX_LIB_CACHE;
+  const r = await fetch(EX_LIB_URL, { cache: "no-store" });
+  const md = await r.text();
+  __EX_LIB_CACHE = __parseYamlBlocks(md);
+  return __EX_LIB_CACHE;
+}
+
+function __activeCaseKey(){
+  if (typeof getCurrentCaseKey === "function") return getCurrentCaseKey();
+  const sel = document.getElementById("caseSelect");
+  return sel ? sel.value : "CASE_001";
+}
+//end drop in//
+// If you already track tags elsewhere, set: window.ACTIVE_IMPAIRMENT_TAGS = [...]
+function __activeTags(){
+  return Array.isArray(window.ACTIVE_IMPAIRMENT_TAGS) ? window.ACTIVE_IMPAIRMENT_TAGS : [];
+}
+
+function __getSelectedRegions(){
+  const el = document.getElementById("exRegion");
+  if (!el) return [];
+  return [...el.selectedOptions].map(o=>o.value);
+}
+function __getSelectedCategory(){
+  return (document.getElementById("exCategory")?.value || "").trim();
+}
+
+function __recommendTop3(lib, regions, category, tags){
+  const tagSet = new Set((tags||[]).map(String));
+  const filtered = lib.filter(ex=>{
+    const okRegion = regions.length ? regions.includes(String(ex.region||"")) : true;
+    const okCat = category ? String(ex.category||"") === category : true;
+    return okRegion && okCat;
+  });
+
+  const scored = filtered.map(ex=>{
+    const exTags = Array.isArray(ex.impairment_tags) ? ex.impairment_tags : [];
+    const score = exTags.reduce((s,t)=> s + (tagSet.has(t)?1:0), 0);
+    return { ex, score };
+  }).sort((a,b)=> b.score - a.score);
+
+  // If no tag matches, still give 3 from region/category
+  return scored.slice(0,3).map(x=>x.ex);
+}
+
+function __renderRecList(items){
+  const box = document.getElementById("exRecList");
+  if (!box) return;
+
+  if (!items.length){
+    box.innerHTML = `<div style="color:var(--muted);font-size:12px;">No matches. Try another region/category.</div>`;
+    return;
+  }
+
+  box.innerHTML = items.map(ex=>`
+    <label style="display:flex;gap:8px;align-items:flex-start;padding:6px 4px;border-radius:8px;cursor:pointer;">
+      <input type="checkbox" class="exPick" value="${ex.id}" style="margin-top:2px;">
+      <div>
+        <div style="color:var(--ink);font-size:12px;font-weight:600;">${ex.name}</div>
+        <div style="color:var(--muted);font-size:11px;">${ex.category || ""}${ex.default_dose ? " • " + ex.default_dose : ""}</div>
+      </div>
+    </label>
+  `).join("");
+}
+
+async function __refreshExerciseRecs(){
+  const lib = await __getExerciseLib();
+  const regions = __getSelectedRegions();
+  const category = __getSelectedCategory();
+  const recs = __recommendTop3(lib, regions, category, __activeTags());
+  __renderRecList(recs);
+}
+
+function __openExModal(){
+  const m = document.getElementById("exModal");
+  if (!m) return;
+  m.style.display = "flex";
+
+  const meta = document.getElementById("exMeta");
+  if (meta) meta.textContent = `Active case: ${__activeCaseKey()}`;
+
+  // default: auto-select first region if none selected
+  const reg = document.getElementById("exRegion");
+  if (reg && ![...reg.options].some(o=>o.selected)) reg.options[0].selected = true;
+
+  __refreshExerciseRecs();
+}
+
+function __closeExModal(){
+  const m = document.getElementById("exModal");
+  if (m) m.style.display = "none";
+}
+
+// Find your existing Exercises tab button WITHOUT changing HTML
+const __exTabBtn = [...document.querySelectorAll(".tabs .tab")]
+  .find(b => (b.textContent || "").trim().toLowerCase() === "exercises");
+
+__exTabBtn?.addEventListener("click", (e)=>{ e.preventDefault(); __openExModal(); });
+
+document.getElementById("exBackdrop")?.addEventListener("click", __closeExModal);
+document.getElementById("exClose")?.addEventListener("click", __closeExModal);
+document.getElementById("exCancel")?.addEventListener("click", __closeExModal);
+
+document.getElementById("exRegion")?.addEventListener("change", __refreshExerciseRecs);
+document.getElementById("exCategory")?.addEventListener("change", __refreshExerciseRecs);
+
+document.getElementById("exAddBtn")?.addEventListener("click", async ()=>{
+  const lib = await __getExerciseLib();
+  const picks = [...document.querySelectorAll("#exRecList .exPick:checked")].map(i=>i.value);
+  if (!picks.length) return;
+
+  const sets  = document.getElementById("exSets")?.value || "";
+  const reps  = document.getElementById("exReps")?.value || "";
+  const hold  = document.getElementById("exHold")?.value || "0";
+  const days  = document.getElementById("exDays")?.value || "";
+  const weeks = document.getElementById("exWeeks")?.value || "";
+  const notes = (document.getElementById("exNotes")?.value || "").trim();
+
+  const byId = new Map(lib.map(x=>[x.id, x]));
+  const lines = picks.map(id=>{
+    const ex = byId.get(id);
+    if (!ex) return null;
+    const dose = (String(hold) !== "0" && hold !== "") ? `${sets}×${hold}s` : `${sets}×${reps}`;
+    const freq = `${days}x/week × ${weeks} wks`;
+    return `• ${ex.name} — ${dose} (${freq})${notes ? " — " + notes : ""}`;
+  }).filter(Boolean);
+
+  // Append into Treatment Plan (SOAP Plan)
+  const plan = document.getElementById("docPlan");
+  if (plan){
+    const header = `\nHEP (${__activeCaseKey()}):\n`;
+    plan.value = (plan.value || "") + header + lines.join("\n") + "\n";
+  }
+
+  __closeExModal();
+});
 
 document.getElementById("refBackdrop")?.addEventListener("click", closeRefModal);
 document.getElementById("refClose")?.addEventListener("click", closeRefModal);
@@ -1038,82 +1196,7 @@ localStorage.setItem(
   closeRefModal();
 });
 });
-//Exercise button//
-  const EX_LIB_URL = "./assets/rometrics_exercise_library.md";
-let EX_LIB = null;
 
-function parseExerciseLibrary(md){
-  // pulls each ```yaml ... ``` block into a plain object
-  const blocks = [...md.matchAll(/```yaml\s*([\s\S]*?)```/g)].map(m => m[1]);
-  return blocks.map(y => {
-    const obj = {};
-    y.split("\n").forEach(line=>{
-      const m = line.match(/^([a-zA-Z0-9_]+)\s*:\s*(.*)\s*$/);
-      if(!m) return;
-      let k = m[1], v = m[2];
-      // basic array support: [a,b,c]
-      if(v.startsWith("[") && v.endsWith("]")){
-        v = v.slice(1,-1).split(",").map(s=>s.trim()).filter(Boolean);
-      }
-      obj[k] = v;
-    });
-    return obj;
-  }).filter(x => x.id && x.name);
-}
-
-async function getExerciseLibrary(){
-  if (EX_LIB) return EX_LIB;
-  const res = await fetch(EX_LIB_URL, { cache: "no-store" });
-  const md = await res.text();
-  EX_LIB = parseExerciseLibrary(md);
-  return EX_LIB;
-}
-
-// NOTE: replace these 2 lines with *your* active case + impairment source if named differently
-function getActiveCaseKeySafe(){ return (typeof getCurrentCaseKey==="function") ? getCurrentCaseKey() : "case_unknown"; }
-function getActiveImpairmentTagsSafe(){ return (window.ACTIVE_IMPAIRMENT_TAGS || []); } // you’ll map this to your case data
-
-function pickTop3Exercises(lib, impairmentTags){
-  // score exercises by matching impairment_tags
-  const tags = new Set((impairmentTags||[]).map(String));
-  const scored = lib.map(ex=>{
-    const exTags = Array.isArray(ex.impairment_tags) ? ex.impairment_tags : [];
-    const score = exTags.reduce((s,t)=> s + (tags.has(t) ? 1 : 0), 0);
-    return { ex, score };
-  }).sort((a,b)=> b.score - a.score);
-  return scored.slice(0,3).map(x=>x.ex);
-}
-
-const btnExercises = document.getElementById("btnExercises");
-const exModal = document.getElementById("exModal");
-const exClose = document.getElementById("exClose");
-const exBody = document.getElementById("exBody");
-
-if (btnExercises && exModal && exClose && exBody){
-  exClose.onclick = () => exModal.style.display = "none";
-
-  btnExercises.onclick = async () => {
-    const lib = await getExerciseLibrary();
-
-    const caseKey = getActiveCaseKeySafe();
-    const impair = getActiveImpairmentTagsSafe();
-
-    const top3 = pickTop3Exercises(lib, impair);
-
-    exBody.innerHTML =
-      `<div style="opacity:.85;margin-bottom:8px;">Active case: <b>${caseKey}</b></div>` +
-      `<div style="opacity:.85;margin-bottom:10px;">Matched tags: ${impair.length ? impair.join(", ") : "—"}</div>` +
-      top3.map(ex => `
-        <div style="border:1px solid #1f2937;border-radius:12px;padding:10px;margin:8px 0;background:#0b1220;">
-          <div style="font-weight:700;">${ex.name} <span style="opacity:.7;font-weight:500;">(${ex.category || "Exercise"})</span></div>
-          <div style="opacity:.85;margin-top:4px;">${ex.default_dose || ""}</div>
-          <div style="opacity:.7;margin-top:6px;font-size:11px;">ID: ${ex.id}</div>
-        </div>
-      `).join("");
-
-    exModal.style.display = "block";
-  };
-}
 
 </script>
 <!-- Orders / Referrals popup -->
@@ -1173,15 +1256,89 @@ if (btnExercises && exModal && exClose && exBody){
 
     <div style="display:flex;gap:10px;margin-top:12px;justify-content:flex-end;">
       <button id="refSubmitBtn" class="module-btn" type="button">Submit</button>
-      <button id="refCancel" type="button" style="border:1px solid var(--border);background:#020617;color:var(--ink);border-radius:999px;padding:6px 12px;cursor:pointer;">Cancel</button
-//Exercise//
-<div id="exModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;">
-  <div style="max-width:920px;margin:60px auto;background:#0f172a;border:1px solid #1f2937;border-radius:14px;padding:14px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
-      <div style="font-weight:700;">Exercises (auto-suggest)</div>
-      <button id="exClose" class="module-btn" type="button" style="padding:6px 10px;">Close</button>
+<button id="refCancel" type="button" style="border:1px solid var(--border);background:#020617;color:var(--ink);border-radius:999px;padding:6px 12px;cursor:pointer;">Cancel</button>
+
+<!-- Exercises popup (matches referral modal style + logic-ready fields) -->
+<div id="exModal" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:9999;">
+  <div id="exBackdrop" style="position:absolute;inset:0;background:rgba(0,0,0,.55);"></div>
+
+  <div style="position:relative;width:min(720px,92vw);border:1px solid var(--border);border-radius:14px;background:#0b1120;padding:14px;box-shadow:var(--shadow);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <div style="font-weight:700;color:var(--ink);">Exercises</div>
+      <button id="exClose" type="button" style="border:1px solid var(--border);background:#020617;color:var(--ink);border-radius:10px;padding:6px 10px;cursor:pointer;">✕</button>
     </div>
-    <div id="exBody" style="margin-top:10px;color:#e5e7eb;font-size:12px;"></div>
+
+    <div id="exMeta" style="font-size:12px;color:var(--muted);margin-bottom:10px;"></div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div>
+        <div class="field-label">Body Region (multi-select)</div>
+        <select id="exRegion" multiple size="6" style="width:100%;margin-top:4px;padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:#020617;color:var(--ink);">
+          <option value="cervical">Cervical</option>
+          <option value="thoracic">Thoracic</option>
+          <option value="shoulder">Shoulder / Scapular</option>
+          <option value="elbow">Elbow / Wrist / Hand</option>
+          <option value="trunk">Trunk / Core</option>
+          <option value="hip">Hip</option>
+          <option value="knee">Knee</option>
+          <option value="ankle">Ankle / Foot</option>
+        </select>
+        <div style="margin-top:6px;font-size:11px;color:var(--muted);">Tip: Ctrl/⌘ click to select multiple.</div>
+      </div>
+
+      <div>
+        <div class="field-label">Category</div>
+        <select id="exCategory" style="width:100%;margin-top:4px;padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:#020617;color:var(--ink);">
+          <option value="">Any…</option>
+          <option value="Mobility/ROM">Mobility / ROM</option>
+          <option value="Strength">Strength</option>
+          <option value="Neuromuscular control">Neuromuscular control</option>
+          <option value="Balance">Balance</option>
+        </select>
+
+        <div style="margin-top:10px;">
+          <div class="field-label">Recommended (pick up to 3)</div>
+          <div id="exRecList" style="margin-top:6px;border:1px solid var(--border);background:#020617;border-radius:10px;padding:8px;max-height:210px;overflow:auto;">
+            <div style="color:var(--muted);font-size:12px;">Select a region (left) to load recommendations…</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="grid-column:1/-1;">
+        <div class="field-label">Dose</div>
+        <div style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-top:6px;">
+          <div>
+            <div style="font-size:10px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.12em;">Sets</div>
+            <input id="exSets" type="number" min="1" value="3" style="width:100%;padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:#020617;color:var(--ink);" />
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.12em;">Reps</div>
+            <input id="exReps" type="number" min="1" value="10" style="width:100%;padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:#020617;color:var(--ink);" />
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.12em;">Hold (sec)</div>
+            <input id="exHold" type="number" min="0" value="0" style="width:100%;padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:#020617;color:var(--ink);" />
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.12em;">Days/week</div>
+            <input id="exDays" type="number" min="1" max="7" value="3" style="width:100%;padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:#020617;color:var(--ink);" />
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.12em;">Weeks</div>
+            <input id="exWeeks" type="number" min="1" value="6" style="width:100%;padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:#020617;color:var(--ink);" />
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.12em;">Notes</div>
+            <input id="exNotes" type="text" placeholder="pain rule / cues" style="width:100%;padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:#020617;color:var(--ink);" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:12px;justify-content:flex-end;">
+      <button id="exAddBtn" class="module-btn" type="button">Add to Treatment Plan</button>
+      <button id="exCancel" type="button" style="border:1px solid var(--border);background:#020617;color:var(--ink);border-radius:999px;padding:6px 12px;cursor:pointer;">Cancel</button>
+    </div>
   </div>
 </div>
 
