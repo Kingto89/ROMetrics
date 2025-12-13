@@ -82,12 +82,24 @@
     .module-grid .doc-card{grid-column:1/-1;}
     .doc-card{margin-top:14px;border:1px solid var(--border);padding:20px 22px;border-radius:12px;background:#0f172a;display:block;width:100%;max-width:100%;box-sizing:border-box;overflow-y:auto;max-height:420px;}
     textarea{width:100%;min-height:210px;resize:vertical;border-radius:10px;border:1px solid var(--border);background:#020617;color:var(--text);padding:10px 12px;font-size:12px;line-height:1.4;}
-    @media (max-width:900px){
-      main{flex-direction:column;}
-      .sidebar{width:100%;max-width:none;}
-      #simStatusCard .field-grid{grid-template-columns:1fr;}
-      .field-grid{grid-template-columns:1fr;}
-    }
+
+@media (max-width:900px){
+  main{flex-direction:column;}
+  .sidebar{width:100%;max-width:none;}
+}
+
+@media (max-width:600px) and (orientation:portrait){
+  #simStatusCard .field-grid > div{min-width:0;}
+  #simStatusCard #caseIdValue,
+  #simStatusCard #scenarioSummary{
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    display:block;
+    max-width:100%;
+  }
+}
+
   </style>
 </head>
 <body>
