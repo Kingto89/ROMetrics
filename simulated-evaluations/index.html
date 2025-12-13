@@ -498,7 +498,7 @@ const CASE_FILES = {
     docSubjective: 100,
     docObjective:  150,
     docDx:         60,
-    docPlan:       150,
+    docPlan:       350,
     docGoals:      100,
     docPrognosis:  60
   };
@@ -1174,23 +1174,38 @@ function scoreExercise(ex, tags){
 }
 
 function buildExerciseLine(ex){
-  const lines = [];
+  const cat = (ex.category || "").toLowerCase();
+  const prefix =
+    cat.includes("mobility") ? "ROM" :
+    cat.includes("neuro")    ? "NEURO" :
+    cat.includes("strength") ? "STR" :
+    cat.includes("balance")  ? "BAL" : "EX";
 
-  // main bullet (one line)
-  lines.push(`• ${ex.id} — ${ex.name}`);
+  const name = ex.name || ex.id;
 
-  // sub-bullets (each on its own line)
-  if (ex.default_dose) lines.push(`  - Dose: ${ex.default_dose}`);
-  if (ex.setup)        lines.push(`  - Setup: ${ex.setup}`);
-  if (ex.action)       lines.push(`  - Action: ${ex.action}`);
+  // dose can be either a normal string OR a "{ sets:..., reps:..., hold_sec:..., frequency:... }" string
+  const raw = String(ex.dose || ex.default_dose || "").trim();
 
-  const cues  = (ex.cues || []).filter(Boolean);
-  const avoid = (ex.avoid_if || []).filter(Boolean);
+  let reps = "", hold = "", freq = "";
 
-  if (cues.length)  lines.push(`  - Cues: ${cues.slice(0,3).join("; ")}`);
-  if (avoid.length) lines.push(`  - Avoid if: ${avoid.slice(0,2).join("; ")}`);
+  if (raw.startsWith("{") && raw.endsWith("}")){
+    reps = (raw.match(/reps:\s*"?([^",}]+)"?/i) || [])[1] || "";
+    hold = (raw.match(/hold_sec:\s*"?([^",}]+)"?/i) || [])[1] || "";
+    freq = (raw.match(/frequency:\s*"?([^",}]+)"?/i) || [])[1] || "";
+  } else {
+    reps = (raw.match(/(\d+\s*[-–]\s*\d+)\s*reps/i) || [])[1] || "";
+    hold = (raw.match(/(\d+\s*[-–]\s*\d+)\s*(?:sec|s)\s*hold/i) || [])[1] || "";
+    freq = (raw.match(/\b(daily|every day|\d+\s*x\/week|\d+\s*times\/week)\b/i) || [])[1] || "";
+  }
 
-  return lines.join("\n");
+  const parts = [];
+  if (reps) parts.push(`${reps.replace(/\s+/g,"")} reps`);
+  if (hold) parts.push(`hold ${hold.replace(/\s+/g,"")}s`);
+  if (freq) parts.push(freq.toLowerCase());
+
+  const dose = parts.length ? ` — ${parts.join(", ")}` : "";
+
+  return `• ${prefix}: ${name}${dose}`;
 }
 
 
