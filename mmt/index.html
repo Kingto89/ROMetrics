@@ -783,7 +783,14 @@ function updateResistanceFill() {
   resistanceFill.style.backgroundColor = status.color;
 
   const denom = Math.max(0.1, maxAllowedTime);
-  resistanceFill.style.width = `${Math.min(100, (effective / denom) * 100)}%`;
+// Fill maps to the 0→Grade3→Grade4→Grade5 timing scale (2s, 4s, 7s)
+// so a Grade 4 cap shows ~80% (not 100%).
+let fillPct = 0;
+if (effective <= 2) fillPct = (effective / 2) * 60;                 // 0–2s  → 0–60%
+else if (effective <= 4) fillPct = 60 + ((effective - 2) / 2) * 20; // 2–4s  → 60–80%
+else fillPct = 80 + ((effective - 4) / 3) * 20;                     // 4–7s  → 80–100%
+
+resistanceFill.style.width = `${Math.min(100, Math.max(0, fillPct))}%`;
 
   if (status.grade > 0) {
     resistanceText.textContent = status.text;
