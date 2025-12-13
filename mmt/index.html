@@ -927,19 +927,40 @@ function stopResistanceTest() {
     resistanceText.textContent = 'Hold to Apply Resistance (Grade 3, 4, 5)';
 }
 
-// Wire the Resistance Button for Press-and-Hold (NO BUBBLE)
+// Wire the Resistance Button for Press-and-Hold (robust hold; ignores stray ups)
 if (testButton) {
+  let activePointerId = null;
 
-  const down = (e) => { e.preventDefault(); e.stopPropagation(); startResistanceTest(e); };
-  const up   = (e) => { e.preventDefault(); e.stopPropagation(); stopResistanceTest(e); };
+  const onDown = (e) => {
+    e.preventDefault(); e.stopPropagation();
+    activePointerId = e.pointerId;
 
-  testButton.addEventListener('pointerdown', down, true);
-  testButton.addEventListener('pointerup', up, true);
-  testButton.addEventListener('pointercancel', up, true);
-  testButton.addEventListener('pointerleave', up, true);
+    // keep receiving events even if cursor drifts
+    try { testButton.setPointerCapture(activePointerId); } catch (_) {}
 
-  // Kill click so it never triggers other UI logic
-  testButton.addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); }, true);
+    startResistanceTest(e);
+  };
+
+  const onUp = (e) => {
+    // ignore "up" events that aren’t from the active press
+    if (activePointerId !== null && e.pointerId !== activePointerId) return;
+
+    e.preventDefault(); e.stopPropagation();
+    activePointerId = null;
+
+    stopResistanceTest(e);
+  };
+
+  testButton.addEventListener("pointerdown", onDown, { capture: true, passive: false });
+  testButton.addEventListener("pointerup", onUp, { capture: true, passive: false });
+  testButton.addEventListener("pointercancel", onUp, { capture: true, passive: false });
+  testButton.addEventListener("lostpointercapture", onUp, { capture: true });
+
+  // IMPORTANT: remove pointerleave stop (it causes “ends while holding”)
+  // testButton.addEventListener('pointerleave', stopResistanceTest);
+
+  // also block click bubbling (prevents “copy test”)
+  testButton.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); }, true);
 }
 
 /* ==================================== */  
