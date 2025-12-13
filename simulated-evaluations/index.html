@@ -538,14 +538,17 @@ const CASE_FILES = {
   const docSubmitBtn  = document.getElementById("docSubmitBtn");
   const docStatus     = document.getElementById("docSubmitStatus");
 
-const ATTEMPT_KEY = `docAttempts_${getCurrentCaseKey()}`;
+function attemptKey(){
+  return `docAttempts_${getCurrentCaseKey()}`;
+}
 
-  function getAttempts(){
-    return parseInt(localStorage.getItem(ATTEMPT_KEY) || "0", 10);
-  }
-  function setAttempts(n){
-    localStorage.setItem(ATTEMPT_KEY, String(n));
-  }
+function getAttempts(){
+  return parseInt(localStorage.getItem(attemptKey()) || "0", 10);
+}
+function setAttempts(n){
+  localStorage.setItem(attemptKey(), String(n));
+}
+
 
   function applyGradeFromAttempts(used){
     if (!gradeFill || !gradeLabel) return;
@@ -587,7 +590,6 @@ const ATTEMPT_KEY = `docAttempts_${getCurrentCaseKey()}`;
 
   if (docSubmitBtn && docStatus){
     docSubmitBtn.onclick = () => {
-      const ATTEMPT_KEY = `docAttempts_${getCurrentCaseKey()}`;
       const used = getAttempts();
 
       const docIds = [
