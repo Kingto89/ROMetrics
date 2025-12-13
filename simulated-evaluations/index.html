@@ -613,6 +613,17 @@ const CASE_FILES = {
         checkAttemptLock();
         return;
       }
+// Build a single payload AI can grade later (docs + referrals)
+const docText = docIds.map(id => {
+  const el = document.getElementById(id);
+  return `${id}: ${el ? el.value.trim() : ""}`;
+}).join("\n");
+
+const bundle = (document.getElementById("docBundle")?.value || "").trim(); // referrals already go here
+window.__GRADE_PAYLOAD_TEXT =
+  `CASE: ${getCurrentCaseKey()}\nSUBMITTED: ${new Date().toLocaleString()}\n\n` +
+  `--- DOCUMENTATION ---\n${docText}\n\n` +
+  (bundle ? `--- ORDERS/REFERRALS LOG ---\n${bundle}\n` : "");
 
       const nextCount = used + 1;
       setAttempts(nextCount);
