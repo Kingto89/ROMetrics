@@ -900,6 +900,24 @@ document.getElementById("refSubmitBtn")?.addEventListener("click", ()=>{
 - Request: ${req}`;
 
   pushDoc(note);
+    // --- show referral history under patient name ---
+  const nameEl = document.getElementById("patientName");
+  if (nameEl){
+    let badge = document.getElementById("refBadge");
+    if (!badge){
+      badge = document.createElement("div");
+      badge.id = "refBadge";
+      badge.style.marginTop = "4px";
+      badge.style.fontSize = "11px";
+      badge.style.color = "var(--muted)";
+      nameEl.insertAdjacentElement("afterend", badge);
+    }
+    badge.textContent = `Referred: ${to} • ${new Date().toLocaleDateString()}`;
+  }
+
+  // store latest referral summary for grading
+  window.__LAST_REFERRAL_NOTE = note;
+
   closeRefModal();
 });
 });
