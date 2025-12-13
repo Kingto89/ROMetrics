@@ -756,76 +756,75 @@ function getGradeStatus(elapsedSeconds) {
     return { grade: 0, color: 'transparent', text: 'Hold to Apply Resistance (Grade 3, 4, 5)' };
 }
 function updateResistanceFill() {
-    if (!resistanceTimer) return;
+  if (!resistanceTimer) return;
 
-    const elapsed = (Date.now() - pressStartTime) / 1000;
-    const status = getGradeStatus(elapsed);
-    const maxTime = 7.0; 
-    
-// --- CASE MODE CLAMPING (GENERIC: caps by current testKey) ---
-let maxAllowedTime = maxTime;
+  const elapsed = (Date.now() - pressStartTime) / 1000;
+  const maxTime = 7.0;
 
-if (window.MMT_CASE_MODE && window.MMT_CASE_MODE.active) {
-  const testKey = actionSel.value;
-  const imp =
-    (window.MMT_CASE_MODE.impairments && window.MMT_CASE_MODE.impairments[testKey]) ||
-    (window.MMT_CASE_MODE.impairments && window.MMT_CASE_MODE.impairments.default_unrestricted);
+  // --- CASE MODE CLAMPING (caps hold time per test) ---
+  let maxAllowedTime = maxTime;
 
-  if (imp && typeof imp.max_hold_time === "number") {
-    maxAllowedTime = Math.max(0.1, Math.min(maxTime, imp.max_hold_time)); // clamp to 0.1–7.0
-  }
-}
-// --- END CASE MODE CLAMPING ---
-
-resistanceFill.style.transition = "width 0.1s linear, background-color 0.4s";
-resistanceFill.style.backgroundColor = status.color;
-applyHoldMovement();
-
-// Fill should reach 100% at the cap (not always 7s)
-const denom = Math.max(0.1, maxAllowedTime);
-const normalizedWidth = Math.min(100, (elapsed / denom) * 100);
-resistanceFill.style.width = `${normalizedWidth}%`;
-
-if (status.grade > 0) {
-  resistanceText.textContent = status.text;
-  currentGrade = status.grade;
-}
-
-if (elapsed >= maxAllowedTime) {
-  clearInterval(resistanceTimer);
-  resistanceTimer = null;
-
-  applyBodyPositionFromSelection();
-
-  // Final grade should match the time you were allowed to hold
-  const finalStatus = getGradeStatus(maxAllowedTime);
-  currentGrade = finalStatus.grade;
-
-  // Track completion (for requiredTests)
   if (window.MMT_CASE_MODE && window.MMT_CASE_MODE.active) {
     const testKey = actionSel.value;
-    window.IMPAIRMENT_TRACKER = window.IMPAIRMENT_TRACKER || {};
-    window.IMPAIRMENT_TRACKER[testKey] = true;
+    const imp =
+      (window.MMT_CASE_MODE.impairments && window.MMT_CASE_MODE.impairments[testKey]) ||
+      (window.MMT_CASE_MODE.impairments && window.MMT_CASE_MODE.impairments.default_unrestricted);
 
-    const req = window.MMT_CASE_MODE.requiredTests || [];
-    const allDone = req.length > 0 && req.every(k => window.IMPAIRMENT_TRACKER[k] === true);
-
-    if (allDone && !window.MMT_CASE_MODE._resultsShown) {
-      window.MMT_CASE_MODE._resultsShown = true;
-      alert(window.MMT_CASE_MODE.resultsText || "Case complete.");
+    if (imp && typeof imp.max_hold_time === "number") {
+      maxAllowedTime = Math.max(0.1, Math.min(maxTime, imp.max_hold_time));
     }
   }
 
-  if (maxAllowedTime < 7.0) {
-    $("msg").textContent = `Case Mode: Grade ${currentGrade} (capped at ${maxAllowedTime.toFixed(1)}s).`;
-  } else {
-    $("msg").textContent = `Test finished. Recorded score: Grade ${currentGrade}!`;
+  // Use the capped time for UI + grade calculation
+  const effective = Math.min(elapsed, maxAllowedTime);
+  const status = getGradeStatus(effective);
+
+  resistanceFill.style.transition = "width 0.1s linear, background-color 0.4s";
+  resistanceFill.style.backgroundColor = status.color;
+
+  const denom = Math.max(0.1, maxAllowedTime);
+  resistanceFill.style.width = `${Math.min(100, (effective / denom) * 100)}%`;
+
+  if (status.grade > 0) {
+    resistanceText.textContent = status.text;
+    currentGrade = status.grade;
   }
 
-  testButton.disabled = false;
-  vectorOverlayBtn.disabled = false;
-}
+  applyHoldMovement();
 
+  // Stop exactly at the cap (this is the clamp)
+  if (elapsed >= maxAllowedTime) {
+    clearInterval(resistanceTimer);
+    resistanceTimer = null;
+
+    applyBodyPositionFromSelection();
+
+    // Track completion (requiredTests)
+    if (window.MMT_CASE_MODE && window.MMT_CASE_MODE.active) {
+      const testKey = actionSel.value;
+      window.IMPAIRMENT_TRACKER = window.IMPAIRMENT_TRACKER || {};
+      window.IMPAIRMENT_TRACKER[testKey] = true;
+
+      const req = window.MMT_CASE_MODE.requiredTests || [];
+      const allDone = req.length > 0 && req.every(k => window.IMPAIRMENT_TRACKER[k] === true);
+
+      if (allDone && !window.MMT_CASE_MODE._resultsShown) {
+        window.MMT_CASE_MODE._resultsShown = true;
+        alert(window.MMT_CASE_MODE.resultsText || "Case complete.");
+      }
+    }
+
+    // ✅ Message that will NOT get overwritten
+    if (maxAllowedTime < maxTime) {
+      $("msg").textContent = `Case Mode: Grade ${currentGrade}/5 (capped at ${maxAllowedTime.toFixed(1)}s).`;
+    } else {
+      $("msg").textContent = `Test finished. Recorded score: Grade ${currentGrade}!`;
+    }
+
+    testButton.disabled = false;
+    vectorOverlayBtn.disabled = false;
+  }
+}
 
 // ... Next lines update message/buttons ...
         
