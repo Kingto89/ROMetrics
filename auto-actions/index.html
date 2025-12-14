@@ -400,7 +400,8 @@ Walk_Alt_Lumbar_Case3: {
   obs: [
     "Guarded gait: minimal trunk rotation, slight forward trunk flexion (pain avoidance)",
     "Short step length + slow cadence (antalgic pattern)",
-    "BILATERAL foot drop tendency in swing → higher hip/knee flex (steppage compensation)"
+    "BILATERAL foot drop tendency in swing → higher hip/knee flex (steppage compensation)",
+    "Mild stance-side trunk lean each step (guarded sway, NOT Trendelenburg)"
   ],
   steps: [
     // neutral (guarded posture)
@@ -411,37 +412,40 @@ Walk_Alt_Lumbar_Case3: {
       sh_fe_l: 4, sh_fe_r: 4
     }},
 
-    // LEFT swing (RIGHT stance) — foot drop (PF in swing) + steppage (↑ hip/knee)
+    // LEFT swing (RIGHT stance) — PF in swing (foot drop) + steppage (↑ hip/knee)
+    // Arms: contralateral (RIGHT arm forward with LEFT step)
+    // Trunk: slight lean to stance side (RIGHT) + minimal rotation (stiff)
     { dur: 0.80, targets: {
-      hip_fe_l: 38, knee_fe_l: -55, ankle_dfpf_l: -8,     // swing: toe drags unless compensated
-      hip_fe_r: -6, knee_fe_r: 0,   ankle_dfpf_r: -6,     // stance: shortened + cautious push-off
-      trunk_fe: 12, trunk_rot: -4, trunk_lat: 0,          // stiff/guarded trunk
-      sh_fe_r: 8,  sh_fe_l: 2                             // reduced arm swing
+      hip_fe_l: 38, knee_fe_l: -55, ankle_dfpf_l: -10,   // swing: toe drag tendency
+      hip_fe_r: -6, knee_fe_r: 0,   ankle_dfpf_r: -6,    // stance: shortened + cautious
+      trunk_fe: 12, trunk_lat: 6, trunk_rot: -2,         // guarded sway RIGHT
+      sh_fe_r: 18, sh_fe_l: -12                           // ✅ correct arm swing phase
     }},
     { dur: 0.25, targets: {
       hip_fe_l: 0, knee_fe_l: 0, ankle_dfpf_l: 0,
       hip_fe_r: 0, ankle_dfpf_r: 0,
-      trunk_fe: 10, trunk_rot: 0,
+      trunk_fe: 10, trunk_lat: 0, trunk_rot: 0,
       sh_fe_l: 4, sh_fe_r: 4
     }},
 
-    // RIGHT swing (LEFT stance) — same (bilateral)
+    // RIGHT swing (LEFT stance) — same pattern (bilateral)
+    // Arms: contralateral (LEFT arm forward with RIGHT step)
+    // Trunk: slight lean to stance side (LEFT) + minimal rotation (stiff)
     { dur: 0.80, targets: {
-      hip_fe_r: 38, knee_fe_r: -55, ankle_dfpf_r: -8,
+      hip_fe_r: 38, knee_fe_r: -55, ankle_dfpf_r: -10,
       hip_fe_l: -6, knee_fe_l: 0,   ankle_dfpf_l: -6,
-      trunk_fe: 12, trunk_rot: 4, trunk_lat: 0,
-      sh_fe_l: 8,  sh_fe_r: 2
+      trunk_fe: 12, trunk_lat: -6, trunk_rot: 2,          // guarded sway LEFT
+      sh_fe_l: 18, sh_fe_r: -12                           // ✅ correct arm swing phase
     }},
     { dur: 0.25, targets: {
       hip_fe_r: 0, knee_fe_r: 0, ankle_dfpf_r: 0,
       hip_fe_l: 0, ankle_dfpf_l: 0,
-      trunk_fe: 10, trunk_rot: 0,
+      trunk_fe: 10, trunk_lat: 0, trunk_rot: 0,
       sh_fe_l: 4, sh_fe_r: 4
     }},
   ],
   loop: 4
 }
-
  
 
 
