@@ -629,14 +629,12 @@ function funcTick(){
     setPair(key, a);
   }
 
-  if (p >= 1){
-    // commit end angles (DON’T re-setPair here — last frame already applied clamps)
-    for (const key of Object.keys(targets)){
-      FUNC.pose[key] = targets[key];
-    }
-    FUNC.stepIndex += 1;
-    FUNC.stepT0 = performance.now();
-  }
+if (p >= 1){
+  // ✅ do NOT overwrite FUNC.pose with raw targets (we track real applied values per-frame)
+  FUNC.stepIndex += 1;
+  FUNC.stepT0 = performance.now();
+}
+
 
   FUNC.raf = requestAnimationFrame(funcTick);
 }
