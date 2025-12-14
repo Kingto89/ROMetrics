@@ -330,17 +330,8 @@ if (antiBox){
    - Shows only when URL has ?case=1
    - Plays scripted sequences using your existing setPair()
    ========================================================= */
-const QS = new URLSearchParams(location.search);
-const CASE_TOKEN = QS.get("caseToken") || "";
-const LEGACY_CASE = QS.get("case") || "";
+const CASE_MODE = new URL(location.href).searchParams.get("case") === "1";
 
-// Extract 001/002/003 from: LAB-CERVICAL-001, LAB-HIP-002, LAB-CLUSTER-003
-const CASE_NUM = (() => {
-  const m = String(CASE_TOKEN).match(/(\d{3})\b/);
-  return m ? m[1] : "";
-})();
-
-const CASE_ID = CASE_NUM ? `case_${CASE_NUM}` : "";
 const funcBox  = document.getElementById("funcBox");
 const taskSel  = document.getElementById("taskSel");
 const taskPlay = document.getElementById("taskPlay");
@@ -350,7 +341,7 @@ const taskObs  = document.getElementById("taskObs");
 
 if (funcBox) funcBox.style.display = CASE_MODE ? "block" : "none";
 
-const ALL_FUNC_TASKS = {
+const FUNC_TASKS = {
   March_Alt_RHip: {
     label: "March (Alternating) — Hip",
     obs: [
@@ -428,7 +419,7 @@ Walk_Alt_Lumbar_Case3: {
       hip_fe_l: 30, knee_fe_l: -60, ankle_dfpf_l: -10,   // swing: PF toe-drop tendency
       hip_fe_r: -6, knee_fe_r: 0,   ankle_dfpf_r: -6,    // stance: cautious push-off
 
-      trunk_fe: 12, trunk_rot: -7, trunk_lat: 10,         // guarded trunk (minimal rotation)
+      trunk_fe: 12, trunk_rot: -3, trunk_lat: 10,         // guarded trunk (minimal rotation)
 
       // ✅ keep wrists neutral (no preset-looking hands)
       wr_ps_l: 0, wr_ps_r: 0,
@@ -449,7 +440,7 @@ Walk_Alt_Lumbar_Case3: {
       hip_fe_r: 35, knee_fe_r: -60, ankle_dfpf_r: -10,
       hip_fe_l: -6, knee_fe_l: 0,   ankle_dfpf_l: -6,
 
-      trunk_fe: 12, trunk_rot: 7, trunk_lat: -10,
+      trunk_fe: 12, trunk_rot: 3, trunk_lat: -10,
 
       wr_ps_l: 0, wr_ps_r: 0,
       el_fe_l: 20, el_fe_r: 15
@@ -467,6 +458,10 @@ Walk_Alt_Lumbar_Case3: {
   loop: 4
 }
 
+ 
+
+
+ 
 };
 
 
@@ -1725,7 +1720,6 @@ function ensureCollisionTuner() {
     <div style="flex:1"><input id="colTrunkLatL" type="number" step="1" min="0" max="90"></div></div>
   <div class="rom-row"><div class="rom-head">Trunk Lat — Right max (°)</div>
     <div style="flex:1"><input id="colTrunkLatR" type="number" step="1" min="0" max="90"></div></div>
-    
   <hr style="border-color:#1c2941;opacity:.3;">
   <div class="rom-row"><div class="rom-head">Cervical Rot — Left max (°)</div>
     <div style="flex:1"><input id="cervL" type="number" step="1" min="0" max="90"></div></div>
