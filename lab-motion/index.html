@@ -860,15 +860,18 @@ function funcStart(taskId){
 
 function funcPauseToggle(){
   if (!FUNC.active) return;
-
-  // ✅ If user changed the task selection, do NOT resume the old task
-if (taskSel && taskSel.value && FUNC.taskId && taskSel.value !== FUNC.taskId) {
+// ✅ if dropdown no longer matches the running task, do NOT allow resume
+if (!FUNC.taskId || (taskSel && taskSel.value !== FUNC.taskId)) {
   funcStop(true);
   FUNC.taskId = "";
+  taskPause.classList.remove("paused");
   taskPause.textContent = "Pause";
-  msg.textContent = "Functional cleared (Task changed).";
+  taskPause.disabled = true;
+  taskPlay.disabled = !taskSel.value;
+  msg.textContent = "Functional cleared (task changed).";
   return;
 }
+
 
   // ✅ toggle first
   FUNC.paused = !FUNC.paused;
@@ -1005,19 +1008,31 @@ function initFunctionalUI(){
   });
 
   // observe text
-  taskSel.addEventListener("change", ()=>{
-    const t = FUNC_TASKS[taskSel.value];
-    taskObs.innerHTML = t ? `<ul style="margin:0;padding-left:16px">${t.obs.map(x=>`<li>${x}</li>`).join("")}</ul>` : "";
- 
-  // ✅ STEP 2: changing the task nukes any paused/running functional state
+taskSel.addEventListener("change", ()=>{
+  const sel = taskSel.value || "";
+  const t = FUNC_TASKS[sel];
+
+  taskObs.innerHTML = t
+    ? `<ul style="margin:0;padding-left:16px">${t.obs.map(x=>`<li>${x}</li>`).join("")}</ul>`
+    : "";
+
+  // HARD cancel any running/paused functional as soon as dropdown changes (including blank)
   if (FUNC.active || FUNC.paused) {
     funcStop(true);
-    FUNC.taskId = "";
-    taskPause.classList.remove("paused");
-    taskPause.textContent = "Pause";
-    msg.textContent = "Functional cleared (Task changed).";
+    FUNC.taskId = ""; // invalidate
   }
+
+  // reset Pause UI state
+  taskPause.classList.remove("paused");
+  taskPause.textContent = "Pause";
+  taskPause.disabled = true;
+
+  // only allow Play if a task is selected
+  taskPlay.disabled = !sel;
+
+  msg.textContent = sel ? "Task selected." : "Select a Functional Task.";
 });
+
 
 
   taskPlay.onclick = ()=> {
