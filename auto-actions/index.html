@@ -366,7 +366,35 @@ const FUNC_TASKS = {
       { dur: 0.35, targets: { hip_fe_r: 0,  knee_fe_r: 0,   ankle_dfpf_r: 0, trunk_lat: 0, trunk_fe: 0 } },
     ],
     loop: 3
+  },
+   Cervical_BlindSpot_R: {
+    label: "Cervical — Blind Spot RIGHT (trunk cheat)",
+    obs: [
+      "Neck RIGHT rotation stops early (case limit)",
+      "Compensation: trunk rotates RIGHT to reach target"
+    ],
+    steps: [
+      { dur: 0.35, targets: { cerv_rot: 0, trunk_rot: 0 } },
+      { dur: 0.70, targets: { cerv_rot: -30, trunk_rot: -25 } }, // RIGHT = negative
+      { dur: 0.45, targets: { cerv_rot: 0, trunk_rot: 0 } }
+    ],
+    loop: 3
+  },
+
+  Cervical_LatFlex_R: {
+    label: "Cervical — Sidebend RIGHT (trunk cheat)",
+    obs: [
+      "Neck RIGHT lateral flex stops early (case limit)",
+      "Compensation: trunk leans RIGHT to simulate range"
+    ],
+    steps: [
+      { dur: 0.35, targets: { cerv_lat: 0, trunk_lat: 0 } },
+      { dur: 0.70, targets: { cerv_lat: 20, trunk_lat: 12 } }, // RIGHT lat flex = positive
+      { dur: 0.45, targets: { cerv_lat: 0, trunk_lat: 0 } }
+    ],
+    loop: 3
   }
+ 
 };
 
 
