@@ -343,9 +343,9 @@ if (funcBox) funcBox.style.display = CASE_MODE ? "block" : "none";
 
 const FUNC_TASKS = {
   March_Alt_RHip: {
-    label: "March (Alternating) — R Hip Deficit (in place)",
+    label: "March (Alternating) — Hip",
     obs: [
-      "LEFT knee lift (RIGHT stance) shows ipsilateral trunk lean RIGHT (Trendelenburg compensation)",
+      "LEFT knee lift (RIGHT stance) shows ipsilateral trunk lean ",
       "RIGHT knee lift stops early (hip flex limit on R)",
       "Asymmetry: trunk/pelvis strategy differs L vs R"
     ],
@@ -368,7 +368,7 @@ const FUNC_TASKS = {
     loop: 3
   },
   Cervical_Alt_RDeficit: {
-    label: "Cervical (ALT) — R Rotation + R Sidebend Deficit",
+    label: "Cervical (ALT) — Rotation + Sidebend Deficit",
     obs: [
       "LEFT = uninvolved (full range, minimal trunk)",
       "RIGHT = involved (stops early), trunk rotates/leans RIGHT to compensate"
@@ -378,7 +378,7 @@ const FUNC_TASKS = {
       { dur: 0.30, targets: { cerv_rot: 0, cerv_lat: 0, trunk_rot: 0, trunk_lat: 0 } },
 
       // LEFT look over shoulder (normal)  ✅ left rot = +
-      { dur: 0.65, targets: { cerv_rot: 70, trunk_rot: 5 } },
+      { dur: 0.65, targets: { cerv_rot: 60, trunk_rot: 0 } },
       { dur: 0.30, targets: { cerv_rot: 0, trunk_rot: 0 } },
 
       // RIGHT look over shoulder (limited) ✅ right rot = -
@@ -386,7 +386,7 @@ const FUNC_TASKS = {
       { dur: 0.30, targets: { cerv_rot: 0, trunk_rot: 0 } },
 
       // LEFT sidebend (normal) ✅ left lat flex = -
-      { dur: 0.55, targets: { cerv_lat: -45, trunk_lat: -4 } },
+      { dur: 0.55, targets: { cerv_lat: -45, trunk_lat: 0 } },
       { dur: 0.30, targets: { cerv_lat: 0, trunk_lat: 0 } },
 
       // RIGHT sidebend (limited) ✅ right lat flex = +
