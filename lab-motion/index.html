@@ -998,6 +998,14 @@ function initFunctionalUI(){
 
   taskPlay.onclick = ()=> {
     if (!taskSel.value) { msg.textContent = "Select a Functional Task first."; return; }
+    // reset Action UI so it’s not “active business” during functional
+actionSel.value = "";
+CURRENT_ACTION = null;
+actionDeg.value = "0";
+actionDeg.disabled = true;
+pairLabel.textContent = "Angle (°)";
+resetPainExpression();
+
     funcStart(taskSel.value);
   };
 
@@ -1013,6 +1021,14 @@ function initFunctionalUI(){
 }
 
 initFunctionalUI();
+    
+ function breakFunctionalBecauseActionMoved(){
+  if (!FUNC.active && !FUNC.paused) return;
+  funcStop(true);                 // hard reset functional + baseline
+  taskPause.textContent = "Pause";
+  msg.textContent = "Functional cleared (Action used).";
+}
+   
   /* ===== Draggable panel ===== */
   (function(){
     let dragging=false, sx=0, sy=0, startLeft=0, startTop=0;
@@ -1707,6 +1723,7 @@ function applyAnatomicBaseline(){
 
   // Always return to anatomic when changing actions; then freeze bind
   actionSel.addEventListener("change", ()=>{
+    breakFunctionalBecauseActionMoved();
     resetPainExpression(); 
     resetAllBonesToInitial();
     applyAnatomicBaseline();
@@ -1749,6 +1766,8 @@ function resetPainExpression(){
 
 actionDeg.addEventListener("input", ()=> {
   if (!CURRENT_ACTION) return;
+breakFunctionalBecauseActionMoved();
+resetPainExpression(); // also prevents grimace carrying into anything else
 
   let val = Math.max(0, Math.min(CURRENT_ACTION.max, parseFloat(actionDeg.value)||0));
   let isImpairedMotion = false;
