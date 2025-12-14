@@ -954,6 +954,22 @@ if (/^clavicle_/.test(key)) {
 }
 
     if (JOINT_BIND.has(key)) return JOINT_BIND.get(key);
+    // ✅ FORCE Shoulder Abd/Add to bind to upperarm bones (fix for GLB “arms in air”) added for functionl
+if (key === 'sh_aa_l' || key === 'sh_aa_r') {
+  const boneName = (key === 'sh_aa_l') ? 'upperarm_L' : 'upperarm_R';
+  const bone = getExactBoneByName(boneName);
+  if (!bone) { log(`No bind for ${key} (missing ${boneName})`); return null; }
+
+  const qBind = (initialBoneRot.get(bone) || bone.quaternion.clone()).clone();
+  const defAxis = (key === 'sh_aa_r') ? '-z' : 'z';
+  const axis = axisFor(RIG_PROFILE, key, defAxis);
+
+  const obj = { bone, qBind, axis };
+  JOINT_BIND.set(key, obj);
+  log(`Bound ${key} → ${bone.name} (axis ${axis}) [FORCED upperarm]`);
+  return obj;
+}
+
  if (/^trunk_/.test(key)) {
   // Try common spine names across rigs
   let b =
