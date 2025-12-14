@@ -826,17 +826,29 @@ function funcStart(taskId){
 
 function funcPauseToggle(){
   if (!FUNC.active) return;
+
+  // ✅ toggle first
   FUNC.paused = !FUNC.paused;
-  if (!FUNC.paused){
-    FUNC.stepT0 = performance.now(); // restart timing for current step smoothly
-    funcTick();
-    msg.textContent = "Functional Task: resumed";
-  } else {
+
+  // ✅ paused = unlock manual UI, running = lock it
+  if (FUNC.paused){
+    funcLockUI(false);
+    taskPlay.disabled  = true;
+    taskPause.disabled = false;
+
     if (FUNC.raf) cancelAnimationFrame(FUNC.raf);
     FUNC.raf = null;
     msg.textContent = "Functional Task: paused";
+    return;
   }
+
+  // ✅ resume
+  funcLockUI(true);
+  FUNC.stepT0 = performance.now();
+  msg.textContent = "Functional Task: resumed";
+  funcTick();
 }
+
 
 function funcStop(resetPose=true){
   if (FUNC.raf) cancelAnimationFrame(FUNC.raf);
