@@ -400,8 +400,7 @@ Walk_Alt_Lumbar_Case3: {
   obs: [
     "Guarded gait: minimal trunk rotation, slight forward trunk flexion (pain avoidance)",
     "Short step length + slow cadence (antalgic pattern)",
-    "BILATERAL foot drop tendency in swing → higher hip/knee flex (steppage compensation)",
-    "Arms forced ADducted (arms at sides) + wrists neutral (no anatomic-hand preset look)"
+    "BILATERAL foot drop tendency in swing & steppage compensation,
   ],
   steps: [
     // neutral (guarded posture) + FORCE arms down + wrists neutral
@@ -409,13 +408,6 @@ Walk_Alt_Lumbar_Case3: {
       trunk_fe: 10, trunk_lat: 0, trunk_rot: 0,
       hip_fe_l: 0, knee_fe_l: 0, ankle_dfpf_l: 0,
       hip_fe_r: 0, knee_fe_r: 0, ankle_dfpf_r: 0,
-
-      // ✅ force shoulder adduction to override model pose / anatomic preset behavior
-      sh_aa_l: -122,
-      sh_aa_r:  122,
-
-      // ✅ keep arms near side (small swing only)
-      sh_fe_l: 0,  sh_fe_r: 0,
 
       // ✅ neutralize “anatomic hands”
       wr_ps_l: 0, wr_ps_r: 0,
@@ -430,7 +422,6 @@ Walk_Alt_Lumbar_Case3: {
       trunk_fe: 12, trunk_rot: -3, trunk_lat: 10,         // guarded trunk (minimal rotation)
 
       // ✅ arms synced contralateral (small, not abducted)
-      sh_aa_l: -122, sh_aa_r: 122,
       sh_fe_r: 10,  sh_fe_l: -8,
 
       // ✅ keep wrists neutral (no preset-looking hands)
@@ -443,8 +434,6 @@ Walk_Alt_Lumbar_Case3: {
 
       trunk_fe: 10, trunk_rot: 0, trunk_lat: 0,
 
-      sh_aa_l: 122, sh_aa_r: -122,
-      sh_fe_l: 0, sh_fe_r: 0,
       wr_ps_l: 0, wr_ps_r: 0,
       el_fe_l: 10, el_fe_r: 10
     }},
@@ -456,9 +445,6 @@ Walk_Alt_Lumbar_Case3: {
 
       trunk_fe: 12, trunk_rot: 3, trunk_lat: -10,
 
-      sh_aa_l: -122, sh_aa_r: 122,
-      sh_fe_l: 10,  sh_fe_r: -8,
-
       wr_ps_l: 0, wr_ps_r: 0,
       el_fe_l: 20, el_fe_r: 15
     }},
@@ -467,9 +453,7 @@ Walk_Alt_Lumbar_Case3: {
       hip_fe_l: 0, knee_fe_l: 0,   ankle_dfpf_l: -4,
 
       trunk_fe: 10, trunk_rot: 0, trunk_lat: 0,
-
-      sh_aa_l: -122, sh_aa_r: 122,
-      sh_fe_l: 0, sh_fe_r: 0,
+      
       wr_ps_l: 0, wr_ps_r: 0,
       el_fe_l: 10, el_fe_r: 10
     }},
