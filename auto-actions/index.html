@@ -477,14 +477,13 @@ function funcStop(resetPose=true){
   msg.textContent = resetPose ? "Functional Task: reset" : "Functional Task: stopped";
   log(`■ Functional Task STOP`);
 }
-
 function funcTick(){
   if (!FUNC.active || FUNC.paused) return;
 
   const task = FUNC_TASKS[FUNC.taskId];
   const step = task.steps[FUNC.stepIndex];
+
   if (!step){
-    // finished one full pass
     FUNC.loopsLeft -= 1;
     if (FUNC.loopsLeft > 0){
       FUNC.stepIndex = 0;
@@ -492,7 +491,6 @@ function funcTick(){
       FUNC.raf = requestAnimationFrame(funcTick);
       return;
     }
-    // done
     funcStop(false);
     msg.textContent = "Functional Task complete.";
     return;
@@ -503,20 +501,49 @@ function funcTick(){
   const p = Math.min(1, (now - FUNC.stepT0) / durMs);
   const e = easeInOut(p);
 
-  // interpolate only keys listed in this step
   const targets = step.targets || {};
+
+  // interpolate only keys listed in this step
   for (const key of Object.keys(targets)){
     const a0 = (typeof FUNC.pose[key] === "number") ? FUNC.pose[key] : 0;
     const a1 = targets[key];
-    const a  = a0 + (a1 - a0) * e;
+    let a  = a0 + (a1 - a0) * e;
+
+    // ✅ APPLY LIMITS DURING FUNCTIONAL PLAYBACK
+    if (COLLIM.enabled){
+      const isL = key.endsWith("_l");
+      const isR = key.endsWith("_r");
+
+      // Hip FE: + = flex, - = ext
+      if (key.startsWith("hip_fe_")){
+        const capFlex = isL ? COLLIM.hipFlexLMax : COLLIM.hipFlexRMax;
+        const capExt  = isL ? COLLIM.hipExtLMax  : COLLIM.hipExtRMax;
+        if (a > 0) a = Math.min(a, capFlex);
+        if (a < 0) a = Math.max(a, -capExt);
+      }
+
+      // Knee FE on your task keys: flexion is NEGATIVE
+      if (key.startsWith("knee_fe_")){
+        const capFlex = isL ? COLLIM.kneeFlexLMax : COLLIM.kneeFlexRMax;
+        if (a < 0) a = -Math.min(Math.abs(a), capFlex);
+      }
+
+      // Ankle DF/PF: DF is +, PF is -
+      if (key.startsWith("ankle_dfpf_")){
+        const capPF = isL ? COLLIM.anklePF_LMax : COLLIM.anklePF_RMax;
+        const capDF = isL ? COLLIM.ankleDF_LMax : COLLIM.ankleDF_RMax;
+        if (a > 0) a = Math.min(a, capDF);
+        if (a < 0) a = Math.max(a, -capPF);
+      }
+    }
+
     setPair(key, a);
   }
 
   if (p >= 1){
-    // commit end angles
+    // commit end angles (DON’T re-setPair here — last frame already applied clamps)
     for (const key of Object.keys(targets)){
       FUNC.pose[key] = targets[key];
-      setPair(key, targets[key]);
     }
     FUNC.stepIndex += 1;
     FUNC.stepT0 = performance.now();
@@ -524,6 +551,7 @@ function funcTick(){
 
   FUNC.raf = requestAnimationFrame(funcTick);
 }
+
 
 function initFunctionalUI(){
   if (!taskSel) return;
