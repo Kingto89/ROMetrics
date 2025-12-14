@@ -376,6 +376,31 @@ const FUNC_TASKS = {
       { dur: 0.6, targets: { trunk_fe: 0 } }
     ],
     loop: 1
+  },
+  March_Alt_RHip: {
+    label: "March (Alternating) — R Hip Deficit (in place)",
+    obs: [
+      "LEFT knee lift (RIGHT stance) shows ipsilateral trunk lean RIGHT (Trendelenburg compensation)",
+      "RIGHT knee lift stops early (hip flex limit on R)",
+      "Asymmetry: trunk/pelvis strategy differs L vs R"
+    ],
+    steps: [
+      // neutral
+      { dur: 0.35, targets: {
+        trunk_fe: 0, trunk_lat: 0,
+        hip_fe_l: 0, knee_fe_l: 0, ankle_dfpf_l: 0,
+        hip_fe_r: 0, knee_fe_r: 0, ankle_dfpf_r: 0
+      }},
+
+      // LEFT knee up (RIGHT stance) → show RIGHT trunk lean
+      { dur: 0.65, targets: { hip_fe_l: 55, knee_fe_l: -60, ankle_dfpf_l: 8, trunk_lat: 14, trunk_fe: 8 } },
+      { dur: 0.35, targets: { hip_fe_l: 0,  knee_fe_l: 0,   ankle_dfpf_l: 0, trunk_lat: 0,  trunk_fe: 0 } },
+
+      // RIGHT knee up (R hip deficit) → reduced lift
+      { dur: 0.65, targets: { hip_fe_r: 32, knee_fe_r: -45, ankle_dfpf_r: 6, trunk_lat: 4, trunk_fe: 6 } },
+      { dur: 0.35, targets: { hip_fe_r: 0,  knee_fe_r: 0,   ankle_dfpf_r: 0, trunk_lat: 0, trunk_fe: 0 } },
+    ],
+    loop: 3
   }
 };
 
