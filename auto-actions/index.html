@@ -862,17 +862,27 @@ if (/^clavicle_/.test(key)) {
 }
 
     if (JOINT_BIND.has(key)) return JOINT_BIND.get(key);
-    if (/^trunk_/.test(key)) {
-      const b = getExactBoneByName('spine01');
-      if (b) {
-        const qBind = (initialBoneRot.get(b) || b.quaternion.clone()).clone();
-        const axis = axisFor(RIG_PROFILE, key, ({sagittal:'x', frontal:'z', transverse:'y'})[cfg.plane] || 'x');
-        const obj = { bone: b, qBind, axis };
-        JOINT_BIND.set(key, obj);
-        log(`Bound ${key} → spine01 (axis ${axis}) [hard-bind]`);
-        return obj;
-      }
-    }
+ if (/^trunk_/.test(key)) {
+  // Try common spine names across rigs
+  let b =
+    getExactBoneByName('spine01') ||
+    getExactBoneByName('spine_01') ||
+    getExactBoneByName('spine1') ||
+    getExactBoneByName('spine') ||
+    findBoneBy({ side:'', key, hints:[/^spine01$/i,/^spine_?01$/i,/^spine1$/i,/^spine$/i,/chest|torso/i] });
+
+  if (b) {
+    const qBind = (initialBoneRot.get(b) || b.quaternion.clone()).clone();
+    const axis = axisFor(RIG_PROFILE, key, ({sagittal:'x', frontal:'z', transverse:'y'})[cfg.plane] || 'x');
+    const obj = { bone: b, qBind, axis };
+    JOINT_BIND.set(key, obj);
+    log(`Bound ${key} → ${b.name} (axis ${axis}) [trunk-bind]`);
+    return obj;
+  } else {
+    log(`No bind for ${key} (trunk) — no spine bone matched`);
+  }
+}
+
     let bone = findBoneBy({...cfg, key});
     if ((!bone) && (key==='wr_ps_l' || key==='fa_ps_l')) { const p=ensureDRUJProxy('l'); bone=p&&p.pivot; }
     if ((!bone) && (key==='wr_ps_r' || key==='fa_ps_r')) { const p=ensureDRUJProxy('r'); bone=p&&p.pivot; }
