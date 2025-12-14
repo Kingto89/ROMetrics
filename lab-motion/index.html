@@ -581,24 +581,50 @@ if(/^foot_invev_/.test(key)){
 }
     return null;
   }
-
 /* =========================================================
    Functional Tasks (Case Mode prototype)
-   - Shows only when URL has ?case=1
+   - Shows when URL has ?caseToken=LAB-____-###  (preferred)
+     OR legacy: ?case=1 (shows all) OR ?case=003 (filters)
    - Plays scripted sequences using your existing setPair()
    ========================================================= */
-const CASE_MODE = new URL(location.href).searchParams.get("case") === "1";
+const QS = new URLSearchParams(location.search);
+const CASE_TOKEN  = QS.get("caseToken") || "";
+const LEGACY_CASE = QS.get("case") || "";
 
-const funcBox  = document.getElementById("funcBox");
-const taskSel  = document.getElementById("taskSel");
-const taskPlay = document.getElementById("taskPlay");
-const taskPause= document.getElementById("taskPause");
-const taskSlow = document.getElementById("taskSlow");
-const taskObs  = document.getElementById("taskObs");
+// Extract 001/002/003 from: LAB-CERVICAL-001, LAB-HIP-002, LAB-CLUSTER-003
+const CASE_NUM = (() => {
+  const m = String(CASE_TOKEN).match(/(\d{3})\b/);
+  return m ? m[1] : "";
+})();
+
+// Legacy numeric support: ?case=003 (filters) OR ?case=1 (show all like before)
+const LEGACY_NUM = (() => {
+  const v = String(LEGACY_CASE).trim();
+  if (!v) return "";
+  if (v === "1") return "";              // legacy "on" toggle (no filtering)
+  if (/^\d{1,3}$/.test(v)) return v.padStart(3, "0");
+  return "";
+})();
+
+const ACTIVE_NUM = CASE_NUM || LEGACY_NUM;
+
+// ✅ show UI if we have a caseToken, OR legacy case=1 toggle, OR legacy numeric
+const CASE_MODE = (!!CASE_TOKEN) || (LEGACY_CASE === "1") || (!!LEGACY_NUM);
+
+const funcBox   = document.getElementById("funcBox");
+const taskSel   = document.getElementById("taskSel");
+const taskPlay  = document.getElementById("taskPlay");
+const taskPause = document.getElementById("taskPause");
+const taskSlow  = document.getElementById("taskSlow");
+const taskObs   = document.getElementById("taskObs");
 
 if (funcBox) funcBox.style.display = CASE_MODE ? "block" : "none";
 
-const FUNC_TASKS = {
+/* -----------------------
+   ALL TASKS (full logic lives here)
+   Tag each task with caseNum so we can filter by 001/002/003.
+------------------------ */
+const ALL_FUNC_TASKS = {
   March_Alt_RHip: {
     label: "March (Alternating) — Hip",
     obs: [
@@ -716,11 +742,16 @@ Walk_Alt_Lumbar_Case3: {
 }
 
  
-
-
- 
 };
-
+const FUNC_TASKS = (() => {
+  if (!CASE_MODE) return {};
+  if (!ACTIVE_NUM) return ALL_FUNC_TASKS; // legacy case=1 toggle
+  const out = {};
+  for (const [id, t] of Object.entries(ALL_FUNC_TASKS)) {
+    if (!t.caseNum || t.caseNum === ACTIVE_NUM) out[id] = t;
+  }
+  return out;
+})();
 
 const FUNC = {
   speed: 1, // 1 = normal, >1 = slower
