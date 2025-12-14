@@ -776,7 +776,8 @@ function funcLockUI(lock){
   actionDeg.disabled = !!lock;
   segUpper.disabled  = !!lock;
   segLower.disabled  = !!lock;
-  document.getElementById("autoMoveBtn").disabled = !!lock;
+const autoMoveBtn = document.getElementById("autoMoveBtn");
+if (autoMoveBtn) autoMoveBtn.disabled = !!lock;
 
   // also block “Zero All” during play (optional)
   zeroAll.disabled = !!lock;
