@@ -95,7 +95,7 @@ optgroup{color:#9fb0c9;font-style:normal}
   <div class="row">
     <button id="taskPlay" class="mini">Play</button>
     <button id="taskPause" class="mini">Pause</button>
-    <button id="taskReset" class="mini">Reset</button>
+    <button id="taskSlow" class="mini">Slow: OFF</button>
   </div>
 
   <div class="mini" style="margin-top:6px;border-radius:10px;line-height:1.35">
@@ -336,7 +336,7 @@ const funcBox  = document.getElementById("funcBox");
 const taskSel  = document.getElementById("taskSel");
 const taskPlay = document.getElementById("taskPlay");
 const taskPause= document.getElementById("taskPause");
-const taskReset= document.getElementById("taskReset");
+const taskSlow = document.getElementById("taskSlow");
 const taskObs  = document.getElementById("taskObs");
 
 if (funcBox) funcBox.style.display = CASE_MODE ? "block" : "none";
@@ -401,6 +401,7 @@ const FUNC_TASKS = {
 
 
 const FUNC = {
+  speed: 1, // 1 = normal, >1 = slower
   active: false,
   paused: false,
   raf: null,
@@ -518,8 +519,8 @@ function funcTick(){
   }
 
   const now = performance.now();
-  const durMs = Math.max(0.05, step.dur || 0.5) * 1000;
-  const p = Math.min(1, (now - FUNC.stepT0) / durMs);
+  const durMs = Math.max(0.05, step.dur || 0.5) * 1000 * (FUNC.speed || 1);
+ const p = Math.min(1, (now - FUNC.stepT0) / durMs);
   const e = easeInOut(p);
 
   const targets = step.targets || {};
@@ -597,7 +598,10 @@ function initFunctionalUI(){
   };
 
   taskPause.onclick = ()=> funcPauseToggle();
-  taskReset.onclick = ()=> funcStop(true);
+  taskSlow.onclick = ()=> {
+  FUNC.speed = (FUNC.speed === 1) ? 2.5 : 1;  // toggle slow
+  taskSlow.textContent = (FUNC.speed === 1) ? "Slow: OFF" : "Slow: ON";
+};
 
   // default button states
   taskPause.disabled = true;
