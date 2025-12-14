@@ -582,15 +582,6 @@ if(/^foot_invev_/.test(key)){
     return null;
   }
 
-  const antiBox = document.getElementById('antiBox');
-  if (antiBox){
-    antiBox.checked = COLLIM.enabled;
-    antiBox.addEventListener('click', (e)=>{
-      if (e.shiftKey){ e.preventDefault(); toggleCollisionTuner(true); return; }
-      COLLIM.enabled = !!antiBox.checked;
-      log(`Anticollision ${COLLIM.enabled ? 'ENABLED' : 'DISABLED'}.`);
-    });
-  }
 /* =========================================================
    Functional Tasks (Case Mode prototype)
    - Shows only when URL has ?case=1
