@@ -394,31 +394,49 @@ const FUNC_TASKS = {
     ],
     loop: 2
   },
-  Lumbar_Alt_GuardedGait_DFWeak: {
-  label: "Lumbar (ALT) — Guarded Gait + Bilateral DF Weakness",
+
+ Lumbar_Alt_GuardedGait_FootDrop: {
+  label: "Walking (ALT) — Guarded + Bilateral Foot Drop (Case 3)",
   obs: [
-    "Trunk stays stiff/guarded (minimal lumbar flex/ext) to limit pain",
-    "Each swing shows toe scuff risk → compensates with ↑ hip/knee flex (steppage)",
-    "Mild hip hike/circumduction may appear to clear the foot"
+    "Both swing legs show toe drop/toe drag (DF weakness) → steppage strategy",
+    "Compensation: exaggerated hip/knee flexion + contralateral vaulting",
+    "Guarded trunk: reduced trunk rotation + stiff lumbar (minimal flex/ext)"
   ],
   steps: [
-    // neutral (stiff trunk baseline)
-    { dur: 0.35, targets: { trunk_fe: 0, trunk_lat: 0, hip_fe_l: 0, knee_fe_l: 0, ankle_dfpf_l: 0, hip_fe_r: 0, knee_fe_r: 0, ankle_dfpf_r: 0 } },
+    // neutral (stiff trunk)
+    { dur: 0.35, targets: {
+      trunk_fe: 0, trunk_lat: 0, trunk_rot: 0,
+      hip_fe_l: 0, knee_fe_l: 0, ankle_dfpf_l: 0,
+      hip_fe_r: 0, knee_fe_r: 0, ankle_dfpf_r: 0
+    }},
 
-    // LEFT swing (ALT) — steppage to avoid toe drag (DF weak)
-    { dur: 0.70, targets: { trunk_fe: 4, trunk_lat: 3, hip_fe_l: 65, knee_fe_l: -80, ankle_dfpf_l: 2, hip_fe_r: 10, knee_fe_r: -10, ankle_dfpf_r: 0 } },
-    { dur: 0.35, targets: { trunk_fe: 0, trunk_lat: 0, hip_fe_l: 0,  knee_fe_l: 0,   ankle_dfpf_l: 0, hip_fe_r: 0,  knee_fe_r: 0,   ankle_dfpf_r: 0 } },
+    // LEFT swing (toe drop) + RIGHT stance vault
+    { dur: 0.70, targets: {
+      trunk_fe: 3, trunk_lat: 6, trunk_rot: 2,          // guarded trunk (low motion)
+      hip_fe_l: 80, knee_fe_l: -95, ankle_dfpf_l: -15,  // LEFT steppage + toe drop (PF = negative)
+      hip_fe_r: -10, knee_fe_r: 5,  ankle_dfpf_r: -18   // RIGHT stance: slight hip ext + vault (PF)
+    }},
+    { dur: 0.35, targets: {
+      trunk_fe: 0, trunk_lat: 0, trunk_rot: 0,
+      hip_fe_l: 0,  knee_fe_l: 0,  ankle_dfpf_l: 0,
+      hip_fe_r: 0,  knee_fe_r: 0,  ankle_dfpf_r: 0
+    }},
 
-    // RIGHT swing (ALT) — steppage to avoid toe drag (DF weak)
-    { dur: 0.70, targets: { trunk_fe: 4, trunk_lat: -3, hip_fe_r: 65, knee_fe_r: -80, ankle_dfpf_r: 2, hip_fe_l: 10, knee_fe_l: -10, ankle_dfpf_l: 0 } },
-    { dur: 0.35, targets: { trunk_fe: 0, trunk_lat: 0, hip_fe_r: 0,  knee_fe_r: 0,   ankle_dfpf_r: 0, hip_fe_l: 0,  knee_fe_l: 0,   ankle_dfpf_l: 0 } },
-
-    // guarded "attempt" at lumbar motion (shows pain-limited ROM; stays small)
-    { dur: 0.55, targets: { trunk_fe: 10 } },  // keep small (pain/guarding), NOT a full bend
-    { dur: 0.35, targets: { trunk_fe: 0 } }
+    // RIGHT swing (toe drop) + LEFT stance vault
+    { dur: 0.70, targets: {
+      trunk_fe: 3, trunk_lat: -6, trunk_rot: -2,        // guarded trunk (low motion)
+      hip_fe_r: 80, knee_fe_r: -95, ankle_dfpf_r: -15,  // RIGHT steppage + toe drop
+      hip_fe_l: -10, knee_fe_l: 5,  ankle_dfpf_l: -18   // LEFT stance vault
+    }},
+    { dur: 0.35, targets: {
+      trunk_fe: 0, trunk_lat: 0, trunk_rot: 0,
+      hip_fe_r: 0,  knee_fe_r: 0,  ankle_dfpf_r: 0,
+      hip_fe_l: 0,  knee_fe_l: 0,  ankle_dfpf_l: 0
+    }}
   ],
-  loop: 2
+  loop: 4
 }
+ 
 
 
  
