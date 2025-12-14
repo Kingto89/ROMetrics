@@ -629,6 +629,7 @@ if (funcBox) funcBox.style.display = CASE_MODE ? "block" : "none";
 ------------------------ */
 const ALL_FUNC_TASKS = {
   March_Alt_RHip: {
+    caseNum: "002",
     label: "March (Alternating) — Hip",
     obs: [
       "RIGHT knee lift stops early (hip flex limit on R)",
@@ -653,6 +654,7 @@ const ALL_FUNC_TASKS = {
     loop: 3
   },
   Cervical_Alt_RDeficit: {
+        caseNum: "001",
     label: "Cervical (ALT) — Rotation + Sidebend Deficit",
     obs: [
       "LEFT = uninvolved (full range, minimal trunk)",
@@ -682,6 +684,7 @@ const ALL_FUNC_TASKS = {
   },
 
 Walk_Alt_Lumbar_Case3: {
+      caseNum: "003",
   label: "Walk (in place, ALT) — Case 3 (Guarded + Bilateral Foot Drop)",
   obs: [
     "Guarded gait: minimal trunk rotation, slight forward trunk flexion (pain avoidance)",
@@ -746,15 +749,17 @@ Walk_Alt_Lumbar_Case3: {
 
  
 };
-const FUNC_TASKS = (() => {
+
+    const FUNC_TASKS = (() => {
   if (!CASE_MODE) return {};
-  if (!ACTIVE_NUM) return ALL_FUNC_TASKS; // legacy case=1 toggle
+  if (!ACTIVE_NUM) return ALL_FUNC_TASKS; // legacy case=1 (show all)
   const out = {};
   for (const [id, t] of Object.entries(ALL_FUNC_TASKS)) {
-    if (!t.caseNum || t.caseNum === ACTIVE_NUM) out[id] = t;
+    if (t.caseNum === ACTIVE_NUM) out[id] = t; // STRICT: only matching case
   }
   return out;
 })();
+
 
 const FUNC = {
   speed: 1, // 1 = normal, >1 = slower
