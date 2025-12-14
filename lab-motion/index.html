@@ -250,6 +250,7 @@ const ROM_CASE_TOKENS = {
 
     // Let lower-body motions be available for this lab case
     allowedRegions: ["Hip", "Knee", "Ankle", "Foot"],
+    disableAdvancedMenu: true, // Hide the Bone (Advanced) details menu
 
     // --- IMPAIRMENTS: ROM Limits (for future use in lab logic) ---
     impairments: {
@@ -307,7 +308,7 @@ const ROM_CASE_TOKENS = {
     label: "Cluster Impairment",
 
     allowedRegions: ["Hip", "Knee", "Ankle", "Foot"],
-    disableAdvancedMenu: true,
+    disableAdvancedMenu: true, // Hide the Bone (Advanced) details menu
 
     impairments: {
       trunk_flexion:   { max: 20 }, // Lumbar flexion 20°
