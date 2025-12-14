@@ -923,7 +923,7 @@ function freezeBindBaseFor(key, cfg) {
   // Handle flipped axis (e.g. "-z" for mirrored rig)
   let x = 0, y = 0, z = 0;
   let flip = 1;
-  let axis = rawAxis || 'z'; // use mapped axis; default 'z' if missing
+let axis = (FUNC.active && key==='trunk_fe') ? 'z' : (rawAxis || 'z'); // functional-only trunk lean uses Z
   if (axis.startsWith('-')) {
     flip = -1;
     axis = axis.slice(1);
