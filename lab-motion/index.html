@@ -1700,6 +1700,8 @@ if (id === "case_001") {            // Cervical
  segLower.disabled = true;
   segLower.style.display = "none";
   segUpper.click();
+   if (advancedDetails) advancedDetails.style.display =
+    (t.disableAdvancedMenu === false) ? "" : "none";
 }
 
   window.ROM_CASE_MODE.impairments  = cfg.impairments || {};
