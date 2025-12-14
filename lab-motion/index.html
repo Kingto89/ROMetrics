@@ -766,6 +766,27 @@ const FUNC = {
   pose: {},        // last “committed” angles we set per key
   loopsLeft: 0
 };
+// ===== Functional ↔ Manual pose isolation =====
+function snapPose(){
+  const snap = [];
+  for (const obj of initialBoneRot.keys()){
+    if (obj?.quaternion) snap.push([obj, obj.quaternion.clone()]);
+  }
+  return snap;
+}
+
+function restorePose(snap){
+  if (!snap) return;
+  for (const [obj,q] of snap){
+    if (obj?.quaternion && q) obj.quaternion.copy(q);
+  }
+  if (JOINT_BIND) JOINT_BIND.forEach(b=>{
+    if (b?.bone) b.qBind = b.bone.quaternion.clone();
+  });
+}
+
+// stores the manual pose only while a functional run is active
+FUNC.manualSnap = null;
 
 function easeInOut(t){
   t = Math.max(0, Math.min(1, t));
@@ -791,10 +812,14 @@ if (autoMoveBtn) autoMoveBtn.disabled = !!lock;
 }
 
 function funcApplyBaseline(){
-  // clean slate so tasks look consistent
   resetAllBonesToInitial();
   applyAnatomicBaseline();
+  // keep binds consistent with baseline
+  if (JOINT_BIND) JOINT_BIND.forEach(b=>{
+    if (b?.bone) b.qBind = b.bone.quaternion.clone();
+  });
 }
+
 
 function funcSetAngle(key, deg){
   FUNC.pose[key] = deg;
@@ -815,6 +840,7 @@ function funcStart(taskId){
   FUNC.stepT0 = performance.now();
   FUNC.pose = {}; // start from 0 baseline values
   FUNC.loopsLeft = Math.max(1, t.loop || 1);
+  FUNC.manualSnap = snapPose();   // remember whatever the user was doing in the main menu
 
   // baseline pose (so we don’t “stack” onto random prior state)
   funcApplyBaseline();
@@ -861,13 +887,18 @@ function funcStop(resetPose=true){
 
   funcLockUI(false);
 
-  if (resetPose){
+  // IMPORTANT: restore the manual pose so functional never carries over
+  if (FUNC.manualSnap){
+    restorePose(FUNC.manualSnap);
+    FUNC.manualSnap = null;
+  } else if (resetPose){
     funcApplyBaseline();
   }
 
   msg.textContent = resetPose ? "Functional Task: reset" : "Functional Task: stopped";
   log(`■ Functional Task STOP`);
 }
+
 function funcTick(){
   if (!FUNC.active || FUNC.paused) return;
 
@@ -882,7 +913,7 @@ function funcTick(){
       FUNC.raf = requestAnimationFrame(funcTick);
       return;
     }
-    funcStop(false);
+    funcStop(true);
     msg.textContent = "Functional Task complete.";
     return;
   }
