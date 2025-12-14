@@ -342,41 +342,6 @@ const taskObs  = document.getElementById("taskObs");
 if (funcBox) funcBox.style.display = CASE_MODE ? "block" : "none";
 
 const FUNC_TASKS = {
-  March_HighKnee_R: {
-    label: "March (High Knee) — Right (in place)",
-    obs: [
-      "Right knee lift stops early (hip flex cap)",
-      "Forward trunk lean compensation",
-      "Pelvis control (watch for tilt/rotation)"
-    ],
-    steps: [
-      { dur: 0.4, targets: { trunk_fe: 0, hip_fe_r: 0, knee_fe_r: 0, ankle_dfpf_r: 0 } },
-      { dur: 0.8, targets: { hip_fe_r: 50, knee_fe_r: -60, ankle_dfpf_r: 8, trunk_fe: 18 } }, // “attempt”
-      { dur: 0.5, targets: { hip_fe_r: 0, knee_fe_r: 0, ankle_dfpf_r: 0, trunk_fe: 0 } },
-      { dur: 0.4, targets: { trunk_fe: 0 } }
-    ],
-    loop: 2
-  },
-
-  SitToStand: {
-    label: "Sit-to-Stand (in place)",
-    obs: [
-      "Excess trunk flexion / momentum use",
-      "Asymmetry (watch hip/knee strategy)",
-      "Early heel rise / ankle strategy"
-    ],
-    steps: [
-      // seated setup
-      { dur: 0.6, targets: { trunk_fe: 10, hip_fe_l: 90, hip_fe_r: 90, knee_fe_l: -90, knee_fe_r: -90, ankle_dfpf_l: 6, ankle_dfpf_r: 6 } },
-      // nose-over-toes
-      { dur: 0.7, targets: { trunk_fe: 35, ankle_dfpf_l: 10, ankle_dfpf_r: 10 } },
-      // stand up
-      { dur: 1.0, targets: { trunk_fe: 0, hip_fe_l: 0, hip_fe_r: 0, knee_fe_l: 0, knee_fe_r: 0, ankle_dfpf_l: 0, ankle_dfpf_r: 0 } },
-      // stabilize
-      { dur: 0.6, targets: { trunk_fe: 0 } }
-    ],
-    loop: 1
-  },
   March_Alt_RHip: {
     label: "March (Alternating) — R Hip Deficit (in place)",
     obs: [
@@ -403,6 +368,7 @@ const FUNC_TASKS = {
     loop: 3
   }
 };
+
 
 const FUNC = {
   active: false,
