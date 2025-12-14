@@ -861,6 +861,15 @@ function funcStart(taskId){
 function funcPauseToggle(){
   if (!FUNC.active) return;
 
+  // ✅ If user changed the task selection, do NOT resume the old task
+if (taskSel && taskSel.value && FUNC.taskId && taskSel.value !== FUNC.taskId) {
+  funcStop(true);
+  FUNC.taskId = "";
+  taskPause.textContent = "Pause";
+  msg.textContent = "Functional cleared (Task changed).";
+  return;
+}
+
   // ✅ toggle first
   FUNC.paused = !FUNC.paused;
   taskPause.classList.toggle("paused", FUNC.paused);
@@ -999,7 +1008,17 @@ function initFunctionalUI(){
   taskSel.addEventListener("change", ()=>{
     const t = FUNC_TASKS[taskSel.value];
     taskObs.innerHTML = t ? `<ul style="margin:0;padding-left:16px">${t.obs.map(x=>`<li>${x}</li>`).join("")}</ul>` : "";
-  });
+ 
+  // ✅ STEP 2: changing the task nukes any paused/running functional state
+  if (FUNC.active || FUNC.paused) {
+    funcStop(true);
+    FUNC.taskId = "";
+    taskPause.classList.remove("paused");
+    taskPause.textContent = "Pause";
+    msg.textContent = "Functional cleared (Task changed).";
+  }
+});
+
 
   taskPlay.onclick = ()=> {
     if (!taskSel.value) { msg.textContent = "Select a Functional Task first."; return; }
