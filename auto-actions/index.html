@@ -446,6 +446,7 @@ function funcSetAngle(key, deg){
 }
 
 function funcStart(taskId){
+  if (!skeleton) { msg.textContent = "Model not loaded yet."; return; }
   if (!CASE_MODE) return;
 
   const t = FUNC_TASKS[taskId];
