@@ -1673,6 +1673,43 @@ function applyHoldMovement() {
 
 /* ==== Loader ==== */
 const loader = new GLTFLoader();
+ function findBoneByName(root, boneName){
+  let found = null;
+  root.traverse(o => {
+    if (o && o.isBone && o.name === boneName) found = o;
+  });
+  return found;
+}
+
+function placeModelByBoneAnchor(model, {
+  anchorBone = "root",
+  fallbackBone = "pelvis",
+  targetPos = new THREE.Vector3(0,0,0),
+  targetYawDeg = 0,
+  targetScale = 1
+}){
+  model.scale.setScalar(targetScale);
+  model.rotation.set(0, THREE.MathUtils.degToRad(targetYawDeg), 0);
+  model.updateMatrixWorld(true);
+
+  let bone = findBoneByName(model, anchorBone) || findBoneByName(model, fallbackBone);
+
+  if (!bone) {
+    const box = new THREE.Box3().setFromObject(model);
+    const center = box.getCenter(new THREE.Vector3());
+    model.position.add(targetPos.clone().sub(center));
+    model.updateMatrixWorld(true);
+    return;
+  }
+
+  const boneWorld = new THREE.Vector3();
+  bone.getWorldPosition(boneWorld);
+
+  const delta = targetPos.clone().sub(boneWorld);
+  model.position.add(delta);
+
+  model.updateMatrixWorld(true);
+} 
 loader.setMeshoptDecoder(MeshoptDecoder);
 const draco = new DRACOLoader(); draco.setDecoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/draco/"); loader.setDRACOLoader(draco);
 const ktx2  = new KTX2Loader();  ktx2.setTranscoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/basis/"); ktx2.detectSupport(renderer); loader.setKTX2Loader(ktx2);
@@ -2737,15 +2774,22 @@ function addModel(gltf){
     applyAnatomicBaseline();
   }
 
-  // Apply hard-wired numeric transform (no saving, no snapping)
-  model.scale.set(POSE.s, POSE.s, POSE.s);
-  model.position.set(POSE.x, POSE.y, POSE.z);
-  model.rotation.set(0, degToRad(POSE.ryDeg), 0);
+// Apply hard-wired numeric transform (bone-anchored so it works across different models)
+  scene.add(model); // add first so world matrices resolve correctly
+
+  placeModelByBoneAnchor(model, {
+    anchorBone: "root",
+    fallbackBone: "pelvis",
+    targetPos: new THREE.Vector3(POSE.x, POSE.y, POSE.z),
+    targetYawDeg: POSE.ryDeg,
+    targetScale: POSE.s
+  });
+
   if (POSE.seated) seatPoseOnlyLegs();
 
-  scene.add(model);
   $("msg").textContent = "✅ Model loaded";
 }
+
 
 const MODEL_CANDIDATES = [
   window.ROMETRICS_MODEL_URL,
