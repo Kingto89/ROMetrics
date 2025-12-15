@@ -114,8 +114,6 @@ select,button,input[type=range]{width:100%;margin:6px 0 8px 0;padding:8px 10px;b
   <div class="content">
     <label>MMT Test & Muscle</label>
     <select id="actionSel">
-     <option value="" selected>— Anchor (leave model at load position) —</option>
- 
       <option value="">(Select a test to begin…)</option>
       <optgroup label="Cervical & Capital">
         <option value="Capital_Extension">Capital Extension (Rectus Capitis Posterior Major, Obliquus Capitis Superior, Splenius Capitis)</option>
@@ -1779,9 +1777,8 @@ const TEST_POSITION = {
 // Decide if we're in the high (3–5) or low (0–2) family for a given test
 // Per-test pose overrides (absolute position + rotation) keyed by "TestKey:high" / "TestKey:low"
 const POSE_OVERRIDES = {};
-  POSE_OVERRIDES["Capital_Extension:high"]  = {  }; //supine
-
-  POSE_OVERRIDES["Capital_Extension:low"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222 }; //supine
+POSE_OVERRIDES["Capital_Extension:high"] = { x:-0.800, y:0.820, z:0.330, rx:-1.571, ry:3.142, rz:1.222 }; //prone head off
+POSE_OVERRIDES["Capital_Extension:low"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222 }; //supine
 POSE_OVERRIDES["Cervical_Extension:high"]  = { x:-0.800, y:0.820, z:0.330, rx:-1.571, ry:3.142, rz:1.222 };
 POSE_OVERRIDES["Cervical_Extension:low"]   = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222 };
 POSE_OVERRIDES["Capital_Flexion:high"] = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222 };  
@@ -2747,18 +2744,6 @@ function addModel(gltf){
   if (POSE.seated) seatPoseOnlyLegs();
 
   scene.add(model);
-  window.model = model;
-(() => {
-  const p = model.position;
-  const r = model.rotation;
-
-  console.log(
-    `POSE_OVERRIDES["ANCHOR_START:high"] = { ` +
-    `x:${p.x.toFixed(6)}, y:${p.y.toFixed(6)}, z:${p.z.toFixed(6)}, ` +
-    `rx:${r.x.toFixed(6)}, ry:${r.y.toFixed(6)}, rz:${r.z.toFixed(6)} ` +
-    `};`
-  );
-})();
   $("msg").textContent = "✅ Model loaded";
 }
 
@@ -2862,29 +2847,14 @@ const out = {
     alert("Hand pose saved — check console.");
 });
 
+
 function applyBodyPositionFromSelection(){
   if (!model || !skeleton) return;
   
   const test = actionSel?.value;
   if (!test) return;
 
-  // ===== ANCHOR TEST (allows Save Pose without moving model) =====
-  if (test === "__ANCHOR__") {
-    CURRENT_BODY_TEST = "ANCHOR";
-    CURRENT_BODY_BUCKET = "high";
-
-    window.currentMMTtest = "ANCHOR";
-    window.currentMMTgradeBucket = "high";
-
-    // DO NOT MOVE THE MODEL
-    if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
-    return;
-  }
-  // =============================================================
-
   const bucket = getGradeBucketForTest(test);
-
-  // ★ REQUIRED FOR HAND TUNER ★
 
   // ★ REQUIRED FOR HAND TUNER ★
   window.currentMMTtest = test;
