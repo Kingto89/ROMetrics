@@ -1678,6 +1678,7 @@ const draco = new DRACOLoader(); draco.setDecoderPath("https://unpkg.com/three@0
 const ktx2  = new KTX2Loader();  ktx2.setTranscoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/basis/"); ktx2.detectSupport(renderer); loader.setKTX2Loader(ktx2);
 
 let model=null, skeleton=null;
+const ANCHOR_START = { x:-0.1, y:0.0, z:0.7, rx:0.0, ry:0.523599, rz:0.0 };  
 const initialBoneRot = new Map();
 let GLOBAL_PF_DEG = 0; // shared plantarflex angle for both feet
 let currentHoldAngle = 0; // NEW: Tracks rotation during MMT resistance hold
@@ -2737,13 +2738,10 @@ function addModel(gltf){
     applyAnatomicBaseline();
   }
 
-  // Apply hard-wired numeric transform (no saving, no snapping)
-  model.scale.set(POSE.s, POSE.s, POSE.s);
-  model.position.set(POSE.x, POSE.y, POSE.z);
-  model.rotation.set(0, degToRad(POSE.ryDeg), 0);
-  if (POSE.seated) seatPoseOnlyLegs();
-
   scene.add(model);
+  model.position.set(ANCHOR_START.x, ANCHOR_START.y, ANCHOR_START.z);
+  model.rotation.set(ANCHOR_START.rx, ANCHOR_START.ry, ANCHOR_START.rz);
+
   $("msg").textContent = "✅ Model loaded";
 }
 
