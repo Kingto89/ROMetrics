@@ -2779,8 +2779,15 @@ const modelWrap = new THREE.Group();
 scene.add(modelWrap);
 modelWrap.add(model);
 
-placeModelByBoneAnchor(model, { ... });
 if (POSE.seated) seatPoseOnlyLegs();
+
+placeModelByBoneAnchor(model, {
+  anchorBone: "pelvis",
+  fallbackBone: "root",
+  targetPos: new THREE.Vector3(0, 0, 0),
+  targetYawDeg: 0,
+  targetScale: 1
+});
 
 
   $("msg").textContent = "✅ Model loaded";
