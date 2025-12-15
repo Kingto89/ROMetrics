@@ -2775,17 +2775,13 @@ function addModel(gltf){
   }
 
 // Apply hard-wired numeric transform (bone-anchored so it works across different models)
-  scene.add(model); // add first so world matrices resolve correctly
+const modelWrap = new THREE.Group();
+scene.add(modelWrap);
+modelWrap.add(model);
 
-  placeModelByBoneAnchor(model, {
-    anchorBone: "root",
-    fallbackBone: "pelvis",
-    targetPos: new THREE.Vector3(POSE.x, POSE.y, POSE.z),
-    targetYawDeg: POSE.ryDeg,
-    targetScale: POSE.s
-  });
+placeModelByBoneAnchor(model, { ... });
+if (POSE.seated) seatPoseOnlyLegs();
 
-  if (POSE.seated) seatPoseOnlyLegs();
 
   $("msg").textContent = "✅ Model loaded";
 }
