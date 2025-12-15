@@ -2747,6 +2747,7 @@ function addModel(gltf){
   if (POSE.seated) seatPoseOnlyLegs();
 
   scene.add(model);
+  window.model = model;
 (() => {
   const p = model.position;
   const r = model.rotation;
