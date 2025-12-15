@@ -2850,14 +2850,29 @@ const out = {
     alert("Hand pose saved — check console.");
 });
 
-
 function applyBodyPositionFromSelection(){
   if (!model || !skeleton) return;
   
   const test = actionSel?.value;
   if (!test) return;
 
+  // ===== ANCHOR TEST (allows Save Pose without moving model) =====
+  if (test === "__ANCHOR__") {
+    CURRENT_BODY_TEST = "ANCHOR";
+    CURRENT_BODY_BUCKET = "high";
+
+    window.currentMMTtest = "ANCHOR";
+    window.currentMMTgradeBucket = "high";
+
+    // DO NOT MOVE THE MODEL
+    if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
+    return;
+  }
+  // =============================================================
+
   const bucket = getGradeBucketForTest(test);
+
+  // ★ REQUIRED FOR HAND TUNER ★
 
   // ★ REQUIRED FOR HAND TUNER ★
   window.currentMMTtest = test;
