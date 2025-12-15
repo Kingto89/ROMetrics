@@ -1678,7 +1678,7 @@ const draco = new DRACOLoader(); draco.setDecoderPath("https://unpkg.com/three@0
 const ktx2  = new KTX2Loader();  ktx2.setTranscoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/basis/"); ktx2.detectSupport(renderer); loader.setKTX2Loader(ktx2);
 
 let model=null, skeleton=null;
-const ANCHOR_START = { x:-0.5, y:0.0, z:0.7, rx:0.0, ry:0.523599, rz:0.0 };  
+const ANCHOR_START = { x:-0.133, y:0.0, z:0.7, rx:0.0, ry:0.523599, rz:0.0 };  
 const initialBoneRot = new Map();
 let GLOBAL_PF_DEG = 0; // shared plantarflex angle for both feet
 let currentHoldAngle = 0; // NEW: Tracks rotation during MMT resistance hold
