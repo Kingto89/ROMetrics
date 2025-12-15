@@ -1390,18 +1390,6 @@ const AXIS_MAP = {
 function getBone(name){
   return skeleton?.bones.find(b => b.name === name) || null;
 }
-
-window.dumpHipLocal = () => {
-  const b = getBone("hips") || getBone("pelvis") || getBone("Hips") || getBone("Pelvis");
-  if (!model || !b) return console.warn("Need model + hips/pelvis bone.");
-
-  const w = new THREE.Vector3();
-  b.getWorldPosition(w);
-
-  const hipLocal = model.worldToLocal(w.clone());
-  console.log("PASTE THIS INTO window.REF_HIP_LOCAL:", hipLocal.x, hipLocal.y, hipLocal.z);
-};
-  
 // Function to reset bone to baseline and apply new rotation
 function setDegAxis(bone, axis, deg){
   if(!bone) return;
@@ -2325,11 +2313,7 @@ if (key && POSE_OVERRIDES[key]){
   // }
 }
 
-model.position.set(
-  posX + ((window.MODEL_ANCHOR_OFFSET && window.MODEL_ANCHOR_OFFSET.x) || 0),
-  posY + ((window.MODEL_ANCHOR_OFFSET && window.MODEL_ANCHOR_OFFSET.y) || 0),
-  posZ + ((window.MODEL_ANCHOR_OFFSET && window.MODEL_ANCHOR_OFFSET.z) || 0)
-);
+model.position.set(posX, posY, posZ);
   model.rotation.set(rotX, rotY, rotZ);
   // NEW: Apply Bone Tuner overrides (patient skeleton) BEFORE therapist hands
   if (CURRENT_BODY_TEST && CURRENT_BODY_BUCKET) {
@@ -2759,26 +2743,9 @@ function addModel(gltf){
   model.rotation.set(0, degToRad(POSE.ryDeg), 0);
   if (POSE.seated) seatPoseOnlyLegs();
 
-scene.add(model);
-
-// ===== ANCHOR NORMALIZE (drop-in) =====
-window.REF_HIP_LOCAL = window.REF_HIP_LOCAL || new THREE.Vector3(0,0,0); // <-- replace 0,0,0 with your GOOD model value
-window.MODEL_ANCHOR_OFFSET = new THREE.Vector3(0,0,0);
-
-(() => {
-  const b =
-    getBone("hips") || getBone("pelvis") || getBone("Hips") || getBone("Pelvis");
-  if (!model || !b) { console.warn("No hips/pelvis bone; anchor offset skipped."); return; }
-
-  const w = new THREE.Vector3();
-  b.getWorldPosition(w);
-  const curHipLocal = model.worldToLocal(w.clone());
-  window.MODEL_ANCHOR_OFFSET.copy(window.REF_HIP_LOCAL).sub(curHipLocal);
-
-  console.log("MODEL_ANCHOR_OFFSET =", window.MODEL_ANCHOR_OFFSET);
-})();
-
-$("msg").textContent = "✅ Model loaded";
+  scene.add(model);
+  $("msg").textContent = "✅ Model loaded";
+}
 
 const MODEL_CANDIDATES = [
   window.ROMETRICS_MODEL_URL,
@@ -3636,6 +3603,7 @@ function onPointerDownTransformControls(event) {
   requestAnimationFrame(loop);
 })();
 
+</script>
 <!-- ================= HAND TUNER PANEL (NEW CLEAN VERSION) ================= -->
 <div id="handTuner" style="
   position:fixed; right:12px; top:80px; width:240px;
