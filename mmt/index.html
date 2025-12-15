@@ -2723,7 +2723,6 @@ function applySideLyingLimbs(){
   }
 }
 
-
 /* ==== Load model ==== */
 function addModel(gltf){
   model = gltf.scene;
@@ -2739,11 +2738,43 @@ function addModel(gltf){
   }
 
   scene.add(model);
-  model.position.set(ANCHOR_START.x, ANCHOR_START.y, ANCHOR_START.z);
-  model.rotation.set(ANCHOR_START.rx, ANCHOR_START.ry, ANCHOR_START.rz);
+
+  // Initial anchor set
+  model.position.set(
+    ANCHOR_START.x,
+    ANCHOR_START.y,
+    ANCHOR_START.z
+  );
+  model.rotation.set(
+    ANCHOR_START.rx,
+    ANCHOR_START.ry,
+    ANCHOR_START.rz
+  );
 
   $("msg").textContent = "✅ Model loaded";
+
+  // ===== FORCE ANCHOR AFTER ALL LOAD LOGIC =====
+  requestAnimationFrame(() => {
+    model.position.set(
+      ANCHOR_START.x,
+      ANCHOR_START.y,
+      ANCHOR_START.z
+    );
+    model.rotation.set(
+      ANCHOR_START.rx,
+      ANCHOR_START.ry,
+      ANCHOR_START.rz
+    );
+
+    console.log(
+      "ANCHOR ENFORCED AT LOAD",
+      model.position.toArray(),
+      model.rotation.toArray()
+    );
+  });
+  // ===========================================
 }
+
 
 const MODEL_CANDIDATES = [
   window.ROMETRICS_MODEL_URL,
