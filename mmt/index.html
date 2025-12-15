@@ -2747,7 +2747,17 @@ function addModel(gltf){
   if (POSE.seated) seatPoseOnlyLegs();
 
   scene.add(model);
-  window.model = model; window.scene = scene; window.skeleton = skeleton;
+(() => {
+  const p = model.position;
+  const r = model.rotation;
+
+  console.log(
+    `POSE_OVERRIDES["ANCHOR_START:high"] = { ` +
+    `x:${p.x.toFixed(6)}, y:${p.y.toFixed(6)}, z:${p.z.toFixed(6)}, ` +
+    `rx:${r.x.toFixed(6)}, ry:${r.y.toFixed(6)}, rz:${r.z.toFixed(6)} ` +
+    `};`
+  );
+})();
   $("msg").textContent = "✅ Model loaded";
 }
 
