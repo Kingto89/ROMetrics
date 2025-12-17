@@ -1436,7 +1436,60 @@ function applyAnatomicBaseline(){
   setDegAxis(wrL, 'y', ANAT.wps);
   setDegAxis(wrR, 'y', -ANAT.wps);   
 }
-/**
+// ===== HAND "HARD SURFACE" (simple collider clamp) =====
+// Prevents the resistance contact point from going THROUGH either hand.
+// Tune these 2 numbers if needed:
+const HAND_COLLIDER_RADIUS = 0.070; // ~7cm (palm-ish)
+const HAND_SURFACE_PAD     = 0.006; // ~6mm extra "skin" gap
+
+const _hcA = new THREE.Vector3();
+const _hcB = new THREE.Vector3();
+const _hcC = new THREE.Vector3();
+const _hcD = new THREE.Vector3();
+
+function enforceHandHardSurface(testKey){
+  if (!model || !handsModel || !handsModel.visible) return;
+  if (!rightHandModel || !leftHandModel) return;
+
+  const g = VECTOR_GUIDES[testKey];
+  if (!g || !g.R_startPos) return;
+
+  // Use your resistance contact point as the "should not penetrate hand" point
+  _hcA.set(g.R_startPos.x, g.R_startPos.y, g.R_startPos.z);
+  model.localToWorld(_hcA); // now world
+
+  // Compare vs both hands, push model away from whichever is penetrating more
+  const hands = [rightHandModel, leftHandModel];
+
+  let bestPen = 0;
+  let bestDir = null;
+
+  for (const h of hands){
+    h.getWorldPosition(_hcB);
+    _hcC.copy(_hcA).sub(_hcB);
+    const d = _hcC.length();
+
+    const minD = HAND_COLLIDER_RADIUS + HAND_SURFACE_PAD;
+    const pen  = (minD - d);
+
+    if (pen > bestPen){
+      bestPen = pen;
+
+      // If exactly same position (rare), choose a stable direction
+      if (d < 1e-6) _hcC.set(0, 0, 1);
+      else _hcC.multiplyScalar(1 / d);
+
+      bestDir = _hcC.clone(); // direction from hand -> contact
+    }
+  }
+
+  if (bestPen > 0 && bestDir){
+    // Move the whole patient model just enough so the contact point sits on the hand surface.
+    // (It won't drift because you already reset pose on stop via applyBodyPositionFromSelection().)
+    model.position.addScaledVector(bestDir, bestPen);
+  }
+}
+
  * Applies a small, slow, incremental movement to the bone being tested.
  * Simulates the patient straining against resistance.Checkspot
  */
@@ -1477,6 +1530,7 @@ function applyHoldMovement() {
         head.rotateZ(degToRad(jz));
       }
     }
+    enforceHandHardSurface(testKey);  
   }
 
   // 2) Body tremor for scapula / shoulder tests (non-cervical)
