@@ -1442,8 +1442,8 @@ function applyAnatomicBaseline(){
  */
 // ===== HAND "HARD SURFACE" (simple collider push-out) =====
 // Paste this whole block DIRECTLY ABOVE:  function applyHoldMovement() {
-const HAND_COLLIDER_RADIUS = 0.070; // ~7cm (palm-ish)
-const HAND_SURFACE_PAD     = 0.006; // ~6mm extra "skin" pad
+const HAND_COLLIDER_RADIUS = 0.085; // ~7cm (palm-ish)
+const HAND_SURFACE_PAD     = 0.012; // ~6mm extra "skin" pad
 
 const _hcA = new THREE.Vector3();
 const _hcB = new THREE.Vector3();
@@ -2505,7 +2505,7 @@ if (!rightHandModel || !leftHandModel) {
             handsModel.visible = true; 
             
             // Set scale to match the patient model scale
-            handsModel.scale.set(0.20, 0.20, 0.20);
+            handsModel.scale.set(0.24, 0.24, 0.24);
             // Initial position guess: centered in front of the patient
             handsModel.position.set(0, 1.7, 0.5); // Adjusted Y to 1.4
             
