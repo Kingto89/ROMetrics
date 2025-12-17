@@ -3344,36 +3344,65 @@ function ensurePoseTuner(){
     return THREE.MathUtils.radToDeg(rad);
   }
 
+// Helper: get or create override object for current test+bucket
+function getCurrentOverrideKey(){
+  if (!CURRENT_BODY_TEST || !CURRENT_BODY_BUCKET) return null;
+  return `${CURRENT_BODY_TEST}:${CURRENT_BODY_BUCKET}`;
+}
 
-  // Helper: get or create override object for current test+bucket
-  function getCurrentOverrideKey(){
-    if (!CURRENT_BODY_TEST || !CURRENT_BODY_BUCKET) return null;
-    return `${CURRENT_BODY_TEST}:${CURRENT_BODY_BUCKET}`;
-  }
+// World-space pose target (MODEL_ROOT if present, otherwise model)
+function getPoseTarget(){
+  return (window.MODEL_ROOT && window.MODEL_ROOT.isObject3D) ? window.MODEL_ROOT : model;
+}
 
-  function ensureOverrideFromCurrentPose(){
-    const key = getCurrentOverrideKey();
-    if (!key || !model) return null;
-    if (!POSE_OVERRIDES[key]){
-      const euler = new THREE.Euler().copy(model.rotation);
-      POSE_OVERRIDES[key] = {
-        x: model.position.x,
-        y: model.position.y,
-        z: model.position.z,
-        rx: euler.x,
-        ry: euler.y,
-        rz: euler.z
-      };
-    }
-    return key;
-  }
+function ensureOverrideFromCurrentPose(){
+  const key = getCurrentOverrideKey();
+  const target = getPoseTarget();
+  if (!key || !target) return null;
 
-  function applyOverride(key){
-    const o = key && POSE_OVERRIDES[key];
-    if (!o || !model) return;
-    model.position.set(o.x, o.y, o.z);
-    model.rotation.set(o.rx, o.ry, o.rz);
+  if (!POSE_OVERRIDES[key]){
+    const euler = new THREE.Euler().copy(target.rotation);
+    POSE_OVERRIDES[key] = {
+      x:  target.position.x,
+      y:  target.position.y,
+      z:  target.position.z,
+      rx: euler.x,
+      ry: euler.y,
+      rz: euler.z
+    };
   }
+  return key;
+}
+
+function applyOverride(key){
+  const o = key && POSE_OVERRIDES[key];
+  const target = getPoseTarget();
+  if (!o || !target) return;
+
+  target.position.set(o.x, o.y, o.z);
+  target.rotation.set(o.rx, o.ry, o.rz);
+}
+
+// Position buttons
+poseTunerEl.querySelectorAll('button[data-axis]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const key = ensureOverrideFromCurrentPose();
+    if (!key) return;
+
+    const axis  = btn.getAttribute('data-axis');
+    const delta = parseFloat(btn.getAttribute('data-delta') || '0');
+    const o = POSE_OVERRIDES[key];
+
+    if (axis === 'x')  o.x  += delta;
+    if (axis === 'y')  o.y  += delta;
+    if (axis === 'z')  o.z  += delta;
+    if (axis === 'rx') o.rx += delta;
+    if (axis === 'ry') o.ry += delta;
+    if (axis === 'rz') o.rz += delta;
+
+    applyOverride(key);
+  });
+});
 
   // Position buttons
   poseTunerEl.querySelectorAll('button[data-axis]').forEach(btn=>{
