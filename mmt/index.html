@@ -700,13 +700,13 @@ function showVectorsForTest(testKey) {
 
   // Effort: patient force
   positionVector(effortVectorMesh, guide.E_startPos, guide.E_direction);
-  if (model && effortVectorMesh.parent !== model) scene.add(effortVectorMesh);
+  if (model && effortVectorMesh.parent !== model) model.add(effortVectorMesh);
   effortVectorMesh.visible = true;
 
   // Resistance: therapist force
   // Resistance: therapist force
   positionVector(resistanceVectorMesh, guide.R_startPos, guide.R_direction);
-  if (model && resistanceVectorMesh.parent !== model) scene.add(resistanceVectorMesh);
+  if (model && resistanceVectorMesh.parent !== model) model.add(resistanceVectorMesh);
   resistanceVectorMesh.scale.set(1, 1, 1); // keep green vector from shrinking
   resistanceVectorMesh.visible = true;
 
@@ -1440,57 +1440,6 @@ function applyAnatomicBaseline(){
  * Applies a small, slow, incremental movement to the bone being tested.
  * Simulates the patient straining against resistance.Checkspot
  */
-// ===== HAND "HARD SURFACE" (simple collider push-out) =====
-// Paste this whole block DIRECTLY ABOVE:  function applyHoldMovement() {
-const HAND_COLLIDER_RADIUS = 0.095; // ~7cm (palm-ish)
-const HAND_SURFACE_PAD     = 0.019; // ~6mm extra "skin" pad
-
-const _hcA = new THREE.Vector3();
-const _hcB = new THREE.Vector3();
-const _hcC = new THREE.Vector3();
-
-function enforceHandHardSurface(testKey){
-  // requires these globals already exist in your index:
-  // model, handsModel, rightHandModel, leftHandModel, VECTOR_GUIDES
-  if (!model || !handsModel || !handsModel.visible) return;
-  if (!rightHandModel || !leftHandModel) return;
-
-  const g = VECTOR_GUIDES?.[testKey];
-  if (!g || !g.R_startPos) return;
-
-  // world position of resistance contact point
-_hcA.set(g.R_startPos.x, g.R_startPos.y, g.R_startPos.z);
-
-
-  let bestPen = 0;
-  let bestDir = null;
-
-  for (const h of [rightHandModel, leftHandModel]){
-    h.getWorldPosition(_hcB);
-
-    _hcC.copy(_hcA).sub(_hcB);
-    const d = _hcC.length();
-
-    const minD = HAND_COLLIDER_RADIUS + HAND_SURFACE_PAD;
-    const pen  = minD - d;
-
-    if (pen > bestPen){
-      bestPen = pen;
-
-      if (d < 1e-6) _hcC.set(0, 0, 1);
-      else _hcC.multiplyScalar(1 / d);
-
-      bestDir = _hcC.clone(); // from hand -> contact
-    }
-  }
-
-  if (bestPen > 0 && bestDir){
-    // push patient model just enough to sit on hand surface (prevents pass-through)
-    model.position.addScaledVector(bestDir, bestPen);
-  }
-}
-// ===== END HAND HARD SURFACE =====
-  
 function applyHoldMovement() {
   const testKey = actionSel.value;
   if (!testKey || isPracticeModeActive) return;
@@ -1529,7 +1478,6 @@ function applyHoldMovement() {
       }
     }
   }
-  enforceHandHardSurface(testKey);
 
   // 2) Body tremor for scapula / shoulder tests (non-cervical)
   if (!mapping) {
@@ -1730,7 +1678,6 @@ const draco = new DRACOLoader(); draco.setDecoderPath("https://unpkg.com/three@0
 const ktx2  = new KTX2Loader();  ktx2.setTranscoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/basis/"); ktx2.detectSupport(renderer); loader.setKTX2Loader(ktx2);
 
 let model=null, skeleton=null;
-const ANCHOR_START = { x:-0.1, y:0.07, z:0.7, rx:0.0, ry:0.523599, rz:0.0 };  
 const initialBoneRot = new Map();
 let GLOBAL_PF_DEG = 0; // shared plantarflex angle for both feet
 let currentHoldAngle = 0; // NEW: Tracks rotation during MMT resistance hold
@@ -2505,7 +2452,7 @@ if (!rightHandModel || !leftHandModel) {
             handsModel.visible = true; 
             
             // Set scale to match the patient model scale
-            handsModel.scale.set(0.24, 0.24, 0.24);
+            handsModel.scale.set(0.20, 0.20, 0.20);
             // Initial position guess: centered in front of the patient
             handsModel.position.set(0, 1.7, 0.5); // Adjusted Y to 1.4
             
@@ -2775,6 +2722,7 @@ function applySideLyingLimbs(){
   }
 }
 
+
 /* ==== Load model ==== */
 function addModel(gltf){
   model = gltf.scene;
@@ -2789,60 +2737,15 @@ function addModel(gltf){
     applyAnatomicBaseline();
   }
 
-// --- MODEL ROOT (world-space poses live here) ---
-if (!window.MODEL_ROOT){
-  window.MODEL_ROOT = new THREE.Group();
-  window.MODEL_ROOT.name = "MODEL_ROOT";
-  scene.add(window.MODEL_ROOT);
+  // Apply hard-wired numeric transform (no saving, no snapping)
+  model.scale.set(POSE.s, POSE.s, POSE.s);
+  model.position.set(POSE.x, POSE.y, POSE.z);
+  model.rotation.set(0, degToRad(POSE.ryDeg), 0);
+  if (POSE.seated) seatPoseOnlyLegs();
+
+  scene.add(model);
+  $("msg").textContent = "✅ Model loaded";
 }
-window.MODEL_ROOT.clear();
-window.MODEL_ROOT.add(model);
-
-// keep model local clean; transforms will be applied to MODEL_ROOT
-model.position.set(0, 0, 0);
-model.rotation.set(0, 0, 0);
-model.scale.set(1, 1, 1);
-
-// Initial anchor set (WORLD via MODEL_ROOT)
-window.MODEL_ROOT.position.set(ANCHOR_START.x, ANCHOR_START.y, ANCHOR_START.z);
-window.MODEL_ROOT.rotation.set(ANCHOR_START.rx, ANCHOR_START.ry, ANCHOR_START.rz);
-
-$("msg").textContent = "✅ Model loaded";
-
-// ===== FORCE ANCHOR AFTER ALL LOAD LOGIC =====
-requestAnimationFrame(() => {
-  window.MODEL_ROOT.position.set(ANCHOR_START.x, ANCHOR_START.y, ANCHOR_START.z);
-  window.MODEL_ROOT.rotation.set(ANCHOR_START.rx, ANCHOR_START.ry, ANCHOR_START.rz);
-
-  console.log(
-    "ANCHOR ENFORCED AT LOAD",
-    window.MODEL_ROOT.position.toArray(),
-    window.MODEL_ROOT.rotation.toArray()
-  );
-});
-// ===========================================
-
-} // <-- keep this: closes addModel(gltf)
-
-
-// ===== FORCE ANCHOR AFTER ALL LOAD LOGIC =====
-if (!window.MODEL_ROOT){
-  console.warn("MODEL_ROOT not ready yet — skipping anchor enforce");
-} else {
-  const root = window.MODEL_ROOT; // capture ref
-  requestAnimationFrame(() => {
-    root.position.set(ANCHOR_START.x, ANCHOR_START.y, ANCHOR_START.z);
-    root.rotation.set(ANCHOR_START.rx, ANCHOR_START.ry, ANCHOR_START.rz);
-
-    console.log(
-      "ANCHOR ENFORCED AT LOAD",
-      root.position.toArray(),
-      root.rotation.toArray()
-    );
-  });
-}
-// ===========================================
-
 
 const MODEL_CANDIDATES = [
   window.ROMETRICS_MODEL_URL,
@@ -3344,65 +3247,36 @@ function ensurePoseTuner(){
     return THREE.MathUtils.radToDeg(rad);
   }
 
-// Helper: get or create override object for current test+bucket
-function getCurrentOverrideKey(){
-  if (!CURRENT_BODY_TEST || !CURRENT_BODY_BUCKET) return null;
-  return `${CURRENT_BODY_TEST}:${CURRENT_BODY_BUCKET}`;
-}
 
-// World-space pose target (MODEL_ROOT if present, otherwise model)
-function getPoseTarget(){
-  return (window.MODEL_ROOT && window.MODEL_ROOT.isObject3D) ? window.MODEL_ROOT : model;
-}
-
-function ensureOverrideFromCurrentPose(){
-  const key = getCurrentOverrideKey();
-  const target = getPoseTarget();
-  if (!key || !target) return null;
-
-  if (!POSE_OVERRIDES[key]){
-    const euler = new THREE.Euler().copy(target.rotation);
-    POSE_OVERRIDES[key] = {
-      x:  target.position.x,
-      y:  target.position.y,
-      z:  target.position.z,
-      rx: euler.x,
-      ry: euler.y,
-      rz: euler.z
-    };
+  // Helper: get or create override object for current test+bucket
+  function getCurrentOverrideKey(){
+    if (!CURRENT_BODY_TEST || !CURRENT_BODY_BUCKET) return null;
+    return `${CURRENT_BODY_TEST}:${CURRENT_BODY_BUCKET}`;
   }
-  return key;
-}
 
-function applyOverride(key){
-  const o = key && POSE_OVERRIDES[key];
-  const target = getPoseTarget();
-  if (!o || !target) return;
+  function ensureOverrideFromCurrentPose(){
+    const key = getCurrentOverrideKey();
+    if (!key || !model) return null;
+    if (!POSE_OVERRIDES[key]){
+      const euler = new THREE.Euler().copy(model.rotation);
+      POSE_OVERRIDES[key] = {
+        x: model.position.x,
+        y: model.position.y,
+        z: model.position.z,
+        rx: euler.x,
+        ry: euler.y,
+        rz: euler.z
+      };
+    }
+    return key;
+  }
 
-  target.position.set(o.x, o.y, o.z);
-  target.rotation.set(o.rx, o.ry, o.rz);
-}
-
-// Position buttons
-poseTunerEl.querySelectorAll('button[data-axis]').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    const key = ensureOverrideFromCurrentPose();
-    if (!key) return;
-
-    const axis  = btn.getAttribute('data-axis');
-    const delta = parseFloat(btn.getAttribute('data-delta') || '0');
-    const o = POSE_OVERRIDES[key];
-
-    if (axis === 'x')  o.x  += delta;
-    if (axis === 'y')  o.y  += delta;
-    if (axis === 'z')  o.z  += delta;
-    if (axis === 'rx') o.rx += delta;
-    if (axis === 'ry') o.ry += delta;
-    if (axis === 'rz') o.rz += delta;
-
-    applyOverride(key);
-  });
-});
+  function applyOverride(key){
+    const o = key && POSE_OVERRIDES[key];
+    if (!o || !model) return;
+    model.position.set(o.x, o.y, o.z);
+    model.rotation.set(o.rx, o.ry, o.rz);
+  }
 
   // Position buttons
   poseTunerEl.querySelectorAll('button[data-axis]').forEach(btn=>{
@@ -3863,4 +3737,4 @@ function onPointerDownTransformControls(event) {
 
 </script>
 </body>
-  </html>
+</html>
