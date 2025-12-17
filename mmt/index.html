@@ -2789,43 +2789,55 @@ function addModel(gltf){
     applyAnatomicBaseline();
   }
 
-  scene.add(model);
+// --- MODEL ROOT (world-space poses live here) ---
+if (!window.MODEL_ROOT){
+  window.MODEL_ROOT = new THREE.Group();
+  window.MODEL_ROOT.name = "MODEL_ROOT";
+  scene.add(window.MODEL_ROOT);
+}
+window.MODEL_ROOT.clear();
+window.MODEL_ROOT.add(model);
 
-  // Initial anchor set
-  model.position.set(
+// keep model local clean; transforms will be applied to MODEL_ROOT
+model.position.set(0, 0, 0);
+model.rotation.set(0, 0, 0);
+model.scale.set(1, 1, 1);
+
+// Initial anchor set (WORLD via MODEL_ROOT)
+window.MODEL_ROOT.position.set(
+  ANCHOR_START.x,
+  ANCHOR_START.y,
+  ANCHOR_START.z
+);
+window.MODEL_ROOT.rotation.set(
+  ANCHOR_START.rx,
+  ANCHOR_START.ry,
+  ANCHOR_START.rz
+);
+
+$("msg").textContent = "✅ Model loaded";
+
+// ===== FORCE ANCHOR AFTER ALL LOAD LOGIC =====
+requestAnimationFrame(() => {
+  window.MODEL_ROOT.position.set(
     ANCHOR_START.x,
     ANCHOR_START.y,
     ANCHOR_START.z
   );
-  model.rotation.set(
+  window.MODEL_ROOT.rotation.set(
     ANCHOR_START.rx,
     ANCHOR_START.ry,
     ANCHOR_START.rz
   );
 
-  $("msg").textContent = "✅ Model loaded";
+  console.log(
+    "ANCHOR ENFORCED AT LOAD",
+    window.MODEL_ROOT.position.toArray(),
+    window.MODEL_ROOT.rotation.toArray()
+  );
+});
+// ===========================================
 
-  // ===== FORCE ANCHOR AFTER ALL LOAD LOGIC =====
-  requestAnimationFrame(() => {
-    model.position.set(
-      ANCHOR_START.x,
-      ANCHOR_START.y,
-      ANCHOR_START.z
-    );
-    model.rotation.set(
-      ANCHOR_START.rx,
-      ANCHOR_START.ry,
-      ANCHOR_START.rz
-    );
-
-    console.log(
-      "ANCHOR ENFORCED AT LOAD",
-      model.position.toArray(),
-      model.rotation.toArray()
-    );
-  });
-  // ===========================================
-}
 
 
 const MODEL_CANDIDATES = [
