@@ -700,13 +700,13 @@ function showVectorsForTest(testKey) {
 
   // Effort: patient force
   positionVector(effortVectorMesh, guide.E_startPos, guide.E_direction);
-  if (model && effortVectorMesh.parent !== model) model.add(effortVectorMesh);
+  if (model && effortVectorMesh.parent !== model) scene.add(effortVectorMesh);
   effortVectorMesh.visible = true;
 
   // Resistance: therapist force
   // Resistance: therapist force
   positionVector(resistanceVectorMesh, guide.R_startPos, guide.R_direction);
-  if (model && resistanceVectorMesh.parent !== model) model.add(resistanceVectorMesh);
+  if (model && resistanceVectorMesh.parent !== model) scene.add(resistanceVectorMesh);
   resistanceVectorMesh.scale.set(1, 1, 1); // keep green vector from shrinking
   resistanceVectorMesh.visible = true;
 
@@ -1459,8 +1459,8 @@ function enforceHandHardSurface(testKey){
   if (!g || !g.R_startPos) return;
 
   // world position of resistance contact point
-  _hcA.set(g.R_startPos.x, g.R_startPos.y, g.R_startPos.z);
-  model.localToWorld(_hcA);
+_hcA.set(g.R_startPos.x, g.R_startPos.y, g.R_startPos.z);
+
 
   let bestPen = 0;
   let bestDir = null;
