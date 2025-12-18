@@ -205,6 +205,26 @@ optgroup{color:#9fb0c9;font-style:normal}
   import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
   import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 
+const MODEL_URLS = {
+  Roman: "https://kingto89.github.io/ROMetrics.com/assets/Roman_ROMetrics.glb",
+  Roma:  "https://kingto89.github.io/ROMetrics.com/assets/Roma_ROMetrics.glb"
+};
+
+function pickModelUrl(){
+  const u = new URL(location.href);
+  const qRaw = (u.searchParams.get("model") || "").trim();
+
+  // allow ?model=Roma or ?model=Roman
+  if (qRaw && MODEL_URLS[qRaw]) return MODEL_URLS[qRaw];
+
+  // allow absolute URL or relative path
+  if (qRaw && /^https?:\/\//i.test(qRaw)) return qRaw;
+  if (qRaw) return new URL(qRaw, location.href).href;
+
+  return MODEL_URLS.Roma; // default
+}
+
+let MODEL_URL = pickModelUrl();
 /* =========================================
    ROM CASE TOKEN DEFINITIONS (Drop-In)
    ========================================= */
@@ -411,7 +431,24 @@ const actionSel = document.getElementById("actionSel");
 const actionDeg = document.getElementById("actionDeg");
 const pairLabel = document.getElementById("pairLabel");
 const zeroAll = document.getElementById("zeroAll");
+    
+const modelSel = document.getElementById("modelSel");       
+if (modelSel){
+  // set dropdown to match whatever MODEL_URL resolved to
+  modelSel.value = /\/Roma_/i.test(MODEL_URL) ? "Roma" : "Roman";
 
+  modelSel.addEventListener("change", () => {
+    const key = modelSel.value;
+    MODEL_URL = MODEL_URLS[key] || MODEL_URLS.Roman;
+
+    // keep URL shareable (so reload keeps the chosen model)
+    const u = new URL(location.href);
+    u.searchParams.set("model", key);
+    history.replaceState(null, "", u);
+
+    loadModel(); // reload with new MODEL_URL
+  });
+}
 /* ===== TWO-DROPDOWN BONE SYSTEM ===== */
 const boneSel  = document.getElementById("boneSel");   // LEFT dropdown
 const boneSel2 = document.getElementById("boneSel2");  // RIGHT dropdown
