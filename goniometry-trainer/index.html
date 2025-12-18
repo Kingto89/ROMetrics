@@ -1532,8 +1532,8 @@ function updateModelPose(pose) {
         model.rotation.y = Math.PI;
     } else if (pose === "sitting") { 
         // Flex Hips and Knees to 90 degrees on both legs
-        setPair('hip_fe_l', 90);
-        setPair('hip_fe_r', 90);
+        setPair('hip_fe_l', 80);
+        setPair('hip_fe_r', 80);
         setPair('knee_fe_l', -90);
         setPair('knee_fe_r', -90);
         
