@@ -1073,7 +1073,7 @@ if (antiBox){
   renderer.setSize(innerWidth, innerHeight);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.enabled = false;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
   const scene = new THREE.Scene
@@ -1091,7 +1091,7 @@ if (antiBox){
   scene.add(new THREE.HemisphereLight(0xffffff, 0x333344, 0.7));
   const key = new THREE.DirectionalLight(0xffffff, 1.2);
   key.position.set(2.5,4,2.5);
-  key.castShadow = true;
+  key.castShadow = false;
   key.shadow.mapSize.set(2048,2048);
   key.shadow.camera.near = 0.1; key.shadow.camera.far = 15;
   key.shadow.camera.left = -4; key.shadow.camera.right = 4; key.shadow.camera.top = 4; key.shadow.camera.bottom = -4;
