@@ -122,8 +122,8 @@ input[type=range]::-moz-range-thumb { width: 24px; height: 24px; background: #e2
   <div style="flex:1;">
     <label>Model</label>
     <select id="modelSel">
-      <option value="Roman">Roman</option>
       <option value="Roma">Roma</option>
+      <option value="Roman">Roman</option>
     </select>
   </div>
 
@@ -463,22 +463,27 @@ window.addEventListener("load", applyNumTweaks);
   import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
   import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 
+const MODEL_URLS = {
+  Roman: "https://kingto89.github.io/ROMetrics.com/assets/Roman_ROMetrics.glb",
+  Roma:  "https://kingto89.github.io/ROMetrics.com/assets/Roma_ROMetrics.glb"
+};
+
 function pickModelUrl(){
   const u = new URL(location.href);
   const qRaw = (u.searchParams.get("model") || "").trim();
 
   // allow ?model=Roma or ?model=Roman
-  const qKey = qRaw ? (qRaw[0].toUpperCase() + qRaw.slice(1).toLowerCase()) : "";
-  if (qKey && MODEL_URLS[qKey]) return MODEL_URLS[qKey];
+  if (qRaw && MODEL_URLS[qRaw]) return MODEL_URLS[qRaw];
 
   // allow absolute URL or relative path
   if (qRaw && /^https?:\/\//i.test(qRaw)) return qRaw;
   if (qRaw) return new URL(qRaw, location.href).href;
 
-  return MODEL_URLS.Roman;
+  return MODEL_URLS.Roma; // default
 }
 
-let MODEL_URL = pickModelUrl();    
+let MODEL_URL = pickModelUrl();
+  
 
 let lock3D = false;
 let lockGonio = false;
@@ -1163,13 +1168,6 @@ if (antiBox){
 
   let model = null, skeleton = null;
   const initialBoneRot = new Map();
-
-const MODEL_URLS = {
-  Roman: "https://kingto89.github.io/ROMetrics.com/assets/Roman_ROMetrics.glb",
-  Roma:  "https://kingto89.github.io/ROMetrics.com/assets/Roma_ROMetrics.glb"
-};
-
-
 
   function groundSnap(){
     if (!model) return;
