@@ -1784,11 +1784,46 @@ if (cfg.key === 'foot_invev_l') {
   segLower.onclick = ()=>{ CURRENT = LOWER; segLower.classList.add('on'); segUpper.classList.remove('on'); fillActionMenu(); };
 
   // === Anatomic preset (preloaded) ===
-  const ANAT = { addL:-32, psL:-2, wpsL:-73 };
+const ANAT_PRESETS = {
+  Roma: { addL:-32, psL:-2, wpsL:-73 },  
+  Roman:  { addL: -64, psL:-4, wpsL:-73, hipAA: 10 }   //
+};
+
+let ANAT = { ...ANAT_PRESETS.Roman };
+
+function _inferModelKey(){
+  const sel = document.getElementById("modelSel");
+  if (sel && (sel.value === "Roman" || sel.value === "Roma")) return sel.value;
+
+  const u = new URL(location.href);
+  const q = (u.searchParams.get("model") || "").trim();
+  if (q === "Roman" || q === "Roma") return q;
+
+  // fallback: infer from resolved MODEL_URL
+  if (typeof MODEL_URL === "string" && /\/Roma_/i.test(MODEL_URL)) return "Roma";
+  return "Roman";
+}
+
+function setAnatForModel(key){
+  const k = ANAT_PRESETS[key] ? key : "Roman";
+  ANAT = { ...ANAT_PRESETS[k] };
+}
+
+// run once on startup
+setAnatForModel(_inferModelKey());
+
+// ensure ANAT updates BEFORE your existing modelSel change handler runs
+document.getElementById("modelSel")?.addEventListener(
+  "change",
+  (e) => setAnatForModel(e.target.value),
+  { capture: true }
+);
 function applyAnatomicBaseline(){
   // 🦴 Apply identical baselines to both arms (no mirroring)
   setPair('sh_aa_l', ANAT.addL);
   setPair('sh_aa_r', ANAT.addL);
+  setPair('hip_aa_l',  ANAT.hipAA);
+  setPair('hip_aa_r', -ANAT.hipAA);
 
   // Forearm & wrist PS — apply same orientation to both
   setPair('fa_ps_l', ANAT.psL);
