@@ -1288,9 +1288,19 @@ if (antiBox){
     };
     if (key in map) return map[key];
   }
+
+  // --- ROMAN rig wrist axes are swapped vs generic plane assumptions ---
+  const mk = (typeof _inferModelKey === "function") ? _inferModelKey() : "";
+  if (mk === "Roman") {
+    const romanAxis = {
+      wr_fe_l: "z", wr_fe_r: "z",
+      wr_ru_l: "x", wr_ru_r: "x",
+    };
+    if (key in romanAxis) return romanAxis[key];
+  }
+
   return defAxis;
 }
-
 
   /* ===== Bone finding ===== */
   const EXCLUDE = /(pelvis|root|scapula)/i;
