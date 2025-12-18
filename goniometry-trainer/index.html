@@ -140,7 +140,7 @@ input[type=range]::-moz-range-thumb { width: 24px; height: 24px; background: #e2
 
 
 
-
+<div class="row" style="gap:15px">
   <div style="flex:1;">
     <label>Body Region</label>
     <select id="regionSel">
@@ -157,12 +157,12 @@ input[type=range]::-moz-range-thumb { width: 24px; height: 24px; background: #e2
     </select>
   </div>
 
-<div class="row" style="gap:15px">
   <div style="flex:1;">
     <label>Action</label>
     <select id="actionSel"></select>
   </div>
-  </div>
+</div>
+
   
 
       <label><span id="pairLabel">Angle (°)</span></label>
@@ -462,6 +462,27 @@ window.addEventListener("load", applyNumTweaks);
   import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
   import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
   import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
+
+function pickModelUrl(){
+  const u = new URL(location.href);
+  const qRaw = (u.searchParams.get("model") || "").trim();
+
+  // allow ?model=Roma or ?model=Roman
+  const qKey = qRaw ? (qRaw[0].toUpperCase() + qRaw.slice(1).toLowerCase()) : "";
+  if (qKey && MODEL_URLS[qKey]) return MODEL_URLS[qKey];
+
+  // allow absolute URL or relative path
+  if (qRaw && /^https?:\/\//i.test(qRaw)) return qRaw;
+  if (qRaw) return new URL(qRaw, location.href).href;
+
+  return MODEL_URLS.Roman;
+}
+
+let MODEL_URL = pickModelUrl();    
+
+let lock3D = false;
+let lockGonio = false;
+   
 /* ===================== GONIOMETER LOGIC (From Index 2) ===================== */
 const Gonio = (() => {
   const host        = document.getElementById('gonioHost');
@@ -1148,22 +1169,6 @@ const MODEL_URLS = {
   Roma:  "https://kingto89.github.io/ROMetrics.com/assets/Roma_ROMetrics.glb"
 };
 
-function pickModelUrl(){
-  const u = new URL(location.href);
-  const qRaw = (u.searchParams.get("model") || "").trim();
-
-  // allow ?model=Roma or ?model=Roman
-  const qKey = qRaw ? (qRaw[0].toUpperCase() + qRaw.slice(1).toLowerCase()) : "";
-  if (qKey && MODEL_URLS[qKey]) return MODEL_URLS[qKey];
-
-  // allow absolute URL or relative path
-  if (qRaw && /^https?:\/\//i.test(qRaw)) return qRaw;
-  if (qRaw) return new URL(qRaw, location.href).href;
-
-  return MODEL_URLS.Roman;
-}
-
-let MODEL_URL = pickModelUrl();
 
 
   function groundSnap(){
@@ -2384,9 +2389,7 @@ log("Anatomic baseline applied on load.");
     log(`Wrist ${side.toUpperCase()} (hand_${side}) PS = ${deg}°`);
   }
 
-/* --- HUD & Helpers --- */
-let lock3D = false;    
-let lockGonio = false; 
+/* --- HUD & Helpers --- */ 
 
 function setAngleHUD(angle, romStr=""){
   const hud = document.getElementById("hud");
