@@ -140,11 +140,6 @@ input[type=range]::-moz-range-thumb { width: 24px; height: 24px; background: #e2
 
 
 
-<div class="row" style="gap:15px">
-  <div style="flex:1;">
-    <label>Action</label>
-    <select id="actionSel"></select>
-  </div>
 
   <div style="flex:1;">
     <label>Body Region</label>
@@ -161,7 +156,14 @@ input[type=range]::-moz-range-thumb { width: 24px; height: 24px; background: #e2
       <option value="transverse_tarsal_subtalar">Transverse Tarsal & Subtalar</option>
     </select>
   </div>
-</div>
+
+<div class="row" style="gap:15px">
+  <div style="flex:1;">
+    <label>Action</label>
+    <select id="actionSel"></select>
+  </div>
+  </div>
+  
 
       <label><span id="pairLabel">Angle (°)</span></label>
       <input type="range" id="actionDeg" min="-90" max="150" step="1" value="0" style="display:none">
