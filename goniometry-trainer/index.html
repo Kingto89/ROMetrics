@@ -1431,6 +1431,9 @@ function freezeBindBaseFor(key, cfg) {
   if (key === 'wr_ps_r') deg = -deg;  // flip pronation/supination
   if (key === 'wr_ru_r') deg = -deg;  // flip radial/ulnar deviation
 
+  // --- ROMAN: wrist flex/ext sign is flipped ---
+  const mk = (typeof _inferModelKey === "function") ? _inferModelKey() : "";
+  if (mk === "Roman" && (key === "wr_fe_l" || key === "wr_fe_r")) deg = -deg;    
 
   const rad = THREE.MathUtils.degToRad(deg + (cfg.neutral || 0));
 
