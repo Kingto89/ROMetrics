@@ -119,35 +119,49 @@ input[type=range]::-moz-range-thumb { width: 24px; height: 24px; background: #e2
       </div>
 
 <div class="row" style="gap:15px">
-    <div style="flex:1;">
-        <label>Body Region</label>
-        <select id="regionSel">
-            <option value="">(Select region…)</option>
-            <option value="cervical_spine">Cervical Spine</option>
-            <option value="thoracic_lumbar_spine">Thoracic & Lumbar Spine</option>
-            <option value="glenohumeral_joint">Glenohumeral Joint</option>
-            <option value="elbow_radioulnar">Elbow & Radioulnar Joints</option>
-            <option value="wrist">Wrist</option>
-            <option value="hip">Hip</option>
-            <option value="knee">Knee</option>
-            <option value="talocrural_ankle">Talocrural (Ankle)</option>
-            <option value="transverse_tarsal_subtalar">Transverse Tarsal & Subtalar</option>
-        </select>
-    </div>
-    <div style="flex:1;">
-        <label>Position</label>
-        <select id="positionSel">
-            <option value="standing">Standing (Default)</option>
-            <option value="supine">Supine (Face Up)</option>
-            <option value="prone">Prone (Face Down)</option>
-            <option value="sitting">Sitting</option>
-        </select>
-    </div>
+  <div style="flex:1;">
+    <label>Model</label>
+    <select id="modelSel">
+      <option value="Roman">Roman</option>
+      <option value="Roma">Roma</option>
+    </select>
+  </div>
+
+  <div style="flex:1;">
+    <label>Position</label>
+    <select id="positionSel">
+      <option value="standing">Standing (Default)</option>
+      <option value="supine">Supine (Face Up)</option>
+      <option value="prone">Prone (Face Down)</option>
+      <option value="sitting">Sitting</option>
+    </select>
+  </div>
 </div>
 
 
-      <label>Action</label>
-      <select id="actionSel"></select>
+
+<div class="row" style="gap:15px">
+  <div style="flex:1;">
+    <label>Action</label>
+    <select id="actionSel"></select>
+  </div>
+
+  <div style="flex:1;">
+    <label>Body Region</label>
+    <select id="regionSel">
+      <option value="">(Select region…)</option>
+      <option value="cervical_spine">Cervical Spine</option>
+      <option value="thoracic_lumbar_spine">Thoracic & Lumbar Spine</option>
+      <option value="glenohumeral_joint">Glenohumeral Joint</option>
+      <option value="elbow_radioulnar">Elbow & Radioulnar Joints</option>
+      <option value="wrist">Wrist</option>
+      <option value="hip">Hip</option>
+      <option value="knee">Knee</option>
+      <option value="talocrural_ankle">Talocrural (Ankle)</option>
+      <option value="transverse_tarsal_subtalar">Transverse Tarsal & Subtalar</option>
+    </select>
+  </div>
+</div>
 
       <label><span id="pairLabel">Angle (°)</span></label>
       <input type="range" id="actionDeg" min="-90" max="150" step="1" value="0" style="display:none">
@@ -703,6 +717,7 @@ window.Gonio = Gonio;
 /* ===== UI ===== */
 const regionSel = document.getElementById("regionSel");  
 const positionSel = document.getElementById("positionSel");
+const modelSel = document.getElementById("modelSel");    
 const showNote = document.getElementById("showNote");
 const notePopup = document.getElementById("notePopup");
 const closeNote = document.getElementById("closeNote");
@@ -726,6 +741,23 @@ const ry = document.getElementById("ry");
 const rz = document.getElementById("rz");
 const zeroBone = document.getElementById("zeroBone");
 
+if (modelSel){
+  // set dropdown to match whatever MODEL_URL resolved to
+  modelSel.value = /\/Roma_/i.test(MODEL_URL) ? "Roma" : "Roman";
+
+  modelSel.addEventListener("change", () => {
+    const key = modelSel.value;
+    MODEL_URL = MODEL_URLS[key] || MODEL_URLS.Roman;
+
+    // keep URL shareable (so reload keeps the chosen model)
+    const u = new URL(location.href);
+    u.searchParams.set("model", key);
+    history.replaceState(null, "", u);
+
+    loadModel(); // reload with new MODEL_URL
+  });
+}
+    
 /* ===================== SCREEN-SPACE DOTS (no 3D raycast) ===================== */
 const scr = { fulcrum:null, stationary:null, moving:null };
 let romActive = false; // Added
@@ -1109,14 +1141,28 @@ if (antiBox){
   let model = null, skeleton = null;
   const initialBoneRot = new Map();
 
-  function pickModelUrl(){
-    const u = new URL(location.href);
-    const q = u.searchParams.get("model");
-    if (q && /^https?:\/\//i.test(q)) return q;
-    if (q && q.trim()) return new URL(q, location.href).href;
-    return "https://kingto89.github.io/ROMetrics.com/assets/Roman_ROMetrics.glb";
-  }
-  let MODEL_URL = pickModelUrl();
+const MODEL_URLS = {
+  Roman: "https://kingto89.github.io/ROMetrics.com/assets/Roman_ROMetrics.glb",
+  Roma:  "https://kingto89.github.io/ROMetrics.com/assets/Roma_ROMetrics.glb"
+};
+
+function pickModelUrl(){
+  const u = new URL(location.href);
+  const qRaw = (u.searchParams.get("model") || "").trim();
+
+  // allow ?model=Roma or ?model=Roman
+  const qKey = qRaw ? (qRaw[0].toUpperCase() + qRaw.slice(1).toLowerCase()) : "";
+  if (qKey && MODEL_URLS[qKey]) return MODEL_URLS[qKey];
+
+  // allow absolute URL or relative path
+  if (qRaw && /^https?:\/\//i.test(qRaw)) return qRaw;
+  if (qRaw) return new URL(qRaw, location.href).href;
+
+  return MODEL_URLS.Roman;
+}
+
+let MODEL_URL = pickModelUrl();
+
 
   function groundSnap(){
     if (!model) return;
