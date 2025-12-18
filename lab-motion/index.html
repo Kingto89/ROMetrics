@@ -67,16 +67,20 @@ optgroup{color:#9fb0c9;font-style:normal}
         <button id="segUpper" class="on">Upper Body</button>
         <button id="segLower">Lower Body</button>
       </div>
-
-      <div style="flex:1;">
-    <label>Model</label>
-    <select id="modelSel">
+<div style="display: flex; gap: 20px; align-items: flex-end;">
+  <div style="flex: 1;">
+    <label style="display: block;">Model</label>
+    <select id="modelSel" style="width: 100%;">
       <option value="Roman">Roman</option>
       <option value="Roma">Roma</option>
     </select>
   </div>
-      <label>Action</label>
-      <select id="actionSel"></select>
+
+  <div style="flex: 1;">
+    <label style="display: block;">Action</label>
+    <select id="actionSel" style="width: 100%;"></select>
+  </div>
+</div>
 
       <label><span id="pairLabel">Angle (°)</span></label>
       <input type="range" id="actionDeg" min="-90" max="150" step="1" value="0">
