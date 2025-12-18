@@ -253,10 +253,6 @@ select,button,input[type=range]{width:100%;margin:6px 0 8px 0;padding:8px 10px;b
   <div class="note-body" id="noteBody">Loading…</div>
 </div>
 
-<script>
-  // Use your live model path (uploaded in your repo)
-  window.ROMETRICS_MODEL_URL = "https://kingto89.github.io/ROMetrics.com/assets/Roma_ROMetrics.glb";
-</script>
 
 <script type="module">
 import * as THREE from "three";
@@ -2749,8 +2745,8 @@ function addModel(gltf){
 
 const MODEL_CANDIDATES = [
   window.ROMETRICS_MODEL_URL,
-  "assets/Roma_ROMetrics.glb",
-  new URL("assets/Roma_ROMetrics.glb", document.baseURI).href
+  "assets/Roman_ROMetrics.glb",
+  new URL("assets/Roman_ROMetrics.glb", document.baseURI).href
 ].filter(Boolean);
 
 function tryNextModelUrl(index){
