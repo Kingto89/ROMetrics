@@ -822,59 +822,95 @@
 
     scene.add(zoneForensics);
 
+// ==============================
+// 5) Avatar / model loader
+// ==============================
+let avatarRoot = null; // active model root in scene
 
-    // ==============================
-    // 5) Avatar / model loader
-    // ==============================
-    let avatarRoot = null; // active model root in scene
+function buildPreviewMannequin(){
+  const avatar = new THREE.Group();
+  avatar.userData.__isMannequin = true;
 
-    function buildPreviewMannequin(){
-      const avatar = new THREE.Group();
-      const bodyMat = new THREE.MeshStandardMaterial({ color:0xdbe7f7, roughness:0.65, metalness:0.08 });
-      const pelvis = new THREE.Mesh(new THREE.CapsuleGeometry(0.35, 0.25, 6, 14), bodyMat);
-      pelvis.position.set(0, 0.95, 0);
-      pelvis.castShadow = true;
-      const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.48, 0.95, 8, 18), bodyMat);
-      torso.position.set(0, 1.85, 0);
-      torso.castShadow = true;
-      const head = new THREE.Mesh(new THREE.SphereGeometry(0.32, 18, 18), bodyMat);
-      head.position.set(0, 2.85, 0);
-      head.castShadow = true;
-      const limb = (r,l)=>{ const m=new THREE.Mesh(new THREE.CapsuleGeometry(r,l,6,12), bodyMat); m.castShadow=true; return m; };
-      const armL = limb(0.12, 0.65); armL.position.set(-0.75, 2.1, 0); armL.rotation.z = 0.45;
-      const armR = limb(0.12, 0.65); armR.position.set( 0.75, 2.1, 0); armR.rotation.z = -0.45;
-      const legL = limb(0.14, 0.85); legL.position.set(-0.28, 0.55, 0);
-      const legR = limb(0.14, 0.85); legR.position.set( 0.28, 0.55, 0);
-      avatar.add(pelvis, torso, head, armL, armR, legL, legR);
-      return avatar;
-    }
+  const bodyMat = new THREE.MeshStandardMaterial({ color:0xdbe7f7, roughness:0.65, metalness:0.08 });
 
-    async function loadSelectedModel(modelId){
-      const m = getModel(modelId);
+  const pelvis = new THREE.Mesh(new THREE.CapsuleGeometry(0.35, 0.25, 6, 14), bodyMat);
+  pelvis.position.set(0, 0.95, 0);
+  pelvis.castShadow = true;
 
-      if (avatarRoot){ scene.remove(avatarRoot); avatarRoot = null; }
+  const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.48, 0.95, 8, 18), bodyMat);
+  torso.position.set(0, 1.85, 0);
+  torso.castShadow = true;
 
-      if (!m.url){
-        avatarRoot = buildPreviewMannequin();
-        scene.add(avatarRoot);
-        return;
-      }
-// Normalize imported GLB to ~1.75m tall (fix tiny models)
-{
-  const box = new THREE.Box3().setFromObject(avatarRoot);
-  const size = new THREE.Vector3();
-  box.getSize(size);
-  const targetH = 1.75;
-  const s = (size.y > 1e-6) ? (targetH / size.y) : 1;
-  avatarRoot.scale.setScalar(s);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.32, 18, 18), bodyMat);
+  head.position.set(0, 2.85, 0);
+  head.castShadow = true;
+
+  const limb = (r,l)=>{ const m=new THREE.Mesh(new THREE.CapsuleGeometry(r,l,6,12), bodyMat); m.castShadow=true; return m; };
+
+  const armL = limb(0.12, 0.65); armL.position.set(-0.75, 2.1, 0); armL.rotation.z = 0.45;
+  const armR = limb(0.12, 0.65); armR.position.set( 0.75, 2.1, 0); armR.rotation.z = -0.45;
+
+  const legL = limb(0.14, 0.85); legL.position.set(-0.28, 0.55, 0);
+  const legR = limb(0.14, 0.85); legR.position.set( 0.28, 0.55, 0);
+
+  avatar.add(pelvis, torso, head, armL, armR, legL, legR);
+  return avatar;
 }
 
-      const loader = new GLTFLoader();
-      const gltf = await loader.loadAsync(m.url);
-      avatarRoot = gltf.scene;
-      avatarRoot.traverse(o=>{ if (o.isMesh){ o.castShadow=true; o.receiveShadow=true; } });
-      scene.add(avatarRoot);
-    }
+async function loadSelectedModel(modelId, onProgress){
+  const m = getModel(modelId);
+
+  if (avatarRoot){
+    scene.remove(avatarRoot);
+    avatarRoot = null;
+  }
+
+  // fallback mannequin
+  if (!m || !m.url){
+    avatarRoot = buildPreviewMannequin();
+    scene.add(avatarRoot);
+    return avatarRoot;
+  }
+
+  return await new Promise((resolve, reject)=>{
+    const loader = new GLTFLoader();
+
+    loader.load(
+      m.url,
+      (gltf)=>{
+        avatarRoot = gltf.scene || (gltf.scenes && gltf.scenes[0]) || null;
+        if (!avatarRoot) return reject(new Error("GLB loaded but scene is empty"));
+
+        avatarRoot.traverse(o=>{ if (o.isMesh){ o.castShadow=true; o.receiveShadow=true; } });
+        scene.add(avatarRoot);
+
+        // normalize imported GLB to ~1.75m tall
+        avatarRoot.updateWorldMatrix(true, true);
+        const box = new THREE.Box3().setFromObject(avatarRoot);
+        const size = new THREE.Vector3();
+        box.getSize(size);
+
+        if (size.y > 1e-6){
+          const targetH = 1.75;
+          const s = targetH / size.y;
+          avatarRoot.scale.setScalar(s);
+          avatarRoot.updateWorldMatrix(true, true);
+        }
+
+        resolve(avatarRoot);
+      },
+      (xhr)=>{
+        if (!onProgress) return;
+        if (xhr && xhr.total){
+          onProgress(Math.round((xhr.loaded / xhr.total) * 100));
+        } else {
+          onProgress(null);
+        }
+      },
+      (err)=>reject(err)
+    );
+  });
+}
 
 
     // ==============================
@@ -1009,23 +1045,37 @@
     // ==============================
     // 9) Enter Studio (gate -> studio)
     // ==============================
+$enter.addEventListener('click', async ()=>{
+  const modelId = $modelSel.value;
+  const moduleId = $modSel.value;
 
-    $enter.addEventListener('click', async ()=>{
-      const modelId = $modelSel.value;
-      const moduleId = $modSel.value;
+  $enter.disabled = true;
+  const prevTxt = $enter.textContent;
+  $enter.textContent = "Loading 0%";
 
-      // show studio chrome
-      $gate.style.display = 'none';
-      $ui.style.display = '';
-      $badge.style.display = '';
-      $hint.style.display = '';
-
-      // load model (or mannequin)
-      await loadSelectedModel(modelId);
-
-      // enter chosen module (routes to zone)
-      enterModule(moduleId);
+  try {
+    await loadSelectedModel(modelId, (p)=>{
+      $enter.textContent = (p == null) ? "Loading…" : `Loading ${p}%`;
     });
+  } catch (e) {
+    console.error(e);
+    $enter.textContent = "Load failed";
+    $enter.disabled = false;
+    setTimeout(()=>{ $enter.textContent = prevTxt; }, 1200);
+    return;
+  }
+
+  $gate.style.display = "none";
+  $ui.style.display = "";
+  $badge.style.display = "";
+  $hint.style.display = "";
+
+  enterModule(moduleId);
+
+  $enter.disabled = false;
+  $enter.textContent = prevTxt;
+});
+
 
     // Resize
     addEventListener('resize', ()=>{
