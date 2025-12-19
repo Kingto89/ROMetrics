@@ -186,8 +186,8 @@
     // ==============================
 
     const MODEL_URLS = {
-  Roman: "https://kingto89.github.io/ROMetrics.com/assets/Roman_ROMetrics.glb",
-  Roma:  "https://kingto89.github.io/ROMetrics.com/assets/Roma_ROMetrics.glb"
+  Roma: "https://kingto89.github.io/ROMetrics.com/assets/Roma_ROMetrics.glb",
+  Roman:  "https://kingto89.github.io/ROMetrics.com/assets/Roman_ROMetrics.glb"
 };
 
 
@@ -229,6 +229,11 @@
 
     function getModel(id){ return MODELS.find(m=>m.id===id) || MODELS[0]; }
     function getModule(id){ return FORENSICS_MODULES.find(m=>m.id===id) || FORENSICS_MODULES[0]; }
+
+    const MODELS = [
+  { id: "Roman", label: "Roman (Male)", desc: "ROMetrics Roman model.", url: MODEL_URLS.Roman },
+  { id: "Roma",  label: "Roma (Male)",  desc: "ROMetrics Roma model.",  url: MODEL_URLS.Roma  }
+];
 
     fillSelect($modelSel, MODELS);
     fillSelect($modSel, FORENSICS_MODULES);
