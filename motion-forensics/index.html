@@ -194,7 +194,7 @@
     const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:false });
     renderer.setSize(innerWidth, innerHeight);
     renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.enabled = false;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     document.body.appendChild(renderer.domElement);
 
@@ -575,6 +575,26 @@
     tmConsole.position.set(0, 1.02, frontZ + 0.14);
     tmConsole.castShadow = true;
     treadmill.add(tmConsole);
+    
+const tmScreen = new THREE.Mesh(
+  new THREE.PlaneGeometry(0.56, 0.30),  // bigger = more “real” console
+  new THREE.MeshBasicMaterial({
+    map: consoleScreen.tex,
+    side: THREE.DoubleSide,
+    transparent: true,
+    depthTest: false,
+    depthWrite: false,
+    toneMapped: false
+  })
+);
+
+// IMPORTANT: attach to the console so it never hovers in front of the avatar
+tmConsole.add(tmScreen);
+
+// console depth is 0.32, so front face is +0.16
+tmScreen.position.set(0, 0.02, 0.162);  // (z = 0.16 + tiny offset)
+tmScreen.rotation.set(-0.10, 0, 0);
+tmScreen.renderOrder = 1000;
 
 
     // Wall board (live)
@@ -612,7 +632,7 @@ zoneCardio.add(boardGlow);
 
 
     const lblC = makeLabel('Cardio Bay');
-    lblC.position.copy(Z_CARDIO).add(new THREE.Vector3(0, 3.7, -1.6));
+    lblC.position.copy(Z_CARDIO).add(new THREE.Vector3(0, 5.1, -1.6));
     labelGroup.add(lblC);
 
     scene.add(zoneCardio);
@@ -902,13 +922,33 @@ zoneCardio.add(boardGlow);
         }
       }
 
-      drawPanel(wallScreen, 'CARDIO BOARD');
-      drawPanel(consoleScreen, 'TREADMILL');
-      updateHUD();
+    function drawTreadmillMph(screen){
+  const { ctx, c } = screen;
 
-      renderer.render(scene, camera);
-    }
-    animate();
+  ctx.clearRect(0,0,c.width,c.height);
+  ctx.fillStyle = 'rgba(6,18,34,1)';
+  ctx.fillRect(0,0,c.width,c.height);
+
+  ctx.strokeStyle = 'rgba(56,189,248,0.85)';
+  ctx.lineWidth = 10;
+  ctx.strokeRect(10,10,c.width-20,c.height-20);
+
+  ctx.fillStyle = '#e6eef7';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = '900 64px system-ui, -apple-system, Segoe UI, Roboto, Inter';
+  ctx.fillText(`${sim.speedMph.toFixed(1)} mph`, c.width/2, c.height/2);
+
+  screen.tex.needsUpdate = true;
+}
+
+drawPanel(wallScreen, 'CARDIO BOARD');
+drawTreadmillMph(consoleScreen);
+
+updateHUD();
+renderer.render(scene, camera);
+}
+animate();
 
     // ==============================
     // 9) Enter Studio (gate -> studio)
