@@ -185,30 +185,38 @@
     // ==============================
     // 2) Studio: Three.js base
     // ==============================
-    const $spd = document.getElementById('spd');
-    const $spdVal = document.getElementById('spdVal');
-    const $engVal = document.getElementById('engVal');
-    const $status = document.getElementById('statusVal');
-    const $fuel = document.getElementById('fuelBtn');
-    const $reset = document.getElementById('resetBtn');
-    const $start = document.getElementById('startBtn');
+const $spd = document.getElementById('spd');
+const $spdVal = document.getElementById('spdVal');
+const $engVal = document.getElementById('engVal');
+const $status = document.getElementById('statusVal');
+const $start = document.getElementById('startBtn');
+const $fuel = document.getElementById('fuelBtn');
+const $reset = document.getElementById('resetBtn');
+
+const sim = { speedMph: 6.0, energy: 100, lastFuelT: -999, running:false };
+const clamp = (v,a,b)=> Math.max(a, Math.min(b, v));
+
+$spd.addEventListener('input', ()=>{ sim.speedMph = parseFloat($spd.value); });
 
 $start.addEventListener('click', ()=>{
   sim.running = !sim.running;
   $start.textContent = sim.running ? "Pause" : "Start";
 });
 
-    const sim = { speedMph: 6.0, energy: 100, lastFuelT: -999, running:false };
-    const clamp = (v,a,b)=> Math.max(a, Math.min(b, v));
+$fuel.addEventListener('click', ()=>{
+  if (!sim.running) return;
+  sim.energy = clamp(sim.energy + 10, 0, 100);
+  sim.lastFuelT = performance.now()/1000;
+});
 
-    $spd.addEventListener('input', ()=>{ sim.speedMph = parseFloat($spd.value); });
-  $fuel.addEventListener('click', ()=>{ if(!sim.running) return; sim.energy = clamp(sim.energy + 10, 0, 100); sim.lastFuelT = performance.now()/1000; });
-  $reset.addEventListener('click', ()=>{
+
+$reset.addEventListener('click', ()=>{
   sim.energy = 100;
   sim.lastFuelT = -999;
   sim.running = false;
   $start.textContent = "Start";
 });
+
 
     const scene = new THREE.Scene();
     scene.fog = new THREE.Fog(0x07101b, 10, 45);
