@@ -1036,7 +1036,9 @@ zoneCardio.add(boardGlow);
       const dt = Math.min(0.05, clock.getDelta());
       const t = clock.getElapsedTime();
 
-      sim.energy = clamp(sim.energy - (sim.speedMph * 0.55) * dt, 0, 100);
+if (sim.running){
+  sim.energy = clamp(sim.energy - (sim.speedMph * 0.55) * dt, 0, 100);
+}
 
       // treadmill motion
     if (sim.running){
