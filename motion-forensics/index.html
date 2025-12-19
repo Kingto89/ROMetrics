@@ -465,6 +465,93 @@
     bar.castShadow = true;
     zoneStrength.add(bar);
 
+    // Dumbbell rack (near bench, offset left so it won’t collide)
+{
+  const rack = new THREE.Group();
+  const matRubber = new THREE.MeshStandardMaterial({ color:0x121923, roughness:0.98, metalness:0.03 });
+
+  const W = 1.85, D = 0.55, H = 0.95;
+  const legGeo   = new THREE.BoxGeometry(0.06, H, 0.06);
+  const shelfGeo = new THREE.BoxGeometry(W, 0.06, 0.36);
+
+  const legs = [
+    [-W/2+0.07, H/2, -D/2+0.07],
+    [ W/2-0.07, H/2, -D/2+0.07],
+    [-W/2+0.07, H/2,  D/2-0.07],
+    [ W/2-0.07, H/2,  D/2-0.07],
+  ];
+  for (const p of legs){
+    const leg = new THREE.Mesh(legGeo, matSteel);
+    leg.position.set(p[0], p[1], p[2]);
+    leg.castShadow = true;
+    rack.add(leg);
+  }
+
+  const shelf1 = new THREE.Mesh(shelfGeo, matDark);
+  shelf1.position.set(0, 0.68, 0);
+  shelf1.rotation.x = -0.14;
+  shelf1.castShadow = true;
+  shelf1.receiveShadow = true;
+  rack.add(shelf1);
+
+  const shelf2 = new THREE.Mesh(shelfGeo, matDark);
+  shelf2.position.set(0, 0.32, 0);
+  shelf2.rotation.x = -0.14;
+  shelf2.castShadow = true;
+  shelf2.receiveShadow = true;
+  rack.add(shelf2);
+
+  const base = new THREE.Mesh(new THREE.BoxGeometry(W+0.12, 0.05, D+0.18), matDark);
+  base.position.set(0, 0.03, 0);
+  base.receiveShadow = true;
+  rack.add(base);
+
+  const handleGeo = new THREE.CylinderGeometry(0.022, 0.022, 0.24, 16);
+  const hexGeo    = new THREE.CylinderGeometry(0.070, 0.070, 0.050, 6);
+
+  function dumbbell(scale=1){
+    const g = new THREE.Group();
+    const handle = new THREE.Mesh(handleGeo, matSteel);
+    handle.rotation.z = Math.PI/2;
+    handle.castShadow = true;
+    g.add(handle);
+
+    const wL = new THREE.Mesh(hexGeo, matRubber);
+    wL.position.x = -0.145;
+    wL.rotation.z = Math.PI/2;
+    wL.castShadow = true;
+    g.add(wL);
+
+    const wR = wL.clone();
+    wR.position.x = 0.145;
+    g.add(wR);
+
+    g.scale.setScalar(scale);
+    return g;
+  }
+
+  const xs = [-0.68, -0.34, 0.00, 0.34, 0.68];
+  xs.forEach((x,i)=>{
+    const db = dumbbell(0.92 + i*0.02);
+    db.position.set(x, 0.73, -0.06);
+    db.rotation.y = 0.08;
+    rack.add(db);
+  });
+  xs.forEach((x,i)=>{
+    const db = dumbbell(1.00 + i*0.03);
+    db.position.set(x, 0.37, -0.06);
+    db.rotation.y = 0.08;
+    rack.add(db);
+  });
+
+  // placement relative to YOUR bench (bench is around x=0, z≈0.35)
+  rack.position.set(-2.10, 0.0, 0.55);
+  rack.rotation.y = 0.35;
+
+  zoneStrength.add(rack);
+}
+
+
     const lblS = makeLabel('Strength / Load Station');
     lblS.position.copy(Z_STRENGTH).add(new THREE.Vector3(0, 2.7, -1.6));
     labelGroup.add(lblS);
