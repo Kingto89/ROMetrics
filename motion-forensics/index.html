@@ -576,22 +576,6 @@
     tmConsole.castShadow = true;
     treadmill.add(tmConsole);
 
-   const tmScreen = new THREE.Mesh(
-  new THREE.PlaneGeometry(0.38, 0.20),
-  new THREE.MeshBasicMaterial({
-    map: consoleScreen.tex,
-    side: THREE.DoubleSide,
-    transparent: true,
-    depthTest: false,
-    depthWrite: false,
-    toneMapped: false
-  })
-);
-tmScreen.position.set(0, 1.02, frontZ + 0.32);   // <-- pushed forward (was too close)
-tmScreen.rotation.x = -0.12;
-tmScreen.renderOrder = 1000;
-treadmill.add(tmScreen);
-
 
     // Wall board (live)
     const board = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.88, 0.08), new THREE.MeshStandardMaterial({ color:0x111b2e, roughness:0.6, metalness:0.15 }));
