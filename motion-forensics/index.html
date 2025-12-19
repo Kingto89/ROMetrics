@@ -442,7 +442,7 @@
 
     // Simple bench press rack (realistic)
     const benchTop = new THREE.Mesh(new THREE.BoxGeometry(1.35, 0.10, 0.34), matDark);
-    benchTop.position.set(0, 0.48, 0.15);
+    benchTop.position.set(0, 0.48, 0.95);
     benchTop.castShadow = true;
     zoneStrength.add(benchTop);
 
@@ -577,7 +577,7 @@
     treadmill.add(tmConsole);
     
 const tmScreen = new THREE.Mesh(
-  new THREE.PlaneGeometry(0.56, 0.30),  // bigger = more “real” console
+  new THREE.PlaneGeometry(0.56, 0.30),
   new THREE.MeshBasicMaterial({
     map: consoleScreen.tex,
     side: THREE.DoubleSide,
@@ -588,13 +588,14 @@ const tmScreen = new THREE.Mesh(
   })
 );
 
-// IMPORTANT: attach to the console so it never hovers in front of the avatar
+// attach to console (NOT treadmill / NOT zone)
 tmConsole.add(tmScreen);
 
-// console depth is 0.32, so front face is +0.16
-tmScreen.position.set(0, 0.02, 0.162);  // (z = 0.16 + tiny offset)
+// local coords on the console front face (console depth = 0.32 -> half = 0.16)
+tmScreen.position.set(0, 0.02, 0.162);
 tmScreen.rotation.set(-0.10, 0, 0);
 tmScreen.renderOrder = 1000;
+
 
 
     // Wall board (live)
