@@ -1,0 +1,711 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>ROMetrics — Exercise Science Studio (Preview)</title>
+  <style>
+    html,body{height:100%;margin:0;overflow:hidden;background:#07101b;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;}
+    #ui{
+      position:fixed;left:14px;top:14px;z-index:10;
+      display:flex;gap:10px;flex-wrap:wrap;align-items:center;
+    }
+    .pill{
+      border:1px solid rgba(148,163,184,.35);
+      background:rgba(15,23,42,.78);
+      color:#e5eefc;
+      padding:10px 12px;
+      border-radius:999px;
+      font-size:13px;
+      cursor:pointer;
+      user-select:none;
+      backdrop-filter: blur(8px);
+    }
+    .pill.active{border-color:rgba(56,189,248,.8);box-shadow:0 0 0 2px rgba(56,189,248,.14) inset;}
+
+    #badge{
+      position:fixed;right:14px;top:14px;z-index:10;
+      padding:12px 12px;border-radius:16px;
+      border:1px solid rgba(148,163,184,.25);
+      background:rgba(15,23,42,.65);
+      color:#cfe3ff;font-size:13px;
+      max-width:380px;
+      backdrop-filter: blur(8px);
+    }
+    #badge .t{font-weight:800;letter-spacing:.2px;}
+    #badge .p{opacity:.92;margin-top:6px;line-height:1.25;}
+
+    #controls{
+      margin-top:10px;
+      padding-top:10px;
+      border-top:1px solid rgba(148,163,184,.18);
+      display:grid;gap:8px;
+    }
+    .row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+    .k{opacity:.88;}
+    .v{font-weight:800;letter-spacing:.2px;}
+    input[type=range]{width:100%;accent-color:#38bdf8;}
+    .btn{
+      border:1px solid rgba(148,163,184,.35);
+      background:rgba(15,23,42,.78);
+      color:#e5eefc;
+      padding:8px 10px;
+      border-radius:12px;
+      font-size:12px;
+      cursor:pointer;
+    }
+
+    #hint{
+      position:fixed;left:14px;bottom:14px;z-index:10;
+      padding:10px 12px;border-radius:14px;
+      border:1px solid rgba(148,163,184,.20);
+      background:rgba(15,23,42,.55);
+      color:#a8c0da;font-size:12px;
+      backdrop-filter: blur(8px);
+    }
+    canvas{display:block;}
+  </style>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="ui">
+    <div class="pill active" data-zone="all">All Zones</div>
+    <div class="pill" data-zone="strength">Strength / Load Station</div>
+    <div class="pill" data-zone="cardio">Cardio Bay</div>
+    <div class="pill" data-zone="forensics">Movement Analysis Booth</div>
+    <div class="pill" data-zone="labels">Toggle Labels</div>
+  </div>
+
+  <div id="badge">
+    <div class="t">Exercise Science Studio</div>
+    <div class="p">Live-number demo: use the slider + Fuel button. The treadmill console + wall board update in real time.</div>
+    <div id="controls">
+      <div class="row"><div class="k">Cardio Speed</div><div class="v"><span id="spdVal">6.0</span> mph</div></div>
+      <input id="spd" type="range" min="0" max="12" step="0.1" value="6"/>
+      <div class="row"><div class="k">Energy</div><div class="v"><span id="engVal">100</span>%</div></div>
+      <div class="row" style="justify-content:flex-end;gap:10px;">
+        <button id="fuelBtn" class="btn" title="Adds energy (demo)">Fuel +10</button>
+        <button id="resetBtn" class="btn" title="Resets energy">Reset</button>
+      </div>
+      <div class="row" style="justify-content:space-between;">
+        <div class="k">Status</div><div class="v" id="statusVal">Stable</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="hint">Mouse: orbit • Wheel: zoom • Right-drag: pan • Keys: 1/2/3 = zones • 0 = all • L = labels</div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    // ----------------------
+    // UI STATE (demo only)
+    // ----------------------
+    const $spd = document.getElementById('spd');
+    const $spdVal = document.getElementById('spdVal');
+    const $engVal = document.getElementById('engVal');
+    const $status = document.getElementById('statusVal');
+    const $fuel = document.getElementById('fuelBtn');
+    const $reset = document.getElementById('resetBtn');
+
+    const sim = {
+      speedMph: 6.0,
+      energy: 100,   // 0..100
+      lastFuelT: -999
+    };
+
+    function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+
+    $spd.addEventListener('input', ()=>{
+      sim.speedMph = parseFloat($spd.value);
+    });
+
+    $fuel.addEventListener('click', ()=>{
+      sim.energy = clamp(sim.energy + 10, 0, 100);
+      sim.lastFuelT = performance.now()/1000;
+    });
+
+    $reset.addEventListener('click', ()=>{
+      sim.energy = 100;
+      sim.lastFuelT = -999;
+    });
+
+    // ----------------------
+    // THREE: scene
+    // ----------------------
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.Fog(0x07101b, 22, 85);
+
+    const camera = new THREE.PerspectiveCamera(55, innerWidth/innerHeight, 0.1, 200);
+    camera.position.set(8.5, 5.0, 12.5);
+
+    const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:false });
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    document.body.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.target.set(0, 1.4, 0);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.07;
+    controls.maxPolarAngle = Math.PI * 0.49;
+    controls.minDistance = 4;
+    controls.maxDistance = 30;
+
+    // Lights
+    scene.add(new THREE.AmbientLight(0x6aa0d8, 0.35));
+
+    const key = new THREE.DirectionalLight(0xffffff, 1.05);
+    key.position.set(8, 10, 6);
+    key.castShadow = true;
+    key.shadow.mapSize.set(2048,2048);
+    key.shadow.camera.near = 0.5;
+    key.shadow.camera.far = 40;
+    key.shadow.camera.left = -18;
+    key.shadow.camera.right = 18;
+    key.shadow.camera.top = 18;
+    key.shadow.camera.bottom = -18;
+    scene.add(key);
+
+    const rim = new THREE.DirectionalLight(0x38bdf8, 0.35);
+    rim.position.set(-10, 6, -8);
+    scene.add(rim);
+
+    // Materials
+    const matFloor = new THREE.MeshStandardMaterial({ color:0x0a1a2e, roughness:0.95, metalness:0.05 });
+    const matWall  = new THREE.MeshStandardMaterial({ color:0x091425, roughness:0.9, metalness:0.05 });
+    const matDark  = new THREE.MeshStandardMaterial({ color:0x0b1220, roughness:0.85, metalness:0.08 });
+    const matSteel = new THREE.MeshStandardMaterial({ color:0x7a8aa0, roughness:0.35, metalness:0.55 });
+    const matGlow  = new THREE.MeshStandardMaterial({ color:0x38bdf8, roughness:0.35, metalness:0.25, emissive:0x103040, emissiveIntensity:0.8 });
+
+    // ----------------------
+    // LIVE SCREEN TEXTURES
+    // ----------------------
+    function makeScreenCanvas(w=512,h=256){
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      const ctx = c.getContext('2d');
+      const tex = new THREE.CanvasTexture(c);
+      tex.anisotropy = 8;
+      return { c, ctx, tex };
+    }
+
+    const wallScreen = makeScreenCanvas(1024, 320);
+    const consoleScreen = makeScreenCanvas(512, 256);
+
+    function drawPanel(screen, title){
+      const {ctx,c} = screen;
+      ctx.clearRect(0,0,c.width,c.height);
+
+      // background
+      ctx.fillStyle = 'rgba(6,18,34,1)';
+      ctx.fillRect(0,0,c.width,c.height);
+
+      // border
+      ctx.strokeStyle = 'rgba(56,189,248,0.85)';
+      ctx.lineWidth = 10;
+      ctx.strokeRect(10,10,c.width-20,c.height-20);
+
+      // header
+      ctx.fillStyle = 'rgba(15,23,42,0.85)';
+      ctx.fillRect(24, 24, c.width-48, 64);
+
+      ctx.fillStyle = '#e6eef7';
+      ctx.font = '800 40px system-ui, -apple-system, Segoe UI, Roboto, Inter';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(title, 42, 56);
+
+      // values
+      const spd = sim.speedMph;
+      const eng = sim.energy;
+      const status = (eng <= 10) ? 'CRASH' : (eng <= 25 ? 'Warning' : 'Stable');
+
+      ctx.font = '700 44px system-ui, -apple-system, Segoe UI, Roboto, Inter';
+      ctx.fillStyle = '#cfe3ff';
+      ctx.fillText(`Speed: ${spd.toFixed(1)} mph`, 42, 132);
+      ctx.fillText(`Energy: ${Math.round(eng)}%`, 42, 192);
+
+      // status chip
+      const chipX = 42, chipY = 222, chipW = 260, chipH = 64;
+      ctx.fillStyle = status === 'CRASH' ? 'rgba(255,80,80,0.25)' : (status === 'Warning' ? 'rgba(255,205,80,0.20)' : 'rgba(56,189,248,0.18)');
+      roundRect(ctx, chipX, chipY, chipW, chipH, 18);
+      ctx.fill();
+      ctx.strokeStyle = status === 'CRASH' ? 'rgba(255,80,80,0.75)' : (status === 'Warning' ? 'rgba(255,205,80,0.65)' : 'rgba(56,189,248,0.65)');
+      ctx.lineWidth = 5;
+      ctx.stroke();
+      ctx.fillStyle = '#e6eef7';
+      ctx.font = '800 34px system-ui, -apple-system, Segoe UI, Roboto, Inter';
+      ctx.fillText(`Status: ${status}`, chipX+18, chipY+chipH/2);
+
+      // tiny fuel pulse
+      const t = performance.now()/1000;
+      const fuelPulse = Math.max(0, 1 - (t - sim.lastFuelT) / 0.8);
+      if (fuelPulse > 0){
+        ctx.globalAlpha = fuelPulse * 0.35;
+        ctx.fillStyle = 'rgba(56,189,248,1)';
+        ctx.beginPath();
+        ctx.arc(c.width-70, 56, 20 + (1-fuelPulse)*30, 0, Math.PI*2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+
+      screen.tex.needsUpdate = true;
+    }
+
+    function roundRect(ctx, x, y, w, h, r){
+      const min = Math.min(w,h); if (r > min/2) r = min/2;
+      ctx.beginPath();
+      ctx.moveTo(x+r, y);
+      ctx.arcTo(x+w, y, x+w, y+h, r);
+      ctx.arcTo(x+w, y+h, x, y+h, r);
+      ctx.arcTo(x, y+h, x, y, r);
+      ctx.arcTo(x, y, x+w, y, r);
+      ctx.closePath();
+    }
+
+    // ----------------------
+    // Room
+    // ----------------------
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(28, 22), matFloor);
+    floor.rotation.x = -Math.PI/2;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    const room = new THREE.Group();
+
+    const wallBack = new THREE.Mesh(new THREE.BoxGeometry(28, 7, 0.35), matWall);
+    wallBack.position.set(0, 3.5, -10.8);
+    wallBack.receiveShadow = true;
+    room.add(wallBack);
+
+    const wallLeft = new THREE.Mesh(new THREE.BoxGeometry(0.35, 7, 22), matWall);
+    wallLeft.position.set(-13.9, 3.5, 0);
+    room.add(wallLeft);
+
+    const wallRight = new THREE.Mesh(new THREE.BoxGeometry(0.35, 7, 22), matWall);
+    wallRight.position.set(13.9, 3.5, 0);
+    room.add(wallRight);
+
+    const beam = new THREE.Mesh(new THREE.BoxGeometry(28, 0.25, 0.6), matDark);
+    beam.position.set(0, 6.65, -8.6);
+    room.add(beam);
+
+    const grid = new THREE.GridHelper(28, 28, 0x1f3b5a, 0x10243a);
+    grid.position.y = 0.01;
+    room.add(grid);
+
+    const accent = new THREE.Mesh(new THREE.BoxGeometry(24, 0.03, 0.08), matGlow);
+    accent.position.set(0, 0.06, -10.45);
+    room.add(accent);
+
+    scene.add(room);
+
+    // ----------------------
+    // Labels (toggleable)
+    // ----------------------
+    let labelsOn = false;
+    const labelGroup = new THREE.Group();
+    scene.add(labelGroup);
+
+    function makeLabel(text){
+      const canvas = document.createElement('canvas');
+      canvas.width = 512; canvas.height = 128;
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.fillStyle = 'rgba(15,23,42,0.72)';
+      ctx.strokeStyle = 'rgba(56,189,248,0.65)';
+      ctx.lineWidth = 6;
+      roundRect(ctx, 14, 16, 484, 96, 26);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#e6eef7';
+      ctx.font = '700 36px system-ui, -apple-system, Segoe UI, Roboto, Inter';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, 34, 64);
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.anisotropy = 8;
+      const mat = new THREE.MeshBasicMaterial({ map: tex, transparent:true });
+      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(4.4, 1.1), mat);
+      mesh.renderOrder = 10;
+      return mesh;
+    }
+
+    function setLabels(v){
+      labelsOn = v;
+      labelGroup.traverse(o=>{ if (o.isMesh) o.visible = labelsOn; });
+    }
+    setLabels(false);
+
+    // ----------------------
+    // Zone helpers
+    // ----------------------
+    function zoneBasePlate(w, d){
+      const plate = new THREE.Mesh(new THREE.BoxGeometry(w, 0.08, d), new THREE.MeshStandardMaterial({ color:0x0b1a2e, roughness:0.9, metalness:0.06 }));
+      plate.castShadow = false; plate.receiveShadow = true;
+      return plate;
+    }
+
+    // Strength / Load Station (left)
+    const zoneStrength = new THREE.Group();
+    zoneStrength.name = 'strength';
+    zoneStrength.position.set(-7.6, 0, 2.4);
+
+    const plat = zoneBasePlate(7.0, 5.2);
+    plat.position.set(0, 0.04, 0);
+    zoneStrength.add(plat);
+
+    const postGeo = new THREE.BoxGeometry(0.22, 2.35, 0.22);
+    [[-2.2, 1.2, -1.5], [ 2.2, 1.2, -1.5], [-2.2, 1.2,  1.5], [ 2.2, 1.2,  1.5]].forEach(p=>{
+      const m = new THREE.Mesh(postGeo, matSteel);
+      m.position.set(p[0], p[1], p[2]);
+      m.castShadow = true;
+      zoneStrength.add(m);
+    });
+
+    const bar1 = new THREE.Mesh(new THREE.BoxGeometry(4.9, 0.16, 0.16), matSteel);
+    bar1.position.set(0, 2.25, -1.5);
+    bar1.castShadow = true;
+    zoneStrength.add(bar1);
+
+    const bar2 = new THREE.Mesh(new THREE.BoxGeometry(4.9, 0.16, 0.16), matSteel);
+    bar2.position.set(0, 2.25, 1.5);
+    bar2.castShadow = true;
+    zoneStrength.add(bar2);
+
+    const bench = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.18, 0.55), matDark);
+    bench.position.set(0, 0.5, 0);
+    bench.castShadow = true;
+    zoneStrength.add(bench);
+
+    const benchLeg = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.55, 0.12), matSteel);
+    [[-0.95,0.25,-0.2],[0.95,0.25,-0.2],[-0.95,0.25,0.2],[0.95,0.25,0.2]].forEach(p=>{
+      const l = benchLeg.clone();
+      l.position.set(p[0], p[1], p[2]);
+      l.castShadow = true;
+      zoneStrength.add(l);
+    });
+
+    const lblS = makeLabel('Strength / Load Station');
+    lblS.position.set(0, 3.2, -2.9);
+    zoneStrength.add(lblS);
+    labelGroup.add(lblS);
+
+    scene.add(zoneStrength);
+
+    // Cardio Bay (right) — includes treadmill + live screens
+    const zoneCardio = new THREE.Group();
+    zoneCardio.name = 'cardio';
+    zoneCardio.position.set(7.6, 0, 2.4);
+
+    const lane = zoneBasePlate(7.0, 5.2);
+    lane.position.set(0, 0.04, 0);
+    zoneCardio.add(lane);
+
+    // Treadmill (more obvious)
+    const tmBase = new THREE.Mesh(new THREE.BoxGeometry(2.9, 0.26, 1.35), matDark);
+    tmBase.position.set(0, 0.24, 0);
+    tmBase.castShadow = true;
+    zoneCardio.add(tmBase);
+
+    const tmBelt = new THREE.Mesh(new THREE.BoxGeometry(2.35, 0.09, 1.02), new THREE.MeshStandardMaterial({ color:0x0c1728, roughness:0.98, metalness:0.05 }));
+    tmBelt.position.set(0, 0.33, 0);
+    tmBelt.receiveShadow = true;
+    zoneCardio.add(tmBelt);
+
+    // Side rails
+    const railMat = matSteel;
+    const railGeo = new THREE.CylinderGeometry(0.035, 0.035, 1.35, 10);
+    const railL = new THREE.Mesh(railGeo, railMat);
+    railL.rotation.z = Math.PI/2;
+    railL.position.set(-1.15, 0.95, -0.35);
+    railL.castShadow = true;
+    zoneCardio.add(railL);
+
+    const railR = railL.clone();
+    railR.position.x = 1.15;
+    zoneCardio.add(railR);
+
+    // Uprights
+    const upGeo = new THREE.CylinderGeometry(0.05, 0.05, 1.15, 12);
+    const upL = new THREE.Mesh(upGeo, railMat);
+    upL.position.set(-0.95, 0.85, -0.62);
+    upL.castShadow = true;
+    zoneCardio.add(upL);
+
+    const upR = upL.clone();
+    upR.position.x = 0.95;
+    zoneCardio.add(upR);
+
+    // Console box
+    const tmConsole = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.38, 0.20), new THREE.MeshStandardMaterial({ color:0x111b2e, roughness:0.55, metalness:0.12 }));
+    tmConsole.position.set(0, 1.35, -0.62);
+    tmConsole.castShadow = true;
+    zoneCardio.add(tmConsole);
+
+    // Console screen (live)
+    const tmScreen = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.52, 0.28),
+      new THREE.MeshBasicMaterial({ map: consoleScreen.tex, transparent:false })
+    );
+    tmScreen.position.set(0, 1.35, -0.515);
+    tmScreen.renderOrder = 5;
+    zoneCardio.add(tmScreen);
+
+    // Wall board (live)
+    const board = new THREE.Mesh(new THREE.BoxGeometry(3.6, 1.15, 0.08), new THREE.MeshStandardMaterial({ color:0x111b2e, roughness:0.6, metalness:0.15 }));
+    board.position.set(0, 2.8, -2.85);
+    zoneCardio.add(board);
+
+    const boardFace = new THREE.Mesh(
+      new THREE.PlaneGeometry(3.42, 1.02),
+      new THREE.MeshBasicMaterial({ map: wallScreen.tex })
+    );
+    boardFace.position.set(0, 2.8, -2.805);
+    boardFace.renderOrder = 6;
+    zoneCardio.add(boardFace);
+
+    // Soft glow (no flicker)
+    const boardGlow = new THREE.Mesh(
+      new THREE.PlaneGeometry(3.6, 1.2),
+      new THREE.MeshBasicMaterial({ color:0x38bdf8, transparent:true, opacity:0.12, depthWrite:false, depthTest:false })
+    );
+    boardGlow.position.set(0, 2.8, -2.79);
+    boardGlow.renderOrder = 7;
+    zoneCardio.add(boardGlow);
+
+    const lblC = makeLabel('Cardio Bay');
+    lblC.position.set(0, 3.2, -2.9);
+    zoneCardio.add(lblC);
+    labelGroup.add(lblC);
+
+    scene.add(zoneCardio);
+
+    // Movement Analysis Booth (center)
+    const zoneForensics = new THREE.Group();
+    zoneForensics.name = 'forensics';
+    zoneForensics.position.set(0, 0, -4.2);
+
+    const booth = zoneBasePlate(8.2, 6.2);
+    booth.position.set(0, 0.04, 0);
+    zoneForensics.add(booth);
+
+    const lineMat = new THREE.LineBasicMaterial({ color:0x38bdf8, transparent:true, opacity:0.6 });
+    const squarePts = [
+      new THREE.Vector3(-2.1, 0.06, -1.8),
+      new THREE.Vector3( 2.1, 0.06, -1.8),
+      new THREE.Vector3( 2.1, 0.06,  1.8),
+      new THREE.Vector3(-2.1, 0.06,  1.8),
+      new THREE.Vector3(-2.1, 0.06, -1.8)
+    ];
+    const capture = new THREE.Line(new THREE.BufferGeometry().setFromPoints(squarePts), lineMat);
+    zoneForensics.add(capture);
+
+    function tripod(x,z){
+      const g = new THREE.Group();
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.06,1.2,10), matSteel);
+      pole.position.y = 0.6;
+      pole.castShadow = true;
+      g.add(pole);
+      const head = new THREE.Mesh(new THREE.BoxGeometry(0.25,0.14,0.25), matDark);
+      head.position.y = 1.22;
+      head.castShadow = true;
+      g.add(head);
+      const legGeo = new THREE.CylinderGeometry(0.025,0.025,0.95,8);
+      for (let i=0;i<3;i++){
+        const leg = new THREE.Mesh(legGeo, matSteel);
+        const ang = i * (Math.PI*2/3);
+        leg.position.set(Math.cos(ang)*0.22, 0.35, Math.sin(ang)*0.22);
+        leg.rotation.z = 0.55;
+        leg.rotation.y = ang;
+        g.add(leg);
+      }
+      g.position.set(x, 0, z);
+      return g;
+    }
+    zoneForensics.add(tripod(-3.2,-2.3), tripod(3.2,-2.3), tripod(0,2.7));
+
+    const mon1 = new THREE.Mesh(new THREE.BoxGeometry(2.8, 1.6, 0.08), new THREE.MeshStandardMaterial({ color:0x111b2e, roughness:0.6, metalness:0.15 }));
+    mon1.position.set(-1.8, 2.7, -2.95);
+    zoneForensics.add(mon1);
+
+    const mon2 = mon1.clone();
+    mon2.position.x = 1.8;
+    zoneForensics.add(mon2);
+
+    const lblF = makeLabel('Movement Analysis Booth');
+    lblF.position.set(0, 3.2, -2.9);
+    zoneForensics.add(lblF);
+    labelGroup.add(lblF);
+
+    scene.add(zoneForensics);
+
+    // ----------------------
+    // Simple avatar (placeholder mannequin)
+    // ----------------------
+    const avatar = new THREE.Group();
+
+    const bodyMat = new THREE.MeshStandardMaterial({ color:0xdbe7f7, roughness:0.65, metalness:0.08 });
+
+    const pelvis = new THREE.Mesh(new THREE.CapsuleGeometry(0.35, 0.25, 6, 14), bodyMat);
+    pelvis.position.set(0, 0.95, 0);
+    pelvis.castShadow = true;
+
+    const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.48, 0.95, 8, 18), bodyMat);
+    torso.position.set(0, 1.85, 0);
+    torso.castShadow = true;
+
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.32, 18, 18), bodyMat);
+    head.position.set(0, 2.85, 0);
+    head.castShadow = true;
+
+    function limb(radius, length){
+      const m = new THREE.Mesh(new THREE.CapsuleGeometry(radius, length, 6, 12), bodyMat);
+      m.castShadow = true;
+      return m;
+    }
+
+    const armL = limb(0.12, 0.65); armL.position.set(-0.75, 2.1, 0); armL.rotation.z = 0.45;
+    const armR = limb(0.12, 0.65); armR.position.set( 0.75, 2.1, 0); armR.rotation.z = -0.45;
+    const legL = limb(0.14, 0.85); legL.position.set(-0.28, 0.55, 0);
+    const legR = limb(0.14, 0.85); legR.position.set( 0.28, 0.55, 0);
+
+    avatar.add(pelvis, torso, head, armL, armR, legL, legR);
+    avatar.position.set(0, 0, -4.2);
+    scene.add(avatar);
+
+    // ----------------------
+    // Zone toggling
+    // ----------------------
+    function setZone(which){
+      const all = (which === 'all');
+      zoneStrength.visible  = all || which === 'strength';
+      zoneCardio.visible    = all || which === 'cardio';
+      zoneForensics.visible = all || which === 'forensics';
+
+      // Place avatar per zone (world coords)
+      if (which === 'strength') avatar.position.set(-7.6, 0, 2.4);
+      else if (which === 'cardio') avatar.position.set(7.6, 0.33, 2.4); // on treadmill belt
+      else if (which === 'forensics') avatar.position.set(0, 0, -4.2);
+      else avatar.position.set(0, 0, -4.2);
+    }
+
+    // UI wiring
+    const pills = [...document.querySelectorAll('.pill')];
+    function setActive(btn){
+      pills.forEach(p=>p.classList.toggle('active', p === btn && btn.dataset.zone !== 'labels'));
+    }
+
+    pills.forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const z = btn.dataset.zone;
+        if (z === 'labels'){
+          setLabels(!labelsOn);
+          btn.classList.toggle('active', labelsOn);
+          return;
+        }
+        setZone(z);
+        setActive(btn);
+      });
+    });
+
+    addEventListener('keydown', (e)=>{
+      if (e.key === '0'){ setZone('all'); setActive(document.querySelector('[data-zone="all"]')); }
+      if (e.key === '1'){ setZone('strength'); setActive(document.querySelector('[data-zone="strength"]')); }
+      if (e.key === '2'){ setZone('cardio'); setActive(document.querySelector('[data-zone="cardio"]')); }
+      if (e.key === '3'){ setZone('forensics'); setActive(document.querySelector('[data-zone="forensics"]')); }
+      if (e.key.toLowerCase() === 'l'){ setLabels(!labelsOn); document.querySelector('[data-zone="labels"]').classList.toggle('active', labelsOn); }
+    });
+
+    // ----------------------
+    // Animation
+    // ----------------------
+    const clock = new THREE.Clock();
+    let activeZone = 'all';
+
+    // Track active zone by reading which pills is active (simple)
+    function getActiveZone(){
+      const a = document.querySelector('.pill.active[data-zone]');
+      return a ? a.dataset.zone : 'all';
+    }
+
+    function updateHUD(){
+      $spdVal.textContent = sim.speedMph.toFixed(1);
+      $engVal.textContent = Math.round(sim.energy);
+      const st = (sim.energy <= 10) ? 'CRASH' : (sim.energy <= 25 ? 'Warning' : 'Stable');
+      $status.textContent = st;
+      $status.style.color = (st==='CRASH') ? '#ff9aa0' : (st==='Warning' ? '#ffe4a3' : '#cfe3ff');
+    }
+
+    function animate(){
+      requestAnimationFrame(animate);
+      controls.update();
+
+      const dt = Math.min(0.05, clock.getDelta());
+      const t = clock.getElapsedTime();
+
+      activeZone = getActiveZone();
+
+      // Energy drain demo (only really matters if you are looking at cardio)
+      // Drain scales with speed.
+      sim.energy = clamp(sim.energy - (sim.speedMph * 0.55) * dt, 0, 100);
+
+      // Avatar "reaction" demo:
+      // As energy drops, posture slumps + steps shorten (procedural).
+      const fatigue = 1 - (sim.energy / 100);
+      const runRate = 1.6 + sim.speedMph * 0.35; // faster speed => faster cycle
+      const ampLeg = 0.55 - fatigue * 0.25;
+      const ampArm = 0.35 - fatigue * 0.18;
+
+      // breathing
+      torso.position.y = 1.85 + Math.sin(t*1.5) * 0.015;
+      head.position.y  = 2.85 + Math.sin(t*1.5 + 0.6) * 0.012;
+
+      // run cycle
+      legL.rotation.x = Math.sin(t*runRate) * ampLeg;
+      legR.rotation.x = -Math.sin(t*runRate) * ampLeg;
+      armL.rotation.x = -Math.sin(t*runRate) * ampArm;
+      armR.rotation.x = Math.sin(t*runRate) * ampArm;
+
+      // fatigue posture
+      torso.rotation.x = fatigue * 0.20; // forward slump
+      pelvis.rotation.x = fatigue * 0.08;
+
+      // slight wobble when very low energy
+      const wobble = Math.max(0, (0.22 - sim.energy/100) * 0.6);
+      torso.rotation.z = Math.sin(t*10.0) * wobble;
+      head.rotation.z  = Math.sin(t*11.0) * wobble * 0.8;
+
+      // Live panels
+      drawPanel(wallScreen, 'CARDIO BOARD');
+      drawPanel(consoleScreen, 'TREADMILL');
+
+      updateHUD();
+
+      renderer.render(scene, camera);
+    }
+
+    // Start view
+    setZone('all');
+    animate();
+
+    // Resize
+    addEventListener('resize', ()=>{
+      camera.aspect = innerWidth/innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight);
+      renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    });
+  </script>
+</body>
+</html>
