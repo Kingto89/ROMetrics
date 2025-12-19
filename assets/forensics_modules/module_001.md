@@ -1,4 +1,4 @@
-# FL-001 — Energy Crash Lab
+# FL-001 — Metabolic Demand: Energy Systems
 
 **Objective:** Use pacing and fueling to prevent performance collapse.  
 **Audience:** 1st-year Exercise Science, 1st-year DPT  
