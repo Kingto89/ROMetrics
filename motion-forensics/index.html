@@ -967,6 +967,10 @@ async function loadSelectedModel(modelId, onProgress){
         camGoalPos.set(8.5, 5.0, 12.5);
       }
     }
+// snap camera ONCE (no per-frame forcing)
+camera.position.copy(camGoalPos);
+controls.target.copy(camGoalTarget);
+controls.update();
 
     let currentModule = null;
 
