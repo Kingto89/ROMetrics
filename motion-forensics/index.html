@@ -939,19 +939,29 @@ zoneCardio.add(boardGlow);
       controls.update();
     }
 
-    function placeAvatarForZone(which){
-      if (!avatarRoot) return;
+function placeAvatarForZone(which){
+  if (!avatarRoot) return;
 
-      if (which === 'strength'){
-        avatarRoot.position.copy(Z_STRENGTH).add(new THREE.Vector3(0, 0.06, -0.10));
-      } else if (which === 'cardio'){
-        // stand on belt (belt Y ~ 0.295 + zone offset)
-        avatarRoot.position.copy(Z_CARDIO).add(new THREE.Vector3(0, 0.30, 0.05));
-      } else if (which === 'forensics'){
-        avatarRoot.position.copy(Z_FORENSIC).add(new THREE.Vector3(0, 0.06, 0.00));
-      } else {
-        avatarRoot.position.copy(Z_FORENSIC).add(new THREE.Vector3(0, 0.06, 0.00));
-      }
+  // default facing (non-cardio)
+  let rotY = 0;
+
+  if (which === 'strength'){
+    avatarRoot.position.copy(Z_STRENGTH).add(new THREE.Vector3(0, 0.06, -0.10));
+    rotY = 0;
+  } else if (which === 'cardio'){
+    // stand on belt (belt Y ~ 0.295 + zone offset)
+    avatarRoot.position.copy(Z_CARDIO).add(new THREE.Vector3(0, 0.30, 0.05));
+    rotY = Math.PI; // <-- 180° turn to face the right way
+  } else if (which === 'forensics'){
+    avatarRoot.position.copy(Z_FORENSIC).add(new THREE.Vector3(0, 0.06, 0.00));
+    rotY = 0;
+  } else {
+    avatarRoot.position.copy(Z_FORENSIC).add(new THREE.Vector3(0, 0.06, 0.00));
+    rotY = 0;
+  }
+
+  avatarRoot.rotation.set(0, rotY, 0);
+}
     }
 
     function setZone(which){
