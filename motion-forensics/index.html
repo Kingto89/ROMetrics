@@ -576,26 +576,56 @@
     tmConsole.castShadow = true;
     treadmill.add(tmConsole);
 
-    const tmScreen = new THREE.Mesh(new THREE.PlaneGeometry(0.38, 0.20), new THREE.MeshBasicMaterial({ map: consoleScreen.tex, side: THREE.DoubleSide }));
-    tmScreen.position.set(0, 1.02, frontZ + 0.26);
-    tmScreen.rotation.x = -0.12;
-    tmScreen.renderOrder = 5;
-    treadmill.add(tmScreen);
+   const tmScreen = new THREE.Mesh(
+  new THREE.PlaneGeometry(0.38, 0.20),
+  new THREE.MeshBasicMaterial({
+    map: consoleScreen.tex,
+    side: THREE.DoubleSide,
+    transparent: true,
+    depthTest: false,
+    depthWrite: false,
+    toneMapped: false
+  })
+);
+tmScreen.position.set(0, 1.02, frontZ + 0.32);   // <-- pushed forward (was too close)
+tmScreen.rotation.x = -0.12;
+tmScreen.renderOrder = 1000;
+treadmill.add(tmScreen);
+
 
     // Wall board (live)
     const board = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.88, 0.08), new THREE.MeshStandardMaterial({ color:0x111b2e, roughness:0.6, metalness:0.15 }));
     board.position.set(0, 2.55, -1.55);
     zoneCardio.add(board);
 
-    const boardFace = new THREE.Mesh(new THREE.PlaneGeometry(2.46, 0.78), new THREE.MeshBasicMaterial({ map: wallScreen.tex }));
-    boardFace.position.set(0, 2.55, -1.515);
-    boardFace.renderOrder = 6;
-    zoneCardio.add(boardFace);
+    const boardFace = new THREE.Mesh(
+  new THREE.PlaneGeometry(2.46, 0.78),
+  new THREE.MeshBasicMaterial({
+    map: wallScreen.tex,
+    transparent: true,
+    depthTest: false,
+    depthWrite: false,
+    toneMapped: false
+  })
+);
+boardFace.position.set(0, 2.55, -1.495);   // <-- moved in front of the board
+boardFace.renderOrder = 1000;
+zoneCardio.add(boardFace);
 
-    const boardGlow = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 0.92), new THREE.MeshBasicMaterial({ color:0x38bdf8, transparent:true, opacity:0.10, depthWrite:false, depthTest:false }));
-    boardGlow.position.set(0, 2.55, -1.50);
-    boardGlow.renderOrder = 7;
-    zoneCardio.add(boardGlow);
+const boardGlow = new THREE.Mesh(
+  new THREE.PlaneGeometry(2.6, 0.92),
+  new THREE.MeshBasicMaterial({
+    color:0x38bdf8,
+    transparent:true,
+    opacity:0.10,
+    depthWrite:false,
+    depthTest:false
+  })
+);
+boardGlow.position.set(0, 2.55, -1.505);   // <-- behind the text plane
+boardGlow.renderOrder = 900;
+zoneCardio.add(boardGlow);
+
 
     const lblC = makeLabel('Cardio Bay');
     lblC.position.copy(Z_CARDIO).add(new THREE.Vector3(0, 2.7, -1.6));
