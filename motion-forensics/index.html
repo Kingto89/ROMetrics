@@ -92,9 +92,10 @@
       <input id="spd" type="range" min="0" max="12" step="0.1" value="6"/>
       <div class="row"><div class="k">Energy</div><div class="v"><span id="engVal">100</span>%</div></div>
       <div class="row" style="justify-content:flex-end;gap:10px;">
-        <button id="fuelBtn" class="btn">Fuel +10</button>
-        <button id="resetBtn" class="btn">Reset</button>
-      </div>
+  <button id="startBtn" class="btn">Start</button>
+  <button id="fuelBtn" class="btn">Fuel +10</button>
+  <button id="resetBtn" class="btn">Reset</button>
+</div>
       <div class="row" style="justify-content:space-between;">
         <div class="k">Status</div><div class="v" id="statusVal">Stable</div>
       </div>
@@ -177,13 +178,24 @@
     const $status = document.getElementById('statusVal');
     const $fuel = document.getElementById('fuelBtn');
     const $reset = document.getElementById('resetBtn');
+    const $start = document.getElementById('startBtn');
 
-    const sim = { speedMph: 6.0, energy: 100, lastFuelT: -999 };
+$start.addEventListener('click', ()=>{
+  sim.running = !sim.running;
+  $start.textContent = sim.running ? "Pause" : "Start";
+});
+
+    const sim = { speedMph: 6.0, energy: 100, lastFuelT: -999, running:false };
     const clamp = (v,a,b)=> Math.max(a, Math.min(b, v));
 
     $spd.addEventListener('input', ()=>{ sim.speedMph = parseFloat($spd.value); });
-    $fuel.addEventListener('click', ()=>{ sim.energy = clamp(sim.energy + 10, 0, 100); sim.lastFuelT = performance.now()/1000; });
-    $reset.addEventListener('click', ()=>{ sim.energy = 100; sim.lastFuelT = -999; });
+  $fuel.addEventListener('click', ()=>{ if(!sim.running) return; sim.energy = clamp(sim.energy + 10, 0, 100); sim.lastFuelT = performance.now()/1000; });
+  $reset.addEventListener('click', ()=>{
+  sim.energy = 100;
+  sim.lastFuelT = -999;
+  sim.running = false;
+  $start.textContent = "Start";
+});
 
     const scene = new THREE.Scene();
     scene.fog = new THREE.Fog(0x07101b, 10, 45);
@@ -993,17 +1005,17 @@ zoneCardio.add(boardGlow);
       sim.energy = clamp(sim.energy - (sim.speedMph * 0.55) * dt, 0, 100);
 
       // treadmill motion
-      const treadSpeed = 0.35 + (sim.speedMph / 12) * 2.0;
-      for (const s of treadStrips){
-        s.position.z += dt * treadSpeed;
-        if (s.position.z > TREAD_MAX_Z) s.position.z = TREAD_MIN_Z;
-      }
-      const beltSpeed = 0.10 + (sim.speedMph / 12) * 1.10;
-      beltTex.offset.y = (beltTex.offset.y + dt * beltSpeed) % 1;
+    if (sim.running){
+  // treadmill motion
+  const treadSpeed = 0.35 + (sim.speedMph / 12) * 2.0;
+  for (const s of treadStrips){
+    s.position.z += dt * treadSpeed;
+    if (s.position.z > TREAD_MAX_Z) s.position.z = TREAD_MIN_Z;
+  }
+  const beltSpeed = 0.10 + (sim.speedMph / 12) * 1.10;
+  beltTex.offset.y = (beltTex.offset.y + dt * beltSpeed) % 1;
+}
 
-      if (currentModule && typeof currentModule.onTick === 'function'){
-        currentModule.onTick({ THREE, scene, camera, controls, sim, setZone, avatar: avatarRoot }, dt, t);
-      }
 
       // billboard labels
       if (labelsOn){
