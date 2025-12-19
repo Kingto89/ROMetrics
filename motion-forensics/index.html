@@ -475,30 +475,30 @@
     // 4) Room + zones
     // ==============================
 
-    const floor = new THREE.Mesh(new THREE.PlaneGeometry(28, 22), matFloor);
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(18, 14), matFloor);
     floor.rotation.x = -Math.PI/2;
     floor.receiveShadow = true;
     scene.add(floor);
 
     const room = new THREE.Group();
-    const wallBack = new THREE.Mesh(new THREE.BoxGeometry(28, 7, 0.35), matWall);
-    wallBack.position.set(0, 3.5, -10.8);
+    const wallBack = new THREE.Mesh(new THREE.BoxGeometry(18, 7, 0.35), matWall);
+    wallBack.position.set(0, 3.5, -7.0);
     wallBack.receiveShadow = true;
     room.add(wallBack);
 
-    const wallLeft = new THREE.Mesh(new THREE.BoxGeometry(0.35, 7, 22), matWall);
-    wallLeft.position.set(-13.9, 3.5, 0);
+    const wallLeft = new THREE.Mesh(new THREE.BoxGeometry(0.35, 7, 14), matWall);
+    wallLeft.position.set(-9.0, 3.5, 0);
     room.add(wallLeft);
 
-    const wallRight = new THREE.Mesh(new THREE.BoxGeometry(0.35, 7, 22), matWall);
-    wallRight.position.set(13.9, 3.5, 0);
+    const wallRight = new THREE.Mesh(new THREE.BoxGeometry(0.35, 7, 14), matWall);
+    wallRight.position.set(9.0, 3.5, 0);
     room.add(wallRight);
 
     const beam = new THREE.Mesh(new THREE.BoxGeometry(28, 0.25, 0.6), matDark);
     beam.position.set(0, 6.65, -8.6);
     room.add(beam);
 
-    const grid = new THREE.GridHelper(28, 28, 0x1f3b5a, 0x10243a);
+    const grid = new THREE.GridHelper(18, 18, 0x1f3b5a, 0x10243a);
     grid.position.y = 0.01;
     room.add(grid);
 
