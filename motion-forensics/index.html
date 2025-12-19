@@ -215,24 +215,48 @@
     // center lane
     bctx.fillStyle = '#0e1b33';
     bctx.fillRect(180, 0, 152, 512);
-    // stripes + chevrons (scrolling illusion)
-    for (let y=0; y<512; y+=64){
-      bctx.fillStyle = 'rgba(210,230,255,0.18)';
-      bctx.fillRect(0, y, 512, 14);
-      bctx.fillStyle = 'rgba(210,230,255,0.10)';
-      bctx.fillRect(0, y+30, 512, 10);
-    }
+    // rubber tread ridges (subtle — NOT an LED screen)
+    {
+      // soft width shading so it reads like rubber, not a flat UI panel
+      const g = bctx.createLinearGradient(0,0,512,0);
+      g.addColorStop(0.00,'#0a0f16');
+      g.addColorStop(0.35,'#0c1522');
+      g.addColorStop(0.65,'#0b1320');
+      g.addColorStop(1.00,'#09101a');
+      bctx.fillStyle = g;
+      bctx.fillRect(0,0,512,512);
 
-    // center chevrons for obvious motion
-    bctx.strokeStyle = 'rgba(56,189,248,0.20)';
-    bctx.lineWidth = 6;
-    for (let y=0; y<512; y+=64){
-      for (let x=205; x<307; x+=34){
-        bctx.beginPath();
-        bctx.moveTo(x, y+18);
-        bctx.lineTo(x+14, y+32);
-        bctx.lineTo(x, y+46);
-        bctx.stroke();
+      // center seam (very subtle)
+      bctx.fillStyle = 'rgba(0,0,0,0.18)';
+      bctx.fillRect(252, 0, 8, 512);
+
+      // irregular micro-ridges across the belt (vary spacing + thickness)
+      let y = 0;
+      while (y < 512){
+        const h = 1 + Math.floor(Math.random()*2);
+        const a = 0.020 + Math.random()*0.030;
+        bctx.fillStyle = `rgba(255,255,255,${a})`;
+        bctx.fillRect(0, y, 512, h);
+
+        // occasional second ridge close by (breaks any "scanline" look)
+        if (Math.random() < 0.22){
+          const y2 = y + 3 + Math.floor(Math.random()*6);
+          const a2 = 0.015 + Math.random()*0.020;
+          bctx.fillStyle = `rgba(255,255,255,${a2})`;
+          bctx.fillRect(0, y2, 512, 1);
+        }
+
+        y += 12 + Math.floor(Math.random()*16);
+      }
+
+      // scuffs (darker marks)
+      for (let i=0;i<120;i++){
+        const x = Math.random()*512;
+        const yy = Math.random()*512;
+        const w = 18 + Math.random()*80;
+        const h = 2 + Math.random()*5;
+        bctx.fillStyle = `rgba(0,0,0,${0.03 + Math.random()*0.05})`;
+        bctx.fillRect(x, yy, w, h);
       }
     }
 
@@ -248,17 +272,16 @@
     beltTex.anisotropy = 8;
     beltTex.wrapS = THREE.RepeatWrapping;
     beltTex.wrapT = THREE.RepeatWrapping;
-    beltTex.repeat.set(1, 7.0);
+    beltTex.repeat.set(1, 10.0);
     beltTex.offset.set(0, 0);
 
     const matBelt = new THREE.MeshStandardMaterial({
       map: beltTex,
-      roughness: 0.95,
-      metalness: 0.02,
-      color: 0xffffff,
-      emissive: 0x0b1a2e,
-      emissiveIntensity: 0.85,
-      emissiveMap: beltTex
+      color: 0x0b1018,      // rubber base tint
+      roughness: 0.98,
+      metalness: 0.00,
+      emissive: 0x000000,
+      emissiveIntensity: 0.0
     });
 
     function drawPanel(screen, title){
@@ -519,7 +542,13 @@
     tm.add(beltEdges);
 
     // Animated tread strips (REAL geometry motion)
-    const stripMat = new THREE.MeshBasicMaterial({ color: 0xcfe3ff, transparent: true, opacity: 0.26, depthWrite: false });
+    const stripMat = new THREE.MeshStandardMaterial({
+      color: 0x1a2738,
+      roughness: 0.95,
+      metalness: 0.02,
+      transparent: true,
+      opacity: 0.35
+    });
     const stripCount = 14;
     for (let i = 0; i < stripCount; i++){
       const s = new THREE.Mesh(new THREE.BoxGeometry(BELT_W - 0.06, 0.01, 0.08), stripMat);
