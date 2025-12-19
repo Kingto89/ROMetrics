@@ -3,9 +3,10 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>ROMetrics — Exercise Science Studio (Preview)</title>
+  <title>ROMetrics — Forensics Labs (Studio Preview)</title>
   <style>
     html,body{height:100%;margin:0;overflow:hidden;background:#07101b;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;}
+
     #ui{
       position:fixed;left:14px;top:14px;z-index:10;
       display:flex;gap:10px;flex-wrap:wrap;align-items:center;
@@ -29,10 +30,10 @@
       border:1px solid rgba(148,163,184,.25);
       background:rgba(15,23,42,.65);
       color:#cfe3ff;font-size:13px;
-      max-width:380px;
+      max-width:420px;
       backdrop-filter: blur(8px);
     }
-    #badge .t{font-weight:800;letter-spacing:.2px;}
+    #badge .t{font-weight:900;letter-spacing:.2px;}
     #badge .p{opacity:.92;margin-top:6px;line-height:1.25;}
 
     #controls{
@@ -43,7 +44,7 @@
     }
     .row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
     .k{opacity:.88;}
-    .v{font-weight:800;letter-spacing:.2px;}
+    .v{font-weight:900;letter-spacing:.2px;}
     input[type=range]{width:100%;accent-color:#38bdf8;}
     .btn{
       border:1px solid rgba(148,163,184,.35);
@@ -63,6 +64,43 @@
       color:#a8c0da;font-size:12px;
       backdrop-filter: blur(8px);
     }
+
+    /* --- Gate (Model + Module select) --- */
+    #gate{
+      position:fixed;inset:0;z-index:50;
+      display:flex;align-items:center;justify-content:center;
+      background:radial-gradient(900px 600px at 50% 35%, rgba(56,189,248,0.10), rgba(7,16,27,0.96));
+      backdrop-filter: blur(6px);
+    }
+    #gateCard{
+      width:min(740px, calc(100vw - 28px));
+      border-radius:24px;
+      border:1px solid rgba(148,163,184,.28);
+      background:rgba(9,20,37,.72);
+      box-shadow:0 20px 80px rgba(0,0,0,.40);
+      padding:22px;
+    }
+    #gateTop{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;}
+    #gateTitle{font-weight:950;font-size:22px;color:#e6eef7;letter-spacing:.2px;}
+    #gateSub{margin-top:6px;color:#a8c0da;line-height:1.25;font-size:13px;}
+    #gateGrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px;}
+    @media (max-width:640px){ #gateGrid{grid-template-columns:1fr;} }
+    .field{border:1px solid rgba(148,163,184,.22);border-radius:18px;background:rgba(15,23,42,.55);padding:14px;}
+    .field .lbl{color:#cfe3ff;font-weight:800;font-size:12px;letter-spacing:.25px;opacity:.95;}
+    .field select{width:100%;margin-top:10px;background:rgba(7,16,27,.35);border:1px solid rgba(148,163,184,.22);color:#e6eef7;border-radius:14px;padding:10px 12px;font-size:14px;outline:none;}
+    .field .desc{margin-top:10px;color:#a8c0da;font-size:12px;line-height:1.25;min-height:32px;}
+    #gateActions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px;flex-wrap:wrap;}
+    .primary{
+      border:1px solid rgba(56,189,248,.55);
+      background:rgba(56,189,248,.16);
+      color:#e6eef7;
+      padding:10px 14px;
+      border-radius:16px;
+      font-size:13px;
+      cursor:pointer;
+      font-weight:900;
+    }
+
     canvas{display:block;}
   </style>
 
@@ -76,7 +114,40 @@
   </script>
 </head>
 <body>
-  <div id="ui">
+
+  <!-- Gate: students select MODEL first, then MODULE; then enter Studio -->
+  <div id="gate">
+    <div id="gateCard">
+      <div id="gateTop">
+        <div>
+          <div id="gateTitle">Forensics Labs</div>
+          <div id="gateSub">Select a model, then choose a lab module. (Adding modules later = append one object at the bottom of the registry.)</div>
+        </div>
+      </div>
+
+      <div id="gateGrid">
+        <div class="field">
+          <div class="lbl">MODEL</div>
+          <select id="modelSelect"></select>
+          <div class="desc" id="modelDesc"></div>
+        </div>
+
+        <div class="field">
+          <div class="lbl">MODULE</div>
+          <select id="moduleSelect"></select>
+          <div class="desc" id="moduleDesc"></div>
+        </div>
+      </div>
+
+      <div id="gateActions">
+        <button id="enterBtn" class="primary">Enter Studio</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Studio UI (shows after gate) -->
+  <div id="ui" style="display:none;">
     <div class="pill active" data-zone="all">All Zones</div>
     <div class="pill" data-zone="strength">Strength / Load Station</div>
     <div class="pill" data-zone="cardio">Cardio Bay</div>
@@ -84,16 +155,16 @@
     <div class="pill" data-zone="labels">Toggle Labels</div>
   </div>
 
-  <div id="badge">
-    <div class="t">Exercise Science Studio</div>
-    <div class="p">Live-number demo: use the slider + Fuel button. The treadmill console + wall board update in real time.</div>
+  <div id="badge" style="display:none;">
+    <div class="t">Forensics Labs — Studio</div>
+    <div class="p" id="moduleTitle">Module</div>
     <div id="controls">
       <div class="row"><div class="k">Cardio Speed</div><div class="v"><span id="spdVal">6.0</span> mph</div></div>
       <input id="spd" type="range" min="0" max="12" step="0.1" value="6"/>
       <div class="row"><div class="k">Energy</div><div class="v"><span id="engVal">100</span>%</div></div>
       <div class="row" style="justify-content:flex-end;gap:10px;">
-        <button id="fuelBtn" class="btn" title="Adds energy (demo)">Fuel +10</button>
-        <button id="resetBtn" class="btn" title="Resets energy">Reset</button>
+        <button id="fuelBtn" class="btn">Fuel +10</button>
+        <button id="resetBtn" class="btn">Reset</button>
       </div>
       <div class="row" style="justify-content:space-between;">
         <div class="k">Status</div><div class="v" id="statusVal">Stable</div>
@@ -101,15 +172,84 @@
     </div>
   </div>
 
-  <div id="hint">Mouse: orbit • Wheel: zoom • Right-drag: pan • Keys: 1/2/3 = zones • 0 = all • L = labels</div>
+  <div id="hint" style="display:none;">Mouse: orbit • Wheel: zoom • Right-drag: pan • Keys: 1/2/3 = zones • 0 = all • L = labels</div>
+
 
   <script type="module">
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-    // ----------------------
-    // UI STATE (demo only)
-    // ----------------------
+    // ==============================
+    // 0) REGISTRY (Model + Modules)
+    //    Add new modules by appending ONE object at the bottom.
+    // ==============================
+
+    const MODEL_URLS = {
+  Roman: "https://kingto89.github.io/ROMetrics.com/assets/Roman_ROMetrics.glb",
+  Roma:  "https://kingto89.github.io/ROMetrics.com/assets/Roma_ROMetrics.glb"
+};
+
+
+    const FORENSICS_MODULES = [
+      { id:'FL-001', label:'Module 1 — Energy Crash Lab', desc:'Cardio Bay: speed, energy, fuel timing (fast preview).', zone:'cardio', onEnter:null, onTick:null },
+      { id:'FL-002', label:'Module 2 — Joint Load Lever Lab', desc:'Strength Station: effort vs lever distance (placeholder).', zone:'strength', onEnter:null, onTick:null },
+      { id:'FL-003', label:'Module 3 — Motion Forensics Lite', desc:'Analysis Booth: mark fault start + replay fix (placeholder).', zone:'forensics', onEnter:null, onTick:null }
+
+      // === DROP-IN AREA ===
+      // Append new modules BELOW (FL-004 ... FL-015). No other edits.
+      // { id:'FL-004', label:'Module 4 — ...', desc:'...', zone:'cardio|strength|forensics', onEnter(ctx){}, onTick(ctx,dt,t){} },
+    ];
+
+
+    // ==============================
+    // 1) Gate UI wiring
+    // ==============================
+    const $gate = document.getElementById('gate');
+    const $modelSel = document.getElementById('modelSelect');
+    const $modSel = document.getElementById('moduleSelect');
+    const $modelDesc = document.getElementById('modelDesc');
+    const $modDesc = document.getElementById('moduleDesc');
+    const $enter = document.getElementById('enterBtn');
+
+    const $ui = document.getElementById('ui');
+    const $badge = document.getElementById('badge');
+    const $hint = document.getElementById('hint');
+    const $moduleTitle = document.getElementById('moduleTitle');
+
+    function fillSelect($sel, items){
+      $sel.innerHTML = '';
+      for (const it of items){
+        const opt = document.createElement('option');
+        opt.value = it.id;
+        opt.textContent = it.label;
+        $sel.appendChild(opt);
+      }
+    }
+
+    function getModel(id){ return MODELS.find(m=>m.id===id) || MODELS[0]; }
+    function getModule(id){ return FORENSICS_MODULES.find(m=>m.id===id) || FORENSICS_MODULES[0]; }
+
+    fillSelect($modelSel, MODELS);
+    fillSelect($modSel, FORENSICS_MODULES);
+
+    function refreshGate(){
+      const m = getModel($modelSel.value);
+      const mod = getModule($modSel.value);
+      $modelDesc.textContent = m.desc || '';
+      $modDesc.textContent = mod.desc || '';
+    }
+
+    $modelSel.addEventListener('change', refreshGate);
+    $modSel.addEventListener('change', refreshGate);
+    refreshGate();
+
+
+    // ==============================
+    // 2) Studio: Three.js base
+    // ==============================
+
+    // --- UI STATE (demo only) ---
     const $spd = document.getElementById('spd');
     const $spdVal = document.getElementById('spdVal');
     const $engVal = document.getElementById('engVal');
@@ -117,31 +257,13 @@
     const $fuel = document.getElementById('fuelBtn');
     const $reset = document.getElementById('resetBtn');
 
-    const sim = {
-      speedMph: 6.0,
-      energy: 100,   // 0..100
-      lastFuelT: -999
-    };
+    const sim = { speedMph: 6.0, energy: 100, lastFuelT: -999 };
+    const clamp = (v,a,b)=> Math.max(a, Math.min(b, v));
 
-    function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+    $spd.addEventListener('input', ()=>{ sim.speedMph = parseFloat($spd.value); });
+    $fuel.addEventListener('click', ()=>{ sim.energy = clamp(sim.energy + 10, 0, 100); sim.lastFuelT = performance.now()/1000; });
+    $reset.addEventListener('click', ()=>{ sim.energy = 100; sim.lastFuelT = -999; });
 
-    $spd.addEventListener('input', ()=>{
-      sim.speedMph = parseFloat($spd.value);
-    });
-
-    $fuel.addEventListener('click', ()=>{
-      sim.energy = clamp(sim.energy + 10, 0, 100);
-      sim.lastFuelT = performance.now()/1000;
-    });
-
-    $reset.addEventListener('click', ()=>{
-      sim.energy = 100;
-      sim.lastFuelT = -999;
-    });
-
-    // ----------------------
-    // THREE: scene
-    // ----------------------
     const scene = new THREE.Scene();
     scene.fog = new THREE.Fog(0x07101b, 22, 85);
 
@@ -162,6 +284,10 @@
     controls.maxPolarAngle = Math.PI * 0.49;
     controls.minDistance = 4;
     controls.maxDistance = 30;
+
+    // Smooth camera snapping to zones
+    const camGoalPos = new THREE.Vector3(8.5, 5.0, 12.5);
+    const camGoalTarget = new THREE.Vector3(0, 1.4, 0);
 
     // Lights
     scene.add(new THREE.AmbientLight(0x6aa0d8, 0.35));
@@ -189,9 +315,11 @@
     const matSteel = new THREE.MeshStandardMaterial({ color:0x7a8aa0, roughness:0.35, metalness:0.55 });
     const matGlow  = new THREE.MeshStandardMaterial({ color:0x38bdf8, roughness:0.35, metalness:0.25, emissive:0x103040, emissiveIntensity:0.8 });
 
-    // ----------------------
-    // LIVE SCREEN TEXTURES
-    // ----------------------
+
+    // ==============================
+    // 3) Live screens + Belt texture
+    // ==============================
+
     function makeScreenCanvas(w=512,h=256){
       const c = document.createElement('canvas');
       c.width = w; c.height = h;
@@ -204,20 +332,14 @@
     const wallScreen = makeScreenCanvas(1024, 320);
     const consoleScreen = makeScreenCanvas(512, 256);
 
-    // Moving treadmill belt texture (procedural stripes)
+    // Moving treadmill belt texture (rubber ridges)
     const beltCanvas = document.createElement('canvas');
     beltCanvas.width = 512;
     beltCanvas.height = 512;
     const bctx = beltCanvas.getContext('2d');
-    // base
-    bctx.fillStyle = '#0b1426';
-    bctx.fillRect(0,0,512,512);
-    // center lane
-    bctx.fillStyle = '#0e1b33';
-    bctx.fillRect(180, 0, 152, 512);
+
     // rubber tread ridges (subtle — NOT an LED screen)
     {
-      // soft width shading so it reads like rubber, not a flat UI panel
       const g = bctx.createLinearGradient(0,0,512,0);
       g.addColorStop(0.00,'#0a0f16');
       g.addColorStop(0.35,'#0c1522');
@@ -226,11 +348,9 @@
       bctx.fillStyle = g;
       bctx.fillRect(0,0,512,512);
 
-      // center seam (very subtle)
       bctx.fillStyle = 'rgba(0,0,0,0.18)';
       bctx.fillRect(252, 0, 8, 512);
 
-      // irregular micro-ridges across the belt (vary spacing + thickness)
       let y = 0;
       while (y < 512){
         const h = 1 + Math.floor(Math.random()*2);
@@ -238,7 +358,6 @@
         bctx.fillStyle = `rgba(255,255,255,${a})`;
         bctx.fillRect(0, y, 512, h);
 
-        // occasional second ridge close by (breaks any "scanline" look)
         if (Math.random() < 0.22){
           const y2 = y + 3 + Math.floor(Math.random()*6);
           const a2 = 0.015 + Math.random()*0.020;
@@ -249,7 +368,6 @@
         y += 12 + Math.floor(Math.random()*16);
       }
 
-      // scuffs (darker marks)
       for (let i=0;i<120;i++){
         const x = Math.random()*512;
         const yy = Math.random()*512;
@@ -258,14 +376,13 @@
         bctx.fillStyle = `rgba(0,0,0,${0.03 + Math.random()*0.05})`;
         bctx.fillRect(x, yy, w, h);
       }
-    }
 
-    // subtle speckle
-    for (let i=0;i<900;i++){
-      const x = Math.random()*512;
-      const y = Math.random()*512;
-      bctx.fillStyle = `rgba(255,255,255,${Math.random()*0.05})`;
-      bctx.fillRect(x,y,1,1);
+      for (let i=0;i<900;i++){
+        const x = Math.random()*512;
+        const yy = Math.random()*512;
+        bctx.fillStyle = `rgba(255,255,255,${Math.random()*0.05})`;
+        bctx.fillRect(x,yy,1,1);
+      }
     }
 
     const beltTex = new THREE.CanvasTexture(beltCanvas);
@@ -277,46 +394,51 @@
 
     const matBelt = new THREE.MeshStandardMaterial({
       map: beltTex,
-      color: 0x0b1018,      // rubber base tint
+      color: 0x0b1018,
       roughness: 0.98,
       metalness: 0.00,
       emissive: 0x000000,
       emissiveIntensity: 0.0
     });
 
+
+    function roundRect(ctx, x, y, w, h, r){
+      const min = Math.min(w,h); if (r > min/2) r = min/2;
+      ctx.beginPath();
+      ctx.moveTo(x+r, y);
+      ctx.arcTo(x+w, y, x+w, y+h, r);
+      ctx.arcTo(x+w, y+h, x, y+h, r);
+      ctx.arcTo(x, y+h, x, y, r);
+      ctx.arcTo(x, y, x+w, y, r);
+      ctx.closePath();
+    }
+
     function drawPanel(screen, title){
       const {ctx,c} = screen;
       ctx.clearRect(0,0,c.width,c.height);
-
-      // background
       ctx.fillStyle = 'rgba(6,18,34,1)';
       ctx.fillRect(0,0,c.width,c.height);
-
-      // border
       ctx.strokeStyle = 'rgba(56,189,248,0.85)';
       ctx.lineWidth = 10;
       ctx.strokeRect(10,10,c.width-20,c.height-20);
 
-      // header
       ctx.fillStyle = 'rgba(15,23,42,0.85)';
       ctx.fillRect(24, 24, c.width-48, 64);
 
       ctx.fillStyle = '#e6eef7';
-      ctx.font = '800 40px system-ui, -apple-system, Segoe UI, Roboto, Inter';
+      ctx.font = '900 40px system-ui, -apple-system, Segoe UI, Roboto, Inter';
       ctx.textBaseline = 'middle';
       ctx.fillText(title, 42, 56);
 
-      // values
       const spd = sim.speedMph;
       const eng = sim.energy;
       const status = (eng <= 10) ? 'CRASH' : (eng <= 25 ? 'Warning' : 'Stable');
 
-      ctx.font = '700 44px system-ui, -apple-system, Segoe UI, Roboto, Inter';
+      ctx.font = '800 44px system-ui, -apple-system, Segoe UI, Roboto, Inter';
       ctx.fillStyle = '#cfe3ff';
       ctx.fillText(`Speed: ${spd.toFixed(1)} mph`, 42, 132);
       ctx.fillText(`Energy: ${Math.round(eng)}%`, 42, 192);
 
-      // status chip
       const chipX = 42, chipY = 222, chipW = 260, chipH = 64;
       ctx.fillStyle = status === 'CRASH' ? 'rgba(255,80,80,0.25)' : (status === 'Warning' ? 'rgba(255,205,80,0.20)' : 'rgba(56,189,248,0.18)');
       roundRect(ctx, chipX, chipY, chipW, chipH, 18);
@@ -324,11 +446,11 @@
       ctx.strokeStyle = status === 'CRASH' ? 'rgba(255,80,80,0.75)' : (status === 'Warning' ? 'rgba(255,205,80,0.65)' : 'rgba(56,189,248,0.65)');
       ctx.lineWidth = 5;
       ctx.stroke();
+
       ctx.fillStyle = '#e6eef7';
-      ctx.font = '800 34px system-ui, -apple-system, Segoe UI, Roboto, Inter';
+      ctx.font = '900 34px system-ui, -apple-system, Segoe UI, Roboto, Inter';
       ctx.fillText(`Status: ${status}`, chipX+18, chipY+chipH/2);
 
-      // tiny fuel pulse
       const t = performance.now()/1000;
       const fuelPulse = Math.max(0, 1 - (t - sim.lastFuelT) / 0.8);
       if (fuelPulse > 0){
@@ -343,27 +465,17 @@
       screen.tex.needsUpdate = true;
     }
 
-    function roundRect(ctx, x, y, w, h, r){
-      const min = Math.min(w,h); if (r > min/2) r = min/2;
-      ctx.beginPath();
-      ctx.moveTo(x+r, y);
-      ctx.arcTo(x+w, y, x+w, y+h, r);
-      ctx.arcTo(x+w, y+h, x, y+h, r);
-      ctx.arcTo(x, y+h, x, y, r);
-      ctx.arcTo(x, y, x+w, y, r);
-      ctx.closePath();
-    }
 
-    // ----------------------
-    // Room
-    // ----------------------
+    // ==============================
+    // 4) Room + zones
+    // ==============================
+
     const floor = new THREE.Mesh(new THREE.PlaneGeometry(28, 22), matFloor);
     floor.rotation.x = -Math.PI/2;
     floor.receiveShadow = true;
     scene.add(floor);
 
     const room = new THREE.Group();
-
     const wallBack = new THREE.Mesh(new THREE.BoxGeometry(28, 7, 0.35), matWall);
     wallBack.position.set(0, 3.5, -10.8);
     wallBack.receiveShadow = true;
@@ -391,9 +503,7 @@
 
     scene.add(room);
 
-    // ----------------------
-    // Labels (toggleable)
-    // ----------------------
+    // Labels
     let labelsOn = false;
     const labelGroup = new THREE.Group();
     scene.add(labelGroup);
@@ -410,7 +520,7 @@
       ctx.fill();
       ctx.stroke();
       ctx.fillStyle = '#e6eef7';
-      ctx.font = '700 36px system-ui, -apple-system, Segoe UI, Roboto, Inter';
+      ctx.font = '800 36px system-ui, -apple-system, Segoe UI, Roboto, Inter';
       ctx.textBaseline = 'middle';
       ctx.fillText(text, 34, 64);
       const tex = new THREE.CanvasTexture(canvas);
@@ -427,16 +537,13 @@
     }
     setLabels(false);
 
-    // ----------------------
-    // Zone helpers
-    // ----------------------
     function zoneBasePlate(w, d){
       const plate = new THREE.Mesh(new THREE.BoxGeometry(w, 0.08, d), new THREE.MeshStandardMaterial({ color:0x0b1a2e, roughness:0.9, metalness:0.06 }));
-      plate.castShadow = false; plate.receiveShadow = true;
+      plate.receiveShadow = true;
       return plate;
     }
 
-    // Strength / Load Station (left)
+    // Strength (left)
     const zoneStrength = new THREE.Group();
     zoneStrength.name = 'strength';
     zoneStrength.position.set(-7.6, 0, 2.4);
@@ -483,7 +590,7 @@
 
     scene.add(zoneStrength);
 
-    // Cardio Bay (right) — includes treadmill + live screens
+    // Cardio (right)
     const zoneCardio = new THREE.Group();
     zoneCardio.name = 'cardio';
     zoneCardio.position.set(7.6, 0, 2.4);
@@ -492,15 +599,14 @@
     lane.position.set(0, 0.04, 0);
     zoneCardio.add(lane);
 
-    // ----------------------
-    // TREADMILL (proper proportions: LONG in Z, NARROW in X)
-    // Front = negative Z (faces the wall board)
-    // ----------------------
-    const tm = new THREE.Group();
+    // Treadmill (proper proportions: LONG in Z, NARROW in X)
+    // Front = negative Z
+    const treadmill = new THREE.Group();
+    zoneCardio.add(treadmill);
+
     const treadStrips = [];
     let TREAD_MIN_Z = -0.6;
     let TREAD_MAX_Z = 0.6;
-    zoneCardio.add(tm);
 
     const BELT_W = 1.18;
     const BELT_L = 2.90;
@@ -510,38 +616,33 @@
     TREAD_MIN_Z = -(BELT_L/2) + 0.14;
     TREAD_MAX_Z =  (BELT_L/2) - 0.14;
 
-    // Main frame
     const tmFrame = new THREE.Mesh(new THREE.BoxGeometry(FRAME_W, 0.26, FRAME_L), matDark);
     tmFrame.position.set(0, 0.23, 0);
     tmFrame.castShadow = true;
-    tm.add(tmFrame);
+    treadmill.add(tmFrame);
 
-    // Deck recess
     const tmDeck = new THREE.Mesh(
       new THREE.BoxGeometry(BELT_W + 0.18, 0.08, BELT_L + 0.28),
       new THREE.MeshStandardMaterial({ color:0x0c1728, roughness:0.95, metalness:0.05 })
     );
     tmDeck.position.set(0, 0.34, 0);
     tmDeck.receiveShadow = true;
-    tm.add(tmDeck);
+    treadmill.add(tmDeck);
 
-    // Belt surface (plane, so motion reads instantly)
     const tmBelt = new THREE.Mesh(new THREE.PlaneGeometry(BELT_W, BELT_L), matBelt);
     tmBelt.rotation.x = -Math.PI/2;
     tmBelt.position.set(0, 0.385, 0);
     tmBelt.receiveShadow = true;
-    tm.add(tmBelt);
+    treadmill.add(tmBelt);
 
-    // Outline around belt
     const beltEdges = new THREE.LineSegments(
       new THREE.EdgesGeometry(new THREE.BoxGeometry(BELT_W + 0.14, 0.02, BELT_L + 0.14)),
       new THREE.LineBasicMaterial({ color:0x38bdf8, transparent:true, opacity:0.60 })
     );
     beltEdges.position.set(0, 0.40, 0);
     beltEdges.renderOrder = 9;
-    tm.add(beltEdges);
+    treadmill.add(beltEdges);
 
-    // Animated tread strips (REAL geometry motion)
     const stripMat = new THREE.MeshStandardMaterial({
       color: 0x1a2738,
       roughness: 0.95,
@@ -553,36 +654,35 @@
     for (let i = 0; i < stripCount; i++){
       const s = new THREE.Mesh(new THREE.BoxGeometry(BELT_W - 0.06, 0.01, 0.08), stripMat);
       s.position.set(0, 0.395, TREAD_MIN_Z + i * ((TREAD_MAX_Z - TREAD_MIN_Z) / stripCount));
+      s.castShadow = false;
       s.renderOrder = 10;
-      tm.add(s);
+      treadmill.add(s);
       treadStrips.push(s);
     }
 
-    // Rollers
     const rollerGeo = new THREE.CylinderGeometry(0.13, 0.13, BELT_W + 0.10, 20);
     const rollerMat = new THREE.MeshStandardMaterial({ color:0x1a2a44, roughness:0.55, metalness:0.25 });
     const rFront = new THREE.Mesh(rollerGeo, rollerMat);
     rFront.rotation.z = Math.PI/2;
     rFront.position.set(0, 0.44, -(BELT_L/2) - 0.06);
     rFront.castShadow = true;
-    tm.add(rFront);
+    treadmill.add(rFront);
 
     const rBack = rFront.clone();
     rBack.position.z = (BELT_L/2) + 0.06;
-    tm.add(rBack);
+    treadmill.add(rBack);
 
-    // Motor hood (front) + rear cap
     const hood = new THREE.Mesh(new THREE.BoxGeometry(FRAME_W, 0.34, 0.82), matDark);
     hood.position.set(0, 0.40, -(BELT_L/2) - 0.54);
     hood.castShadow = true;
-    tm.add(hood);
+    treadmill.add(hood);
 
     const rearCap = new THREE.Mesh(new THREE.BoxGeometry(FRAME_W, 0.22, 0.30), matDark);
     rearCap.position.set(0, 0.30, (BELT_L/2) + 0.30);
     rearCap.castShadow = true;
-    tm.add(rearCap);
+    treadmill.add(rearCap);
 
-    // Handrails + console (clearly on the FRONT, attached)
+    // Handrails + console (FRONT)
     const railMat = matSteel;
     const upGeo = new THREE.CylinderGeometry(0.06, 0.06, 1.55, 18);
     const upX = (FRAME_W/2) - 0.14;
@@ -591,40 +691,36 @@
     const upL = new THREE.Mesh(upGeo, railMat);
     upL.position.set(-upX, 1.02, frontZ);
     upL.castShadow = true;
-    tm.add(upL);
+    treadmill.add(upL);
 
     const upR = upL.clone();
     upR.position.x = upX;
-    tm.add(upR);
+    treadmill.add(upR);
 
-    // Top crossbar (front)
     const topBar = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, FRAME_W - 0.10, 18), railMat);
     topBar.rotation.z = Math.PI/2;
     topBar.position.set(0, 1.78, frontZ);
     topBar.castShadow = true;
-    tm.add(topBar);
+    treadmill.add(topBar);
 
-    // Side rails run BACK along the belt
     const sideRail = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, BELT_L + 0.65, 18), railMat);
     sideRail.rotation.x = Math.PI/2;
     sideRail.position.set(-upX, 1.35, -0.05);
     sideRail.castShadow = true;
-    tm.add(sideRail);
+    treadmill.add(sideRail);
 
     const sideRailR = sideRail.clone();
     sideRailR.position.x = upX;
-    tm.add(sideRailR);
+    treadmill.add(sideRailR);
 
-    // Console box
     const tmConsole = new THREE.Mesh(
       new THREE.BoxGeometry(0.85, 0.58, 0.32),
       new THREE.MeshStandardMaterial({ color:0x111b2e, roughness:0.55, metalness:0.12 })
     );
     tmConsole.position.set(0, 1.52, frontZ + 0.18);
     tmConsole.castShadow = true;
-    tm.add(tmConsole);
+    treadmill.add(tmConsole);
 
-    // Console screen (live) — double-sided so it never disappears
     const tmScreen = new THREE.Mesh(
       new THREE.PlaneGeometry(0.56, 0.30),
       new THREE.MeshBasicMaterial({ map: consoleScreen.tex, side: THREE.DoubleSide })
@@ -632,7 +728,7 @@
     tmScreen.position.set(0, 1.52, frontZ + 0.35);
     tmScreen.rotation.x = -0.10;
     tmScreen.renderOrder = 5;
-    tm.add(tmScreen);
+    treadmill.add(tmScreen);
 
     // Wall board (live)
     const board = new THREE.Mesh(new THREE.BoxGeometry(3.6, 1.15, 0.08), new THREE.MeshStandardMaterial({ color:0x111b2e, roughness:0.6, metalness:0.15 }));
@@ -647,7 +743,6 @@
     boardFace.renderOrder = 6;
     zoneCardio.add(boardFace);
 
-    // Soft glow (no flicker)
     const boardGlow = new THREE.Mesh(
       new THREE.PlaneGeometry(3.6, 1.2),
       new THREE.MeshBasicMaterial({ color:0x38bdf8, transparent:true, opacity:0.12, depthWrite:false, depthTest:false })
@@ -663,7 +758,7 @@
 
     scene.add(zoneCardio);
 
-    // Movement Analysis Booth (center)
+    // Forensics (center)
     const zoneForensics = new THREE.Group();
     zoneForensics.name = 'forensics';
     zoneForensics.position.set(0, 0, -4.2);
@@ -722,61 +817,73 @@
 
     scene.add(zoneForensics);
 
-    // ----------------------
-    // Simple avatar (placeholder mannequin)
-    // ----------------------
-    const avatar = new THREE.Group();
 
-    const bodyMat = new THREE.MeshStandardMaterial({ color:0xdbe7f7, roughness:0.65, metalness:0.08 });
+    // ==============================
+    // 5) Avatar / model loader
+    // ==============================
+    let avatarRoot = null; // active model root in scene
 
-    const pelvis = new THREE.Mesh(new THREE.CapsuleGeometry(0.35, 0.25, 6, 14), bodyMat);
-    pelvis.position.set(0, 0.95, 0);
-    pelvis.castShadow = true;
-
-    const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.48, 0.95, 8, 18), bodyMat);
-    torso.position.set(0, 1.85, 0);
-    torso.castShadow = true;
-
-    const head = new THREE.Mesh(new THREE.SphereGeometry(0.32, 18, 18), bodyMat);
-    head.position.set(0, 2.85, 0);
-    head.castShadow = true;
-
-    function limb(radius, length){
-      const m = new THREE.Mesh(new THREE.CapsuleGeometry(radius, length, 6, 12), bodyMat);
-      m.castShadow = true;
-      return m;
+    function buildPreviewMannequin(){
+      const avatar = new THREE.Group();
+      const bodyMat = new THREE.MeshStandardMaterial({ color:0xdbe7f7, roughness:0.65, metalness:0.08 });
+      const pelvis = new THREE.Mesh(new THREE.CapsuleGeometry(0.35, 0.25, 6, 14), bodyMat);
+      pelvis.position.set(0, 0.95, 0);
+      pelvis.castShadow = true;
+      const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.48, 0.95, 8, 18), bodyMat);
+      torso.position.set(0, 1.85, 0);
+      torso.castShadow = true;
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.32, 18, 18), bodyMat);
+      head.position.set(0, 2.85, 0);
+      head.castShadow = true;
+      const limb = (r,l)=>{ const m=new THREE.Mesh(new THREE.CapsuleGeometry(r,l,6,12), bodyMat); m.castShadow=true; return m; };
+      const armL = limb(0.12, 0.65); armL.position.set(-0.75, 2.1, 0); armL.rotation.z = 0.45;
+      const armR = limb(0.12, 0.65); armR.position.set( 0.75, 2.1, 0); armR.rotation.z = -0.45;
+      const legL = limb(0.14, 0.85); legL.position.set(-0.28, 0.55, 0);
+      const legR = limb(0.14, 0.85); legR.position.set( 0.28, 0.55, 0);
+      avatar.add(pelvis, torso, head, armL, armR, legL, legR);
+      return avatar;
     }
 
-    const armL = limb(0.12, 0.65); armL.position.set(-0.75, 2.1, 0); armL.rotation.z = 0.45;
-    const armR = limb(0.12, 0.65); armR.position.set( 0.75, 2.1, 0); armR.rotation.z = -0.45;
-    const legL = limb(0.14, 0.85); legL.position.set(-0.28, 0.55, 0);
-    const legR = limb(0.14, 0.85); legR.position.set( 0.28, 0.55, 0);
+    async function loadSelectedModel(modelId){
+      const m = getModel(modelId);
 
-    avatar.add(pelvis, torso, head, armL, armR, legL, legR);
-    avatar.position.set(0, 0, -4.2);
-    scene.add(avatar);
+      if (avatarRoot){ scene.remove(avatarRoot); avatarRoot = null; }
 
-    // ----------------------
-    // Zone toggling
-    // ----------------------
+      if (!m.url){
+        avatarRoot = buildPreviewMannequin();
+        scene.add(avatarRoot);
+        return;
+      }
+
+      const loader = new GLTFLoader();
+      const gltf = await loader.loadAsync(m.url);
+      avatarRoot = gltf.scene;
+      avatarRoot.traverse(o=>{ if (o.isMesh){ o.castShadow=true; o.receiveShadow=true; } });
+      scene.add(avatarRoot);
+    }
+
+
+    // ==============================
+    // 6) Zone + Module router
+    // ==============================
+
     function setZone(which){
       const all = (which === 'all');
       zoneStrength.visible  = all || which === 'strength';
       zoneCardio.visible    = all || which === 'cardio';
       zoneForensics.visible = all || which === 'forensics';
 
-      // Place avatar per zone (world coords)
-      if (which === 'strength') avatar.position.set(-7.6, 0, 2.4);
-      else if (which === 'cardio') avatar.position.set(7.6, 0.37, 2.4); // on belt
-      else if (which === 'forensics') avatar.position.set(0, 0, -4.2);
-      else avatar.position.set(0, 0, -4.2);
+      if (!avatarRoot) return;
 
-      // Camera presets so you instantly SEE the zone
+      if (which === 'strength') avatarRoot.position.set(-7.6, 0, 2.4);
+      else if (which === 'cardio') avatarRoot.position.set(7.6, 0.37, 2.4);
+      else if (which === 'forensics') avatarRoot.position.set(0, 0, -4.2);
+      else avatarRoot.position.set(0, 0, -4.2);
+
       if (which === 'strength') {
         camGoalTarget.set(-7.6, 1.35, 2.4);
         camGoalPos.set(-3.2, 3.1, 10.6);
       } else if (which === 'cardio') {
-        // Cardio camera: centered (not off to the side), aimed at the treadmill
         camGoalTarget.set(7.6, 1.15, 2.4);
         camGoalPos.set(7.6, 2.65, 0.10);
       } else if (which === 'forensics') {
@@ -788,11 +895,25 @@
       }
     }
 
-    // UI wiring
-    const pills = [...document.querySelectorAll('.pill')];
-    function setActive(btn){
-      pills.forEach(p=>p.classList.toggle('active', p === btn && btn.dataset.zone !== 'labels'));
+    let currentModule = null;
+
+    function enterModule(moduleId){
+      const mod = getModule(moduleId);
+      currentModule = mod;
+      $moduleTitle.textContent = mod.label;
+      setZone(mod.zone || 'all');
+      if (typeof mod.onEnter === 'function'){
+        mod.onEnter({ THREE, scene, camera, controls, sim, setZone, avatar: avatarRoot });
+      }
     }
+
+
+    // ==============================
+    // 7) Studio UI wiring
+    // ==============================
+
+    const pills = [...document.querySelectorAll('.pill')];
+    function setActive(btn){ pills.forEach(p=>p.classList.toggle('active', p === btn && btn.dataset.zone !== 'labels')); }
 
     pills.forEach(btn=>{
       btn.addEventListener('click', ()=>{
@@ -808,6 +929,7 @@
     });
 
     addEventListener('keydown', (e)=>{
+      if ($gate.style.display !== 'none') return;
       if (e.key === '0'){ setZone('all'); setActive(document.querySelector('[data-zone="all"]')); }
       if (e.key === '1'){ setZone('strength'); setActive(document.querySelector('[data-zone="strength"]')); }
       if (e.key === '2'){ setZone('cardio'); setActive(document.querySelector('[data-zone="cardio"]')); }
@@ -815,21 +937,10 @@
       if (e.key.toLowerCase() === 'l'){ setLabels(!labelsOn); document.querySelector('[data-zone="labels"]').classList.toggle('active', labelsOn); }
     });
 
-    // ----------------------
-    // Animation
-    // ----------------------
-    const clock = new THREE.Clock();
-    let activeZone = 'all';
 
-    // Smooth camera snapping to zones (so equipment is never "lost")
-    const camGoalPos = new THREE.Vector3(8.5, 5.0, 12.5);
-    const camGoalTarget = new THREE.Vector3(0, 1.4, 0);
-
-    // Track active zone by reading which pills is active (simple)
-    function getActiveZone(){
-      const a = document.querySelector('.pill.active[data-zone]');
-      return a ? a.dataset.zone : 'all';
-    }
+    // ==============================
+    // 8) Tick loop
+    // ==============================
 
     function updateHUD(){
       $spdVal.textContent = sim.speedMph.toFixed(1);
@@ -839,71 +950,70 @@
       $status.style.color = (st==='CRASH') ? '#ff9aa0' : (st==='Warning' ? '#ffe4a3' : '#cfe3ff');
     }
 
+    const clock = new THREE.Clock();
+
     function animate(){
       requestAnimationFrame(animate);
       controls.update();
 
-      // Smoothly move camera/target toward the active zone preset
+      // camera easing
       controls.target.lerp(camGoalTarget, 0.085);
       camera.position.lerp(camGoalPos, 0.085);
 
       const dt = Math.min(0.05, clock.getDelta());
       const t = clock.getElapsedTime();
 
-      activeZone = getActiveZone();
-
-      // Energy drain demo (only really matters if you are looking at cardio)
-      // Drain scales with speed.
+      // demo energy drain
       sim.energy = clamp(sim.energy - (sim.speedMph * 0.55) * dt, 0, 100);
 
-      // Avatar "reaction" demo:
-      // As energy drops, posture slumps + steps shorten (procedural).
-      const fatigue = 1 - (sim.energy / 100);
-      const runRate = 1.6 + sim.speedMph * 0.35; // faster speed => faster cycle
-      const ampLeg = 0.55 - fatigue * 0.25;
-      const ampArm = 0.35 - fatigue * 0.18;
-
-      // breathing
-      torso.position.y = 1.85 + Math.sin(t*1.5) * 0.015;
-      head.position.y  = 2.85 + Math.sin(t*1.5 + 0.6) * 0.012;
-
-      // run cycle
-      legL.rotation.x = Math.sin(t*runRate) * ampLeg;
-      legR.rotation.x = -Math.sin(t*runRate) * ampLeg;
-      armL.rotation.x = -Math.sin(t*runRate) * ampArm;
-      armR.rotation.x = Math.sin(t*runRate) * ampArm;
-
-      // fatigue posture
-      torso.rotation.x = fatigue * 0.20; // forward slump
-      pelvis.rotation.x = fatigue * 0.08;
-
-      // slight wobble when very low energy
-      const wobble = Math.max(0, (0.22 - sim.energy/100) * 0.6);
-      torso.rotation.z = Math.sin(t*10.0) * wobble;
-      head.rotation.z  = Math.sin(t*11.0) * wobble * 0.8;
-
-      // Live panels
-      drawPanel(wallScreen, 'CARDIO BOARD');
-      drawPanel(consoleScreen, 'TREADMILL');
-      // Move treadmill tread strips (OBVIOUS motion) — direction matches the treadmill (front -> back)
-      const treadSpeed = 0.55 + (sim.speedMph / 12) * 3.10; // units/sec along belt
+      // treadmill motion
+      const treadSpeed = 0.55 + (sim.speedMph / 12) * 3.10;
       for (const s of treadStrips){
         s.position.z += dt * treadSpeed;
         if (s.position.z > TREAD_MAX_Z) s.position.z = TREAD_MIN_Z;
       }
-
-      // Also scroll the belt texture in the SAME direction (front -> back)
       const beltSpeed = 0.14 + (sim.speedMph / 12) * 1.65;
       beltTex.offset.y = (beltTex.offset.y + dt * beltSpeed) % 1;
 
+      // mannequin reaction (only if preview mannequin is used)
+      if (avatarRoot && avatarRoot.userData && avatarRoot.userData.__isMannequin){
+        // not used; kept for future
+      }
+
+      // optional module tick
+      if (currentModule && typeof currentModule.onTick === 'function'){
+        currentModule.onTick({ THREE, scene, camera, controls, sim, setZone, avatar: avatarRoot }, dt, t);
+      }
+
+      drawPanel(wallScreen, 'CARDIO BOARD');
+      drawPanel(consoleScreen, 'TREADMILL');
       updateHUD();
 
       renderer.render(scene, camera);
     }
-
-    // Start view
-    setZone('all');
     animate();
+
+
+    // ==============================
+    // 9) Enter Studio (gate -> studio)
+    // ==============================
+
+    $enter.addEventListener('click', async ()=>{
+      const modelId = $modelSel.value;
+      const moduleId = $modSel.value;
+
+      // show studio chrome
+      $gate.style.display = 'none';
+      $ui.style.display = '';
+      $badge.style.display = '';
+      $hint.style.display = '';
+
+      // load model (or mannequin)
+      await loadSelectedModel(modelId);
+
+      // enter chosen module (routes to zone)
+      enterModule(moduleId);
+    });
 
     // Resize
     addEventListener('resize', ()=>{
@@ -912,6 +1022,7 @@
       renderer.setSize(innerWidth, innerHeight);
       renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
     });
+
   </script>
 </body>
 </html>
