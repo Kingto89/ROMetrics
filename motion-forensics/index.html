@@ -859,6 +859,15 @@
         scene.add(avatarRoot);
         return;
       }
+// Normalize imported GLB to ~1.75m tall (fix tiny models)
+{
+  const box = new THREE.Box3().setFromObject(avatarRoot);
+  const size = new THREE.Vector3();
+  box.getSize(size);
+  const targetH = 1.75;
+  const s = (size.y > 1e-6) ? (targetH / size.y) : 1;
+  avatarRoot.scale.setScalar(s);
+}
 
       const loader = new GLTFLoader();
       const gltf = await loader.loadAsync(m.url);
