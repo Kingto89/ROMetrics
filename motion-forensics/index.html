@@ -826,9 +826,6 @@ zoneCardio.add(boardGlow);
     // 5) Avatar / model loader
     // ==============================
     let avatarRoot = null;
-    let mixer = null;
-    let runAction = null;
-    const RUN_BASE_MPH = 6.0; // 6 mph = “normal run” speed
 
     function buildPreviewMannequin(){
       const avatar = new THREE.Group();
@@ -879,22 +876,6 @@ zoneCardio.add(boardGlow);
 
             avatarRoot.traverse(o=>{ if (o.isMesh){ o.castShadow=true; o.receiveShadow=true; } });
             scene.add(avatarRoot);
-            // --- animation setup (run/walk/first clip) ---
-mixer = null;
-runAction = null;
-
-const clips = (gltf.animations || []);
-if (clips.length){
-  mixer = new THREE.AnimationMixer(avatarRoot);
-  const clip =
-    clips.find(c => /run|jog/i.test(c.name)) ||
-    clips.find(c => /walk/i.test(c.name)) ||
-    clips[0];
-
-  runAction = mixer.clipAction(clip);
-  runAction.play();
-  runAction.paused = true; // wait for Start
-}
 
             // normalize to ~1.75m tall (ignore far outliers)
             avatarRoot.updateWorldMatrix(true, true);
@@ -1063,13 +1044,6 @@ function placeAvatarForZone(which){
       controls.update();
 
       const dt = Math.min(0.05, clock.getDelta());
-      // --- drive animation with Start + mph ---
-if (mixer && runAction){
-  runAction.paused = !sim.running;
-  runAction.timeScale = clamp(sim.speedMph / RUN_BASE_MPH, 0, 3);
-  mixer.update(dt);
-}
-
       const t = clock.getElapsedTime();
 
 if (sim.running){
