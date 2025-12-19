@@ -578,14 +578,17 @@
     
 const tmScreen = new THREE.Mesh(
   new THREE.PlaneGeometry(0.56, 0.30),
-  new THREE.MeshBasicMaterial({
-    map: consoleScreen.tex,
-    side: THREE.DoubleSide,
-    transparent: true,
-    depthTest: false,
-    depthWrite: false,
-    toneMapped: false
-  })
+ new THREE.MeshBasicMaterial({
+  map: consoleScreen.tex,
+  side: THREE.DoubleSide,
+  transparent: true,
+  depthTest: true,      // <-- IMPORTANT: allow avatar to occlude it
+  depthWrite: false,
+  toneMapped: false,
+  polygonOffset: true,  // prevents z-fighting with the console face
+  polygonOffsetFactor: -1,
+  polygonOffsetUnits: -1
+})
 );
 
 // attach to console (NOT treadmill / NOT zone)
@@ -594,7 +597,6 @@ tmConsole.add(tmScreen);
 // local coords on the console front face (console depth = 0.32 -> half = 0.16)
 tmScreen.position.set(0, 0.02, 0.162);
 tmScreen.rotation.set(-0.10, 0, 0);
-tmScreen.renderOrder = 1000;
 
 
 
