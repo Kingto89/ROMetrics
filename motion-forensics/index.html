@@ -962,9 +962,7 @@
       controls.update();
 
       // camera easing
-      controls.target.lerp(camGoalTarget, 0.085);
-      camera.position.lerp(camGoalPos, 0.085);
-
+  
       const dt = Math.min(0.05, clock.getDelta());
       const t = clock.getElapsedTime();
 
