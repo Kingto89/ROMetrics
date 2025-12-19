@@ -196,11 +196,22 @@ const $reset = document.getElementById('resetBtn');
 const sim = { speedMph: 6.0, energy: 100, lastFuelT: -999, running:false };
 const clamp = (v,a,b)=> Math.max(a, Math.min(b, v));
 
+// UI defaults BEFORE Start
+$spdVal.textContent = sim.speedMph.toFixed(1);
+$engVal.textContent = Math.round(sim.energy);
+$status.textContent = "Ready";
+$status.style.color = "#cfe3ff";
+$start.textContent = "Start";
+
 $spd.addEventListener('input', ()=>{ sim.speedMph = parseFloat($spd.value); });
 
 $start.addEventListener('click', ()=>{
   sim.running = !sim.running;
   $start.textContent = sim.running ? "Pause" : "Start";
+  if (!sim.running){
+    // when paused, keep things stable
+    sim.energy = clamp(sim.energy, 0, 100);
+  }
 });
 
 $fuel.addEventListener('click', ()=>{
@@ -209,13 +220,15 @@ $fuel.addEventListener('click', ()=>{
   sim.lastFuelT = performance.now()/1000;
 });
 
-
 $reset.addEventListener('click', ()=>{
   sim.energy = 100;
   sim.lastFuelT = -999;
   sim.running = false;
   $start.textContent = "Start";
+  $status.textContent = "Ready";
+  $status.style.color = "#cfe3ff";
 });
+
 
 
     const scene = new THREE.Scene();
