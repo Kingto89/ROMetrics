@@ -442,12 +442,12 @@
 
     // Simple bench press rack (realistic)
     const benchTop = new THREE.Mesh(new THREE.BoxGeometry(1.35, 0.10, 0.34), matDark);
-    benchTop.position.set(0, 0.48, 0.95);
+    benchTop.position.set(0, 0.48, 0.35);
     benchTop.castShadow = true;
     zoneStrength.add(benchTop);
 
     const benchLegGeo = new THREE.BoxGeometry(0.06, 0.45, 0.06);
-    [[-0.55,0.22,0.03],[0.55,0.22,0.03],[-0.55,0.22,0.27],[0.55,0.22,0.27]].forEach(p=>{
+    [[-0.55,0.22,0.23],[0.55,0.22,0.23],[-0.55,0.22,0.47],[0.55,0.22,0.47]].forEach(p=>{
       const l = new THREE.Mesh(benchLegGeo, matSteel);
       l.position.set(p[0], p[1], p[2]);
       l.castShadow = true;
