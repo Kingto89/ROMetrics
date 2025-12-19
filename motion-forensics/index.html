@@ -231,8 +231,8 @@
     function getModule(id){ return FORENSICS_MODULES.find(m=>m.id===id) || FORENSICS_MODULES[0]; }
 
     const MODELS = [
-  { id: "Roman", label: "Roman (Male)", desc: "ROMetrics Roman model.", url: MODEL_URLS.Roman },
-  { id: "Roma",  label: "Roma (Male)",  desc: "ROMetrics Roma model.",  url: MODEL_URLS.Roma  }
+  { id: "Roma", label: "Roma (Female)", desc: "ROMetrics Roma model.", url: MODEL_URLS.Roma },
+  { id: "Roman",  label: "Roman (Male)",  desc: "ROMetrics Roman model.",  url: MODEL_URLS.Roman  }
 ];
 
     fillSelect($modelSel, MODELS);
