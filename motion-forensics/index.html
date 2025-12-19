@@ -204,6 +204,63 @@
     const wallScreen = makeScreenCanvas(1024, 320);
     const consoleScreen = makeScreenCanvas(512, 256);
 
+    // Moving treadmill belt texture (procedural stripes)
+    const beltCanvas = document.createElement('canvas');
+    beltCanvas.width = 512;
+    beltCanvas.height = 512;
+    const bctx = beltCanvas.getContext('2d');
+    // base
+    bctx.fillStyle = '#0b1426';
+    bctx.fillRect(0,0,512,512);
+    // center lane
+    bctx.fillStyle = '#0e1b33';
+    bctx.fillRect(180, 0, 152, 512);
+    // stripes + chevrons (scrolling illusion)
+    for (let y=0; y<512; y+=64){
+      bctx.fillStyle = 'rgba(210,230,255,0.18)';
+      bctx.fillRect(0, y, 512, 14);
+      bctx.fillStyle = 'rgba(210,230,255,0.10)';
+      bctx.fillRect(0, y+30, 512, 10);
+    }
+
+    // center chevrons for obvious motion
+    bctx.strokeStyle = 'rgba(56,189,248,0.20)';
+    bctx.lineWidth = 6;
+    for (let y=0; y<512; y+=64){
+      for (let x=205; x<307; x+=34){
+        bctx.beginPath();
+        bctx.moveTo(x, y+18);
+        bctx.lineTo(x+14, y+32);
+        bctx.lineTo(x, y+46);
+        bctx.stroke();
+      }
+    }
+
+    // subtle speckle
+    for (let i=0;i<900;i++){
+      const x = Math.random()*512;
+      const y = Math.random()*512;
+      bctx.fillStyle = `rgba(255,255,255,${Math.random()*0.05})`;
+      bctx.fillRect(x,y,1,1);
+    }
+
+    const beltTex = new THREE.CanvasTexture(beltCanvas);
+    beltTex.anisotropy = 8;
+    beltTex.wrapS = THREE.RepeatWrapping;
+    beltTex.wrapT = THREE.RepeatWrapping;
+    beltTex.repeat.set(1, 7.0);
+    beltTex.offset.set(0, 0);
+
+    const matBelt = new THREE.MeshStandardMaterial({
+      map: beltTex,
+      roughness: 0.95,
+      metalness: 0.02,
+      color: 0xffffff,
+      emissive: 0x0b1a2e,
+      emissiveIntensity: 0.85,
+      emissiveMap: beltTex
+    });
+
     function drawPanel(screen, title){
       const {ctx,c} = screen;
       ctx.clearRect(0,0,c.width,c.height);
@@ -412,55 +469,141 @@
     lane.position.set(0, 0.04, 0);
     zoneCardio.add(lane);
 
-    // Treadmill (more obvious)
-    const tmBase = new THREE.Mesh(new THREE.BoxGeometry(2.9, 0.26, 1.35), matDark);
-    tmBase.position.set(0, 0.24, 0);
-    tmBase.castShadow = true;
-    zoneCardio.add(tmBase);
+    // ----------------------
+    // TREADMILL (proper proportions: LONG in Z, NARROW in X)
+    // Front = negative Z (faces the wall board)
+    // ----------------------
+    const tm = new THREE.Group();
+    const treadStrips = [];
+    let TREAD_MIN_Z = -0.6;
+    let TREAD_MAX_Z = 0.6;
+    zoneCardio.add(tm);
 
-    const tmBelt = new THREE.Mesh(new THREE.BoxGeometry(2.35, 0.09, 1.02), new THREE.MeshStandardMaterial({ color:0x0c1728, roughness:0.98, metalness:0.05 }));
-    tmBelt.position.set(0, 0.33, 0);
+    const BELT_W = 1.18;
+    const BELT_L = 2.90;
+    const FRAME_W = 1.55;
+    const FRAME_L = 3.75;
+
+    TREAD_MIN_Z = -(BELT_L/2) + 0.14;
+    TREAD_MAX_Z =  (BELT_L/2) - 0.14;
+
+    // Main frame
+    const tmFrame = new THREE.Mesh(new THREE.BoxGeometry(FRAME_W, 0.26, FRAME_L), matDark);
+    tmFrame.position.set(0, 0.23, 0);
+    tmFrame.castShadow = true;
+    tm.add(tmFrame);
+
+    // Deck recess
+    const tmDeck = new THREE.Mesh(
+      new THREE.BoxGeometry(BELT_W + 0.18, 0.08, BELT_L + 0.28),
+      new THREE.MeshStandardMaterial({ color:0x0c1728, roughness:0.95, metalness:0.05 })
+    );
+    tmDeck.position.set(0, 0.34, 0);
+    tmDeck.receiveShadow = true;
+    tm.add(tmDeck);
+
+    // Belt surface (plane, so motion reads instantly)
+    const tmBelt = new THREE.Mesh(new THREE.PlaneGeometry(BELT_W, BELT_L), matBelt);
+    tmBelt.rotation.x = -Math.PI/2;
+    tmBelt.position.set(0, 0.385, 0);
     tmBelt.receiveShadow = true;
-    zoneCardio.add(tmBelt);
+    tm.add(tmBelt);
 
-    // Side rails
+    // Outline around belt
+    const beltEdges = new THREE.LineSegments(
+      new THREE.EdgesGeometry(new THREE.BoxGeometry(BELT_W + 0.14, 0.02, BELT_L + 0.14)),
+      new THREE.LineBasicMaterial({ color:0x38bdf8, transparent:true, opacity:0.60 })
+    );
+    beltEdges.position.set(0, 0.40, 0);
+    beltEdges.renderOrder = 9;
+    tm.add(beltEdges);
+
+    // Animated tread strips (REAL geometry motion)
+    const stripMat = new THREE.MeshBasicMaterial({ color: 0xcfe3ff, transparent: true, opacity: 0.26, depthWrite: false });
+    const stripCount = 14;
+    for (let i = 0; i < stripCount; i++){
+      const s = new THREE.Mesh(new THREE.BoxGeometry(BELT_W - 0.06, 0.01, 0.08), stripMat);
+      s.position.set(0, 0.395, TREAD_MIN_Z + i * ((TREAD_MAX_Z - TREAD_MIN_Z) / stripCount));
+      s.renderOrder = 10;
+      tm.add(s);
+      treadStrips.push(s);
+    }
+
+    // Rollers
+    const rollerGeo = new THREE.CylinderGeometry(0.13, 0.13, BELT_W + 0.10, 20);
+    const rollerMat = new THREE.MeshStandardMaterial({ color:0x1a2a44, roughness:0.55, metalness:0.25 });
+    const rFront = new THREE.Mesh(rollerGeo, rollerMat);
+    rFront.rotation.z = Math.PI/2;
+    rFront.position.set(0, 0.44, -(BELT_L/2) - 0.06);
+    rFront.castShadow = true;
+    tm.add(rFront);
+
+    const rBack = rFront.clone();
+    rBack.position.z = (BELT_L/2) + 0.06;
+    tm.add(rBack);
+
+    // Motor hood (front) + rear cap
+    const hood = new THREE.Mesh(new THREE.BoxGeometry(FRAME_W, 0.34, 0.82), matDark);
+    hood.position.set(0, 0.40, -(BELT_L/2) - 0.54);
+    hood.castShadow = true;
+    tm.add(hood);
+
+    const rearCap = new THREE.Mesh(new THREE.BoxGeometry(FRAME_W, 0.22, 0.30), matDark);
+    rearCap.position.set(0, 0.30, (BELT_L/2) + 0.30);
+    rearCap.castShadow = true;
+    tm.add(rearCap);
+
+    // Handrails + console (clearly on the FRONT, attached)
     const railMat = matSteel;
-    const railGeo = new THREE.CylinderGeometry(0.035, 0.035, 1.35, 10);
-    const railL = new THREE.Mesh(railGeo, railMat);
-    railL.rotation.z = Math.PI/2;
-    railL.position.set(-1.15, 0.95, -0.35);
-    railL.castShadow = true;
-    zoneCardio.add(railL);
+    const upGeo = new THREE.CylinderGeometry(0.06, 0.06, 1.55, 18);
+    const upX = (FRAME_W/2) - 0.14;
+    const frontZ = -(BELT_L/2) - 0.72;
 
-    const railR = railL.clone();
-    railR.position.x = 1.15;
-    zoneCardio.add(railR);
-
-    // Uprights
-    const upGeo = new THREE.CylinderGeometry(0.05, 0.05, 1.15, 12);
     const upL = new THREE.Mesh(upGeo, railMat);
-    upL.position.set(-0.95, 0.85, -0.62);
+    upL.position.set(-upX, 1.02, frontZ);
     upL.castShadow = true;
-    zoneCardio.add(upL);
+    tm.add(upL);
 
     const upR = upL.clone();
-    upR.position.x = 0.95;
-    zoneCardio.add(upR);
+    upR.position.x = upX;
+    tm.add(upR);
+
+    // Top crossbar (front)
+    const topBar = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, FRAME_W - 0.10, 18), railMat);
+    topBar.rotation.z = Math.PI/2;
+    topBar.position.set(0, 1.78, frontZ);
+    topBar.castShadow = true;
+    tm.add(topBar);
+
+    // Side rails run BACK along the belt
+    const sideRail = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, BELT_L + 0.65, 18), railMat);
+    sideRail.rotation.x = Math.PI/2;
+    sideRail.position.set(-upX, 1.35, -0.05);
+    sideRail.castShadow = true;
+    tm.add(sideRail);
+
+    const sideRailR = sideRail.clone();
+    sideRailR.position.x = upX;
+    tm.add(sideRailR);
 
     // Console box
-    const tmConsole = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.38, 0.20), new THREE.MeshStandardMaterial({ color:0x111b2e, roughness:0.55, metalness:0.12 }));
-    tmConsole.position.set(0, 1.35, -0.62);
-    tmConsole.castShadow = true;
-    zoneCardio.add(tmConsole);
-
-    // Console screen (live)
-    const tmScreen = new THREE.Mesh(
-      new THREE.PlaneGeometry(0.52, 0.28),
-      new THREE.MeshBasicMaterial({ map: consoleScreen.tex, transparent:false })
+    const tmConsole = new THREE.Mesh(
+      new THREE.BoxGeometry(0.85, 0.58, 0.32),
+      new THREE.MeshStandardMaterial({ color:0x111b2e, roughness:0.55, metalness:0.12 })
     );
-    tmScreen.position.set(0, 1.35, -0.515);
+    tmConsole.position.set(0, 1.52, frontZ + 0.18);
+    tmConsole.castShadow = true;
+    tm.add(tmConsole);
+
+    // Console screen (live) — double-sided so it never disappears
+    const tmScreen = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.56, 0.30),
+      new THREE.MeshBasicMaterial({ map: consoleScreen.tex, side: THREE.DoubleSide })
+    );
+    tmScreen.position.set(0, 1.52, frontZ + 0.35);
+    tmScreen.rotation.x = -0.10;
     tmScreen.renderOrder = 5;
-    zoneCardio.add(tmScreen);
+    tm.add(tmScreen);
 
     // Wall board (live)
     const board = new THREE.Mesh(new THREE.BoxGeometry(3.6, 1.15, 0.08), new THREE.MeshStandardMaterial({ color:0x111b2e, roughness:0.6, metalness:0.15 }));
@@ -595,9 +738,25 @@
 
       // Place avatar per zone (world coords)
       if (which === 'strength') avatar.position.set(-7.6, 0, 2.4);
-      else if (which === 'cardio') avatar.position.set(7.6, 0.33, 2.4); // on treadmill belt
+      else if (which === 'cardio') avatar.position.set(7.6, 0.37, 2.4); // on belt
       else if (which === 'forensics') avatar.position.set(0, 0, -4.2);
       else avatar.position.set(0, 0, -4.2);
+
+      // Camera presets so you instantly SEE the zone
+      if (which === 'strength') {
+        camGoalTarget.set(-7.6, 1.35, 2.4);
+        camGoalPos.set(-3.2, 3.1, 10.6);
+      } else if (which === 'cardio') {
+        // Cardio camera: centered (not off to the side), aimed at the treadmill
+        camGoalTarget.set(7.6, 1.15, 2.4);
+        camGoalPos.set(7.6, 2.65, 0.10);
+      } else if (which === 'forensics') {
+        camGoalTarget.set(0, 1.35, -4.2);
+        camGoalPos.set(5.2, 3.2, 3.8);
+      } else {
+        camGoalTarget.set(0, 1.4, 0);
+        camGoalPos.set(8.5, 5.0, 12.5);
+      }
     }
 
     // UI wiring
@@ -633,6 +792,10 @@
     const clock = new THREE.Clock();
     let activeZone = 'all';
 
+    // Smooth camera snapping to zones (so equipment is never "lost")
+    const camGoalPos = new THREE.Vector3(8.5, 5.0, 12.5);
+    const camGoalTarget = new THREE.Vector3(0, 1.4, 0);
+
     // Track active zone by reading which pills is active (simple)
     function getActiveZone(){
       const a = document.querySelector('.pill.active[data-zone]');
@@ -650,6 +813,10 @@
     function animate(){
       requestAnimationFrame(animate);
       controls.update();
+
+      // Smoothly move camera/target toward the active zone preset
+      controls.target.lerp(camGoalTarget, 0.085);
+      camera.position.lerp(camGoalPos, 0.085);
 
       const dt = Math.min(0.05, clock.getDelta());
       const t = clock.getElapsedTime();
@@ -689,6 +856,16 @@
       // Live panels
       drawPanel(wallScreen, 'CARDIO BOARD');
       drawPanel(consoleScreen, 'TREADMILL');
+      // Move treadmill tread strips (OBVIOUS motion) — direction matches the treadmill (front -> back)
+      const treadSpeed = 0.55 + (sim.speedMph / 12) * 3.10; // units/sec along belt
+      for (const s of treadStrips){
+        s.position.z += dt * treadSpeed;
+        if (s.position.z > TREAD_MAX_Z) s.position.z = TREAD_MIN_Z;
+      }
+
+      // Also scroll the belt texture in the SAME direction (front -> back)
+      const beltSpeed = 0.14 + (sim.speedMph / 12) * 1.65;
+      beltTex.offset.y = (beltTex.offset.y + dt * beltSpeed) % 1;
 
       updateHUD();
 
