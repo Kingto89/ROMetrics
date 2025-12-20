@@ -175,9 +175,25 @@
 </div>
   <div id="hint" style="display:block;">Mouse: orbit • Wheel: zoom • Right-drag: pan • Keys: 1/2/3 = zones • 0 = all • L = labels</div>
   <script type="module">
-    document.getElementById('trialHelpClose').onclick = ()=>{
+document.getElementById('trialHelpClose').onclick = ()=>{
   document.getElementById('trialHelpModal').style.display = 'none';
 };
+
+document.getElementById('trialHelp').onclick = async ()=>{
+  document.getElementById('trialHelpModal').style.display = 'flex';
+
+  const res = await fetch('../assets/forensics_modules/module_001.md');
+  if (!res.ok){
+    document.getElementById('trialHelpContent').textContent =
+      'MD LOAD FAILED: ' + res.status;
+    return;
+  }
+
+  const md = await res.text();
+  document.getElementById('trialHelpContent').innerHTML =
+    md.replace(/\n/g, '<br>');
+};
+
 
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
