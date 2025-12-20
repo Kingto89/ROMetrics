@@ -432,6 +432,78 @@ $reset.addEventListener('click', ()=>{
     const matSteel = new THREE.MeshStandardMaterial({ color:0x7a8aa0, roughness:0.35, metalness:0.55 });
     const matGlow  = new THREE.MeshStandardMaterial({ color:0x38bdf8, roughness:0.35, metalness:0.25, emissive:0x103040, emissiveIntensity:0.8 });
 
+    // ==============================
+    // 3) Live screens + Belt texture
+    // ==============================
+    function makeScreenCanvas(w=512,h=256){
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      const ctx = c.getContext('2d');
+      const tex = new THREE.CanvasTexture(c);
+      tex.anisotropy = 8;
+      return { c, ctx, tex };
+    }
+    const wallScreen = makeScreenCanvas(1024, 320);
+    const consoleScreen = makeScreenCanvas(512, 256);
+
+    const beltCanvas = document.createElement('canvas');
+    beltCanvas.width = 512;
+    beltCanvas.height = 512;
+    const bctx = beltCanvas.getContext('2d');
+
+    {
+      const g = bctx.createLinearGradient(0,0,512,0);
+      g.addColorStop(0.00,'#0a0f16');
+      g.addColorStop(0.35,'#0c1522');
+      g.addColorStop(0.65,'#0b1320');
+      g.addColorStop(1.00,'#09101a');
+      bctx.fillStyle = g;
+      bctx.fillRect(0,0,512,512);
+      bctx.fillStyle = 'rgba(0,0,0,0.18)';
+      bctx.fillRect(252, 0, 8, 512);
+
+      let y = 0;
+      while (y < 512){
+        const h = 1 + Math.floor(Math.random()*2);
+        const a = 0.020 + Math.random()*0.030;
+        bctx.fillStyle = `rgba(255,255,255,${a})`;
+        bctx.fillRect(0, y, 512, h);
+        y += 12 + Math.floor(Math.random()*16);
+      }
+      for (let i=0;i<900;i++){
+        const x = Math.random()*512;
+        const yy = Math.random()*512;
+        bctx.fillStyle = `rgba(255,255,255,${Math.random()*0.05})`;
+        bctx.fillRect(x,yy,1,1);
+      }
+    }
+
+    const beltTex = new THREE.CanvasTexture(beltCanvas);
+    beltTex.anisotropy = 8;
+    beltTex.wrapS = THREE.RepeatWrapping;
+    beltTex.wrapT = THREE.RepeatWrapping;
+    beltTex.repeat.set(1, 8.0);
+    beltTex.offset.set(0, 0);
+
+    const matBelt = new THREE.MeshStandardMaterial({
+      map: beltTex,
+      color: 0x0b1018,
+      roughness: 0.98,
+      metalness: 0.00
+    });
+
+ function roundRect(ctx, x, y, w, h, r){
+  const min = Math.min(w,h);
+  if (r > min/2) r = min/2;
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.arcTo(x+w, y, x+w, y+h, r);
+  ctx.arcTo(x+w, y+h, x, y+h, r);
+  ctx.arcTo(x, y+h, x, y, r);
+  ctx.arcTo(x, y, x+w, y, r);
+  ctx.closePath();
+}
+
 function drawPanel(screen, title){
   const { ctx, c } = screen;
 
@@ -451,7 +523,7 @@ function drawPanel(screen, title){
   ctx.fillRect(24, 24, c.width-48, 64);
 
   ctx.fillStyle = '#e6eef7';
-  ctx.font = '900 40px system-ui';
+  ctx.font = '900 40px system-ui, -apple-system, Segoe UI, Roboto, Inter';
   ctx.textBaseline = 'middle';
   ctx.fillText(title, 42, 56);
 
@@ -460,7 +532,7 @@ function drawPanel(screen, title){
   const eng = sim.energy;
   const status = (eng <= 10) ? 'CRASH' : (eng <= 25 ? 'Warning' : 'Stable');
 
-  ctx.font = '800 44px system-ui';
+  ctx.font = '800 44px system-ui, -apple-system, Segoe UI, Roboto, Inter';
   ctx.fillStyle = '#cfe3ff';
   ctx.fillText(`Speed: ${spd.toFixed(1)} mph`, 42, 132);
   ctx.fillText(`Energy: ${Math.round(eng)}%`, 42, 192);
@@ -482,10 +554,10 @@ function drawPanel(screen, title){
   ctx.stroke();
 
   ctx.fillStyle = '#e6eef7';
-  ctx.font = '900 34px system-ui';
+  ctx.font = '900 34px system-ui, -apple-system, Segoe UI, Roboto, Inter';
   ctx.fillText(`Status: ${status}`, chipX+18, chipY+chipH/2);
 
-  // fuel pulse indicator
+  // fuel pulse
   const t = performance.now()/1000;
   const fuelPulse = Math.max(0, 1 - (t - sim.lastFuelT) / 0.8);
   if (fuelPulse > 0){
@@ -497,38 +569,67 @@ function drawPanel(screen, title){
     ctx.globalAlpha = 1;
   }
 
-  // ===== PRIMARY ENERGY SYSTEM (SINGLE, CLEAR) =====
-  let primary = 'AEROBIC';
-  if (spd < 3.0) primary = 'ATP-PC';
-  else if (spd < 6.5) primary = 'ANAEROBIC';
+  // ===== ENERGY SYSTEM GRAPH (LAB STYLE) =====
+  const gW = c.width - 84;
+  const gH = 70;
+  const gX = (c.width - gW) / 2;
+  const gY = 300 - 70; // sits under Status safely
 
-  const boxW = c.width - 120;
-  const boxH = 64;
-  const boxX = (c.width - boxW) / 2;
-  const boxY = 260;
-
-  roundRect(ctx, boxX, boxY, boxW, boxH, 18);
+  // panel
   ctx.fillStyle = 'rgba(15,23,42,0.85)';
+  roundRect(ctx, gX, gY, gW, gH, 14);
   ctx.fill();
 
-  const col =
-    primary === 'ATP-PC'    ? '#ef4444' :
-    primary === 'ANAEROBIC' ? '#fbbf24' :
-                              '#38bdf8';
+  // compute contributions (REAL-TIME)
+  if (!drawPanel._prevEnergy) drawPanel._prevEnergy = sim.energy;
+  const dE = sim.energy - drawPanel._prevEnergy;
+  drawPanel._prevEnergy = sim.energy;
 
-  ctx.strokeStyle = col;
-  ctx.lineWidth = 4;
+  const aerobic   = clamp(0.75 + dE * 6, 0, 1);
+  const anaerobic = clamp(-dE * 6, 0, 1);
+  const atpPC     = clamp(fuelPulse * 0.8, 0, 0.8);
+
+  const total = aerobic + anaerobic + atpPC || 1;
+  const aFrac = aerobic / total;
+  const nFrac = anaerobic / total;
+  const pFrac = atpPC / total;
+
+  // axis
+  const baseY = gY + gH - 18;
+  ctx.strokeStyle = 'rgba(148,163,184,0.35)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(gX + 40, baseY);
+  ctx.lineTo(gX + gW - 12, baseY);
   ctx.stroke();
 
-  ctx.fillStyle = col;
-  ctx.font = '900 28px system-ui';
+  // bars
+  const maxH = gH - 36;
+  const colW = 48;
+  const gap  = 42;
+  const startX = gX + 70;
+
+  ctx.fillStyle = '#38bdf8';
+  ctx.fillRect(startX, baseY - maxH * aFrac, colW, maxH * aFrac);
+
+  ctx.fillStyle = '#fbbf24';
+  ctx.fillRect(startX + colW + gap, baseY - maxH * nFrac, colW, maxH * nFrac);
+
+  ctx.fillStyle = '#ef4444';
+  ctx.fillRect(startX + (colW + gap) * 2, baseY - maxH * pFrac, colW, maxH * pFrac);
+
+  // labels
+  ctx.fillStyle = '#cfe3ff';
+  ctx.font = '700 14px system-ui';
   ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(`PRIMARY ENERGY: ${primary}`, c.width/2, boxY + boxH/2);
+  ctx.fillText('Aerobic',   startX + colW/2, baseY + 14);
+  ctx.fillText('Anaerobic', startX + colW + gap + colW/2, baseY + 14);
+  ctx.fillText('ATP-PC',    startX + (colW + gap) * 2 + colW/2, baseY + 14);
   ctx.textAlign = 'left';
 
   screen.tex.needsUpdate = true;
 }
+
 
     // ==============================
     // 4) Room + zones (REAL SCALE)
@@ -568,17 +669,6 @@ function drawPanel(screen, title){
     let labelsOn = false;
     const labelGroup = new THREE.Group();
     scene.add(labelGroup);
-function roundRect(ctx, x, y, w, h, r){
-  const min = Math.min(w, h);
-  if (r > min / 2) r = min / 2;
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.arcTo(x + w, y, x + w, y + h, r);
-  ctx.arcTo(x + w, y + h, x, y + h, r);
-  ctx.arcTo(x, y + h, x, y, r);
-  ctx.arcTo(x, y, x + w, y, r);
-  ctx.closePath();
-}
 
     function makeLabel(text){
       const canvas = document.createElement('canvas');
@@ -783,36 +873,6 @@ function roundRect(ctx, x, y, w, h, r){
     tmDeck.position.set(0, 0.26, 0);
     tmDeck.receiveShadow = true;
     treadmill.add(tmDeck);
-// --- treadmill belt canvas (SOURCE) ---
-const beltCanvas = document.createElement('canvas');
-beltCanvas.width = 512;
-beltCanvas.height = 512;
-const bctx = beltCanvas.getContext('2d');
-
-// simple dark belt texture
-bctx.fillStyle = '#0b1018';
-bctx.fillRect(0, 0, 512, 512);
-
-bctx.fillStyle = 'rgba(255,255,255,0.08)';
-for (let y = 0; y < 512; y += 18){
-  bctx.fillRect(0, y, 512, 2);
-}
-
-    // --- treadmill belt texture (REQUIRED) ---
-const beltTex = new THREE.CanvasTexture(beltCanvas);
-beltTex.anisotropy = 8;
-beltTex.wrapS = THREE.RepeatWrapping;
-beltTex.wrapT = THREE.RepeatWrapping;
-beltTex.repeat.set(1, 8.0);
-beltTex.offset.set(0, 0);
-
-// --- treadmill belt material (REQUIRED) ---
-const matBelt = new THREE.MeshStandardMaterial({
-  map: beltTex,
-  color: 0x0b1018,
-  roughness: 0.98,
-  metalness: 0.00
-});
 
     const tmBelt = new THREE.Mesh(new THREE.PlaneGeometry(BELT_W, BELT_L), matBelt);
     tmBelt.rotation.x = -Math.PI/2;
