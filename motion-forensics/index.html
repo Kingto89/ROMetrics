@@ -1167,8 +1167,8 @@ function animate(){
 
     const bendL = Math.max(0, -s) * kneeAmp;
     const bendR = Math.max(0,  s) * kneeAmp;
-    applyAdd(b.calfL, 0, bendL, 0);
-    applyAdd(b.calfR, 0, bendR, 0);
+    applyAdd(b.calfL, 0, -bendL, 0);
+    applyAdd(b.calfR, 0, -bendR, 0);
 
     // arms (opposite)
     applyAdd(b.upArmL, -armAmp * s, 0, 0);
