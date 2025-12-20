@@ -100,6 +100,59 @@
       <div class="v"><span id="engVal">100</span>%</div>
     </div>
 
+<!-- ===== FL-001 (Energy Systems) UI ===== -->
+<div id="fl001UI" style="display:none; margin-top:10px; padding-top:10px; border-top:1px solid rgba(148,163,184,.18); display:grid; gap:10px;">
+
+  <div class="row">
+    <div class="k">Work Type</div>
+    <select id="workTypeSel" style="flex:1; margin-left:10px; background:rgba(7,16,27,.35); border:1px solid rgba(148,163,184,.22); color:#e6eef7; border-radius:12px; padding:8px 10px; font-size:12px; outline:none;">
+      <option value="steady">Steady-State</option>
+      <option value="tempo">Tempo/Threshold</option>
+    </select>
+  </div>
+
+  <div class="row">
+    <div class="k">Trial</div>
+    <div class="v"><span id="trialTag">A</span> • <span id="trialTime">60</span>s</div>
+  </div>
+
+  <div class="row" style="justify-content:flex-start; gap:8px; flex-wrap:wrap;">
+    <button id="trialA" class="btn">Trial A</button>
+    <button id="trialB" class="btn">Trial B</button>
+    <button id="trialC" class="btn">Trial C</button>
+  </div>
+
+  <div style="border:1px solid rgba(148,163,184,.18); border-radius:14px; background:rgba(7,16,27,.22); padding:10px;">
+    <div style="color:#cfe3ff; font-weight:900; font-size:12px; letter-spacing:.2px;">CASE CLUE</div>
+    <div id="trialClue" style="margin-top:6px; color:#a8c0da; font-size:12px; line-height:1.25;"></div>
+    <div style="margin-top:10px; color:#cfe3ff; font-weight:900; font-size:12px; letter-spacing:.2px;">GOAL</div>
+    <div id="trialGoal" style="margin-top:6px; color:#a8c0da; font-size:12px; line-height:1.25;"></div>
+    <div style="margin-top:10px; color:#cfe3ff; font-weight:900; font-size:12px; letter-spacing:.2px;">PASS WHEN</div>
+    <div id="trialPass" style="margin-top:6px; color:#a8c0da; font-size:12px; line-height:1.25;"></div>
+  </div>
+
+  <div class="row">
+    <div class="k">Score</div>
+    <div class="v"><span id="flScore">0</span>/100</div>
+  </div>
+
+  <div id="mcqBox" style="display:none; border:1px solid rgba(148,163,184,.18); border-radius:14px; background:rgba(7,16,27,.22); padding:10px;">
+    <div style="display:flex; justify-content:space-between; gap:10px; align-items:center;">
+      <div style="color:#cfe3ff; font-weight:900; font-size:12px;">MCQ</div>
+      <div style="color:#a8c0da; font-size:12px;">Attempts: <span id="mcqAttempts">0</span>/3</div>
+    </div>
+    <div id="mcqQ" style="margin-top:8px; color:#e6eef7; font-weight:900; font-size:13px; line-height:1.25;"></div>
+    <div id="mcqOpts" style="margin-top:8px; display:grid; gap:6px;"></div>
+    <div style="display:flex; gap:8px; justify-content:space-between; align-items:center; margin-top:10px; flex-wrap:wrap;">
+      <button id="mcqSubmit" class="btn">Submit</button>
+      <div id="mcqMsg" style="color:#a8c0da; font-size:12px;"></div>
+    </div>
+  </div>
+
+  <div id="trialMsg" style="color:#a8c0da; font-size:12px; line-height:1.25;"></div>
+
+</div>
+    
     <div class="row" style="justify-content:flex-end;gap:10px;">
       <button id="startBtn" class="btn">Start</button>
       <button id="fuelBtn" class="btn">Fuel +10</button>
@@ -151,7 +204,8 @@ function setAnatForModel(id){
 }
 
     const FORENSICS_MODULES = [
-      { id:'FL-001', label:'Module 1 — Metabolic Demand: Energy Systems', desc:'Cardio Bay: speed, energy, fuel timing.', zone:'cardio', onEnter:null, onTick:null },
+    { id:'FL-001', label:'Module 1 — Metabolic Demand: Energy Systems',  desc:'Cardio Bay: speed, energy, fuel timing.', zone:'cardio', onEnter: enterFL001,  onTick: null },
+      
       { id:'FL-002', label:'Module 2 — Joint Load Lever ', desc:'Strength Station: effort vs lever distance .', zone:'strength', onEnter:null, onTick:null },
       { id:'FL-003', label:'Module 3 — Motion Forensics Lite', desc:'Reactive Balance:Pick the stance that gives the best Stability %', zone:'Analysis Booth', onEnter:null, onTick:null }
       // === DROP-IN AREA ===
@@ -209,6 +263,7 @@ const $fuel = document.getElementById('fuelBtn');
 const $reset = document.getElementById('resetBtn');
 
 const sim = { speedMph: 6.0, energy: 100, lastFuelT: -999, running:false };
+    
 const clamp = (v,a,b)=> Math.max(a, Math.min(b, v));
 
 // UI defaults BEFORE Start
@@ -239,6 +294,7 @@ $reset.addEventListener('click', ()=>{
   sim.energy = 100;
   sim.lastFuelT = -999;
   sim.running = false;
+  animate._fl001Passed = false;
   $start.textContent = "Start";
   $status.textContent = "Ready";
   $status.style.color = "#cfe3ff";
@@ -1023,6 +1079,87 @@ function placeAvatarForZone(which){
       snapCam();
     }
 
+function parseFL001(md){
+  const trials = {};
+  let current = null;
+
+  const lines = md.split('\n');
+  for (let line of lines){
+    line = line.trim();
+
+    if (line.startsWith('### Trial')){
+      current = line.match(/Trial ([ABC])/)[1];
+      trials[current] = { clue:'', goal:'', pass:'', mcq:null };
+    }
+
+    if (!current) continue;
+
+    if (line.startsWith('**CASE CLUE')){
+      trials[current].clue = line.split('**:')[1]?.trim() || '';
+    }
+
+    if (line.startsWith('**Goal:**')){
+      trials[current].goal = line.replace('**Goal:**','').trim();
+    }
+
+    if (line.startsWith('**PASS when:**')){
+      trials[current].pass = line.replace('**PASS when:**','').trim();
+    }
+
+    if (line.startsWith('Which') || line.startsWith('Why') || line.startsWith('What')){
+      trials[current].mcq = { q: line, opts: [] };
+    }
+
+    if (trials[current].mcq && /^[A-D]\)/.test(line)){
+      trials[current].mcq.opts.push(line);
+    }
+  }
+
+  return trials;
+}
+
+function showFL001Trial(trials, letter){
+  const t = trials[letter];
+
+  document.getElementById('trialTag').textContent = letter;
+  document.getElementById('trialClue').textContent = t.clue;
+  document.getElementById('trialGoal').textContent = t.goal;
+  document.getElementById('trialPass').textContent = t.pass;
+  document.getElementById('mcqBox').style.display = 'none';
+
+  if (t.mcq){
+    document.getElementById('mcqQ').textContent = t.mcq.q;
+    const box = document.getElementById('mcqOpts');
+    box.innerHTML = '';
+    t.mcq.opts.forEach(o=>{
+      const div = document.createElement('div');
+      div.textContent = o;
+      box.appendChild(div);
+    });
+  }
+}
+function fl001PassTrial(){
+  document.getElementById('trialMsg').textContent =
+    'Trial passed. Answer the question.';
+  document.getElementById('mcqBox').style.display = 'block';
+}
+    
+async function enterFL001(){
+  document.getElementById('fl001UI').style.display = 'grid';
+
+  const res = await fetch('/assets/forensics_modules/module_001.md');
+  const md  = await res.text();
+
+  const trials = parseFL001(md);
+
+  showFL001Trial(trials, 'A');
+
+  trialA.onclick = ()=>showFL001Trial(trials,'A');
+  trialB.onclick = ()=>showFL001Trial(trials,'B');
+  trialC.onclick = ()=>showFL001Trial(trials,'C');
+}
+
+
     function enterModule(moduleId){
       const mod = getModule(moduleId);
       currentModule = mod;
@@ -1417,10 +1554,17 @@ if (b.head) applyAdd(b.head, 0, torsoYaw * 0.15, 0);
   }
   R.wasRunning = runNow;
 
-  // energy only drains when running
-  if (sim.running){
-    sim.energy = clamp(sim.energy - (sim.speedMph * 0.55) * dt, 0, 100);
+// energy only drains when running
+if (sim.running){
+  sim.energy = clamp(sim.energy - (sim.speedMph * 0.55) * dt, 0, 100);
+
+  // TEMP pass trigger (fires once)
+  if (currentModule?.id === 'FL-001' && sim.energy >= 60 && !animate._fl001Passed){
+    animate._fl001Passed = true;
+    fl001PassTrial();
   }
+}
+
 
   // treadmill motion
   if (sim.running){
