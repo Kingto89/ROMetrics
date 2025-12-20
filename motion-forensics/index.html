@@ -1080,6 +1080,107 @@ function animate(){
 
   const dt = Math.min(0.05, clock.getDelta());
 
+  // ==============================
+// BLINK (morph targets) — every ~5s
+// ==============================
+if (!animate._blink){
+  animate._blink = {
+    lastAvatar: null,
+    targets: [],          // { mesh, idxBoth, idxL, idxR }
+    nextT: 0,
+    active: false,
+    t: 0,
+    dur: 0.16             // seconds (blink length)
+  };
+
+  animate._blink.build = ()=>{
+    const B = animate._blink;
+    B.targets = [];
+    if (!avatarRoot) return;
+
+    const isRoman = (typeof ACTIVE_MODEL_ID === "string" && ACTIVE_MODEL_ID === "Roman");
+
+    const N = isRoman
+      ? { both:"Eye_Blink", l:"Eye_Blink_L", r:"Eye_Blink_R" }
+      : { both:"", l:"Expressions_eyeClosedL_max", r:"Expressions_eyeClosedR_max" };
+
+    avatarRoot.traverse(o=>{
+      const inf = o.morphTargetInfluences;
+      const dict = o.morphTargetDictionary;
+      if (!inf || !dict) return;
+
+      const idxBoth = N.both && (dict[N.both] ?? -1);
+      const idxL    = dict[N.l] ?? -1;
+      const idxR    = dict[N.r] ?? -1;
+
+      if ((idxBoth != null && idxBoth >= 0) || idxL >= 0 || idxR >= 0){
+        B.targets.push({ mesh:o, idxBoth:(idxBoth ?? -1), idxL, idxR });
+      }
+    });
+
+    const now = performance.now()/1000;
+    B.nextT = now + 4.8 + Math.random()*1.2; // ~5s
+    B.active = false;
+    B.t = 0;
+  };
+}
+
+{
+  const B = animate._blink;
+
+  // rebuild targets when model changes (or when switching Roma/Roman)
+  if (avatarRoot && B.lastAvatar !== avatarRoot){
+    B.lastAvatar = avatarRoot;
+    B.build();
+  }
+
+  const now = performance.now()/1000;
+
+  // start blink
+  if (!B.active && B.targets.length && now >= B.nextT){
+    B.active = true;
+    B.t = 0;
+    B.dur = 0.14 + Math.random()*0.05;       // 0.14–0.19s
+    B.nextT = now + 4.8 + Math.random()*1.2; // next ~5s
+  }
+
+  // update blink
+  if (B.active){
+    B.t += dt;
+    const u = Math.min(1, B.t / B.dur);
+    const v = Math.sin(Math.PI * u); // 0->1->0
+
+    for (const t of B.targets){
+      const inf = t.mesh.morphTargetInfluences;
+      if (!inf) continue;
+
+      if (t.idxBoth >= 0){
+        inf[t.idxBoth] = v;
+      } else {
+        if (t.idxL >= 0) inf[t.idxL] = v;
+        if (t.idxR >= 0) inf[t.idxR] = v;
+      }
+    }
+
+    if (u >= 1){
+      // ensure eyes fully open at end
+      for (const t of B.targets){
+        const inf = t.mesh.morphTargetInfluences;
+        if (!inf) continue;
+
+        if (t.idxBoth >= 0){
+          inf[t.idxBoth] = 0;
+        } else {
+          if (t.idxL >= 0) inf[t.idxL] = 0;
+          if (t.idxR >= 0) inf[t.idxR] = 0;
+        }
+      }
+      B.active = false;
+    }
+  }
+}
+
+
   // --- Procedural run-in-place (NO GLB animation clips required) ---
   if (!animate._run){
     animate._run = {
