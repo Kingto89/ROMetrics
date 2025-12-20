@@ -1082,6 +1082,7 @@ function placeAvatarForZone(which){
 function parseFL001(md){
   const trials = {};
   let current = null;
+  let capture = null;
 
   const lines = md.split('\n');
   for (let line of lines){
@@ -1090,24 +1091,39 @@ function parseFL001(md){
     if (line.startsWith('### Trial')){
       current = line.match(/Trial ([ABC])/)[1];
       trials[current] = { clue:'', goal:'', pass:'', mcq:null };
+      capture = null;
+      continue;
     }
 
     if (!current) continue;
 
     if (line.startsWith('**CASE CLUE')){
-      trials[current].clue = line.split('**:')[1]?.trim() || '';
+      const inline = line.split('**:')[1]?.trim();
+      if (inline) trials[current].clue = inline;
+      capture = 'clue';
+      continue;
     }
 
     if (line.startsWith('**Goal:**')){
       trials[current].goal = line.replace('**Goal:**','').trim();
+      capture = 'goal';
+      continue;
     }
 
     if (line.startsWith('**PASS when:**')){
       trials[current].pass = line.replace('**PASS when:**','').trim();
+      capture = 'pass';
+      continue;
+    }
+
+    if (capture && line && !line.startsWith('**')){
+      trials[current][capture] += (trials[current][capture] ? ' ' : '') + line;
+      continue;
     }
 
     if (line.startsWith('Which') || line.startsWith('Why') || line.startsWith('What')){
       trials[current].mcq = { q: line, opts: [] };
+      continue;
     }
 
     if (trials[current].mcq && /^[A-D]\)/.test(line)){
@@ -1117,6 +1133,7 @@ function parseFL001(md){
 
   return trials;
 }
+
 
 function showFL001Trial(trials, letter){
   const t = trials[letter];
