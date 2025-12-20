@@ -1203,13 +1203,16 @@ applyAdd(b.loArmR, elbowHold, 0, 0);
 const torsoYaw  = THREE.MathUtils.degToRad(9) * amp * (-s);  // Y = axial rotation
 const torsoLean = THREE.MathUtils.degToRad(1.5) * amp * ( s); // Z = tiny counterbalance (optional)
 
-// use spine01/spine02 if you mapped them; otherwise fall back to b.spine
+// use spine01/spine02 if available; otherwise use whichever exists
 if (b.spine01 && b.spine02){
-  applyAdd(b.spine01, 0, torsoYaw * 0.35, torsoLean * 0.35);
-  applyAdd(b.spine02, 0, torsoYaw * 0.65, torsoLean * 0.65);
-} else {
-  applyAdd(b.spine, 0, torsoYaw, torsoLean);
+  applyAdd(b.spine01, 0, torsoYaw * 0.60, torsoLean * 0.60);  // lower trunk / hip twist
+  applyAdd(b.spine02, 0, torsoYaw * 0.40, torsoLean * 0.40);  // upper trunk
+} else if (b.spine01){
+  applyAdd(b.spine01, 0, torsoYaw, torsoLean);
+} else if (b.spine02){
+  applyAdd(b.spine02, 0, torsoYaw, torsoLean);
 }
+
 
 // head/neck: FOLLOW the torso yaw slightly (don’t use s2 here or it “shakes”)
 if (b.neck) applyAdd(b.neck, 0, torsoYaw * 0.35, 0);
