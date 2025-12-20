@@ -633,9 +633,9 @@ ctx.fill();
 
 
 // ===== LIVE RUNNER POSITION (MOVES WITH SPEED) =====
-const speed = clamp(sim.speedMph, 0, 12);
-const nx = speed / 12;
+const nx = clamp(sim.speedMph, 0, 12) / 12;
 const mx = gX + 50 + spanW * nx;
+
 
 // compute Y on dominance curve at THIS speed
 const curveY =
