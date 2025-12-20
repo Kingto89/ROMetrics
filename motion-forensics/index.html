@@ -190,8 +190,19 @@ document.getElementById('trialHelp').onclick = async ()=>{
   }
 
   const md = await res.text();
-  document.getElementById('trialHelpContent').innerHTML =
-    md.replace(/\n/g, '<br>');
+  const trial = document.getElementById('trialTag').textContent; // A, B, or C
+
+const rx = new RegExp(
+  `### Trial ${trial}[\\s\\S]*?(?=\\n---|\\n### Trial|$)`,
+  'm'
+);
+
+const match = md.match(rx);
+
+document.getElementById('trialHelpContent').innerHTML = match
+  ? `<b>Trial ${trial} Instructions</b><br><br>` + match[0].replace(/\n/g,'<br>')
+  : 'No instructions found for this trial.';
+
 };
 
 
