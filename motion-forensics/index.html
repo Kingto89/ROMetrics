@@ -1172,15 +1172,17 @@ function animate(){
   applyAdd(b.calfR, -bendR, 0, 0);
 
 
-// arms (opposite) + tuck + elbows (single pass so it can’t be overwritten)
-const addRad   = THREE.MathUtils.degToRad(32) * amp;  // tuck arms in
-const elbowRad = THREE.MathUtils.degToRad(85) * amp;  // bend elbows
+// arms (opposite) + MORE adduction + slight back bias + elbows
+const addRad   = THREE.MathUtils.degToRad(55) * amp; // tuck in harder (Y)
+const backRad  = THREE.MathUtils.degToRad(12) * amp; // rotate arms back a bit (X)
+const elbowRad = THREE.MathUtils.degToRad(85) * amp; // elbows
 
-applyAdd(b.upArmL, -armAmp * s, +addRad, 0);
-applyAdd(b.upArmR,  armAmp * s, -addRad, 0);
+applyAdd(b.upArmL, (-armAmp * s) - backRad, +addRad, 0);
+applyAdd(b.upArmR, ( armAmp * s) - backRad, -addRad, 0);
 
-applyAdd(b.loArmL, elbowRad, 0, 0);
-applyAdd(b.loArmR, elbowRad, 0, 0);
+applyAdd(b.loArmL,  elbowRad, 0, 0);
+applyAdd(b.loArmR,  elbowRad, 0, 0);
+
 
 
     // tiny torso counter
