@@ -1150,15 +1150,11 @@ function parseFL001(md){
   let capture = null;
 
   const lines = md.split('\n');
-
   for (let line of lines){
     line = line.trim();
 
-    // ---- Trial header ----
     if (line.startsWith('### Trial')){
-      const m = line.match(/Trial ([ABC])/);
-      if (!m) continue;
-      current = m[1];
+      current = line.match(/Trial ([ABC])/)[1];
       trials[current] = { clue:'', goal:'', pass:'', mcq:null };
       capture = null;
       continue;
@@ -1166,40 +1162,31 @@ function parseFL001(md){
 
     if (!current) continue;
 
-    // ---- Case clue ----
     if (line.startsWith('**CASE CLUE')){
-      trials[current].clue = line.split('**:')[1]?.trim() || '';
+      const inline = line.split('**:')[1]?.trim();
+      if (inline) trials[current].clue = inline;
       capture = 'clue';
       continue;
     }
 
-    // ---- Goal ----
     if (line.startsWith('**Goal:**')){
       trials[current].goal = line.replace('**Goal:**','').trim();
       capture = 'goal';
       continue;
     }
 
-    // ---- Pass condition ----
     if (line.startsWith('**PASS when:**')){
       trials[current].pass = line.replace('**PASS when:**','').trim();
       capture = 'pass';
       continue;
     }
 
-    // ---- Multiline capture ----
     if (capture && line && !line.startsWith('**')){
-      trials[current][capture] +=
-        (trials[current][capture] ? ' ' : '') + line;
+      trials[current][capture] += (trials[current][capture] ? ' ' : '') + line;
       continue;
     }
 
-    // ---- MCQ ----
-    if (
-      line.startsWith('Which') ||
-      line.startsWith('Why') ||
-      line.startsWith('What')
-    ){
+    if (line.startsWith('Which') || line.startsWith('Why') || line.startsWith('What')){
       trials[current].mcq = { q: line, opts: [] };
       continue;
     }
@@ -1211,7 +1198,6 @@ function parseFL001(md){
 
   return trials;
 }
-
 
 function showFL001Trial(trials, letter){
   const t = trials[letter];
@@ -1246,7 +1232,6 @@ function fl001PassTrial(){
 }
     
 async function enterFL001(){
-  setZone('cardio');
   document.getElementById('trialHelpContent').textContent = 'ENTER FL-001 CALLED';
   document.getElementById('fl001UI').style.display = 'grid';
 
@@ -1588,7 +1573,7 @@ bake(bones.thighR, 0, 0, +hip);
   };
 
   // only run when Start is on AND cardio zone is visible
-const runNow = !!(sim.running && R.rig);
+  const runNow = !!(sim.running && zoneCardio.visible && R.rig);
 
   if (runNow){
     const mph = sim.speedMph;
@@ -1698,10 +1683,13 @@ if (b.head) applyAdd(b.head, 0, torsoYaw * 0.15, 0);
 if (sim.running){
   sim.energy = clamp(sim.energy - (sim.speedMph * 0.55) * dt, 0, 100);
 
-if (currentModule?.id === 'FL-001'){
-  fl001MinEnergy = Math.min(fl001MinEnergy, sim.energy);
+  // TEMP pass trigger (fires once)
+  if (currentModule?.id === 'FL-001' && sim.energy >= 60 && !animate._fl001Passed){
+    animate._fl001Passed = true;
+    fl001PassTrial();
   }
-} 
+}
+
 
   // treadmill motion
   if (sim.running){
