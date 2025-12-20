@@ -1860,8 +1860,8 @@ positionSel.onchange = () => {
   // === Anatomic preset (preloaded) ===
 // ===== Model-specific Anatomic Baseline =====
 const ANAT_PRESETS = {
-  Roma: { addL:-32, psL:-2, wpsL:-73, hipAA: 1  },  
-  Roman:  { addL: -64, psL:-4, wpsL:-73, hipAA: 10 }   //
+  Roma: { addL:-32, psL:-2, wpsL:-73, hipAA: 1, spine01Flex: 5, upperarmFlex: 5  },  
+  Roman:  { addL: -64, psL:-4, wpsL:-73, hipAA: 10, spine01Flex: 5, upperarmFlex: 5 }   //
 };
 
 let ANAT = { ...ANAT_PRESETS.Roman };
@@ -1897,9 +1897,11 @@ function applyAnatomicBaseline(){
   // 🦴 Apply identical baselines to both arms (no mirroring)
   setPair('sh_aa_l', ANAT.addL);
   setPair('sh_aa_r', ANAT.addL);
+  setPair('sh_fe_l', ANAT.upperarmFlex);
+  setPair('sh_fe_r', ANAT.upperarmFlex);
+  setPair('spine01_fe', ANAT.spine01Flex);
   setPair('hip_aa_l',  ANAT.hipAA);
   setPair('hip_aa_r', -ANAT.hipAA);
-
 
   // Forearm & wrist PS — apply same orientation to both
   setPair('fa_ps_l', ANAT.psL);
