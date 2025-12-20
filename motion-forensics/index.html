@@ -111,11 +111,10 @@
     </select>
   </div>
 
- <div class="row">
-  <div class="k">Time</div>
-  <div class="v"><span id="trialTimer">60</span>s</div>
-</div>
-
+  <div class="row">
+    <div class="k">Trial</div>
+    <div class="v"><span id="trialTag">A</span> • <span id="trialTime">60</span>s</div>
+  </div>
 
   <div class="row" style="justify-content:flex-start; gap:8px; flex-wrap:wrap;">
     <button id="trialA" class="btn">Trial A</button>
@@ -315,7 +314,6 @@ const $fuel = document.getElementById('fuelBtn');
 const $reset = document.getElementById('resetBtn');
 
 const sim = { speedMph: 6.0, energy: 100, lastFuelT: -999, running:false };
-let trialTime = 60;
     
 const clamp = (v,a,b)=> Math.max(a, Math.min(b, v));
 
@@ -326,13 +324,15 @@ $status.textContent = "Ready";
 $status.style.color = "#cfe3ff";
 $start.textContent = "Start";
 
-$spd.addEventListener('input', ()=>{
-  sim.speedMph = parseFloat($spd.value);
-});
+$spd.addEventListener('input', ()=>{ sim.speedMph = parseFloat($spd.value); });
 
 $start.addEventListener('click', ()=>{
   sim.running = !sim.running;
   $start.textContent = sim.running ? "Pause" : "Start";
+  if (!sim.running){
+    // when paused, keep things stable
+    sim.energy = clamp(sim.energy, 0, 100);
+  }
 });
 
 $fuel.addEventListener('click', ()=>{
@@ -1186,8 +1186,6 @@ function parseFL001(md){
 }
 
 function showFL001Trial(trials, letter){
-  trialTime = 60; document.getElementById('trialTimer').textContent = 60;
-
   const t = trials[letter];
 
   document.getElementById('trialTag').textContent = letter;
