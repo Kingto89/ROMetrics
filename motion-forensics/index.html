@@ -121,7 +121,12 @@
     <button id="trialB" class="btn">Trial B</button>
     <button id="trialC" class="btn">Trial C</button>
   </div>
+<button id="trialHelp" class="btn" style="align-self:flex-start;">
+  Instructions
+</button>
 
+
+  
   <div style="border:1px solid rgba(148,163,184,.18); border-radius:14px; background:rgba(7,16,27,.22); padding:10px;">
     <div style="color:#cfe3ff; font-weight:900; font-size:12px; letter-spacing:.2px;">CASE CLUE</div>
     <div id="trialClue" style="margin-top:6px; color:#a8c0da; font-size:12px; line-height:1.25;"></div>
@@ -169,6 +174,15 @@
 
 
   <div id="hint" style="display:none;">Mouse: orbit • Wheel: zoom • Right-drag: pan • Keys: 1/2/3 = zones • 0 = all • L = labels</div>
+<div id="trialHelpModal" style="display:none; position:fixed; inset:0; z-index:100;
+  background:rgba(7,16,27,.85); display:flex; align-items:center; justify-content:center;">
+  <div style="max-width:520px; padding:16px; border-radius:16px;
+    background:rgba(15,23,42,.95); border:1px solid rgba(148,163,184,.25);">
+    <div style="font-weight:900; color:#e6eef7;">Trial Instructions</div>
+    <div id="trialHelpContent" style="margin-top:8px; color:#a8c0da; font-size:13px; line-height:1.35;"></div>
+    <button id="trialHelpClose" class="btn" style="margin-top:12px;">Close</button>
+  </div>
+</div>
 
   <script type="module">
     import * as THREE from 'three';
@@ -1134,7 +1148,6 @@ function parseFL001(md){
   return trials;
 }
 
-
 function showFL001Trial(trials, letter){
   const t = trials[letter];
 
@@ -1142,6 +1155,12 @@ function showFL001Trial(trials, letter){
   document.getElementById('trialClue').textContent = t.clue;
   document.getElementById('trialGoal').textContent = t.goal;
   document.getElementById('trialPass').textContent = t.pass;
+
+  // IMPORTANT: instruction prompt
+  document.getElementById('trialMsg').innerHTML =
+    `👉 <b>Read the instructions above.</b><br>
+     When ready, press <b>Start</b> to begin Trial ${letter}.`;
+
   document.getElementById('mcqBox').style.display = 'none';
 
   if (t.mcq){
@@ -1155,6 +1174,8 @@ function showFL001Trial(trials, letter){
     });
   }
 }
+
+   
 function fl001PassTrial(){
   document.getElementById('trialMsg').textContent =
     'Trial passed. Answer the question.';
