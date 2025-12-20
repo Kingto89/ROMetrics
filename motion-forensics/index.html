@@ -9,7 +9,7 @@
     #ui{position:fixed;left:14px;top:14px;z-index:10;display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
     .pill{border:1px solid rgba(148,163,184,.35);background:rgba(15,23,42,.78);color:#e5eefc;padding:10px 12px;border-radius:999px;font-size:13px;cursor:pointer;user-select:none;backdrop-filter: blur(8px);}
     .pill.active{border-color:rgba(56,189,248,.8);box-shadow:0 0 0 2px rgba(56,189,248,.14) inset;}
-    #badge{position:fixed;right:14px;top:14px;z-index:10;padding:12px 12px;border-radius:16px;border:1px solid rgba(148,163,184,.25);background:rgba(15,23,42,.65);color:#cfe3ff;font-size:13px;max-width:420px;backdrop-filter: blur(8px);}
+    #badge{position:fixed;right:14px;top:-82px;z-index:10;padding:12px 12px;border-radius:16px;border:1px solid rgba(148,163,184,.25);background:rgba(15,23,42,.65);color:#cfe3ff;font-size:13px;max-width:420px;backdrop-filter: blur(8px);}
     #badge .t{font-weight:900;letter-spacing:.2px;}
     #badge .p{opacity:.92;margin-top:6px;line-height:1.25;}
     #controls{margin-top:10px;padding-top:10px;border-top:1px solid rgba(148,163,184,.18);display:grid;gap:8px;}
@@ -173,10 +173,9 @@
 
 
 
-<div id="trialHelpModal" style="display:none; position:fixed; inset:0; z-index:1000;
+  <div id="hint" style="display:none;">Mouse: orbit • Wheel: zoom • Right-drag: pan • Keys: 1/2/3 = zones • 0 = all • L = labels</div>
+<div id="trialHelpModal" style="display:none; position:fixed; inset:0; z-index:100;
   background:rgba(7,16,27,.85); align-items:center; justify-content:center;">
-
-
 
   <div style="max-width:520px; padding:16px; border-radius:16px;
     background:rgba(15,23,42,.95); border:1px solid rgba(148,163,184,.25);">
@@ -1201,15 +1200,6 @@ async function enterFL001(){
   trialA.onclick = ()=>showFL001Trial(trials,'A');
   trialB.onclick = ()=>showFL001Trial(trials,'B');
   trialC.onclick = ()=>showFL001Trial(trials,'C');
-
-document.getElementById('trialHelp').onclick = ()=>{
-  document.getElementById('trialHelpContent').innerHTML =
-    `<b>CASE CLUE</b><br>${document.getElementById('trialClue').textContent}<br><br>
-     <b>GOAL</b><br>${document.getElementById('trialGoal').textContent}<br><br>
-     <b>PASS WHEN</b><br>${document.getElementById('trialPass').textContent}`;
-  document.getElementById('trialHelpModal').style.display = 'flex';
-};
-
 }
 
 
