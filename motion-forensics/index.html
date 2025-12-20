@@ -1179,6 +1179,7 @@ async function enterFL001(){
 
   const res = await fetch('../assets/forensics_modules/module_001.md');
   const md  = await res.text();
+  document.getElementById('trialHelpContent').innerHTML = md.replace(/\n/g, '<br>');
 
   const trials = parseFL001(md);
 
