@@ -1129,6 +1129,18 @@ function animate(){
 
       const base = new Map();
       Object.values(bones).forEach(b=>{ if (b) base.set(b, b.quaternion.clone()); });
+// --- bake anatomic baseline into stored "base" so restore() keeps it ---
+if (bones.spine01){
+  const flex = THREE.MathUtils.degToRad(ANAT.spine01Flex || 0); // Roman=5, Roma=0
+  const qFlex = new THREE.Quaternion().setFromEuler(new THREE.Euler(flex, 0, 0));
+
+  const baseQ = base.get(bones.spine01);
+  if (baseQ){
+    const newBase = baseQ.clone().multiply(qFlex);
+    base.set(bones.spine01, newBase);
+    bones.spine01.quaternion.copy(newBase);
+  }
+}
 
       // If we found basically nothing, don't pretend it worked
       const foundCount = [...base.keys()].length;
