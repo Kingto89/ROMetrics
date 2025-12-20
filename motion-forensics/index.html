@@ -1163,7 +1163,7 @@ function animate(){
 // legs (hip swing + 5° THIGH ADDUCTION on Z)
 const thighAdd = THREE.MathUtils.degToRad(5);
 
-applyAdd(b.thighL,  hipAmp * s, 0, +thighAdd);
+applyAdd(b.thighL,  hipAmp * s, -0, +thighAdd);
 applyAdd(b.thighR, -hipAmp * s, 0, +thighAdd);
 
 
