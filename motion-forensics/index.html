@@ -557,10 +557,10 @@ ctx.fillText(
   }
 
 // ===== ENERGY SYSTEM DOMINANCE GRAPH (SPEED-BASED) =====
-const gW = c.width - 100;   // narrower
+const gW = c.width - 60;   // narrower
 const gH = 90;             // shorter
-const gX = (c.width - gW) / 2 + 60;  // shift RIGHT
-const gY = 170;            // move UP
+const gX = (c.width - gW) / 2 + 30;  // shift RIGHT
+const gY = 190;            // move UP
 
 
 // background
@@ -622,17 +622,33 @@ for (let i = 0; i <= 100; i++) {
 }
 ctx.stroke();
 
-// runner marker
+// ===== LIVE RUNNER POSITION (MOVES WITH SPEED) =====
 const speed = clamp(sim.speedMph, 0, 12);
 const nx = speed / 12;
 const mx = gX + 50 + spanW * nx;
 
-ctx.strokeStyle = '#ffffff';
-ctx.lineWidth = 3;
+// compute Y on dominance curve at THIS speed
+const curveY =
+  baseY -
+  maxH *
+    (0.15 +
+      0.85 *
+        Math.exp(-2.8 * nx));
+
+// vertical guide line
+ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+ctx.lineWidth = 2;
 ctx.beginPath();
-ctx.moveTo(mx, baseY - maxH - 10);
-ctx.lineTo(mx, baseY + 10);
+ctx.moveTo(mx, baseY - maxH - 6);
+ctx.lineTo(mx, baseY + 6);
 ctx.stroke();
+
+// moving dot (THIS is what makes it feel alive)
+ctx.fillStyle = '#ffffff';
+ctx.beginPath();
+ctx.arc(mx, curveY, 6, 0, Math.PI * 2);
+ctx.fill();
+
 
 // labels
 ctx.fillStyle = '#cfe3ff';
