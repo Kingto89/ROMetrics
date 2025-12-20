@@ -1155,11 +1155,22 @@ function animate(){
     const s2 = Math.sin(R.phase * 2.0);
 
     const hipAmp  = THREE.MathUtils.degToRad(28) * amp;
-    const kneeAmp = THREE.MathUtils.degToRad(70) * amp;
+    const kneeAmp = THREE.MathUtils.degToRad(90) * amp;
     const armAmp  = THREE.MathUtils.degToRad(22) * amp;
     const spineTw = THREE.MathUtils.degToRad(4)  * (amp * 0.6);
 
     const b = R.rig.bones;
+    // --- Arm posture: adduct upper arms + hold elbows at ~90° ---
+const upperAdduct = THREE.MathUtils.degToRad(18);   // tweak 12–25 if needed
+const elbow90     = THREE.MathUtils.degToRad(90);
+
+// upperarm adduction (Z)
+applyAdd(b.upperarmL, 0, 0,  upperAdduct);
+applyAdd(b.upperarmR, 0, 0, -upperAdduct);
+
+// elbow flexion (X)
+applyAdd(b.lowerarmL, -elbow90, 0, 0);
+applyAdd(b.lowerarmR, -elbow90, 0, 0);
 
     // legs
     applyAdd(b.thighL,  hipAmp * s, 0, 0);
