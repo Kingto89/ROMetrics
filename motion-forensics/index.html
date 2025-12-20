@@ -214,7 +214,11 @@ const clean = section.split('**Question')[0];
 
 document.getElementById('trialHelpContent').innerHTML =
   `<b>Trial ${trial} Instructions</b><br><br>` +
-  clean.replace(/\n/g, '<br>');
+  clean
+  .replace(/^###\s+/gm, '')                 // remove ### headings
+  .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')  // bold
+  .replace(/^\d+\)\s+/gm, '• ')            // numbered steps → bullets
+  .replace(/\n/g, '<br>');
 };
 
 
