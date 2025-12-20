@@ -199,10 +199,13 @@ const rx = new RegExp(
 
 const match = md.match(rx);
 
-document.getElementById('trialHelpContent').innerHTML = match
-  ? `<b>Trial ${trial} Instructions</b><br><br>` + match[0].replace(/\n/g,'<br>')
-  : 'No instructions found for this trial.';
+const clean = match
+  ? match[0].split('**Question')[0]
+  : '';
 
+document.getElementById('trialHelpContent').innerHTML = clean
+  ? `<b>Trial ${trial} Instructions</b><br><br>` + clean.replace(/\n/g,'<br>')
+  : 'No instructions found for this trial.';
 };
 
 
