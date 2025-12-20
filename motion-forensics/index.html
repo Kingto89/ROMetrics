@@ -552,10 +552,10 @@ $reset.addEventListener('click', ()=>{
         ctx.globalAlpha = 1;
       }
      // ===== ENERGY SYSTEM CONTRIBUTION GRAPH =====
-const gX = 42;
-const gY = 220;     // <-- move UP so it fits on the board
 const gW = c.width - 84;
-const gH = 70;      // <-- slightly shorter for safety
+const gH = 70;
+const gX = (c.width - gW) / 2;   // centered horizontally
+const gY = 220;                  // below Status, inside canvas
 
 
 // ===== ENERGY SYSTEM CONTRIBUTION (SINGLE SOURCE OF TRUTH) =====
