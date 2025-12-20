@@ -1622,7 +1622,7 @@ const torsoLean = THREE.MathUtils.degToRad(1.5) * amp * ( s); // Z = tiny counte
 
 // use spine01/spine02 if available; otherwise use whichever exists
 if (b.spine01 && b.spine02){
-  applyAdd(b.spine01, 0, torsoYaw * 0.60, torsoLean * 0.60);  // lower trunk / hip twist
+  applyAdd(b.spine01, 0, torsoYaw * 0.40, torsoLean * 0.60);  // lower trunk / hip twist
   applyAdd(b.spine02, 0, torsoYaw * 0.40, torsoLean * 0.40);  // upper trunk
 } else if (b.spine01){
   applyAdd(b.spine01, 0, torsoYaw, torsoLean);
