@@ -1166,21 +1166,19 @@ const upperR = avatarRoot?.getObjectByName('upperarm_R');
 const lowerL = avatarRoot?.getObjectByName('lowerarm_L');
 const lowerR = avatarRoot?.getObjectByName('lowerarm_R');
 
-// shoulder adduction (Z axis): bring arms closer to body
-const addDeg = 18 * amp;
+// shoulder ADduction (tuck arms in) — use Y on this rig
+const addDeg = 38 * amp;                       // stronger tuck
 const addRad = THREE.MathUtils.degToRad(addDeg);
 
-if (upperL) applyAdd(upperL, 0, 0, +addRad);
-if (upperR) applyAdd(upperR, 0, 0, -addRad);
+if (upperL) applyAdd(upperL, 0, +addRad, 0);
+if (upperR) applyAdd(upperR, 0, -addRad, 0);
 
-// keep your arm swing (X axis)
-if (upperL) applyAdd(upperL,  armAmp * s, 0, 0);
-if (upperR) applyAdd(upperR, -armAmp * s, 0, 0);
+// elbow flex — use Z on this rig (forearm bend)
+const elbowRad = THREE.MathUtils.degToRad(95) * amp;
 
-// elbow flex to ~90° (X axis)
-const elbowRad = THREE.MathUtils.degToRad(90) * amp;
-if (lowerL) applyAdd(lowerL, elbowRad, 0, 0);
-if (lowerR) applyAdd(lowerR, elbowRad, 0, 0);
+if (lowerL) applyAdd(lowerL, 0, 0, +elbowRad);
+if (lowerR) applyAdd(lowerR, 0, 0, -elbowRad);
+
 
 
     // legs
