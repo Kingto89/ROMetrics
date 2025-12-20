@@ -1162,7 +1162,7 @@ function animate(){
     const b = R.rig.bones;
 
 // legs (hip swing + ° THIGH ADDUCTION)
-const thighAdd = THREE.MathUtils.degToRad(10);
+const thighAdd = THREE.MathUtils.degToRad(-10);
 
 applyAdd(b.thighL,  hipAmp * s, -thighAdd, 0);
 applyAdd(b.thighR, -hipAmp * s, +thighAdd, 0);
