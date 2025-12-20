@@ -1177,7 +1177,7 @@ function fl001PassTrial(){
 async function enterFL001(){
   document.getElementById('fl001UI').style.display = 'grid';
 
-  const res = await fetch('/assets/forensics_modules/module_001.md');
+  const res = await fetch('../assets/forensics_modules/module_001.md');
   const md  = await res.text();
 
   const trials = parseFL001(md);
