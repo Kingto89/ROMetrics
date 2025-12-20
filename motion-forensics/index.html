@@ -347,16 +347,26 @@ $fuel.addEventListener('click', ()=>{
 });  
 
 $reset.addEventListener('click', ()=>{
+  // reset sim
   sim.energy = 100;
   sim.lastFuelT = -999;
   sim.running = false;
+
+  // reset trial timer
+  trialTime = 60;
+  document.getElementById('trialTime').textContent = 60;
+
+  // reset UI state
   animate._fl001Passed = false;
   $start.textContent = "Start";
   $status.textContent = "Ready";
   $status.style.color = "#cfe3ff";
+
+  // hide MCQ + message
+  document.getElementById('mcqBox').style.display = 'none';
+  document.getElementById('trialMsg').textContent =
+    'Read the instructions above. When ready, press Start.';
 });
-
-
 
     const scene = new THREE.Scene();
     scene.fog = new THREE.Fog(0x07101b, 10, 45);
