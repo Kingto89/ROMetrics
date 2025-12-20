@@ -532,7 +532,7 @@ function drawPanel(screen, title){
   const eng = sim.energy;
   const status = (eng <= 10) ? 'CRASH' : (eng <= 25 ? 'Warning' : 'Stable');
 // ===== SINGLE-LINE STATUS ROW =====
-ctx.font = '900 18px system-ui, -apple-system, Segoe UI, Roboto, Inter';
+ctx.font = '900 28px system-ui, -apple-system, Segoe UI, Roboto, Inter';
 ctx.fillStyle = '#e6eef7';
 
 const lineY = 150;
@@ -542,23 +542,6 @@ ctx.fillText(
   42,
   lineY
 );
-
-
-  // status chip
-  const chipX = 42, chipY = 222, chipW = 260, chipH = 64;
-  ctx.fillStyle =
-    status === 'CRASH'   ? 'rgba(255,80,80,0.25)' :
-    status === 'Warning' ? 'rgba(255,205,80,0.20)' :
-                           'rgba(56,189,248,0.18)';
-  roundRect(ctx, chipX, chipY, chipW, chipH, 18);
-  ctx.fill();
-
-  ctx.strokeStyle =
-    status === 'CRASH'   ? 'rgba(255,80,80,0.75)' :
-    status === 'Warning' ? 'rgba(255,205,80,0.65)' :
-                           'rgba(56,189,248,0.65)';
-  ctx.lineWidth = 5;
-  ctx.stroke();
 
 
   // fuel pulse
