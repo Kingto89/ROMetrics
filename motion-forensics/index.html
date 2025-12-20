@@ -344,22 +344,7 @@ $fuel.addEventListener('click', ()=>{
   if (!sim.running) return;
   sim.energy = clamp(sim.energy + 10, 0, 100);
   sim.lastFuelT = performance.now()/1000;
-});
-
-  if (typeof currentModule !== 'undefined' && currentModule && currentModule.id === 'FL-001'){
-  trialTime -= dt;
-  if (trialTime < 0) trialTime = 0;
-
-  document.getElementById('trialTime').textContent =
-    Math.ceil(trialTime);
-
-  if (trialTime === 0){
-    sim.running = false;
-    $start.textContent = "Start";
-  }
-}
-  
-    
+});  
 
 $reset.addEventListener('click', ()=>{
   sim.energy = 100;
@@ -1322,6 +1307,20 @@ function animate(){
   controls.update();
 
   const dt = Math.min(0.05, clock.getDelta());
+// ===== FL-001 TIMER =====
+if (sim.running && currentModule?.id === 'FL-001'){
+  trialTime -= dt;
+  if (trialTime < 0) trialTime = 0;
+
+  document.getElementById('trialTime').textContent = Math.ceil(trialTime);
+
+  if (trialTime === 0){
+    sim.running = false;
+    $start.textContent = "Start";
+  }
+}
+
+  
 // ===== BLINK (works for BOTH Roma + Roman via auto-detect morph names) =====
 if (!animate._blink) animate._blink = { model:null, targets:[], state:0, t:0, next:0 };
 
