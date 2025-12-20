@@ -1177,8 +1177,20 @@ function fl001PassTrial(){
 async function enterFL001(){
   document.getElementById('fl001UI').style.display = 'grid';
 
+  
   const res = await fetch('../assets/forensics_modules/module_001.md');
-  const md  = await res.text();
+
+if (!res.ok) {
+  document.getElementById('trialHelpContent').textContent =
+    'MD LOAD FAILED: ' + res.status;
+  return;
+}
+
+const md = await res.text();
+
+document.getElementById('trialHelpContent').textContent =
+  'MD LOADED (' + md.length + ' chars)';
+
   document.getElementById('trialHelpContent').innerHTML = md.replace(/\n/g, '<br>');
 
   const trials = parseFL001(md);
