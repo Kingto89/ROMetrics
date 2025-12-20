@@ -1160,26 +1160,6 @@ function animate(){
     const spineTw = THREE.MathUtils.degToRad(4)  * (amp * 0.6);
 
     const b = R.rig.bones;
-// ===== ARMS (use exact bone names from your list) =====
-const upperL = avatarRoot?.getObjectByName('upperarm_L');
-const upperR = avatarRoot?.getObjectByName('upperarm_R');
-const lowerL = avatarRoot?.getObjectByName('lowerarm_L');
-const lowerR = avatarRoot?.getObjectByName('lowerarm_R');
-
-// shoulder ADduction (tuck arms in) — use Y on this rig
-const addDeg = 38 * amp;                       // stronger tuck
-const addRad = THREE.MathUtils.degToRad(addDeg);
-
-if (upperL) applyAdd(upperL, 0, +addRad, 0);
-if (upperR) applyAdd(upperR, 0, -addRad, 0);
-
-// elbow flex — use Z on this rig (forearm bend)
-const elbowRad = THREE.MathUtils.degToRad(95) * amp;
-
-if (lowerL) applyAdd(lowerL, 0, 0, +elbowRad);
-if (lowerR) applyAdd(lowerR, 0, 0, -elbowRad);
-
-
 
     // legs
     applyAdd(b.thighL,  hipAmp * s, 0, 0);
@@ -1192,11 +1172,16 @@ if (lowerR) applyAdd(lowerR, 0, 0, -elbowRad);
   applyAdd(b.calfR, -bendR, 0, 0);
 
 
-    // arms (opposite)
-    applyAdd(b.upArmL, -armAmp * s, 0, 0);
-    applyAdd(b.upArmR,  armAmp * s, 0, 0);
-    applyAdd(b.loArmL,  armAmp * Math.max(0,  s), 0, 0);
-    applyAdd(b.loArmR,  armAmp * Math.max(0, -s), 0, 0);
+// arms (opposite) + tuck + elbows (single pass so it can’t be overwritten)
+const addRad   = THREE.MathUtils.degToRad(32) * amp;  // tuck arms in
+const elbowRad = THREE.MathUtils.degToRad(85) * amp;  // bend elbows
+
+applyAdd(b.upArmL, -armAmp * s, +addRad, 0);
+applyAdd(b.upArmR,  armAmp * s, -addRad, 0);
+
+applyAdd(b.loArmL, elbowRad, 0, 0);
+applyAdd(b.loArmR, elbowRad, 0, 0);
+
 
     // tiny torso counter
     applyAdd(b.spine, 0, 0, spineTw * s2);
