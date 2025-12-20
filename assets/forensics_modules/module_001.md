@@ -1,6 +1,5 @@
-```rometrics-case
 {
-  "crashEnergy": 10,
+  "Energy Systems": 10,
   "duration": 60,
   "trials": {
     "A": {
