@@ -175,7 +175,8 @@
 
   <div id="hint" style="display:none;">Mouse: orbit • Wheel: zoom • Right-drag: pan • Keys: 1/2/3 = zones • 0 = all • L = labels</div>
 <div id="trialHelpModal" style="display:none; position:fixed; inset:0; z-index:100;
-  background:rgba(7,16,27,.85); align-items:center; justify-content:center;">
+  background:rgba(7,16,27,.85); display:flex; align-items:center; justify-content:center;">
+
 
   <div style="max-width:520px; padding:16px; border-radius:16px;
     background:rgba(15,23,42,.95); border:1px solid rgba(148,163,184,.25);">
@@ -1200,6 +1201,15 @@ async function enterFL001(){
   trialA.onclick = ()=>showFL001Trial(trials,'A');
   trialB.onclick = ()=>showFL001Trial(trials,'B');
   trialC.onclick = ()=>showFL001Trial(trials,'C');
+
+document.getElementById('trialHelp').onclick = ()=>{
+  document.getElementById('trialHelpContent').innerHTML =
+    `<b>CASE CLUE</b><br>${document.getElementById('trialClue').textContent}<br><br>
+     <b>GOAL</b><br>${document.getElementById('trialGoal').textContent}<br><br>
+     <b>PASS WHEN</b><br>${document.getElementById('trialPass').textContent}`;
+  document.getElementById('trialHelpModal').style.display = 'flex';
+};
+
 }
 
 
