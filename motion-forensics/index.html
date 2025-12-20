@@ -557,20 +557,20 @@ const gY = 300;
 const gW = c.width - 84;
 const gH = 90;
 
-// derive relative demand (0–1)
-// ===== REAL-TIME METABOLIC CONTRIBUTION =====
-// dE > 0  → aerobic dominant
-// dE < 0  → anaerobic contribution rising
+// ===== ENERGY SYSTEM CONTRIBUTION (SINGLE SOURCE OF TRUTH) =====
+// dE > 0  = aerobic dominant (energy stable / rising)
+// dE < 0  = anaerobic dominant (energy falling)
 
-let aerobic = clamp(0.7 + dE * 6, 0, 1);
-let anaerobic = clamp(-dE * 7, 0, 1);
-let atpPC = clamp(fuelPulse * 0.8, 0, 0.8);
+let aerobic   = clamp(0.75 + dE * 6, 0, 1);
+let anaerobic = clamp(-dE * 6, 0, 1);
+let atpPC     = clamp(fuelPulse * 0.8, 0, 0.8);
 
 // normalize
 const total = aerobic + anaerobic + atpPC || 1;
 aerobic   /= total;
 anaerobic /= total;
 atpPC     /= total;
+
       
 
 // aerobic dominance when energy is stable or recovering
