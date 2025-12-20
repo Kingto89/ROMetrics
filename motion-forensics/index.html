@@ -1099,6 +1099,8 @@ function animate(){
       };
 
       const bones = {
+        neck:  find(['neck','Neck','mixamorigNeck']),
+        head:  find(['head','Head','mixamorigHead']),
         thighL: find(['thigh_L','thigh.L','LeftUpLeg','mixamorigLeftUpLeg']),
         thighR: find(['thigh_R','thigh.R','RightUpLeg','mixamorigRightUpLeg']),
         calfL:  find(['calf_L','shin_L','calf.L','LeftLeg','mixamorigLeftLeg']),
@@ -1201,6 +1203,8 @@ applyAdd(b.loArmR, elbowHold, 0, 0);
 const torsoYaw  = THREE.MathUtils.degToRad(9) * amp * (-s);   // Y = axial rotation (NO shake)
 const torsoLean = THREE.MathUtils.degToRad(2) * amp * ( s);   // Z = tiny counterbalance (optional)
 applyAdd(b.spine, 0, torsoYaw, torsoLean);
+if (b.neck) applyAdd(b.neck, 0, 0, -spineTw * 0.55 * s2);
+if (b.head) applyAdd(b.head, 0, 0, -spineTw * 0.80 * s2);
 
   } else if (R.wasRunning) {
     restore();
