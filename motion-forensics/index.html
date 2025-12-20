@@ -553,9 +553,10 @@ $reset.addEventListener('click', ()=>{
       }
      // ===== ENERGY SYSTEM CONTRIBUTION GRAPH =====
 const gX = 42;
-const gY = 300;
+const gY = 220;     // <-- move UP so it fits on the board
 const gW = c.width - 84;
-const gH = 90;
+const gH = 70;      // <-- slightly shorter for safety
+
 
 // ===== ENERGY SYSTEM CONTRIBUTION (SINGLE SOURCE OF TRUTH) =====
 // Based on REAL-TIME energy trend (no timers, no delays)
