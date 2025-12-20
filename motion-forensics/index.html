@@ -331,8 +331,8 @@ const $start = document.getElementById('startBtn');
 const $fuel = document.getElementById('fuelBtn');
 const $reset = document.getElementById('resetBtn');
 
-const sim = { speedMph: 6.0, energy: 100, lastFuelT: -999, running:false };
-let trialTime = 60;
+const sim = { speedMph: 22.0, energy: 100, lastFuelT: -999, running:false };
+let trialTime = 180;
     
 const clamp = (v,a,b)=> Math.max(a, Math.min(b, v));
 
@@ -351,7 +351,7 @@ $start.addEventListener('click', ()=>{
 
   // START TIMER when trial is running
   if (sim.running && currentModule?.id === 'FL-001'){
-    if (typeof trialTime !== 'number') trialTime = 60;
+    if (typeof trialTime !== 'number') trialTime = 180;
     document.getElementById('trialTime').textContent = Math.ceil(trialTime);
   }
 });
@@ -370,8 +370,8 @@ $reset.addEventListener('click', ()=>{
   sim.running = false;
 
   // reset trial timer
-  trialTime = 60;
-  document.getElementById('trialTime').textContent = 60;
+  trialTime = 180;
+  document.getElementById('trialTime').textContent = 180;
 
   // reset UI state
   animate._fl001Passed = false;
