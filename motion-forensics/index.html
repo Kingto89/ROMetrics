@@ -558,46 +558,23 @@ const gW = c.width - 84;
 const gH = 90;
 
 // ===== ENERGY SYSTEM CONTRIBUTION (SINGLE SOURCE OF TRUTH) =====
-// dE > 0  = aerobic dominant (energy stable / rising)
-// dE < 0  = anaerobic dominant (energy falling)
+// Based on REAL-TIME energy trend (no timers, no delays)
 
-let aerobic   = clamp(0.75 + dE * 6, 0, 1);
-let anaerobic = clamp(-dE * 6, 0, 1);
-let atpPC     = clamp(fuelPulse * 0.8, 0, 0.8);
+if (!drawPanel._prevEnergy) drawPanel._prevEnergy = sim.energy;
+const dE = sim.energy - drawPanel._prevEnergy;
+drawPanel._prevEnergy = sim.energy;
 
-// normalize
-const total = aerobic + anaerobic + atpPC || 1;
-aerobic   /= total;
-anaerobic /= total;
-atpPC     /= total;
-
-      
-
-// aerobic dominance when energy is stable or recovering
-let aerobic = clamp(0.6 + dE * 4 + fuelPulse * 0.3, 0, 1);
-
-// anaerobic rises when energy is dropping fast
-let anaerobic = clamp(-dE * 5, 0, 1);
-
-// ATP-PC spikes briefly after fuel
-let atpPC = clamp(fuelPulse * 0.6, 0, 0.6);
+// ATP-PC spikes immediately with fuel
+const aerobic   = clamp(0.75 + dE * 6, 0, 1);
+const anaerobic = clamp(-dE * 6, 0, 1);
+const atpPC     = clamp(fuelPulse * 0.8, 0, 0.8);
 
 // normalize
 const total = aerobic + anaerobic + atpPC || 1;
-aerobic   /= total;
-anaerobic /= total;
-atpPC     /= total;
+const aFrac = aerobic / total;
+const nFrac = anaerobic / total;
+const pFrac = atpPC / total;
 
-// simple physiology-based contribution
-let aerobic = clamp(1.0 - (demand * 0.7), 0, 1);
-let anaerobic = clamp(demand * 0.6, 0, 1);
-let atpPC = clamp(demand < 0.3 ? (0.3 - demand) * 2 : 0, 0, 0.3);
-
-// normalize stack
-const total = aerobic + anaerobic + atpPC || 1;
-aerobic /= total;
-anaerobic /= total;
-atpPC /= total;
 
 // background
 ctx.fillStyle = 'rgba(15,23,42,0.85)';
@@ -612,20 +589,21 @@ const y = gY + 18;
 
 // Aerobic
 ctx.fillStyle = '#38bdf8';
-ctx.fillRect(x, y, barW * aerobic, barH);
+ctx.fillRect(x, y, barW * aFrac, barH);
 
 // Anaerobic
 ctx.fillStyle = '#fbbf24';
-ctx.fillRect(x + barW * aerobic, y, barW * anaerobic, barH);
+ctx.fillRect(x + barW * aFrac, y, barW * nFrac, barH);
 
 // ATP-PC
 ctx.fillStyle = '#ef4444';
 ctx.fillRect(
-  x + barW * (aerobic + anaerobic),
+  x + barW * (aFrac + nFrac),
   y,
-  barW * atpPC,
+  barW * pFrac,
   barH
 );
+
 
 // labels
 ctx.fillStyle = '#e6eef7';
