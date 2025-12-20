@@ -531,11 +531,18 @@ function drawPanel(screen, title){
   const spd = sim.speedMph;
   const eng = sim.energy;
   const status = (eng <= 10) ? 'CRASH' : (eng <= 25 ? 'Warning' : 'Stable');
+// ===== SINGLE-LINE STATUS ROW =====
+ctx.font = '900 18px system-ui, -apple-system, Segoe UI, Roboto, Inter';
+ctx.fillStyle = '#e6eef7';
 
-  ctx.font = '800 44px system-ui, -apple-system, Segoe UI, Roboto, Inter';
-  ctx.fillStyle = '#cfe3ff';
-  ctx.fillText(`Speed: ${spd.toFixed(1)} mph`, 42, 132);
-  ctx.fillText(`Energy: ${Math.round(eng)}%`, 42, 192);
+const lineY = 150;
+
+ctx.fillText(
+  `Speed ${spd.toFixed(1)} mph   |   Energy ${Math.round(eng)}%   |   ${status}`,
+  42,
+  lineY
+);
+
 
   // status chip
   const chipX = 42, chipY = 222, chipW = 260, chipH = 64;
@@ -553,9 +560,6 @@ function drawPanel(screen, title){
   ctx.lineWidth = 5;
   ctx.stroke();
 
-  ctx.fillStyle = '#e6eef7';
-  ctx.font = '900 34px system-ui, -apple-system, Segoe UI, Roboto, Inter';
-  ctx.fillText(`Status: ${status}`, chipX+18, chipY+chipH/2);
 
   // fuel pulse
   const t = performance.now()/1000;
