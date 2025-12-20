@@ -570,10 +570,11 @@ function drawPanel(screen, title){
   }
 
 // ===== ENERGY SYSTEM DOMINANCE GRAPH (SPEED-BASED) =====
-const gW = c.width - 90;
-const gH = 120;
-const gX = (c.width - gW) / 2;
-const gY = 235;
+const gW = c.width - 160;   // narrower
+const gH = 90;             // shorter
+const gX = (c.width - gW) / 2 + 60;  // shift RIGHT
+const gY = 195;            // move UP
+
 
 // background
 ctx.fillStyle = 'rgba(15,23,42,0.95)';
