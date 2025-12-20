@@ -783,6 +783,20 @@ function roundRect(ctx, x, y, w, h, r){
     tmDeck.position.set(0, 0.26, 0);
     tmDeck.receiveShadow = true;
     treadmill.add(tmDeck);
+// --- treadmill belt canvas (SOURCE) ---
+const beltCanvas = document.createElement('canvas');
+beltCanvas.width = 512;
+beltCanvas.height = 512;
+const bctx = beltCanvas.getContext('2d');
+
+// simple dark belt texture
+bctx.fillStyle = '#0b1018';
+bctx.fillRect(0, 0, 512, 512);
+
+bctx.fillStyle = 'rgba(255,255,255,0.08)';
+for (let y = 0; y < 512; y += 18){
+  bctx.fillRect(0, y, 512, 2);
+}
 
     // --- treadmill belt texture (REQUIRED) ---
 const beltTex = new THREE.CanvasTexture(beltCanvas);
