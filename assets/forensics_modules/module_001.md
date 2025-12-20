@@ -1,105 +1,101 @@
-# FL-001 — Metabolic Demand: Energy Systems
 
-**Objective:** Use pacing and fueling to prevent performance collapse.  
-**Audience:** 1st-year Exercise Science, 1st-year DPT  
-**Time-on-task:** 6–10 minutes  
-**Environment:** Cardio Bay (treadmill + cardio board)
+## FL-001 — Metabolic Demand: Primary Energy Sources
 
----
+**Lesson focus:**  
+Running speed determines which energy system is used most.  
+As speed increases, the primary energy source shifts from **Aerobic Metabolism** to **Anaerobic Glycolysis**, and at very high speeds to **PCr**.
 
-## IN-APP INSTRUCTIONS (STUDENT VIEW)
-
-### Complete all 3 trials (A → B → C)
+You will use the **Primary Energy Source indicator** to complete each trial.
 
 ---
 
-### Trial A — “Find Your Sustainable Pace” (60s)
-**CASE CLUE (read first):** The goal is to select a speed where ATP demand can be continuously met without excessive depletion of available energy.
+### Trial A — Aerobic Metabolism
 
-**Goal:** Find the highest speed at which aerobic metabolism remains the primary energy source.
+**Concept (read first):**  
+At lower speeds, aerobic metabolism can meet energy demand.  
+Above a certain speed, aerobic metabolism is no longer the primary source.
+
+---
+
+**Goal:**  
+Find the **highest speed** at which **Aerobic Metabolism** remains the **primary energy source**.
+
+---
 
 **Steps**
 1. Select **Work Type: Steady-State**  
-2. Set a running speed using the **mph slider**  
-3. Press **Start Trial**  
-4. Observe the energy trend over time  
-5. If energy shows a steady decline, reduce speed and retry
+2. Increase speed using the **mph slider**  
+3. Observe the **Primary Energy Source** indicator  
+4. If the indicator switches away from **Aerobic**, reduce speed and retry  
+
+---
 
 **PASS when:**  
-- Speed is as high as possible  
+- Speed is maximized  
 - **Primary Energy Source = Aerobic Metabolism**
 
-**Question (after Trial A) — 3 attempts**
-Which energy system best supports sustained steady work?  
-A) ATP-PCr  
-B) Anaerobic Glycolysis  
-C) Oxidative (Aerobic)  
-D) None
-
 ---
 
-### Trial B — “Fuel Timing Matters” (60s)
-**CASE CLUE (read first):** At higher intensity, you drain energy faster. Fuel helps — but timing matters.
+### Trial B — Anaerobic Glycolysis With Fuel Support
 
-**Goal:Complete the trial without Energy dropping below 35%, using exactly two refuels to offset increased ATP demand.
+**Concept (read first):**  
+At higher speeds, anaerobic glycolysis becomes the primary energy source.  
+Fuel can support continued work but does not change which system is dominant.
+
+---
 
 **Setup**
-- Work Type: **Tempo/Threshold**
-- Speed: **8.0 mph** (locked)
-
-**Steps**
-1) Select **Work Type: Tempo/Threshold**  
-2) Confirm speed is **8.0 mph**  
-3) Press **Start Trial**  
-4) Press **Fuel +10** exactly **two** times (you choose WHEN)  
-5) Finish the 60s timer with Energy ≥ 35%
-
-**PASS when:** Finish 60s with Energy ≥ 35% AND used exactly 2 fuels.
-
-**Question (after Trial B) — 3 attempts**
-Why can “late fuel” fail even if you press Fuel +10?  
-A) Fuel only works at low speeds  
-B) Fuel adds energy, but you can still drain faster than you add  
-C) Fuel permanently stops energy drain  
-D) Fuel timing never matters
+- **Work Type:** Tempo / Threshold  
+- **Speed:** **8.0 mph** (locked)
 
 ---
 
-### Trial C — “Same Fuel, Better Strategy” (60s)
-**CASE CLUE (read first):** Two people can use the same amount of fuel and get different outcomes based on strategy.
+**Goal:**  
+Maintain work while **Anaerobic Glycolysis** is the **primary energy source**, using fuel appropriately.
 
-**Goal:** Repeat the same trial as Trial B and finish with more Energy remaining by changing when you refuel.
+---
+
+**Steps**
+1. Press **Start Trial**  
+2. Confirm the **Primary Energy Source = Anaerobic Glycolysis**  
+3. Use **Fuel +10 exactly two times**  
+4. Monitor Energy during the trial  
+
+---
+
+**PASS when:**  
+- **Primary Energy Source remains Anaerobic Glycolysis**  
+- **Exactly two** fuel uses were applied  
+
+---
+
+### Trial C — Fuel Timing Does Not Change the Energy System
+
+**Concept (read first):**  
+Changing fuel timing can affect fatigue, but it does **not** change the primary energy source at a fixed speed.
+
+---
+
+**Goal:**  
+Demonstrate that **fuel timing affects outcome**, not **energy system selection**.
+
+---
 
 **Rules**
-- Work Type: **Tempo/Threshold**
-- Speed: **8.0 mph** (locked)
-- Fuel presses: **exactly 2**
-
-**Steps**
-1) Press **Start Trial**  
-2) Use exactly **2 fuels** again  
-3) Your goal is to end with **higher final Energy** than Trial B
-
-**PASS when:** Final Energy is higher than your Trial B final Energy.
-
-**Question (after Trial C) — 3 attempts**
-What did you change to improve the outcome if speed and fuel amount stayed the same?  
-A) You changed the timing of the fuel  
-B) You changed gravity  
-C) You changed the treadmill distance  
-D) Nothing can change the outcome
+- **Work Type:** Tempo / Threshold  
+- **Speed:** **8.0 mph** (locked)  
+- **Fuel uses:** **exactly 2**
 
 ---
 
-## (INTERNAL) SCORING + RECORDING (NOT SHOWN TO STUDENTS)
+**Steps**
+1. Press **Start Trial**  
+2. Use **exactly two** fuel uses at different times than Trial B  
+3. Observe Energy behavior  
+4. Observe the **Primary Energy Source** indicator  
 
-### MCQ scoring (per question, max 4.0)
-- Attempt 1 correct = 4.0
-- Attempt 2 correct = 3.5
-- Attempt 3 correct = 2.5
-- Miss all 3 = 1.5
+---
 
-### Data recorded
-- Per trial: minEnergy, finalEnergy, timeInWarning, fuelTimes[], completionTimeSec
-- Per question: correct, attemptsUsed, pointsAwarded
-- Module totals: totalPoints
+**PASS when:**  
+- Final Energy differs from Trial B  
+- **Primary Energy Source remains Anaerobic Glycolysis**
