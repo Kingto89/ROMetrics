@@ -1221,7 +1221,11 @@ if (BL.targets.length){
         upArmL: find(['upperarm_L','upper_arm_L','upperarm.L','LeftArm','mixamorigLeftArm']),
         upArmR: find(['upperarm_R','upper_arm_R','upperarm.R','RightArm','mixamorigRightArm']),
         loArmL: find(['lowerarm_L','forearm_L','lowerarm.L','LeftForeArm','mixamorigLeftForeArm']),
-        loArmR: find(['lowerarm_R','forearm_R','lowerarm.R','RightForeArm','mixamorigRightForeArm'])
+        loArmR: find(['lowerarm_R','forearm_R','lowerarm.R','RightForeArm','mixamorigRightForeArm']),
+        footL: find(['foot_L','foot.L','LeftFoot','mixamorigLeftFoot']),
+        footR: find(['foot_R','foot.R','RightFoot','mixamorigRightFoot']),
+        toesL: find(['toes_L','toe_L','toes.L','LeftToeBase','mixamorigLeftToeBase']),
+        toesR: find(['toes_R','toe_R','toes.R','RightToeBase','mixamorigRightToeBase'])
       };
 
       const base = new Map();
@@ -1353,6 +1357,24 @@ if (ACTIVE_MODEL_ID === "Roma") {
     // knee flexion = X axis (rx). keep your existing bendL/bendR logic.
   applyAdd(b.calfL, -bendL, 0, 0);
   applyAdd(b.calfR, -bendR, 0, 0);
+// ankles/toes (dorsi in swing, plantar at toe-off)
+const swingL  = Math.max(0, -s);
+const swingR  = Math.max(0,  s);
+const stanceL = Math.max(0,  s);
+const stanceR = Math.max(0, -s);
+
+const ankleDorsi = THREE.MathUtils.degToRad(12) * amp; // toe clearance
+const anklePF    = THREE.MathUtils.degToRad(18) * amp; // toe-off
+const toeExt     = THREE.MathUtils.degToRad(15) * amp; // MTP extension at toe-off
+
+const ankleL = (+ankleDorsi * swingL) + (-anklePF * stanceL);
+const ankleR = (+ankleDorsi * swingR) + (-anklePF * stanceR);
+
+applyAdd(b.footL, ankleL, 0, 0);
+applyAdd(b.footR, ankleR, 0, 0);
+
+applyAdd(b.toesL, toeExt * stanceL, 0, 0);
+applyAdd(b.toesR, toeExt * stanceR, 0, 0);
 
 
 // arms (opposite) + MORE adduction + slight back bias + elbows
