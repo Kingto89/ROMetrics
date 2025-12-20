@@ -1168,8 +1168,8 @@ function animate(){
     const bendL = Math.max(0, -s) * kneeAmp;
     const bendR = Math.max(0,  s) * kneeAmp;
     // knee flexion = X axis (rx). keep your existing bendL/bendR logic.
-  applyAdd(b.calfL, bendL, 0, 0);
-  applyAdd(b.calfR, bendR, 0, 0);
+  applyAdd(b.calfL, -bendL, 0, 0);
+  applyAdd(b.calfR, -bendR, 0, 0);
 
 
     // arms (opposite)
