@@ -93,7 +93,7 @@
       <div class="v"><span id="spdVal">6.0</span> mph</div>
     </div>
 
-    <input id="spd" type="range" min="0" max="12" step="0.1" value="6"/>
+    <input id="spd" type="range" min="0" max="22" step="0.1" value="6"/>
 
     <div class="row">
       <div class="k">Energy</div>
@@ -606,7 +606,7 @@ ctx.fillRect(
 
 // ===== LIVE ENERGY DOMINANCE LINE (MOVES WITH MODEL) =====
 const speed = clamp(sim.speedMph, 0, 12);
-const nx = speed / 12;
+const nx = speed / 22;
 
 // dominance weighting based on speed
 let dominance;
@@ -632,31 +632,61 @@ ctx.arc(gX + 50 + spanW * nx, liveY, 6, 0, Math.PI * 2);
 ctx.fill();
 
 
-// ===== LIVE RUNNER POSITION (MOVES WITH SPEED) =====
-const mx = gX + 50 + spanW * nx;
+// ===== LIVE ENERGY DOMINANCE GRAPH (ACTUALLY MOVES) =====
+const nx = clamp(sim.speedMph, 0, 22) / 22;
 
+// determine dominant system by speed
+let dominant;
+let domColor;
+let domLevel;
 
-// compute Y on dominance curve at THIS speed
-const curveY =
-  baseY -
-  maxH *
-    (0.15 +
-      0.85 *
-        Math.exp(-2.8 * nx));
+if (nx < 0.22) {
+  dominant = 'ATP-PC';
+  domColor = '#ef4444';
+  domLevel = 0.85;
+} else if (nx < 0.58) {
+  dominant = 'Anaerobic Glycolysis';
+  domColor = '#fbbf24';
+  domLevel = 0.55;
+} else {
+  dominant = 'Aerobic Metabolism';
+  domColor = '#38bdf8';
+  domLevel = 0.30;
+}
 
-// vertical guide line
-ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+// baseline reference (BOTTOM of graph)
+ctx.strokeStyle = 'rgba(148,163,184,0.45)';
 ctx.lineWidth = 2;
 ctx.beginPath();
-ctx.moveTo(mx, baseY - maxH - 6);
-ctx.lineTo(mx, baseY + 6);
+ctx.moveTo(gX + 50, baseY);
+ctx.lineTo(gX + 50 + spanW, baseY);
 ctx.stroke();
 
-// moving dot (THIS is what makes it feel alive)
-ctx.fillStyle = '#ffffff';
+// LIVE dominance line (ALWAYS starts at LEFT)
+const liveY = baseY - maxH * domLevel;
+
+ctx.strokeStyle = domColor;
+ctx.lineWidth = 6;
 ctx.beginPath();
-ctx.arc(mx, curveY, 6, 0, Math.PI * 2);
+ctx.moveTo(gX + 50, liveY);
+ctx.lineTo(gX + 50 + spanW * nx, liveY);
+ctx.stroke();
+
+// moving endpoint dot
+ctx.fillStyle = domColor;
+ctx.beginPath();
+ctx.arc(gX + 50 + spanW * nx, liveY, 7, 0, Math.PI * 2);
 ctx.fill();
+
+// dominant system label (THIS makes it useful)
+ctx.font = '900 20px system-ui';
+ctx.fillStyle = domColor;
+ctx.fillText(
+  `Dominant: ${dominant}`,
+  gX + 50,
+  gY + 24
+);
+
 
 
 // labels
