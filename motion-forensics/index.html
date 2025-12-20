@@ -492,65 +492,144 @@ $reset.addEventListener('click', ()=>{
       metalness: 0.00
     });
 
-    function roundRect(ctx, x, y, w, h, r){
-      const min = Math.min(w,h); if (r > min/2) r = min/2;
-      ctx.beginPath();
-      ctx.moveTo(x+r, y);
-      ctx.arcTo(x+w, y, x+w, y+h, r);
-      ctx.arcTo(x+w, y+h, x, y+h, r);
-      ctx.arcTo(x, y+h, x, y, r);
-      ctx.arcTo(x, y, x+w, y, r);
-      ctx.closePath();
-    }
+ function roundRect(ctx, x, y, w, h, r){
+  const min = Math.min(w,h);
+  if (r > min/2) r = min/2;
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.arcTo(x+w, y, x+w, y+h, r);
+  ctx.arcTo(x+w, y+h, x, y+h, r);
+  ctx.arcTo(x, y+h, x, y, r);
+  ctx.arcTo(x, y, x+w, y, r);
+  ctx.closePath();
+}
 
-    function drawPanel(screen, title){
-      const {ctx,c} = screen;
-      ctx.clearRect(0,0,c.width,c.height);
-      ctx.fillStyle = 'rgba(6,18,34,1)';
-      ctx.fillRect(0,0,c.width,c.height);
-      ctx.strokeStyle = 'rgba(56,189,248,0.85)';
-      ctx.lineWidth = 10;
-      ctx.strokeRect(10,10,c.width-20,c.height-20);
+function drawPanel(screen, title){
+  const { ctx, c } = screen;
 
-      ctx.fillStyle = 'rgba(15,23,42,0.85)';
-      ctx.fillRect(24, 24, c.width-48, 64);
+  ctx.clearRect(0,0,c.width,c.height);
 
-      ctx.fillStyle = '#e6eef7';
-      ctx.font = '900 40px system-ui, -apple-system, Segoe UI, Roboto, Inter';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(title, 42, 56);
+  // background
+  ctx.fillStyle = 'rgba(6,18,34,1)';
+  ctx.fillRect(0,0,c.width,c.height);
 
-      const spd = sim.speedMph;
-      const eng = sim.energy;
-      const status = (eng <= 10) ? 'CRASH' : (eng <= 25 ? 'Warning' : 'Stable');
+  // frame
+  ctx.strokeStyle = 'rgba(56,189,248,0.85)';
+  ctx.lineWidth = 10;
+  ctx.strokeRect(10,10,c.width-20,c.height-20);
 
-      ctx.font = '800 44px system-ui, -apple-system, Segoe UI, Roboto, Inter';
-      ctx.fillStyle = '#cfe3ff';
-      ctx.fillText(`Speed: ${spd.toFixed(1)} mph`, 42, 132);
-      ctx.fillText(`Energy: ${Math.round(eng)}%`, 42, 192);
+  // header
+  ctx.fillStyle = 'rgba(15,23,42,0.85)';
+  ctx.fillRect(24, 24, c.width-48, 64);
 
-      const chipX = 42, chipY = 222, chipW = 260, chipH = 64;
-      ctx.fillStyle = status === 'CRASH' ? 'rgba(255,80,80,0.25)' : (status === 'Warning' ? 'rgba(255,205,80,0.20)' : 'rgba(56,189,248,0.18)');
-      roundRect(ctx, chipX, chipY, chipW, chipH, 18);
-      ctx.fill();
-      ctx.strokeStyle = status === 'CRASH' ? 'rgba(255,80,80,0.75)' : (status === 'Warning' ? 'rgba(255,205,80,0.65)' : 'rgba(56,189,248,0.65)');
-      ctx.lineWidth = 5;
-      ctx.stroke();
+  ctx.fillStyle = '#e6eef7';
+  ctx.font = '900 40px system-ui, -apple-system, Segoe UI, Roboto, Inter';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(title, 42, 56);
 
-      ctx.fillStyle = '#e6eef7';
-      ctx.font = '900 34px system-ui, -apple-system, Segoe UI, Roboto, Inter';
-      ctx.fillText(`Status: ${status}`, chipX+18, chipY+chipH/2);
+  // values
+  const spd = sim.speedMph;
+  const eng = sim.energy;
+  const status = (eng <= 10) ? 'CRASH' : (eng <= 25 ? 'Warning' : 'Stable');
 
-      const t = performance.now()/1000;
-      const fuelPulse = Math.max(0, 1 - (t - sim.lastFuelT) / 0.8);
-      if (fuelPulse > 0){
-        ctx.globalAlpha = fuelPulse * 0.35;
-        ctx.fillStyle = 'rgba(56,189,248,1)';
-        ctx.beginPath();
-        ctx.arc(c.width-70, 56, 20 + (1-fuelPulse)*30, 0, Math.PI*2);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-      }
+  ctx.font = '800 44px system-ui, -apple-system, Segoe UI, Roboto, Inter';
+  ctx.fillStyle = '#cfe3ff';
+  ctx.fillText(`Speed: ${spd.toFixed(1)} mph`, 42, 132);
+  ctx.fillText(`Energy: ${Math.round(eng)}%`, 42, 192);
+
+  // status chip
+  const chipX = 42, chipY = 222, chipW = 260, chipH = 64;
+  ctx.fillStyle =
+    status === 'CRASH'   ? 'rgba(255,80,80,0.25)' :
+    status === 'Warning' ? 'rgba(255,205,80,0.20)' :
+                           'rgba(56,189,248,0.18)';
+  roundRect(ctx, chipX, chipY, chipW, chipH, 18);
+  ctx.fill();
+
+  ctx.strokeStyle =
+    status === 'CRASH'   ? 'rgba(255,80,80,0.75)' :
+    status === 'Warning' ? 'rgba(255,205,80,0.65)' :
+                           'rgba(56,189,248,0.65)';
+  ctx.lineWidth = 5;
+  ctx.stroke();
+
+  ctx.fillStyle = '#e6eef7';
+  ctx.font = '900 34px system-ui, -apple-system, Segoe UI, Roboto, Inter';
+  ctx.fillText(`Status: ${status}`, chipX+18, chipY+chipH/2);
+
+  // fuel pulse
+  const t = performance.now()/1000;
+  const fuelPulse = Math.max(0, 1 - (t - sim.lastFuelT) / 0.8);
+  if (fuelPulse > 0){
+    ctx.globalAlpha = fuelPulse * 0.35;
+    ctx.fillStyle = 'rgba(56,189,248,1)';
+    ctx.beginPath();
+    ctx.arc(c.width-70, 56, 20 + (1-fuelPulse)*30, 0, Math.PI*2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+
+  // ===== ENERGY SYSTEM GRAPH (LAB STYLE) =====
+  const gW = c.width - 84;
+  const gH = 70;
+  const gX = (c.width - gW) / 2;
+  const gY = 300 - 70; // sits under Status safely
+
+  // panel
+  ctx.fillStyle = 'rgba(15,23,42,0.85)';
+  roundRect(ctx, gX, gY, gW, gH, 14);
+  ctx.fill();
+
+  // compute contributions (REAL-TIME)
+  if (!drawPanel._prevEnergy) drawPanel._prevEnergy = sim.energy;
+  const dE = sim.energy - drawPanel._prevEnergy;
+  drawPanel._prevEnergy = sim.energy;
+
+  const aerobic   = clamp(0.75 + dE * 6, 0, 1);
+  const anaerobic = clamp(-dE * 6, 0, 1);
+  const atpPC     = clamp(fuelPulse * 0.8, 0, 0.8);
+
+  const total = aerobic + anaerobic + atpPC || 1;
+  const aFrac = aerobic / total;
+  const nFrac = anaerobic / total;
+  const pFrac = atpPC / total;
+
+  // axis
+  const baseY = gY + gH - 18;
+  ctx.strokeStyle = 'rgba(148,163,184,0.35)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(gX + 40, baseY);
+  ctx.lineTo(gX + gW - 12, baseY);
+  ctx.stroke();
+
+  // bars
+  const maxH = gH - 36;
+  const colW = 48;
+  const gap  = 42;
+  const startX = gX + 70;
+
+  ctx.fillStyle = '#38bdf8';
+  ctx.fillRect(startX, baseY - maxH * aFrac, colW, maxH * aFrac);
+
+  ctx.fillStyle = '#fbbf24';
+  ctx.fillRect(startX + colW + gap, baseY - maxH * nFrac, colW, maxH * nFrac);
+
+  ctx.fillStyle = '#ef4444';
+  ctx.fillRect(startX + (colW + gap) * 2, baseY - maxH * pFrac, colW, maxH * pFrac);
+
+  // labels
+  ctx.fillStyle = '#cfe3ff';
+  ctx.font = '700 14px system-ui';
+  ctx.textAlign = 'center';
+  ctx.fillText('Aerobic',   startX + colW/2, baseY + 14);
+  ctx.fillText('Anaerobic', startX + colW + gap + colW/2, baseY + 14);
+  ctx.fillText('ATP-PC',    startX + (colW + gap) * 2 + colW/2, baseY + 14);
+  ctx.textAlign = 'left';
+
+  screen.tex.needsUpdate = true;
+}
+
      // ===== ENERGY SYSTEM CONTRIBUTION GRAPH =====
 const gW = c.width - 84;
 const gH = 70;
