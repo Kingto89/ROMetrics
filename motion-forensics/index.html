@@ -344,18 +344,20 @@ $fuel.addEventListener('click', ()=>{
   sim.energy = clamp(sim.energy + 10, 0, 100);
   sim.lastFuelT = performance.now()/1000;
 });
-  if (currentModule?.id === 'FL-001'){
-    trialTime -= dt;
-    if (trialTime < 0) trialTime = 0;
 
-    document.getElementById('trialTime').textContent =
-      Math.ceil(trialTime);
+  if (typeof currentModule !== 'undefined' && currentModule && currentModule.id === 'FL-001'){
+  trialTime -= dt;
+  if (trialTime < 0) trialTime = 0;
 
-    if (trialTime === 0){
-      sim.running = false;
-      $start.textContent = "Start";
-    }
+  document.getElementById('trialTime').textContent =
+    Math.ceil(trialTime);
+
+  if (trialTime === 0){
+    sim.running = false;
+    $start.textContent = "Start";
   }
+}
+  
     
 
 $reset.addEventListener('click', ()=>{
