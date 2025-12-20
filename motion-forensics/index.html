@@ -783,6 +783,13 @@ function roundRect(ctx, x, y, w, h, r){
     tmDeck.position.set(0, 0.26, 0);
     tmDeck.receiveShadow = true;
     treadmill.add(tmDeck);
+// --- treadmill belt material (REQUIRED) ---
+const matBelt = new THREE.MeshStandardMaterial({
+  map: beltTex,
+  color: 0x0b1018,
+  roughness: 0.98,
+  metalness: 0.00
+});
 
     const tmBelt = new THREE.Mesh(new THREE.PlaneGeometry(BELT_W, BELT_L), matBelt);
     tmBelt.rotation.x = -Math.PI/2;
