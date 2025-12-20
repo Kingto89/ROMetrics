@@ -138,9 +138,10 @@ const MODELS = [
 let ACTIVE_MODEL_ID = "Roma";
 
 const ANAT_PRESETS = {
-  Roma:  { shTuck: 35, shER: 10, hipAdd: 5 },
-  Roman: { shTuck: 52, shER: 12, hipAdd: 0 }
+  Roma:  { shTuck: 35, shER: 10, hipAdd: 5, spine01Flex: 0 },  // degrees
+  Roman: { shTuck: 52, shER: 12, hipAdd: 0, spine01Flex: 5 }   // degrees
 };
+
 
 let ANAT = { ...ANAT_PRESETS[ACTIVE_MODEL_ID] };
 
