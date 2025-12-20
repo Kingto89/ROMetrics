@@ -14,7 +14,7 @@
 ---
 
 ### Trial A — “Find Your Sustainable Pace” (60s)
-**CASE CLUE (read first):** At steady work, the body can keep going longer if demand stays manageable.
+**CASE CLUE (read first):** The goal is to select a speed where ATP demand can be continuously met without excessive depletion of available energy.
 
 **Goal:** Find the highest speed that keeps **Energy ≥ 60%** for the entire trial.
 
@@ -38,7 +38,7 @@ D) None
 ### Trial B — “Fuel Timing Matters” (60s)
 **CASE CLUE (read first):** At higher intensity, you drain energy faster. Fuel helps — but timing matters.
 
-**Goal:** Keep **Energy ≥ 35%** for the full 60s at a fixed speed using **exactly 2 fuels**.
+**Goal:Complete the trial without Energy dropping below 35%, using exactly two refuels to offset increased ATP demand.
 
 **Setup**
 - Work Type: **Tempo/Threshold**
@@ -65,7 +65,7 @@ D) Fuel timing never matters
 ### Trial C — “Same Fuel, Better Strategy” (60s)
 **CASE CLUE (read first):** Two people can use the same amount of fuel and get different outcomes based on strategy.
 
-**Goal:** Beat your Trial B result using the SAME rules.
+**Goal:** Repeat the same trial as Trial B and finish with more Energy remaining by changing when you refuel.
 
 **Rules**
 - Work Type: **Tempo/Threshold**
