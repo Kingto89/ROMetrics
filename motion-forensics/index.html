@@ -190,22 +190,31 @@ document.getElementById('trialHelp').onclick = async ()=>{
   }
 
   const md = await res.text();
-  const trial = document.getElementById('trialTag').textContent; // A, B, or C
 
-const rx = new RegExp(
-  `### Trial ${trial}[\\s\\S]*?(?=\\n---|\\n### Trial|$)`,
-  'm'
-);
+const trial = document.getElementById('trialTag').textContent; // A / B / C
 
-const match = md.match(rx);
+const startTag = `### Trial ${trial}`;
+const startIdx = md.indexOf(startTag);
 
-const clean = match
-  ? match[0].split('**Question')[0]
-  : '';
+if (startIdx === -1) {
+  document.getElementById('trialHelpContent').textContent =
+    'Instructions not found for Trial ' + trial;
+  return;
+}
 
-document.getElementById('trialHelpContent').innerHTML = clean
-  ? `<b>Trial ${trial} Instructions</b><br><br>` + clean.replace(/\n/g,'<br>')
-  : 'No instructions found for this trial.';
+const rest = md.slice(startIdx);
+const endIdx = rest.search(/\r?\n---\r?\n/);
+
+const section = endIdx !== -1
+  ? rest.slice(0, endIdx)
+  : rest;
+
+// strip MCQ block
+const clean = section.split('**Question')[0];
+
+document.getElementById('trialHelpContent').innerHTML =
+  `<b>Trial ${trial} Instructions</b><br><br>` +
+  clean.replace(/\n/g, '<br>');
 };
 
 
