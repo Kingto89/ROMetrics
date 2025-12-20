@@ -1150,11 +1150,15 @@ function parseFL001(md){
   let capture = null;
 
   const lines = md.split('\n');
+
   for (let line of lines){
     line = line.trim();
 
+    // ---- Trial header ----
     if (line.startsWith('### Trial')){
-      current = line.match(/Trial ([ABC])/)[1];
+      const m = line.match(/Trial ([ABC])/);
+      if (!m) continue;
+      current = m[1];
       trials[current] = { clue:'', goal:'', pass:'', mcq:null };
       capture = null;
       continue;
@@ -1162,31 +1166,40 @@ function parseFL001(md){
 
     if (!current) continue;
 
+    // ---- Case clue ----
     if (line.startsWith('**CASE CLUE')){
-      const inline = line.split('**:')[1]?.trim();
-      if (inline) trials[current].clue = inline;
+      trials[current].clue = line.split('**:')[1]?.trim() || '';
       capture = 'clue';
       continue;
     }
 
+    // ---- Goal ----
     if (line.startsWith('**Goal:**')){
       trials[current].goal = line.replace('**Goal:**','').trim();
       capture = 'goal';
       continue;
     }
 
+    // ---- Pass condition ----
     if (line.startsWith('**PASS when:**')){
       trials[current].pass = line.replace('**PASS when:**','').trim();
       capture = 'pass';
       continue;
     }
 
+    // ---- Multiline capture ----
     if (capture && line && !line.startsWith('**')){
-      trials[current][capture] += (trials[current][capture] ? ' ' : '') + line;
+      trials[current][capture] +=
+        (trials[current][capture] ? ' ' : '') + line;
       continue;
     }
 
-    if (line.startsWith('Which') || line.startsWith('Why') || line.startsWith('What')){
+    // ---- MCQ ----
+    if (
+      line.startsWith('Which') ||
+      line.startsWith('Why') ||
+      line.startsWith('What')
+    ){
       trials[current].mcq = { q: line, opts: [] };
       continue;
     }
@@ -1198,6 +1211,7 @@ function parseFL001(md){
 
   return trials;
 }
+
 
 function showFL001Trial(trials, letter){
   const t = trials[letter];
