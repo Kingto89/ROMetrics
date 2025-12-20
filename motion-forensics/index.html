@@ -125,16 +125,29 @@
     // ==============================
     // 0) REGISTRY (Model + Modules)
     // ==============================
-    const MODEL_URLS = {
-      Roma:  "https://kingto89.github.io/ROMetrics.com/assets/Roma_ROMetrics.glb",
-      Roman: "https://kingto89.github.io/ROMetrics.com/assets/Roman_ROMetrics.glb"
-    };
-    
-  let ACTIVE_MODEL_ID = "Roma";
-    const MODELS = [
-      { id:"Roma",  label:"Roma ", desc:"Default ROMetrics model.", url: MODEL_URLS.Roma },
-      { id:"Roman", label:"Roman",            desc:"Alternate ROMetrics model.", url: MODEL_URLS.Roman }
-    ];
+const MODEL_URLS = {
+  Roma:  "https://kingto89.github.io/ROMetrics.com/assets/Roma_ROMetrics.glb",
+  Roman: "https://kingto89.github.io/ROMetrics.com/assets/Roman_ROMetrics.glb"
+};
+
+const MODELS = [
+  { id:"Roma",  label:"Roma ",  desc:"Default ROMetrics model.",  url: MODEL_URLS.Roma },
+  { id:"Roman", label:"Roman",  desc:"Alternate ROMetrics model.", url: MODEL_URLS.Roman }
+];
+
+let ACTIVE_MODEL_ID = "Roma";
+
+const ANAT_PRESETS = {
+  Roma:  { shTuck: 35, shER: 10, hipAdd: 5 },
+  Roman: { shTuck: 52, shER: 12, hipAdd: 0 }
+};
+
+let ANAT = { ...ANAT_PRESETS[ACTIVE_MODEL_ID] };
+
+function setAnatForModel(id){
+  ACTIVE_MODEL_ID = (id === "Roman" || id === "Roma") ? id : "Roma";
+  ANAT = { ...ANAT_PRESETS[ACTIVE_MODEL_ID] };
+}
 
     const FORENSICS_MODULES = [
       { id:'FL-001', label:'Module 1 — Metabolic Demand: Energy Systems', desc:'Cardio Bay: speed, energy, fuel timing.', zone:'cardio', onEnter:null, onTick:null },
@@ -1119,6 +1132,31 @@ function animate(){
       // If we found basically nothing, don't pretend it worked
       const foundCount = [...base.keys()].length;
       if (foundCount < 4) return null;
+// --- bake model-specific anatomic baseline into base quaternions ---
+const tuck = THREE.MathUtils.degToRad(ANAT.shTuck);
+const er   = THREE.MathUtils.degToRad(ANAT.shER);
+const hip  = THREE.MathUtils.degToRad(ANAT.hipAdd);
+
+const tE = new THREE.Euler();
+const tQ = new THREE.Quaternion();
+
+const bake = (bone, ex, ey, ez)=>{
+  if (!bone) return;
+  const q = base.get(bone);
+  if (!q) return;
+  tE.set(ex, ey, ez);
+  tQ.setFromEuler(tE);
+  q.multiply(tQ);         // update stored base
+  bone.quaternion.copy(q); // apply immediately on load
+};
+
+// shoulders (mirrored)
+bake(bones.upArmL, 0, +er, -tuck);
+bake(bones.upArmR, 0, -er, +tuck);
+
+// hips/thigh adduction (mirrored) — Roma=5°, Roman=0°
+bake(bones.thighL, 0, 0, -hip);
+bake(bones.thighR, 0, 0, +hip);
 
       return { bones, base };
     };
@@ -1274,6 +1312,7 @@ animate();
     // ==============================
     $enter.addEventListener('click', async ()=>{
       const modelId = $modelSel.value;
+      setAnatForModel(modelId);
       const moduleId = $modSel.value;
 
       $enter.disabled = true;
