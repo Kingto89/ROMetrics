@@ -826,6 +826,9 @@ zoneCardio.add(boardGlow);
     // 5) Avatar / model loader
     // ==============================
     let avatarRoot = null;
+    let mixer = null;
+    let runAction = null;
+    const RUN_BASE_MPH = 6.0; // 6 mph = “normal run” speed
 
     function buildPreviewMannequin(){
       const avatar = new THREE.Group();
@@ -876,6 +879,22 @@ zoneCardio.add(boardGlow);
 
             avatarRoot.traverse(o=>{ if (o.isMesh){ o.castShadow=true; o.receiveShadow=true; } });
             scene.add(avatarRoot);
+            // --- animation setup (run/walk/first clip) ---
+mixer = null;
+runAction = null;
+
+const clips = (gltf.animations || []);
+if (clips.length){
+  mixer = new THREE.AnimationMixer(avatarRoot);
+  const clip =
+    clips.find(c => /run|jog/i.test(c.name)) ||
+    clips.find(c => /walk/i.test(c.name)) ||
+    clips[0];
+
+  runAction = mixer.clipAction(clip);
+  runAction.play();
+  runAction.paused = true; // wait for Start
+}
 
             // normalize to ~1.75m tall (ignore far outliers)
             avatarRoot.updateWorldMatrix(true, true);
@@ -1039,62 +1058,174 @@ function placeAvatarForZone(which){
 
     const clock = new THREE.Clock();
 
-    function animate(){
-      requestAnimationFrame(animate);
-      controls.update();
+function animate(){
+  requestAnimationFrame(animate);
+  controls.update();
 
-      const dt = Math.min(0.05, clock.getDelta());
-      const t = clock.getElapsedTime();
+  const dt = Math.min(0.05, clock.getDelta());
 
-if (sim.running){
-  sim.energy = clamp(sim.energy - (sim.speedMph * 0.55) * dt, 0, 100);
-}
+  // --- Procedural run-in-place (NO GLB animation clips required) ---
+  if (!animate._run){
+    animate._run = {
+      rig: null,
+      phase: 0,
+      wasRunning: false,
+      tmpQ: new THREE.Quaternion(),
+      tmpE: new THREE.Euler(),
+    };
 
-      // treadmill motion
-    if (sim.running){
-  // treadmill motion
-  const treadSpeed = 0.35 + (sim.speedMph / 12) * 2.0;
-  for (const s of treadStrips){
-    s.position.z += dt * treadSpeed;
-    if (s.position.z > TREAD_MAX_Z) s.position.z = TREAD_MIN_Z;
-  }
-  const beltSpeed = 0.10 + (sim.speedMph / 12) * 1.10;
-  beltTex.offset.y = (beltTex.offset.y + dt * beltSpeed) % 1;
-}
+    animate._getSkeleton = (root)=>{
+      let sk = null;
+      root.traverse(o=>{
+        if (sk) return;
+        if (o.isSkinnedMesh && o.skeleton) sk = o.skeleton;
+      });
+      return sk;
+    };
 
+    animate._initRig = ()=>{
+      if (!avatarRoot) return null;
+      const sk = animate._getSkeleton(avatarRoot);
+      if (!sk) return null;
 
-      // billboard labels
-      if (labelsOn){
-        for (const ch of labelGroup.children){
-          ch.lookAt(camera.position);
+      const find = (names)=>{
+        for (const n of names){
+          const b = sk.getBoneByName(n);
+          if (b) return b;
         }
-      }
+        return null;
+      };
 
-    function drawTreadmillMph(screen){
-  const { ctx, c } = screen;
+      const bones = {
+        thighL: find(['thigh_L','thigh.L','LeftUpLeg','mixamorigLeftUpLeg']),
+        thighR: find(['thigh_R','thigh.R','RightUpLeg','mixamorigRightUpLeg']),
+        calfL:  find(['calf_L','shin_L','calf.L','LeftLeg','mixamorigLeftLeg']),
+        calfR:  find(['calf_R','shin_R','calf.R','RightLeg','mixamorigRightLeg']),
+        upArmL: find(['upperarm_L','upper_arm_L','upperarm.L','LeftArm','mixamorigLeftArm']),
+        upArmR: find(['upperarm_R','upper_arm_R','upperarm.R','RightArm','mixamorigRightArm']),
+        loArmL: find(['lowerarm_L','forearm_L','lowerarm.L','LeftForeArm','mixamorigLeftForeArm']),
+        loArmR: find(['lowerarm_R','forearm_R','lowerarm.R','RightForeArm','mixamorigRightForeArm']),
+        spine:  find(['spine02','spine01','spine','Spine2','Spine1','mixamorigSpine2','mixamorigSpine1'])
+      };
 
-  ctx.clearRect(0,0,c.width,c.height);
-  ctx.fillStyle = 'rgba(6,18,34,1)';
-  ctx.fillRect(0,0,c.width,c.height);
+      const base = new Map();
+      Object.values(bones).forEach(b=>{ if (b) base.set(b, b.quaternion.clone()); });
 
-  ctx.strokeStyle = 'rgba(56,189,248,0.85)';
-  ctx.lineWidth = 10;
-  ctx.strokeRect(10,10,c.width-20,c.height-20);
+      // If we found basically nothing, don't pretend it worked
+      const foundCount = [...base.keys()].length;
+      if (foundCount < 4) return null;
 
-  ctx.fillStyle = '#e6eef7';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.font = '900 64px system-ui, -apple-system, Segoe UI, Roboto, Inter';
-  ctx.fillText(`${sim.speedMph.toFixed(1)} mph`, c.width/2, c.height/2);
+      return { bones, base };
+    };
+  }
 
-  screen.tex.needsUpdate = true;
-}
+  const R = animate._run;
 
-drawPanel(wallScreen, 'CARDIO BOARD');
-drawTreadmillMph(consoleScreen);
+  // init rig once model exists
+  if (!R.rig && avatarRoot && !avatarRoot.userData.__isMannequin){
+    R.rig = animate._initRig();
+  }
 
-updateHUD();
-renderer.render(scene, camera);
+  const applyAdd = (bone, ex, ey, ez)=>{
+    if (!R.rig || !bone) return;
+    const baseQ = R.rig.base.get(bone);
+    if (!baseQ) return;
+    R.tmpE.set(ex, ey, ez);
+    R.tmpQ.setFromEuler(R.tmpE);
+    bone.quaternion.copy(baseQ).multiply(R.tmpQ);
+  };
+
+  const restore = ()=>{
+    if (!R.rig) return;
+    for (const [b,q] of R.rig.base) b.quaternion.copy(q);
+  };
+
+  // only run when Start is on AND cardio zone is visible
+  const runNow = !!(sim.running && zoneCardio.visible && R.rig);
+
+  if (runNow){
+    const mph = sim.speedMph;
+    const k = clamp(mph / 6.0, 0, 2.0);           // 1.0 at 6mph
+    const amp = clamp(k, 0, 1.35);
+    const freq = (1.6 * k) + 0.15;                // cycles/sec
+
+    R.phase += dt * (Math.PI * 2) * freq;
+
+    const s  = Math.sin(R.phase);
+    const s2 = Math.sin(R.phase * 2.0);
+
+    const hipAmp  = THREE.MathUtils.degToRad(28) * amp;
+    const kneeAmp = THREE.MathUtils.degToRad(42) * amp;
+    const armAmp  = THREE.MathUtils.degToRad(22) * amp;
+    const spineTw = THREE.MathUtils.degToRad(4)  * (amp * 0.6);
+
+    const b = R.rig.bones;
+
+    // legs
+    applyAdd(b.thighL,  hipAmp * s, 0, 0);
+    applyAdd(b.thighR, -hipAmp * s, 0, 0);
+
+    const bendL = Math.max(0, -s) * kneeAmp;
+    const bendR = Math.max(0,  s) * kneeAmp;
+    applyAdd(b.calfL, bendL, 0, 0);
+    applyAdd(b.calfR, bendR, 0, 0);
+
+    // arms (opposite)
+    applyAdd(b.upArmL, -armAmp * s, 0, 0);
+    applyAdd(b.upArmR,  armAmp * s, 0, 0);
+    applyAdd(b.loArmL,  armAmp * Math.max(0,  s), 0, 0);
+    applyAdd(b.loArmR,  armAmp * Math.max(0, -s), 0, 0);
+
+    // tiny torso counter
+    applyAdd(b.spine, 0, 0, spineTw * s2);
+
+  } else if (R.wasRunning) {
+    restore();
+  }
+  R.wasRunning = runNow;
+
+  // energy only drains when running
+  if (sim.running){
+    sim.energy = clamp(sim.energy - (sim.speedMph * 0.55) * dt, 0, 100);
+  }
+
+  // treadmill motion
+  if (sim.running){
+    const treadSpeed = 0.35 + (sim.speedMph / 12) * 2.0;
+    for (const s of treadStrips){
+      s.position.z += dt * treadSpeed;
+      if (s.position.z > TREAD_MAX_Z) s.position.z = TREAD_MIN_Z;
+    }
+    const beltSpeed = 0.10 + (sim.speedMph / 12) * 1.10;
+    beltTex.offset.y = (beltTex.offset.y + dt * beltSpeed) % 1;
+  }
+
+  // billboard labels
+  if (labelsOn){
+    for (const ch of labelGroup.children) ch.lookAt(camera.position);
+  }
+
+  function drawTreadmillMph(screen){
+    const { ctx, c } = screen;
+    ctx.clearRect(0,0,c.width,c.height);
+    ctx.fillStyle = 'rgba(6,18,34,1)';
+    ctx.fillRect(0,0,c.width,c.height);
+    ctx.strokeStyle = 'rgba(56,189,248,0.85)';
+    ctx.lineWidth = 10;
+    ctx.strokeRect(10,10,c.width-20,c.height-20);
+    ctx.fillStyle = '#e6eef7';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = '900 64px system-ui, -apple-system, Segoe UI, Roboto, Inter';
+    ctx.fillText(`${sim.speedMph.toFixed(1)} mph`, c.width/2, c.height/2);
+    screen.tex.needsUpdate = true;
+  }
+
+  drawPanel(wallScreen, 'CARDIO BOARD');
+  drawTreadmillMph(consoleScreen);
+
+  updateHUD();
+  renderer.render(scene, camera);
 }
 animate();
 
