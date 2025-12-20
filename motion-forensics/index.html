@@ -129,7 +129,8 @@
       Roma:  "https://kingto89.github.io/ROMetrics.com/assets/Roma_ROMetrics.glb",
       Roman: "https://kingto89.github.io/ROMetrics.com/assets/Roman_ROMetrics.glb"
     };
-
+    
+  let ACTIVE_MODEL_ID = "Roma";
     const MODELS = [
       { id:"Roma",  label:"Roma ", desc:"Default ROMetrics model.", url: MODEL_URLS.Roma },
       { id:"Roman", label:"Roman",            desc:"Alternate ROMetrics model.", url: MODEL_URLS.Roman }
@@ -856,6 +857,7 @@ zoneCardio.add(boardGlow);
 
     async function loadSelectedModel(modelId, onProgress){
       const m = getModel(modelId);
+      ACTIVE_MODEL_ID = m.id;
 
       if (avatarRoot){
         scene.remove(avatarRoot);
@@ -1160,11 +1162,16 @@ function animate(){
     const spineTw = THREE.MathUtils.degToRad(4)  * (amp * 0.6);
     const b = R.rig.bones;
 
-// legs (hip swing + 5° THIGH ADDUCTION on Z)
-const thighAdd = THREE.MathUtils.degToRad(5);
+// legs (hip swing + 5° THIGH ADDUCTION on Z) — ROMA ONLY
+if (ACTIVE_MODEL_ID === "Roma") {
+  const thighAdd = THREE.MathUtils.degToRad(5);
+  applyAdd(b.thighL,  hipAmp * s, 0, -thighAdd);
+  applyAdd(b.thighR, -hipAmp * s, 0, +thighAdd);
+} else {
+  applyAdd(b.thighL,  hipAmp * s, 0, 0);
+  applyAdd(b.thighR, -hipAmp * s, 0, 0);
+}
 
-applyAdd(b.thighL,  hipAmp * s, 0, -thighAdd);
-applyAdd(b.thighR, -hipAmp * s, 0, +thighAdd);
 
 
     const bendL = Math.max(0, -s) * kneeAmp;
@@ -1190,7 +1197,10 @@ applyAdd(b.loArmR, elbowHold, 0, 0);
 
 
     // tiny torso counter
-    applyAdd(b.spine, 0, 0, spineTw * s2);
+// torso: rotate so the OPPOSITE shoulder comes forward to the STANCE leg
+const torsoYaw  = THREE.MathUtils.degToRad(9) * amp * (-s);   // Y = axial rotation (NO shake)
+const torsoLean = THREE.MathUtils.degToRad(2) * amp * ( s);   // Z = tiny counterbalance (optional)
+applyAdd(b.spine, 0, torsoYaw, torsoLean);
 
   } else if (R.wasRunning) {
     restore();
