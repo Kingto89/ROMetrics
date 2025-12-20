@@ -314,6 +314,7 @@ const $fuel = document.getElementById('fuelBtn');
 const $reset = document.getElementById('resetBtn');
 
 const sim = { speedMph: 6.0, energy: 100, lastFuelT: -999, running:false };
+let trialTime = 60;
     
 const clamp = (v,a,b)=> Math.max(a, Math.min(b, v));
 
@@ -329,17 +330,33 @@ $spd.addEventListener('input', ()=>{ sim.speedMph = parseFloat($spd.value); });
 $start.addEventListener('click', ()=>{
   sim.running = !sim.running;
   $start.textContent = sim.running ? "Pause" : "Start";
-  if (!sim.running){
-    // when paused, keep things stable
-    sim.energy = clamp(sim.energy, 0, 100);
+
+  // START TIMER when trial is running
+  if (sim.running && currentModule?.id === 'FL-001'){
+    if (typeof trialTime !== 'number') trialTime = 60;
+    document.getElementById('trialTime').textContent = Math.ceil(trialTime);
   }
 });
+
 
 $fuel.addEventListener('click', ()=>{
   if (!sim.running) return;
   sim.energy = clamp(sim.energy + 10, 0, 100);
   sim.lastFuelT = performance.now()/1000;
 });
+  if (currentModule?.id === 'FL-001'){
+    trialTime -= dt;
+    if (trialTime < 0) trialTime = 0;
+
+    document.getElementById('trialTime').textContent =
+      Math.ceil(trialTime);
+
+    if (trialTime === 0){
+      sim.running = false;
+      $start.textContent = "Start";
+    }
+  }
+    
 
 $reset.addEventListener('click', ()=>{
   sim.energy = 100;
@@ -1620,14 +1637,24 @@ applyAdd(b.loArmR, elbowHold, 0, 0);
 const torsoYaw  = THREE.MathUtils.degToRad(9) * amp * (-s);  // Y = axial rotation
 const torsoLean = THREE.MathUtils.degToRad(1.5) * amp * ( s); // Z = tiny counterbalance (optional)
 
-// use spine01/spine02 if available; otherwise use whichever exists
-if (b.spine01 && b.spine02){
-  applyAdd(b.spine01, 0, torsoYaw * 0.90, torsoLean * 0.60);  // lower trunk / hip twist
-  applyAdd(b.spine02, 0, torsoYaw * 0.40, torsoLean * 0.40);  // upper trunk
-} else if (b.spine01){
+// use spine01 / spine02 / spine03 if available; otherwise fall back cleanly
+if (b.spine01 && b.spine02 && b.spine03){
+  applyAdd(b.spine01, 0, torsoYaw * 0.45, torsoLean * 0.45); // lower trunk
+  applyAdd(b.spine02, 0, torsoYaw * 0.35, torsoLean * 0.35); // mid trunk
+  applyAdd(b.spine03, 0, torsoYaw * 0.20, torsoLean * 0.20); // upper trunk
+} 
+else if (b.spine01 && b.spine02){
+  applyAdd(b.spine01, 0, torsoYaw * 0.60, torsoLean * 0.60);
+  applyAdd(b.spine02, 0, torsoYaw * 0.40, torsoLean * 0.40);
+}
+else if (b.spine01){
   applyAdd(b.spine01, 0, torsoYaw, torsoLean);
-} else if (b.spine02){
+}
+else if (b.spine02){
   applyAdd(b.spine02, 0, torsoYaw, torsoLean);
+}
+else if (b.spine03){
+  applyAdd(b.spine03, 0, torsoYaw, torsoLean);
 }
 
 
