@@ -16,15 +16,18 @@
 ### Trial A — “Find Your Sustainable Pace” (60s)
 **CASE CLUE (read first):** The goal is to select a speed where ATP demand can be continuously met without excessive depletion of available energy.
 
-**Goal:** Find the highest speed that keeps **Energy ≥ 60%** for the entire trial.
+**Goal:** Find the highest speed at which aerobic metabolism remains the primary energy source.
 
 **Steps**
-1) Select **Work Type: Steady-State**  
-2) Set a speed with the **mph slider**  
-3) Press **Start Trial**  
-4) If Energy drops below 60%, lower speed and retry
+1. Select **Work Type: Steady-State**  
+2. Set a running speed using the **mph slider**  
+3. Press **Start Trial**  
+4. Observe the energy trend over time  
+5. If energy shows a steady decline, reduce speed and retry
 
-**PASS when:** Energy never drops below 60% during the 60s timer.
+**PASS when:**  
+- Speed is as high as possible  
+- **Primary Energy Source = Aerobic Metabolism**
 
 **Question (after Trial A) — 3 attempts**
 Which energy system best supports sustained steady work?  
