@@ -1224,10 +1224,10 @@ if (ACTIVE_MODEL_ID === "Roma") {
 
 // arms (opposite) + MORE adduction + slight back bias + elbows
 // arms (swing reacts to mph; pose does NOT)
-const armTuck   = THREE.MathUtils.degToRad(20);  // adduction (Z)
+const armTuck   = THREE.MathUtils.degToRad(17);  // adduction (Z)
 const armBack   = THREE.MathUtils.degToRad(10);  // slight shoulder extension (X)
-const humER     = THREE.MathUtils.degToRad(10);  // external rotation (Y)
-const elbowHold = THREE.MathUtils.degToRad(85);  // elbow flex (X)
+const humER     = THREE.MathUtils.degToRad(7);  // external rotation (Y)
+const elbowHold = THREE.MathUtils.degToRad(90);  // elbow flex (X)
 
 // one applyAdd per bone (no overwrites)
 applyAdd(b.upArmL, (-armAmp * s) - armBack, +humER, -armTuck);
