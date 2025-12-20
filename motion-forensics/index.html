@@ -568,6 +568,17 @@ function drawPanel(screen, title){
     let labelsOn = false;
     const labelGroup = new THREE.Group();
     scene.add(labelGroup);
+function roundRect(ctx, x, y, w, h, r){
+  const min = Math.min(w, h);
+  if (r > min / 2) r = min / 2;
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
 
     function makeLabel(text){
       const canvas = document.createElement('canvas');
