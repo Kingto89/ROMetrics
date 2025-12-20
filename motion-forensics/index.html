@@ -1158,14 +1158,15 @@ function animate(){
     const kneeAmp = THREE.MathUtils.degToRad(90) * amp;
     const armAmp  = THREE.MathUtils.degToRad(22) * amp;
     const spineTw = THREE.MathUtils.degToRad(4)  * (amp * 0.6);
-
+    const extRot  = THREE.MathUtils.degToRad(10) * amp;
     const b = R.rig.bones;
 
-   // legs (add 5° thigh adduction)
-const thighAdd = THREE.MathUtils.degToRad(5);   // try Y; if wrong, move to Z
+// legs (hip swing + 5° THIGH ADDUCTION)
+const thighAdd = THREE.MathUtils.degToRad(5);
 
-applyAdd(b.thighL,  hipAmp * s, +thighAdd, 0);
-applyAdd(b.thighR, -hipAmp * s, -thighAdd, 0);
+applyAdd(b.thighL,  hipAmp * s, -thighAdd, 0);
+applyAdd(b.thighR, -hipAmp * s, +thighAdd, 0);
+
 
 
     const bendL = Math.max(0, -s) * kneeAmp;
