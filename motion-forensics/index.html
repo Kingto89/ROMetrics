@@ -598,6 +598,7 @@ const spanW = gW - 70;
 const t = (sim.running ? sim.elapsed : 0); // seconds
 const mph = clamp(sim.speedMph, 0, 22);
 const intensity = mph / 22;
+const tFrac = clamp(t / 180, 0, 1); // 0 → 1 over 3 minutes
 
 // X position = TIME (0 → 3 min)
 const tNorm = sim.running ? clamp(t / 180, 0, 1) : 0;
@@ -605,30 +606,39 @@ const xPos = gX + 50 + spanW * tNorm;
 
 // ===== DOMINANCE LOGIC (TIME × MPH) =====
 let dominant, domColor, domLevel;
-if (t === 0){
+
+// normalize inputs
+const tSec = t;                     // seconds elapsed
+const mphN = intensity;             // already mph / 22 (0–1)
+
+// ---- ATP-PC ALWAYS DOMINATES AT START ----
+if (tSec < 3) {
   dominant = 'ATP-PC';
   domColor = '#ef4444';
   domLevel = 0.85;
 }
 
-// ATP-PC: explosive, very short, very fast
-if (intensity >= 0.75 && t <= 10) {
+// ---- ATP-PC: very high intensity, very short duration ----
+else if (mphN >= 0.75 && tSec <= 10) {
   dominant = 'ATP-PC';
   domColor = '#ef4444';
-  domLevel = 0.85;
+  domLevel = 0.85 * (1 - Math.min(tSec / 10, 1));
 }
-// Anaerobic glycolysis: moderate–high intensity, short–moderate duration
-else if (intensity >= 0.35 && t <= 120) {
+
+// ---- ANAEROBIC GLYCOLYSIS: moderate–high intensity, short–moderate ----
+else if (mphN >= 0.35 && tSec <= 120) {
   dominant = 'Anaerobic Glycolysis';
   domColor = '#fbbf24';
-  domLevel = 0.55;
+  domLevel = 0.55 * (1 - Math.min((tSec - 10) / 110, 1));
 }
-// Aerobic metabolism: low intensity OR long duration
+
+// ---- AEROBIC: sustained effort OR low intensity ----
 else {
   dominant = 'Aerobic Metabolism';
   domColor = '#38bdf8';
-  domLevel = 0.30;
+  domLevel = 0.30 + 0.35 * clamp(tSec / 180, 0, 1);
 }
+
 
 // Y position = dominance height
 const yPos = baseY - maxH * domLevel;
