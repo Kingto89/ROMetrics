@@ -558,7 +558,31 @@ const gW = c.width - 84;
 const gH = 90;
 
 // derive relative demand (0–1)
-const demand = clamp(sim.speedMph / 10, 0, 1);
+// ===== REAL-TIME METABOLIC STATE =====
+const now = performance.now() / 1000;
+
+// energy slope (negative = draining)
+if (!drawPanel._prevEnergy) drawPanel._prevEnergy = sim.energy;
+const dE = sim.energy - drawPanel._prevEnergy;
+drawPanel._prevEnergy = sim.energy;
+
+// detect recent fuel (within 2.5s)
+const fuelPulse = clamp(1 - (now - sim.lastFuelT) / 2.5, 0, 1);
+
+// aerobic dominance when energy is stable or recovering
+let aerobic = clamp(0.6 + dE * 4 + fuelPulse * 0.3, 0, 1);
+
+// anaerobic rises when energy is dropping fast
+let anaerobic = clamp(-dE * 5, 0, 1);
+
+// ATP-PC spikes briefly after fuel
+let atpPC = clamp(fuelPulse * 0.6, 0, 0.6);
+
+// normalize
+const total = aerobic + anaerobic + atpPC || 1;
+aerobic   /= total;
+anaerobic /= total;
+atpPC     /= total;
 
 // simple physiology-based contribution
 let aerobic = clamp(1.0 - (demand * 0.7), 0, 1);
