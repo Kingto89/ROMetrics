@@ -261,6 +261,7 @@ function setAnatForModel(id){
       { id:'FL-003', label:'Module 3 — Motion Forensics Lite', desc:'Reactive Balance:Pick the stance that gives the best Stability %', zone:'Analysis Booth', onEnter:null, onTick:null }
       // === DROP-IN AREA ===
     ];
+    let currentModule = null;
 
     // ==============================
     // 1) Gate UI wiring
@@ -1089,7 +1090,6 @@ if (clips.length){
     // ==============================
     // 6) Zone + Module router (with snap)
     // ==============================
-    let currentModule = null;
 
     const camGoalPos = new THREE.Vector3(6.8, 3.9, 8.6);
     const camGoalTarget = new THREE.Vector3(0, 1.35, 0);
