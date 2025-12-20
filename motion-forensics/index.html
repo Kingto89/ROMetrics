@@ -1162,11 +1162,10 @@ function animate(){
     const b = R.rig.bones;
 
 // legs (hip swing + ° THIGH ADDUCTION)
-const thighAdd = THREE.MathUtils.degToRad(-10);
+const thighAdd = THREE.MathUtils.degToRad(5);
 
-applyAdd(b.thighL,  hipAmp * s, -thighAdd, 0);
-applyAdd(b.thighR, -hipAmp * s, +thighAdd, 0);
-
+applyAdd(b.thighL,  hipAmp * s, 0, +thighAdd);
+applyAdd(b.thighR, -hipAmp * s, 0, +thighAdd);
 
 
     const bendL = Math.max(0, -s) * kneeAmp;
@@ -1182,9 +1181,11 @@ const addRad  = THREE.MathUtils.degToRad(55) * amp; // adduction (tuck)
 const backRad = THREE.MathUtils.degToRad(12) * amp; // arms slightly back
 const elbow   = THREE.MathUtils.degToRad(85) * amp; // elbow bend
 
-applyAdd(b.upArmL, (-armAmp * s) - backRad, +addRad, 0);
-applyAdd(b.upArmR, ( armAmp * s) - backRad, -addRad, 0);
+const extRot = THREE.MathUtils.degToRad(10) * amp; // external rotation
 
+applyAdd(b.upArmL, (-armAmp * s) - backRad, +extRot, -addRad); // Z tucks elbow in
+applyAdd(b.upArmR, ( armAmp * s) - backRad, -extRot, +addRad);
+    
 applyAdd(b.loArmL, elbow, 0, 0);
 applyAdd(b.loArmR, elbow, 0, 0);
 
