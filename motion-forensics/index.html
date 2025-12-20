@@ -783,6 +783,15 @@ function roundRect(ctx, x, y, w, h, r){
     tmDeck.position.set(0, 0.26, 0);
     tmDeck.receiveShadow = true;
     treadmill.add(tmDeck);
+
+    // --- treadmill belt texture (REQUIRED) ---
+const beltTex = new THREE.CanvasTexture(beltCanvas);
+beltTex.anisotropy = 8;
+beltTex.wrapS = THREE.RepeatWrapping;
+beltTex.wrapT = THREE.RepeatWrapping;
+beltTex.repeat.set(1, 8.0);
+beltTex.offset.set(0, 0);
+
 // --- treadmill belt material (REQUIRED) ---
 const matBelt = new THREE.MeshStandardMaterial({
   map: beltTex,
