@@ -331,7 +331,7 @@ const $start = document.getElementById('startBtn');
 const $fuel = document.getElementById('fuelBtn');
 const $reset = document.getElementById('resetBtn');
 
-const sim = { speedMph: 22.0, energy: 100, lastFuelT: -999, running:false };
+const sim = { speedMph: 6.0, energy: 100, lastFuelT: -999, running:false };
 let trialTime = 180;
     
 const clamp = (v,a,b)=> Math.max(a, Math.min(b, v));
@@ -604,55 +604,41 @@ ctx.fillRect(
   maxH
 );
 
-// ===== LIVE ENERGY DOMINANCE LINE (MOVES WITH MODEL) =====
-const speed = clamp(sim.speedMph, 0, 12);
-const nx = speed / 22;
+// ===== LIVE ENERGY DOMINANCE GRAPH (CORRECT) =====
 
-// dominance weighting based on speed
-let dominance;
-if (nx < 0.22) dominance = 1.0;                 // ATP-PC
-else if (nx < 0.58) dominance = 1.0 - (nx - 0.22) / 0.36; // Anaerobic transition
-else dominance = 0.15;                          // Aerobic steady
+// X AXIS = TIME (0 → 3 minutes)
+const tNorm = clamp(sim.elapsed / 180, 0, 1);
+const xPos = gX + 50 + spanW * tNorm;
 
-// vertical position driven by dominance
-const liveY = baseY - maxH * dominance;
+// DOMINANCE = SPEED + TIME
+const mph = sim.speedMph;
+const t = sim.elapsed;
 
-// draw LIVE line (this MOVES)
-ctx.strokeStyle = '#ffffff';
-ctx.lineWidth = 4;
-ctx.beginPath();
-ctx.moveTo(gX + 50, liveY);
-ctx.lineTo(gX + 50 + spanW * nx, liveY);
-ctx.stroke();
+let dominant, domColor, domLevel;
 
-// endpoint dot (moves every frame)
-ctx.fillStyle = '#ffffff';
-ctx.beginPath();
-ctx.arc(gX + 50 + spanW * nx, liveY, 6, 0, Math.PI * 2);
-ctx.fill();
-
-
-// ===== LIVE ENERGY DOMINANCE GRAPH (ACTUALLY MOVES) =====
-// determine dominant system by speed
-let dominant;
-let domColor;
-let domLevel;
-
-if (nx < 0.22) {
+// ATP-PC: very high speed, very short duration
+if (mph >= 18 && t <= 10) {
   dominant = 'ATP-PC';
   domColor = '#ef4444';
   domLevel = 0.85;
-} else if (nx < 0.58) {
+}
+// Anaerobic glycolysis: moderate–high speed OR early effort
+else if (t <= 120 && mph >= 6) {
   dominant = 'Anaerobic Glycolysis';
   domColor = '#fbbf24';
   domLevel = 0.55;
-} else {
+}
+// Aerobic: sustained effort
+else {
   dominant = 'Aerobic Metabolism';
   domColor = '#38bdf8';
   domLevel = 0.30;
 }
 
-// baseline reference (BOTTOM of graph)
+// Y POSITION = DOMINANCE
+const yPos = baseY - maxH * domLevel;
+
+// BASELINE (REFERENCE)
 ctx.strokeStyle = 'rgba(148,163,184,0.45)';
 ctx.lineWidth = 2;
 ctx.beginPath();
@@ -660,28 +646,25 @@ ctx.moveTo(gX + 50, baseY);
 ctx.lineTo(gX + 50 + spanW, baseY);
 ctx.stroke();
 
-// LIVE dominance line (ALWAYS starts at LEFT)
+// LIVE DOMINANCE LINE (STARTS AT LEFT)
 ctx.strokeStyle = domColor;
 ctx.lineWidth = 6;
 ctx.beginPath();
-ctx.moveTo(gX + 50, liveY);
-ctx.lineTo(gX + 50 + spanW * nx, liveY);
+ctx.moveTo(gX + 50, yPos);
+ctx.lineTo(xPos, yPos);
 ctx.stroke();
 
-// moving endpoint dot
+// ENDPOINT DOT
 ctx.fillStyle = domColor;
 ctx.beginPath();
-ctx.arc(gX + 50 + spanW * nx, liveY, 7, 0, Math.PI * 2);
+ctx.arc(xPos, yPos, 7, 0, Math.PI * 2);
 ctx.fill();
 
-// dominant system label (THIS makes it useful)
+// LABEL
 ctx.font = '900 20px system-ui';
 ctx.fillStyle = domColor;
-ctx.fillText(
-  `Dominant: ${dominant}`,
-  gX + 50,
-  gY + 24
-);
+ctx.fillText(`Dominant: ${dominant}`, gX + 50, gY + 24);
+
 
 
 
