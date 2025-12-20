@@ -1146,9 +1146,7 @@ function showFL001Trial(trials, letter){
   const t = trials[letter];
 
   document.getElementById('trialTag').textContent = letter;
-  document.getElementById('trialClue').textContent = t.clue;
-  document.getElementById('trialGoal').textContent = t.goal;
-  document.getElementById('trialPass').textContent = t.pass;
+
 
   // IMPORTANT: instruction prompt
   document.getElementById('trialMsg').innerHTML =
