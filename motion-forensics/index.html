@@ -1079,103 +1079,99 @@ function animate(){
   controls.update();
 
   const dt = Math.min(0.05, clock.getDelta());
+// ===== BLINK (works for BOTH Roma + Roman via auto-detect morph names) =====
+if (!animate._blink) animate._blink = { model:null, targets:[], state:0, t:0, next:0 };
 
-  // ==============================
-// BLINK (morph targets) — every ~5s
-// ==============================
-if (!animate._blink){
-  animate._blink = {
-    lastAvatar: null,
-    targets: [],          // { mesh, idxBoth, idxL, idxR }
-    nextT: 0,
-    active: false,
-    t: 0,
-    dur: 0.16             // seconds (blink length)
+const BL = animate._blink;
+
+// (re)build targets when model changes
+if (avatarRoot && BL.model !== avatarRoot){
+  BL.model = avatarRoot;
+  BL.targets = [];
+  BL.state = 0;
+  BL.t = 0;
+  BL.next = performance.now()/1000 + 1.5;
+
+  // Find morph targets on any mesh that has them
+  const addTarget = (mesh, name)=>{
+    const d = mesh.morphTargetDictionary;
+    if (!d || d[name] == null) return false;
+    BL.targets.push({ mesh, idx: d[name] });
+    return true;
   };
 
-  animate._blink.build = ()=>{
-    const B = animate._blink;
-    B.targets = [];
-    if (!avatarRoot) return;
+  // Prefer Roman blink morphs if present, else Roma eyeClosed morphs
+  let foundRoman = false;
+  let foundRoma  = false;
 
-    const isRoman = (typeof ACTIVE_MODEL_ID === "string" && ACTIVE_MODEL_ID === "Roman");
+  avatarRoot.traverse(o=>{
+    if (!o.isMesh || !o.morphTargetInfluences || !o.morphTargetDictionary) return;
 
-    const N = isRoman
-      ? { both:"Eye_Blink", l:"Eye_Blink_L", r:"Eye_Blink_R" }
-      : { both:"", l:"Expressions_eyeClosedL_max", r:"Expressions_eyeClosedR_max" };
+    // Roman
+    foundRoman = addTarget(o, "Eye_Blink")   || foundRoman;
+    foundRoman = addTarget(o, "Eye_Blink_L") || foundRoman;
+    foundRoman = addTarget(o, "Eye_Blink_R") || foundRoman;
 
-    avatarRoot.traverse(o=>{
-      const inf = o.morphTargetInfluences;
-      const dict = o.morphTargetDictionary;
-      if (!inf || !dict) return;
+    // Roma
+    foundRoma  = addTarget(o, "Expressions_eyeClosedL_max") || foundRoma;
+    foundRoma  = addTarget(o, "Expressions_eyeClosedR_max") || foundRoma;
+  });
 
-      const idxBoth = N.both && (dict[N.both] ?? -1);
-      const idxL    = dict[N.l] ?? -1;
-      const idxR    = dict[N.r] ?? -1;
-
-      if ((idxBoth != null && idxBoth >= 0) || idxL >= 0 || idxR >= 0){
-        B.targets.push({ mesh:o, idxBoth:(idxBoth ?? -1), idxL, idxR });
-      }
+  // If Roman + Roma both got added somehow, keep the one that actually matches this model:
+  // (simple rule: if any Eye_Blink exists on this model, keep only Roman targets)
+  const hasEyeBlink = BL.targets.some(t=>{
+    const dict = t.mesh.morphTargetDictionary;
+    return dict && (dict["Eye_Blink"] != null || dict["Eye_Blink_L"] != null || dict["Eye_Blink_R"] != null);
+  });
+  if (hasEyeBlink){
+    BL.targets = BL.targets.filter(t=>{
+      const dict = t.mesh.morphTargetDictionary;
+      return dict && (dict["Eye_Blink"] != null || dict["Eye_Blink_L"] != null || dict["Eye_Blink_R"] != null);
     });
-
-    const now = performance.now()/1000;
-    B.nextT = now + 4.8 + Math.random()*1.2; // ~5s
-    B.active = false;
-    B.t = 0;
-  };
+  } else {
+    BL.targets = BL.targets.filter(t=>{
+      const dict = t.mesh.morphTargetDictionary;
+      return dict && (dict["Expressions_eyeClosedL_max"] != null || dict["Expressions_eyeClosedR_max"] != null);
+    });
+  }
 }
 
-{
-  const B = animate._blink;
-
-  // rebuild targets when model changes (or when switching Roma/Roman)
-  if (avatarRoot && B.lastAvatar !== avatarRoot){
-    B.lastAvatar = avatarRoot;
-    B.build();
-  }
-
+// drive blink
+if (BL.targets.length){
   const now = performance.now()/1000;
 
-  // start blink
-  if (!B.active && B.targets.length && now >= B.nextT){
-    B.active = true;
-    B.t = 0;
-    B.dur = 0.14 + Math.random()*0.05;       // 0.14–0.19s
-    B.nextT = now + 4.8 + Math.random()*1.2; // next ~5s
+  // schedule next blink (about every ~5s with slight randomness)
+  if (BL.state === 0 && now >= BL.next){
+    BL.state = 1;        // closing
+    BL.t = 0;
+    BL.next = now + 4.2 + Math.random()*1.6;
   }
 
-  // update blink
-  if (B.active){
-    B.t += dt;
-    const u = Math.min(1, B.t / B.dur);
-    const v = Math.sin(Math.PI * u); // 0->1->0
+  // timings
+  const down = 0.06;     // close
+  const hold = 0.02;     // closed
+  const up   = 0.10;     // open
 
-    for (const t of B.targets){
-      const inf = t.mesh.morphTargetInfluences;
-      if (!inf) continue;
-
-      if (t.idxBoth >= 0){
-        inf[t.idxBoth] = v;
-      } else {
-        if (t.idxL >= 0) inf[t.idxL] = v;
-        if (t.idxR >= 0) inf[t.idxR] = v;
-      }
+  const setBlink = (v)=>{
+    for (const t of BL.targets){
+      t.mesh.morphTargetInfluences[t.idx] = v;
     }
+  };
 
-    if (u >= 1){
-      // ensure eyes fully open at end
-      for (const t of B.targets){
-        const inf = t.mesh.morphTargetInfluences;
-        if (!inf) continue;
+  if (BL.state !== 0){
+    BL.t += dt;
 
-        if (t.idxBoth >= 0){
-          inf[t.idxBoth] = 0;
-        } else {
-          if (t.idxL >= 0) inf[t.idxL] = 0;
-          if (t.idxR >= 0) inf[t.idxR] = 0;
-        }
-      }
-      B.active = false;
+    if (BL.state === 1){ // closing
+      const v = Math.min(1, BL.t / down);
+      setBlink(v);
+      if (BL.t >= down){ BL.state = 2; BL.t = 0; }
+    } else if (BL.state === 2){ // hold
+      setBlink(1);
+      if (BL.t >= hold){ BL.state = 3; BL.t = 0; }
+    } else if (BL.state === 3){ // opening
+      const v = 1 - Math.min(1, BL.t / up);
+      setBlink(v);
+      if (BL.t >= up){ BL.state = 0; BL.t = 0; setBlink(0); }
     }
   }
 }
