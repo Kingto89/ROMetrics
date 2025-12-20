@@ -641,7 +641,7 @@ else {
 
 
 // Y position = dominance height
-const yPos = baseY - maxH * domLevel;
+const yPos = baseY - maxH * Math.max(domLevel, 0.32);
 
 // baseline
 ctx.strokeStyle = 'rgba(148,163,184,0.45)';
