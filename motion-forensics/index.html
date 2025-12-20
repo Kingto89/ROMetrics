@@ -570,74 +570,89 @@ function drawPanel(screen, title){
   }
 
 // ===== ENERGY SYSTEM DOMINANCE GRAPH (SPEED-BASED) =====
-const gW = c.width - 84;
-const gH = 90;
+const gW = c.width - 90;
+const gH = 120;
 const gX = (c.width - gW) / 2;
-const gY = 260;
+const gY = 235;
 
-// background panel
-ctx.fillStyle = 'rgba(15,23,42,0.90)';
-roundRect(ctx, gX, gY, gW, gH, 14);
+// background
+ctx.fillStyle = 'rgba(15,23,42,0.95)';
+roundRect(ctx, gX, gY, gW, gH, 16);
 ctx.fill();
 
 // axes
 ctx.strokeStyle = 'rgba(148,163,184,0.35)';
 ctx.lineWidth = 2;
 ctx.beginPath();
-ctx.moveTo(gX + 40, gY + gH - 28);
-ctx.lineTo(gX + gW - 16, gY + gH - 28);
+ctx.moveTo(gX + 50, gY + gH - 40);
+ctx.lineTo(gX + gW - 20, gY + gH - 40);
 ctx.stroke();
 
-// speed scale (mph)
-const speed = clamp(sim.speedMph, 0, 12);
-const nx = speed / 12;
+// dominance zones (mph thresholds)
+const Z_ATP = 0.22;   // ~0–2.5 mph
+const Z_ANA = 0.58;   // ~2.5–7 mph
 
-// dominance zones (mph-based)
-const zATP = 0.20;   // ~0–2.5 mph
-const zANA = 0.55;   // ~2.5–7 mph
+const baseY = gY + gH - 40;
+const maxH  = 45;
+const spanW = gW - 70;
 
 // shaded regions
-const baseY = gY + gH - 28;
-const maxH  = 36;
+ctx.fillStyle = 'rgba(239,68,68,0.35)'; // ATP-PC
+ctx.fillRect(gX + 50, baseY - maxH, spanW * Z_ATP, maxH);
 
-// ATP-PC
-ctx.fillStyle = 'rgba(239,68,68,0.35)';
-ctx.fillRect(gX + 40, baseY - maxH, (gW - 56) * zATP, maxH);
-
-// Anaerobic Glycolysis
-ctx.fillStyle = 'rgba(251,191,36,0.35)';
+ctx.fillStyle = 'rgba(251,191,36,0.35)'; // Anaerobic
 ctx.fillRect(
-  gX + 40 + (gW - 56) * zATP,
+  gX + 50 + spanW * Z_ATP,
   baseY - maxH,
-  (gW - 56) * (zANA - zATP),
+  spanW * (Z_ANA - Z_ATP),
   maxH
 );
 
-// Aerobic
-ctx.fillStyle = 'rgba(56,189,248,0.35)';
+ctx.fillStyle = 'rgba(56,189,248,0.35)'; // Aerobic
 ctx.fillRect(
-  gX + 40 + (gW - 56) * zANA,
+  gX + 50 + spanW * Z_ANA,
   baseY - maxH,
-  (gW - 56) * (1 - zANA),
+  spanW * (1 - Z_ANA),
   maxH
 );
 
-// runner marker
-const markerX = gX + 40 + (gW - 56) * nx;
+// dominance curve (conceptual)
 ctx.strokeStyle = '#e6eef7';
 ctx.lineWidth = 3;
 ctx.beginPath();
-ctx.moveTo(markerX, baseY - maxH - 6);
-ctx.lineTo(markerX, baseY + 6);
+for (let i = 0; i <= 100; i++) {
+  const t = i / 100;
+  const x = gX + 50 + spanW * t;
+  const y =
+    baseY -
+    maxH *
+      (0.15 +
+        0.85 *
+          Math.exp(-2.8 * t)); // steep early drop like reference image
+  if (i === 0) ctx.moveTo(x, y);
+  else ctx.lineTo(x, y);
+}
+ctx.stroke();
+
+// runner marker
+const speed = clamp(sim.speedMph, 0, 12);
+const nx = speed / 12;
+const mx = gX + 50 + spanW * nx;
+
+ctx.strokeStyle = '#ffffff';
+ctx.lineWidth = 3;
+ctx.beginPath();
+ctx.moveTo(mx, baseY - maxH - 10);
+ctx.lineTo(mx, baseY + 10);
 ctx.stroke();
 
 // labels
 ctx.fillStyle = '#cfe3ff';
 ctx.font = '700 13px system-ui';
 ctx.textAlign = 'center';
-ctx.fillText('ATP-PC', gX + 40 + (gW - 56) * 0.10, baseY + 16);
-ctx.fillText('Anaerobic', gX + 40 + (gW - 56) * 0.38, baseY + 16);
-ctx.fillText('Aerobic', gX + 40 + (gW - 56) * 0.78, baseY + 16);
+ctx.fillText('ATP-PC', gX + 50 + spanW * 0.11, baseY + 18);
+ctx.fillText('Anaerobic Glycolysis', gX + 50 + spanW * 0.40, baseY + 18);
+ctx.fillText('Aerobic Metabolism', gX + 50 + spanW * 0.80, baseY + 18);
 
 ctx.textAlign = 'left';
 
