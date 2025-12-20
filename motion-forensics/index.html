@@ -1178,9 +1178,9 @@ applyAdd(b.thighR, -hipAmp * s, 0, +thighAdd);
 // arms (ONE applyAdd per bone — swing + adduct + slight back)
 const addRad  = THREE.MathUtils.degToRad(55) * amp; // adduction (tuck)
 const backRad = THREE.MathUtils.degToRad(12) * amp; // arms slightly back
-const elbow   = THREE.MathUtils.degToRad(85) * amp; // elbow bend
+const elbow   = THREE.MathUtils.degToRad(90) * amp; // elbow bend
 
-const extRot = THREE.MathUtils.degToRad(10) * amp; // external rotation
+const extRot = THREE.MathUtils.degToRad(7) * amp; // external rotation
 
 applyAdd(b.upArmL, (-armAmp * s) - backRad, +extRot, -addRad); // Z tucks elbow in
 applyAdd(b.upArmR, ( armAmp * s) - backRad, -extRot, +addRad);
