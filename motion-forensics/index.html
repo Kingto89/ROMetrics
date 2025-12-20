@@ -1155,7 +1155,7 @@ function animate(){
     const s2 = Math.sin(R.phase * 2.0);
 
     const hipAmp  = THREE.MathUtils.degToRad(28) * amp;
-    const kneeAmp = THREE.MathUtils.degToRad(42) * amp;
+    const kneeAmp = THREE.MathUtils.degToRad(70) * amp;
     const armAmp  = THREE.MathUtils.degToRad(22) * amp;
     const spineTw = THREE.MathUtils.degToRad(4)  * (amp * 0.6);
 
@@ -1167,8 +1167,9 @@ function animate(){
 
     const bendL = Math.max(0, -s) * kneeAmp;
     const bendR = Math.max(0,  s) * kneeAmp;
-    applyAdd(b.calfL, bendL, 0, 0);
-    applyAdd(b.calfR, bendR, 0, 0);
+    applyAdd(b.calfL, 0, 0, bendL);
+    applyAdd(b.calfR, 0, 0, bendR);
+
 
     // arms (opposite)
     applyAdd(b.upArmL, -armAmp * s, 0, 0);
