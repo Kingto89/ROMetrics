@@ -1163,7 +1163,7 @@ function animate(){
 // legs (hip swing + 5° THIGH ADDUCTION on Z)
 const thighAdd = THREE.MathUtils.degToRad(5);
 
-applyAdd(b.thighL,  hipAmp * s, -0, +thighAdd);
+applyAdd(b.thighL,  hipAmp * s, 0, -thighAdd);
 applyAdd(b.thighR, -hipAmp * s, 0, +thighAdd);
 
 
@@ -1175,18 +1175,19 @@ applyAdd(b.thighR, -hipAmp * s, 0, +thighAdd);
 
 
 // arms (opposite) + MORE adduction + slight back bias + elbows
-// arms (ONE applyAdd per bone — swing + adduct + slight back)
-const addRad  = THREE.MathUtils.degToRad(55) * amp; // adduction (tuck)
-const backRad = THREE.MathUtils.degToRad(12) * amp; // arms slightly back
-const elbow   = THREE.MathUtils.degToRad(90) * amp; // elbow bend
+// arms (swing reacts to mph; pose does NOT)
+const armTuck   = THREE.MathUtils.degToRad(35);  // adduction (Z)
+const armBack   = THREE.MathUtils.degToRad(10);  // slight shoulder extension (X)
+const humER     = THREE.MathUtils.degToRad(10);  // external rotation (Y)
+const elbowHold = THREE.MathUtils.degToRad(85);  // elbow flex (X)
 
-const extRot = THREE.MathUtils.degToRad(7) * amp; // external rotation
+// one applyAdd per bone (no overwrites)
+applyAdd(b.upArmL, (-armAmp * s) - armBack, +humER, -armTuck);
+applyAdd(b.upArmR, ( armAmp * s) - armBack, -humER, +armTuck);
 
-applyAdd(b.upArmL, (-armAmp * s) - backRad, +extRot, -addRad); // Z tucks elbow in
-applyAdd(b.upArmR, ( armAmp * s) - backRad, -extRot, +addRad);
-    
-applyAdd(b.loArmL, elbow, 0, 0);
-applyAdd(b.loArmR, elbow, 0, 0);
+applyAdd(b.loArmL, elbowHold, 0, 0);
+applyAdd(b.loArmR, elbowHold, 0, 0);
+
 
     // tiny torso counter
     applyAdd(b.spine, 0, 0, spineTw * s2);
