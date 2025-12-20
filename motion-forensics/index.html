@@ -1683,11 +1683,8 @@ if (b.head) applyAdd(b.head, 0, torsoYaw * 0.15, 0);
 if (sim.running){
   sim.energy = clamp(sim.energy - (sim.speedMph * 0.55) * dt, 0, 100);
 
-  // TEMP pass trigger (fires once)
-  if (currentModule?.id === 'FL-001' && sim.energy >= 60 && !animate._fl001Passed){
-    animate._fl001Passed = true;
-    fl001PassTrial();
-  }
+if (currentModule?.id === 'FL-001'){
+  fl001MinEnergy = Math.min(fl001MinEnergy, sim.energy);
 }
 
 
