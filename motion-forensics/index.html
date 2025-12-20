@@ -604,23 +604,33 @@ ctx.fillRect(
   maxH
 );
 
-// dominance curve (conceptual)
-ctx.strokeStyle = '#e6eef7';
-ctx.lineWidth = 3;
+// ===== LIVE ENERGY DOMINANCE LINE (MOVES WITH MODEL) =====
+const speed = clamp(sim.speedMph, 0, 12);
+const nx = speed / 12;
+
+// dominance weighting based on speed
+let dominance;
+if (nx < 0.22) dominance = 1.0;                 // ATP-PC
+else if (nx < 0.58) dominance = 1.0 - (nx - 0.22) / 0.36; // Anaerobic transition
+else dominance = 0.15;                          // Aerobic steady
+
+// vertical position driven by dominance
+const liveY = baseY - maxH * dominance;
+
+// draw LIVE line (this MOVES)
+ctx.strokeStyle = '#ffffff';
+ctx.lineWidth = 4;
 ctx.beginPath();
-for (let i = 0; i <= 100; i++) {
-  const t = i / 100;
-  const x = gX + 50 + spanW * t;
-  const y =
-    baseY -
-    maxH *
-      (0.15 +
-        0.85 *
-          Math.exp(-2.8 * t)); // steep early drop like reference image
-  if (i === 0) ctx.moveTo(x, y);
-  else ctx.lineTo(x, y);
-}
+ctx.moveTo(gX + 50, liveY);
+ctx.lineTo(gX + 50 + spanW * nx, liveY);
 ctx.stroke();
+
+// endpoint dot (moves every frame)
+ctx.fillStyle = '#ffffff';
+ctx.beginPath();
+ctx.arc(gX + 50 + spanW * nx, liveY, 6, 0, Math.PI * 2);
+ctx.fill();
+
 
 // ===== LIVE RUNNER POSITION (MOVES WITH SPEED) =====
 const speed = clamp(sim.speedMph, 0, 12);
@@ -652,7 +662,7 @@ ctx.fill();
 
 // labels
 ctx.fillStyle = '#cfe3ff';
-ctx.font = '700 13px system-ui';
+ctx.font = '700 19px system-ui';
 ctx.textAlign = 'center';
 ctx.fillText('ATP-PC', gX + 50 + spanW * 0.11, baseY + 18);
 ctx.fillText('Anaerobic Glycolysis', gX + 50 + spanW * 0.40, baseY + 18);
