@@ -331,7 +331,13 @@ const $start = document.getElementById('startBtn');
 const $fuel = document.getElementById('fuelBtn');
 const $reset = document.getElementById('resetBtn');
 
-const sim = { speedMph: 6.0, energy: 100, lastFuelT: -999, running:false };
+const sim = {
+  speedMph: 6.0,
+  energy: 100,
+  lastFuelT: -999,
+  running: false,
+  elapsed: 0
+};
 let trialTime = 180;
     
 const clamp = (v,a,b)=> Math.max(a, Math.min(b, v));
@@ -346,15 +352,22 @@ $start.textContent = "Start";
 $spd.addEventListener('input', ()=>{ sim.speedMph = parseFloat($spd.value); });
 
 $start.addEventListener('click', ()=>{
+  if (!sim.running) {
+    // starting a new trial
+    sim.elapsed = 0;
+    trialTime = 180;
+  }
+
   sim.running = !sim.running;
   $start.textContent = sim.running ? "Pause" : "Start";
 
-  // START TIMER when trial is running
+  // START TIMER display immediately when running
   if (sim.running && currentModule?.id === 'FL-001'){
-    if (typeof trialTime !== 'number') trialTime = 180;
-    document.getElementById('trialTime').textContent = Math.ceil(trialTime);
+    document.getElementById('trialTime').textContent =
+      Math.ceil(trialTime);
   }
 });
+
 
 
 $fuel.addEventListener('click', ()=>{
@@ -368,6 +381,7 @@ $reset.addEventListener('click', ()=>{
   sim.energy = 100;
   sim.lastFuelT = -999;
   sim.running = false;
+    sim.elapsed = 0;
 
   // reset trial timer
   trialTime = 180;
@@ -545,8 +559,8 @@ ctx.fillText(
 
 
   // fuel pulse
-  const t = performance.now()/1000;
-  const fuelPulse = Math.max(0, 1 - (t - sim.lastFuelT) / 0.8);
+  const now = performance.now()/1000;
+  const fuelPulse = Math.max(0, 1 - (now - sim.lastFuelT) / 0.8);
   if (fuelPulse > 0){
     ctx.globalAlpha = fuelPulse * 0.35;
     ctx.fillStyle = 'rgba(56,189,248,1)';
@@ -556,12 +570,11 @@ ctx.fillText(
     ctx.globalAlpha = 1;
   }
 
-// ===== ENERGY SYSTEM DOMINANCE GRAPH (SPEED-BASED) =====
+// ===== ENERGY SYSTEM DOMINANCE GRAPH =====
 const gW = c.width - 40;   // narrower
-const gH = 90;             // shorter
+const gH = 90;            // shorter
 const gX = (c.width - gW) / 2 + 5;  // shift RIGHT
-const gY = 190;            // move UP
-
+const gY = 190;           // move UP
 
 // background
 ctx.fillStyle = 'rgba(15,23,42,0.95)';
@@ -576,67 +589,51 @@ ctx.moveTo(gX + 50, gY + gH - 40);
 ctx.lineTo(gX + gW - 20, gY + gH - 40);
 ctx.stroke();
 
-// dominance zones (mph thresholds)
-const Z_ATP = 0.22;   // ~0–2.5 mph
-const Z_ANA = 0.58;   // ~2.5–7 mph
-
+// graph metrics (MUST COME BEFORE USE)
 const baseY = gY + gH - 40;
 const maxH  = 45;
 const spanW = gW - 70;
 
-// shaded regions
-ctx.fillStyle = 'rgba(239,68,68,0.35)'; // ATP-PC
-ctx.fillRect(gX + 50, baseY - maxH, spanW * Z_ATP, maxH);
+// time + speed inputs
+const t = (sim.running ? sim.elapsed : 0); // seconds
+const mph = clamp(sim.speedMph, 0, 22);
+const intensity = mph / 22;
 
-ctx.fillStyle = 'rgba(251,191,36,0.35)'; // Anaerobic
-ctx.fillRect(
-  gX + 50 + spanW * Z_ATP,
-  baseY - maxH,
-  spanW * (Z_ANA - Z_ATP),
-  maxH
-);
-
-ctx.fillStyle = 'rgba(56,189,248,0.35)'; // Aerobic
-ctx.fillRect(
-  gX + 50 + spanW * Z_ANA,
-  baseY - maxH,
-  spanW * (1 - Z_ANA),
-  maxH
-);
-
-// ===== LIVE ENERGY DOMINANCE GRAPH (CORRECT) =====
-
-// X AXIS = TIME (0 → 3 minutes)
-const tNorm = clamp(sim.elapsed / 180, 0, 1);
+// X position = TIME (0 → 3 min)
+const tNorm = sim.running ? clamp(t / 180, 0, 1) : 0;
 const xPos = gX + 50 + spanW * tNorm;
 
-// DOMINANCE = SPEED + TIME
-const mph = sim.speedMph;
+// ===== DOMINANCE LOGIC (TIME × MPH) =====
 let dominant, domColor, domLevel;
-
-// ATP-PC: very high speed, very short duration
-if (mph >= 18 && t <= 10) {
+if (t === 0){
   dominant = 'ATP-PC';
   domColor = '#ef4444';
   domLevel = 0.85;
 }
-// Anaerobic glycolysis: moderate–high speed OR early effort
-else if (t <= 120 && mph >= 6) {
+
+// ATP-PC: explosive, very short, very fast
+if (intensity >= 0.75 && t <= 10) {
+  dominant = 'ATP-PC';
+  domColor = '#ef4444';
+  domLevel = 0.85;
+}
+// Anaerobic glycolysis: moderate–high intensity, short–moderate duration
+else if (intensity >= 0.35 && t <= 120) {
   dominant = 'Anaerobic Glycolysis';
   domColor = '#fbbf24';
   domLevel = 0.55;
 }
-// Aerobic: sustained effort
+// Aerobic metabolism: low intensity OR long duration
 else {
   dominant = 'Aerobic Metabolism';
   domColor = '#38bdf8';
   domLevel = 0.30;
 }
 
-// Y POSITION = DOMINANCE
+// Y position = dominance height
 const yPos = baseY - maxH * domLevel;
 
-// BASELINE (REFERENCE)
+// baseline
 ctx.strokeStyle = 'rgba(148,163,184,0.45)';
 ctx.lineWidth = 2;
 ctx.beginPath();
@@ -644,7 +641,7 @@ ctx.moveTo(gX + 50, baseY);
 ctx.lineTo(gX + 50 + spanW, baseY);
 ctx.stroke();
 
-// LIVE DOMINANCE LINE (STARTS AT LEFT)
+// live dominance line
 ctx.strokeStyle = domColor;
 ctx.lineWidth = 6;
 ctx.beginPath();
@@ -652,19 +649,16 @@ ctx.moveTo(gX + 50, yPos);
 ctx.lineTo(xPos, yPos);
 ctx.stroke();
 
-// ENDPOINT DOT
+// endpoint dot
 ctx.fillStyle = domColor;
 ctx.beginPath();
 ctx.arc(xPos, yPos, 7, 0, Math.PI * 2);
 ctx.fill();
 
-// LABEL
+// label
 ctx.font = '900 20px system-ui';
 ctx.fillStyle = domColor;
 ctx.fillText(`Dominant: ${dominant}`, gX + 50, gY + 24);
-
-
-
 
 // labels
 ctx.fillStyle = '#cfe3ff';
@@ -1460,6 +1454,13 @@ function animate(){
   controls.update();
 
   const dt = Math.min(0.05, clock.getDelta());
+// advance elapsed time for energy graph
+if (sim.running && currentModule?.id === 'FL-001'){
+  sim.elapsed = Math.min(180, sim.elapsed + dt);
+}
+
+
+  
 // ===== FL-001 TIMER =====
 if (sim.running && currentModule?.id === 'FL-001'){
   trialTime -= dt;
