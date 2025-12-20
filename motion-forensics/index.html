@@ -138,8 +138,8 @@ const MODELS = [
 let ACTIVE_MODEL_ID = "Roma";
 
 const ANAT_PRESETS = {
-  Roma:  { shTuck: 35, shER: 10, hipAdd: 5, spine01Flex: 0 },  // degrees
-  Roman: { shTuck: 52, shER: 12, hipAdd: 0, spine01Flex: 5 }   // degrees
+  Roma:  { shTuck: 35, shER: 10, hipAdd: 5, spine01Flex: 0, upperarmFlex: 0 },  // degrees
+  Roman: { shTuck: 52, shER: 12, hipAdd: 0, spine01Flex: 5, upperarmFlex: 5 }   // degrees
 };
 
 
@@ -1129,6 +1129,29 @@ function animate(){
 
       const base = new Map();
       Object.values(bones).forEach(b=>{ if (b) base.set(b, b.quaternion.clone()); });
+ // bake anatomic baseline into stored "base" so restore() keeps it
+const uaFlex = THREE.MathUtils.degToRad(ANAT.upperarmFlex || 0);
+if (uaFlex){
+  const qUAFlex = new THREE.Quaternion().setFromEuler(new THREE.Euler(uaFlex, 0, 0)); // X = shoulder flex
+
+  if (bones.upArmL){
+    const bq = base.get(bones.upArmL);
+    if (bq){
+      const baked = bq.clone().multiply(qUAFlex);
+      base.set(bones.upArmL, baked);
+      bones.upArmL.quaternion.copy(baked);
+    }
+  }
+  if (bones.upArmR){
+    const bq = base.get(bones.upArmR);
+    if (bq){
+      const baked = bq.clone().multiply(qUAFlex);
+      base.set(bones.upArmR, baked);
+      bones.upArmR.quaternion.copy(baked);
+    }
+  }
+}
+     
 // --- bake anatomic baseline into stored "base" so restore() keeps it ---
 if (bones.spine01){
   const flex = THREE.MathUtils.degToRad(ANAT.spine01Flex || 0); // Roman=5, Roma=0
