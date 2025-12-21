@@ -435,15 +435,6 @@ if (!sim.hasStarted){
   sim.running = !sim.running;
   if (runAction) runAction.paused = !sim.running;
   $start.textContent = sim.running ? "Pause" : "Start";
-
-  // START TIMER display immediately when running
-  if (sim.running && currentModule?.id === 'FL-001'){
-    document.getElementById('trialTime').textContent =
-      Math.ceil(trialTime);
-  }
-});
- 
-
 $reset.addEventListener('click', ()=>{
   // reset sim
   sim.energy = 100;
@@ -1794,6 +1785,12 @@ if (sim.running){
   }
 
   sim.energy = clamp(sim.energy + row.rate * dt, 0, 100);
+}
+// FL-001 countdown + display
+if (sim.running && currentModule?.id === 'FL-001'){
+  trialTime = Math.max(0, trialTime - dt);
+  document.getElementById('trialTime').textContent =
+    Math.ceil(trialTime);
 }
 
   updateHUD();
