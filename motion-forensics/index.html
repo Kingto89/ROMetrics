@@ -701,7 +701,13 @@ ctx.fill();
 // label
 ctx.font = '900 20px system-ui';
 ctx.fillStyle = domColor;
-ctx.fillText(dominanceLabel, gX + 50, gY + 24);
+ctx.fillText(
+  `Dominant: ${dominant}` +
+  (sim.running && sim.elapsed < 3 ? ' — ATP-PC activated' : ''),
+  gX + 50,
+  gY + 24
+);
+  
 // ===== ATP-PC ACTIVATION DISPLAY (NO LOGIC CHANGE) =====
 let activationNote = '';
 
