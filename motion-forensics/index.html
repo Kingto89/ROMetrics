@@ -1824,49 +1824,47 @@ if (b.head) applyAdd(b.head, 0, torsoYaw * 0.15, 0);
 if (sim.running){
   const mph = sim.speedMph;
 
-  // ---- FATIGUE MEMORY (persists after sprints) ----
   if (!sim.fatigue) sim.fatigue = 0;
-  const sprintLoad = Math.max(0, mph - 12) / 10;   // only >12 mph builds fatigue
+
+  // build fatigue only at high speeds
+  const sprintLoad = Math.max(0, mph - 12) / 10;
   sim.fatigue = clamp(
-    sim.fatigue + sprintLoad * dt - 0.6 * dt,     // decays over time
+    sim.fatigue + sprintLoad * dt - 0.25 * dt,   // ⬅ slower decay
     0,
     1
   );
 
-  let dE = 0; // energy delta per second
+  let dE = 0;
 
   // ---- SPEED ZONES ----
   if (mph < 1.5){
-    // passive recovery (standing / very slow walk)
-    dE = +4.0;
+    dE = +3.0;
   }
   else if (mph < 3.0){
-    // easy walk → near full recovery
-    dE = +2.0;
+    dE = +1.8;
   }
   else if (mph < 4.5){
-    // aerobic plateau (no meaningful change)
     dE = +0.2;
   }
   else if (mph < 7.0){
-    // easy aerobic work
     dE = -1.5;
   }
   else if (mph < 12.0){
-    // moderate run
     dE = -3.5;
   }
   else {
-    // anaerobic sprint
     dE = -8.0;
   }
 
-  // ---- FATIGUE PENALTY ----
-  dE -= sim.fatigue * 3.5;
+  // ---- WORK–REST RATIO ENFORCEMENT ----
+  // Fatigue throttles recovery HARD after intense work
+  if (dE > 0){
+    const recoveryLimiter = 1 - sim.fatigue; // sprint → slow recovery
+    dE *= clamp(recoveryLimiter, 0.15, 1.0);
+  }
 
   sim.energy = clamp(sim.energy + dE * dt, 0, 100);
 
-  // HARD STOP
   if (sim.energy <= 0){
     sim.energy = 0;
     sim.running = false;
