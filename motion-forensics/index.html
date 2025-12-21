@@ -672,18 +672,18 @@ ctx.fillText(`Dominant: ${dominant}`, gX + 50, gY + 24);
 ctx.fillStyle = '#cfe3ff';
 ctx.font = '700 19px system-ui';
 ctx.textAlign = 'center';
-// ===== DEPLETION + WORK–REST STATUS =====
+
+// ===== DEPLETION + RECOVERY STATUS (REAL POOLS) =====
 ctx.font = '700 16px system-ui';
 ctx.fillStyle = '#94a3b8';
 
-// depletion flags (very low contribution = functionally depleted)
-const atpDepleted = nATP < 0.05;
-const anaDepleted = (nANA < 0.05) && (sim.fatigue > 0.3);
-if (anaDepleted) sim.anaLocked = true;
+// real depletion based on kJ pools
+const atpDepleted = sim.pools.atp <= 0.01;
+const anaDepleted = sim.pools.ana <= 0.05;
 
-// draw depletion BELOW the system labels
+// draw depletion labels BELOW system labels
 ctx.font = '700 14px system-ui';
-ctx.fillStyle = '#fca5a5'; // subtle red, readable
+ctx.fillStyle = '#fca5a5';
 
 if (atpDepleted)
   ctx.fillText('depleted', gX + 50 + spanW * 0.11, baseY + 48);
@@ -691,23 +691,20 @@ if (atpDepleted)
 if (anaDepleted)
   ctx.fillText('depleted', gX + 50 + spanW * 0.40, baseY + 48);
 
+// work–rest cue (based on anaerobic state only)
+ctx.fillStyle = '#94a3b8';
+ctx.textAlign = 'center';
 
-// work–rest recovery cue (fatigue-limited recovery)
-let wrText = '';
-if (sim.fatigue > 0.4){
-  wrText = 'Recovery limited (work–rest debt)';
-} else if (sim.fatigue > 0.15){
-  wrText = 'Recovering…';
-} else {
-  wrText = 'Recovered';
+let wrText = 'Recovered';
+if (anaDepleted){
+  wrText = 'Anaerobic depleted — recovery requires minutes';
+} else if (sim.pools.ana < 6){
+  wrText = 'Recovering… (low intensity required)';
 }
 
-ctx.textAlign = 'center';
 ctx.fillText(wrText, gX + 50 + spanW * 0.55, baseY + 56);
 ctx.textAlign = 'left';
 
-
-ctx.textAlign = 'left';
 
   screen.tex.needsUpdate = true;
 }
