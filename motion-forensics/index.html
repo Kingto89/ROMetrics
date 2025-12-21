@@ -218,6 +218,22 @@ document.getElementById('trialHelpContent').innerHTML =
     import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+// ==============================
+// SIMULATION STATE (GLOBAL)
+// ==============================
+let trialTime = 300; // seconds
+
+const sim = {
+  speedMph: 0,
+  energy: 100,
+  running: false,
+  elapsed: 0,
+  workTime: 0,
+  hasStarted: false
+};
+
+
+    
 const METABOLIC_TABLE = {
   0.0:{mode:"recover",rate:+0.00013,dominant:"aerobic",finishable:true},
   0.2:{mode:"recover",rate:+0.00010,dominant:"aerobic",finishable:true},
@@ -409,15 +425,12 @@ $status.style.color = "#cfe3ff";
 $start.textContent = "Start";
 
 $spd.addEventListener('input', ()=>{ sim.speedMph = parseFloat($spd.value); });
-
-$start.addEventListener('click', ()=>{
-  if (sim.speedMph <= 0) return;
-if (!sim.running && sim.elapsed === 0) {
-    // starting a new trial
-    sim.elapsed = 0;
-    sim.workTime = 0;
-    trialTime = 300;
-  }
+if (!sim.hasStarted){
+  sim.hasStarted = true;
+  sim.elapsed = 0;
+  sim.workTime = 0;
+  trialTime = 300;
+}
 
   sim.running = !sim.running;
   if (runAction) runAction.paused = !sim.running;
@@ -436,6 +449,7 @@ $reset.addEventListener('click', ()=>{
   sim.energy = 100;
   sim.lastFuelT = -999;
   sim.running = false;
+  sim.hasStarted = false;
     sim.elapsed = 0;
 
   // reset trial timer
