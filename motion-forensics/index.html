@@ -356,7 +356,26 @@ $start.addEventListener('click', ()=>{
 
 $fuel.addEventListener('click', ()=>{
   if (!sim.running) return;
-sim.energy = clamp(sim.energy + dE * dt, 0, sim.fatigue > 0.25 ? 80 : 100);
+// ---------- FUNCTIONAL METABOLIC CAPACITY (%)
+// intensity-weighted perception of remaining energy
+
+const totalKJ = ATP_MAX + ANA_MAX;
+const fracRemaining = clamp(remaining / totalKJ, 0, 1);
+
+// intensity factor (0–1)
+const intensity = clamp(sim.speedMph / 22, 0, 1);
+
+// nonlinear fatigue perception:
+// low intensity → forgiving
+// high intensity → punishing
+const fatigueWeight = 0.35 + 1.9 * Math.pow(intensity, 2.2);
+
+// perceived capacity
+sim.energy = clamp(
+  Math.pow(fracRemaining, fatigueWeight) * 100,
+  0,
+  100
+);
   sim.lastFuelT = performance.now()/1000;
 });  
 
