@@ -1861,6 +1861,31 @@ if (b.head) applyAdd(b.head, 0, torsoYaw * 0.15, 0);
   R.wasRunning = runNow;
 
 // ===== ENERGY SYSTEM — CONTINUOUS PHYSIOLOGY MODEL =====
+// ----- RECOMPUTE DOMINANCE WEIGHTS FOR ENERGY MODEL -----
+const tSecE = sim.elapsed;
+const vE = clamp(sim.speedMph / 22, 0, 1);
+const aerobicCapE = 0.35;
+
+const wATPE = (vE > aerobicCapE)
+  ? Math.exp(-tSecE / 6)
+  : 0;
+
+const wANAE = (!sim.anaLocked && vE > aerobicCapE)
+  ? (1 - Math.exp(-tSecE / 10)) * Math.exp(-tSecE / 120)
+  : 0;
+
+const aerobicDelayE = 30 + 90 * vE;
+const wAERE = (vE <= aerobicCapE)
+  ? 1
+  : 1 / (1 + Math.exp(-(tSecE - aerobicDelayE) / 18));
+
+const wSumE = wATPE + wANAE + wAERE || 1;
+
+const nATP = wATPE / wSumE;
+const nANA = wANAE / wSumE;
+const nAER = wAERE / wSumE;
+
+  
 if (sim.running){
 
   const mph = sim.speedMph;
