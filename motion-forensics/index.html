@@ -1689,10 +1689,10 @@ if (b.neck) applyAdd(b.neck, 0, torsoYaw * 0.35, 0);
 if (b.head) applyAdd(b.head, 0, torsoYaw * 0.15, 0);
 
 
-  } else if (R.wasRunning) {
-    restore();
-  }
-  R.wasRunning = runNow;
+if (runAction){
+  runAction.paused = !runNow;
+}
+
 
   // treadmill motion
   if (sim.running){
