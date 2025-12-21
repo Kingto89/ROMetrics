@@ -309,6 +309,7 @@ const sim = {
   speedMph: 0.0,
   energy: 100,
   lastFuelT: -999,
+  anaLocked: false
   running: false,
   elapsed: 0,
   workTime: 0
@@ -597,9 +598,10 @@ const wATP = (v > aerobicCap)
   : 0;
 
 // Anaerobic glycolysis: ONLY if aerobic alone is insufficient
-const wANA = (v > aerobicCap)
+const wANA = (!sim.anaLocked && v > aerobicCap)
   ? (1 - Math.exp(-tSec / 10)) * Math.exp(-tSec / 120)
   : 0;
+
 
 // Aerobic: dominant immediately at low intensity, delayed at high
 const aerobicDelay = 30 + 90 * v;
@@ -675,6 +677,7 @@ ctx.fillStyle = '#94a3b8';
 // depletion flags (very low contribution = functionally depleted)
 const atpDepleted = nATP < 0.05;
 const anaDepleted = (nANA < 0.05) && (sim.fatigue > 0.3);
+if (anaDepleted) sim.anaLocked = true;
 
 // draw depletion BELOW the system labels
 ctx.font = '700 14px system-ui';
