@@ -1846,27 +1846,33 @@ if (b.head) applyAdd(b.head, 0, torsoYaw * 0.15, 0);
   }
   R.wasRunning = runNow;
 
-// ===== ENERGY DRAIN (PHYSIOLOGY-BASED) =====
+// ===== ENERGY DRAIN (SYSTEM-WEIGHTED) =====
 if (sim.running){
-  const vMax = 22;
-  const intensity = Math.pow(sim.speedMph / vMax, 1.6);
 
-  // accumulate intensity-weighted work time
-  sim.workTime += intensity * dt;
+  // use SAME weights as graph
+  const drainATP = 18;   // very fast depletion
+  const drainANA = 7;    // moderate
+  const drainAER = -3;   // RECOVERY when aerobic-dominant
 
-  // calibrated for 3-minute trial realism
-  const kDrain = 6;
-  sim.energy = clamp(sim.energy - (kDrain * intensity * dt), 0, 100);
+  // weighted net drain (can be negative = recovery)
+  const netDrain =
+      (nATP * drainATP) +
+      (nANA * drainANA) +
+      (nAER * drainAER);
 
-  // HARD STOP on exhaustion
-  if (sim.energy <= 0){
-    sim.energy = 0;
+  sim.energy = clamp(sim.energy - (netDrain * dt), 0, 100);
+
+  // HARD STOP only if truly exhausted
+  if (sim.energy === 0){
     sim.running = false;
+    sim.speedMph = 0;
+    $spd.value = 0;
     $start.textContent = "Start";
     $status.textContent = "Exhausted";
     $status.style.color = "#38bdf8";
   }
 }
+
 
 
   // treadmill motion
