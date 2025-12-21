@@ -1909,26 +1909,6 @@ if (sim.running){
 }
 
 
-  // ---- WORK–REST RATIO ENFORCEMENT ----
-  // Fatigue throttles recovery HARD after intense work
-  if (dE > 0){
-    const recoveryLimiter = 1 - sim.fatigue; // sprint → slow recovery
-    dE *= clamp(recoveryLimiter, 0.15, 1.0);
-  }
-
-  sim.energy = clamp(sim.energy + dE * dt, 0, 100);
-
-  if (sim.energy <= 0){
-    sim.energy = 0;
-    sim.running = false;
-    $start.textContent = "Start";
-    $status.textContent = "Exhausted";
-    $status.style.color = "#ff9aa0";
-  }
-}
-
-
-
   // treadmill motion
   if (sim.running){
     const treadSpeed = 0.35 + (sim.speedMph / 12) * 2.0;
