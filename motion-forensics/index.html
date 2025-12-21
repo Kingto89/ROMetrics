@@ -315,7 +315,7 @@ const sim = {
   workTime: 0
 };
 
-let trialTime = 180;
+let trialTime = 300;
     
 const clamp = (v,a,b)=> Math.max(a, Math.min(b, v));
 
@@ -334,7 +334,7 @@ $start.addEventListener('click', ()=>{
     // starting a new trial
     sim.elapsed = 0;
     sim.workTime = 0;
-    trialTime = 180;
+    trialTime = 300;
   }
 
   sim.running = !sim.running;
@@ -363,7 +363,7 @@ $reset.addEventListener('click', ()=>{
     sim.elapsed = 0;
 
   // reset trial timer
-  trialTime = 180;
+  trialTime = 300;
   document.getElementById('trialTime').textContent = 180;
 
   // reset UI state
@@ -1893,7 +1893,7 @@ if (sim.running){
     dE = -3.5;
   }
   else {
-    dE = -8.0;
+    dE = -5.0;
   }
 
   // ---- WORK–REST RATIO ENFORCEMENT ----
