@@ -607,53 +607,69 @@ const tFrac = clamp(t / 180, 0, 1); // 0 → 1 over 3 minutes
 const tNorm = sim.running ? clamp(t / 180, 0, 1) : 0;
 const xPos = gX + 50 + spanW * tNorm;
 
-// ===== DOMINANCE LOGIC — REAL POOL–DRIVEN =====
+// ===== DOMINANCE LOGIC — PHYSIOLOGICALLY CORRECT =====
 
 // inputs
 const mphDom = clamp(sim.speedMph, 0, 22);
 const tDom   = sim.elapsed;
 
-// intensity thresholds
-const LOW  = 4;
-const MOD  = 8;
-const HIGH = 14;
-
 // remaining pools (kJ)
 const atpR = sim.pools.atp;
 const anaR = sim.pools.ana;
 
-// ---- determine active deficit ----
+// defaults
 let dominant = 'Aerobic Metabolism';
 let domColor = '#38bdf8';
 let domLevel = 1.0;
 
-// sprint or hard run
-if (mph > HIGH){
-  if (t < 12 && atpR > 0){
-    dominant = 'ATP-PC';
-    domColor = '#ef4444';
-    domLevel = clamp(atpR / 3, 0.3, 1);
-  } else if (anaR > 0){
-    dominant = 'Anaerobic Glycolysis';
-    domColor = '#fbbf24';
-    domLevel = clamp(anaR / 12, 0.3, 1);
-  }
-}
+// normalized intensity
+const v = mphDom / 22;
 
-// moderate–high running
-else if (mph > MOD){
-  if (anaR > 0){
-    dominant = 'Anaerobic Glycolysis';
-    domColor = '#fbbf24';
-    domLevel = clamp(anaR / 12, 0.3, 1);
-  }
-}
-
-// low / aerobic
-else {
+// ---------- RULE 1: AEROBIC SUFFICIENCY ZONE ----------
+// ≤ ~6.5 mph → aerobic can fully meet demand
+if (mphDom <= 6.5){
   dominant = 'Aerobic Metabolism';
   domColor = '#38bdf8';
   domLevel = 1.0;
+}
+
+// ---------- RULE 2: TRANSITION ZONE (mixed) ----------
+else if (mphDom <= 8.0){
+  // aerobic still primary, anaerobic assisting
+  dominant = 'Aerobic Metabolism';
+  domColor = '#60a5fa';
+  domLevel = clamp(anaR / 12, 0.55, 0.9);
+}
+
+// ---------- RULE 3: ANAEROBIC DOMINANT RUN ----------
+else if (mphDom <= 14){
+  if (anaR > 0){
+    dominant = 'Anaerobic Glycolysis';
+    domColor = '#fbbf24';
+    domLevel = clamp(anaR / 12, 0.3, 1.0);
+  }
+}
+
+// ---------- RULE 4: SPRINT ----------
+else {
+  // first ~10 s: ATP-PC if available
+  if (tDom < 12 && atpR > 0){
+    dominant = 'ATP-PC';
+    domColor = '#ef4444';
+    domLevel = clamp(atpR / 3, 0.3, 1.0);
+  }
+  // then anaerobic glycolysis
+  else if (anaR > 0){
+    dominant = 'Anaerobic Glycolysis';
+    domColor = '#fbbf24';
+    domLevel = clamp(anaR / 12, 0.3, 1.0);
+  }
+  // exhausted → forced aerobic
+  else {
+    dominant = 'Aerobic Metabolism';
+    domColor = '#94a3b8';
+    domLevel = 0.35;
+  }
 }
 
 
@@ -1886,13 +1902,13 @@ if (b.head) applyAdd(b.head, 0, torsoYaw * 0.15, 0);
 // constants (average casual jogger)
 const ANA_MAX = 12.0;   // kJ anaerobic capacity
 const ATP_MAX = 3.0;    // kJ ATP-PC
-const AER_MAX = 9.0;    // kJ/min max aerobic power (~VO2max proxy)
+const AER_MAX = 28.0;   // kJ/min max aerobic power (scaled to jog/run reality)
 
 // oxygen kinetics (how fast aerobic ramps up)
-const AER_TIME_CONST = 45; // seconds to ~63% supply
+const AER_TIME_CONST = 30; // seconds to near-steady state at jog speeds
 
 // recovery (true physiology: minutes, not seconds)
-const ANA_RECOVERY_RATE = 0.22; // kJ per minute (≈10–15 min full)
+const ANA_RECOVERY_RATE = 0.22; // kJ per minute (~10–15 min full)
 
 // ------------------------------------------------------
 if (sim.running){
@@ -1901,48 +1917,73 @@ if (sim.running){
   const dtMin = dt / 60;
 
   // ---------- METABOLIC DEMAND (kJ/min) ----------
-  // smooth, nonlinear cost curve
-  const demand =
-    mph <= 4  ? 4 :
-    mph <= 8  ? 4 + (mph - 4) * 1.5 :
-    mph <= 14 ? 10 + (mph - 8) * 2.0 :
-                22 + Math.pow((mph - 14) / 8, 2) * 40;
+  // calibrated so jogging is sustainable
+  let demand;
+  if (mph <= 4){
+    demand = 4;
+  }
+  else if (mph <= 6.5){
+    demand = 4 + (mph - 4) * 2.0;        // aerobic jog
+  }
+  else if (mph <= 8){
+    demand = 9 + (mph - 6.5) * 4.0;      // upper aerobic / mixed
+  }
+  else if (mph <= 14){
+    demand = 15 + (mph - 8) * 2.2;       // anaerobic dominant
+  }
+  else {
+    const s = (mph - 14) / 8;            // sprint nonlinearity
+    demand = 28 + (s * s) * 45;
+  }
 
-  // ---------- AEROBIC SUPPLY (RAMPS WITH TIME) ----------
-  if (!sim.aerFrac) sim.aerFrac = 0;
+  // ---------- AEROBIC SUPPLY (MATCHES DEMAND UNTIL LIMIT) ----------
+  if (sim.aerFrac == null) sim.aerFrac = 0;
 
-  const targetAerFrac = clamp(demand / AER_MAX, 0, 1);
+  // aerobic can fully meet demand until ~6.5 mph
+  const aerobicCeiling =
+    mph <= 6.5 ? demand :
+    mph <= 8.0 ? demand * 0.9 :
+    mph <= 14  ? demand * 0.7 :
+                 demand * 0.4;
+
+  // ramp aerobic fraction smoothly
+  const targetAerFrac = clamp(aerobicCeiling / AER_MAX, 0, 1);
   sim.aerFrac += (targetAerFrac - sim.aerFrac) * (dt / AER_TIME_CONST);
 
   const aerobicSupply = AER_MAX * sim.aerFrac;
 
   // ---------- POWER BALANCE ----------
-  let excess = demand - aerobicSupply; // + drains anaerobic, - recovers
+  let deficit = demand - aerobicSupply;
 
   // ---------- ATP-PC (FIRST ~10 s ONLY) ----------
-  if (sim.elapsed < 10 && excess > 0 && sim.pools.atp > 0){
-    const use = Math.min(excess * dtMin, sim.pools.atp);
+  if (sim.elapsed < 10 && deficit > 0 && sim.pools.atp > 0){
+    const use = Math.min(deficit * dtMin, sim.pools.atp);
     sim.pools.atp -= use;
-    excess -= use / dtMin;
+    deficit -= use / dtMin;
   }
 
   // ---------- ANAEROBIC DRAIN ----------
-  if (excess > 0 && sim.pools.ana > 0){
-    const use = Math.min(excess * dtMin, sim.pools.ana);
+  if (deficit > 0 && sim.pools.ana > 0){
+    const use = Math.min(deficit * dtMin, sim.pools.ana);
     sim.pools.ana -= use;
   }
 
-  // ---------- ANAEROBIC RECOVERY ----------
-  if (excess < 0 && mph <= 3){
+  // ---------- ANAEROBIC RECOVERY (LOW INTENSITY ONLY) ----------
+  if (deficit <= 0 && mph <= 3){
     sim.pools.ana = Math.min(
       ANA_MAX,
       sim.pools.ana + ANA_RECOVERY_RATE * dtMin
     );
   }
 
-  // ---------- UPDATE METABOLIC CAPACITY ----------
+  // ---------- FUNCTIONAL METABOLIC CAPACITY (%) ----------
   const remaining = sim.pools.atp + sim.pools.ana;
-  sim.energy = clamp((remaining / (ATP_MAX + ANA_MAX)) * 100, 0, 100);
+  const frac = clamp(remaining / (ATP_MAX + ANA_MAX), 0, 1);
+  const intensity = clamp(mph / 22, 0, 1);
+
+  // perception-weighted capacity (low speed forgiving, high speed punishing)
+  const fatigueWeight = 0.35 + 1.9 * Math.pow(intensity, 2.2);
+  sim.energy = clamp(Math.pow(frac, fatigueWeight) * 100, 0, 100);
 
   // ---------- EXHAUSTION ----------
   if (remaining <= 0){
@@ -1953,7 +1994,6 @@ if (sim.running){
     $status.style.color = "#ff9aa0";
   }
 }
-
 
   // treadmill motion
   if (sim.running){
