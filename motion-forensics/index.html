@@ -1254,6 +1254,7 @@ function fl001PassTrial(){
 }
     
 async function enterFL001(){
+  setZone('cardio');
   document.getElementById('trialHelpContent').textContent = 'ENTER FL-001 CALLED';
   document.getElementById('fl001UI').style.display = 'grid';
 
@@ -1344,16 +1345,6 @@ function animate(){
   dt = Math.min(dt, TIME_STEP_CAP);
 
   controls.update();
-
-// ===== FL-001 METABOLIC UPDATE (authoritative) =====
-if (sim.running && currentModule?.id === 'FL-001'){
-  if (sim.energy > 0){
-    const dE = metabolicDelta(sim.speedMph, dt);
-    sim.energy = clamp(sim.energy + dE, 0, 100);
-    sim.elapsed += dt;
-  } else {
-    sim.running = false;
-  }
 }
   
 // ===== BLINK (works for BOTH Roma + Roman via auto-detect morph names) =====
