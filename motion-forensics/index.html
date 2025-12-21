@@ -674,7 +674,7 @@ ctx.fillStyle = '#94a3b8';
 
 // depletion flags (very low contribution = functionally depleted)
 const atpDepleted = nATP < 0.05;
-const anaDepleted = nANA < 0.05;
+const anaDepleted = (nANA < 0.05) && (sim.fatigue > 0.3);
 
 // draw depletion BELOW the system labels
 ctx.font = '700 14px system-ui';
