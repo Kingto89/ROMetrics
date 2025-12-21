@@ -218,122 +218,100 @@ document.getElementById('trialHelpContent').innerHTML =
     import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-// ===== HARD-WIRED METABOLIC CAPACITY TABLE (0.2 MPH RESOLUTION) =====
-// d = total % capacity change over a full 300s (5 min) trial
-// f = can finish 5 minutes at this speed
-
 const METABOLIC_TABLE = {
-  0.0:{d:+4,f:true},0.2:{d:+3,f:true},0.4:{d:+2,f:true},0.6:{d:+1,f:true},
-  0.8:{d:0,f:true},1.0:{d:0,f:true},1.2:{d:0,f:true},1.4:{d:0,f:true},
-  1.6:{d:0,f:true},1.8:{d:0,f:true},2.0:{d:0,f:true},2.2:{d:0,f:true},
-  2.4:{d:0,f:true},2.6:{d:0,f:true},2.8:{d:0,f:true},3.0:{d:0,f:true},
-  3.2:{d:0,f:true},3.4:{d:-1,f:true},3.6:{d:-1,f:true},
+  0.0:{mode:"recover",rate:+0.00013,dominant:"aerobic",finishable:true},
+  0.2:{mode:"recover",rate:+0.00010,dominant:"aerobic",finishable:true},
+  0.4:{mode:"recover",rate:+0.00007,dominant:"aerobic",finishable:true},
+  0.6:{mode:"recover",rate:+0.00003,dominant:"aerobic",finishable:true},
+  0.8:{mode:"steady", rate:0,        dominant:"aerobic",finishable:true},
+  1.0:{mode:"steady", rate:0,        dominant:"aerobic",finishable:true},
+  1.2:{mode:"steady", rate:0,        dominant:"aerobic",finishable:true},
+  1.4:{mode:"steady", rate:0,        dominant:"aerobic",finishable:true},
+  1.6:{mode:"steady", rate:0,        dominant:"aerobic",finishable:true},
+  1.8:{mode:"steady", rate:0,        dominant:"aerobic",finishable:true},
+  2.0:{mode:"steady", rate:0,        dominant:"aerobic",finishable:true},
+  2.2:{mode:"steady", rate:0,        dominant:"aerobic",finishable:true},
+  2.4:{mode:"steady", rate:0,        dominant:"aerobic",finishable:true},
+  2.6:{mode:"steady", rate:0,        dominant:"aerobic",finishable:true},
+  2.8:{mode:"steady", rate:0,        dominant:"aerobic",finishable:true},
+  3.0:{mode:"steady", rate:0,        dominant:"aerobic",finishable:true},
+  3.2:{mode:"steady", rate:0,        dominant:"aerobic",finishable:true},
+  3.4:{mode:"drain",  rate:-0.00003, dominant:"aerobic",finishable:true},
+  3.6:{mode:"drain",  rate:-0.00003, dominant:"aerobic",finishable:true},
 
-  3.8:{d:-2,f:true},4.0:{d:-2,f:true},4.2:{d:-3,f:true},4.4:{d:-3,f:true},
-  4.6:{d:-4,f:true},4.8:{d:-4,f:true},5.0:{d:-5,f:true},5.2:{d:-6,f:true},
-  5.4:{d:-7,f:true},5.6:{d:-8,f:true},5.8:{d:-9,f:true},6.0:{d:-10,f:true},
-  6.2:{d:-12,f:true},6.4:{d:-14,f:true},6.6:{d:-18,f:true},
+  3.8:{mode:"drain",  rate:-0.00007, dominant:"aerobic",finishable:true},
+  4.0:{mode:"drain",  rate:-0.00007, dominant:"aerobic",finishable:true},
+  4.2:{mode:"drain",  rate:-0.00010, dominant:"aerobic",finishable:true},
+  4.4:{mode:"drain",  rate:-0.00010, dominant:"aerobic",finishable:true},
+  4.6:{mode:"drain",  rate:-0.00013, dominant:"aerobic",finishable:true},
+  4.8:{mode:"drain",  rate:-0.00013, dominant:"aerobic",finishable:true},
+  5.0:{mode:"drain",  rate:-0.00017, dominant:"aerobic",finishable:true},
+  5.2:{mode:"drain",  rate:-0.00020, dominant:"aerobic",finishable:true},
+  5.4:{mode:"drain",  rate:-0.00023, dominant:"aerobic",finishable:true},
+  5.6:{mode:"drain",  rate:-0.00027, dominant:"aerobic",finishable:true},
+  5.8:{mode:"drain",  rate:-0.00030, dominant:"aerobic",finishable:true},
+  6.0:{mode:"drain",  rate:-0.00033, dominant:"aerobic",finishable:true},
+  6.2:{mode:"drain",  rate:-0.00040, dominant:"aerobic",finishable:true},
+  6.4:{mode:"drain",  rate:-0.00047, dominant:"aerobic",finishable:true},
+  6.6:{mode:"drain",  rate:-0.00060, dominant:"aerobic+ana",finishable:true},
 
-  6.8:{d:-22,f:true},7.0:{d:-26,f:true},7.2:{d:-30,f:true},
-  7.4:{d:-34,f:true},7.6:{d:-38,f:true},7.8:{d:-42,f:true},
-  8.0:{d:-35,f:true},8.2:{d:-40,f:true},8.4:{d:-45,f:true},
-  8.6:{d:-50,f:true},8.8:{d:-55,f:true},
+  6.8:{mode:"drain",  rate:-0.00073, dominant:"aerobic+ana",finishable:true},
+  7.0:{mode:"drain",  rate:-0.00087, dominant:"aerobic+ana",finishable:true},
+  7.2:{mode:"drain",  rate:-0.00100, dominant:"aerobic+ana",finishable:true},
+  7.4:{mode:"drain",  rate:-0.00113, dominant:"anaerobic",finishable:true},
+  7.6:{mode:"drain",  rate:-0.00127, dominant:"anaerobic",finishable:true},
+  7.8:{mode:"drain",  rate:-0.00140, dominant:"anaerobic",finishable:true},
+  8.0:{mode:"drain",  rate:-0.00117, dominant:"anaerobic",finishable:true},
+  8.2:{mode:"drain",  rate:-0.00133, dominant:"anaerobic",finishable:true},
+  8.4:{mode:"drain",  rate:-0.00150, dominant:"anaerobic",finishable:true},
+  8.6:{mode:"drain",  rate:-0.00167, dominant:"anaerobic",finishable:true},
+  8.8:{mode:"drain",  rate:-0.00183, dominant:"anaerobic",finishable:true},
 
-  9.0:{d:-65,f:false},9.2:{d:-70,f:false},9.4:{d:-80,f:false},
-  9.6:{d:-90,f:false},9.8:{d:-95,f:false},10.0:{d:-100,f:false},
+  // ---- COLLAPSE DOMAIN (speed-specific failure kinetics) ----
+  9.0:{mode:"drain",rate:-0.00417,dominant:"anaerobic",finishable:false}, // ~240s
+  9.2:{mode:"drain",rate:-0.00476,dominant:"anaerobic",finishable:false},
+  9.4:{mode:"drain",rate:-0.00556,dominant:"anaerobic",finishable:false},
+  9.6:{mode:"drain",rate:-0.00667,dominant:"anaerobic",finishable:false},
+  9.8:{mode:"drain",rate:-0.00833,dominant:"anaerobic",finishable:false},
+ 10.0:{mode:"drain",rate:-0.01111,dominant:"anaerobic",finishable:false}, // ~90s
 
-  10.2:{d:-100,f:false},10.4:{d:-100,f:false},10.6:{d:-100,f:false},
-  10.8:{d:-100,f:false},11.0:{d:-100,f:false},11.2:{d:-100,f:false},
-  11.4:{d:-100,f:false},11.6:{d:-100,f:false},11.8:{d:-100,f:false},
-  12.0:{d:-100,f:false},
+ 10.2:{mode:"drain",rate:-0.01429,dominant:"atp",finishable:false},
+ 10.4:{mode:"drain",rate:-0.01818,dominant:"atp",finishable:false},
+ 10.6:{mode:"drain",rate:-0.02273,dominant:"atp",finishable:false},
+ 10.8:{mode:"drain",rate:-0.02857,dominant:"atp",finishable:false},
+ 11.0:{mode:"drain",rate:-0.03571,dominant:"atp",finishable:false},
 
-  12.2:{d:-100,f:false},12.4:{d:-100,f:false},12.6:{d:-100,f:false},
-  12.8:{d:-100,f:false},13.0:{d:-100,f:false},13.2:{d:-100,f:false},
-  13.4:{d:-100,f:false},13.6:{d:-100,f:false},13.8:{d:-100,f:false},
-  14.0:{d:-100,f:false},14.2:{d:-100,f:false},14.4:{d:-100,f:false},
-  14.6:{d:-100,f:false},14.8:{d:-100,f:false},15.0:{d:-100,f:false},
+ 11.2:{mode:"drain",rate:-0.04348,dominant:"atp",finishable:false},
+ 11.4:{mode:"drain",rate:-0.05263,dominant:"atp",finishable:false},
+ 11.6:{mode:"drain",rate:-0.06250,dominant:"atp",finishable:false},
+ 11.8:{mode:"drain",rate:-0.07143,dominant:"atp",finishable:false},
+ 12.0:{mode:"drain",rate:-0.08333,dominant:"atp",finishable:false}, // ~30s
 
-  15.2:{d:-100,f:false},15.4:{d:-100,f:false},15.6:{d:-100,f:false},
-  15.8:{d:-100,f:false},16.0:{d:-100,f:false},16.2:{d:-100,f:false},
-  16.4:{d:-100,f:false},16.6:{d:-100,f:false},16.8:{d:-100,f:false},
-  17.0:{d:-100,f:false},17.2:{d:-100,f:false},17.4:{d:-100,f:false},
-  17.6:{d:-100,f:false},17.8:{d:-100,f:false},18.0:{d:-100,f:false},
+ 12.2:{mode:"drain",rate:-0.10000,dominant:"atp",finishable:false},
+ 12.4:{mode:"drain",rate:-0.12500,dominant:"atp",finishable:false},
+ 12.6:{mode:"drain",rate:-0.16667,dominant:"atp",finishable:false},
+ 12.8:{mode:"drain",rate:-0.20000,dominant:"atp",finishable:false},
+ 13.0:{mode:"drain",rate:-0.25000,dominant:"atp",finishable:false},
 
-  18.2:{d:-100,f:false},18.4:{d:-100,f:false},18.6:{d:-100,f:false},
-  18.8:{d:-100,f:false},19.0:{d:-100,f:false},19.2:{d:-100,f:false},
-  19.4:{d:-100,f:false},19.6:{d:-100,f:false},19.8:{d:-100,f:false},
-  20.0:{d:-100,f:false},20.2:{d:-100,f:false},20.4:{d:-100,f:false},
-  20.6:{d:-100,f:false},20.8:{d:-100,f:false},21.0:{d:-100,f:false},
+ 13.2:{mode:"drain",rate:-0.33333,dominant:"atp",finishable:false},
+ 13.4:{mode:"drain",rate:-0.41667,dominant:"atp",finishable:false},
+ 13.6:{mode:"drain",rate:-0.50000,dominant:"atp",finishable:false},
+ 13.8:{mode:"drain",rate:-0.62500,dominant:"atp",finishable:false},
+ 14.0:{mode:"drain",rate:-0.71429,dominant:"atp",finishable:false},
 
-  21.2:{d:-100,f:false},21.4:{d:-100,f:false},21.6:{d:-100,f:false},
-  21.8:{d:-100,f:false},22.0:{d:-100,f:false}
+ 14.2:{mode:"drain",rate:-0.83333,dominant:"atp",finishable:false},
+ 14.4:{mode:"drain",rate:-1.00000,dominant:"atp",finishable:false},
+ 14.6:{mode:"drain",rate:-1.25000,dominant:"atp",finishable:false},
+ 14.8:{mode:"drain",rate:-1.66667,dominant:"atp",finishable:false},
+ 15.0:{mode:"drain",rate:-2.00000,dominant:"atp",finishable:false}, // ~5s
+
+  // 15.2 → 22.0 continues accelerating to ~1s collapse
+  16.0:{mode:"drain",rate:-5.00000,dominant:"atp",finishable:false},
+  18.0:{mode:"drain",rate:-10.0000,dominant:"atp",finishable:false},
+  20.0:{mode:"drain",rate:-20.0000,dominant:"atp",finishable:false},
+  22.0:{mode:"drain",rate:-100.000,dominant:"atp",finishable:false}
 };
-
-// ===== DELTA LOOKUP (NO MATH, NO SCALING) =====
-function metabolicDelta(mph, dt){
-  const snapped = Math.round(mph * 5) / 5; // snap to 0.2 mph
-  const row = METABOLIC_TABLE[snapped];
-  if (!row) return 0;
-  if (!row.f) return -999; // immediate failure
-  return (row.d / 300) * dt;
-}
    
-// ===== PHYSIOLOGY CONSTANTS =====
-const VO2_MAX = 42;          // ml/kg/min (avg fit adult)
-const CRITICAL_SPEED = 7.2;  // mph
-const DRAIN_EXPONENT = 2.4;  // nonlinear fatigue
-const DRAIN_K = 18;          // calibrated for 5-min collapse @ 8 mph
-
-// ---- simulation state ----
-let trialTime = 300; // seconds (5-minute FL-001 trial)    
-const sim = {
-  speedMph: 0,
-  energy: 100,          // % metabolic capacity
-  running: false,
-  elapsed: 0,           // seconds
-  workTime: 0
-};
-
-// ---- constants (average fit adult) ----
-const REST_VO2 = 3.5;               // ml/kg/min
-const RECOVERY_RATE = 0.35;         // % per minute at rest
-const TIME_STEP_CAP = 0.25;         // stability cap (seconds)
-
-// ---- ACSM walking/running VO2 equation ----
-// speed in mph → m/min
-function estimateVO2(speedMph){
-  const speed = speedMph * 26.8; // m/min
-
-  // Walking < ~3.7 mph
-  if (speedMph <= 3.7){
-    return REST_VO2 + (0.1 * speed);
-  }
-
-  // Running
-  return REST_VO2 + (0.2 * speed);
-}
-
-// ---- metabolic drain per second ----
-function metabolicDelta(speedMph, dt){
-  const vo2 = estimateVO2(speedMph);
-  const intensity = vo2 / VO2_MAX;
-
-  // significance gate (0.2 mph MDC)
-  const sig = Math.round(speedMph / 0.2) * 0.2;
-  const scaled = clamp(sig / 22, 0, 1);
-
-  // walking ≈ sustainable → near zero drain
-  if (intensity < 0.35){
-    return +(RECOVERY_RATE / 60) * dt;
-  }
-
-  // progressive nonlinear drain
-  const drainPerMin =
-    Math.pow(intensity, 2.2) * 18 * scaled;
-
-  return -(drainPerMin / 60) * dt;
-}
-
     // ==============================
     // 0) REGISTRY (Model + Modules)
     // ==============================
@@ -1402,7 +1380,6 @@ function animate(){
   const now = clock.getElapsedTime();
   let dt = now - lastT;
   lastT = now;
-  dt = Math.min(dt, TIME_STEP_CAP);
 
   controls.update();
   
@@ -1788,16 +1765,22 @@ if (runAction){
 
   drawPanel(wallScreen, 'CARDIO BOARD');
   drawTreadmillMph(consoleScreen);
-if (sim.energy > 0){
- if (sim.running && currentModule?.id === 'FL-001') trialTime = Math.max(0, trialTime - dt);  
-  const dE = metabolicDelta(sim.speedMph, dt);
-  sim.energy = clamp(sim.energy + dE, 0, 100);
-  sim.elapsed += dt;
-} else {
-  sim.running = false;
-}
+
 if (currentModule?.id === 'FL-001')
   document.getElementById('trialTime').textContent = Math.ceil(trialTime);
+if (sim.running){
+  const key = Math.round(sim.speedMph * 5) / 5;
+  const row = METABOLIC_TABLE[key];
+  if (!row) return;
+
+  if (row.mode === "collapse"){
+    sim.energy = 0;
+    sim.running = false;
+    return;
+  }
+
+  sim.energy = clamp(sim.energy + row.rate * dt, 0, 100);
+}
 
   updateHUD();
   renderer.render(scene, camera);
