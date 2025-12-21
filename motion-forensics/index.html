@@ -582,23 +582,30 @@ const tFrac = clamp(t / 180, 0, 1); // 0 → 1 over 3 minutes
 const tNorm = sim.running ? clamp(t / 180, 0, 1) : 0;
 const xPos = gX + 50 + spanW * tNorm;
 
-// ===== DOMINANCE LOGIC (TIME × MPH) =====
-// ===== DOMINANCE LOGIC (CONTINUOUS — TIME × MPH) =====
+// ===== CORRECT DOMINANCE LOGIC (TIME × MPH) =====
 
 // normalize inputs
 const tSec = t;                // seconds
 const v = intensity;           // 0–1 (mph / 22)
 
-// --- energy system weights ---
-// ATP-PC: sharp exponential decay (~10 s)
-const wATP = Math.exp(-tSec / 6);
+// aerobic capacity gate (intro-safe)
+const aerobicCap = 0.35;       // ~7–8 mph
 
-// Anaerobic glycolysis: rises early, decays slowly (~120 s)
-const wANA = (1 - Math.exp(-tSec / 10)) * Math.exp(-tSec / 120);
+// ATP-PC: ONLY if demand exceeds aerobic capacity AND early
+const wATP = (v > aerobicCap)
+  ? Math.exp(-tSec / 6)
+  : 0;
 
-// Aerobic: slow logistic rise, delayed by intensity
-const aerobicDelay = 30 + 90 * v; // higher speed delays aerobic
-const wAER = 1 / (1 + Math.exp(-(tSec - aerobicDelay) / 18));
+// Anaerobic glycolysis: ONLY if aerobic alone is insufficient
+const wANA = (v > aerobicCap)
+  ? (1 - Math.exp(-tSec / 10)) * Math.exp(-tSec / 120)
+  : 0;
+
+// Aerobic: dominant immediately at low intensity, delayed at high
+const aerobicDelay = 30 + 90 * v;
+const wAER = (v <= aerobicCap)
+  ? 1
+  : 1 / (1 + Math.exp(-(tSec - aerobicDelay) / 18));
 
 // normalize so weights sum to 1
 const wSum = wATP + wANA + wAER;
