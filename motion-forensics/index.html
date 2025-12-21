@@ -96,7 +96,7 @@
     <input id="spd" type="range" min="0" max="22" step="0.1" value="0"/>
 
     <div class="row">
-      <div class="k">Energy</div>
+      <div class="k">Metabolic Capacity</div>
       <div class="v"><span id="engVal">100</span>%</div>
     </div>
 
@@ -307,13 +307,18 @@ const $reset = document.getElementById('resetBtn');
 
 const sim = {
   speedMph: 0.0,
-  energy: 100,
-  lastFuelT: -999,
-  anaLocked: false,
   running: false,
   elapsed: 0,
-  workTime: 0
+
+  // ---- REAL METABOLIC STATE ----
+  pools: {
+    atp: 3.0,   // kJ (ATP-PC)
+    ana: 12.0   // kJ (anaerobic glycolysis)
+  },
+
+  energy: 100  // % = (atp + ana) / 15 kJ
 };
+
 
 let trialTime = 300;
     
@@ -583,57 +588,54 @@ const tFrac = clamp(t / 180, 0, 1); // 0 → 1 over 3 minutes
 const tNorm = sim.running ? clamp(t / 180, 0, 1) : 0;
 const xPos = gX + 50 + spanW * tNorm;
 
-// ===== CORRECT DOMINANCE LOGIC (TIME × MPH) =====
+// ===== DOMINANCE LOGIC — REAL POOL–DRIVEN =====
 
-// normalize inputs
-const tSec = t;                // seconds
-const v = intensity;           // 0–1 (mph / 22)
+// inputs
+const mph = clamp(sim.speedMph, 0, 22);
+const t   = sim.elapsed;
 
-// aerobic capacity gate (intro-safe)
-const aerobicCap = 0.35;       // ~7–8 mph
+// intensity thresholds
+const LOW  = 4;
+const MOD  = 8;
+const HIGH = 14;
 
-// ATP-PC: ONLY if demand exceeds aerobic capacity AND early
-const wATP = (v > aerobicCap)
-  ? Math.exp(-tSec / 6)
-  : 0;
+// remaining pools (kJ)
+const atpR = sim.pools.atp;
+const anaR = sim.pools.ana;
 
-// Anaerobic glycolysis: ONLY if aerobic alone is insufficient
-const wANA = (!sim.anaLocked && v > aerobicCap)
-  ? (1 - Math.exp(-tSec / 10)) * Math.exp(-tSec / 120)
-  : 0;
+// ---- determine active deficit ----
+let dominant = 'Aerobic Metabolism';
+let domColor = '#38bdf8';
+let domLevel = 1.0;
 
-
-// Aerobic: dominant immediately at low intensity, delayed at high
-const aerobicDelay = 30 + 90 * v;
-const wAER = (v <= aerobicCap)
-  ? 1
-  : 1 / (1 + Math.exp(-(tSec - aerobicDelay) / 18));
-
-// normalize so weights sum to 1
-const wSum = wATP + wANA + wAER;
-const nATP = wATP / wSum;
-const nANA = wANA / wSum;
-const nAER = wAER / wSum;
-
-// determine dominant system
-let dominant, domColor, domLevel;
-
-if (nATP >= nANA && nATP >= nAER){
-  dominant = 'ATP-PC';
-  domColor = '#ef4444';
-  domLevel = nATP;
+// sprint or hard run
+if (mph > HIGH){
+  if (t < 12 && atpR > 0){
+    dominant = 'ATP-PC';
+    domColor = '#ef4444';
+    domLevel = clamp(atpR / 3, 0.3, 1);
+  } else if (anaR > 0){
+    dominant = 'Anaerobic Glycolysis';
+    domColor = '#fbbf24';
+    domLevel = clamp(anaR / 12, 0.3, 1);
+  }
 }
-else if (nANA >= nAER){
-  dominant = 'Anaerobic Glycolysis';
-  domColor = '#fbbf24';
-  domLevel = nANA;
+
+// moderate–high running
+else if (mph > MOD){
+  if (anaR > 0){
+    dominant = 'Anaerobic Glycolysis';
+    domColor = '#fbbf24';
+    domLevel = clamp(anaR / 12, 0.3, 1);
+  }
 }
+
+// low / aerobic
 else {
   dominant = 'Aerobic Metabolism';
   domColor = '#38bdf8';
-  domLevel = nAER;
+  domLevel = 1.0;
 }
-
 
 
 // Y position = dominance height
@@ -1860,79 +1862,77 @@ if (b.head) applyAdd(b.head, 0, torsoYaw * 0.15, 0);
   }
   R.wasRunning = runNow;
 
-// ===== ENERGY SYSTEM — CONTINUOUS PHYSIOLOGY MODEL =====
-// ----- RECOMPUTE DOMINANCE WEIGHTS FOR ENERGY MODEL -----
-const tSecE = sim.elapsed;
-const vE = clamp(sim.speedMph / 22, 0, 1);
-const aerobicCapE = 0.35;
-
-const wATPE = (vE > aerobicCapE)
-  ? Math.exp(-tSecE / 6)
-  : 0;
-
-const wANAE = (!sim.anaLocked && vE > aerobicCapE)
-  ? (1 - Math.exp(-tSecE / 10)) * Math.exp(-tSecE / 120)
-  : 0;
-
-const aerobicDelayE = 30 + 90 * vE;
-const wAERE = (vE <= aerobicCapE)
-  ? 1
-  : 1 / (1 + Math.exp(-(tSecE - aerobicDelayE) / 18));
-
-const wSumE = wATPE + wANAE + wAERE || 1;
-
-const nATP = wATPE / wSumE;
-const nANA = wANAE / wSumE;
-const nAER = wAERE / wSumE;
-
-  
+// ===== ENERGY SYSTEM — REAL PHYSIOLOGY (mph × time) =====
 if (sim.running){
 
-  const mph = sim.speedMph;
-  const v = clamp(mph / 22, 0, 1);   // normalized speed
-  if (!sim.fatigue) sim.fatigue = 0;
+  const mph   = sim.speedMph;
+  const dtMin = dt / 60; // seconds → minutes
 
-  // ---------- FATIGUE BUILD / DECAY ----------
-  // fatigue accumulates only at high demand
-  sim.fatigue = clamp(
-    sim.fatigue + Math.max(0, v - 0.55) * dt * 0.6 - dt * 0.15,
-    0,
-    1
-  );
+  // ---- INTENSITY THRESHOLDS (mph) ----
+  const LOW  = 4;
+  const MOD  = 8;
+  const HIGH = 14;
 
-  // ---------- ATP DEMAND (speed-driven) ----------
-  // cubic rise = realistic sprint cost
-  const ATP_demand = 0.6 + 2.4 * Math.pow(v, 3);
+  // ---- METABOLIC DEMAND (kJ / min) ----
+  let demand;
+  if (mph <= LOW)        demand = 4;    // fully aerobic
+  else if (mph <= MOD)   demand = 10;   // aerobic-dominant
+  else if (mph <= HIGH)  demand = 22;   // anaerobic dominant
+  else                   demand = 35;   // sprint
 
-  // ---------- ATP SUPPLY (system-driven) ----------
-  // nATP / nANA / nAER already computed in graph logic
-  const ATP_supply =
-    (nATP * 4.5) +      // ATP-PC (very fast, short)
-    (nANA * 3.0) +      // Anaerobic glycolysis
-    (nAER * 1.4);       // Aerobic metabolism
+  // ---- AEROBIC SUPPLY CEILING ----
+  const aerobicMax = 8;                 // kJ / min
+  let deficit = Math.max(0, demand - aerobicMax);
 
-  // ---------- FATIGUE PENALTY ----------
-  const fatiguePenalty = 1 + 1.5 * sim.fatigue;
+  // ---- ATP-PC (FIRST ~10–12 s ONLY) ----
+  if (sim.elapsed < 12 && deficit > 0 && sim.pools.atp > 0){
+    const use = Math.min(deficit * dtMin, sim.pools.atp);
+    sim.pools.atp -= use;
+    deficit -= use / dtMin;
+  }
 
-  // ---------- ENERGY CHANGE ----------
-  let dE = (ATP_supply - ATP_demand) / fatiguePenalty;
+  // ---- ANAEROBIC GLYCOLYSIS ----
+  if (deficit > 0 && sim.pools.ana > 0){
+    const use = Math.min(deficit * dtMin, sim.pools.ana);
+    sim.pools.ana -= use;
+  }
 
-  // scale ATP units → % energy per second
-  dE *= 10;
+  // ---- UPDATE METABOLIC CAPACITY (%) ----
+  const remaining = sim.pools.atp + sim.pools.ana;
+  sim.energy = clamp((remaining / 15) * 100, 0, 100);
 
-  // apply
-  sim.energy = clamp(sim.energy + dE * dt, 0, 100);
-
-  // ---------- CRASH ----------
-  if (sim.energy <= 0){
-    sim.energy = 0;
+  // ---- EXHAUSTION ----
+  if (remaining <= 0){
+    sim.energy  = 0;
     sim.running = false;
     $start.textContent = "Start";
     $status.textContent = "Exhausted";
     $status.style.color = "#ff9aa0";
   }
 }
+// ===== SLOW ANAEROBIC RECOVERY (MINUTES, NOT SECONDS) =====
+if (sim.running){
 
+  const mph   = sim.speedMph;
+  const dtMin = dt / 60;
+
+  // recovery only at very low intensity (true recovery walking)
+  if (mph <= 3 && sim.pools.ana < 12){
+
+    // real physiology:
+    // ~10–20 minutes for full anaerobic restoration
+    const RECOVERY_RATE = 0.30; // kJ per minute
+
+    sim.pools.ana = Math.min(
+      12,
+      sim.pools.ana + RECOVERY_RATE * dtMin
+    );
+
+    // update capacity % after recovery
+    const remaining = sim.pools.atp + sim.pools.ana;
+    sim.energy = clamp((remaining / 15) * 100, 0, 100);
+  }
+}
 
   // treadmill motion
   if (sim.running){
