@@ -130,7 +130,7 @@
 
   <div class="row">
     <div class="k">Trial</div>
-    <div class="v"><span id="trialTag">A</span> • <span id="trialTime">60</span>s</div>
+    <div class="v"><span id="trialTag">A</span> • <span id="trialTime">180</span>s</div>
   </div>
 
   <div class="row" style="justify-content:flex-start; gap:8px; flex-wrap:wrap;">
@@ -654,7 +654,7 @@ else {
 
 
 // Y position = dominance height
-const yPos = baseY - maxH * Math.max(domLevel, 0.32);
+const yPos = baseY - maxH * domLevel;
 
 // baseline
 ctx.strokeStyle = 'rgba(148,163,184,0.45)';
