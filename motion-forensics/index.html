@@ -1859,81 +1859,82 @@ if (b.head) applyAdd(b.head, 0, torsoYaw * 0.15, 0);
   }
   R.wasRunning = runNow;
 
-// ===== ENERGY SYSTEM — REAL PHYSIOLOGY (mph × time) =====
+
+// ======================================================
+// ENERGY SYSTEM — CONTINUOUS POWER BALANCE (CASUAL JOGGER)
+// ======================================================
+
+// constants (average casual jogger)
+const ANA_MAX = 12.0;   // kJ anaerobic capacity
+const ATP_MAX = 3.0;    // kJ ATP-PC
+const AER_MAX = 9.0;    // kJ/min max aerobic power (~VO2max proxy)
+
+// oxygen kinetics (how fast aerobic ramps up)
+const AER_TIME_CONST = 45; // seconds to ~63% supply
+
+// recovery (true physiology: minutes, not seconds)
+const ANA_RECOVERY_RATE = 0.22; // kJ per minute (≈10–15 min full)
+
+// ------------------------------------------------------
 if (sim.running){
 
-  const mph   = sim.speedMph;
-  const dtMin = dt / 60; // seconds → minutes
+  const mph   = clamp(sim.speedMph, 0, 22);
+  const dtMin = dt / 60;
 
-  // ---- INTENSITY THRESHOLDS (mph) ----
-  const LOW  = 4;
-  const MOD  = 8;
-  const HIGH = 14;
+  // ---------- METABOLIC DEMAND (kJ/min) ----------
+  // smooth, nonlinear cost curve
+  const demand =
+    mph <= 4  ? 4 :
+    mph <= 8  ? 4 + (mph - 4) * 1.5 :
+    mph <= 14 ? 10 + (mph - 8) * 2.0 :
+                22 + Math.pow((mph - 14) / 8, 2) * 40;
 
-  // ---- METABOLIC DEMAND (kJ / min) ----
-  let demand;
-  if (mph <= LOW)        demand = 4;    // fully aerobic
-  else if (mph <= MOD)   demand = 10;   // aerobic-dominant
-  else if (mph <= HIGH)  demand = 22;   // anaerobic dominant
-else {
-  // nonlinear sprint cost (explodes near max speed)
-  const sprintFrac = (mph - HIGH) / (22 - HIGH); // 0 → 1
-  demand = 35 + 40 * sprintFrac; // up to ~75 kJ/min at max
-}
+  // ---------- AEROBIC SUPPLY (RAMPS WITH TIME) ----------
+  if (!sim.aerFrac) sim.aerFrac = 0;
 
-  // ---- AEROBIC SUPPLY CEILING ----
-  const aerobicMax = 8;                 // kJ / min
-  let deficit = Math.max(0, demand - aerobicMax);
+  const targetAerFrac = clamp(demand / AER_MAX, 0, 1);
+  sim.aerFrac += (targetAerFrac - sim.aerFrac) * (dt / AER_TIME_CONST);
 
-  // ---- ATP-PC (FIRST ~10–12 s ONLY) ----
-  if (sim.elapsed < 12 && deficit > 0 && sim.pools.atp > 0){
-    const use = Math.min(deficit * dtMin, sim.pools.atp);
+  const aerobicSupply = AER_MAX * sim.aerFrac;
+
+  // ---------- POWER BALANCE ----------
+  let excess = demand - aerobicSupply; // + drains anaerobic, - recovers
+
+  // ---------- ATP-PC (FIRST ~10 s ONLY) ----------
+  if (sim.elapsed < 10 && excess > 0 && sim.pools.atp > 0){
+    const use = Math.min(excess * dtMin, sim.pools.atp);
     sim.pools.atp -= use;
-    deficit -= use / dtMin;
+    excess -= use / dtMin;
   }
 
-  // ---- ANAEROBIC GLYCOLYSIS ----
-  if (deficit > 0 && sim.pools.ana > 0){
-    const use = Math.min(deficit * dtMin, sim.pools.ana);
+  // ---------- ANAEROBIC DRAIN ----------
+  if (excess > 0 && sim.pools.ana > 0){
+    const use = Math.min(excess * dtMin, sim.pools.ana);
     sim.pools.ana -= use;
   }
 
-  // ---- UPDATE METABOLIC CAPACITY (%) ----
-  const remaining = sim.pools.atp + sim.pools.ana;
-  sim.energy = clamp((remaining / 15) * 100, 0, 100);
+  // ---------- ANAEROBIC RECOVERY ----------
+  if (excess < 0 && mph <= 3){
+    sim.pools.ana = Math.min(
+      ANA_MAX,
+      sim.pools.ana + ANA_RECOVERY_RATE * dtMin
+    );
+  }
 
-  // ---- EXHAUSTION ----
+  // ---------- UPDATE METABOLIC CAPACITY ----------
+  const remaining = sim.pools.atp + sim.pools.ana;
+  sim.energy = clamp((remaining / (ATP_MAX + ANA_MAX)) * 100, 0, 100);
+
+  // ---------- EXHAUSTION ----------
   if (remaining <= 0){
-    sim.energy  = 0;
+    sim.energy = 0;
     sim.running = false;
     $start.textContent = "Start";
     $status.textContent = "Exhausted";
     $status.style.color = "#ff9aa0";
   }
 }
-// ===== SLOW ANAEROBIC RECOVERY (MINUTES, NOT SECONDS) =====
-if (sim.running){
 
-  const mph   = sim.speedMph;
-  const dtMin = dt / 60;
-
-  // recovery only at very low intensity (true recovery walking)
-  if (mph <= 3 && sim.pools.ana < 12){
-
-    // real physiology:
-    // ~10–20 minutes for full anaerobic restoration
-    const RECOVERY_RATE = 0.30; // kJ per minute
-
-    sim.pools.ana = Math.min(
-      12,
-      sim.pools.ana + RECOVERY_RATE * dtMin
-    );
-
-    // update capacity % after recovery
-    const remaining = sim.pools.atp + sim.pools.ana;
-    sim.energy = clamp((remaining / 15) * 100, 0, 100);
-  }
-}
 
   // treadmill motion
   if (sim.running){
