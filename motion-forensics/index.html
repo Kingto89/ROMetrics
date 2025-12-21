@@ -676,12 +676,16 @@ ctx.fillStyle = '#94a3b8';
 const atpDepleted = nATP < 0.05;
 const anaDepleted = nANA < 0.05;
 
-// show depletion text under labels
+// draw depletion BELOW the system labels
+ctx.font = '700 14px system-ui';
+ctx.fillStyle = '#fca5a5'; // subtle red, readable
+
 if (atpDepleted)
-  ctx.fillText('depleted', gX + 50 + spanW * 0.11, baseY + 36);
+  ctx.fillText('depleted', gX + 50 + spanW * 0.11, baseY + 48);
 
 if (anaDepleted)
-  ctx.fillText('depleted', gX + 50 + spanW * 0.40, baseY + 36);
+  ctx.fillText('depleted', gX + 50 + spanW * 0.40, baseY + 48);
+
 
 // work–rest recovery cue (fatigue-limited recovery)
 let wrText = '';
