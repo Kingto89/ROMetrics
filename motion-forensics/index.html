@@ -1737,6 +1737,13 @@ if (b.head) applyAdd(b.head, 0, torsoYaw * 0.15, 0);
 
   drawPanel(wallScreen, 'CARDIO BOARD');
   drawTreadmillMph(consoleScreen);
+if (sim.energy > 0){
+  const dE = metabolicDelta(sim.speedMph, dt);
+  sim.energy = clamp(sim.energy + dE, 0, 100);
+  sim.elapsed += dt;
+} else {
+  sim.running = false;
+}
 
   updateHUD();
   renderer.render(scene, camera);
