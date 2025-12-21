@@ -1729,6 +1729,7 @@ if (runAction){
   drawPanel(wallScreen, 'CARDIO BOARD');
   drawTreadmillMph(consoleScreen);
 if (sim.energy > 0){
+ if (sim.running && currentModule?.id === 'FL-001') trialTime = Math.max(0, trialTime - dt);  
   const dE = metabolicDelta(sim.speedMph, dt);
   sim.energy = clamp(sim.energy + dE, 0, 100);
   sim.elapsed += dt;
