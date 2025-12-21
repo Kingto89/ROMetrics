@@ -216,12 +216,13 @@ document.getElementById('trialHelpContent').innerHTML =
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-// ==============================
-// PHYSIOLOGY + SIM CORE (FL-001)
-// ==============================
 
-// ---- helpers ----
-const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+   
+// ===== PHYSIOLOGY CONSTANTS =====
+const VO2_MAX = 42;          // ml/kg/min (avg fit adult)
+const CRITICAL_SPEED = 7.2;  // mph
+const DRAIN_EXPONENT = 2.4;  // nonlinear fatigue
+const DRAIN_K = 18;          // calibrated for 5-min collapse @ 8 mph
 
 // ---- simulation state ----
 let trialTime = 300; // seconds (5-minute FL-001 trial)    
@@ -234,7 +235,6 @@ const sim = {
 };
 
 // ---- constants (average fit adult) ----
-const VO2_MAX = 42;                 // ml/kg/min (non-elite fit adult)
 const REST_VO2 = 3.5;               // ml/kg/min
 const RECOVERY_RATE = 0.35;         // % per minute at rest
 const TIME_STEP_CAP = 0.25;         // stability cap (seconds)
@@ -402,7 +402,7 @@ $reset.addEventListener('click', ()=>{
 
   // reset trial timer
   trialTime = 300;
-  document.getElementById('trialTime').textContent = 180;
+document.getElementById('trialTime').textContent = 300;
 
   // reset UI state
   animate._fl001Passed = false;
