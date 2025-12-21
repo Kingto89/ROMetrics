@@ -605,39 +605,48 @@ const tNorm = sim.running ? clamp(t / 180, 0, 1) : 0;
 const xPos = gX + 50 + spanW * tNorm;
 
 // ===== DOMINANCE LOGIC (TIME × MPH) =====
-let dominant, domColor, domLevel;
+// ===== DOMINANCE LOGIC (CONTINUOUS — TIME × MPH) =====
 
 // normalize inputs
-const tSec = t;                     // seconds elapsed
-const mphN = intensity;             // already mph / 22 (0–1)
+const tSec = t;                // seconds
+const v = intensity;           // 0–1 (mph / 22)
 
-// ---- ATP-PC ALWAYS DOMINATES AT START ----
-if (tSec < 3) {
+// --- energy system weights ---
+// ATP-PC: sharp exponential decay (~10 s)
+const wATP = Math.exp(-tSec / 6);
+
+// Anaerobic glycolysis: rises early, decays slowly (~120 s)
+const wANA = (1 - Math.exp(-tSec / 10)) * Math.exp(-tSec / 120);
+
+// Aerobic: slow logistic rise, delayed by intensity
+const aerobicDelay = 30 + 90 * v; // higher speed delays aerobic
+const wAER = 1 / (1 + Math.exp(-(tSec - aerobicDelay) / 18));
+
+// normalize so weights sum to 1
+const wSum = wATP + wANA + wAER;
+const nATP = wATP / wSum;
+const nANA = wANA / wSum;
+const nAER = wAER / wSum;
+
+// determine dominant system
+let dominant, domColor, domLevel;
+
+if (nATP >= nANA && nATP >= nAER){
   dominant = 'ATP-PC';
   domColor = '#ef4444';
-  domLevel = 0.85;
+  domLevel = nATP;
 }
-
-// ---- ATP-PC: very high intensity, very short duration ----
-else if (mphN >= 0.75 && tSec <= 10) {
-  dominant = 'ATP-PC';
-  domColor = '#ef4444';
-  domLevel = 0.85 * (1 - Math.min(tSec / 10, 1));
-}
-
-// ---- ANAEROBIC GLYCOLYSIS: moderate–high intensity, short–moderate ----
-else if (mphN >= 0.35 && tSec <= 120) {
+else if (nANA >= nAER){
   dominant = 'Anaerobic Glycolysis';
   domColor = '#fbbf24';
-  domLevel = 0.55 * (1 - Math.min((tSec - 10) / 110, 1));
+  domLevel = nANA;
 }
-
-// ---- AEROBIC: sustained effort OR low intensity ----
 else {
   dominant = 'Aerobic Metabolism';
   domColor = '#38bdf8';
-  domLevel = 0.30 + 0.35 * clamp(tSec / 180, 0, 1);
+  domLevel = nAER;
 }
+
 
 
 // Y position = dominance height
