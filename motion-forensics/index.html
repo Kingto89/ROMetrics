@@ -364,6 +364,8 @@ const fracRemaining = clamp(remaining / totalKJ, 0, 1);
 
 // intensity factor (0–1)
 const intensity = clamp(sim.speedMph / 22, 0, 1);
+const AEROBIC_CEILING = 0.72; // ~72% max demand (physiologic VO₂ threshold)
+const intensity = mph / 22;
 
 // nonlinear fatigue perception:
 // low intensity → forgiving
@@ -1551,6 +1553,15 @@ if (sim.running && currentModule?.id === 'FL-001'){
   
 // ===== FL-001 TIMER =====
 if (sim.running && currentModule?.id === 'FL-001'){
+
+  // ---- ISSUE #1 FIX: mandatory anaerobic drain above aerobic ceiling ----
+  if (typeof anaerobicDemand === 'number' && anaerobicDemand > 0 && sim.pools.ana > 0){
+    sim.pools.ana = Math.max(
+      0,
+      sim.pools.ana - (anaerobicDemand * 1.6 * dt)
+    );
+  }
+
   trialTime -= dt;
   if (trialTime < 0) trialTime = 0;
 
@@ -1561,6 +1572,7 @@ if (sim.running && currentModule?.id === 'FL-001'){
     $start.textContent = "Start";
   }
 }
+
 
   
 // ===== BLINK (works for BOTH Roma + Roman via auto-detect morph names) =====
