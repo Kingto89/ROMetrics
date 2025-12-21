@@ -217,6 +217,7 @@ document.getElementById('trialHelpContent').innerHTML =
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
    
 // ===== PHYSIOLOGY CONSTANTS =====
 const VO2_MAX = 42;          // ml/kg/min (avg fit adult)
