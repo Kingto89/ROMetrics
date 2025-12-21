@@ -104,7 +104,7 @@
 
   <div class="row">
     <div class="k">Trial</div>
-    <div class="v"><span id="trialTag">A</span> • <span id="trialTime">180</span>s</div>
+    <div class="v"><span id="trialTag">A</span> • <span id="trialTime">300</span>s</div>
   </div>
 
   <div class="row" style="justify-content:flex-start; gap:8px; flex-wrap:wrap;">
@@ -1860,41 +1860,54 @@ if (b.head) applyAdd(b.head, 0, torsoYaw * 0.15, 0);
   }
   R.wasRunning = runNow;
 
-// ===== ENERGY SYSTEM (RECOVERY + PLATEAU + FATIGUE) =====
+// ===== ENERGY SYSTEM — CONTINUOUS PHYSIOLOGY MODEL =====
 if (sim.running){
-  const mph = sim.speedMph;
 
+  const mph = sim.speedMph;
+  const v = clamp(mph / 22, 0, 1);   // normalized speed
   if (!sim.fatigue) sim.fatigue = 0;
 
-  // build fatigue only at high speeds
-  const sprintLoad = Math.max(0, mph - 12) / 10;
+  // ---------- FATIGUE BUILD / DECAY ----------
+  // fatigue accumulates only at high demand
   sim.fatigue = clamp(
-    sim.fatigue + sprintLoad * dt - 0.25 * dt,   // ⬅ slower decay
+    sim.fatigue + Math.max(0, v - 0.55) * dt * 0.6 - dt * 0.15,
     0,
     1
   );
 
-  let dE = 0;
+  // ---------- ATP DEMAND (speed-driven) ----------
+  // cubic rise = realistic sprint cost
+  const ATP_demand = 0.6 + 2.4 * Math.pow(v, 3);
 
-  // ---- SPEED ZONES ----
-  if (mph < 1.5){
-    dE = +3.0;
+  // ---------- ATP SUPPLY (system-driven) ----------
+  // nATP / nANA / nAER already computed in graph logic
+  const ATP_supply =
+    (nATP * 4.5) +      // ATP-PC (very fast, short)
+    (nANA * 3.0) +      // Anaerobic glycolysis
+    (nAER * 1.4);       // Aerobic metabolism
+
+  // ---------- FATIGUE PENALTY ----------
+  const fatiguePenalty = 1 + 1.5 * sim.fatigue;
+
+  // ---------- ENERGY CHANGE ----------
+  let dE = (ATP_supply - ATP_demand) / fatiguePenalty;
+
+  // scale ATP units → % energy per second
+  dE *= 10;
+
+  // apply
+  sim.energy = clamp(sim.energy + dE * dt, 0, 100);
+
+  // ---------- CRASH ----------
+  if (sim.energy <= 0){
+    sim.energy = 0;
+    sim.running = false;
+    $start.textContent = "Start";
+    $status.textContent = "Exhausted";
+    $status.style.color = "#ff9aa0";
   }
-  else if (mph < 3.0){
-    dE = +1.8;
-  }
-  else if (mph < 4.5){
-    dE = +0.2;
-  }
-  else if (mph < 7.0){
-    dE = -1.5;
-  }
-  else if (mph < 12.0){
-    dE = -3.5;
-  }
-  else {
-    dE = -5.0;
-  }
+}
+
 
   // ---- WORK–REST RATIO ENFORCEMENT ----
   // Fatigue throttles recovery HARD after intense work
