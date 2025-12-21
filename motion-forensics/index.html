@@ -1846,27 +1846,62 @@ if (b.head) applyAdd(b.head, 0, torsoYaw * 0.15, 0);
   }
   R.wasRunning = runNow;
 
-// ===== ENERGY DRAIN (PHYSIOLOGY-BASED) =====
+// ===== ENERGY SYSTEM (RECOVERY + PLATEAU + FATIGUE) =====
 if (sim.running){
-  const vMax = 22;
-  const intensity = Math.pow(sim.speedMph / vMax, 1.6);
+  const mph = sim.speedMph;
 
-  // accumulate intensity-weighted work time
-  sim.workTime += intensity * dt;
+  // ---- FATIGUE MEMORY (persists after sprints) ----
+  if (!sim.fatigue) sim.fatigue = 0;
+  const sprintLoad = Math.max(0, mph - 12) / 10;   // only >12 mph builds fatigue
+  sim.fatigue = clamp(
+    sim.fatigue + sprintLoad * dt - 0.6 * dt,     // decays over time
+    0,
+    1
+  );
 
-  // calibrated for 3-minute trial realism
-  const kDrain = 6;
-  sim.energy = clamp(sim.energy - (kDrain * intensity * dt), 0, 100);
+  let dE = 0; // energy delta per second
 
-  // HARD STOP on exhaustion
+  // ---- SPEED ZONES ----
+  if (mph < 1.5){
+    // passive recovery (standing / very slow walk)
+    dE = +4.0;
+  }
+  else if (mph < 3.0){
+    // easy walk → near full recovery
+    dE = +2.0;
+  }
+  else if (mph < 4.5){
+    // aerobic plateau (no meaningful change)
+    dE = +0.2;
+  }
+  else if (mph < 7.0){
+    // easy aerobic work
+    dE = -1.5;
+  }
+  else if (mph < 12.0){
+    // moderate run
+    dE = -3.5;
+  }
+  else {
+    // anaerobic sprint
+    dE = -8.0;
+  }
+
+  // ---- FATIGUE PENALTY ----
+  dE -= sim.fatigue * 3.5;
+
+  sim.energy = clamp(sim.energy + dE * dt, 0, 100);
+
+  // HARD STOP
   if (sim.energy <= 0){
     sim.energy = 0;
     sim.running = false;
     $start.textContent = "Start";
     $status.textContent = "Exhausted";
-    $status.style.color = "#38bdf8";
+    $status.style.color = "#ff9aa0";
   }
 }
+
 
 
   // treadmill motion
