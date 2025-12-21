@@ -1532,7 +1532,7 @@ document.getElementById('trialHelpContent').textContent =
       $engVal.textContent = Math.round(sim.energy);
       const st = (sim.energy <= 10) ? 'CRASH' : (sim.energy <= 25 ? 'Warning' : 'Stable');
       $status.textContent = st;
-      $status.style.color = (st==='CRASH') ? '#ff9aa0' : (st==='Warning' ? '#ffe4a3' : '#cfe3ff');
+if ($status) $status.style.color = (st==='CRASH') ? '#ff9aa0' : (st==='Warning' ? '#ffe4a3' : '#cfe3ff');
     }
 
     const clock = new THREE.Clock();
@@ -1960,7 +1960,7 @@ if (demand > MAX_SUSTAINABLE_POWER){
   sim.running = false;
   $start.textContent = "Start";
   $status.textContent = "Task Failure";
-  $status.style.color = "#ff9aa0";
+if ($status) $status.style.color = "#ff9aa0";
   return;
 }
 
@@ -2019,7 +2019,7 @@ if (demand > MAX_SUSTAINABLE_POWER){
     sim.running = false;
     $start.textContent = "Start";
     $status.textContent = "Exhausted";
-    $status.style.color = "#ff9aa0";
+if ($status) $status.style.color = "#ff9aa0";
   }
 }
 
