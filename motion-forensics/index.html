@@ -233,6 +233,9 @@ const sim = {
 };
 
 
+   let avatarRoot = null;
+    let mixer = null;
+    let runAction = null;
     
 const METABOLIC_TABLE = {
   0.0:{mode:"recover",rate:+0.00013,dominant:"aerobic",finishable:true},
@@ -432,33 +435,44 @@ if (!sim.hasStarted){
   trialTime = 300;
 }
 
+$start.onclick = () => {
+  if (!sim.hasStarted) {
+    sim.hasStarted = true;
+    sim.elapsed = 0;
+    sim.workTime = 0;
+    trialTime = 300;
+  }
   sim.running = !sim.running;
   if (runAction) runAction.paused = !sim.running;
   $start.textContent = sim.running ? "Pause" : "Start";
-$reset.addEventListener('click', ()=>{
-  // reset sim
-  sim.energy = 100;
-  sim.lastFuelT = -999;
-  sim.running = false;
-  sim.hasStarted = false;
-    sim.elapsed = 0;
+};
 
-  // reset trial timer
-  trialTime = 300;
-document.getElementById('trialTime').textContent = 300;
+ $reset.addEventListener('click', ()=>{
+  // reset sim
+  sim.energy = 100;
+  sim.lastFuelT = -999;
+  sim.running = false;
+  sim.hasStarted = false;
+  sim.elapsed = 0;
 
-  // reset UI state
-  animate._fl001Passed = false;
-  $start.textContent = "Start";
-  $status.textContent = "Ready";
-  $status.style.color = "#cfe3ff";
+  // Added safety: pause animation if it exists
+  if (runAction) runAction.paused = true;
 
-  // hide MCQ + message
-  document.getElementById('mcqBox').style.display = 'none';
-  document.getElementById('trialMsg').textContent =
-    'Read the instructions above. When ready, press Start.';
-});
+  // reset trial timer
+  trialTime = 300;
+  document.getElementById('trialTime').textContent = 300;
 
+  // reset UI state
+  animate._fl001Passed = false;
+  $start.textContent = "Start";
+  $status.textContent = "Ready";
+  $status.style.color = "#cfe3ff";
+
+  // hide MCQ + message
+  document.getElementById('mcqBox').style.display = 'none';
+  document.getElementById('trialMsg').textContent =
+    'Read the instructions above. When ready, press Start.';
+});   
     const scene = new THREE.Scene();
     scene.fog = new THREE.Fog(0x07101b, 10, 45);
 
@@ -1028,10 +1042,7 @@ zoneCardio.add(boardGlow);
     // ==============================
     // 5) Avatar / model loader
     // ==============================
-    let avatarRoot = null;
-    let mixer = null;
-    let runAction = null;
-
+ 
     function buildPreviewMannequin(){
       const avatar = new THREE.Group();
       avatar.userData.__isMannequin = true;
