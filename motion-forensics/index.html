@@ -216,6 +216,62 @@ document.getElementById('trialHelpContent').innerHTML =
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+// ==============================
+// PHYSIOLOGY + SIM CORE (FL-001)
+// ==============================
+
+// ---- helpers ----
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+// ---- simulation state ----
+const sim = {
+  speedMph: 0,
+  energy: 100,          // % metabolic capacity
+  running: false,
+  elapsed: 0,           // seconds
+  workTime: 0
+};
+
+// ---- constants (average fit adult) ----
+const VO2_MAX = 42;                 // ml/kg/min (non-elite fit adult)
+const REST_VO2 = 3.5;               // ml/kg/min
+const RECOVERY_RATE = 0.35;         // % per minute at rest
+const TIME_STEP_CAP = 0.25;         // stability cap (seconds)
+
+// ---- ACSM walking/running VO2 equation ----
+// speed in mph → m/min
+function estimateVO2(speedMph){
+  const speed = speedMph * 26.8; // m/min
+
+  // Walking < ~3.7 mph
+  if (speedMph <= 3.7){
+    return REST_VO2 + (0.1 * speed);
+  }
+
+  // Running
+  return REST_VO2 + (0.2 * speed);
+}
+
+// ---- metabolic drain per second ----
+function metabolicDelta(speedMph, dt){
+  const vo2 = estimateVO2(speedMph);
+  const intensity = vo2 / VO2_MAX;
+
+  // significance gate (0.2 mph MDC)
+  const sig = Math.round(speedMph / 0.2) * 0.2;
+  const scaled = clamp(sig / 22, 0, 1);
+
+  // walking ≈ sustainable → near zero drain
+  if (intensity < 0.35){
+    return +(RECOVERY_RATE / 60) * dt;
+  }
+
+  // progressive nonlinear drain
+  const drainPerMin =
+    Math.pow(intensity, 2.2) * 18 * scaled;
+
+  return -(drainPerMin / 60) * dt;
+}
 
     // ==============================
     // 0) REGISTRY (Model + Modules)
@@ -1276,11 +1332,28 @@ document.getElementById('trialHelpContent').textContent =
     }
 
     const clock = new THREE.Clock();
+let lastT = clock.getElapsedTime();
 
 function animate(){
   requestAnimationFrame(animate);
+
+  const now = clock.getElapsedTime();
+  let dt = now - lastT;
+  lastT = now;
+  dt = Math.min(dt, TIME_STEP_CAP);
+
   controls.update();
 
+// ===== FL-001 METABOLIC UPDATE (authoritative) =====
+if (sim.running && currentModule?.id === 'FL-001'){
+  if (sim.energy > 0){
+    const dE = metabolicDelta(sim.speedMph, dt);
+    sim.energy = clamp(sim.energy + dE, 0, 100);
+    sim.elapsed += dt;
+  } else {
+    sim.running = false;
+  }
+}
   
 // ===== BLINK (works for BOTH Roma + Roman via auto-detect morph names) =====
 if (!animate._blink) animate._blink = { model:null, targets:[], state:0, t:0, next:0 };
