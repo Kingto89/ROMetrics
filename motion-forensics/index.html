@@ -1846,14 +1846,25 @@ if (b.head) applyAdd(b.head, 0, torsoYaw * 0.15, 0);
   }
   R.wasRunning = runNow;
 
-// energy only drains when running
+// ===== ENERGY DRAIN (PHYSIOLOGY-BASED) =====
 if (sim.running){
-  sim.energy = clamp(sim.energy - (sim.speedMph * 0.55) * dt, 0, 100);
+  const vMax = 22;
+  const intensity = Math.pow(sim.speedMph / vMax, 1.6);
 
-  // TEMP pass trigger (fires once)
-  if (currentModule?.id === 'FL-001' && sim.energy >= 60 && !animate._fl001Passed){
-    animate._fl001Passed = true;
-    fl001PassTrial();
+  // accumulate intensity-weighted work time
+  sim.workTime += intensity * dt;
+
+  // calibrated for 3-minute trial realism
+  const kDrain = 6;
+  sim.energy = clamp(sim.energy - (kDrain * intensity * dt), 0, 100);
+
+  // HARD STOP on exhaustion
+  if (sim.energy <= 0){
+    sim.energy = 0;
+    sim.running = false;
+    $start.textContent = "Start";
+    $status.textContent = "Exhausted";
+    $status.style.color = "#38bdf8";
   }
 }
 
