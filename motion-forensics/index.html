@@ -1952,6 +1952,17 @@ if (sim.running){
     const s = (mph - 14) / 8;            // sprint nonlinearity
     demand = 28 + (s * s) * 45;
   }
+// ===== HARD POWER CEILING (TASK FAILURE RULE) =====
+const MAX_SUSTAINABLE_POWER = 22; // kJ/min (average person)
+
+if (demand > MAX_SUSTAINABLE_POWER){
+  sim.energy = 0;
+  sim.running = false;
+  $start.textContent = "Start";
+  $status.textContent = "Task Failure";
+  $status.style.color = "#ff9aa0";
+  return;
+}
 
   // ---------- AEROBIC SUPPLY (MATCHES DEMAND UNTIL LIMIT) ----------
   if (sim.aerFrac == null) sim.aerFrac = 0;
