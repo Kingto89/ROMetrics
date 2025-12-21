@@ -1740,7 +1740,7 @@ bake(bones.thighR, 0, 0, +hip);
   };
 
   // only run when Start is on AND cardio zone is visible
-  const runNow = !!(sim.running && zoneCardio.visible && R.rig);
+const runNow = !!(sim.running && sim.energy > 0 && zoneCardio.visible && R.rig);
 
   if (runNow){
     const mph = sim.speedMph;
