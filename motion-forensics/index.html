@@ -224,6 +224,7 @@ document.getElementById('trialHelpContent').innerHTML =
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
 // ---- simulation state ----
+let trialTime = 300; // seconds (5-minute FL-001 trial)    
 const sim = {
   speedMph: 0,
   energy: 100,          // % metabolic capacity
