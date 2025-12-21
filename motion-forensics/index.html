@@ -1875,7 +1875,11 @@ if (sim.running){
   if (mph <= LOW)        demand = 4;    // fully aerobic
   else if (mph <= MOD)   demand = 10;   // aerobic-dominant
   else if (mph <= HIGH)  demand = 22;   // anaerobic dominant
-  else                   demand = 35;   // sprint
+else {
+  // nonlinear sprint cost (explodes near max speed)
+  const sprintFrac = (mph - HIGH) / (22 - HIGH); // 0 → 1
+  demand = 35 + 40 * sprintFrac; // up to ~75 kJ/min at max
+}
 
   // ---- AEROBIC SUPPLY CEILING ----
   const aerobicMax = 8;                 // kJ / min
