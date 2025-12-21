@@ -1736,6 +1736,8 @@ if (sim.energy > 0){
 } else {
   sim.running = false;
 }
+if (currentModule?.id === 'FL-001')
+  document.getElementById('trialTime').textContent = Math.ceil(trialTime);
 
   updateHUD();
   renderer.render(scene, camera);
