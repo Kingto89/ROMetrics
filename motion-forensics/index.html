@@ -374,7 +374,7 @@ $spd.addEventListener('input', ()=>{ sim.speedMph = parseFloat($spd.value); });
 
 $start.addEventListener('click', ()=>{
   if (sim.speedMph <= 0) return;
-  if (!sim.running) {
+if (!sim.running && sim.elapsed === 0) {
     // starting a new trial
     sim.elapsed = 0;
     sim.workTime = 0;
