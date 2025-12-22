@@ -168,7 +168,7 @@ let cachedModuleMD = "";
 window.showTab = function(tabName) {
   const content = document.getElementById('tabContent');
   
-  // 1. Manage Tab UI
+  // 1. Manage Tab UI Active State
   document.querySelectorAll('#trialHelpModal .pill').forEach(p => p.classList.remove('active'));
   const activeTab = document.getElementById('tab-' + tabName);
   if (activeTab) activeTab.classList.add('active');
@@ -178,12 +178,11 @@ window.showTab = function(tabName) {
     return;
   }
 
-  // 2. Exact Header Matching for your MD file
+  // 2. Updated Anchors for Universal Consistency across all 10 labs
   let searchHeading = "";
   if (tabName === 'concept') searchHeading = "Concept (read first):";
-  // The Energy Systems info is actually inside the "Trial Guide" section in your MD
   if (tabName === 'systems') searchHeading = "Trial Guide:"; 
-  if (tabName === 'guide')   searchHeading = "Oxygen Budget and Cost Instructions";
+  if (tabName === 'guide')   searchHeading = "Module Instructions";
 
   // 3. Robust Search (Case Insensitive + ignoring hashtags)
   const lines = cachedModuleMD.split('\n');
@@ -201,47 +200,42 @@ window.showTab = function(tabName) {
     return;
   }
 
-  // 4. Extraction Logic: Collect lines until the next '---' or next Trial Header
+  // 4. Extraction Logic: Collect lines until the next '---' or the next Trial Section
   let extractedLines = [];
   for (let i = startIdx + 1; i < lines.length; i++) {
-    // Stop if we hit a horizontal rule or the next Trial (### Trial)
-    if (lines[i].trim() === "---" || lines[i].startsWith("### Trial")) break;
+    // Stop if we hit a horizontal rule or a specific Trial header (to avoid bleeding into next trial)
+    if (lines[i].trim() === "---" || lines[i].trim().startsWith("### Trial")) break;
     extractedLines.push(lines[i]);
   }
 
-  // 5. Render to HTML
+  // 5. Render to HTML with formatting cleanup
   let rawContent = extractedLines.join('\n').trim();
   content.innerHTML = rawContent
     .replace(/\n/g, '<br>')
-    .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>') // Bold
-    .replace(/\_(.*?)\_/g, '<i>$1</i>')     // Italics
-    .replace(/\#+/g, '');                   // Clean any leftover hashtags
+    .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>') // Support **bold**
+    .replace(/\_(.*?)\_/g, '<i>$1</i>')     // Support _italics_
+    .replace(/\#+/g, '');                   // Remove any Markdown hashtags from view
 };
 
 document.getElementById('trialHelp').onclick = async () => {
   document.getElementById('trialHelpModal').style.display = 'flex';
   
-  if (!cachedModuleMD) {
-    const modId = document.getElementById('moduleSelect').value || "FL-001";
-    // Ensures file names match your folder structure (fl_001.md)
-    const path = `../assets/forensics_modules/${modId.toLowerCase().replace('-','_')}.md`;
-    
-    try {
-      const res = await fetch(path);
-      if (res.ok) {
-        cachedModuleMD = await res.text();
-        window.showTab('concept'); // Load first tab only after fetch succeeds
-      } else {
-        document.getElementById('tabContent').innerHTML = "Failed to load: " + path;
-      }
-    } catch (e) {
-      console.error("Fetch Error:", e);
+  // Always fetch based on the currently selected module ID
+  const modId = document.getElementById('moduleSelect').value || "FL-001";
+  const path = `../assets/forensics_modules/${modId.toLowerCase().replace('-','_')}.md`;
+  
+  try {
+    const res = await fetch(path);
+    if (res.ok) {
+      cachedModuleMD = await res.text();
+      window.showTab('concept'); 
+    } else {
+      document.getElementById('tabContent').innerHTML = "Failed to load: " + path;
     }
-  } else {
-    window.showTab('concept');
+  } catch (e) {
+    console.error("Fetch Error:", e);
   }
 };
-
 
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
