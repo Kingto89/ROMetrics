@@ -82,7 +82,10 @@ VO2 Max = 15.3 × ((220 − Age) / 72)
 
 * Roman's Age: 43
 
-**Your Result:**  ________   *(This is your subject's capacity)* **2. Calculate the "Oxygen Cost"**
+**Your Result:** [ ENTER VALUE HERE ]  
+*(This is your subject's budget)*
+
+**2. Calculate the "Oxygen Cost"**
 Plug your chosen MPH into this line to find its "price" in oxygen:
 
 **Formula:** 
