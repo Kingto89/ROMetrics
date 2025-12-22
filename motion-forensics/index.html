@@ -320,13 +320,12 @@ function setAnatForModel(id){
   ANAT = { ...ANAT_PRESETS[ACTIVE_MODEL_ID] };
 }
 
-    const FORENSICS_MODULES = [
-    { id:'FL-001', label:'Module 1 — Metabolic Demand: Energy Systems',  desc:'Cardio Bay: speed, energy, fuel timing.', zone:'cardio', onEnter: enterFL001,  onTick: null },
-      
-      { id:'FL-002', label:'Module 2 — Joint Load Lever ', desc:'Strength Station: effort vs lever distance .', zone:'strength', onEnter:null, onTick:null },
-      { id:'FL-003', label:'Module 3 — Motion Forensics Lite', desc:'Reactive Balance:Pick the stance that gives the best Stability %', zone:'Analysis Booth', onEnter:null, onTick:null }
-      // === DROP-IN AREA ===
-    ];
+const FORENSICS_MODULES = [
+  { id:'FL-001', label:'Module 1 — Metabolic Demand: Energy Systems', desc:'Cardio Bay: speed, energy, fuel timing.', zone:'cardio', onEnter: enterFL001, onTick: null },
+  { id:'FL-002', label:'Module 2 — Joint Load Lever', desc:'Strength Station: effort vs lever distance.', zone:'strength', onEnter: null, onTick: null },
+  { id:'FL-003', label:'Module 3 — Motion Forensics Lite', desc:'Reactive Balance: Best Stability %', zone:'forensics', onEnter: null, onTick: null }
+];
+    
     let currentModule = null;
 
     // ==============================
