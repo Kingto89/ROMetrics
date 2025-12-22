@@ -12,7 +12,7 @@ You will use the **Primary Energy Source indicator** to complete each trial.
 ### Trial A — Aerobic Metabolism
 
 **Concept (read first):**  
-**Energy Balance:** At any speed, the body is a "hybrid" engine.v
+**Energy Balance:** At any speed, the body is a "hybrid" engine.
 - Aerobic Contribution: Uses oxygen to meet demand. If this system is the primary source, energy levels remain stable.
 - Oxygen Deficit: When speed exceeds your aerobic capacity, you must "borrow" energy from a finite tank (W' Balance).
 - Anaerobic Supplement: If oxygen demand exceeds supply, the body "borrows" from its finite W' Balance.
