@@ -1743,6 +1743,30 @@ if (runAction){
   }
 // --- SIMPLE STOP & RESET ADD-IN ---
     if (sim.energy <= 0 || trialTime <= 0) {
+   // --- SIMPLE STOP & RESET ADD-IN ---
+if (sim.energy <= 0 || trialTime <= 0) {
+    
+    // --- FINALIZED MCQ UNLOCK LOGIC ---
+    if (trialTime <= 0 && document.getElementById('mcqBox').style.display !== 'block') {
+        const activeModel = document.getElementById('modelSelect').value;
+        const targetSpeed = (activeModel === "Roma") ? 6.8 : 6.6;
+
+        // Check if they were at the correct speed when time ran out
+        if (sim.speedMph === targetSpeed) {
+            document.getElementById('mcqBox').style.display = 'block';
+            document.getElementById('trialMsg').innerHTML = 
+                '<b style="color:#38bdf8;">Requirement Met:</b> Data logged. Answer the question below.';
+        } else {
+            document.getElementById('trialMsg').innerHTML = 
+                `<b style="color:#ff9aa0;">Trial Incomplete:</b> Speed must be exactly ${targetSpeed} mph. Reset and try again.`;
+        }
+    }   
+
+    sim.running = false;
+    if (runAction) runAction.paused = true;
+    restore(); 
+    $start.textContent = "Start";
+}   
       sim.running = false;
       if (runAction) runAction.paused = true;
       restore(); // This snaps her to the anatomic position
