@@ -196,7 +196,6 @@ document.getElementById('trialHelpClose').onclick = (e) => {
 };
 
 // 3. Protected Zone Listeners (Modified from your original)
-pills.forEach(btn => {
   btn.addEventListener('click', (e) => {
     if (isModalOpen) return; // KILL THE JUMP: Ignore click if help is open
     
