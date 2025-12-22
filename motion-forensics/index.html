@@ -9,7 +9,7 @@
     #ui{position:fixed;left:14px;top:14px;z-index:10;display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
     .pill{border:1px solid rgba(148,163,184,.35);background:rgba(15,23,42,.78);color:#e5eefc;padding:10px 12px;border-radius:999px;font-size:13px;cursor:pointer;user-select:none;backdrop-filter: blur(8px);}
     .pill.active{border-color:rgba(56,189,248,.8);box-shadow:0 0 0 2px rgba(56,189,248,.14) inset;}
-    #badge{position:fixed;right:14px;top:-62px;z-index:10;padding:12px 12px;border-radius:16px;border:1px solid rgba(148,163,184,.25);background:rgba(15,23,42,.65);color:#cfe3ff;font-size:13px;max-width:420px;backdrop-filter: blur(8px);}
+    #badge{position:fixed;right:14px;top:14px;z-index:100;padding:12px 12px;border-radius:16px;border:1px solid rgba(148,163,184,.25);background:rgba(15,23,42,.65);color:#cfe3ff;font-size:13px;max-width:420px;backdrop-filter: blur(8px);display:none;}
     #badge .t{font-weight:900;letter-spacing:.2px;}
     #badge .p{opacity:.92;margin-top:6px;line-height:1.25;}
     #controls{margin-top:10px;padding-top:10px;border-top:1px solid rgba(148,163,184,.18);display:grid;gap:8px;}
@@ -1832,50 +1832,53 @@ animate(); // Starts loop
 // 9) Enter Studio (gate -> studio)
 // ==============================
 $enter.addEventListener('click', async () => {
-  const modelId = $modelSel.value; 
-  const moduleId = $modSel.value;
+  const modelId = document.getElementById('modelSelect').value; 
+  const moduleId = document.getElementById('moduleSelect').value;
   
-  // Set Roman 43, Roma 34
+  // Ages: Roman 43, Roma 34
   let age = (modelId === "Roman") ? 43 : 34;
-  sim.vo2Max = 15.3 * ((220 - age) / 72); 
+  let hrMax = 220 - age;
+  sim.vo2Max = 15.3 * (hrMax / 72); 
 
   setAnatForModel(modelId);
   $enter.disabled = true;
+  $enter.textContent = "Loading...";
 
   try {
+    // 1. Load the Model
     await loadSelectedModel(modelId, (p) => { 
       $enter.textContent = `Loading ${p}%`; 
     });
 
-    // 1. Reveal basic UI first
-    $gate.style.display = "none";
-    $ui.style.display = "flex"; 
+    // 2. Clear the loading gate
+    document.getElementById('gate').style.display = "none";
+    
+    // 3. Reveal UI Elements safely
+    const uiMain = document.getElementById('ui');
+    const badgeMenu = document.getElementById('badge');
 
-    // 2. Fix the simulation menu visibility (The Badge)
-    const badgeEl = document.getElementById('badge');
-    if (badgeEl) {
-      badgeEl.style.display = "block";
-      badgeEl.style.top = "14px"; // Slide into view from -62px
+    if (uiMain) uiMain.style.display = "flex";
+    if (badgeMenu) {
+        badgeMenu.style.display = "block";
+        badgeMenu.style.top = "14px"; // Ensure it is on-screen
     }
 
-    // 3. Force camera to Cardio Bay coordinates 
+    // 4. Force snap to Cardio Bay
     if (moduleId === 'FL-001') {
       setZone('cardio'); 
     }
 
-    // 4. Initialize Simulation logic (Trial A/B/C)
-    enterModule(moduleId); 
-    
-    // 5. Final Snap to prevent jumping
+    // 5. Initialize module simulation buttons
+    enterModule(moduleId);
     snapCam();
 
   } catch (e) {
     console.error("Entry Error:", e);
+    $enter.textContent = "Error - Check Console";
   } finally {
     $enter.disabled = false;
-    $enter.textContent = "Enter Studio";
   }
-});
+}); // Correctly closed
 
 addEventListener('resize', () => {
   camera.aspect = innerWidth / innerHeight;
