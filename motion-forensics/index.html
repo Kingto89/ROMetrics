@@ -1717,24 +1717,30 @@ if (runAction){
 // 1. Update the Screen Displays
   drawPanel(wallScreen, 'CARDIO BOARD');
   drawTreadmillMph(consoleScreen);
-
-  // 2. Metabolic Engine & Timer
-  if (sim.running && sim.energy > 0) {
+// --- REALISTIC METABOLIC DRAIN (NON-ATHLETE) ---
+if (sim.running && sim.energy > 0) {
     const key = sim.speedMph.toFixed(1);
     const row = METABOLIC_TABLE[key];
 
     if (row && sim.vo2Max > 0) {
-      // Logic: (Oxygen Requirement - Biological Capacity) / 60 seconds
-      const deficit = row.cost - sim.vo2Max;
+        // Difference between Demand and Capacity
+        const deficit = row.cost - sim.vo2Max;
 
-      if (deficit > 0) {
-        // ANAEROBIC DRAIN
-        sim.energy -= (deficit / 60) * dt;
-      } else {
-        // AEROBIC RECOVERY (capped at 100%)
-        sim.energy = Math.min(100, sim.energy + (0.2 * dt));
-      }
+        if (deficit > 0) {
+            // REALISM: A non-athlete's 'W prime' (tank) is small.
+            // At a 10 ml/kg/min deficit, an average person fails in ~2 mins.
+            // Math: We increase the drain speed to reflect a smaller anaerobic tank.
+            const anaerobicTankSize = 1200; // Total 'ml' units in the tank
+            const drainPerSecond = deficit / 60;
+            const percentDropPerSecond = (drainPerSecond / anaerobicTankSize) * 10000;
+            
+            sim.energy -= percentDropPerSecond * dt;
+        } else {
+            // Recovery for non-athletes is much slower than elite runners
+            sim.energy = Math.min(100, sim.energy + (0.05 * dt));
+        }
     }
+}
 
     // Update the 300s Trial Timer for Module 1
     if (currentModule?.id === 'FL-001') {
