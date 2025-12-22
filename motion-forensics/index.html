@@ -145,85 +145,31 @@
     </div>
   </div>
 
-<div id="trialHelpModal"
-     style="display:none; position:fixed; inset:0; z-index:100;
-            background:rgba(7,16,27,.85);
-            align-items:center; justify-content:center;"
-     onclick="event.stopPropagation();">
-
-  <div id="gateCard"
-       style="max-width:600px; padding:0; overflow:hidden;
-              display:flex; flex-direction:column;"
-       onclick="event.stopPropagation();">
-
-    <div style="display:flex;
-                background:rgba(15,23,42,.95);
-                border-bottom:1px solid rgba(148,163,184,.25);">
-
-  <div style="display:flex; background:rgba(15,23,42,.95); border-bottom:1px solid rgba(148,163,184,.25);">
-  <div id="tab-concept" 
-       class="tab-pill active" 
-       style="flex:1; text-align:center; padding:10px; cursor:pointer; color:#e5eefc; font-size:13px;" 
-       onclick="showTab('concept')">
-    Concept (read first):
-  </div>
-  <div id="tab-systems" 
-       class="tab-pill" 
-       style="flex:1; text-align:center; padding:10px; cursor:pointer; color:#e5eefc; font-size:13px;" 
-       onclick="showTab('systems')">
-    Trial Guide:
-  </div>
-  <div id="tab-guide" 
-       class="tab-pill" 
-       style="flex:1; text-align:center; padding:10px; cursor:pointer; color:#e5eefc; font-size:13px;" 
-       onclick="showTab('guide')">
-    Module Instructions
-  </div>
-</div>
-
-    <div id="tabContent"
-         style="padding:24px; color:#a8c0da; font-size:13px;
-                line-height:1.5; min-height:350px;
-                max-height:500px; overflow-y:auto;">
+  <div id="trialHelpModal" style="display:none; position:fixed; inset:0; z-index:100; background:rgba(7,16,27,.85); align-items:center; justify-content:center;">
+    <div id="gateCard" style="max-width:600px; padding:0; overflow:hidden; display:flex; flex-direction:column;">
+      <div style="display:flex; background:rgba(15,23,42,.95); border-bottom:1px solid rgba(148,163,184,.25);">
+        <div id="tab-concept" class="pill active" style="border-radius:0; border:none; flex:1; text-align:center; cursor:pointer;" onclick="showTab('concept')">Concept (read first):</div>
+        <div id="tab-systems" class="pill" style="border-radius:0; border:none; flex:1; text-align:center; cursor:pointer;" onclick="showTab('systems')">Trial Guide:</div>
+        <div id="tab-guide" class="pill" style="border-radius:0; border:none; flex:1; text-align:center; cursor:pointer;" onclick="showTab('guide')">Module Instructions</div>
+      </div>
+      <div id="tabContent" style="padding:24px; color:#a8c0da; font-size:13px; line-height:1.5; min-height:350px; max-height:500px; overflow-y:auto;"></div>
+      <div style="padding:14px; border-top:1px solid rgba(148,163,184,.18); display:flex; justify-content:flex-end; background:rgba(9,20,37,.72);">
+<button id="trialHelpClose" type="button" class="primary">Close Instructions</button>
+      </div>
     </div>
-
-    <div style="padding:14px;
-                border-top:1px solid rgba(148,163,184,.18);
-                display:flex; justify-content:flex-end;
-                background:rgba(9,20,37,.72);">
-      <button id="trialHelpClose" type="button" class="primary">
-        Close Instructions
-      </button>
-    </div>
-
   </div>
-</div>
-
 
   <div id="hint" style="display:block;">Mouse: orbit • Wheel: zoom • Right-drag: pan • Keys: 1/2/3 = zones • 0 = all • L = labels</div>
 
   <script type="module">
 let cachedModuleMD = "";
-let IN_HELP_MODAL = false;
-
-// Zone pill clicks (only #ui pills) — run once at startup
-document.querySelectorAll('#ui .pill').forEach(pill => {
-  pill.addEventListener('click', (e) => {
-    if (IN_HELP_MODAL) return; // ignore clicks while modal is open
-    const zone = pill.dataset.zone;
-    if (!zone) return;
-    setZone(zone);
-    document.querySelectorAll('#ui .pill').forEach(p => p.classList.remove('active'));
-    pill.classList.add('active');
-  });
-});
 
 window.showTab = function(tabName) {
   const content = document.getElementById('tabContent');
-  const currentTrial = document.getElementById('trialTag').textContent.trim();
-
-  // 1. Manage UI Tab States (Using the .tab-pill class to avoid "jumping")
-  document.querySelectorAll('.tab-pill').forEach(p => p.classList.remove('active'));
+  const currentTrial = document.getElementById('trialTag').textContent; // "A", "B", or "C"
+  
+  // 1. Manage UI Tab States
+  document.querySelectorAll('#trialHelpModal .pill').forEach(p => p.classList.remove('active'));
   const activeTab = document.getElementById('tab-' + tabName);
   if (activeTab) activeTab.classList.add('active');
 
@@ -231,9 +177,6 @@ window.showTab = function(tabName) {
     content.innerHTML = "Fetching forensic module data...";
     return;
   }
-
-  // Reset scroll to top of content area
-  content.scrollTop = 0;
 
   // 2. Global Section: Module Instructions
   if (tabName === 'guide') {
@@ -246,7 +189,7 @@ window.showTab = function(tabName) {
   }
 
   // 3. Trial-Specific Sections
-  const trialMarker = new RegExp(`###\\s*Trial\\s*${currentTrial}\\b`, 'i');
+const trialMarker = new RegExp(`###\\s*Trial\\s*${currentTrial}\\b`, 'i');
   const trialMatch = cachedModuleMD.match(trialMarker);
 
   if (!trialMatch) {
@@ -254,10 +197,10 @@ window.showTab = function(tabName) {
     return;
   }
 
-  // Isolate the text for the current trial block
-  const restOfFile = cachedModuleMD.slice(trialMatch.index + trialMatch[0].length);
-  const nextHeader = restOfFile.search(/###\s*(Trial\s+[A-Z]\b|Module\s*Instructions)/i);
-  const trialBlock = nextHeader !== -1 ? restOfFile.slice(0, nextHeader) : restOfFile;
+  // Isolate the current Trial's text block
+const restOfFile = cachedModuleMD.slice(trialMatch.index + trialMatch[0].length);
+const nextHeader = restOfFile.search(/###\s*(Trial\s+[A-Z]\b|Module\s*Instructions)/i);
+const trialBlock = nextHeader !== -1 ? restOfFile.slice(0, nextHeader) : restOfFile;
 
   // 4. Robust Regex Search for Sub-Headings
   let searchRegex;
@@ -267,14 +210,14 @@ window.showTab = function(tabName) {
   const headerMatch = trialBlock.match(searchRegex);
 
   if (headerMatch) {
-    // Extract content from heading to the first divider (---)
+    // Rejoin from the found line onwards
     const fromStart = trialBlock.slice(headerMatch.index + headerMatch[0].length);
     const endIdx = fromStart.indexOf('---');
     content.innerHTML = formatMD(endIdx !== -1 ? fromStart.slice(0, endIdx) : fromStart);
   } else {
     content.innerHTML = `Heading for "${tabName}" not found in Trial ${currentTrial}. Check MD syntax.`;
   }
-    
+};
 
 // Formatting Helper
 function formatMD(text) {
@@ -288,8 +231,7 @@ function formatMD(text) {
 
 // Global Fetch Trigger
 document.getElementById('trialHelp').onclick = async () => {
-IN_HELP_MODAL = true;
-document.getElementById('trialHelpModal').style.display = 'flex';
+  document.getElementById('trialHelpModal').style.display = 'flex';
   
   const modId = document.getElementById('moduleSelect').value || "FL-001";
   const fileName = modId.toLowerCase().replace('fl-', 'module_');
@@ -308,11 +250,9 @@ document.getElementById('trialHelpModal').style.display = 'flex';
 
 // This prevents the default behavior and simply hides the modal
 document.getElementById('trialHelpClose').onclick = (e) => {
-  e.preventDefault();
-  IN_HELP_MODAL = false;
+  e.preventDefault(); // Stop any jumping or refreshing
   document.getElementById('trialHelpModal').style.display = 'none';
 };
-
 
     
     import * as THREE from 'three';
@@ -1410,9 +1350,7 @@ document.getElementById('trialHelpContent').textContent =
     });
 
     addEventListener('keydown', (e)=>{
-      if (IN_HELP_MODAL) return;
       if ($gate.style.display !== 'none') return;
-      e.preventDefault();
       if (e.key === '0'){ setZone('all'); setActive(document.querySelector('[data-zone="all"]')); }
       if (e.key === '1'){ setZone('strength'); setActive(document.querySelector('[data-zone="strength"]')); }
       if (e.key === '2'){ setZone('cardio'); setActive(document.querySelector('[data-zone="cardio"]')); }
