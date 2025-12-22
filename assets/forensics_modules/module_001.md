@@ -88,7 +88,7 @@ VO2 Max = 15.3 × ((220 − Age) / 72)
 Plug your chosen MPH into this line to find its "price" in oxygen:
 
 **Formula:** 
-Total Cost = ((MPH × 26.8) × 0.22) + 3.5
+Total Cost = ((MPH × 26.8) × 0.2) + 3.5
 
 **3. The Forensic Test**
 Compare your **Total Cost** to your **Oxygen Budget**:
