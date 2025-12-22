@@ -1325,19 +1325,19 @@ document.getElementById('trialHelpContent').textContent =
   trialC.onclick = ()=>showFL001Trial(trials,'C');
 }
 
-
- function enterModule(moduleId){
+function enterModule(moduleId){
   const mod = getModule(moduleId);
   currentModule = mod;
-  
-  // 1. Update the UI Badge
   $moduleTitle.textContent = mod.label;
   
-  // 2. Set the Camera
+  // SNAP CAMERA TO STATION
   setZone(mod.zone || 'all');
   
-  // 3. TRIGGER SIMULATION MENU
-  // This calls enterFL001() which populates the Trials and HUD
+  // SHOW THE HUD (Slide it into view)
+  const $badge = document.getElementById('badge');
+  $badge.style.display = "block";
+  $badge.style.top = "14px"; // Moves it from -62px to 14px so it is visible
+  
   if (typeof mod.onEnter === 'function'){
     mod.onEnter(); 
   }
@@ -1843,25 +1843,29 @@ $enter.addEventListener('click', async () => {
   setAnatForModel(modelId);
   $enter.disabled = true;
 
-  try {
+ try {
     await loadSelectedModel(modelId, (p) => { 
       $enter.textContent = `Loading ${p}%`; 
     });
 
-    // 1. Force camera to Cardio Bay coordinates immediately
+    // 1. Force camera to Cardio Bay coordinates before reveal
     if (moduleId === 'FL-001') {
       setZone('cardio'); 
     }
 
-    // 2. Reveal Studio
+    // 2. Reveal Studio UI and HUD
     $gate.style.display = "none";
     $ui.style.display = ""; 
-    $badge.style.display = ""; 
+    
+    // 3. Fix Menu Visibility: Move badge from -62px to 14px
+    const $badge = document.getElementById('badge');
+    $badge.style.display = "block";
+    $badge.style.top = "14px"; 
 
-    // 3. Initialize Simulation Menu (Trial A/B/C)
+    // 4. Initialize Simulation Menu (Trial A/B/C logic)
     enterModule(moduleId); 
     
-    // 4. Final Snap to prevent jumping
+    // 5. Final Snap to lock station
     snapCam();
 
   } catch (e) {
@@ -1870,7 +1874,6 @@ $enter.addEventListener('click', async () => {
     $enter.disabled = false;
     $enter.textContent = "Enter Studio";
   }
-});
 
 addEventListener('resize', () => {
   camera.aspect = innerWidth / innerHeight;
