@@ -169,45 +169,30 @@ let cachedModuleMD = "";
 
 window.showTab = function(tabName) {
   const content = document.getElementById('tabContent');
-  const modal = document.getElementById('trialHelpModal');
+  const currentTrial = document.getElementById('trialTag').textContent; // "A", "B", or "C"
   
-  // 1. Prevent background "jump" and reset scroll to top
-  if (event) {
-    event.preventDefault();
-    event.stopPropagation();
-  }
-  content.scrollTop = 0;
+  // 1. Manage UI Tab States
+  document.querySelectorAll('#trialHelpModal .pill').forEach(p => p.classList.remove('active'));
+  const activeTab = document.getElementById('tab-' + tabName);
+  if (activeTab) activeTab.classList.add('active');
 
-  // 2. Manage Button States (Switching from divs to buttons)
-  document.querySelectorAll('#trialHelpModal .pill').forEach(btn => {
-    btn.classList.remove('active');
-    btn.style.background = 'transparent';
-  });
-  
-  const activeBtn = document.getElementById('tab-' + tabName);
-  if (activeBtn) {
-    activeBtn.classList.add('active');
-    activeBtn.style.background = 'rgba(56,189,248,0.15)';
-  }
-
-  // 3. Render logic
   if (!cachedModuleMD) {
-    content.innerHTML = "Fetching module data...";
+    content.innerHTML = "Fetching forensic module data...";
     return;
   }
 
-  // Handle Module Instructions Tab
+  // 2. Global Section: Module Instructions
   if (tabName === 'guide') {
-    const guideMatch = cachedModuleMD.match(/###\s*Module\s*Instructions/i);
+    const guideRegex = /###\s*Module\s*Instructions/i;
+    const guideMatch = cachedModuleMD.match(guideRegex);
     if (guideMatch) {
       content.innerHTML = formatMD(cachedModuleMD.slice(guideMatch.index + guideMatch[0].length));
     }
     return;
   }
 
-  // Handle Trial-Specific Tabs (Concept/Systems)
-  const currentTrial = document.getElementById('trialTag').textContent;
-  const trialMarker = new RegExp(`###\\s*Trial\\s*${currentTrial}\\b`, 'i');
+  // 3. Trial-Specific Sections
+const trialMarker = new RegExp(`###\\s*Trial\\s*${currentTrial}\\b`, 'i');
   const trialMatch = cachedModuleMD.match(trialMarker);
 
   if (!trialMatch) {
@@ -215,29 +200,41 @@ window.showTab = function(tabName) {
     return;
   }
 
-  const restOfFile = cachedModuleMD.slice(trialMatch.index + trialMatch[0].length);
-  const nextHeader = restOfFile.search(/###\s*(Trial\s+[A-Z]\b|Module\s*Instructions)/i);
-  const trialBlock = nextHeader !== -1 ? restOfFile.slice(0, nextHeader) : restOfFile;
+  // Isolate the current Trial's text block
+const restOfFile = cachedModuleMD.slice(trialMatch.index + trialMatch[0].length);
+const nextHeader = restOfFile.search(/###\s*(Trial\s+[A-Z]\b|Module\s*Instructions)/i);
+const trialBlock = nextHeader !== -1 ? restOfFile.slice(0, nextHeader) : restOfFile;
 
-  let searchRegex = (tabName === 'concept') 
-    ? /###\s*Concept\s*\(read\s*first\):/i 
-    : /###\s*Trial\s*Guide:/i;
+  // 4. Robust Regex Search for Sub-Headings
+  let searchRegex;
+  if (tabName === 'concept') searchRegex = /###\s*Concept\s*\(read\s*first\):/i;
+  if (tabName === 'systems') searchRegex = /###\s*Trial\s*Guide:/i;
 
   const headerMatch = trialBlock.match(searchRegex);
+
   if (headerMatch) {
+    // Rejoin from the found line onwards
     const fromStart = trialBlock.slice(headerMatch.index + headerMatch[0].length);
     const endIdx = fromStart.indexOf('---');
     content.innerHTML = formatMD(endIdx !== -1 ? fromStart.slice(0, endIdx) : fromStart);
   } else {
-    content.innerHTML = `Content for ${tabName} not found.`;
+    content.innerHTML = `Heading for "${tabName}" not found in Trial ${currentTrial}. Check MD syntax.`;
   }
 };
 
-// Update the Open Trigger to lock the station
+// Formatting Helper
+function formatMD(text) {
+  return text.trim()
+    .replace(/\n/g, '<br>')
+    .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+    .replace(/\_(.*?)\_/g, '<i>$1</i>')
+    .replace(/\#+/g, '') 
+    .replace(/\$\$(.*?)\$\$/g, '<div style="background:rgba(56,189,248,0.1); padding:12px; border-radius:10px; color:#38bdf8; font-family:monospace; margin:15px 0; text-align:center; border:1px solid rgba(56,189,248,0.2); font-size:1.1em;">$1</div>');
+}
+
+// Global Fetch Trigger
 document.getElementById('trialHelp').onclick = async () => {
-  const modal = document.getElementById('trialHelpModal');
-  modal.style.display = 'flex';
-  document.body.style.overflow = 'hidden'; // Stop model from jumping/scrolling
+  document.getElementById('trialHelpModal').style.display = 'flex';
   
   const modId = document.getElementById('moduleSelect').value || "FL-001";
   const fileName = modId.toLowerCase().replace('fl-', 'module_');
