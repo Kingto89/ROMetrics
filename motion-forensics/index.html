@@ -96,7 +96,7 @@
     <input id="spd" type="range" min="0" max="22" step="0.1" value="0"/>
 
     <div class="row">
-      <div class="k">Critical Power</div>
+      <div class="k">$W'$ Balance</div>
       <div class="v"><span id="engVal">100</span>%</div>
     </div>
 
@@ -226,6 +226,7 @@ let trialTime = 300; // seconds
 const sim = {
   speedMph: 0,
   energy: 100,
+  vo2Max: 0, // This starts at 0 and waits for the student's selection logic
   running: false,
   elapsed: 0,
   workTime: 0,
@@ -237,238 +238,17 @@ const sim = {
     let mixer = null;
     let runAction = null;
     
-const METABOLIC_TABLE = {
-  // --- RECOVERY (EPOC / Recharging Metabolic Reserve) ---
-  "0.0": { mode: "recover", rate: 0.2000, dominant: "Aerobic Recovery" },
-  "0.1": { mode: "recover", rate: 0.1800, dominant: "Aerobic Recovery" },
-  "0.2": { mode: "recover", rate: 0.1600, dominant: "Aerobic Recovery" },
-  "0.3": { mode: "recover", rate: 0.1400, dominant: "Aerobic Recovery" },
-  "0.4": { mode: "recover", rate: 0.1200, dominant: "Aerobic Recovery" },
-  "0.5": { mode: "recover", rate: 0.1000, dominant: "Aerobic Recovery" },
-  "0.6": { mode: "recover", rate: 0.0500, dominant: "Aerobic Recovery" },
-  "0.7": { mode: "recover", rate: 0.0200, dominant: "Aerobic Recovery" },
-
-  // --- STEADY STATE (Aerobic Balance: Supply = Demand) ---
-  "0.8": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "0.9": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "1.0": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "1.1": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "1.2": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "1.3": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "1.4": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "1.5": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "1.6": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "1.7": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "1.8": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "1.9": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "2.0": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "2.1": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "2.2": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "2.3": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "2.4": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "2.5": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "2.6": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "2.7": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "2.8": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "2.9": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "3.0": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "3.1": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "3.2": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "3.3": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "3.4": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "3.5": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "3.6": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "3.7": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "3.8": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "3.9": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "4.0": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "4.1": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "4.2": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "4.3": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "4.4": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "4.5": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "4.6": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "4.7": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "4.8": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "4.9": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "5.0": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "5.1": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "5.2": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "5.3": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "5.4": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-  "5.5": { mode: "steady", rate: 0.0000, dominant: "Aerobic" },
-
-  // --- THRESHOLD DRAIN (Above Critical Speed: Demand > Aerobic Supply) ---
-  "5.6": { mode: "drain", rate: -0.0100, dominant: "Aerobic + Glycolytic" },
-  "5.7": { mode: "drain", rate: -0.0200, dominant: "Aerobic + Glycolytic" },
-  "5.8": { mode: "drain", rate: -0.0350, dominant: "Aerobic + Glycolytic" },
-  "5.9": { mode: "drain", rate: -0.0500, dominant: "Aerobic + Glycolytic" },
-  "6.0": { mode: "drain", rate: -0.0650, dominant: "Aerobic + Glycolytic" },
-  "6.1": { mode: "drain", rate: -0.0800, dominant: "Aerobic + Glycolytic" },
-  "6.2": { mode: "drain", rate: -0.0950, dominant: "Aerobic + Glycolytic" },
-  "6.3": { mode: "drain", rate: -0.1100, dominant: "Aerobic + Glycolytic" },
-  "6.4": { mode: "drain", rate: -0.1250, dominant: "Aerobic + Glycolytic" },
-  "6.5": { mode: "drain", rate: -0.1400, dominant: "Aerobic + Glycolytic" },
-  "6.6": { mode: "drain", rate: -0.1550, dominant: "Aerobic + Glycolytic" },
-  "6.7": { mode: "drain", rate: -0.1700, dominant: "Aerobic + Glycolytic" },
-  "6.8": { mode: "drain", rate: -0.1850, dominant: "Aerobic + Glycolytic" },
-  "6.9": { mode: "drain", rate: -0.2000, dominant: "Aerobic + Glycolytic" },
-  "7.0": { mode: "drain", rate: -0.2150, dominant: "Aerobic + Glycolytic" },
-  "7.1": { mode: "drain", rate: -0.2300, dominant: "Aerobic + Glycolytic" },
-  "7.2": { mode: "drain", rate: -0.2450, dominant: "Aerobic + Glycolytic" },
-  "7.3": { mode: "drain", rate: -0.2600, dominant: "Aerobic + Glycolytic" },
-  "7.4": { mode: "drain", rate: -0.2750, dominant: "Aerobic + Glycolytic" },
-  "7.5": { mode: "drain", rate: -0.2900, dominant: "Aerobic + Glycolytic" },
-  "7.6": { mode: "drain", rate: -0.3000, dominant: "Aerobic + Glycolytic" },
-  "7.7": { mode: "drain", rate: -0.3100, dominant: "Aerobic + Glycolytic" },
-  "7.8": { mode: "drain", rate: -0.3200, dominant: "Aerobic + Glycolytic" },
-  "7.9": { mode: "drain", rate: -0.3300, dominant: "Aerobic + Glycolytic" },
-  "8.0": { mode: "drain", rate: -0.3334, dominant: "Aerobic + Glycolytic" }, // Math: 100 / 0.3334 = 300s (5 min)
-  "8.1": { mode: "drain", rate: -0.3500, dominant: "Aerobic + Glycolytic" },
-  "8.2": { mode: "drain", rate: -0.3800, dominant: "Aerobic + Glycolytic" },
-  "8.3": { mode: "drain", rate: -0.4100, dominant: "Aerobic + Glycolytic" },
-  "8.4": { mode: "drain", rate: -0.4400, dominant: "Aerobic + Glycolytic" },
-  "8.5": { mode: "drain", rate: -0.4700, dominant: "Aerobic + Glycolytic" },
-  "8.6": { mode: "drain", rate: -0.5000, dominant: "Aerobic + Glycolytic" },
-  "8.7": { mode: "drain", rate: -0.5300, dominant: "Aerobic + Glycolytic" },
-  "8.8": { mode: "drain", rate: -0.5600, dominant: "Aerobic + Glycolytic" },
-  "8.9": { mode: "drain", rate: -0.5900, dominant: "Aerobic + Glycolytic" },
-  "9.0": { mode: "drain", rate: -0.6200, dominant: "Aerobic + Glycolytic" },
-
-  // --- SPRINT (Severe Domain: Glycolytic System) ---
-  "9.1": { mode: "drain", rate: -0.6500, dominant: "Glycolytic" },
-  "9.2": { mode: "drain", rate: -0.6800, dominant: "Glycolytic" },
-  "9.3": { mode: "drain", rate: -0.7100, dominant: "Glycolytic" },
-  "9.4": { mode: "drain", rate: -0.7400, dominant: "Glycolytic" },
-  "9.5": { mode: "drain", rate: -0.7700, dominant: "Glycolytic" },
-  "9.6": { mode: "drain", rate: -0.8000, dominant: "Glycolytic" },
-  "9.7": { mode: "drain", rate: -0.8300, dominant: "Glycolytic" },
-  "9.8": { mode: "drain", rate: -0.8600, dominant: "Glycolytic" },
-  "9.9": { mode: "drain", rate: -0.8900, dominant: "Glycolytic" },
-  "10.0": { mode: "drain", rate: -1.0000, dominant: "Glycolytic" },
-  "10.1": { mode: "drain", rate: -1.0500, dominant: "Glycolytic" },
-  "10.2": { mode: "drain", rate: -1.1000, dominant: "Glycolytic" },
-  "10.3": { mode: "drain", rate: -1.1500, dominant: "Glycolytic" },
-  "10.4": { mode: "drain", rate: -1.2000, dominant: "Glycolytic" },
-  "10.5": { mode: "drain", rate: -1.3000, dominant: "Glycolytic" },
-  "10.6": { mode: "drain", rate: -1.3500, dominant: "Glycolytic" },
-  "10.7": { mode: "drain", rate: -1.4000, dominant: "Glycolytic" },
-  "10.8": { mode: "drain", rate: -1.4500, dominant: "Glycolytic" },
-  "10.9": { mode: "drain", rate: -1.5000, dominant: "Glycolytic" },
-  "11.0": { mode: "drain", rate: -1.6000, dominant: "Glycolytic" },
-  "11.1": { mode: "drain", rate: -1.6500, dominant: "Glycolytic" },
-  "11.2": { mode: "drain", rate: -1.7000, dominant: "Glycolytic" },
-  "11.3": { mode: "drain", rate: -1.7500, dominant: "Glycolytic" },
-  "11.4": { mode: "drain", rate: -1.8000, dominant: "Glycolytic" },
-  "11.5": { mode: "drain", rate: -1.9000, dominant: "Glycolytic" },
-  "11.6": { mode: "drain", rate: -1.9500, dominant: "Glycolytic" },
-  "11.7": { mode: "drain", rate: -2.0000, dominant: "Glycolytic" },
-  "11.8": { mode: "drain", rate: -2.0500, dominant: "Glycolytic" },
-  "11.9": { mode: "drain", rate: -2.1000, dominant: "Glycolytic" },
-  "12.0": { mode: "drain", rate: -2.2000, dominant: "Glycolytic" },
-  "12.1": { mode: "drain", rate: -2.2500, dominant: "Glycolytic" },
-  "12.2": { mode: "drain", rate: -2.3000, dominant: "Glycolytic" },
-  "12.3": { mode: "drain", rate: -2.3500, dominant: "Glycolytic" },
-  "12.4": { mode: "drain", rate: -2.4000, dominant: "Glycolytic" },
-  "12.5": { mode: "drain", rate: -2.5000, dominant: "Glycolytic" },
-  "12.6": { mode: "drain", rate: -2.5500, dominant: "Glycolytic" },
-  "12.7": { mode: "drain", rate: -2.6000, dominant: "Glycolytic" },
-  "12.8": { mode: "drain", rate: -2.6500, dominant: "Glycolytic" },
-  "12.9": { mode: "drain", rate: -2.7000, dominant: "Glycolytic" },
-  "13.0": { mode: "drain", rate: -2.8000, dominant: "Glycolytic" },
-  "13.1": { mode: "drain", rate: -2.8500, dominant: "Glycolytic" },
-  "13.2": { mode: "drain", rate: -2.9000, dominant: "Glycolytic" },
-  "13.3": { mode: "drain", rate: -2.9500, dominant: "Glycolytic" },
-  "13.4": { mode: "drain", rate: -3.0000, dominant: "Glycolytic" },
-  "13.5": { mode: "drain", rate: -3.2000, dominant: "Glycolytic" },
-  "13.6": { mode: "drain", rate: -3.3000, dominant: "Glycolytic" },
-  "13.7": { mode: "drain", rate: -3.4000, dominant: "Glycolytic" },
-  "13.8": { mode: "drain", rate: -3.5000, dominant: "Glycolytic" },
-  "13.9": { mode: "drain", rate: -3.6000, dominant: "Glycolytic" },
-  "14.0": { mode: "drain", rate: -3.8000, dominant: "Glycolytic" },
-  "14.1": { mode: "drain", rate: -3.9000, dominant: "Glycolytic" },
-  "14.2": { mode: "drain", rate: -4.0000, dominant: "Glycolytic" },
-  "14.3": { mode: "drain", rate: -4.1000, dominant: "Glycolytic" },
-  "14.4": { mode: "drain", rate: -4.2000, dominant: "Glycolytic" },
-  "14.5": { mode: "drain", rate: -4.4000, dominant: "Glycolytic" },
-
-  // --- ELITE SPRINT (ATP-PC System: Extreme Drain) ---
-  "14.6": { mode: "drain", rate: -5.0000, dominant: "ATP-PC" },
-  "14.7": { mode: "drain", rate: -5.2000, dominant: "ATP-PC" },
-  "14.8": { mode: "drain", rate: -5.4000, dominant: "ATP-PC" },
-  "14.9": { mode: "drain", rate: -5.6000, dominant: "ATP-PC" },
-  "15.0": { mode: "drain", rate: -6.0000, dominant: "ATP-PC" },
-  "15.1": { mode: "drain", rate: -6.2000, dominant: "ATP-PC" },
-  "15.2": { mode: "drain", rate: -6.4000, dominant: "ATP-PC" },
-  "15.3": { mode: "drain", rate: -6.6000, dominant: "ATP-PC" },
-  "15.4": { mode: "drain", rate: -6.8000, dominant: "ATP-PC" },
-  "15.5": { mode: "drain", rate: -7.0000, dominant: "ATP-PC" },
-  "15.6": { mode: "drain", rate: -7.2000, dominant: "ATP-PC" },
-  "15.7": { mode: "drain", rate: -7.4000, dominant: "ATP-PC" },
-  "15.8": { mode: "drain", rate: -7.6000, dominant: "ATP-PC" },
-  "15.9": { mode: "drain", rate: -7.8000, dominant: "ATP-PC" },
-  "16.0": { mode: "drain", rate: -8.0000, dominant: "ATP-PC" },
-  "16.1": { mode: "drain", rate: -8.2000, dominant: "ATP-PC" },
-  "16.2": { mode: "drain", rate: -8.4000, dominant: "ATP-PC" },
-  "16.3": { mode: "drain", rate: -8.6000, dominant: "ATP-PC" },
-  "16.4": { mode: "drain", rate: -8.8000, dominant: "ATP-PC" },
-  "16.5": { mode: "drain", rate: -9.0000, dominant: "ATP-PC" },
-  "16.6": { mode: "drain", rate: -9.2000, dominant: "ATP-PC" },
-  "16.7": { mode: "drain", rate: -9.4000, dominant: "ATP-PC" },
-  "16.8": { mode: "drain", rate: -9.6000, dominant: "ATP-PC" },
-  "16.9": { mode: "drain", rate: -9.8000, dominant: "ATP-PC" },
-  "17.0": { mode: "drain", rate: -10.000, dominant: "ATP-PC" },
-  "17.1": { mode: "drain", rate: -10.200, dominant: "ATP-PC" },
-  "17.2": { mode: "drain", rate: -10.400, dominant: "ATP-PC" },
-  "17.3": { mode: "drain", rate: -10.600, dominant: "ATP-PC" },
-  "17.4": { mode: "drain", rate: -10.800, dominant: "ATP-PC" },
-  "17.5": { mode: "drain", rate: -11.000, dominant: "ATP-PC" },
-  "17.6": { mode: "drain", rate: -11.200, dominant: "ATP-PC" },
-  "17.7": { mode: "drain", rate: -11.400, dominant: "ATP-PC" },
-  "17.8": { mode: "drain", rate: -11.600, dominant: "ATP-PC" },
-  "17.9": { mode: "drain", rate: -11.800, dominant: "ATP-PC" },
-  "18.0": { mode: "drain", rate: -12.000, dominant: "ATP-PC" },
-  "18.1": { mode: "drain", rate: -12.200, dominant: "ATP-PC" },
-  "18.2": { mode: "drain", rate: -12.400, dominant: "ATP-PC" },
-  "18.3": { mode: "drain", rate: -12.600, dominant: "ATP-PC" },
-  "18.4": { mode: "drain", rate: -12.800, dominant: "ATP-PC" },
-  "18.5": { mode: "drain", rate: -13.000, dominant: "ATP-PC" },
-  "18.6": { mode: "drain", rate: -13.200, dominant: "ATP-PC" },
-  "18.7": { mode: "drain", rate: -13.400, dominant: "ATP-PC" },
-  "18.8": { mode: "drain", rate: -13.600, dominant: "ATP-PC" },
-  "18.9": { mode: "drain", rate: -13.800, dominant: "ATP-PC" },
-  "19.0": { mode: "drain", rate: -14.000, dominant: "ATP-PC" },
-  "19.1": { mode: "drain", rate: -14.200, dominant: "ATP-PC" },
-  "19.2": { mode: "drain", rate: -14.400, dominant: "ATP-PC" },
-  "19.3": { mode: "drain", rate: -14.600, dominant: "ATP-PC" },
-  "19.4": { mode: "drain", rate: -14.800, dominant: "ATP-PC" },
-  "19.5": { mode: "drain", rate: -15.000, dominant: "ATP-PC" },
-  "19.6": { mode: "drain", rate: -15.200, dominant: "ATP-PC" },
-  "19.7": { mode: "drain", rate: -15.400, dominant: "ATP-PC" },
-  "19.8": { mode: "drain", rate: -15.600, dominant: "ATP-PC" },
-  "19.9": { mode: "drain", rate: -15.800, dominant: "ATP-PC" },
-  "20.0": { mode: "drain", rate: -16.000, dominant: "ATP-PC" },
-  "20.1": { mode: "drain", rate: -16.200, dominant: "ATP-PC" },
-  "20.2": { mode: "drain", rate: -16.400, dominant: "ATP-PC" },
-  "20.3": { mode: "drain", rate: -16.600, dominant: "ATP-PC" },
-  "20.4": { mode: "drain", rate: -16.800, dominant: "ATP-PC" },
-  "20.5": { mode: "drain", rate: -17.000, dominant: "ATP-PC" },
-  "20.6": { mode: "drain", rate: -17.200, dominant: "ATP-PC" },
-  "20.7": { mode: "drain", rate: -17.400, dominant: "ATP-PC" },
-  "20.8": { mode: "drain", rate: -17.600, dominant: "ATP-PC" },
-  "20.9": { mode: "drain", rate: -17.800, dominant: "ATP-PC" },
-  "21.0": { mode: "drain", rate: -18.000, dominant: "ATP-PC" },
-  "21.1": { mode: "drain", rate: -18.200, dominant: "ATP-PC" },
-  "21.2": { mode: "drain", rate: -18.400, dominant: "ATP-PC" },
-  "21.3": { mode: "drain", rate: -18.600, dominant: "ATP-PC" },
-  "21.4": { mode: "drain", rate: -18.800, dominant: "ATP-PC" },
-  "21.5": { mode: "drain", rate: -19.000, dominant: "ATP-PC" },
-  "21.6": { mode: "drain", rate: -19.200, dominant: "ATP-PC" },
-  "21.7": { mode: "drain", rate: -19.400, dominant: "ATP-PC" },
-  "21.8": { mode: "drain", rate: -19.600, dominant: "ATP-PC" },
-  "21.9": { mode: "drain", rate: -19.800, dominant: "ATP-PC" },
-  "22.0": { mode: "drain", rate: -20.000, dominant: "ATP-PC" }
-};
+// --- ACSM UNIVERSAL OXYGEN COST TABLE ---
+// Math: Cost = (Speed_in_mph * 26.8 * 0.2) + 3.5
+const METABOLIC_TABLE = {};
+for (let i = 0; i <= 220; i++) {
+  let mph = (i / 10).toFixed(1);
+  let cost = (parseFloat(mph) * 26.8 * 0.2) + 3.5;
+  METABOLIC_TABLE[mph] = { 
+    cost: cost, 
+    dominant: cost > 40 ? "Anaerobic" : "Aerobic" 
+  };
+}
     // ==============================
     // 0) REGISTRY (Model + Modules)
     // ==============================
@@ -558,21 +338,21 @@ const $fuel = document.getElementById('fuelBtn');
 const $reset = document.getElementById('resetBtn');
 
 
-// UI defaults BEFORE Start
+// ==============================
+// UI & CONTROL INITIALIZATION
+// ==============================
 $spdVal.textContent = sim.speedMph.toFixed(1);
 $engVal.textContent = Math.round(sim.energy);
 $status.textContent = "Ready";
 $status.style.color = "#cfe3ff";
 $start.textContent = "Start";
 
-$spd.addEventListener('input', ()=>{ sim.speedMph = parseFloat($spd.value); });
-if (!sim.hasStarted){
-  sim.hasStarted = true;
-  sim.elapsed = 0;
-  sim.workTime = 0;
-  trialTime = 300;
-}
+// Update speed from slider
+$spd.addEventListener('input', () => { 
+  sim.speedMph = parseFloat($spd.value); 
+});
 
+// Start / Pause Button Logic
 $start.onclick = () => {
   if (!sim.hasStarted) {
     sim.hasStarted = true;
@@ -584,21 +364,40 @@ $start.onclick = () => {
   if (runAction) runAction.paused = !sim.running;
   $start.textContent = sim.running ? "Pause" : "Start";
 };
+// --- FUEL BUTTON LOGIC ---
+$fuel.onclick = () => {
+  // Add 10 to current reserve
+  sim.energy = Math.min(100, sim.energy + 10);
+  
+  // Update the UI
+  $engVal.textContent = Math.round(sim.energy);
+  $status.textContent = "Fueled +10%";
+  $status.style.color = "#38bdf8";
+};
+// Reset Button Logic
+$reset.addEventListener('click', () => {
+  sim.energy = 100;
+  sim.vo2Max = 0; // Clear the student calculation
+  sim.running = false;
+  sim.hasStarted = false;
+  sim.elapsed = 0;
 
- $reset.addEventListener('click', ()=>{
-  // reset sim
-  sim.energy = 100;
-  sim.lastFuelT = -999;
-  sim.running = false;
-  sim.hasStarted = false;
-  sim.elapsed = 0;
-
-  // Added safety: pause animation if it exists
   if (runAction) runAction.paused = true;
 
-  // reset trial timer
-  trialTime = 300;
+  trialTime = 300;
   document.getElementById('trialTime').textContent = 300;
+  document.getElementById('engVal').textContent = 100;
+  document.getElementById('spdVal').textContent = "0.0";
+  $spd.value = 0;
+  sim.speedMph = 0;
+
+  $start.textContent = "Start";
+  $status.textContent = "Ready";
+  $status.style.color = "#cfe3ff";
+
+  document.getElementById('mcqBox').style.display = 'none';
+  document.getElementById('trialMsg').textContent = 'Read the instructions above. When ready, press Start.';
+});
 
   // reset UI state
   animate._fl001Passed = false;
@@ -1946,10 +1745,19 @@ animate();
     // ==============================
     // 9) Enter Studio (gate -> studio)
     // ==============================
-    $enter.addEventListener('click', async ()=>{
-      const modelId = $modelSel.value;
-      setAnatForModel(modelId);
-      const moduleId = $modSel.value;
+   $enter.addEventListener('click', async () => {
+  const modelId = $modelSel.value; // Roma or Roman
+  
+  // Student Calculation Logic
+  let age = (modelId === "Roman") ? 33 : 29;
+  let hrMax = 220 - age;
+  let hrRest = 72; // Global standard resting heart rate
+  
+  // The Formula: 15.3 * (Max HR / Resting HR)
+  sim.vo2Max = 15.3 * (hrMax / hrRest);
+
+  setAnatForModel(modelId);
+  const moduleId = $modSel.value;
 
       $enter.disabled = true;
       const prevTxt = $enter.textContent;
