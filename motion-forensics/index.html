@@ -220,22 +220,19 @@ document.querySelectorAll('#ui .pill').forEach(pill => {
 
 window.showTab = function(tabName) {
   const content = document.getElementById('tabContent');
-  
-  // 1. Manage UI Tab States (using .tab-pill now)
-  document.querySelectorAll('.tab-pill').forEach(p => {
-    p.classList.remove('active');
-    p.style.boxShadow = "none"; // Remove any legacy styles
-  });
-  
+  const currentTrial = document.getElementById('trialTag').textContent.trim();
+
+  // 1. Manage UI Tab States (Using the .tab-pill class to avoid "jumping")
+  document.querySelectorAll('.tab-pill').forEach(p => p.classList.remove('active'));
   const activeTab = document.getElementById('tab-' + tabName);
-  if (activeTab) {
-    activeTab.classList.add('active');
-    activeTab.style.boxShadow = "0 -2px 0 #38bdf8 inset"; // Optional: blue underline for active tab
+  if (activeTab) activeTab.classList.add('active');
+
+  if (!cachedModuleMD) {
+    content.innerHTML = "Fetching forensic module data...";
+    return;
   }
 
-  if (!cachedModuleMD) return;
-
-  // Reset scroll to top to prevent "jumpy" feeling between long sections
+  // Reset scroll to top of content area
   content.scrollTop = 0;
 
   // 2. Global Section: Module Instructions
@@ -248,34 +245,37 @@ window.showTab = function(tabName) {
     return;
   }
 
- // 3. Trial-Specific Sections
-  const currentTrial = document.getElementById('trialTag').textContent.trim();
+  // 3. Trial-Specific Sections
   const trialMarker = new RegExp(`###\\s*Trial\\s*${currentTrial}\\b`, 'i');
   const trialMatch = cachedModuleMD.match(trialMarker);
-  
+
   if (!trialMatch) {
     content.innerHTML = `Data for Trial ${currentTrial} not found.`;
     return;
   }
 
-  // Isolate the text for the current trial only
+  // Isolate the text for the current trial block
   const restOfFile = cachedModuleMD.slice(trialMatch.index + trialMatch[0].length);
   const nextHeader = restOfFile.search(/###\s*(Trial\s+[A-Z]\b|Module\s*Instructions)/i);
-  const trialBlock = nextHeader !== -1 ? restOfFile.slice(0, nextSectionIdx) : restOfFile;
+  const trialBlock = nextHeader !== -1 ? restOfFile.slice(0, nextHeader) : restOfFile;
 
+  // 4. Robust Regex Search for Sub-Headings
   let searchRegex;
   if (tabName === 'concept') searchRegex = /###\s*Concept\s*\(read\s*first\):/i;
   if (tabName === 'systems') searchRegex = /###\s*Trial\s*Guide:/i;
 
   const headerMatch = trialBlock.match(searchRegex);
+
   if (headerMatch) {
+    // Extract content from heading to the first divider (---)
     const fromStart = trialBlock.slice(headerMatch.index + headerMatch[0].length);
     const endIdx = fromStart.indexOf('---');
     content.innerHTML = formatMD(endIdx !== -1 ? fromStart.slice(0, endIdx) : fromStart);
   } else {
-    content.innerHTML = `Heading for "${tabName}" not found in Trial ${currentTrial}.`;
+    content.innerHTML = `Heading for "${tabName}" not found in Trial ${currentTrial}. Check MD syntax.`;
   }
-}; // This closes window.showTab
+}; // Correctly closing the function here
+    
   // 3. Trial-Specific Sections
 const trialMarker = new RegExp(`###\\s*Trial\\s*${currentTrial}\\b`, 'i');
   const trialMatch = cachedModuleMD.match(trialMarker);
