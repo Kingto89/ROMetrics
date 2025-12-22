@@ -1717,32 +1717,25 @@ if (runAction){
 // 1. Update the Screen Displays
   drawPanel(wallScreen, 'CARDIO BOARD');
   drawTreadmillMph(consoleScreen);
-// --- REALISTIC METABOLIC DRAIN (NON-ATHLETE) ---
-if (sim.running && sim.energy > 0) {
+
+// 2. Realistic Metabolic Engine
+  if (sim.running && sim.energy > 0) {
     const key = sim.speedMph.toFixed(1);
     const row = METABOLIC_TABLE[key];
 
     if (row && sim.vo2Max > 0) {
-        // Difference between Demand and Capacity
         const deficit = row.cost - sim.vo2Max;
-
         if (deficit > 0) {
-            // REALISM: A non-athlete's 'W prime' (tank) is small.
-            // At a 10 ml/kg/min deficit, an average person fails in ~2 mins.
-            // Math: We increase the drain speed to reflect a smaller anaerobic tank.
-            const anaerobicTankSize = 1200; // Total 'ml' units in the tank
+            // Realistic non-athlete drain speed
+            const anaerobicTankSize = 1200; 
             const drainPerSecond = deficit / 60;
             const percentDropPerSecond = (drainPerSecond / anaerobicTankSize) * 10000;
-            
             sim.energy -= percentDropPerSecond * dt;
         } else {
-            // Recovery for non-athletes is much slower than elite runners
             sim.energy = Math.min(100, sim.energy + (0.05 * dt));
         }
     }
-}
-
-    // Update the 300s Trial Timer for Module 1
+    // Update the 300s Trial Timer
     if (currentModule?.id === 'FL-001') {
       trialTime = Math.max(0, trialTime - dt);
       document.getElementById('trialTime').textContent = Math.ceil(trialTime);
@@ -1752,62 +1745,49 @@ if (sim.running && sim.energy > 0) {
   // 3. Final Render
   updateHUD();
   renderer.render(scene, camera);
-} // <--- End of animate() function
+} // Ends animate
 
-animate(); // <--- Starts the loop
+animate(); // Starts loop
 
-    // ==============================
-    // 9) Enter Studio (gate -> studio)
-    // ==============================
+// ==============================
+// 9) Enter Studio (gate -> studio)
+// ==============================
 $enter.addEventListener('click', async () => {
   const modelId = $modelSel.value; 
-
-  // --- CONSOLIDATED CALCULATION BLOCK ---
-  // We use one variable for age and calculate HRMax and VO2Max immediately
   let age = (modelId === "Roman") ? 33 : 29;
   let hrMax = 220 - age;
   let hrRest = 72; 
-
-  // Apply the Uth-Sørensen Formula to the simulation
   sim.vo2Max = 15.3 * (hrMax / hrRest);
-  // --------------------------------------
 
   setAnatForModel(modelId);
   const moduleId = $modSel.value;
+  $enter.disabled = true;
+  $enter.textContent = "Loading...";
 
-      $enter.disabled = true;
-      const prevTxt = $enter.textContent;
-      $enter.textContent = "Loading 0%";
+  try {
+    await loadSelectedModel(modelId, (p) => { $enter.textContent = `Loading ${p}%`; });
+  } catch (e) {
+    console.error(e);
+    $enter.textContent = "Load failed";
+    $enter.disabled = false;
+    return;
+  }
 
-      try {
-        await loadSelectedModel(modelId, (p)=>{
-          $enter.textContent = (p == null) ? "Loading…" : `Loading ${p}%`;
-        });
-      } catch (e) {
-        console.error(e);
-        $enter.textContent = "Load failed";
-        $enter.disabled = false;
-        setTimeout(()=>{ $enter.textContent = prevTxt; }, 1200);
-        return;
-      }
+  $gate.style.display = "none";
+  $ui.style.display = "";
+  $badge.style.display = "";
+  $hint.style.display = "";
+  enterModule(moduleId);
+  $enter.disabled = false;
+  $enter.textContent = "Enter Studio";
+});
 
-      $gate.style.display = "none";
-      $ui.style.display = "";
-      $badge.style.display = "";
-      $hint.style.display = "";
-
-      enterModule(moduleId);
-
-      $enter.disabled = false;
-      $enter.textContent = prevTxt;
-    });
-
-    addEventListener('resize', ()=>{
-      camera.aspect = innerWidth/innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(innerWidth, innerHeight);
-      renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-    });
-  </script>
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+});
+</script>
 </body>
 </html>
