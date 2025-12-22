@@ -280,15 +280,15 @@ const romaAge = 34;
 const romanAge = 43;
 
 // 1. Calculate the Max Capacity (Denominator) based on Age
-const romaMaxVO2 = (220 - romaAge) * 0.206; 
-const romanMaxVO2 = (220 - romanAge) * 0.206;
+const romaMaxVO2 = (220 - romaAge) * 0.205; 
+const romanMaxVO2 = (220 - romanAge) * 0.205;
 
 for (let i = 0; i <= 220; i++) {
   let mph = (i / 10).toFixed(1);
   let mPerMin = parseFloat(mph) * 26.8;
   
   // 2. ACSM Oxygen Cost (Numerator)
-  let cost = (0.206 * mPerMin) + 3.5;
+  let cost = (0.205 * mPerMin) + 3.5;
   
   // 3. Calculate Percentage (This will now move as speed increases)
   let romaPct = (cost / romaMaxVO2) * 100;
