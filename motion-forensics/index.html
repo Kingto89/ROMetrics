@@ -1719,55 +1719,28 @@ if (runAction){
   drawTreadmillMph(consoleScreen);
 
 // 2. Realistic Metabolic Engine
+  if (sim.running && sim.energy > 0) {
+    const key = sim.speedMph.toFixed(1);
+    const row = METABOLIC_TABLE[key];
 
-
-  // --- METABOLIC ENGINE WITH AUTO-STOP ---
-if (sim.running) {
-    if (sim.energy <= 0) {
-        // --- CRASH STATE ---
-        sim.energy = 0;
-        sim.running = false;
-        if (runAction) runAction.paused = true;
-        $start.textContent = "Start";
-        $status.textContent = "EXHAUSTED / CRASH";
-        $status.style.color = "#ff9aa0";
-    } else {
-        const key = sim.speedMph.toFixed(1);
-        const row = METABOLIC_TABLE[key];
-
-        if (row && sim.vo2Max > 0) {
-            const deficit = row.cost - sim.vo2Max;
-            if (deficit > 0) {
-                const anaerobicTankSize = 1200; 
-                const drainPerSecond = deficit / 60;
-                const percentDropPerSecond = (drainPerSecond / anaerobicTankSize) * 10000;
-                sim.energy -= percentDropPerSecond * dt;
-            } else {
-                sim.energy = Math.min(100, sim.energy + (0.05 * dt));
-            }
+    if (row && sim.vo2Max > 0) {
+        const deficit = row.cost - sim.vo2Max;
+        if (deficit > 0) {
+            // Realistic non-athlete drain speed
+            const anaerobicTankSize = 1200; 
+            const drainPerSecond = deficit / 60;
+            const percentDropPerSecond = (drainPerSecond / anaerobicTankSize) * 10000;
+            sim.energy -= percentDropPerSecond * dt;
+        } else {
+            sim.energy = Math.min(100, sim.energy + (0.05 * dt));
         }
     }
-}
-// --- TIMER WITH TRIAL COMPLETE STATE ---
-if (currentModule?.id === 'FL-001' && sim.running) {
-    trialTime = Math.max(0, trialTime - dt);
-    document.getElementById('trialTime').textContent = Math.ceil(trialTime);
-
-    if (trialTime <= 0) {
-        // --- SUCCESSFUL TRIAL COMPLETION ---
-        sim.running = false;
-        if (runAction) runAction.paused = true;
-        $start.textContent = "Start";
-        
-        // Final Forensic Check
-        const finalEnergy = Math.round(sim.energy);
-        $status.textContent = `TRIAL COMPLETE: ${finalEnergy}%`;
-        $status.style.color = (finalEnergy >= 60) ? "#2ecc71" : "#f1c40f";
-        
-        // Show the MCQ box so they can submit their forensic finding
-        document.getElementById('mcqBox').style.display = 'block';
+    // Update the 300s Trial Timer
+    if (currentModule?.id === 'FL-001') {
+      trialTime = Math.max(0, trialTime - dt);
+      document.getElementById('trialTime').textContent = Math.ceil(trialTime);
     }
-}
+  }
 
   // 3. Final Render
   updateHUD();
