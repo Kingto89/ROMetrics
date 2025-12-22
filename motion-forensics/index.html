@@ -220,9 +220,14 @@ window.showTab = function(tabName) {
 document.getElementById('trialHelp').onclick = async () => {
   document.getElementById('trialHelpModal').style.display = 'flex';
   
-  // Always fetch based on the currently selected module ID
+  // Re-fetch if module changed or cache is empty
   const modId = document.getElementById('moduleSelect').value || "FL-001";
-  const path = `../assets/forensics_modules/${modId.toLowerCase().replace('-','_')}.md`;
+  
+  // Convert "FL-001" to "module_001" to match your GitHub file naming
+  const fileName = modId.toLowerCase().replace('fl-', 'module_');
+  
+  // Updated URL to pull from GitHub Raw
+  const path = `https://raw.githubusercontent.com/Kingto89/ROMetrics.com/main/assets/forensics_modules/${fileName}.md`;
   
   try {
     const res = await fetch(path);
@@ -230,10 +235,11 @@ document.getElementById('trialHelp').onclick = async () => {
       cachedModuleMD = await res.text();
       window.showTab('concept'); 
     } else {
-      document.getElementById('tabContent').innerHTML = "Failed to load: " + path;
+      document.getElementById('tabContent').innerHTML = `<b style="color:#ff9aa0;">Error:</b> Could not reach raw data at: <br><small>${path}</small>`;
     }
   } catch (e) {
     console.error("Fetch Error:", e);
+    document.getElementById('tabContent').innerHTML = "Network error. Check CORS settings or URL.";
   }
 };
 
