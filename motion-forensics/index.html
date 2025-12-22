@@ -160,27 +160,26 @@
                 background:rgba(15,23,42,.95);
                 border-bottom:1px solid rgba(148,163,184,.25);">
 
-      <div id="tab-concept"
-           class="pill active"
-           style="border-radius:0; border:none; flex:1; text-align:center; cursor:pointer;"
-           onclick="event.stopPropagation(); showTab('concept')">
-        Concept (read first):
-      </div>
-
-      <div id="tab-systems"
-           class="pill"
-           style="border-radius:0; border:none; flex:1; text-align:center; cursor:pointer;"
-           onclick="event.stopPropagation(); showTab('systems')">
-        Trial Guide:
-      </div>
-
-      <div id="tab-guide"
-           class="pill"
-           style="border-radius:0; border:none; flex:1; text-align:center; cursor:pointer;"
-           onclick="event.stopPropagation(); showTab('guide')">
-        Module Instructions
-      </div>
-    </div>
+  <div style="display:flex; background:rgba(15,23,42,.95); border-bottom:1px solid rgba(148,163,184,.25);">
+  <div id="tab-concept" 
+       class="tab-pill active" 
+       style="flex:1; text-align:center; padding:10px; cursor:pointer; color:#e5eefc; font-size:13px;" 
+       onclick="showTab('concept')">
+    Concept (read first):
+  </div>
+  <div id="tab-systems" 
+       class="tab-pill" 
+       style="flex:1; text-align:center; padding:10px; cursor:pointer; color:#e5eefc; font-size:13px;" 
+       onclick="showTab('systems')">
+    Trial Guide:
+  </div>
+  <div id="tab-guide" 
+       class="tab-pill" 
+       style="flex:1; text-align:center; padding:10px; cursor:pointer; color:#e5eefc; font-size:13px;" 
+       onclick="showTab('guide')">
+    Module Instructions
+  </div>
+</div>
 
     <div id="tabContent"
          style="padding:24px; color:#a8c0da; font-size:13px;
@@ -221,17 +220,23 @@ document.querySelectorAll('#ui .pill').forEach(pill => {
 
 window.showTab = function(tabName) {
   const content = document.getElementById('tabContent');
-  const currentTrial = document.getElementById('trialTag').textContent; // "A", "B", or "C"
-
-  // 1. Manage UI Tab States
-  document.querySelectorAll('#trialHelpModal .pill').forEach(p => p.classList.remove('active'));
+  
+  // 1. Manage UI Tab States (using .tab-pill now)
+  document.querySelectorAll('.tab-pill').forEach(p => {
+    p.classList.remove('active');
+    p.style.boxShadow = "none"; // Remove any legacy styles
+  });
+  
   const activeTab = document.getElementById('tab-' + tabName);
-  if (activeTab) activeTab.classList.add('active');
-
-  if (!cachedModuleMD) {
-    content.innerHTML = "Fetching forensic module data...";
-    return;
+  if (activeTab) {
+    activeTab.classList.add('active');
+    activeTab.style.boxShadow = "0 -2px 0 #38bdf8 inset"; // Optional: blue underline for active tab
   }
+
+  if (!cachedModuleMD) return;
+
+  // Reset scroll to top to prevent "jumpy" feeling between long sections
+  content.scrollTop = 0;
 
   // 2. Global Section: Module Instructions
   if (tabName === 'guide') {
@@ -243,6 +248,34 @@ window.showTab = function(tabName) {
     return;
   }
 
+ // 3. Trial-Specific Sections
+  const currentTrial = document.getElementById('trialTag').textContent.trim();
+  const trialMarker = new RegExp(`###\\s*Trial\\s*${currentTrial}\\b`, 'i');
+  const trialMatch = cachedModuleMD.match(trialMarker);
+  
+  if (!trialMatch) {
+    content.innerHTML = `Data for Trial ${currentTrial} not found.`;
+    return;
+  }
+
+  // Isolate the text for the current trial only
+  const restOfFile = cachedModuleMD.slice(trialMatch.index + trialMatch[0].length);
+  const nextHeader = restOfFile.search(/###\s*(Trial\s+[A-Z]\b|Module\s*Instructions)/i);
+  const trialBlock = nextHeader !== -1 ? restOfFile.slice(0, nextSectionIdx) : restOfFile;
+
+  let searchRegex;
+  if (tabName === 'concept') searchRegex = /###\s*Concept\s*\(read\s*first\):/i;
+  if (tabName === 'systems') searchRegex = /###\s*Trial\s*Guide:/i;
+
+  const headerMatch = trialBlock.match(searchRegex);
+  if (headerMatch) {
+    const fromStart = trialBlock.slice(headerMatch.index + headerMatch[0].length);
+    const endIdx = fromStart.indexOf('---');
+    content.innerHTML = formatMD(endIdx !== -1 ? fromStart.slice(0, endIdx) : fromStart);
+  } else {
+    content.innerHTML = `Heading for "${tabName}" not found in Trial ${currentTrial}.`;
+  }
+}; // This closes window.showTab
   // 3. Trial-Specific Sections
 const trialMarker = new RegExp(`###\\s*Trial\\s*${currentTrial}\\b`, 'i');
   const trialMatch = cachedModuleMD.match(trialMarker);
