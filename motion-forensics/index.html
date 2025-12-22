@@ -1568,7 +1568,7 @@ bake(bones.thighR, 0, 0, +hip);
     for (const [b,q] of R.rig.base) b.quaternion.copy(q);
   };
 
-// This tells the avatar to animate only if there is energy left
+// This tells the character: "Run only if the start button is on AND you have energy."
 const runNow = !!(sim.running && sim.energy > 0 && zoneCardio.visible);
 
   if (runNow){
@@ -1707,48 +1707,41 @@ if (runAction){
     screen.tex.needsUpdate = true;
   }
 
+// 1. Update the Screen Displays
   drawPanel(wallScreen, 'CARDIO BOARD');
   drawTreadmillMph(consoleScreen);
 
-if (currentModule?.id === 'FL-001')
-  document.getElementById('trialTime').textContent = Math.ceil(trialTime);
-if (sim.running) {
-  // Round to 1 decimal place and convert to string for exact key matching
-  const key = sim.speedMph.toFixed(1); 
-  const row = METABOLIC_TABLE[key];
+  // 2. Metabolic Engine & Timer
+  if (sim.running && sim.energy > 0) {
+    const key = sim.speedMph.toFixed(1);
+    const row = METABOLIC_TABLE[key];
 
-  if (row) {
-    sim.energy = clamp(sim.energy + (row.rate * dt), 0, 100);
-    // Logic: if sim.energy is 0, status becomes "CRASH" and sim.running = false
-  }
-}
-if (sim.running && sim.energy > 0) {
-  const speedKey = sim.speedMph.toFixed(1);
-  const row = METABOLIC_TABLE[speedKey];
+    if (row && sim.vo2Max > 0) {
+      // Logic: (Oxygen Requirement - Biological Capacity) / 60 seconds
+      const deficit = row.cost - sim.vo2Max;
 
-  if (row) {
-    // Math: (Treadmill Cost - Model's Calculated Capacity) / 60
-    const deficit = row.cost - sim.vo2Max;
+      if (deficit > 0) {
+        // ANAEROBIC DRAIN
+        sim.energy -= (deficit / 60) * dt;
+      } else {
+        // AEROBIC RECOVERY (capped at 100%)
+        sim.energy = Math.min(100, sim.energy + (0.2 * dt));
+      }
+    }
 
-    if (deficit > 0) {
-      // DRAINING (Anaerobic): The bar drops
-      sim.energy -= (deficit / 60) * dt;
-    } else {
-      // RECOVERING (Aerobic): The bar recharges
-      sim.energy += 0.2 * dt;
+    // Update the 300s Trial Timer for Module 1
+    if (currentModule?.id === 'FL-001') {
+      trialTime = Math.max(0, trialTime - dt);
+      document.getElementById('trialTime').textContent = Math.ceil(trialTime);
     }
   }
-  
-  // Update the 300s Trial Timer
-  if (currentModule?.id === 'FL-001') {
-    trialTime = Math.max(0, trialTime - dt);
-  }
-}
 
+  // 3. Final Render
   updateHUD();
   renderer.render(scene, camera);
-}
-animate();
+} // <--- End of animate() function
+
+animate(); // <--- Starts the loop
 
     // ==============================
     // 9) Enter Studio (gate -> studio)
