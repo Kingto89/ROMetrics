@@ -1868,12 +1868,13 @@ $enter.addEventListener('click', async () => {
     // 5. Final Snap to lock station
     snapCam();
 
-  } catch (e) {
+} catch (e) {
     console.error("Entry Error:", e);
   } finally {
     $enter.disabled = false;
     $enter.textContent = "Enter Studio";
   }
+}); // <--- THIS WAS MISSING: Closes the $enter.addEventListener block
 
 addEventListener('resize', () => {
   camera.aspect = innerWidth / innerHeight;
