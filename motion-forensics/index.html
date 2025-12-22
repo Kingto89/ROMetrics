@@ -247,7 +247,9 @@ document.getElementById('trialHelp').onclick = async () => {
     console.error("Fetch failure:", e);
   }
 };
-
+document.getElementById('trialHelpClose').onclick = () => {
+  document.getElementById('trialHelpModal').style.display = 'none';
+};
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
