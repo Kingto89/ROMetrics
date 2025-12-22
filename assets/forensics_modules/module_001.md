@@ -67,6 +67,8 @@ You will use the **Primary Energy Source indicator** to complete each trial.
 
 ### Module Instructions
 
+### Trial A 
+
 **1. Calculate the "Oxygen Budget" (VO₂ Max)**
 Determine how much "Oxygen Cash" your specific model has to spend every minute.
 
