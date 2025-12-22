@@ -321,9 +321,27 @@ function setAnatForModel(id){
 }
 
 const FORENSICS_MODULES = [
-  { id:'FL-001', label:'Module 1 — Metabolic Demand: Energy Systems', desc:'Cardio Bay: speed, energy, fuel timing.', zone:'cardio', onEnter: enterFL001, onTick: null },
-  { id:'FL-002', label:'Module 2 — Joint Load Lever', desc:'Strength Station: effort vs lever distance.', zone:'strength', onEnter: null, onTick: null },
-  { id:'FL-003', label:'Module 3 — Motion Forensics Lite', desc:'Reactive Balance: Best Stability %', zone:'forensics', onEnter: null, onTick: null }
+  { 
+    id:'FL-001', 
+    label:'Module 1 — Metabolic Demand: Energy Systems',  
+    desc:'Cardio Bay: speed, energy, fuel timing.', 
+    zone:'cardio', 
+    onEnter: enterFL001 
+  },
+  { 
+    id:'FL-002', 
+    label:'Module 2 — Joint Load Lever', 
+    desc:'Strength Station: effort vs lever distance.', 
+    zone:'strength', 
+    onEnter: null 
+  },
+  { 
+    id:'FL-003', 
+    label:'Module 3 — Motion Analysis Lite', 
+    desc:'Reactive Balance: Best Stability %', 
+    zone:'forensics', 
+    onEnter: null 
+  }
 ];
     
     let currentModule = null;
@@ -1820,34 +1838,34 @@ $enter.addEventListener('click', async () => {
   
   // Roman 43, Roma 34
   let age = (modelId === "Roman") ? 43 : 34;
-  let hrMax = 220 - age;
-  sim.vo2Max = 15.3 * (hrMax / 72); 
+  sim.vo2Max = 15.3 * ((220 - age) / 72); 
 
   setAnatForModel(modelId);
   $enter.disabled = true;
-  $enter.textContent = "Loading...";
 
   try {
     await loadSelectedModel(modelId, (p) => { 
       $enter.textContent = `Loading ${p}%`; 
     });
 
-    // REVEAL STUDIO FIRST
-    $gate.style.display = "none";
-    $ui.style.display = "";
-    $badge.style.display = "";
-    $hint.style.display = "";
+    // 1. Force camera to Cardio Bay coordinates immediately
+    if (moduleId === 'FL-001') {
+      setZone('cardio'); 
+    }
 
-    // INITIALIZE MODULE & MENU
-    // This will move camera to Cardio AND show the simulation controls
-    enterModule(moduleId);
+    // 2. Reveal Studio
+    $gate.style.display = "none";
+    $ui.style.display = ""; 
+    $badge.style.display = ""; 
+
+    // 3. Initialize Simulation Menu (Trial A/B/C)
+    enterModule(moduleId); 
     
-    // Final snap to ensure she's on the treadmill
+    // 4. Final Snap to prevent jumping
     snapCam();
 
   } catch (e) {
-    console.error("Studio Entry Error:", e);
-    $enter.textContent = "Load failed";
+    console.error("Entry Error:", e);
   } finally {
     $enter.disabled = false;
     $enter.textContent = "Enter Studio";
