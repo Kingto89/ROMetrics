@@ -1753,23 +1753,18 @@ animate();
     // ==============================
     // 9) Enter Studio (gate -> studio)
     // ==============================
-   $enter.addEventListener('click', async () => {
-  const modelId = $modelSel.value; // Roma or Roman
- // THE STUDENT CALCULATION (Uth-Sørensen Formula)
-// Roman (Male, 33) vs Roma (Female, 29)
-let age = (modelId === "Roman") ? 33 : 29;
-let hrMax = 220 - age; 
-let hrRest = 72; // Standard student measurement
+$enter.addEventListener('click', async () => {
+  const modelId = $modelSel.value; 
 
-// This calculates the "Aerobic Ceiling" for the simulation
-sim.vo2Max = 15.3 * (hrMax / hrRest); 
-  // Student Calculation Logic
+  // --- CONSOLIDATED CALCULATION BLOCK ---
+  // We use one variable for age and calculate HRMax and VO2Max immediately
   let age = (modelId === "Roman") ? 33 : 29;
   let hrMax = 220 - age;
-  let hrRest = 72; // Global standard resting heart rate
-  
-  // The Formula: 15.3 * (Max HR / Resting HR)
+  let hrRest = 72; 
+
+  // Apply the Uth-Sørensen Formula to the simulation
   sim.vo2Max = 15.3 * (hrMax / hrRest);
+  // --------------------------------------
 
   setAnatForModel(modelId);
   const moduleId = $modSel.value;
