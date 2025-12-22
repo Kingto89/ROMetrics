@@ -1763,22 +1763,42 @@ if (runAction){
   drawTreadmillMph(consoleScreen);
 
 // 2. Realistic Metabolic Engine
-  if (sim.running && sim.energy > 0) {
+if (sim.running && sim.energy > 0) {
     const key = sim.speedMph.toFixed(1);
     const row = METABOLIC_TABLE[key];
 
     if (row && sim.vo2Max > 0) {
+        // Enforce individual limit: Compare cost to the character's specific VO2Max
+        // Roman: ~37.6 | Roma: ~39.5
         const deficit = row.cost - sim.vo2Max;
+        
+        // Update Dominant System dynamically on the HUD
+        const currentSystem = (row.cost > sim.vo2Max) ? "Anaerobic" : "Aerobic";
+        
         if (deficit > 0) {
-            // Realistic non-athlete drain speed
+            // ANAEROBIC STATE: Energy Drains
+            // The larger the deficit (speed vs. capacity), the faster the crash
             const anaerobicTankSize = 1200; 
             const drainPerSecond = deficit / 60;
             const percentDropPerSecond = (drainPerSecond / anaerobicTankSize) * 10000;
+            
             sim.energy -= percentDropPerSecond * dt;
+            
+            // Visual feedback for the "Index"
+            $status.textContent = "Anaerobic (O2 Deficit)";
+            $status.style.color = "#ff9aa0";
         } else {
+            // AEROBIC STATE: Stable or Recovering
+            // If speed is below VO2Max, energy recovers slowly (0.05% per second)
             sim.energy = Math.min(100, sim.energy + (0.05 * dt));
+            
+            if (sim.energy < 100) {
+                $status.textContent = "Aerobic Recovery";
+                $status.style.color = "#38bdf8";
+            }
         }
     }
+}
     // Update the 300s Trial Timer
     if (currentModule?.id === 'FL-001') {
       trialTime = Math.max(0, trialTime - dt);
@@ -1830,9 +1850,17 @@ $enter.addEventListener('click', async () => {
   const moduleId = document.getElementById('moduleSelect').value;
   
   // Ages: Roman 43, Roma 34
-  let age = (modelId === "Roman") ? 43 : 34;
-  let hrMax = 220 - age;
-  sim.vo2Max = 15.3 * (hrMax / 72); 
+// Inside the $enter.addEventListener block:
+let age = (modelId === "Roman") ? 43 : 34;
+let hrMax = 220 - age;
+sim.vo2Max = 15.3 * (hrMax / 72); 
+
+// Automatically find the max speed this specific VO2Max can handle
+// Inverse ACSM: Speed(mph) = ((VO2 - 3.5) / 0.2022) / 26.8
+const absoluteMaxMph = ((sim.vo2Max - 3.5) / 0.2022) / 26.8;
+
+const speedSlider = document.getElementById('spd');
+speedSlider.max = absoluteMaxMph.toFixed(1); // Enforces Roman's lower top speed
 
   setAnatForModel(modelId);
   $enter.disabled = true;
