@@ -273,28 +273,37 @@ window.setTrialTime = (v) => trialTime = v; // Use a function to set the value
    let avatarRoot = null;
     let mixer = null;
     let runAction = null;
-    
+
+
 const METABOLIC_TABLE = {};
 const romaAge = 34;
 const romanAge = 43;
 
-// Calculate thresholds based on age instead of hardcoding 40
-const romaThreshold = (220 - romaAge) * 0.22; 
-const romanThreshold = (220 - romanAge) * 0.22;
+// 1. Calculate the Max Capacity (Denominator) based on Age
+const romaMaxVO2 = (220 - romaAge) * 0.22; 
+const romanMaxVO2 = (220 - romanAge) * 0.22;
 
 for (let i = 0; i <= 220; i++) {
   let mph = (i / 10).toFixed(1);
   let mPerMin = parseFloat(mph) * 26.8;
   
-  // ACSM Formula: VO2 = (0.2 * speed) + 3.5
+  // 2. ACSM Oxygen Cost (Numerator)
   let cost = (0.2023 * mPerMin) + 3.5;
   
+  // 3. Calculate Percentage (This will now move as speed increases)
+  let romaPct = (cost / romaMaxVO2) * 100;
+  let romanPct = (cost / romanMaxVO2) * 100;
+  
   METABOLIC_TABLE[mph] = { 
-    vo2Cost: cost.toFixed(2),
-    romaDominant: cost > romaThreshold ? "Anaerobic" : "Aerobic",
-    romanDominant: cost > romanThreshold ? "Anaerobic" : "Aerobic",
-    romaLimit: romaThreshold.toFixed(1),
-    romanLimit: romanThreshold.toFixed(1)
+    cost: cost.toFixed(2),
+    roma: {
+      intensity: romaPct.toFixed(1) + "%",
+      status: romaPct > 100 ? "Anaerobic" : "Aerobic"
+    },
+    roman: {
+      intensity: romanPct.toFixed(1) + "%",
+      status: romanPct > 100 ? "Anaerobic" : "Aerobic"
+    }
   };
 }
 // ==============================
