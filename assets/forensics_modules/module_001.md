@@ -53,7 +53,8 @@ You will use the **Primary Energy Source indicator** to complete each trial.
 **Goal:**  
 - Find the highest speed at which the subject completes a 300s trial without crossing into Anaerobic Dominance (staying at or above 60% energy).
 - The 60% Rule: In this lab, staying above 60%  indicates the subject is using their Primary Aerobic System with only a manageable assist from anaerobic reserves. Dropping below 60% signifies a transition to Anaerobic Dominance, leading to rapid fatigue.
-# Oxygen Budget and Cost Instructions
+
+# Module Instructions
 
 ## 1. Calculate the "Oxygen Budget" (VO₂ Max)
 Determine how much "Oxygen Cash" your specific model has to spend every minute.  
