@@ -189,7 +189,7 @@ window.showTab = function(tabName) {
   }
 
   // 3. Trial-Specific Sections
-  const trialMarker = new RegExp(`###\\s*Trial\\s*${currentTrial}`, 'i');
+const trialMarker = new RegExp(`###\\s*Trial\\s*${currentTrial}\\b`, 'i');
   const trialMatch = cachedModuleMD.match(trialMarker);
 
   if (!trialMatch) {
@@ -198,9 +198,9 @@ window.showTab = function(tabName) {
   }
 
   // Isolate the current Trial's text block
-  const restOfFile = cachedModuleMD.slice(trialMatch.index);
-  const nextSectionIdx = restOfFile.slice(15).search(/###\s*Trial|###\s*Module\s*Instructions/i);
-  const trialBlock = nextSectionIdx !== -1 ? restOfFile.slice(0, nextSectionIdx + 15) : restOfFile;
+const restOfFile = cachedModuleMD.slice(trialMatch.index + trialMatch[0].length);
+const nextHeader = restOfFile.search(/###\s*(Trial\s+[A-Z]\b|Module\s*Instructions)/i);
+const trialBlock = nextHeader !== -1 ? restOfFile.slice(0, nextHeader) : restOfFile;
 
   // 4. Robust Regex Search for Sub-Headings
   let searchRegex;
