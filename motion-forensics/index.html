@@ -183,55 +183,57 @@ window.showTab = function(tabName) {
     const guideMarker = "### Module Instructions";
     const guideIdx = cachedModuleMD.indexOf(guideMarker);
     if (guideIdx !== -1) {
-      // Pull everything from after the "Module Instructions" header to the end
       content.innerHTML = formatMD(cachedModuleMD.slice(guideIdx + guideMarker.length));
     }
     return;
   }
 
-  // 3. Trial-Specific Sections: Concept & Trial Guide
+  // 3. Trial-Specific Sections
   const trialMarker = `### Trial ${currentTrial}`;
   const trialStart = cachedModuleMD.indexOf(trialMarker);
 
   if (trialStart === -1) {
-    content.innerHTML = `Data for Trial ${currentTrial} not found in this module.`;
+    content.innerHTML = `Data for Trial ${currentTrial} not found.`;
     return;
   }
 
-  // Isolate the text for the current trial block to prevent bleeding into other trials
+  // Isolate the text for the current trial block
   const restOfFile = cachedModuleMD.slice(trialStart);
   const nextSectionIdx = restOfFile.slice(15).search(/### Trial|### Module Instructions/i);
   const trialBlock = nextSectionIdx !== -1 ? restOfFile.slice(0, nextSectionIdx + 15) : restOfFile;
 
-  let snippet = "";
+  // Split into lines to find sub-headings regardless of trailing spaces
+  const lines = trialBlock.split('\n');
+  let startLine = -1;
   let searchStr = "";
 
-  if (tabName === 'concept') {
-    searchStr = "### Concept (read first):";
-  } else if (tabName === 'systems') {
-    searchStr = "### Trial Guide:";
+  if (tabName === 'concept') searchStr = "### Concept (read first):";
+  if (tabName === 'systems') searchStr = "### Trial Guide:";
+
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].trim().includes(searchStr)) {
+      startLine = i;
+      break;
+    }
   }
 
-  const startIdx = trialBlock.indexOf(searchStr);
-  if (startIdx !== -1) {
-    // Extract from the end of the heading to the first horizontal rule
-    const fromStart = trialBlock.slice(startIdx + searchStr.length);
+  if (startLine !== -1) {
+    // Rejoin from the found line
+    const fromStart = lines.slice(startLine + 1).join('\n');
     const endIdx = fromStart.indexOf('---');
-    snippet = endIdx !== -1 ? fromStart.slice(0, endIdx) : fromStart;
+    content.innerHTML = formatMD(endIdx !== -1 ? fromStart.slice(0, endIdx) : fromStart);
   } else {
-    snippet = `Section "${searchStr}" not found in Trial ${currentTrial}. Check MD headings.`;
+    content.innerHTML = `Section "${searchStr}" not found in Trial ${currentTrial}.`;
   }
-
-  content.innerHTML = formatMD(snippet);
 };
 
-// Helper to render Markdown and Style Math
+// Formatting Helper
 function formatMD(text) {
   return text.trim()
     .replace(/\n/g, '<br>')
     .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
     .replace(/\_(.*?)\_/g, '<i>$1</i>')
-    .replace(/\#+/g, '') // Strips out the ### symbols for clean display
+    .replace(/\#+/g, '') 
     .replace(/\$\$(.*?)\$\$/g, '<div style="background:rgba(56,189,248,0.1); padding:12px; border-radius:10px; color:#38bdf8; font-family:monospace; margin:15px 0; text-align:center; border:1px solid rgba(56,189,248,0.2); font-size:1.1em;">$1</div>');
 }
 
@@ -248,12 +250,9 @@ document.getElementById('trialHelp').onclick = async () => {
     if (res.ok) {
       cachedModuleMD = await res.text();
       window.showTab('concept'); 
-    } else {
-      document.getElementById('tabContent').innerHTML = "Module documentation not found on server.";
     }
   } catch (e) {
     console.error("Fetch failure:", e);
-    document.getElementById('tabContent').innerHTML = "Connection error. Could not load instructions.";
   }
 };
 
