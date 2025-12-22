@@ -180,56 +180,46 @@ window.showTab = function(tabName) {
 
   // 2. Global Section: Module Instructions
   if (tabName === 'guide') {
-    const guideMarker = "### Module Instructions";
-    const guideIdx = cachedModuleMD.indexOf(guideMarker);
-    if (guideIdx !== -1) {
-      content.innerHTML = formatMD(cachedModuleMD.slice(guideIdx + guideMarker.length));
+    const guideRegex = /###\s*Module\s*Instructions/i;
+    const guideMatch = cachedModuleMD.match(guideRegex);
+    if (guideMatch) {
+      content.innerHTML = formatMD(cachedModuleMD.slice(guideMatch.index + guideMatch[0].length));
     }
     return;
   }
 
   // 3. Trial-Specific Sections
-  const trialMarker = `### Trial ${currentTrial}`;
-  const trialStart = cachedModuleMD.indexOf(trialMarker);
+  const trialMarker = new RegExp(`###\\s*Trial\\s*${currentTrial}`, 'i');
+  const trialMatch = cachedModuleMD.match(trialMarker);
 
-  if (trialStart === -1) {
+  if (!trialMatch) {
     content.innerHTML = `Data for Trial ${currentTrial} not found.`;
     return;
   }
 
   // Isolate the current Trial's text block
-  const restOfFile = cachedModuleMD.slice(trialStart);
-  const nextSectionIdx = restOfFile.slice(15).search(/### Trial|### Module Instructions/i);
+  const restOfFile = cachedModuleMD.slice(trialMatch.index);
+  const nextSectionIdx = restOfFile.slice(15).search(/###\s*Trial|###\s*Module\s*Instructions/i);
   const trialBlock = nextSectionIdx !== -1 ? restOfFile.slice(0, nextSectionIdx + 15) : restOfFile;
 
-  // FLEXIBLE SEARCH: Find the line that CONTAINS the heading
-  const lines = trialBlock.split('\n');
-  let startLine = -1;
-  let searchStr = "";
+  // 4. Robust Regex Search for Sub-Headings
+  let searchRegex;
+  if (tabName === 'concept') searchRegex = /###\s*Concept\s*\(read\s*first\):/i;
+  if (tabName === 'systems') searchRegex = /###\s*Trial\s*Guide:/i;
 
-  if (tabName === 'concept') searchStr = "Concept (read first):";
-  if (tabName === 'systems') searchStr = "Trial Guide:";
+  const headerMatch = trialBlock.match(searchRegex);
 
-  for (let i = 0; i < lines.length; i++) {
-    const cleanLine = lines[i].trim().toLowerCase();
-    // Look for the string without caring about ### or trailing spaces
-    if (cleanLine.includes(searchStr.toLowerCase())) {
-      startLine = i;
-      break;
-    }
-  }
-
-  if (startLine !== -1) {
+  if (headerMatch) {
     // Rejoin from the found line onwards
-    const fromStart = lines.slice(startLine + 1).join('\n');
+    const fromStart = trialBlock.slice(headerMatch.index + headerMatch[0].length);
     const endIdx = fromStart.indexOf('---');
     content.innerHTML = formatMD(endIdx !== -1 ? fromStart.slice(0, endIdx) : fromStart);
   } else {
-    content.innerHTML = `Heading "${searchStr}" not found in Trial ${currentTrial}. Check MD.`;
+    content.innerHTML = `Heading for "${tabName}" not found in Trial ${currentTrial}. Check MD syntax.`;
   }
 };
 
-// Helper to render Markdown and Style Math
+// Formatting Helper
 function formatMD(text) {
   return text.trim()
     .replace(/\n/g, '<br>')
