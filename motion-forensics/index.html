@@ -153,7 +153,7 @@
         <div id="tab-systems" class="pill" style="border-radius:0; border:none; flex:1; text-align:center; cursor:pointer;" onclick="showTab('systems')">Energy Systems</div>
         <div id="tab-guide" class="pill" style="border-radius:0; border:none; flex:1; text-align:center; cursor:pointer;" onclick="showTab('guide')">Trial Guide</div>
       </div>
-      <div id="tabContent" style="padding:24px; color:#a8c0da; font-size:13px; line-height:1.5; min-height:300px; max-height:450px; overflow-y:auto;"></div>
+      <div id="tabContent" style="padding:24px; color:#a8c0da; font-size:13px; line-height:1.5; min-height:350px; max-height:500px; overflow-y:auto;"></div>
       <div style="padding:14px; border-top:1px solid rgba(148,163,184,.18); display:flex; justify-content:flex-end; background:rgba(9,20,37,.72);">
         <button id="trialHelpClose" class="primary">Close Instructions</button>
       </div>
@@ -163,33 +163,76 @@
   <div id="hint" style="display:block;">Mouse: orbit • Wheel: zoom • Right-drag: pan • Keys: 1/2/3 = zones • 0 = all • L = labels</div>
 
   <script type="module">
-    // Expose showTab to global scope so onclick works
+    // State for universal MD parsing
+    let cachedModuleMD = "";
+
+    // Universal Tab Logic: Scans MD for headings and extracts full content blocks
     window.showTab = function(tabName) {
       const content = document.getElementById('tabContent');
-      const trial = document.getElementById('trialTag').textContent;
       
+      // Update Tab Visuals
       document.querySelectorAll('#trialHelpModal .pill').forEach(p => p.classList.remove('active'));
-      document.getElementById('tab-' + tabName).classList.add('active');
+      const activeTab = document.getElementById('tab-' + tabName);
+      if (activeTab) activeTab.classList.add('active');
 
-      if (tabName === 'concept') {
-        content.innerHTML = `<b>Concept (read first):</b><br><b>Energy Balance:</b> At any speed, the body is a "hybrid" engine.<br>• <b>Aerobic Contribution:</b> Uses oxygen to meet demand. If this system is the primary source, energy levels remain stable.<br>• <b>Oxygen Deficit:</b> When speed exceeds your aerobic capacity, you must "borrow" energy from a finite tank (W' Balance).<br>• <b>Anaerobic Supplement:</b> If oxygen demand exceeds supply, the body "borrows" from its finite W' Balance.`;
-      } 
-      else if (tabName === 'systems') {
-        content.innerHTML = `<b>Primary Energy Systems:</b><br><br><b>1. ATP-PC (Phosphagen)</b><br>Speed: Instant | Duration: ~0–10s | Use: Starts movement immediately.<br><br><b>2. Anaerobic Glycolysis (W')</b><br>Speed: Fast | Duration: ~10s–2min | Use: Covers demand when aerobic isn't enough.<br><br><b>3. Aerobic (VO₂ Max)</b><br>Speed: Moderate | Duration: Minutes to hours | Use: Supplies most energy at low speeds.`;
-      } 
-      else if (tabName === 'guide') {
-        content.innerHTML = `<b>Oxygen Budget and Cost Instructions:</b><br><br><b>1. Calculate the "Oxygen Budget" (VO₂ Max)</b><br>Determine how much "Oxygen Cash" your subject has.<br>Formula: <b>15.3 × ((220 - Age) / 72)</b><br><i>(Roma: 34, Roman: 43)</i><br><br><b>2. Calculate the "Oxygen Cost"</b><br>Formula: <b>((MPH × 26.8) × 0.22) + 3.5</b><br><br><b>3. The Forensic Test</b><br>If Cost > Budget, the bar will drain. If Cost ≤ Budget, energy is stable.`;
+      if (!cachedModuleMD) {
+        content.innerHTML = "Fetching forensic module data...";
+        return;
       }
+
+      // Map Tabs to Universal MD Headings
+      let searchHeading = "";
+      if (tabName === 'concept') searchHeading = "Concept (read first)";
+      if (tabName === 'systems') searchHeading = "Energy Systems"; 
+      if (tabName === 'guide')   searchHeading = "Oxygen Budget and Cost Instructions";
+
+      const startIdx = cachedModuleMD.indexOf(searchHeading);
+      if (startIdx === -1) {
+        content.innerHTML = `<b style="color:#ff9aa0;">Section Not Found:</b><br>Could not find "${searchHeading}" in the module file. Check MD formatting.`;
+        return;
+      }
+
+      // Extraction Logic: Capture everything from heading to the next '---' divider
+      const fromHeading = cachedModuleMD.slice(startIdx + searchHeading.length);
+      const endIdx = fromHeading.search(/\n---\r?\n/);
+      let extracted = endIdx !== -1 ? fromHeading.slice(0, endIdx) : fromHeading;
+
+      // Render Markdown to HTML
+      content.innerHTML = extracted
+        .trim()
+        .replace(/\n/g, '<br>')
+        .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+        .replace(/\_(.*?)\_/g, '<i>$1</i>');
     };
 
     document.getElementById('trialHelpClose').onclick = () => {
       document.getElementById('trialHelpModal').style.display = 'none';
     };
 
-    document.getElementById('trialHelp').onclick = () => {
+    document.getElementById('trialHelp').onclick = async () => {
       document.getElementById('trialHelpModal').style.display = 'flex';
+      
+      // Dynamic loading based on selected module ID
+      if (!cachedModuleMD) {
+        const modId = document.getElementById('moduleSelect').value || "FL-001";
+        const path = `../assets/forensics_modules/${modId.toLowerCase().replace('-','_')}.md`;
+        
+        try {
+          const res = await fetch(path);
+          if (res.ok) {
+            cachedModuleMD = await res.text();
+          } else {
+            console.error("MD Load Fail:", path);
+          }
+        } catch (e) {
+          console.error("Fetch Error:", e);
+        }
+      }
+      
       window.showTab('concept');
     };
+
+    // ... Rest of your Three.js / Simulation code ...
 
 
     import * as THREE from 'three';
