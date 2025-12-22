@@ -165,108 +165,89 @@
   <script type="module">
 let cachedModuleMD = "";
 
-  window.showTab = function(tabName) {
-    const content = document.getElementById('tabContent');
-    const currentTrial = document.getElementById('trialTag').textContent; // "A", "B", or "C"
-    
-    // Manage Active State
-    document.querySelectorAll('#trialHelpModal .pill').forEach(p => p.classList.remove('active'));
-    const activeTab = document.getElementById('tab-' + tabName);
-    if (activeTab) activeTab.classList.add('active');
+window.showTab = function(tabName) {
+  const content = document.getElementById('tabContent');
+  const currentTrial = document.getElementById('trialTag').textContent; // "A", "B", or "C"
+  
+  // 1. Manage UI Tab States
+  document.querySelectorAll('#trialHelpModal .pill').forEach(p => p.classList.remove('active'));
+  const activeTab = document.getElementById('tab-' + tabName);
+  if (activeTab) activeTab.classList.add('active');
 
-    if (!cachedModuleMD) {
-      content.innerHTML = "Loading data...";
-      return;
-    }
-
-    // 1. Isolate the current Trial section
-    const trialHeader = `### Trial ${currentTrial}`;
-    const trialStart = cachedModuleMD.indexOf(trialHeader);
-    
-    // 2. Logic for the "Module Instructions" (Static Global Section)
-    if (tabName === 'guide') {
-      const globalHeaderIdx = cachedModuleMD.search(/#\s+Module Instructions/i);
-      if (globalHeaderIdx !== -1) {
-        content.innerHTML = formatMD(cachedModuleMD.slice(globalHeaderIdx));
-        return;
-      }
-    }
-
-    if (trialStart === -1) {
-      content.innerHTML = `Data for Trial ${currentTrial} not found.`;
-      return;
-    }
-
-    // Isolate the Trial Block
-    const restOfFile = cachedModuleMD.slice(trialStart);
-    const nextSectionIdx = restOfFile.slice(10).search(/### Trial|# Module Instructions/i);
-    const trialBlock = nextSectionIdx !== -1 ? restOfFile.slice(0, nextSectionIdx + 10) : restOfFile;
-
-    // 3. DYNAMIC HEADING EXTRACTION
-    // Finds all bolded headers ending in ":" inside the trial block
-    const foundHeadings = [...trialBlock.matchAll(/\*\*(.*?):\*\*/g)];
-    
-    // Assign Heading 1 to "Concept" tab and Heading 2 to "Systems" tab
-    let targetText = "";
-    if (tabName === 'concept' && foundHeadings[0]) {
-        document.getElementById('tab-concept').textContent = foundHeadings[0][1];
-        targetText = foundHeadings[0][0];
-    } else if (tabName === 'systems' && foundHeadings[1]) {
-        document.getElementById('tab-systems').textContent = foundHeadings[1][1];
-        targetText = foundHeadings[1][0];
-    }
-
-    if (!targetText) {
-      content.innerHTML = "Heading not found in this trial block.";
-      return;
-    }
-
-    // 4. Extract content from the dynamic heading until the next divider "---"
-    const startPos = trialBlock.indexOf(targetText) + targetText.length;
-    const fromTarget = trialBlock.slice(startPos);
-    const dividerIdx = fromTarget.indexOf('---');
-    const snippet = dividerIdx !== -1 ? fromTarget.slice(0, dividerIdx) : fromTarget;
-
-    content.innerHTML = formatMD(snippet);
-  };
-
-  function formatMD(text) {
-    return text.trim()
-      .replace(/\n/g, '<br>')
-      .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
-      .replace(/\_(.*?)\_/g, '<i>$1</i>')
-      .replace(/\#+/g, '') 
-      .replace(/\$\$(.*?)\$\$/g, '<div style="background:rgba(56,189,248,0.1); padding:10px; border-radius:8px; color:#38bdf8; font-family:monospace; margin:10px 0; text-align:center;">$1</div>');
+  if (!cachedModuleMD) {
+    content.innerHTML = "Fetching forensic module data...";
+    return;
   }
 
-  document.getElementById('trialHelp').onclick = async () => {
-    document.getElementById('trialHelpModal').style.display = 'flex';
-    
-    const modId = document.getElementById('moduleSelect').value || "FL-001";
-    const fileName = modId.toLowerCase().replace('fl-', 'module_');
-    const path = `https://raw.githubusercontent.com/Kingto89/ROMetrics.com/main/assets/forensics_modules/${fileName}.md`;
-    
-    try {
-      const res = await fetch(path);
-      if (res.ok) {
-        cachedModuleMD = await res.text();
-        
-        // PRE-RENAME TABS ON LOAD
-        // This ensures the tabs show the MD headings before you even click them
-        const trialAStart = cachedModuleMD.indexOf('### Trial A');
-        if (trialAStart !== -1) {
-            const firstBlock = cachedModuleMD.slice(trialAStart, trialAStart + 1000);
-            const titles = [...firstBlock.matchAll(/\*\*(.*?):\*\*/g)];
-            if (titles[0]) document.getElementById('tab-concept').textContent = titles[0][1];
-            if (titles[1]) document.getElementById('tab-systems').textContent = titles[1][1];
-        }
-        
-        window.showTab('concept'); 
-      }
-    } catch (e) {
-      console.error("MD Fetch Error");
+  // 2. Global Section: Module Instructions
+  if (tabName === 'guide') {
+    const guideIdx = cachedModuleMD.search(/### Module Instructions/i);
+    if (guideIdx !== -1) {
+      // Pull everything from the header to the end of the file
+      content.innerHTML = formatMD(cachedModuleMD.slice(guideIdx + 23));
+      return;
     }
-  };
+  }
+
+  // 3. Trial-Specific Sections: Concept & Trial Guide
+  const trialMarker = `### Trial ${currentTrial}`;
+  const trialStart = cachedModuleMD.indexOf(trialMarker);
+
+  if (trialStart === -1) {
+    content.innerHTML = `Data for Trial ${currentTrial} not found in this module.`;
+    return;
+  }
+
+  // Isolate the text for the current trial only
+  const restOfFile = cachedModuleMD.slice(trialStart);
+  const nextSectionIdx = restOfFile.slice(15).search(/### Trial|### Module Instructions/i);
+  const trialBlock = nextSectionIdx !== -1 ? restOfFile.slice(0, nextSectionIdx + 15) : restOfFile;
+
+  let snippet = "";
+  if (tabName === 'concept') {
+    const start = trialBlock.indexOf('### Concept (read first):');
+    const end = trialBlock.indexOf('---', start);
+    snippet = trialBlock.slice(start + 25, end !== -1 ? end : undefined);
+  } 
+  else if (tabName === 'systems') {
+    const start = trialBlock.indexOf('### Trial Guide:');
+    const end = trialBlock.indexOf('---', start);
+    snippet = trialBlock.slice(start + 16, end !== -1 ? end : undefined);
+  }
+
+  content.innerHTML = formatMD(snippet);
+};
+
+// Helper to render Markdown and Style Math
+function formatMD(text) {
+  return text.trim()
+    .replace(/\n/g, '<br>')
+    .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+    .replace(/\_(.*?)\_/g, '<i>$1</i>')
+    .replace(/\#+/g, '') // Remove ### symbols
+    .replace(/\$\$(.*?)\$\$/g, '<div style="background:rgba(56,189,248,0.1); padding:12px; border-radius:10px; color:#38bdf8; font-family:monospace; margin:15px 0; text-align:center; border:1px solid rgba(56,189,248,0.2); font-size:1.1em;">$1</div>');
+}
+
+// Global Fetch Trigger
+document.getElementById('trialHelp').onclick = async () => {
+  document.getElementById('trialHelpModal').style.display = 'flex';
+  
+  const modId = document.getElementById('moduleSelect').value || "FL-001";
+  const fileName = modId.toLowerCase().replace('fl-', 'module_');
+  const path = `https://raw.githubusercontent.com/Kingto89/ROMetrics.com/main/assets/forensics_modules/${fileName}.md`;
+  
+  try {
+    const res = await fetch(path);
+    if (res.ok) {
+      cachedModuleMD = await res.text();
+      window.showTab('concept'); 
+    } else {
+      document.getElementById('tabContent').innerHTML = "Module documentation not found.";
+    }
+  } catch (e) {
+    console.error("Fetch failure:", e);
+  }
+};
 
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
