@@ -169,75 +169,79 @@ let cachedModuleMD = "";
     const content = document.getElementById('tabContent');
     const currentTrial = document.getElementById('trialTag').textContent; // "A", "B", or "C"
     
+    // Manage Active State
     document.querySelectorAll('#trialHelpModal .pill').forEach(p => p.classList.remove('active'));
     const activeTab = document.getElementById('tab-' + tabName);
     if (activeTab) activeTab.classList.add('active');
 
     if (!cachedModuleMD) {
-      content.innerHTML = "Fetching forensic module data...";
+      content.innerHTML = "Loading data...";
       return;
     }
 
-    // 1. First, isolate the specific Trial section (e.g., "### Trial A")
+    // 1. Isolate the current Trial section
     const trialHeader = `### Trial ${currentTrial}`;
     const trialStart = cachedModuleMD.indexOf(trialHeader);
     
-    // If it's the "Module Instructions" tab, that's usually at the bottom, not trial-specific
+    // 2. Logic for the "Module Instructions" (Static Global Section)
     if (tabName === 'guide') {
-      const guideStart = cachedModuleMD.indexOf('# Module Instructions');
-      if (guideStart !== -1) {
-        content.innerHTML = formatMD(cachedModuleMD.slice(guideStart));
+      const globalHeaderIdx = cachedModuleMD.search(/#\s+Module Instructions/i);
+      if (globalHeaderIdx !== -1) {
+        content.innerHTML = formatMD(cachedModuleMD.slice(globalHeaderIdx));
         return;
       }
     }
 
     if (trialStart === -1) {
-      content.innerHTML = `Instructions for Trial ${currentTrial} not found in this module.`;
+      content.innerHTML = `Data for Trial ${currentTrial} not found.`;
       return;
     }
 
-    // Isolate this trial's text block until the next trial or major section
+    // Isolate the Trial Block
     const restOfFile = cachedModuleMD.slice(trialStart);
-    const nextTrialIdx = restOfFile.slice(10).search(/### Trial|# Module Instructions/);
-    const trialBlock = nextTrialIdx !== -1 ? restOfFile.slice(0, nextTrialIdx + 10) : restOfFile;
+    const nextSectionIdx = restOfFile.slice(10).search(/### Trial|# Module Instructions/i);
+    const trialBlock = nextSectionIdx !== -1 ? restOfFile.slice(0, nextSectionIdx + 10) : restOfFile;
 
-    // 2. Map Tab to the Anchor Headings inside that Trial Block
-    let anchor = "";
-    if (tabName === 'concept') anchor = "**Concept (read first):**";
-    if (tabName === 'systems') anchor = "**Trial Guide:**";
+    // 3. DYNAMIC HEADING EXTRACTION
+    // Finds all bolded headers ending in ":" inside the trial block
+    const foundHeadings = [...trialBlock.matchAll(/\*\*(.*?):\*\*/g)];
+    
+    // Assign Heading 1 to "Concept" tab and Heading 2 to "Systems" tab
+    let targetText = "";
+    if (tabName === 'concept' && foundHeadings[0]) {
+        document.getElementById('tab-concept').textContent = foundHeadings[0][1];
+        targetText = foundHeadings[0][0];
+    } else if (tabName === 'systems' && foundHeadings[1]) {
+        document.getElementById('tab-systems').textContent = foundHeadings[1][1];
+        targetText = foundHeadings[1][0];
+    }
 
-    const anchorIdx = trialBlock.indexOf(anchor);
-    if (anchorIdx === -1) {
-      content.innerHTML = `Section "${anchor}" not found for Trial ${currentTrial}.`;
+    if (!targetText) {
+      content.innerHTML = "Heading not found in this trial block.";
       return;
     }
 
-    // 3. Extract from the anchor until the next divider "---"
-    const fromAnchor = trialBlock.slice(anchorIdx + anchor.length);
-    const dividerIdx = fromAnchor.indexOf('---');
-    const finalSnippet = dividerIdx !== -1 ? fromAnchor.slice(0, dividerIdx) : fromAnchor;
+    // 4. Extract content from the dynamic heading until the next divider "---"
+    const startPos = trialBlock.indexOf(targetText) + targetText.length;
+    const fromTarget = trialBlock.slice(startPos);
+    const dividerIdx = fromTarget.indexOf('---');
+    const snippet = dividerIdx !== -1 ? fromTarget.slice(0, dividerIdx) : fromTarget;
 
-    content.innerHTML = formatMD(finalSnippet);
+    content.innerHTML = formatMD(snippet);
   };
 
-  // Helper function to clean up Markdown for the browser
   function formatMD(text) {
     return text.trim()
       .replace(/\n/g, '<br>')
       .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
       .replace(/\_(.*?)\_/g, '<i>$1</i>')
-      .replace(/\#+/g, '') // Remove hashtags
-      .replace(/\$\$(.*?)\$\$/g, '<div style="background:rgba(56,189,248,0.1); padding:10px; border-radius:8px; color:#38bdf8; font-family:monospace; margin:10px 0;">$1</div>'); // Format Math
+      .replace(/\#+/g, '') 
+      .replace(/\$\$(.*?)\$\$/g, '<div style="background:rgba(56,189,248,0.1); padding:10px; border-radius:8px; color:#38bdf8; font-family:monospace; margin:10px 0; text-align:center;">$1</div>');
   }
-
-  document.getElementById('trialHelpClose').onclick = () => {
-    document.getElementById('trialHelpModal').style.display = 'none';
-  };
 
   document.getElementById('trialHelp').onclick = async () => {
     document.getElementById('trialHelpModal').style.display = 'flex';
     
-    // Auto-fetch based on active module in the dropdown
     const modId = document.getElementById('moduleSelect').value || "FL-001";
     const fileName = modId.toLowerCase().replace('fl-', 'module_');
     const path = `https://raw.githubusercontent.com/Kingto89/ROMetrics.com/main/assets/forensics_modules/${fileName}.md`;
@@ -246,12 +250,21 @@ let cachedModuleMD = "";
       const res = await fetch(path);
       if (res.ok) {
         cachedModuleMD = await res.text();
+        
+        // PRE-RENAME TABS ON LOAD
+        // This ensures the tabs show the MD headings before you even click them
+        const trialAStart = cachedModuleMD.indexOf('### Trial A');
+        if (trialAStart !== -1) {
+            const firstBlock = cachedModuleMD.slice(trialAStart, trialAStart + 1000);
+            const titles = [...firstBlock.matchAll(/\*\*(.*?):\*\*/g)];
+            if (titles[0]) document.getElementById('tab-concept').textContent = titles[0][1];
+            if (titles[1]) document.getElementById('tab-systems').textContent = titles[1][1];
+        }
+        
         window.showTab('concept'); 
-      } else {
-        document.getElementById('tabContent').innerHTML = "Module file not found on GitHub.";
       }
     } catch (e) {
-      console.error("Fetch Error:", e);
+      console.error("MD Fetch Error");
     }
   };
 
