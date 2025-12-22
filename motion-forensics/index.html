@@ -165,83 +165,95 @@
   <script type="module">
 let cachedModuleMD = "";
 
-window.showTab = function(tabName) {
-  const content = document.getElementById('tabContent');
-  
-  // 1. Manage Tab UI Active State
-  document.querySelectorAll('#trialHelpModal .pill').forEach(p => p.classList.remove('active'));
-  const activeTab = document.getElementById('tab-' + tabName);
-  if (activeTab) activeTab.classList.add('active');
+  window.showTab = function(tabName) {
+    const content = document.getElementById('tabContent');
+    const currentTrial = document.getElementById('trialTag').textContent; // "A", "B", or "C"
+    
+    document.querySelectorAll('#trialHelpModal .pill').forEach(p => p.classList.remove('active'));
+    const activeTab = document.getElementById('tab-' + tabName);
+    if (activeTab) activeTab.classList.add('active');
 
-  if (!cachedModuleMD) {
-    content.innerHTML = "Fetching forensic module data...";
-    return;
-  }
-
-  // 2. Updated Anchors for Universal Consistency across all 10 labs
-  let searchHeading = "";
-  if (tabName === 'concept') searchHeading = "Concept (read first):";
-  if (tabName === 'systems') searchHeading = "Trial Guide:"; 
-  if (tabName === 'guide')   searchHeading = "Module Instructions";
-
-  // 3. Robust Search (Case Insensitive + ignoring hashtags)
-  const lines = cachedModuleMD.split('\n');
-  let startIdx = -1;
-  
-  for (let i = 0; i < lines.length; i++) {
-    if (lines[i].toLowerCase().includes(searchHeading.toLowerCase())) {
-      startIdx = i;
-      break;
+    if (!cachedModuleMD) {
+      content.innerHTML = "Fetching forensic module data...";
+      return;
     }
-  }
 
-  if (startIdx === -1) {
-    content.innerHTML = `<b style="color:#ff9aa0;">Data Missing:</b> Could not find the section "${searchHeading}" in this module's documentation.`;
-    return;
-  }
-
-  // 4. Extraction Logic: Collect lines until the next '---' or the next Trial Section
-  let extractedLines = [];
-  for (let i = startIdx + 1; i < lines.length; i++) {
-    // Stop if we hit a horizontal rule or a specific Trial header (to avoid bleeding into next trial)
-    if (lines[i].trim() === "---" || lines[i].trim().startsWith("### Trial")) break;
-    extractedLines.push(lines[i]);
-  }
-
-  // 5. Render to HTML with formatting cleanup
-  let rawContent = extractedLines.join('\n').trim();
-  content.innerHTML = rawContent
-    .replace(/\n/g, '<br>')
-    .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>') // Support **bold**
-    .replace(/\_(.*?)\_/g, '<i>$1</i>')     // Support _italics_
-    .replace(/\#+/g, '');                   // Remove any Markdown hashtags from view
-};
-
-document.getElementById('trialHelp').onclick = async () => {
-  document.getElementById('trialHelpModal').style.display = 'flex';
-  
-  // Re-fetch if module changed or cache is empty
-  const modId = document.getElementById('moduleSelect').value || "FL-001";
-  
-  // Convert "FL-001" to "module_001" to match your GitHub file naming
-  const fileName = modId.toLowerCase().replace('fl-', 'module_');
-  
-  // Updated URL to pull from GitHub Raw
-  const path = `https://raw.githubusercontent.com/Kingto89/ROMetrics.com/main/assets/forensics_modules/${fileName}.md`;
-  
-  try {
-    const res = await fetch(path);
-    if (res.ok) {
-      cachedModuleMD = await res.text();
-      window.showTab('concept'); 
-    } else {
-      document.getElementById('tabContent').innerHTML = `<b style="color:#ff9aa0;">Error:</b> Could not reach raw data at: <br><small>${path}</small>`;
+    // 1. First, isolate the specific Trial section (e.g., "### Trial A")
+    const trialHeader = `### Trial ${currentTrial}`;
+    const trialStart = cachedModuleMD.indexOf(trialHeader);
+    
+    // If it's the "Module Instructions" tab, that's usually at the bottom, not trial-specific
+    if (tabName === 'guide') {
+      const guideStart = cachedModuleMD.indexOf('# Module Instructions');
+      if (guideStart !== -1) {
+        content.innerHTML = formatMD(cachedModuleMD.slice(guideStart));
+        return;
+      }
     }
-  } catch (e) {
-    console.error("Fetch Error:", e);
-    document.getElementById('tabContent').innerHTML = "Network error. Check CORS settings or URL.";
+
+    if (trialStart === -1) {
+      content.innerHTML = `Instructions for Trial ${currentTrial} not found in this module.`;
+      return;
+    }
+
+    // Isolate this trial's text block until the next trial or major section
+    const restOfFile = cachedModuleMD.slice(trialStart);
+    const nextTrialIdx = restOfFile.slice(10).search(/### Trial|# Module Instructions/);
+    const trialBlock = nextTrialIdx !== -1 ? restOfFile.slice(0, nextTrialIdx + 10) : restOfFile;
+
+    // 2. Map Tab to the Anchor Headings inside that Trial Block
+    let anchor = "";
+    if (tabName === 'concept') anchor = "**Concept (read first):**";
+    if (tabName === 'systems') anchor = "**Trial Guide:**";
+
+    const anchorIdx = trialBlock.indexOf(anchor);
+    if (anchorIdx === -1) {
+      content.innerHTML = `Section "${anchor}" not found for Trial ${currentTrial}.`;
+      return;
+    }
+
+    // 3. Extract from the anchor until the next divider "---"
+    const fromAnchor = trialBlock.slice(anchorIdx + anchor.length);
+    const dividerIdx = fromAnchor.indexOf('---');
+    const finalSnippet = dividerIdx !== -1 ? fromAnchor.slice(0, dividerIdx) : fromAnchor;
+
+    content.innerHTML = formatMD(finalSnippet);
+  };
+
+  // Helper function to clean up Markdown for the browser
+  function formatMD(text) {
+    return text.trim()
+      .replace(/\n/g, '<br>')
+      .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+      .replace(/\_(.*?)\_/g, '<i>$1</i>')
+      .replace(/\#+/g, '') // Remove hashtags
+      .replace(/\$\$(.*?)\$\$/g, '<div style="background:rgba(56,189,248,0.1); padding:10px; border-radius:8px; color:#38bdf8; font-family:monospace; margin:10px 0;">$1</div>'); // Format Math
   }
-};
+
+  document.getElementById('trialHelpClose').onclick = () => {
+    document.getElementById('trialHelpModal').style.display = 'none';
+  };
+
+  document.getElementById('trialHelp').onclick = async () => {
+    document.getElementById('trialHelpModal').style.display = 'flex';
+    
+    // Auto-fetch based on active module in the dropdown
+    const modId = document.getElementById('moduleSelect').value || "FL-001";
+    const fileName = modId.toLowerCase().replace('fl-', 'module_');
+    const path = `https://raw.githubusercontent.com/Kingto89/ROMetrics.com/main/assets/forensics_modules/${fileName}.md`;
+    
+    try {
+      const res = await fetch(path);
+      if (res.ok) {
+        cachedModuleMD = await res.text();
+        window.showTab('concept'); 
+      } else {
+        document.getElementById('tabContent').innerHTML = "Module file not found on GitHub.";
+      }
+    } catch (e) {
+      console.error("Fetch Error:", e);
+    }
+  };
 
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
