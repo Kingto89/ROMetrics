@@ -163,6 +163,7 @@
 
   <script type="module">
 let cachedModuleMD = "";
+let IN_HELP_MODAL = false;
 
 window.showTab = function(tabName) {
   const content = document.getElementById('tabContent');
@@ -231,7 +232,8 @@ function formatMD(text) {
 
 // Global Fetch Trigger
 document.getElementById('trialHelp').onclick = async () => {
-  document.getElementById('trialHelpModal').style.display = 'flex';
+IN_HELP_MODAL = true;
+document.getElementById('trialHelpModal').style.display = 'flex';
   
   const modId = document.getElementById('moduleSelect').value || "FL-001";
   const fileName = modId.toLowerCase().replace('fl-', 'module_');
@@ -250,9 +252,11 @@ document.getElementById('trialHelp').onclick = async () => {
 
 // This prevents the default behavior and simply hides the modal
 document.getElementById('trialHelpClose').onclick = (e) => {
-  e.preventDefault(); // Stop any jumping or refreshing
+  e.preventDefault();
+  IN_HELP_MODAL = false;
   document.getElementById('trialHelpModal').style.display = 'none';
 };
+
 
     
     import * as THREE from 'three';
@@ -1350,7 +1354,9 @@ document.getElementById('trialHelpContent').textContent =
     });
 
     addEventListener('keydown', (e)=>{
+      if (IN_HELP_MODAL) return;
       if ($gate.style.display !== 'none') return;
+      e.preventDefault();
       if (e.key === '0'){ setZone('all'); setActive(document.querySelector('[data-zone="all"]')); }
       if (e.key === '1'){ setZone('strength'); setActive(document.querySelector('[data-zone="strength"]')); }
       if (e.key === '2'){ setZone('cardio'); setActive(document.querySelector('[data-zone="cardio"]')); }
