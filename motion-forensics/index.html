@@ -245,6 +245,7 @@ document.getElementById('trialHelpClose').onclick = (e) => {
 };
     
     import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -473,6 +474,14 @@ scene.fog = new THREE.Fog(0x07101b, 10, 45);
     renderer.shadowMap.enabled = false;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     document.body.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.target.set(0, 1.35, 0);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.07;
+    controls.maxPolarAngle = Math.PI * 0.49;
+    controls.minDistance = 0.5;
+    controls.maxDistance = 18.0;
 
     // Lights
     scene.add(new THREE.AmbientLight(0x6aa0d8, 1.77));
@@ -1151,53 +1160,47 @@ if (clips.length){
       controls.update();
     }
 
-function placeAvatarForZone(which){
+function placeAvatarForZone(which) {
   if (!avatarRoot) return;
-
-  // default facing (non-cardio)
+  
+  // Hard-lock to currentModule.zone if it exists to stop jumping between bays
+  const targetZone = (currentModule && currentModule.zone) ? currentModule.zone : which;
   let rotY = 0;
 
-  if (which === 'strength'){
+  if (targetZone === 'strength') {
     avatarRoot.position.copy(Z_STRENGTH).add(new THREE.Vector3(0, 0.06, -0.10));
     rotY = 0;
-  } else if (which === 'cardio'){
-    // stand on belt (belt Y ~ 0.295 + zone offset)
+  } else if (targetZone === 'cardio') {
+    // Lock to Cardio Bay treadmill
     avatarRoot.position.copy(Z_CARDIO).add(new THREE.Vector3(0, 0.30, 0.05));
-    rotY = Math.PI; // <-- 180° turn to face the right way
-  } else if (which === 'forensics'){
-    avatarRoot.position.copy(Z_FORENSIC).add(new THREE.Vector3(0, 0.06, 0.00));
-    rotY = 0;
-  } else {
+    rotY = Math.PI; 
+  } else if (targetZone === 'forensics' || targetZone === 'analysis') {
     avatarRoot.position.copy(Z_FORENSIC).add(new THREE.Vector3(0, 0.06, 0.00));
     rotY = 0;
   }
-
   avatarRoot.rotation.set(0, rotY, 0);
 }
 
-function setZone(which){
-  // ROOM VISIBILITY FIX: Keep all zones visible at all times
-  zoneStrength.visible  = true;
-  zoneCardio.visible    = true;
+function setZone(which) {
+  // Keep all zones visible to maintain the studio environment
+  zoneStrength.visible = true;
+  zoneCardio.visible = true;
   zoneForensics.visible = true;
 
-  // CAMERA FOCUS LOGIC
-  if (which === 'strength'){
+  // Only update camera goals if we aren't already locked into a module
+  if (which === 'strength') {
     camGoalTarget.set(Z_STRENGTH.x, 1.25, Z_STRENGTH.z);
     camGoalPos.set(Z_STRENGTH.x + 3.2, 2.6, Z_STRENGTH.z + 4.8);
-  } else if (which === 'cardio'){
+  } else if (which === 'cardio') {
     camGoalTarget.set(Z_CARDIO.x, 1.10, Z_CARDIO.z);
     camGoalPos.set(Z_CARDIO.x, 1.8, Z_CARDIO.z + 2.4);
-  } else if (which === 'forensics'){
+  } else if (which === 'forensics') {
     camGoalTarget.set(Z_FORENSIC.x, 1.25, Z_FORENSIC.z);
     camGoalPos.set(Z_FORENSIC.x + 3.6, 2.6, Z_FORENSIC.z + 5.1);
-  } else {
-    camGoalTarget.set(0, 1.35, 0);
-    camGoalPos.set(6.8, 3.9, 8.6);
   }
 
   placeAvatarForZone(which);
-  snapCam();
+  // snapCam() is excluded here to let OrbitControls keep your manual pan position
 }
 
 function parseFL001(md){
@@ -1372,6 +1375,8 @@ function animate(){
   const now = clock.getElapsedTime();
   let dt = now - lastT;
   lastT = now;
+
+  controls.update();
   
 // ===== BLINK (works for BOTH Roma + Roman via auto-detect morph names) =====
 if (!animate._blink) animate._blink = { model:null, targets:[], state:0, t:0, next:0 };
