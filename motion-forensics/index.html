@@ -1840,33 +1840,49 @@ $enter.addEventListener('click', async () => {
   const modelId = document.getElementById('modelSelect').value; 
   const moduleId = document.getElementById('moduleSelect').value;
   
-  // Dynamic Age/Physiology: Roman 43 (VO2: 37.6), Roma 34 (VO2: 39.5)
+  // 1. Calculate Physiology
   let age = (modelId === "Roman") ? 43 : 34;
   let hrMax = 220 - age;
   sim.vo2Max = 15.3 * (hrMax / 72); 
 
-  // AUTOMATIC SLIDER CAP: Solve ACSM for Speed (mph)
-  // Formula: mph = ((VO2Max - 3.5) / 0.2025) / 26.8
+  // 2. Fix Max Speed Slider (ACSM Solve for MPH)
   const absoluteMaxMph = ((sim.vo2Max - 3.5) / 0.2025) / 26.8;
   const speedSlider = document.getElementById('spd');
   speedSlider.max = absoluteMaxMph.toFixed(1); 
 
-  setAnatForModel(modelId);
+  // 3. UI State
   $enter.disabled = true;
   $enter.textContent = "Loading...";
 
   try {
-    await loadSelectedModel(modelId, (p) => { $enter.textContent = `Loading ${p}%`; });
+    // 4. Load Model and Setup Anatomy
+    setAnatForModel(modelId);
+    await loadSelectedModel(modelId, (p) => { 
+      $enter.textContent = `Loading ${p}%`; 
+    });
+
+    // 5. Reveal Studio
     document.getElementById('gate').style.display = "none";
     document.getElementById('ui').style.display = "flex";
+    
+    // 6. Reveal Simulation Menu (Badge)
     const badgeMenu = document.getElementById('badge');
-    if (badgeMenu) { badgeMenu.style.display = "block"; badgeMenu.style.top = "14px"; }
-    if (moduleId === 'FL-001') { setZone('cardio'); }
+    if (badgeMenu) {
+        badgeMenu.style.display = "block";
+        badgeMenu.style.top = "14px"; 
+    }
+
+    // 7. Force Snap to Cardio Bay
+    if (moduleId === 'FL-001') {
+      setZone('cardio'); 
+    }
+
     enterModule(moduleId);
     snapCam();
+
   } catch (e) {
     console.error("Entry Error:", e);
-    $enter.textContent = "Error";
+    $enter.textContent = "Error - Check Console";
   } finally {
     $enter.disabled = false;
   }
