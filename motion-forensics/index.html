@@ -224,6 +224,8 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 let trialTime = 300; // seconds
 
 const sim = {
+  window.sim = sim; // Expose to console for testing
+window.trialTime = trialTime; // Expose timer too
   speedMph: 0,
   energy: 100,
   vo2Max: 0, // This starts at 0 and waits for the student's selection logic
