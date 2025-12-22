@@ -154,7 +154,7 @@
       </div>
       <div id="tabContent" style="padding:24px; color:#a8c0da; font-size:13px; line-height:1.5; min-height:350px; max-height:500px; overflow-y:auto;"></div>
       <div style="padding:14px; border-top:1px solid rgba(148,163,184,.18); display:flex; justify-content:flex-end; background:rgba(9,20,37,.72);">
-        <button id="trialHelpClose" class="primary">Close Instructions</button>
+<button id="trialHelpClose" type="button" class="primary">Close Instructions</button>
       </div>
     </div>
   </div>
@@ -247,9 +247,14 @@ document.getElementById('trialHelp').onclick = async () => {
     console.error("Fetch failure:", e);
   }
 };
-document.getElementById('trialHelpClose').onclick = () => {
+
+// This prevents the default behavior and simply hides the modal
+document.getElementById('trialHelpClose').onclick = (e) => {
+  e.preventDefault(); // Stop any jumping or refreshing
   document.getElementById('trialHelpModal').style.display = 'none';
 };
+
+    
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
