@@ -75,14 +75,6 @@
     </div>
   </div>
 
-  <div id="ui" style="display:none;">
-    <div class="pill active" data-zone="all">All Zones</div>
-    <div class="pill" data-zone="strength">Strength / Load Station</div>
-    <div class="pill" data-zone="cardio">Cardio Bay</div>
-    <div class="pill" data-zone="forensics">Movement Analysis Booth</div>
-    <div class="pill" data-zone="labels">Toggle Labels</div>
-  </div>
-
   <div id="badge" style="display:none;">
     <div class="t">Forensics Labs — Studio</div>
     <div class="p" id="moduleTitle">Module</div>
@@ -145,81 +137,23 @@
     </div>
   </div>
 
- <div id="trialHelpModal" style="display:none; position:fixed; inset:0; z-index:1000; background:rgba(7,16,27,.95); align-items:center; justify-content:center; pointer-events:auto;">
-  <div id="gateCard" style="width:600px; height:600px; padding:0; overflow:hidden; display:flex; flex-direction:column; border:1px solid rgba(56,189,248,.3);">
-    
-    <div style="display:flex; background:rgba(15,23,42,1); border-bottom:1px solid rgba(148,163,184,.25);">
-      <button type="button" id="tab-concept" class="pill active" style="border-radius:0; border:none; flex:1; padding:15px; background:transparent; color:#e5eefc; cursor:pointer;" onclick="event.preventDefault(); showTab('concept')">Concept</button>
-      <button type="button" id="tab-systems" class="pill" style="border-radius:0; border:none; flex:1; padding:15px; background:transparent; color:#e5eefc; cursor:pointer;" onclick="event.preventDefault(); showTab('systems')">Trial Guide</button>
-      <button type="button" id="tab-guide" class="pill" style="border-radius:0; border:none; flex:1; padding:15px; background:transparent; color:#e5eefc; cursor:pointer;" onclick="event.preventDefault(); showTab('guide')">Module Info</button>
-    </div>
-
-    <div id="tabContent" style="flex:1; padding:24px; color:#a8c0da; font-size:14px; line-height:1.6; overflow-y:auto; background:rgba(9,20,37,0.5);"></div>
-
-    <div style="padding:14px; border-top:1px solid rgba(148,163,184,.18); display:flex; justify-content:flex-end; background:rgba(15,23,42,0.95);">
-      <button id="trialHelpClose" type="button" class="primary" style="cursor:pointer;" onclick="document.getElementById('trialHelpModal').style.display='none'; document.body.style.overflow='auto';">Close Instructions</button>
+  <div id="trialHelpModal" style="display:none; position:fixed; inset:0; z-index:100; background:rgba(7,16,27,.85); align-items:center; justify-content:center;">
+    <div id="gateCard" style="max-width:600px; padding:0; overflow:hidden; display:flex; flex-direction:column;">
+      <div style="display:flex; background:rgba(15,23,42,.95); border-bottom:1px solid rgba(148,163,184,.25);">
+        <div id="tab-concept" class="pill active" style="border-radius:0; border:none; flex:1; text-align:center; cursor:pointer;" onclick="showTab('concept')">Concept (read first):</div>
+        <div id="tab-systems" class="pill" style="border-radius:0; border:none; flex:1; text-align:center; cursor:pointer;" onclick="showTab('systems')">Trial Guide:</div>
+        <div id="tab-guide" class="pill" style="border-radius:0; border:none; flex:1; text-align:center; cursor:pointer;" onclick="showTab('guide')">Module Instructions</div>
+      </div>
+      <div id="tabContent" style="padding:24px; color:#a8c0da; font-size:13px; line-height:1.5; min-height:350px; max-height:500px; overflow-y:auto;"></div>
+      <div style="padding:14px; border-top:1px solid rgba(148,163,184,.18); display:flex; justify-content:flex-end; background:rgba(9,20,37,.72);">
+<button id="trialHelpClose" type="button" class="primary">Close Instructions</button>
+      </div>
     </div>
   </div>
-</div>
 
   <div id="hint" style="display:block;">Mouse: orbit • Wheel: zoom • Right-drag: pan • Keys: 1/2/3 = zones • 0 = all • L = labels</div>
 
   <script type="module">
-    // 1. Global state flag
-let isModalOpen = false;
-
-// 2. Updated Modal Control Logic
-document.getElementById('trialHelp').onclick = async () => {
-  isModalOpen = true; // Deactivate other listeners
-  document.getElementById('trialHelpModal').style.display = 'flex';
-  document.body.style.overflow = 'hidden'; // Stop background scrolling
-  
-  const modId = document.getElementById('moduleSelect').value || "FL-001";
-  const fileName = modId.toLowerCase().replace('fl-', 'module_');
-  const path = `https://raw.githubusercontent.com/Kingto89/ROMetrics.com/main/assets/forensics_modules/${fileName}.md`;
-  
-  try {
-    const res = await fetch(path);
-    if (res.ok) {
-      cachedModuleMD = await res.text();
-      window.showTab('concept'); 
-    }
-  } catch (e) { console.error(e); }
-};
-
-document.getElementById('trialHelpClose').onclick = (e) => {
-  e.preventDefault();
-  e.stopPropagation();
-  isModalOpen = false; // Reactivate listeners
-  document.getElementById('trialHelpModal').style.display = 'none';
-  document.body.style.overflow = 'auto';
-};
-
-// 3. Protected Zone Listeners (Modified from your original)
-  btn.addEventListener('click', (e) => {
-    if (isModalOpen) return; // KILL THE JUMP: Ignore click if help is open
-    
-    const z = btn.dataset.zone;
-    if (z === 'labels') {
-      setLabels(!labelsOn);
-      btn.classList.toggle('active', labelsOn);
-      return;
-    }
-    setZone(z);
-    setActive(btn);
-  });
-});
-
-// 4. Protected Keyboard Listeners (Modified from your original)
-addEventListener('keydown', (e) => {
-  if ($gate.style.display !== 'none' || isModalOpen) return; // Stop jumps if help is open
-  
-  if (e.key === '0') { setZone('all'); setActive(document.querySelector('[data-zone="all"]')); }
-  if (e.key === '1') { setZone('strength'); setActive(document.querySelector('[data-zone="strength"]')); }
-  if (e.key === '2') { setZone('cardio'); setActive(document.querySelector('[data-zone="cardio"]')); }
-  if (e.key === '3') { setZone('forensics'); setActive(document.querySelector('[data-zone="forensics"]')); }
-  if (e.key.toLowerCase() === 'l') { setLabels(!labelsOn); document.querySelector('[data-zone="labels"]').classList.toggle('active', labelsOn); }
-});
 let cachedModuleMD = "";
 
 window.showTab = function(tabName) {
@@ -1405,15 +1339,6 @@ document.getElementById('trialHelpContent').textContent =
         setZone(z);
         setActive(btn);
       });
-    });
-
-    addEventListener('keydown', (e)=>{
-      if ($gate.style.display !== 'none') return;
-      if (e.key === '0'){ setZone('all'); setActive(document.querySelector('[data-zone="all"]')); }
-      if (e.key === '1'){ setZone('strength'); setActive(document.querySelector('[data-zone="strength"]')); }
-      if (e.key === '2'){ setZone('cardio'); setActive(document.querySelector('[data-zone="cardio"]')); }
-      if (e.key === '3'){ setZone('forensics'); setActive(document.querySelector('[data-zone="forensics"]')); }
-      if (e.key.toLowerCase() === 'l'){ setLabels(!labelsOn); document.querySelector('[data-zone="labels"]').classList.toggle('active', labelsOn); }
     });
 
     // ==============================
