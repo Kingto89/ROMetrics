@@ -1741,7 +1741,13 @@ if (runAction){
       document.getElementById('trialTime').textContent = Math.ceil(trialTime);
     }
   }
-
+// --- SIMPLE STOP & RESET ADD-IN ---
+    if (sim.energy <= 0 || trialTime <= 0) {
+      sim.running = false;
+      if (runAction) runAction.paused = true;
+      restore(); // This snaps her to the anatomic position
+      $start.textContent = "Start";
+    }
   // 3. Final Render
   updateHUD();
   renderer.render(scene, camera);
