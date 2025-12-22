@@ -154,14 +154,21 @@
 
 
 
-<div id="trialHelpModal" style="display:none; position:fixed; inset:0; z-index:100;
-  background:rgba(7,16,27,.85); align-items:center; justify-content:center;">
+<div id="trialHelpModal" style="display:none; position:fixed; inset:0; z-index:100; background:rgba(7,16,27,.85); align-items:center; justify-content:center;">
+  <div id="gateCard" style="max-width:600px; padding:0; overflow:hidden; display:flex; flex-direction:column;">
+    
+    <div style="display:flex; background:rgba(15,23,42,.95); border-bottom:1px solid rgba(148,163,184,.25);">
+      <div id="tab-concept" class="pill active" style="border-radius:0; border:none; flex:1; text-align:center;" onclick="showTab('concept')">Concept</div>
+      <div id="tab-systems" class="pill" style="border-radius:0; border:none; flex:1; text-align:center;" onclick="showTab('systems')">Energy Systems</div>
+      <div id="tab-guide" class="pill" style="border-radius:0; border:none; flex:1; text-align:center;" onclick="showTab('guide')">Trial Guide</div>
+    </div>
+    
+    <div id="tabContent" style="padding:24px; color:#a8c0da; font-size:13px; line-height:1.5; min-height:300px; max-height:450px; overflow-y:auto;">
+      </div>
 
-  <div style="max-width:520px; padding:16px; border-radius:16px;
-    background:rgba(15,23,42,.95); border:1px solid rgba(148,163,184,.25);">
-    <div style="font-weight:900; color:#e6eef7;">Trial Instructions</div>
-    <div id="trialHelpContent" style="margin-top:8px; color:#a8c0da; font-size:13px; line-height:1.35;"></div>
-    <button id="trialHelpClose" class="btn" style="margin-top:12px;">Close</button>
+    <div style="padding:14px; border-top:1px solid rgba(148,163,184,.18); display:flex; justify-content:flex-end; background:rgba(9,20,37,.72);">
+      <button id="trialHelpClose" class="primary">Close Instructions</button>
+    </div>
   </div>
 </div>
   <div id="hint" style="display:block;">Mouse: orbit • Wheel: zoom • Right-drag: pan • Keys: 1/2/3 = zones • 0 = all • L = labels</div>
