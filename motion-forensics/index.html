@@ -163,76 +163,84 @@
   <div id="hint" style="display:block;">Mouse: orbit • Wheel: zoom • Right-drag: pan • Keys: 1/2/3 = zones • 0 = all • L = labels</div>
 
   <script type="module">
-    // State for universal MD parsing
-    let cachedModuleMD = "";
+let cachedModuleMD = "";
 
-    // Universal Tab Logic: Scans MD for headings and extracts full content blocks
-    window.showTab = function(tabName) {
-      const content = document.getElementById('tabContent');
-      
-      // Update Tab Visuals
-      document.querySelectorAll('#trialHelpModal .pill').forEach(p => p.classList.remove('active'));
-      const activeTab = document.getElementById('tab-' + tabName);
-      if (activeTab) activeTab.classList.add('active');
+window.showTab = function(tabName) {
+  const content = document.getElementById('tabContent');
+  
+  // 1. Manage Tab UI
+  document.querySelectorAll('#trialHelpModal .pill').forEach(p => p.classList.remove('active'));
+  const activeTab = document.getElementById('tab-' + tabName);
+  if (activeTab) activeTab.classList.add('active');
 
-      if (!cachedModuleMD) {
-        content.innerHTML = "Fetching forensic module data...";
-        return;
+  if (!cachedModuleMD) {
+    content.innerHTML = "Fetching forensic module data...";
+    return;
+  }
+
+  // 2. Exact Header Matching for your MD file
+  let searchHeading = "";
+  if (tabName === 'concept') searchHeading = "Concept (read first):";
+  // The Energy Systems info is actually inside the "Trial Guide" section in your MD
+  if (tabName === 'systems') searchHeading = "Trial Guide:"; 
+  if (tabName === 'guide')   searchHeading = "Oxygen Budget and Cost Instructions";
+
+  // 3. Robust Search (Case Insensitive + ignoring hashtags)
+  const lines = cachedModuleMD.split('\n');
+  let startIdx = -1;
+  
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].toLowerCase().includes(searchHeading.toLowerCase())) {
+      startIdx = i;
+      break;
+    }
+  }
+
+  if (startIdx === -1) {
+    content.innerHTML = `<b style="color:#ff9aa0;">Data Missing:</b> Could not find the section "${searchHeading}" in this module's documentation.`;
+    return;
+  }
+
+  // 4. Extraction Logic: Collect lines until the next '---' or next Trial Header
+  let extractedLines = [];
+  for (let i = startIdx + 1; i < lines.length; i++) {
+    // Stop if we hit a horizontal rule or the next Trial (### Trial)
+    if (lines[i].trim() === "---" || lines[i].startsWith("### Trial")) break;
+    extractedLines.push(lines[i]);
+  }
+
+  // 5. Render to HTML
+  let rawContent = extractedLines.join('\n').trim();
+  content.innerHTML = rawContent
+    .replace(/\n/g, '<br>')
+    .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>') // Bold
+    .replace(/\_(.*?)\_/g, '<i>$1</i>')     // Italics
+    .replace(/\#+/g, '');                   // Clean any leftover hashtags
+};
+
+document.getElementById('trialHelp').onclick = async () => {
+  document.getElementById('trialHelpModal').style.display = 'flex';
+  
+  if (!cachedModuleMD) {
+    const modId = document.getElementById('moduleSelect').value || "FL-001";
+    // Ensures file names match your folder structure (fl_001.md)
+    const path = `../assets/forensics_modules/${modId.toLowerCase().replace('-','_')}.md`;
+    
+    try {
+      const res = await fetch(path);
+      if (res.ok) {
+        cachedModuleMD = await res.text();
+        window.showTab('concept'); // Load first tab only after fetch succeeds
+      } else {
+        document.getElementById('tabContent').innerHTML = "Failed to load: " + path;
       }
-
-      // Map Tabs to Universal MD Headings
-      let searchHeading = "";
-      if (tabName === 'concept') searchHeading = "Concept (read first)";
-      if (tabName === 'systems') searchHeading = "Energy Systems"; 
-      if (tabName === 'guide')   searchHeading = "Oxygen Budget and Cost Instructions";
-
-      const startIdx = cachedModuleMD.indexOf(searchHeading);
-      if (startIdx === -1) {
-        content.innerHTML = `<b style="color:#ff9aa0;">Section Not Found:</b><br>Could not find "${searchHeading}" in the module file. Check MD formatting.`;
-        return;
-      }
-
-      // Extraction Logic: Capture everything from heading to the next '---' divider
-      const fromHeading = cachedModuleMD.slice(startIdx + searchHeading.length);
-      const endIdx = fromHeading.search(/\n---\r?\n/);
-      let extracted = endIdx !== -1 ? fromHeading.slice(0, endIdx) : fromHeading;
-
-      // Render Markdown to HTML
-      content.innerHTML = extracted
-        .trim()
-        .replace(/\n/g, '<br>')
-        .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
-        .replace(/\_(.*?)\_/g, '<i>$1</i>');
-    };
-
-    document.getElementById('trialHelpClose').onclick = () => {
-      document.getElementById('trialHelpModal').style.display = 'none';
-    };
-
-    document.getElementById('trialHelp').onclick = async () => {
-      document.getElementById('trialHelpModal').style.display = 'flex';
-      
-      // Dynamic loading based on selected module ID
-      if (!cachedModuleMD) {
-        const modId = document.getElementById('moduleSelect').value || "FL-001";
-        const path = `../assets/forensics_modules/${modId.toLowerCase().replace('-','_')}.md`;
-        
-        try {
-          const res = await fetch(path);
-          if (res.ok) {
-            cachedModuleMD = await res.text();
-          } else {
-            console.error("MD Load Fail:", path);
-          }
-        } catch (e) {
-          console.error("Fetch Error:", e);
-        }
-      }
-      
-      window.showTab('concept');
-    };
-
-    // ... Rest of your Three.js / Simulation code ...
+    } catch (e) {
+      console.error("Fetch Error:", e);
+    }
+  } else {
+    window.showTab('concept');
+  }
+};
 
 
     import * as THREE from 'three';
