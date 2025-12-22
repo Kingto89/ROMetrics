@@ -1568,7 +1568,7 @@ bake(bones.thighR, 0, 0, +hip);
     for (const [b,q] of R.rig.base) b.quaternion.copy(q);
   };
 
-  // only run when Start is on AND cardio zone is visible
+// This tells the avatar to animate only if there is energy left
 const runNow = !!(sim.running && sim.energy > 0 && zoneCardio.visible);
 
   if (runNow){
@@ -1722,11 +1722,27 @@ if (sim.running) {
     // Logic: if sim.energy is 0, status becomes "CRASH" and sim.running = false
   }
 }
-// FL-001 countdown + display
-if (sim.running && currentModule?.id === 'FL-001'){
-  trialTime = Math.max(0, trialTime - dt);
-  document.getElementById('trialTime').textContent =
-    Math.ceil(trialTime);
+if (sim.running && sim.energy > 0) {
+  const speedKey = sim.speedMph.toFixed(1);
+  const row = METABOLIC_TABLE[speedKey];
+
+  if (row) {
+    // Math: (Treadmill Cost - Model's Calculated Capacity) / 60
+    const deficit = row.cost - sim.vo2Max;
+
+    if (deficit > 0) {
+      // DRAINING (Anaerobic): The bar drops
+      sim.energy -= (deficit / 60) * dt;
+    } else {
+      // RECOVERING (Aerobic): The bar recharges
+      sim.energy += 0.2 * dt;
+    }
+  }
+  
+  // Update the 300s Trial Timer
+  if (currentModule?.id === 'FL-001') {
+    trialTime = Math.max(0, trialTime - dt);
+  }
 }
 
   updateHUD();
@@ -1739,7 +1755,14 @@ animate();
     // ==============================
    $enter.addEventListener('click', async () => {
   const modelId = $modelSel.value; // Roma or Roman
-  
+ // THE STUDENT CALCULATION (Uth-Sørensen Formula)
+// Roman (Male, 33) vs Roma (Female, 29)
+let age = (modelId === "Roman") ? 33 : 29;
+let hrMax = 220 - age; 
+let hrRest = 72; // Standard student measurement
+
+// This calculates the "Aerobic Ceiling" for the simulation
+sim.vo2Max = 15.3 * (hrMax / hrRest); 
   // Student Calculation Logic
   let age = (modelId === "Roman") ? 33 : 29;
   let hrMax = 220 - age;
