@@ -165,6 +165,62 @@
   <div id="hint" style="display:block;">Mouse: orbit • Wheel: zoom • Right-drag: pan • Keys: 1/2/3 = zones • 0 = all • L = labels</div>
 
   <script type="module">
+    // 1. Global state flag
+let isModalOpen = false;
+
+// 2. Updated Modal Control Logic
+document.getElementById('trialHelp').onclick = async () => {
+  isModalOpen = true; // Deactivate other listeners
+  document.getElementById('trialHelpModal').style.display = 'flex';
+  document.body.style.overflow = 'hidden'; // Stop background scrolling
+  
+  const modId = document.getElementById('moduleSelect').value || "FL-001";
+  const fileName = modId.toLowerCase().replace('fl-', 'module_');
+  const path = `https://raw.githubusercontent.com/Kingto89/ROMetrics.com/main/assets/forensics_modules/${fileName}.md`;
+  
+  try {
+    const res = await fetch(path);
+    if (res.ok) {
+      cachedModuleMD = await res.text();
+      window.showTab('concept'); 
+    }
+  } catch (e) { console.error(e); }
+};
+
+document.getElementById('trialHelpClose').onclick = (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  isModalOpen = false; // Reactivate listeners
+  document.getElementById('trialHelpModal').style.display = 'none';
+  document.body.style.overflow = 'auto';
+};
+
+// 3. Protected Zone Listeners (Modified from your original)
+pills.forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    if (isModalOpen) return; // KILL THE JUMP: Ignore click if help is open
+    
+    const z = btn.dataset.zone;
+    if (z === 'labels') {
+      setLabels(!labelsOn);
+      btn.classList.toggle('active', labelsOn);
+      return;
+    }
+    setZone(z);
+    setActive(btn);
+  });
+});
+
+// 4. Protected Keyboard Listeners (Modified from your original)
+addEventListener('keydown', (e) => {
+  if ($gate.style.display !== 'none' || isModalOpen) return; // Stop jumps if help is open
+  
+  if (e.key === '0') { setZone('all'); setActive(document.querySelector('[data-zone="all"]')); }
+  if (e.key === '1') { setZone('strength'); setActive(document.querySelector('[data-zone="strength"]')); }
+  if (e.key === '2') { setZone('cardio'); setActive(document.querySelector('[data-zone="cardio"]')); }
+  if (e.key === '3') { setZone('forensics'); setActive(document.querySelector('[data-zone="forensics"]')); }
+  if (e.key.toLowerCase() === 'l') { setLabels(!labelsOn); document.querySelector('[data-zone="labels"]').classList.toggle('active', labelsOn); }
+});
 let cachedModuleMD = "";
 
 window.showTab = function(tabName) {
