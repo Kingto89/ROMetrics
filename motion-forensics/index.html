@@ -275,22 +275,33 @@ window.setTrialTime = (v) => trialTime = v; // Use a function to set the value
     let runAction = null;
     
 // --- CORRECTED ACSM OXYGEN COST TABLE ---
-const METABOLIC_TABLE = {};
+// 2. Realistic Metabolic Engine
+if (sim.running && sim.energy > 0) {
+    const key = sim.speedMph.toFixed(1);
+    const row = METABOLIC_TABLE[key];
 
-for (let i = 0; i <= 220; i++) {
-  let mph = (i / 10).toFixed(1);
-  
-  // 1. Convert mph to Meters per Minute (Standard ACSM requirement)
-  let mPerMin = parseFloat(mph) * 26.8;
-  
-  // 2. ACSM Formula: VO2 = (0.2 * speed) + 3.5
-  let cost = (0.2022 * mPerMin) + 3.5;
-  
-  // 3. Store the data for the simulation to use
-  METABOLIC_TABLE[mph] = { 
-    cost: cost,
-    dominant: cost > 40 ? "Anaerobic" : "Aerobic" 
-  };
+    if (row && sim.vo2Max > 0) {
+        // Use character-specific VO2Max (37.6 vs 39.5) instead of 40
+        const deficit = row.cost - sim.vo2Max;
+        
+        if (deficit > 0) {
+            // ANAEROBIC: Drain based on deficit
+            const anaerobicTankSize = 1200; 
+            const drainPerSecond = deficit / 60;
+            const percentDropPerSecond = (drainPerSecond / anaerobicTankSize) * 10000;
+            sim.energy -= percentDropPerSecond * dt;
+
+            $status.textContent = "Anaerobic (Limit)";
+            $status.style.color = "#ff9aa0";
+        } else {
+            // AEROBIC: Steady recovery
+            sim.energy = Math.min(100, sim.energy + (0.05 * dt));
+            if (sim.energy < 100) {
+                $status.textContent = "Aerobic Recovery";
+                $status.style.color = "#38bdf8";
+            }
+        }
+    }
 }
 // ==============================
     // 0) REGISTRY (Model + Modules)
@@ -1763,49 +1774,30 @@ if (runAction){
   drawTreadmillMph(consoleScreen);
 
 // 2. Realistic Metabolic Engine
-if (sim.running && sim.energy > 0) {
+  if (sim.running && sim.energy > 0) {
     const key = sim.speedMph.toFixed(1);
     const row = METABOLIC_TABLE[key];
 
     if (row && sim.vo2Max > 0) {
-        // Enforce individual limit: Compare cost to the character's specific VO2Max
-        // Roman: ~37.6 | Roma: ~39.5
         const deficit = row.cost - sim.vo2Max;
-        
-        // Update Dominant System dynamically on the HUD
-        const currentSystem = (row.cost > sim.vo2Max) ? "Anaerobic" : "Aerobic";
-        
         if (deficit > 0) {
-            // ANAEROBIC STATE: Energy Drains
-            // The larger the deficit (speed vs. capacity), the faster the crash
+            // Realistic non-athlete drain speed
             const anaerobicTankSize = 1200; 
             const drainPerSecond = deficit / 60;
             const percentDropPerSecond = (drainPerSecond / anaerobicTankSize) * 10000;
-            
             sim.energy -= percentDropPerSecond * dt;
-            
-            // Visual feedback for the "Index"
-            $status.textContent = "Anaerobic (O2 Deficit)";
-            $status.style.color = "#ff9aa0";
         } else {
-            // AEROBIC STATE: Stable or Recovering
-            // If speed is below VO2Max, energy recovers slowly (0.05% per second)
             sim.energy = Math.min(100, sim.energy + (0.05 * dt));
-            
-            if (sim.energy < 100) {
-                $status.textContent = "Aerobic Recovery";
-                $status.style.color = "#38bdf8";
-            }
         }
     }
-}
     // Update the 300s Trial Timer
     if (currentModule?.id === 'FL-001') {
       trialTime = Math.max(0, trialTime - dt);
       document.getElementById('trialTime').textContent = Math.ceil(trialTime);
     }
   }
-
+// --- SIMPLE STOP & RESET ADD-IN ---
+    if (sim.energy <= 0 || trialTime <= 0) {
    // --- SIMPLE STOP & RESET ADD-IN ---
 if (sim.energy <= 0 || trialTime <= 0) {
     
@@ -1834,10 +1826,11 @@ if (sim.energy <= 0 || trialTime <= 0) {
       if (runAction) runAction.paused = true;
       restore(); // This snaps her to the anatomic position
       $start.textContent = "Start";
-  
+    }
   // 3. Final Render
   updateHUD();
   renderer.render(scene, camera);
+} // Ends animate
 
 animate(); // Starts loop
 // ==============================
@@ -1847,58 +1840,37 @@ $enter.addEventListener('click', async () => {
   const modelId = document.getElementById('modelSelect').value; 
   const moduleId = document.getElementById('moduleSelect').value;
   
-  // Ages: Roman 43, Roma 34
-// Inside the $enter.addEventListener block:
-let age = (modelId === "Roman") ? 43 : 34;
-let hrMax = 220 - age;
-sim.vo2Max = 15.3 * (hrMax / 72); 
+  // Dynamic Age/Physiology: Roman 43 (VO2: 37.6), Roma 34 (VO2: 39.5)
+  let age = (modelId === "Roman") ? 43 : 34;
+  let hrMax = 220 - age;
+  sim.vo2Max = 15.3 * (hrMax / 72); 
 
-// Automatically find the max speed this specific VO2Max can handle
-// Inverse ACSM: Speed(mph) = ((VO2 - 3.5) / 0.2022) / 26.8
-const absoluteMaxMph = ((sim.vo2Max - 3.5) / 0.2022) / 26.8;
-
-const speedSlider = document.getElementById('spd');
-speedSlider.max = absoluteMaxMph.toFixed(1); // Enforces Roman's lower top speed
+  // AUTOMATIC SLIDER CAP: Solve ACSM for Speed (mph)
+  // Formula: mph = ((VO2Max - 3.5) / 0.2025) / 26.8
+  const absoluteMaxMph = ((sim.vo2Max - 3.5) / 0.2025) / 26.8;
+  const speedSlider = document.getElementById('spd');
+  speedSlider.max = absoluteMaxMph.toFixed(1); 
 
   setAnatForModel(modelId);
   $enter.disabled = true;
   $enter.textContent = "Loading...";
 
   try {
-    // 1. Load the Model
-    await loadSelectedModel(modelId, (p) => { 
-      $enter.textContent = `Loading ${p}%`; 
-    });
-
-    // 2. Clear the loading gate
+    await loadSelectedModel(modelId, (p) => { $enter.textContent = `Loading ${p}%`; });
     document.getElementById('gate').style.display = "none";
-    
-    // 3. Reveal UI Elements safely
-    const uiMain = document.getElementById('ui');
+    document.getElementById('ui').style.display = "flex";
     const badgeMenu = document.getElementById('badge');
-
-    if (uiMain) uiMain.style.display = "flex";
-    if (badgeMenu) {
-        badgeMenu.style.display = "block";
-        badgeMenu.style.top = "14px"; // Ensure it is on-screen
-    }
-
-    // 4. Force snap to Cardio Bay
-    if (moduleId === 'FL-001') {
-      setZone('cardio'); 
-    }
-
-    // 5. Initialize module simulation buttons
+    if (badgeMenu) { badgeMenu.style.display = "block"; badgeMenu.style.top = "14px"; }
+    if (moduleId === 'FL-001') { setZone('cardio'); }
     enterModule(moduleId);
     snapCam();
-
   } catch (e) {
     console.error("Entry Error:", e);
-    $enter.textContent = "Error - Check Console";
+    $enter.textContent = "Error";
   } finally {
     $enter.disabled = false;
   }
-}); // Correctly closed
+});
 
 addEventListener('resize', () => {
   camera.aspect = innerWidth / innerHeight;
@@ -1906,7 +1878,6 @@ addEventListener('resize', () => {
   renderer.setSize(innerWidth, innerHeight);
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 });
-   
 </script>
 </body>
 </html>
