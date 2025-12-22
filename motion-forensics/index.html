@@ -207,10 +207,22 @@
 let cachedModuleMD = "";
 let IN_HELP_MODAL = false;
 
+// Zone pill clicks (only #ui pills) — run once at startup
+document.querySelectorAll('#ui .pill').forEach(pill => {
+  pill.addEventListener('click', (e) => {
+    if (IN_HELP_MODAL) return; // ignore clicks while modal is open
+    const zone = pill.dataset.zone;
+    if (!zone) return;
+    setZone(zone);
+    document.querySelectorAll('#ui .pill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+  });
+});
+
 window.showTab = function(tabName) {
   const content = document.getElementById('tabContent');
   const currentTrial = document.getElementById('trialTag').textContent; // "A", "B", or "C"
-  
+
   // 1. Manage UI Tab States
   document.querySelectorAll('#trialHelpModal .pill').forEach(p => p.classList.remove('active'));
   const activeTab = document.getElementById('tab-' + tabName);
