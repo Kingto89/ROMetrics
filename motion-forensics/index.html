@@ -1814,32 +1814,44 @@ animate(); // Starts loop
 // ==============================
 $enter.addEventListener('click', async () => {
   const modelId = $modelSel.value; 
-  let age = (modelId === "Roman") ? 33 : 29;
+  const moduleId = $modSel.value;
+  
+  // Set accurate ages based on your selection
+  let age = (modelId === "Roman") ? 43 : 34;
+  
+  // Metabolic Math for the Energy Module
   let hrMax = 220 - age;
-  let hrRest = 72; 
+  let hrRest = 70; // Baseline resting HR
   sim.vo2Max = 15.3 * (hrMax / hrRest);
 
   setAnatForModel(modelId);
-  const moduleId = $modSel.value;
   $enter.disabled = true;
   $enter.textContent = "Loading...";
 
   try {
-    await loadSelectedModel(modelId, (p) => { $enter.textContent = `Loading ${p}%`; });
+    // 1. Load the GLB model
+    await loadSelectedModel(modelId, (p) => { 
+      $enter.textContent = `Loading ${p}%`; 
+    });
+    
+    // 2. Transition UI
+    $gate.style.display = "none";
+    $ui.style.display = "";
+    $badge.style.display = "";
+    $hint.style.display = "";
+
+    // 3. Snap to Station (Cardio Bay)
+    // This locks the camera to the module's assigned zone
+    enterModule(moduleId); 
+    snapCam(); // Prevents model jumping to origin
+
   } catch (e) {
     console.error(e);
     $enter.textContent = "Load failed";
+  } finally {
     $enter.disabled = false;
-    return;
+    $enter.textContent = "Enter Studio";
   }
-
-  $gate.style.display = "none";
-  $ui.style.display = "";
-  $badge.style.display = "";
-  $hint.style.display = "";
-  enterModule(moduleId);
-  $enter.disabled = false;
-  $enter.textContent = "Enter Studio";
 });
 
 addEventListener('resize', () => {
