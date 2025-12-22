@@ -75,15 +75,18 @@ You will use the **Primary Energy Source indicator** to complete each trial.
 Determine how much "Oxygen Cash" your specific model has to spend every minute.
 
 **Formula:** 
+VO2 Max = 15.3 × ((220 − Age) / 72)
 
-**Example:** - Roma's Age: 34
+**Example:** 
+* Roma's Age: 34
 
 * Roman's Age: 43
 
-**Your Result:** ________  *(This is your subject's capacity)* **2. Calculate the "Oxygen Cost"**
+**Your Result:**  ________   *(This is your subject's capacity)* **2. Calculate the "Oxygen Cost"**
 Plug your chosen MPH into this line to find its "price" in oxygen:
 
 **Formula:** 
+Total Cost = ((MPH × 26.8) × 0.22) + 3.5
 
 **3. The Forensic Test**
 Compare your **Total Cost** to your **Oxygen Budget**:
