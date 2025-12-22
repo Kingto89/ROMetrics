@@ -197,37 +197,39 @@ window.showTab = function(tabName) {
     return;
   }
 
-  // Isolate the text for the current trial block
+  // Isolate the current Trial's text block
   const restOfFile = cachedModuleMD.slice(trialStart);
   const nextSectionIdx = restOfFile.slice(15).search(/### Trial|### Module Instructions/i);
   const trialBlock = nextSectionIdx !== -1 ? restOfFile.slice(0, nextSectionIdx + 15) : restOfFile;
 
-  // Split into lines to find sub-headings regardless of trailing spaces
+  // FLEXIBLE SEARCH: Find the line that CONTAINS the heading
   const lines = trialBlock.split('\n');
   let startLine = -1;
   let searchStr = "";
 
-  if (tabName === 'concept') searchStr = "### Concept (read first):";
-  if (tabName === 'systems') searchStr = "### Trial Guide:";
+  if (tabName === 'concept') searchStr = "Concept (read first):";
+  if (tabName === 'systems') searchStr = "Trial Guide:";
 
   for (let i = 0; i < lines.length; i++) {
-    if (lines[i].trim().includes(searchStr)) {
+    const cleanLine = lines[i].trim().toLowerCase();
+    // Look for the string without caring about ### or trailing spaces
+    if (cleanLine.includes(searchStr.toLowerCase())) {
       startLine = i;
       break;
     }
   }
 
   if (startLine !== -1) {
-    // Rejoin from the found line
+    // Rejoin from the found line onwards
     const fromStart = lines.slice(startLine + 1).join('\n');
     const endIdx = fromStart.indexOf('---');
     content.innerHTML = formatMD(endIdx !== -1 ? fromStart.slice(0, endIdx) : fromStart);
   } else {
-    content.innerHTML = `Section "${searchStr}" not found in Trial ${currentTrial}.`;
+    content.innerHTML = `Heading "${searchStr}" not found in Trial ${currentTrial}. Check MD.`;
   }
 };
 
-// Formatting Helper
+// Helper to render Markdown and Style Math
 function formatMD(text) {
   return text.trim()
     .replace(/\n/g, '<br>')
