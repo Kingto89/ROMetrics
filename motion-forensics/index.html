@@ -284,7 +284,7 @@ for (let i = 0; i <= 220; i++) {
   let mPerMin = parseFloat(mph) * 26.8;
   
   // 2. ACSM Formula: VO2 = (0.2 * speed) + 3.5
-  let cost = (0.2085 * mPerMin) + 3.5;
+  let cost = (0.2 * mPerMin) + 3.5;
   
   // 3. Store the data for the simulation to use
   METABOLIC_TABLE[mph] = { 
