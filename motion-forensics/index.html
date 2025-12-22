@@ -1167,30 +1167,30 @@ function placeAvatarForZone(which){
   avatarRoot.rotation.set(0, rotY, 0);
 }
 
+function setZone(which){
+  // ROOM VISIBILITY FIX: Keep all zones visible at all times
+  zoneStrength.visible  = true;
+  zoneCardio.visible    = true;
+  zoneForensics.visible = true;
 
-    function setZone(which){
-      const all = (which === 'all');
-      zoneStrength.visible  = all || which === 'strength';
-      zoneCardio.visible    = all || which === 'cardio';
-      zoneForensics.visible = all || which === 'forensics';
+  // CAMERA FOCUS LOGIC
+  if (which === 'strength'){
+    camGoalTarget.set(Z_STRENGTH.x, 1.25, Z_STRENGTH.z);
+    camGoalPos.set(Z_STRENGTH.x + 3.2, 2.6, Z_STRENGTH.z + 4.8);
+  } else if (which === 'cardio'){
+    camGoalTarget.set(Z_CARDIO.x, 1.10, Z_CARDIO.z);
+    camGoalPos.set(Z_CARDIO.x, 1.8, Z_CARDIO.z + 2.4);
+  } else if (which === 'forensics'){
+    camGoalTarget.set(Z_FORENSIC.x, 1.25, Z_FORENSIC.z);
+    camGoalPos.set(Z_FORENSIC.x + 3.6, 2.6, Z_FORENSIC.z + 5.1);
+  } else {
+    camGoalTarget.set(0, 1.35, 0);
+    camGoalPos.set(6.8, 3.9, 8.6);
+  }
 
-      if (which === 'strength'){
-        camGoalTarget.set(Z_STRENGTH.x, 1.25, Z_STRENGTH.z);
-        camGoalPos.set(Z_STRENGTH.x + 3.2, 2.6, Z_STRENGTH.z + 4.8);
-      } else if (which === 'cardio'){
-        camGoalTarget.set(Z_CARDIO.x, 1.10, Z_CARDIO.z);
-        camGoalPos.set(Z_CARDIO.x, 2.1, Z_CARDIO.z + 2.9);
-      } else if (which === 'forensics'){
-        camGoalTarget.set(Z_FORENSIC.x, 1.25, Z_FORENSIC.z);
-        camGoalPos.set(Z_FORENSIC.x + 3.6, 2.6, Z_FORENSIC.z + 5.1);
-      } else {
-        camGoalTarget.set(0, 1.35, 0);
-        camGoalPos.set(6.8, 3.9, 8.6);
-      }
-
-      placeAvatarForZone(which);
-      snapCam();
-    }
+  placeAvatarForZone(which);
+  snapCam();
+}
 
 function parseFL001(md){
   const trials = {};
@@ -1309,16 +1309,22 @@ document.getElementById('trialHelpContent').textContent =
 }
 
 
-    function enterModule(moduleId){
-      const mod = getModule(moduleId);
-      currentModule = mod;
-      $moduleTitle.textContent = mod.label;
-      setZone(mod.zone || 'all');
-      if (typeof mod.onEnter === 'function'){
-        mod.onEnter({ THREE, scene, camera, controls, sim, setZone, avatar: avatarRoot });
-      }
-    }
-
+ function enterModule(moduleId){
+  const mod = getModule(moduleId);
+  currentModule = mod;
+  
+  // 1. Update the UI Badge
+  $moduleTitle.textContent = mod.label;
+  
+  // 2. Set the Camera
+  setZone(mod.zone || 'all');
+  
+  // 3. TRIGGER SIMULATION MENU
+  // This calls enterFL001() which populates the Trials and HUD
+  if (typeof mod.onEnter === 'function'){
+    mod.onEnter(); 
+  }
+}
     // ==============================
     // 7) Studio UI wiring
     // ==============================
@@ -1813,7 +1819,7 @@ $enter.addEventListener('click', async () => {
   const modelId = $modelSel.value; 
   const moduleId = $modSel.value;
   
-  // 1. Correct metabolic data based on your input
+  // Roman 43, Roma 34
   let age = (modelId === "Roman") ? 43 : 34;
   let hrMax = 220 - age;
   sim.vo2Max = 15.3 * (hrMax / 72); 
@@ -1823,32 +1829,25 @@ $enter.addEventListener('click', async () => {
   $enter.textContent = "Loading...";
 
   try {
-    // 2. Load the model geometry
     await loadSelectedModel(modelId, (p) => { 
       $enter.textContent = `Loading ${p}%`; 
     });
 
-    // 3. Simple Module-to-Zone Logic
-    if (moduleId === 'FL-001') {
-      setZone('cardio'); // Force camera to Cardio Bay coordinates
-    } else if (moduleId === 'FL-002') {
-      setZone('strength');
-    } else {
-      setZone('forensics');
-    }
-
-    // 4. Reveal Studio
+    // REVEAL STUDIO FIRST
     $gate.style.display = "none";
     $ui.style.display = "";
     $badge.style.display = "";
     $hint.style.display = "";
 
-    // 5. Initialize module-specific trial logic
+    // INITIALIZE MODULE & MENU
+    // This will move camera to Cardio AND show the simulation controls
     enterModule(moduleId);
-    snapCam(); // Final snap to prevent jumping to origin
+    
+    // Final snap to ensure she's on the treadmill
+    snapCam();
 
   } catch (e) {
-    console.error(e);
+    console.error("Studio Entry Error:", e);
     $enter.textContent = "Load failed";
   } finally {
     $enter.disabled = false;
