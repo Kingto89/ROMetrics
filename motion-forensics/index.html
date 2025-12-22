@@ -222,7 +222,9 @@ function formatMD(text) {
 }
 
 // Global Fetch Trigger
-document.getElementById('trialHelp').onclick = async () => {
+document.getElementById('trialHelp').onclick = async (e) => {
+  e.preventDefault();
+  e.stopPropagation(); // Stops the click from reaching the 3D scene
   document.getElementById('trialHelpModal').style.display = 'flex';
   
   const modId = document.getElementById('moduleSelect').value || "FL-001";
@@ -235,9 +237,7 @@ document.getElementById('trialHelp').onclick = async () => {
       cachedModuleMD = await res.text();
       window.showTab('concept'); 
     }
-  } catch (e) {
-    console.error("Fetch failure:", e);
-  }
+  } catch (err) { console.error("MD Load Error", err); }
 };
 
 // This prevents the default behavior and simply hides the modal
