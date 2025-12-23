@@ -531,7 +531,7 @@ $spd.addEventListener('input', () => {
 // Start / Pause Button Logic
 $start.onclick = () => {
   if (!sim.running) {
-  if (sim.speedMph <= 0) return; // 1-step fix: Exit if speed is zero  
+   if (sim.speedMph <= 0) return; 
     sim.elapsed = 0; 
     
     if (!sim.hasStarted) {
@@ -544,11 +544,9 @@ $start.onclick = () => {
     }
   }
   
- sim.running = false;
-    if (runAction) runAction.paused = true;
-    // This will now work because restore is global
-    if (typeof window.restore === 'function') window.restore(); 
-    document.getElementById('startBtn').textContent = "Start";
+  sim.running = !sim.running;
+  if (runAction) runAction.paused = !sim.running;
+  $start.textContent = sim.running ? "Pause" : "Start";
 };
 // --- FUEL BUTTON LOGIC ---
 $fuel.onclick = () => {
@@ -593,21 +591,26 @@ $reset.addEventListener('click', () => {
     const $status = document.getElementById('statusVal');
     $status.textContent = "Ready";
     $status.style.color = "#cfe3ff";
-// 5. RESET AVATAR & ANIMATION
+
+    // 5. RESET AVATAR & ANIMATION
     if (runAction) {
         runAction.paused = true;
         runAction.time = 0;
     }
-    
-    // Snaps model back to anatomic pose
-    if (typeof window.restore === 'function') {
-        window.restore();
-    }
+    restore(); 
 
     // 6. RE-SYNC VO2 BUDGET
     const currentModel = document.getElementById('modelSelect').value;
     const age = (currentModel === "Roman") ? 43 : 34;
     sim.vo2Max = 15.3 * ((220 - age) / 72);
+
+
+  // 2. Reset the Avatar & Animation
+  if (runAction) {
+    runAction.paused = true;
+    runAction.time = 0;
+  }
+  restore(); 
 
   // 3. Reset the HUD/Menu
   trialTime = 300;
@@ -2050,9 +2053,9 @@ if (sim.energy <= 0 || trialTime <= 0) {
         // Logic for other trials follows the same pattern...
     }
 
-  sim.running = false;
+    sim.running = false;
     if (runAction) runAction.paused = true;
-    if (typeof window.restore === 'function') window.restore(); 
+    restore(); 
     document.getElementById('startBtn').textContent = "Start";
 }
 
