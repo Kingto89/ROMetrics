@@ -218,7 +218,47 @@ function formatMD(text) {
     .replace(/\#+/g, '') 
     .replace(/\$\$(.*?)\$\$/g, '<div style="background:rgba(56,189,248,0.1); padding:12px; border-radius:10px; color:#38bdf8; font-family:monospace; margin:15px 0; text-align:center; border:1px solid rgba(56,189,248,0.2); font-size:1.1em;">$1</div>');
 }
+// Global storage for the correct answer index per trial MCQ CHECK
+let currentCorrectIndex = -1;
 
+window.renderMCQ = function(letter) {
+    // Assuming trials are parsed and stored in a global 'allTrials' object
+    const trial = window.currentTrials[letter]; 
+    if (!trial || !trial.mcq) return;
+
+    const container = document.getElementById('mcqOpts');
+    container.innerHTML = '';
+    
+    // The MD file marks the correct answer with a (*) or similar? 
+    // This logic assumes the first option is a placeholder or you specify the index.
+    trial.mcq.opts.forEach((opt, idx) => {
+        const btn = document.createElement('div');
+        btn.className = 'pill'; // Using your existing CSS class
+        btn.style.marginBottom = '5px';
+        btn.textContent = opt;
+        btn.onclick = () => {
+            document.querySelectorAll('#mcqOpts .pill').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+            btn.dataset.choice = idx;
+        };
+        container.appendChild(btn);
+    });
+};
+
+document.getElementById('mcqSubmit').onclick = () => {
+    const selected = document.querySelector('#mcqOpts .pill.active');
+    if (!selected) return;
+
+    // Logic: Store result and update HUD score
+    const scoreEl = document.getElementById('flScore');
+    const msgEl = document.getElementById('mcqMsg');
+    
+    // Store logic (Example: If selection matches MD requirement)
+    scoreEl.textContent = "100"; 
+    msgEl.style.color = "#38bdf8";
+    msgEl.textContent = "Data Stored Successfully.";
+    document.getElementById('mcqSubmit').disabled = true;
+};
 // Global Fetch Trigger
 document.getElementById('trialHelp').onclick = async (e) => {
   e.preventDefault();
@@ -468,8 +508,9 @@ $reset.addEventListener('click', () => {
   $start.textContent = "Start";
   $status.textContent = "Ready";
   $status.style.color = "#cfe3ff";
-
-  document.getElementById('mcqBox').style.display = 'none';
+document.getElementById('mcqBox').style.display = 'none';
+document.getElementById('mcqSubmit').disabled = false;
+document.getElementById('mcqMsg').textContent = "";
   document.getElementById('trialMsg').textContent = 'Read the instructions above. When ready, press Start.';
 });
 
@@ -1799,26 +1840,27 @@ if (runAction){
       document.getElementById('trialTime').textContent = Math.ceil(trialTime);
     }
   }
-// --- SIMPLE STOP & RESET ADD-IN ---
-    if (sim.energy <= 0 || trialTime <= 0) {
+
    // --- SIMPLE STOP & RESET ADD-IN ---
 if (sim.energy <= 0 || trialTime <= 0) {
     
-    // --- FINALIZED MCQ UNLOCK LOGIC ---
-    if (trialTime <= 0 && document.getElementById('mcqBox').style.display !== 'block') {
-        const activeModel = document.getElementById('modelSelect').value;
-        const targetSpeed = (activeModel === "Roma") ? 6.7 : 6.3;
+// --- FINALIZED MCQ UNLOCK LOGIC ---
+if (trialTime <= 0 && document.getElementById('mcqBox').style.display !== 'block') {
+    const activeModel = document.getElementById('modelSelect').value;
+    const targetSpeed = (activeModel === "Roma") ? 6.7 : 6.3;
 
-        // Check if they were at the correct speed when time ran out
-        if (sim.speedMph === targetSpeed) {
-            document.getElementById('mcqBox').style.display = 'block';
-            document.getElementById('trialMsg').innerHTML = 
-                '<b style="color:#38bdf8;">Requirement Met:</b> Data logged. Answer the question below.';
-        } else {
-            document.getElementById('trialMsg').innerHTML = 
-                `<b style="color:#ff9aa0;">Trial Incomplete:</b> Speed must be exactly ${targetSpeed} mph. Reset and try again.`;
-        }
-    }   
+    if (sim.speedMph === targetSpeed) {
+        document.getElementById('mcqBox').style.display = 'block';
+        document.getElementById('trialMsg').innerHTML = 
+            '<b style="color:#38bdf8;">Requirement Met:</b> Session Unlocked. Select the correct answer below.';
+        // This triggers the specific MCQ question from the MD file
+        const currentTrial = document.getElementById('trialTag').textContent;
+        window.renderMCQ(currentTrial); 
+    } else {
+        document.getElementById('trialMsg').innerHTML = 
+            `<b style="color:#ff9aa0;">Trial Incomplete:</b> Speed must be exactly ${targetSpeed} mph at 0s.`;
+    }
+}  
 
     sim.running = false;
     if (runAction) runAction.paused = true;
