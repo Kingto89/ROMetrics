@@ -153,7 +153,7 @@
   </div>
   <script type="module">
 let cachedModuleMD = "";
-
+let currentMcqStep = 0; // Tracks which question the user is on
 window.showTab = function(tabName) {
   const content = document.getElementById('tabContent');
   const currentTrial = document.getElementById('trialTag').textContent; // "A", "B", or "C"
@@ -223,7 +223,11 @@ let currentCorrectIndex = -1;
 
 window.renderMCQ = function(letter) {
     const trials = window.currentTrials;
-    if (!trials || !trials[letter] || !trials[letter].mcqs[currentMcqStep]) return;
+    // Check if data exists before trying to use currentMcqStep
+    if (!trials || !trials[letter] || !trials[letter].mcqs || !trials[letter].mcqs[currentMcqStep]) {
+        console.error("MCQ Data Missing for step:", currentMcqStep);
+        return;
+    }
 
     const data = trials[letter].mcqs[currentMcqStep];
     
