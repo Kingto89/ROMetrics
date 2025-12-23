@@ -144,11 +144,11 @@ Changing fuel timing can affect fatigue, but it does **not** change the primary 
 What determines whether aerobic metabolism can sustain the selected speed?
 
 A. Fuel timing relative to effort  
-B. VO₂ Max relative to cost  
+B. Duration of the trial  
 C. Size of anaerobic reserve  
-D. Duration of the trial  
+D. VO₂ Max relative to cost  
 
-**Correct Answer:** B
+**Correct Answer:** D
 
 
 **Checkpoint — Trial A (Q2)**
