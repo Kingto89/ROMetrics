@@ -703,20 +703,16 @@ scene.fog = new THREE.Fog(0x07101b, 10, 45);
   ctx.closePath();
 }
 
-function drawPanel(screen, title) {
+ function drawPanel(screen, title) {
     const { ctx, c } = screen;
     const currentTrial = document.getElementById('trialTag').textContent;
     const modelName = document.getElementById('modelSelect').value.trim();
-    
-    // 1. HARD-CODED THRESHOLD PROTECTION
     const speed = parseFloat(sim.speedMph.toFixed(1));
-    const ceiling = (modelName === "Roman") ? 6.3 : 6.7;
-    const isAnaerobic = speed > ceiling;
-
-    // PHYSICAL CLEAR: Wipes the entire board every frame to prevent ghosting
+    
+    // 1. PHYSICAL CLEAR
     ctx.clearRect(0, 0, c.width, c.height);
 
-    // 2. BACKGROUND
+    // 2. BACKGROUND & FRAME
     ctx.fillStyle = '#061222';
     ctx.fillRect(0, 0, c.width, c.height);
     ctx.strokeStyle = '#38bdf8';
@@ -731,7 +727,7 @@ function drawPanel(screen, title) {
     ctx.font = '700 24px Inter, system-ui';
     ctx.fillText(`CURRENT SESSION: Trial ${currentTrial}`, 40, 100);
 
-    // 4. ACTIVATION GATE: Only show data if simulation is active
+    // 4. ACTIVATION GATE
     if (!sim.running && sim.elapsed <= 0) {
         ctx.fillStyle = 'rgba(148,163,184,0.3)';
         ctx.font = 'italic 600 22px Inter, system-ui';
@@ -740,25 +736,28 @@ function drawPanel(screen, title) {
         return;
     }
 
-    // 5. PRIMARY DOMINANCE LABEL
-    let dominantText = isAnaerobic ? "PRIMARY: Anaerobic Glycolysis" : "PRIMARY: Aerobic Metabolism";
-    let dominantColor = isAnaerobic ? "#ffe4a3" : "#38bdf8";
-    ctx.fillStyle = dominantColor;
-    ctx.font = '900 22px Inter, system-ui';
-    ctx.fillText(dominantText, 40, 140);
-
-    // 6. ATP-PC INSTANT START (Hard Removal at 15s)
+    // 5. THRESHOLD LOGIC
+    const ceiling = (modelName === "Roman") ? 6.3 : 6.7;
+    const isAnaerobicSpeed = speed > ceiling;
+    
+    // 6. ATP-PC OVERLAP (Burst)
+    // Realism: Active during the first 15 seconds of motion regardless of speed
     let atpBarPct = 0;
-    if (sim.elapsed > 0 && sim.elapsed < 15 && speed > 0) {
+    const isAtpActive = sim.elapsed > 0 && sim.elapsed < 15 && speed > 0;
+    if (isAtpActive) {
         const fade = 1.0 - (sim.elapsed / 15);
-        atpBarPct = (speed / 22) * 50 * fade;
-        
+        atpBarPct = (speed / 22) * 55 * fade; 
         ctx.fillStyle = '#ff9aa0';
-        ctx.font = '700 16px Inter, system-ui';
+        ctx.font = '700 18px Inter, system-ui';
         ctx.fillText(`● ATP-PC: ACTIVE (${Math.ceil(15 - sim.elapsed)}s)`, 420, 150);
     }
 
-    // 7. HYBRID GRAPH (Realism: Start-up Deficit)
+    // 7. ANAEROBIC DEFICIT (Lags)
+    // Realism: Active if speed > ceiling OR during the first 30s startup lag
+    const isStartupDeficit = sim.elapsed > 0 && sim.elapsed < 30 && speed > 0;
+    const startUpVal = isStartupDeficit ? (0.15 * (1.0 - (sim.elapsed / 30))) : 0;
+
+    // 8. HYBRID GRAPH (The Physical Representation)
     const graphY = 185, graphW = c.width - 80, graphH = 50;
     const currentCost = (speed * 26.8 * 0.205) + 3.5;
     
@@ -766,12 +765,10 @@ function drawPanel(screen, title) {
     let anaerobicPart = Math.max(0, currentCost - sim.vo2Max);
     let totalWork = aerobicPart + anaerobicPart;
 
-    // REALISM: Oxygen deficit for the first 30 seconds
-    let startUpDeficit = (sim.elapsed > 0 && sim.elapsed < 30 && speed > 0) ? (0.12 * (1.0 - (sim.elapsed / 30))) : 0;
-
-    let anaerobicRatio = (anaerobicPart / totalWork) + startUpDeficit;
+    let anaerobicRatio = (anaerobicPart / totalWork) + startUpVal;
     let aerobicRatio = 1.0 - anaerobicRatio;
 
+    // Draw Graph Background
     ctx.fillStyle = 'rgba(255,255,255,0.05)';
     ctx.fillRect(40, graphY, graphW, graphH);
 
@@ -779,36 +776,43 @@ function drawPanel(screen, title) {
     ctx.fillStyle = '#38bdf8';
     ctx.fillRect(40, graphY, graphW * aerobicRatio, graphH);
 
-    // Yellow Bar (Anaerobic - only draws if ratio > 0)
+    // Yellow Bar (Anaerobic)
     if (anaerobicRatio > 0.01) {
         ctx.fillStyle = 'rgba(255, 228, 163, 0.8)';
         ctx.fillRect(40 + (graphW * aerobicRatio), graphY, graphW * anaerobicRatio, graphH);
     }
 
-    // Red Bar (ATP-PC - strictly limited to 15s)
-    if (sim.elapsed > 0 && sim.elapsed < 15 && atpBarPct > 1) {
-        ctx.fillStyle = 'rgba(255, 154, 160, 0.8)';
+    // Red Overlay (ATP-PC) - Appears on top of the start of the bar
+    if (isAtpActive && atpBarPct > 1) {
+        ctx.fillStyle = 'rgba(255, 154, 160, 0.9)';
         ctx.fillRect(40, graphY, graphW * (atpBarPct / 100), graphH);
     }
 
-    // 8. ACTIVE LIST (Dynamic status removal)
+    // 9. CO-EXISTENCE LIST (Dynamic Status)
     ctx.font = '700 16px Inter, system-ui';
     ctx.fillStyle = '#38bdf8'; 
     ctx.fillText("● Aerobic: Active", 420, 100);
-    
-    if (isAnaerobic || startUpDeficit > 0.01) { 
-        ctx.fillStyle = '#ffe4a3'; 
-        ctx.fillText("● Anaerobic: Active", 420, 125); 
+
+    if (isAnaerobicSpeed || isStartupDeficit) {
+        ctx.fillStyle = '#ffe4a3';
+        ctx.fillText("● Anaerobic: Active", 420, 125);
     }
 
-    // 9. LEGEND
+    // 10. PRIMARY LABEL
+    let dominantText = isAnaerobicSpeed ? "PRIMARY: Anaerobic Glycolysis" : "PRIMARY: Aerobic Metabolism";
+    let dominantColor = isAnaerobicSpeed ? "#ffe4a3" : "#38bdf8";
+    ctx.fillStyle = dominantColor;
+    ctx.font = '900 22px Inter, system-ui';
+    ctx.fillText(dominantText, 40, 140);
+
+    // 11. LEGEND
     ctx.font = '600 16px Inter, system-ui';
     ctx.fillStyle = '#ff9aa0'; ctx.fillText('■ ATP-PC', 40, graphY + graphH + 35);
     ctx.fillStyle = '#ffe4a3'; ctx.fillText('■ ANAEROBIC GLYCOLYSIS', 140, graphY + graphH + 35);
     ctx.fillStyle = '#38bdf8'; ctx.fillText('■ AEROBIC', 380, graphY + graphH + 35);
 
     screen.tex.needsUpdate = true;
-}
+}   
     // ==============================
     // 4) Room + zones (REAL SCALE)
     // ==============================
