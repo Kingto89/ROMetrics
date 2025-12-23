@@ -706,19 +706,25 @@ function drawPanel(screen, title) {
     const { ctx, c } = screen;
     const currentTrial = document.getElementById('trialTag').textContent;
     const modelName = document.getElementById('modelSelect').value;
-    const key = sim.speedMph.toFixed(1);
-    const row = METABOLIC_TABLE[key];
-
+    
+    // 1. PHYSICAL MATH ENGINE (ACSM Formula: (Mph * 26.8 * 0.2) + 3.5)
+    const mPerMin = sim.speedMph * 26.8;
+    const currentCost = (mPerMin * 0.205) + 3.5;
+    
+    // 2. STRICT THRESHOLD CHECK
+    // Roma Budget: 39.52 | 6.7mph Cost: 39.41 (AEROBIC) | 6.8mph Cost: 39.94 (ANAEROBIC)
+    const isAnaerobic = currentCost > (sim.vo2Max + 0.01);
+    
     ctx.clearRect(0, 0, c.width, c.height);
 
-    // 1. Background & Frame
+    // 3. BACKGROUND & FRAME
     ctx.fillStyle = '#061222';
     ctx.fillRect(0, 0, c.width, c.height);
     ctx.strokeStyle = '#38bdf8';
     ctx.lineWidth = 8;
     ctx.strokeRect(10, 10, c.width - 20, c.height - 20);
 
-    // 2. Persistent Header
+    // 4. PERSISTENT HEADERS
     ctx.fillStyle = '#e6eef7';
     ctx.font = '900 28px Inter, system-ui';
     ctx.fillText(`SUBJECT: Average Fit Adult (${modelName})`, 40, 60);
@@ -726,7 +732,7 @@ function drawPanel(screen, title) {
     ctx.font = '700 24px Inter, system-ui';
     ctx.fillText(`CURRENT SESSION: Trial ${currentTrial}`, 40, 100);
 
-    // --- ACTIVATION GATE: Hide data until Start is clicked ---
+    // --- ACTIVATION GATE ---
     if (!sim.running && sim.elapsed <= 0) {
         ctx.fillStyle = 'rgba(148,163,184,0.3)';
         ctx.font = 'italic 600 22px Inter, system-ui';
@@ -735,75 +741,58 @@ function drawPanel(screen, title) {
         return;
     }
 
-    // 3. ENFORCED DOMINANCE (The 6.7 mph Threshold Fix)
-    const currentCost = row ? parseFloat(row.cost) : 3.5;
-    
-    // We use a 0.3 buffer. This ensures 6.7 (Cost 39.4) stays UNDER Roma's Budget (39.5)
-    // while 6.8 (Cost 39.9) safely goes OVER.
-    const isAnaerobic = currentCost > (sim.vo2Max + 0.3);
-    
+    // 5. DOMINANT SYSTEM LABEL
     let dominantText = isAnaerobic ? "PRIMARY: Anaerobic Glycolysis" : "PRIMARY: Aerobic Metabolism";
     let dominantColor = isAnaerobic ? "#ffe4a3" : "#38bdf8";
-
     ctx.fillStyle = dominantColor;
     ctx.font = '900 22px Inter, system-ui';
     ctx.fillText(dominantText, 40, 140);
 
-    // 4. ACTIVE SYSTEMS OVERLAY (Co-existence logic)
-    ctx.font = '700 16px Inter, system-ui';
-    
-    // Aerobic: Always Active
-    ctx.fillStyle = '#38bdf8';
-    ctx.fillText("● Aerobic: Active", 420, 100);
-
-    // Anaerobic: Only if demand > budget
-    if (isAnaerobic) {
-        ctx.fillStyle = '#ffe4a3';
-        ctx.fillText("● Anaerobic: Active", 420, 125);
-    }
-
-    // ATP-PC: STRICT 15s CUTOFF
-    let atpContribution = 0;
-    if (sim.elapsed > 0 && sim.elapsed < 15) {
-        const atpFade = 1.0 - (sim.elapsed / 15);
-        atpContribution = (sim.speedMph / 22) * 50 * atpFade;
+    // 6. ATP-PC INSTANT ACTIVATION (Strict Timer)
+    let atpPct = 0;
+    if (sim.running && sim.speedMph > 0 && sim.elapsed < 15) {
+        const fade = 1.0 - (sim.elapsed / 15);
+        atpPct = (sim.speedMph / 22) * 50 * fade; // Scales with speed
         
         ctx.fillStyle = '#ff9aa0';
-        ctx.fillText(`● ATP-PC: Active (${Math.ceil(15 - sim.elapsed)}s)`, 420, 150);
+        ctx.font = '700 18px Inter, system-ui';
+        ctx.fillText(`● ATP-PC: ACTIVE (${Math.ceil(15 - sim.elapsed)}s)`, 420, 150);
     }
 
-    // 5. HYBRID GRAPH Ratios
-    const graphY = 185;
-    const graphW = c.width - 80;
-    const graphH = 50;
-
+    // 7. HYBRID GRAPH RATIOS
+    const graphY = 185, graphW = c.width - 80, graphH = 50;
     let aerobicPart = Math.min(currentCost, sim.vo2Max);
     let anaerobicPart = Math.max(0, currentCost - sim.vo2Max);
     let totalWork = aerobicPart + anaerobicPart;
 
-    let aerobicRatio = (aerobicPart / totalWork);
-    let anaerobicRatio = (anaerobicPart / totalWork);
+    let aerobicRatio = aerobicPart / totalWork;
+    let anaerobicRatio = anaerobicPart / totalWork;
 
     ctx.fillStyle = 'rgba(255,255,255,0.05)';
     ctx.fillRect(40, graphY, graphW, graphH);
 
-    // Aerobic Bar
+    // Blue Bar (Aerobic)
     ctx.fillStyle = '#38bdf8';
     ctx.fillRect(40, graphY, graphW * aerobicRatio, graphH);
 
-    // Anaerobic Bar
+    // Yellow Bar (Anaerobic)
     if (anaerobicRatio > 0) {
         ctx.fillStyle = 'rgba(255, 228, 163, 0.8)';
         ctx.fillRect(40 + (graphW * aerobicRatio), graphY, graphW * anaerobicRatio, graphH);
     }
 
-    // ATP-PC Bar (Strict removal)
-    if (sim.elapsed < 15 && atpContribution > 1) {
+    // Red Overlay (ATP-PC) - Instant burst visuals
+    if (atpPct > 0) {
         ctx.fillStyle = 'rgba(255, 154, 160, 0.8)';
-        ctx.fillRect(40, graphY, graphW * (atpContribution / 100), graphH);
+        ctx.fillRect(40, graphY, graphW * (atpPct / 100), graphH);
     }
 
-    // 6. Legend
+    // 8. CO-EXISTING SYSTEMS LIST
+    ctx.font = '700 16px Inter, system-ui';
+    ctx.fillStyle = '#38bdf8'; ctx.fillText("● Aerobic: Active", 420, 100);
+    if (isAnaerobic) { ctx.fillStyle = '#ffe4a3'; ctx.fillText("● Anaerobic: Active", 420, 125); }
+
+    // 9. LEGEND
     ctx.font = '600 16px Inter, system-ui';
     ctx.fillStyle = '#ff9aa0'; ctx.fillText('■ ATP-PC', 40, graphY + graphH + 35);
     ctx.fillStyle = '#ffe4a3'; ctx.fillText('■ ANAEROBIC GLYCOLYSIS', 140, graphY + graphH + 35);
