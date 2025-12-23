@@ -163,7 +163,6 @@ D. PCr activates at low speed
 
 **Correct Answer:** B
 
-
 **Checkpoint — Trial A (Q3)**
 
 Which value represents the subject’s VO₂ Max used as the oxygen budget for the trial?
@@ -174,4 +173,5 @@ C. 0.22 × running speed
 D. Resting metabolic rate  
 
 **Correct Answer:** A
+
 ---
