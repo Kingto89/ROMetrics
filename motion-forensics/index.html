@@ -691,6 +691,7 @@ scene.fog = new THREE.Fog(0x07101b, 10, 45);
   ctx.arcTo(x, y, x+w, y, r);
   ctx.closePath();
 }
+
 function drawPanel(screen, title) {
     const { ctx, c } = screen;
     const currentTrial = document.getElementById('trialTag').textContent;
@@ -707,18 +708,20 @@ function drawPanel(screen, title) {
     ctx.lineWidth = 8;
     ctx.strokeRect(10, 10, c.width - 20, c.height - 20);
 
-    // 2. Header: Subject & Session Info
+    // 2. Header Info
     ctx.fillStyle = '#e6eef7';
     ctx.font = '900 28px Inter, system-ui';
     ctx.fillText(`SUBJECT: Average Fit Adult (${modelName})`, 40, 60);
-    
     ctx.fillStyle = '#38bdf8';
     ctx.font = '700 24px Inter, system-ui';
     ctx.fillText(`CURRENT SESSION: Trial ${currentTrial}`, 40, 100);
 
-    // 3. ENFORCED DOMINANCE LABEL (The Authority on Energy Systems)
+    // 3. UNIVERSAL ENFORCED DOMINANCE (Threshold based on current sim.vo2Max)
     const currentCost = row ? parseFloat(row.cost) : 3.5;
-    const isAnaerobic = currentCost > sim.vo2Max;
+    
+    // Logic: If cost is within the budget, it is Aerobic. 
+    // We use a small 0.2 tolerance to ensure the 'max speed' stays blue.
+    const isAnaerobic = currentCost > (sim.vo2Max + 0.2);
     
     let dominantText = isAnaerobic ? "PRIMARY: Anaerobic Glycolysis" : "PRIMARY: Aerobic Metabolism";
     let dominantColor = isAnaerobic ? "#ffe4a3" : "#38bdf8";
@@ -727,65 +730,57 @@ function drawPanel(screen, title) {
     ctx.font = '900 22px Inter, system-ui';
     ctx.fillText(dominantText, 40, 140);
 
-    // Show ATP-PC Activation Note at start
-    if (sim.running && sim.elapsed < 10) {
+    // 4. ATP-PC BURST (Realistic 10-15s limit)
+    let atpContribution = 0;
+    if (sim.running && sim.speedMph > 0 && sim.elapsed < 15) {
+        const fade = 1.0 - (sim.elapsed / 15);
+        atpContribution = (sim.speedMph / 22) * 40 * fade; 
+        
         ctx.fillStyle = '#ff9aa0';
         ctx.font = '700 18px Inter, system-ui';
-        ctx.fillText("+ ATP-PC ACTIVATED", 420, 140);
+        ctx.fillText(`+ ATP-PC ACTIVE (${Math.ceil(15 - sim.elapsed)}s)`, 420, 140);
     }
 
-    // 4. Hybrid Energy Graph
+    // 5. Dynamic Hybrid Graph
     const graphY = 175;
     const graphW = c.width - 80;
     const graphH = 50;
 
-    // Logic: Aerobic is budget, Anaerobic is anything over budget
+    // Split work between systems
     let aerobicPart = Math.min(currentCost, sim.vo2Max);
     let anaerobicPart = Math.max(0, currentCost - sim.vo2Max);
-    let totalPart = aerobicPart + anaerobicPart;
+    let totalWork = aerobicPart + anaerobicPart;
 
-    let aerobicPct = (aerobicPart / totalPart) * 100;
-    let anaerobicPct = (anaerobicPart / totalPart) * 100;
-    
-    // ATP-PC visual overlay
-    let atpPct = 0;
-    if (sim.running && sim.elapsed < 15) atpPct = (sim.speedMph / 22) * 35;
+    let aerobicPct = (aerobicPart / totalWork) * 100;
+    let anaerobicPct = (anaerobicPart / totalWork) * 100;
 
-    // Draw Background bar
     ctx.fillStyle = 'rgba(255,255,255,0.05)';
     ctx.fillRect(40, graphY, graphW, graphH);
 
-    // Draw Aerobic (Blue)
+    // Draw Aerobic base (Lungs meeting demand)
     ctx.fillStyle = '#38bdf8';
     ctx.fillRect(40, graphY, graphW * (aerobicPct / 100), graphH);
 
-    // Draw Anaerobic (Yellow - starts where blue ends)
+    // Draw Anaerobic deficit (Borrowing from tank)
     if (anaerobicPct > 0) {
         ctx.fillStyle = 'rgba(255, 228, 163, 0.8)';
         ctx.fillRect(40 + (graphW * (aerobicPct / 100)), graphY, graphW * (anaerobicPct / 100), graphH);
     }
 
-    // Draw ATP-PC (Red - Overlays the start of the bar)
-    if (atpPct > 0) {
-        ctx.fillStyle = 'rgba(255, 154, 160, 0.7)';
-        ctx.fillRect(40, graphY, graphW * (atpPct / 100), graphH);
+    // Draw ATP-PC fade overlay
+    if (atpContribution > 0) {
+        ctx.fillStyle = 'rgba(255, 154, 160, 0.8)';
+        ctx.fillRect(40, graphY, graphW * (atpContribution / 100), graphH);
     }
 
-    // 5. Legend (Corrected Order: High to Low Intensity)
+    // 6. Legend (Corrected Power Order)
     ctx.font = '600 16px Inter, system-ui';
-    
-    ctx.fillStyle = '#ff9aa0'; 
-    ctx.fillText('■ ATP-PC', 40, graphY + graphH + 35);
-    
-    ctx.fillStyle = '#ffe4a3'; 
-    ctx.fillText('■ ANAEROBIC GLYCOLYSIS', 140, graphY + graphH + 35);
-    
-    ctx.fillStyle = '#38bdf8'; 
-    ctx.fillText('■ AEROBIC', 380, graphY + graphH + 35);
+    ctx.fillStyle = '#ff9aa0'; ctx.fillText('■ ATP-PC', 40, graphY + graphH + 35);
+    ctx.fillStyle = '#ffe4a3'; ctx.fillText('■ ANAEROBIC GLYCOLYSIS', 140, graphY + graphH + 35);
+    ctx.fillStyle = '#38bdf8'; ctx.fillText('■ AEROBIC', 380, graphY + graphH + 35);
 
     screen.tex.needsUpdate = true;
-}
-
+}    
     // ==============================
     // 4) Room + zones (REAL SCALE)
     // ==============================
