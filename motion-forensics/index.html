@@ -245,12 +245,15 @@ window.renderMCQ = function(letter) {
         btn.style.marginBottom = '5px';
         btn.style.width = '100%';
         btn.textContent = opt;
-       btn.onclick = () => {
-    document.querySelectorAll('#mcqOpts .pill').forEach(p => p.classList.remove('active'));
-    btn.classList.add('active');
-    // Save only the letter (e.g., "B") to the dataset
-    btn.dataset.choice = opt.trim().substring(0, 1).toUpperCase(); 
-};
+        btn.onclick = () => {
+            document.querySelectorAll('#mcqOpts .pill').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+            
+            // This grabs the very first character of the option text
+            // If the option is "D. VO2 Max...", it saves "D"
+            const letterOnly = opt.trim().charAt(0).toUpperCase();
+            btn.dataset.choice = letterOnly; 
+        };
         container.appendChild(btn);
     });
 };
@@ -259,29 +262,31 @@ document.getElementById('mcqSubmit').onclick = () => {
     const selected = document.querySelector('#mcqOpts .pill.active');
     const msg = document.getElementById('mcqMsg');
     const trials = window.currentTrials;
-    const letter = document.getElementById('trialTag').textContent.trim();
+    const currentTrial = document.getElementById('trialTag').textContent.trim();
     
-    if (!trials || !trials[letter]) return;
-    const data = trials[letter].mcqs[currentMcqStep];
+    // 1. Get the current question data parsed from the MD
+    const data = trials[currentTrial].mcqs[currentMcqStep];
 
     if (!selected) {
         msg.textContent = "Please select an answer.";
         return;
     }
 
-    // Standardizes the comparison to prevent formatting errors
-    if (selected.dataset.choice === data.correct.trim()) {
+    // 2. Compare the two values (both trimmed to be safe)
+    const userSelection = selected.dataset.choice.trim();
+    const correctKey = data.correct.trim();
+
+    if (userSelection === correctKey) {
         currentMcqStep++;
         
-        if (currentMcqStep < trials[letter].mcqs.length) {
+        if (currentMcqStep < trials[currentTrial].mcqs.length) {
             msg.style.color = "#38bdf8";
             msg.textContent = "Correct! Loading next checkpoint...";
             setTimeout(() => { 
                 msg.textContent = ""; 
-                window.renderMCQ(letter); 
+                window.renderMCQ(currentTrial); 
             }, 1000);
         } else {
-            // All Trial Questions passed
             document.getElementById('flScore').textContent = "100";
             msg.style.color = "#38bdf8";
             msg.textContent = "Trial Complete. Data Stored.";
@@ -291,7 +296,7 @@ document.getElementById('mcqSubmit').onclick = () => {
         msg.style.color = "#ff9aa0";
         msg.textContent = "Incorrect. Review the Trial Guide and try again.";
     }
-};    
+};  
 
 // Global Fetch Trigger
 document.getElementById('trialHelp').onclick = async (e) => {
