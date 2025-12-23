@@ -262,9 +262,11 @@ document.getElementById('mcqSubmit').onclick = () => {
     const selected = document.querySelector('#mcqOpts .pill.active');
     const msg = document.getElementById('mcqMsg');
     const trials = window.currentTrials;
+    
+    // FIX: Dynamically get the current trial letter (A, B, or C) from the HUD
     const currentTrial = document.getElementById('trialTag').textContent.trim();
     
-    // 1. Get the current question data parsed from the MD
+    if (!trials || !trials[currentTrial] || !trials[currentTrial].mcqs[currentMcqStep]) return;
     const data = trials[currentTrial].mcqs[currentMcqStep];
 
     if (!selected) {
@@ -272,7 +274,7 @@ document.getElementById('mcqSubmit').onclick = () => {
         return;
     }
 
-    // 2. Compare the two values (both trimmed to be safe)
+    // Comparison logic
     const userSelection = selected.dataset.choice.trim();
     const correctKey = data.correct.trim();
 
@@ -296,7 +298,7 @@ document.getElementById('mcqSubmit').onclick = () => {
         msg.style.color = "#ff9aa0";
         msg.textContent = "Incorrect. Review the Trial Guide and try again.";
     }
-};  
+}; 
 
 // Global Fetch Trigger
 document.getElementById('trialHelp').onclick = async (e) => {
