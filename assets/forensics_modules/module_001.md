@@ -108,7 +108,7 @@ Fuel can support continued work but does not change which system is dominant.
 
 ---
 
-### Trial Guide:
+### Trial Instructions:
 
 **Goal:** Maintain work while **Anaerobic Glycolysis** is the **primary energy source**, using fuel appropriately.
 
@@ -126,7 +126,7 @@ Changing fuel timing can affect fatigue, but it does **not** change the primary 
 
 ---
 
-### Trial Guide:
+### Trial Instructions:
 
 **Goal:** Demonstrate that **fuel timing affects outcome**, not **energy system selection**.
 
@@ -137,6 +137,7 @@ Changing fuel timing can affect fatigue, but it does **not** change the primary 
 3. Observe the **Primary Energy Source** indicator
 
 ---
+
 ### Checkpoint Questions 
 
 **Checkpoint — Trial A (Q1)**
