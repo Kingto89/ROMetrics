@@ -604,14 +604,7 @@ $reset.addEventListener('click', () => {
     sim.vo2Max = 15.3 * ((220 - age) / 72);
 
 
-  // 2. Reset the Avatar & Animation
-  if (runAction) {
-    runAction.paused = true;
-    runAction.time = 0;
-  }
-  restore(); 
-
-  // 3. Reset the HUD/Menu
+  //  Reset the HUD/Menu
   trialTime = 300;
   document.getElementById('trialTime').textContent = 300;
   document.getElementById('engVal').textContent = 100;
@@ -622,7 +615,7 @@ $reset.addEventListener('click', () => {
   $status.textContent = "Ready";
   $status.style.color = "#cfe3ff";
 
-  // 4. Reset MCQ Box & Messages
+  // Reset MCQ Box & Messages
   document.getElementById('mcqBox').style.display = 'none';
   document.getElementById('mcqSubmit').disabled = false;
   document.getElementById('mcqMsg').textContent = "";
@@ -630,7 +623,7 @@ $reset.addEventListener('click', () => {
 });    
 
 // ==============================
-// 2) Studio: Three.js base
+//  Studio: Three.js base
 // ==============================
 const scene = new THREE.Scene();
 scene.fog = new THREE.Fog(0x07101b, 10, 45);
