@@ -222,29 +222,31 @@ function formatMD(text) {
 let currentCorrectIndex = -1;
 
 window.renderMCQ = function(letter) {
-    // Assuming trials are parsed and stored in a global 'allTrials' object
-    const trial = window.currentTrials[letter]; 
-    if (!trial || !trial.mcq) return;
+    const trials = window.currentTrials;
+    if (!trials || !trials[letter]) return;
 
+    const trialData = trials[letter];
+    
+    // 1. Set the Question Text
+    document.getElementById('mcqQ').textContent = trialData.mcq.q;
+
+    // 2. Clear and fill the Options
     const container = document.getElementById('mcqOpts');
     container.innerHTML = '';
     
-    // The MD file marks the correct answer with a (*) or similar? 
-    // This logic assumes the first option is a placeholder or you specify the index.
-    trial.mcq.opts.forEach((opt, idx) => {
+    trialData.mcq.opts.forEach((opt, idx) => {
         const btn = document.createElement('div');
-        btn.className = 'pill'; // Using your existing CSS class
+        btn.className = 'pill'; 
         btn.style.marginBottom = '5px';
+        btn.style.width = '100%';
         btn.textContent = opt;
         btn.onclick = () => {
             document.querySelectorAll('#mcqOpts .pill').forEach(p => p.classList.remove('active'));
             btn.classList.add('active');
-            btn.dataset.choice = idx;
         };
         container.appendChild(btn);
     });
 };
-
 document.getElementById('mcqSubmit').onclick = () => {
     const selected = document.querySelector('#mcqOpts .pill.active');
     if (!selected) return;
