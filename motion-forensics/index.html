@@ -1365,8 +1365,7 @@ document.getElementById('trialHelpContent').textContent =
 
   document.getElementById('trialHelpContent').innerHTML = md.replace(/\n/g, '<br>');
 
-  const trials = parseFL001(md);
-
+window.currentTrials = parseFL001(md); // Global exposure
   showFL001Trial(trials, 'A');
 
   trialA.onclick = ()=>showFL001Trial(trials,'A');
