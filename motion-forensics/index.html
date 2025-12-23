@@ -530,27 +530,23 @@ $spd.addEventListener('input', () => {
 });
 // Start / Pause Button Logic
 $start.onclick = () => {
-  if (sim.speedMph > 0) {
-    if (!sim.running) {
-      sim.elapsed = 0; 
-      if (!sim.hasStarted) {
-        sim.hasStarted = true;
-        sim.workTime = 0;
-        trialTime = 300;
-        initialSpeed = parseFloat(sim.speedMph.toFixed(1));
-        speedViolation = false; 
-      }
+  if (!sim.running) {
+    sim.elapsed = 0; 
+    
+    if (!sim.hasStarted) {
+      sim.hasStarted = true;
+      sim.workTime = 0;
+      trialTime = 300;
+      // Capture the speed they chose to start with
+      initialSpeed = parseFloat(sim.speedMph.toFixed(1));
+      speedViolation = false; 
     }
-    sim.running = !sim.running;
-    if (runAction) runAction.paused = !sim.running;
-    $start.textContent = sim.running ? "Pause" : "Start";
   }
-};
   
   sim.running = !sim.running;
   if (runAction) runAction.paused = !sim.running;
   $start.textContent = sim.running ? "Pause" : "Start";
-
+};
 // --- FUEL BUTTON LOGIC ---
 $fuel.onclick = () => {
   // Add 10 to current reserve
