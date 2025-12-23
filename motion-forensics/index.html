@@ -1289,32 +1289,30 @@ function setZone(which) {
 }
 
 function parseFL001(md) {
-  const trials = {};
-  // Split the file by "### Trial" to separate A, B, and C
-  const sections = md.split(/###\s*Trial\s+/i);
+  const trials = { 'A': { mcqs: [] }, 'B': { mcqs: [] }, 'C': { mcqs: [] } };
+  
+  // 1. Split into large Trial blocks
+  const trialBlocks = md.split(/###\s*Trial\s+([A-C])/i);
 
-  sections.forEach(section => {
-    // Get the first character (A, B, or C)
-    const letter = section.trim().charAt(0).toUpperCase();
-    if (!['A', 'B', 'C'].includes(letter)) return;
+  for (let i = 1; i < trialBlocks.length; i += 2) {
+    const letter = trialBlocks[i].toUpperCase();
+    const content = trialBlocks[i + 1];
 
-    trials[letter] = { mcqs: [] };
-
-    // Split by the "Checkpoint" marker found in your MD
-    const mcqBlocks = section.split(/\*\*Checkpoint/i);
-    mcqBlocks.shift(); // Remove the text before the first checkpoint
+    // 2. Split into Checkpoint blocks
+    const mcqBlocks = content.split(/Checkpoint\s*—\s*Trial\s*[A-C]\s*\(Q\d+\)/i);
+    mcqBlocks.shift(); // Remove text before first question
 
     mcqBlocks.forEach(block => {
       const lines = block.split('\n').map(l => l.trim()).filter(l => l);
       
-      // Extract Question Text
-      const qText = lines[0].replace(/.*?\)\s*/, ''); 
+      // Extract Options (Find lines starting with A., B., C., or D.)
+      const options = lines.filter(l => /^[A-D]\s*\./i.test(l));
       
-      // Extract Options (Looking for A., B., C., D.)
-      const options = lines.filter(l => /^[A-D]\./.test(l));
-      
-      // Extract Correct Answer letter
-      const answerMatch = block.match(/Correct Answer:\s*([A-D])/i);
+      // Extract Question (The first line that isn't a goal/concept)
+      const qText = lines.find(l => !l.includes('**') && !/^[A-D]\./i.test(l)) || "Question text not found";
+
+      // Extract Correct Answer (Looking for "Correct Answer: B" or similar)
+      const answerMatch = block.match(/Correct\s*Answer:\s*([A-D])/i);
 
       if (options.length > 0) {
         trials[letter].mcqs.push({
@@ -1324,7 +1322,8 @@ function parseFL001(md) {
         });
       }
     });
-  });
+  }
+  console.log("Parse Complete. Data found:", trials);
   return trials;
 }
 
