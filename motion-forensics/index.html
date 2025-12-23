@@ -766,9 +766,13 @@ function drawPanel(screen, title) {
     let aerobicPart = Math.min(currentCost, sim.vo2Max);
     let anaerobicPart = Math.max(0, currentCost - sim.vo2Max);
     let totalWork = aerobicPart + anaerobicPart;
+    // --- REALISM ADD-IN: Start-up Anaerobic Deficit ---
+    // Body uses a bit of anaerobic fuel for the first 30s while VO2 ramps up.
+    let startUpDeficit = (sim.elapsed < 30 && speed > 0) ? (0.12 * (1.0 - (sim.elapsed / 30))) : 0;
 
-    let aerobicRatio = aerobicPart / totalWork;
-    let anaerobicRatio = anaerobicPart / totalWork;
+    let anaerobicRatio = (anaerobicPart / totalWork) + startUpDeficit;
+    let aerobicRatio = 1.0 - anaerobicRatio;
+  
 
     ctx.fillStyle = 'rgba(255,255,255,0.05)';
     ctx.fillRect(40, graphY, graphW, graphH);
