@@ -380,6 +380,22 @@ for (let i = 0; i <= 220; i++) {
   // VERIFIED ACSM FORMULA
   let cost = (0.205 * mPerMin) + 3.5;
   
+// 1. Calculate the Max Capacity (VO2 Budget) first
+const romaAge = 34;
+const romanAge = 43;
+
+// ACSM formula for Max VO2 capacity based on age
+const romaMaxVO2 = (220 - romaAge) * 0.205; 
+const romanMaxVO2 = (220 - romanAge) * 0.205;
+
+// 2. Now run the loop using those defined variables
+for (let i = 0; i <= 220; i++) {
+  let mph = (i / 10).toFixed(1);
+  let mPerMin = parseFloat(mph) * 26.8;
+  
+  // VERIFIED ACSM FORMULA
+  let cost = (0.205 * mPerMin) + 3.5;
+  
   // Calculate Pct for internal logic
   let romaPct = (cost / romaMaxVO2) * 100;
   let romanPct = (cost / romanMaxVO2) * 100;
