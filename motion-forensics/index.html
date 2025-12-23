@@ -1961,10 +1961,13 @@ if (b.neck) applyAdd(b.neck, 0, torsoYaw * 0.35, 0);
 if (b.head) applyAdd(b.head, 0, torsoYaw * 0.15, 0);
 
 
-if (runAction){
-  runAction.paused = !runNow;
-}
-}
+if (runAction) runAction.paused = false;
+
+  } else {
+    // THIS FIXES THE RESET: If not running, force anatomic position
+    restore();
+    if (runAction) runAction.paused = true;
+  }
 
   // treadmill motion
   if (sim.running){
