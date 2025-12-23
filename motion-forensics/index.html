@@ -1290,34 +1290,40 @@ function setZone(which) {
 
 function parseFL001(md) {
   const trials = {};
-  const sections = md.split('###');
+  // Split the file by "### Trial" to separate A, B, and C
+  const sections = md.split(/###\s*Trial\s+/i);
 
   sections.forEach(section => {
-    // Look for Trial headers (e.g., Trial A)
-    const trialMatch = section.match(/Trial ([A-C])\b/i);
-    if (trialMatch) {
-      const letter = trialMatch[1].toUpperCase();
-      if (!trials[letter]) trials[letter] = { mcqs: [] };
+    // Get the first character (A, B, or C)
+    const letter = section.trim().charAt(0).toUpperCase();
+    if (!['A', 'B', 'C'].includes(letter)) return;
 
-      // Look for Checkpoints within this trial section
-      const mcqBlocks = section.split('**Checkpoint');
-      mcqBlocks.shift(); // Remove text before first checkpoint
+    trials[letter] = { mcqs: [] };
 
-      mcqBlocks.forEach(block => {
-        const lines = block.split('\n').map(l => l.trim()).filter(l => l);
-        const qText = lines[1]; // First line after the "Checkpoint" header
-        const options = lines.filter(l => /^[A-D]\./.test(l));
-        const answerMatch = block.match(/Correct Answer:\s*([A-D])/i);
+    // Split by the "Checkpoint" marker found in your MD
+    const mcqBlocks = section.split(/\*\*Checkpoint/i);
+    mcqBlocks.shift(); // Remove the text before the first checkpoint
 
-        if (qText && options.length > 0) {
-          trials[letter].mcqs.push({
-            q: qText,
-            opts: options,
-            correct: answerMatch ? answerMatch[1].toUpperCase() : 'A'
-          });
-        }
-      });
-    }
+    mcqBlocks.forEach(block => {
+      const lines = block.split('\n').map(l => l.trim()).filter(l => l);
+      
+      // Extract Question Text
+      const qText = lines[0].replace(/.*?\)\s*/, ''); 
+      
+      // Extract Options (Looking for A., B., C., D.)
+      const options = lines.filter(l => /^[A-D]\./.test(l));
+      
+      // Extract Correct Answer letter
+      const answerMatch = block.match(/Correct Answer:\s*([A-D])/i);
+
+      if (options.length > 0) {
+        trials[letter].mcqs.push({
+          q: qText,
+          opts: options,
+          correct: answerMatch ? answerMatch[1].toUpperCase() : 'A'
+        });
+      }
+    });
   });
   return trials;
 }
@@ -1369,7 +1375,7 @@ async function enterFL001() {
   
   // 2. Parse and store globally so the MCQ system can see it
   window.currentTrials = parseFL001(md); 
-  
+  console.log("Parsed Trials Data:", window.currentTrials);
   // 3. Create local reference for the UI buttons
   const trials = window.currentTrials; 
 
