@@ -749,11 +749,20 @@ function drawPanel(screen, title) {
         ctx.fillRect(40, graphY, graphW * (atpPct / 100), graphH);
     }
 
-    // 4. Legend / Labels
+  // 4. Legend / Labels (Corrected Order: High Intensity to Low Intensity)
     ctx.font = '600 16px Inter, system-ui';
-    ctx.fillStyle = '#38bdf8'; ctx.fillText('■ AEROBIC', 40, graphY + graphH + 30);
-    ctx.fillStyle = '#ffe4a3'; ctx.fillText('■ ANAEROBIC GLYCOLYSIS', 180, graphY + graphH + 30);
-    ctx.fillStyle = '#ff9aa0'; ctx.fillText('■ ATP-PC', 440, graphY + graphH + 30);
+    
+    // Start with ATP-PC (Red)
+    ctx.fillStyle = '#ff9aa0'; 
+    ctx.fillText('■ ATP-PC', 40, graphY + graphH + 30);
+    
+    // Middle Anaerobic (Yellow)
+    ctx.fillStyle = '#ffe4a3'; 
+    ctx.fillText('■ ANAEROBIC GLYCOLYSIS', 140, graphY + graphH + 30);
+    
+    // End Aerobic (Blue)
+    ctx.fillStyle = '#38bdf8'; 
+    ctx.fillText('■ AEROBIC', 380, graphY + graphH + 30);
 
     screen.tex.needsUpdate = true;
 }
