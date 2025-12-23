@@ -1,22 +1,21 @@
 ## FL-001 — Metabolic Demand: Primary Energy Sources
 
-**Lesson focus:** Running speed determines which energy system is used most.
-
-As speed increases, the primary energy source shifts from **Aerobic Metabolism** to **Anaerobic Glycolysis**, and at very high speeds to **PCr**.
-
-You will use the **Primary Energy Source indicator** to complete each trial.
-
 ---
 
 ### Trial A — Aerobic Metabolism
 
 ### Concept (read first):
 
-**Energy Balance:** At any speed, the body is a "hybrid" engine.
+**Lesson Focus:**  
+Running speed determines **which energy system contributes the most energy**.  
+As speed increases, the **primary** energy contribution shifts from **Aerobic Metabolism** to **Anaerobic Glycolysis**, and at very high speeds to **ATP-PC (PCr)**.  
+All energy systems are always active; “primary” refers to the **largest contributor**, not an exclusive system.
 
-* Aerobic Contribution: Uses oxygen to meet demand. If this system is the primary source, energy levels remain stable.
-* Oxygen Deficit: When speed exceeds your aerobic capacity, you must "borrow" energy from a finite tank (W' Balance).
-* Anaerobic Supplement: If oxygen demand exceeds supply, the body "borrows" from its finite W' Balance.
+**Energy Balance:** At any speed, the body functions as a "hybrid" engine.
+
+* **Aerobic Contribution:** Uses oxygen to meet energy demand. When this system is primary, energy levels remain stable.
+* **Oxygen Deficit:** When running speed exceeds aerobic capacity, oxygen supply cannot fully meet demand.
+* **Anaerobic Supplement:** Any shortfall is covered by anaerobic systems drawing from a **finite reserve (W′ Balance)**, causing energy to decline.
 
 ---
 
@@ -24,44 +23,59 @@ You will use the **Primary Energy Source indicator** to complete each trial.
 
 **Overview:** 
 
-* VO2 Max (Aerobic Capacity): This is the subject’s "Oxygen Budget"—the maximum volume of oxygen their heart and lungs can deliver to muscles per minute.
-* The Total VO2 Cost: When running, your body’s total oxygen demand is the sum of two parts:
-* Resting Metabolic Rate (3.5 ml/kg/min): The constant base-level oxygen needed to keep your heart beating and lungs breathing, even before you take a step.
-* Work VO2 (0.22 × Speed): The additional oxygen required specifically for the mechanical work of running.
+* **VO₂ Max (Aerobic Capacity):** In this lab, this represents the subject’s **modeled oxygen budget**—the maximum sustainable oxygen supply available to support running.
+* **The Total VO₂ Cost:** When running, total oxygen demand is modeled as the sum of:
+* **Resting Metabolic Rate (3.5 ml/kg/min):** Baseline oxygen cost required to sustain basic physiological function (≈1 MET).
+* **Work VO₂:** The additional oxygen required to perform the mechanical work of running.
 
+* **Oxygen Deficit:** If **Total VO₂ Cost > VO₂ Max**, energy demand exceeds aerobic supply and energy is supplemented by the finite W′ Balance.
 
-* Oxygen Deficit: If the Total VO2 Cost is higher than the VO2 Max, the body "borrows" energy from the W' Balance
+---
 
 **1. ATP-PC (Phosphagen)**
 
-* **Speed:** Instant
-* **Duration:** ~0–10 seconds
-* **Capacity:** Very small “burst tank”
-* **Use:** Starts movement immediately, like a sprint off the line
-* **Limit:** Runs out almost instantly
-* **Work:Rest:** 1:12–1:20 [10 sec sprint × 12 ratio = 120 sec rest needed – 10 sec sprint × 20 ratio = 200 sec rest needed]
+- **Speed:** Instant  
+- **Duration:** ~0–10 seconds  
+- **Capacity:** Very small “burst tank”  
+- **Use:** Starts movement immediately, like a sprint off the line  
+- **Limit:** Runs out almost instantly  
+- **Work:Rest:** 1:12–1:20  
+
+**Explanation:** The Work:Rest ratio for ATP-PC is usually expressed as 1:12 to 1:20, meaning for every 1 second of maximal effort, 12–20 seconds of rest are required for full recovery of phosphocreatine stores.  
+
+So for a 10-second sprint:  
+
+- **Minimum rest:** 10 × 12 = 120 seconds  
+- **Maximum rest:** 10 × 20 = 200 seconds
+
+
+---
 
 **2. Anaerobic Glycolysis (W′)**
 
 * **Speed:** Fast, short-term
-* **Duration:** ~10 seconds – 2 minutes
-* **Capacity:** Small “reserve tank”
-* **Use:** Covers extra demand when aerobic oxygen isn’t enough
-* **Limit:** Finite; if fully used, fatigue happens
-* **Work:Rest:** 1:3–1:5 [short/medium recovery depending on effort]
-
-**3. Aerobic (VO₂ Max)**
-
-* **Speed:** Moderate, long-term
-* **Duration:** Minutes to hours, depending on intensity
-* **Capacity:** Large “main tank”
-* **Use:** Supplies most energy at low to moderate speeds
-* **Limit:** Maxed out near VO₂ max; recovery slows if above threshold
-* **Work:Rest:** 1:1–1:3 [medium/long recovery depending on effort]
+* **Peak Contribution:** High-intensity efforts beyond aerobic capacity
+* **Capacity:** Small, finite “reserve tank”
+* **Use:** Supplies additional energy when aerobic oxygen delivery is insufficient
+* **Limit:** Finite capacity; depletion results in fatigue
+* **Work:Rest:** 1:3–1:5
 
 ---
 
-* The 60% Rule: In this lab, staying above 60%  indicates the subject is using their Primary Aerobic System with only a manageable assist from anaerobic reserves. Dropping below 60% signifies a transition to Anaerobic Dominance, leading to rapid fatigue.
+**3. Aerobic (VO₂ Max)**
+
+* **Speed:** Moderate, sustainable
+* **Duration:** Minutes to hours, depending on intensity
+* **Capacity:** Large “main tank”
+* **Use:** Supplies most energy at low-to-moderate speeds
+* **Limit:** Capped by aerobic capacity; exceeding it requires anaerobic supplementation
+* **Work:Rest:** 1:1–1:3
+
+---
+
+* **The 60% Threshold (Lab-Defined):**  
+  In real physiology, the transition to anaerobic dominance occurs at an **individual-specific threshold.** This threshold commonly appears around 50–60% of VO₂ max in untrained individuals, 65–75% in recreationally trained individuals, and 80–90% or higher in endurance-trained athletes, but it is not determined by percentage alone and must be identified experimentally. 
+  **In this lab**, **60%** is used as a **standardized simulation threshold** to indicate when aerobic supply is no longer sufficient to meet demand. It is chosen for instructional clarity and consistency and is **not a universal biological constant**.
 
 ---
 
@@ -71,30 +85,44 @@ You will use the **Primary Energy Source indicator** to complete each trial.
 
 **1. Calculate the "Oxygen Budget" (VO₂ Max)**
 
-Goal: - Find the highest speed at which the subject completes a 300s trial without crossing into Anaerobic Dominance (staying at or above 60% energy).
+**Goal:** Find the highest speed at which the subject completes a **300 s trial** without crossing into Anaerobic Dominance (remaining at or above **60% energy**).
 
-**Formula:** 
-VO2 Max = 15.3 × ((220 − Age) / 72)
+**Formula (Lab Model):**  
+VO₂max ≈ 15.3 × (HRmax / HRrest)
 
-**Example:** 
-* Roma's Age: 34
-
-* Roman's Age: 43
+**Model Info:** 
+* Roma's Age: 34  
+* Roman's Age: 43  
+* Heart rate at rest (HRrest): 72 (both models)  
+* HRmax is estimated as (220 − age) - EG. (220-34=?)
 
 **Your Result:** [ ENTER VALUE HERE ]  
-*(This is your subject's budget)*
+*(This is your subject's modeled oxygen budget)*
+
+---
 
 **2. Calculate the "Oxygen Cost"**
-Plug your chosen MPH into this line to find its "price" in oxygen:
 
-**Formula:** 
+Plug your chosen MPH into this line to find its modeled oxygen “price”:
+
+**Original physiological formula (ACSM Running Equation):**  
+VO₂ (ml/kg/min) = 3.5 + (0.2 × speed in m/min) + (0.9 × speed in m/min × grade)
+
+**Lab-Adjusted Formula - USE:**  
 Total Cost = ((MPH × 26.8) × 0.2) + 3.5
 
+**Why we adjust for the lab:**  
+- We **ignore grade** because lab trials are on level ground.  
+- We convert speed from **MPH to m/min** using 26.8 (1 mph ≈ 26.8 m/min).
+  
+---
+
 **3. The Forensic Test**
+
 Compare your **Total Cost** to your **Oxygen Budget**:
 
-* If **Cost > Budget**, the bar will drain.
-* If **Cost ≤ Budget**, energy is stable.
+* If **Cost > Budget**, energy will drain.
+* If **Cost ≤ Budget**, energy remains stable.
 
 ---
 
@@ -114,7 +142,10 @@ Fuel can support continued work but does not change which system is dominant.
 
 **Steps**
 
-1. Press **Start Trial** 2. Confirm the **Primary Energy Source = Anaerobic Glycolysis** 3. Use **Fuel +10 exactly two times** 4. Monitor Energy during the trial
+1. Press **Start Trial**  
+2. Confirm the **Primary Energy Source = Anaerobic Glycolysis**  
+3. Use **Fuel +10 exactly two times**  
+4. Monitor Energy during the trial
 
 ---
 
@@ -132,9 +163,10 @@ Changing fuel timing can affect fatigue, but it does **not** change the primary 
 
 **Steps**
 
-1. Press **Start Trial** 2. Use **exactly two** fuel uses at different times than Trial B
-2. Observe Energy behavior
-3. Observe the **Primary Energy Source** indicator
+1. Press **Start Trial**  
+2. Use **exactly two** fuel uses at different times than Trial B  
+3. Observe Energy behavior  
+4. Observe the **Primary Energy Source** indicator
 
 ---
 
@@ -151,6 +183,7 @@ D. VO₂ Max relative to cost
 
 **Correct Answer:** D
 
+---
 
 **Checkpoint — Trial A (Q2)**
 
@@ -163,13 +196,15 @@ D. PCr activates at low speed
 
 **Correct Answer:** B
 
+---
+
 **Checkpoint — Trial A (Q3)**
 
-Which value represents the subject’s VO₂ Max used as the oxygen budget for the trial?
+Which value represents the subject’s modeled VO₂ Max used as the oxygen budget for the trial?
 
-A. 15.3 × ((220 − age) ÷ 72)  
-B. (Speed × 26.8 × 0.2) + 3.5  
-C. 0.22 × running speed  
+A. 15.3 × (HRmax ÷ HRrest)  
+B. (Speed × 26.8 × 0.20) + 3.5  
+C. 0.20 × running speed  
 D. Resting metabolic rate  
 
 **Correct Answer:** A
