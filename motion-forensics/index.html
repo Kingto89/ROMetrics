@@ -523,12 +523,19 @@ $spd.addEventListener('input', () => {
 
 // Start / Pause Button Logic
 $start.onclick = () => {
-  if (!sim.hasStarted) {
-    sim.hasStarted = true;
-    sim.elapsed = 0;
-    sim.workTime = 0;
-    trialTime = 300;
+  // If we are currently NOT running, treat this as a "system ignition"
+  // This resets the transition timers so ATP-PC and Anaerobic lag show up again
+  if (!sim.running) {
+    sim.elapsed = 0; 
+    
+    // First time start logic
+    if (!sim.hasStarted) {
+      sim.hasStarted = true;
+      sim.workTime = 0;
+      trialTime = 300;
+    }
   }
+  
   sim.running = !sim.running;
   if (runAction) runAction.paused = !sim.running;
   $start.textContent = sim.running ? "Pause" : "Start";
