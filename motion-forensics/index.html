@@ -691,7 +691,6 @@ scene.fog = new THREE.Fog(0x07101b, 10, 45);
   ctx.arcTo(x, y, x+w, y, r);
   ctx.closePath();
 }
-
 function drawPanel(screen, title) {
     const { ctx, c } = screen;
     const currentTrial = document.getElementById('trialTag').textContent;
@@ -708,7 +707,7 @@ function drawPanel(screen, title) {
     ctx.lineWidth = 8;
     ctx.strokeRect(10, 10, c.width - 20, c.height - 20);
 
-    // 2. Header: Model Info & Trial
+    // 2. Header: Subject & Session Info
     ctx.fillStyle = '#e6eef7';
     ctx.font = '900 28px Inter, system-ui';
     ctx.fillText(`SUBJECT: Average Fit Adult (${modelName})`, 40, 60);
@@ -717,19 +716,40 @@ function drawPanel(screen, title) {
     ctx.font = '700 24px Inter, system-ui';
     ctx.fillText(`CURRENT SESSION: Trial ${currentTrial}`, 40, 100);
 
-    // 3. Energy System Graph (The Hybrid View)
-    const graphY = 160;
-    const graphW = c.width - 80;
-    const graphH = 60;
-
-    // Define the "Mix" based on speed and energy
-    // Aerobic is base, Anaerobic kicks in when Cost > Budget
-    let aerobicPct = (sim.vo2Max / (row ? Math.max(row.cost, sim.vo2Max) : sim.vo2Max)) * 100;
-    let anaerobicPct = 100 - aerobicPct;
+    // 3. ENFORCED DOMINANCE LABEL (The Authority on Energy Systems)
+    const currentCost = row ? parseFloat(row.cost) : 3.5;
+    const isAnaerobic = currentCost > sim.vo2Max;
     
-    // ATP-PC: Shows briefly during speed changes or at very high speeds
-    let atpPct = (sim.speedMph > 12) ? 15 : 0; 
-    if (sim.speedMph > 0 && sim.elapsed < 10) atpPct = 25; // First 10 seconds of movement
+    let dominantText = isAnaerobic ? "PRIMARY: Anaerobic Glycolysis" : "PRIMARY: Aerobic Metabolism";
+    let dominantColor = isAnaerobic ? "#ffe4a3" : "#38bdf8";
+
+    ctx.fillStyle = dominantColor;
+    ctx.font = '900 22px Inter, system-ui';
+    ctx.fillText(dominantText, 40, 140);
+
+    // Show ATP-PC Activation Note at start
+    if (sim.running && sim.elapsed < 10) {
+        ctx.fillStyle = '#ff9aa0';
+        ctx.font = '700 18px Inter, system-ui';
+        ctx.fillText("+ ATP-PC ACTIVATED", 420, 140);
+    }
+
+    // 4. Hybrid Energy Graph
+    const graphY = 175;
+    const graphW = c.width - 80;
+    const graphH = 50;
+
+    // Logic: Aerobic is budget, Anaerobic is anything over budget
+    let aerobicPart = Math.min(currentCost, sim.vo2Max);
+    let anaerobicPart = Math.max(0, currentCost - sim.vo2Max);
+    let totalPart = aerobicPart + anaerobicPart;
+
+    let aerobicPct = (aerobicPart / totalPart) * 100;
+    let anaerobicPct = (anaerobicPart / totalPart) * 100;
+    
+    // ATP-PC visual overlay
+    let atpPct = 0;
+    if (sim.running && sim.elapsed < 15) atpPct = (sim.speedMph / 22) * 35;
 
     // Draw Background bar
     ctx.fillStyle = 'rgba(255,255,255,0.05)';
@@ -739,30 +759,29 @@ function drawPanel(screen, title) {
     ctx.fillStyle = '#38bdf8';
     ctx.fillRect(40, graphY, graphW * (aerobicPct / 100), graphH);
 
-    // Draw Anaerobic Glycolysis (Yellow - Overlapping)
-    ctx.fillStyle = 'rgba(255, 228, 163, 0.8)';
-    ctx.fillRect(40 + (graphW * (aerobicPct / 100)) - (anaerobicPct > 0 ? 20 : 0), graphY, graphW * (anaerobicPct / 100), graphH);
+    // Draw Anaerobic (Yellow - starts where blue ends)
+    if (anaerobicPct > 0) {
+        ctx.fillStyle = 'rgba(255, 228, 163, 0.8)';
+        ctx.fillRect(40 + (graphW * (aerobicPct / 100)), graphY, graphW * (anaerobicPct / 100), graphH);
+    }
 
-    // Draw ATP-PC (Red - The "Burst" system)
+    // Draw ATP-PC (Red - Overlays the start of the bar)
     if (atpPct > 0) {
-        ctx.fillStyle = '#ff9aa0';
+        ctx.fillStyle = 'rgba(255, 154, 160, 0.7)';
         ctx.fillRect(40, graphY, graphW * (atpPct / 100), graphH);
     }
 
-  // 4. Legend / Labels (Corrected Order: High Intensity to Low Intensity)
+    // 5. Legend (Corrected Order: High to Low Intensity)
     ctx.font = '600 16px Inter, system-ui';
     
-    // Start with ATP-PC (Red)
     ctx.fillStyle = '#ff9aa0'; 
-    ctx.fillText('■ ATP-PC', 40, graphY + graphH + 30);
+    ctx.fillText('■ ATP-PC', 40, graphY + graphH + 35);
     
-    // Middle Anaerobic (Yellow)
     ctx.fillStyle = '#ffe4a3'; 
-    ctx.fillText('■ ANAEROBIC GLYCOLYSIS', 140, graphY + graphH + 30);
+    ctx.fillText('■ ANAEROBIC GLYCOLYSIS', 140, graphY + graphH + 35);
     
-    // End Aerobic (Blue)
     ctx.fillStyle = '#38bdf8'; 
-    ctx.fillText('■ AEROBIC', 380, graphY + graphH + 30);
+    ctx.fillText('■ AEROBIC', 380, graphY + graphH + 35);
 
     screen.tex.needsUpdate = true;
 }
@@ -1499,23 +1518,17 @@ function updateHUD() {
     $spdVal.textContent = sim.speedMph.toFixed(1);
     $engVal.textContent = Math.round(sim.energy);
 
-    let primarySource = "";
-    let statusColor = "";
-
-    if (sim.energy >= 60) {
-        primarySource = "Primary: Aerobic";
-        statusColor = "#38bdf8"; // Light Blue
-    } else if (sim.energy > 10) {
-        primarySource = "Primary: Anaerobic Glycolysis";
-        statusColor = "#ffe4a3"; // Yellow
+    if (sim.energy <= 0) {
+        $status.textContent = "CRITICAL FAILURE: EXHAUSTED";
+        $status.style.color = "#ff9aa0";
+    } else if (sim.running) {
+        $status.textContent = "Simulation Active";
+        $status.style.color = "#38bdf8";
     } else {
-        primarySource = "System Failure (PCr Exhausted)";
-        statusColor = "#ff9aa0"; // Red
+        $status.textContent = "Ready";
+        $status.style.color = "#cfe3ff";
     }
-
-    $status.textContent = primarySource;
-    $status.style.color = statusColor;
-}
+}    
 
     const clock = new THREE.Clock();
 let lastT = clock.getElapsedTime();
@@ -1937,47 +1950,59 @@ if (runAction){
     }
   }
 
-// --- SIMPLE STOP & RESET ADD-IN ---
+// --- DYNAMIC TRIAL STOP & UNLOCK LOGIC ---
     if (sim.energy <= 0 || trialTime <= 0) {
-        
-// --- FINALIZED MCQ UNLOCK LOGIC ---
-if (trialTime <= 0 && document.getElementById('mcqBox').style.display !== 'block') {
-    const activeModel = document.getElementById('modelSelect').value;
-    const targetSpeed = (activeModel === "Roma") ? 6.7 : 6.3;
-
-    if (sim.speedMph === targetSpeed) {
-        // MD Requirement: Staying above 60% indicates Aerobic Dominance
-        if (sim.energy >= 60) {
-            document.getElementById('mcqBox').style.display = 'block';
-            document.getElementById('trialMsg').innerHTML = 
-                '<b style="color:#38bdf8;">Aerobic Dominance Confirmed.</b> Session logged.';
-            
+        if (trialTime <= 0 && document.getElementById('mcqBox').style.display !== 'block') {
+            const activeModel = document.getElementById('modelSelect').value;
             const currentLetter = document.getElementById('trialTag').textContent.trim();
-            currentMcqStep = 0; // Reset question counter for the new session
-            window.renderMCQ(currentLetter); 
-        } else {
-            document.getElementById('trialMsg').innerHTML = 
-                '<b style="color:#ff9aa0;">Trial Incomplete:</b> Subject crossed into Anaerobic Dominance (<60%). Reduce speed or improve efficiency.';
-        }
-    } else {
-        document.getElementById('trialMsg').innerHTML = 
-            `<b style="color:#ff9aa0;">Failed:</b> Maintain exactly ${targetSpeed} mph for data integrity.`;
-    }
-}
+            
+            if (currentLetter === 'A') {
+                const targetSpeed = (activeModel === "Roma") ? 6.7 : 6.3;
+                if (sim.speedMph === targetSpeed && sim.energy >= 60) {
+                    triggerUnlock("Aerobic Dominance Confirmed.");
+                } else {
+                    document.getElementById('trialMsg').innerHTML = 
+                        `<b style="color:#ff9aa0;">Trial Incomplete:</b> Maintain exactly ${targetSpeed} mph and stay Aerobic (>60%).`;
+                }
+            } 
+            else if (currentLetter === 'B') {
+                const key = sim.speedMph.toFixed(1);
+                const row = METABOLIC_TABLE[key];
+                const isAnaerobic = row && parseFloat(row.cost) > sim.vo2Max;
 
+                // Trial B Requirement: Anaerobic dominance and exactly 2 fuel uses
+                if (isAnaerobic && fuelUsedCount === 2) {
+                    triggerUnlock("Anaerobic Protocol & Fuel Timing Confirmed.");
+                } else {
+                    let reason = !isAnaerobic ? "Speed too low for Anaerobic dominance." : `Fuel clicks: ${fuelUsedCount}/2.`;
+                    document.getElementById('trialMsg').innerHTML = 
+                        `<b style="color:#ff9aa0;">Trial Incomplete:</b> ${reason}`;
+                }
+            }
+        }
+
+        // Auto-stop simulation when time or energy runs out
         sim.running = false;
         if (runAction) runAction.paused = true;
         restore(); 
-        $start.textContent = "Start";
+        document.getElementById('startBtn').textContent = "Start";
     }
 
-    // 3. Final Render
+    // 3. Final Render Refresh
     updateHUD();
     renderer.render(scene, camera);
-} // This is the ONLY closing brace for animate()
+} // End of animate()
+
+// --- HELPER: UNLOCK MCQ HUD ---
+function triggerUnlock(msg) {
+    document.getElementById('mcqBox').style.display = 'block';
+    document.getElementById('trialMsg').innerHTML = `<b style="color:#38bdf8;">Goal Reached:</b> ${msg}`;
+    currentMcqStep = 0;
+    const currentLetter = document.getElementById('trialTag').textContent.trim();
+    window.renderMCQ(currentLetter);
+}
 
 animate();
-// ==============================
 // 9) Enter Studio (gate -> studio)
 // ==============================
 $enter.addEventListener('click', async () => {
