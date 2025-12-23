@@ -152,8 +152,9 @@
     </div>
   </div>
   <script type="module">
+let currentMcqStep = 0; 
+window.currentTrials = { 'A': { mcqs: [] }, 'B': { mcqs: [] }, 'C': { mcqs: [] } };    
 let cachedModuleMD = "";
-let currentMcqStep = 0; // Tracks which question the user is on
 window.showTab = function(tabName) {
   const content = document.getElementById('tabContent');
   const currentTrial = document.getElementById('trialTag').textContent; // "A", "B", or "C"
@@ -1289,42 +1290,41 @@ function setZone(which) {
 }
 
 function parseFL001(md) {
-  const trials = { 'A': { mcqs: [] }, 'B': { mcqs: [] }, 'C': { mcqs: [] } };
-  
-  // 1. Split into large Trial blocks
-  const trialBlocks = md.split(/###\s*Trial\s+([A-C])/i);
+    const trials = { 'A': { mcqs: [] }, 'B': { mcqs: [] }, 'C': { mcqs: [] } };
+    
+    // Split the file specifically by the Checkpoint marker
+    const blocks = md.split('**Checkpoint');
+    blocks.shift(); // Remove introduction text
 
-  for (let i = 1; i < trialBlocks.length; i += 2) {
-    const letter = trialBlocks[i].toUpperCase();
-    const content = trialBlocks[i + 1];
+    blocks.forEach(block => {
+        const lines = block.split('\n').map(l => l.trim()).filter(l => l);
+        
+        // 1. Determine which Trial this question belongs to (A, B, or C)
+        const trialMatch = block.match(/Trial\s+([A-C])/i);
+        if (!trialMatch) return;
+        const letter = trialMatch[1].toUpperCase();
 
-    // 2. Split into Checkpoint blocks
-    const mcqBlocks = content.split(/Checkpoint\s*—\s*Trial\s*[A-C]\s*\(Q\d+\)/i);
-    mcqBlocks.shift(); // Remove text before first question
+        // 2. Extract the Question text (line after the header)
+        const qText = lines[1] || "Question missing";
 
-    mcqBlocks.forEach(block => {
-      const lines = block.split('\n').map(l => l.trim()).filter(l => l);
-      
-      // Extract Options (Find lines starting with A., B., C., or D.)
-      const options = lines.filter(l => /^[A-D]\s*\./i.test(l));
-      
-      // Extract Question (The first line that isn't a goal/concept)
-      const qText = lines.find(l => !l.includes('**') && !/^[A-D]\./i.test(l)) || "Question text not found";
+        // 3. Extract Options (Lines starting with A, B, C, D)
+        const options = lines.filter(l => /^[A-D]\./.test(l));
 
-      // Extract Correct Answer (Looking for "Correct Answer: B" or similar)
-      const answerMatch = block.match(/Correct\s*Answer:\s*([A-D])/i);
+        // 4. Extract Correct Answer
+        const ansMatch = block.match(/Correct\s*Answer:\s*([A-D])/i);
+        const correctLetter = ansMatch ? ansMatch[1].toUpperCase() : 'A';
 
-      if (options.length > 0) {
-        trials[letter].mcqs.push({
-          q: qText,
-          opts: options,
-          correct: answerMatch ? answerMatch[1].toUpperCase() : 'A'
-        });
-      }
+        if (options.length > 0) {
+            trials[letter].mcqs.push({
+                q: qText,
+                opts: options,
+                correct: correctLetter
+            });
+        }
     });
-  }
-  console.log("Parse Complete. Data found:", trials);
-  return trials;
+
+    console.log("Final Parsed Data:", trials);
+    return trials;
 }
 
 function showFL001Trial(trials, letter){
@@ -1432,23 +1432,22 @@ function updateHUD() {
     $spdVal.textContent = sim.speedMph.toFixed(1);
     $engVal.textContent = Math.round(sim.energy);
 
-    // MD Logic: Primary energy source check
-    let energySystem = "";
-    let systemColor = "";
+    let primarySource = "";
+    let statusColor = "";
 
     if (sim.energy >= 60) {
-        energySystem = "Aerobic";
-        systemColor = "#38bdf8"; // Light Blue
+        primarySource = "Primary: Aerobic";
+        statusColor = "#38bdf8"; // Light Blue
     } else if (sim.energy > 10) {
-        energySystem = "Anaerobic";
-        systemColor = "#ffe4a3"; // Yellow
+        primarySource = "Primary: Anaerobic Glycolysis";
+        statusColor = "#ffe4a3"; // Yellow
     } else {
-        energySystem = "CRITICAL";
-        systemColor = "#ff9aa0"; // Red
+        primarySource = "System Failure (PCr Exhausted)";
+        statusColor = "#ff9aa0"; // Red
     }
 
-    $status.textContent = energySystem;
-    $status.style.color = systemColor;
+    $status.textContent = primarySource;
+    $status.style.color = statusColor;
 }
 
     const clock = new THREE.Clock();
@@ -1880,22 +1879,22 @@ if (trialTime <= 0 && document.getElementById('mcqBox').style.display !== 'block
     const targetSpeed = (activeModel === "Roma") ? 6.7 : 6.3;
 
     if (sim.speedMph === targetSpeed) {
-        // MD Logic: Primary energy source check (Stable energy = Aerobic)
+        // MD Requirement: Staying above 60% indicates Aerobic Dominance
         if (sim.energy >= 60) {
             document.getElementById('mcqBox').style.display = 'block';
             document.getElementById('trialMsg').innerHTML = 
-                '<b style="color:#38bdf8;">Requirement Met:</b> Aerobic Dominance Confirmed. Session Unlocked.';
+                '<b style="color:#38bdf8;">Aerobic Dominance Confirmed.</b> Session logged.';
             
-            // This triggers the specific MCQ question from your parsed currentTrials
-            const currentLetter = document.getElementById('trialTag').textContent;
+            const currentLetter = document.getElementById('trialTag').textContent.trim();
+            currentMcqStep = 0; // Reset question counter for the new session
             window.renderMCQ(currentLetter); 
         } else {
             document.getElementById('trialMsg').innerHTML = 
-                '<b style="color:#ff9aa0;">Trial Incomplete:</b> Anaerobic fatigue too high. Maintain >60% energy.';
+                '<b style="color:#ff9aa0;">Trial Incomplete:</b> Subject crossed into Anaerobic Dominance (<60%). Reduce speed or improve efficiency.';
         }
     } else {
         document.getElementById('trialMsg').innerHTML = 
-            `<b style="color:#ff9aa0;">Trial Incomplete:</b> Speed must be exactly ${targetSpeed} mph at 0s.`;
+            `<b style="color:#ff9aa0;">Failed:</b> Maintain exactly ${targetSpeed} mph for data integrity.`;
     }
 }
 
