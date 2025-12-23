@@ -856,11 +856,11 @@ scene.fog = new THREE.Fog(0x07101b, 10, 45);
     ctx.font = '900 22px Inter, system-ui';
     ctx.fillText(dominantText, 40, 140);
 
-    // 11. LEGEND (ATP-PC -> ANAEROBIC -> AEROBIC)
+   // 11. LEGEND (ATP-PC -> AEROBIC -> ANAEROBIC)
     ctx.font = '600 16px Inter, system-ui';
     ctx.fillStyle = '#ff9aa0'; ctx.fillText('■ ATP-PC', 40, graphY + graphH + 35);
-    ctx.fillStyle = '#ffe4a3'; ctx.fillText('■ ANAEROBIC GLYCOLYSIS', 140, graphY + graphH + 35);
-    ctx.fillStyle = '#38bdf8'; ctx.fillText('■ AEROBIC', 380, graphY + graphH + 35);
+    ctx.fillStyle = '#38bdf8'; ctx.fillText('■ AEROBIC', 140, graphY + graphH + 35);
+    ctx.fillStyle = '#ffe4a3'; ctx.fillText('■ ANAEROBIC GLYCOLYSIS', 280, graphY + graphH + 35);
 
     screen.tex.needsUpdate = true;
 }
