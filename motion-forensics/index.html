@@ -154,6 +154,7 @@
   <script type="module">
 let speedViolation = false;
 let initialSpeed = 0;    
+let fuelUsedCount = 0;    
 let currentMcqStep = 0; 
 window.currentTrials = { 'A': { mcqs: [] }, 'B': { mcqs: [] }, 'C': { mcqs: [] } };    
 let cachedModuleMD = "";
@@ -558,18 +559,50 @@ $fuel.onclick = () => {
 };
 
 // Reset Button Logic
+// Reset Button Logic
 $reset.addEventListener('click', () => {
+    // 1. CLEAR MESSAGES & UI (This makes it feel like a fresh start)
+    document.getElementById('trialMsg').innerHTML = 'Read the instructions above. When ready, press Start.';
+    document.getElementById('mcqBox').style.display = 'none';
+    document.getElementById('mcqMsg').textContent = "";
+    document.getElementById('mcqSubmit').disabled = false;
+
+    // 2. WIPE INTEGRITY FLAGS
+    speedViolation = false; 
+    initialSpeed = 0;
+    fuelUsedCount = 0;
+
+    // 3. RESET SIMULATION STATE
     sim.energy = 100;
     sim.running = false;
     sim.hasStarted = false;
-    sim.elapsed = 0;       // THIS IS THE TRIGGER FOR THE BOARD
-    fuelUsedCount = 0;
-  // 2. Reset Integrity Flags (Prevents slider cheating)
-    speedViolation = false; 
-    initialSpeed = 0;
-  // Re-calculate VO2 Max based on the current model
-  const age = (document.getElementById('modelSelect').value === "Roman") ? 43 : 34;
-  sim.vo2Max = 15.3 * ((220 - age) / 72);
+    sim.elapsed = 0; 
+    sim.speedMph = 0;
+
+    // 4. RESET HUD VALUES
+    trialTime = 300;
+    document.getElementById('trialTime').textContent = 300;
+    document.getElementById('engVal').textContent = 100;
+    document.getElementById('spdVal').textContent = "0.0";
+    $spd.value = 0;
+    $start.textContent = "Start";
+    
+    const $status = document.getElementById('statusVal');
+    $status.textContent = "Ready";
+    $status.style.color = "#cfe3ff";
+
+    // 5. RESET AVATAR & ANIMATION
+    if (runAction) {
+        runAction.paused = true;
+        runAction.time = 0;
+    }
+    restore(); 
+
+    // 6. RE-SYNC VO2 BUDGET
+    const currentModel = document.getElementById('modelSelect').value;
+    const age = (currentModel === "Roman") ? 43 : 34;
+    sim.vo2Max = 15.3 * ((220 - age) / 72);
+});
 
   // 2. Reset the Avatar & Animation
   if (runAction) {
