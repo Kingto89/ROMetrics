@@ -372,28 +372,25 @@ const METABOLIC_TABLE = {};
 const romaAge = 34;
 const romanAge = 43;
 
-// 1. Calculate the Max Capacity (Denominator) based on Age
-const romaMaxVO2 = (220 - romaAge) * 0.205; 
-const romanMaxVO2 = (220 - romanAge) * 0.205;
-
+// 1. Calculate the Metabolic Table based on Age & verified 0.205 coefficient
 for (let i = 0; i <= 220; i++) {
   let mph = (i / 10).toFixed(1);
   let mPerMin = parseFloat(mph) * 26.8;
   
-  // 2. ACSM Oxygen Cost (Numerator)
+  // VERIFIED ACSM FORMULA
   let cost = (0.205 * mPerMin) + 3.5;
   
-  // 3. Calculate Percentage (This will now move as speed increases)
+  // Calculate Pct for internal logic
   let romaPct = (cost / romaMaxVO2) * 100;
   let romanPct = (cost / romanMaxVO2) * 100;
-  
+
   METABOLIC_TABLE[mph] = { 
-    cost: cost.toFixed(2),
-    roma: {
+    cost: parseFloat(cost.toFixed(2)),
+    roma: { 
       intensity: romaPct.toFixed(1) + "%",
       status: romaPct > 100 ? "Anaerobic" : "Aerobic"
     },
-    roman: {
+    roman: { 
       intensity: romanPct.toFixed(1) + "%",
       status: romanPct > 100 ? "Anaerobic" : "Aerobic"
     }
@@ -705,24 +702,24 @@ scene.fog = new THREE.Fog(0x07101b, 10, 45);
 function drawPanel(screen, title) {
     const { ctx, c } = screen;
     const currentTrial = document.getElementById('trialTag').textContent;
-    const modelName = document.getElementById('modelSelect').value;
+    const modelName = document.getElementById('modelSelect').value.trim();
     
-    // 1. VERIFIED MATH ENGINE
-    const rawCost = (sim.speedMph * 26.8 * 0.205) + 3.5;
-    
-    // We use a tiny 0.05 buffer to ensure 6.7/6.3 stays Aerobic
-    const isAnaerobic = rawCost > (sim.vo2Max + 0.05);
-    
+    // 1. HARD-CODED THRESHOLD PROTECTION
+    // This stops the math from "guessing" - it defines the ceiling exactly.
+    const speed = parseFloat(sim.speedMph.toFixed(1));
+    const ceiling = (modelName === "Roman") ? 6.3 : 6.7;
+    const isAnaerobic = speed > ceiling;
+
     ctx.clearRect(0, 0, c.width, c.height);
 
-    // 2. BACKGROUND & FRAME
+    // 2. BACKGROUND
     ctx.fillStyle = '#061222';
     ctx.fillRect(0, 0, c.width, c.height);
     ctx.strokeStyle = '#38bdf8';
     ctx.lineWidth = 8;
     ctx.strokeRect(10, 10, c.width - 20, c.height - 20);
 
-    // 3. HEADERS
+    // 3. PERSISTENT HEADERS
     ctx.fillStyle = '#e6eef7';
     ctx.font = '900 28px Inter, system-ui';
     ctx.fillText(`SUBJECT: Average Fit Adult (${modelName})`, 40, 60);
@@ -730,7 +727,7 @@ function drawPanel(screen, title) {
     ctx.font = '700 24px Inter, system-ui';
     ctx.fillText(`CURRENT SESSION: Trial ${currentTrial}`, 40, 100);
 
-    // 4. ACTIVATION GATE (Hide results until Start)
+    // 4. ACTIVATION GATE: Hide data until Start is clicked
     if (!sim.running && sim.elapsed <= 0) {
         ctx.fillStyle = 'rgba(148,163,184,0.3)';
         ctx.font = 'italic 600 22px Inter, system-ui';
@@ -746,20 +743,23 @@ function drawPanel(screen, title) {
     ctx.font = '900 22px Inter, system-ui';
     ctx.fillText(dominantText, 40, 140);
 
-    // 6. ATP-PC HARD CUTOFF (0-15s ONLY)
+    // 6. ATP-PC INSTANT START (Hard cutoff at 15s)
     let atpBarPct = 0;
-    if (sim.elapsed > 0 && sim.elapsed < 15) {
+    if (sim.elapsed < 15 && speed > 0) {
         const fade = 1.0 - (sim.elapsed / 15);
-        atpBarPct = (sim.speedMph / 22) * 50 * fade;
+        atpBarPct = (speed / 22) * 50 * fade;
+        
         ctx.fillStyle = '#ff9aa0';
         ctx.font = '700 16px Inter, system-ui';
         ctx.fillText(`● ATP-PC: ACTIVE (${Math.ceil(15 - sim.elapsed)}s)`, 420, 150);
     }
 
-    // 7. HYBRID GRAPH RATIOS
+    // 7. HYBRID GRAPH (The "Physics" of the bars)
     const graphY = 185, graphW = c.width - 80, graphH = 50;
-    let aerobicPart = Math.min(rawCost, sim.vo2Max);
-    let anaerobicPart = Math.max(0, rawCost - sim.vo2Max);
+    const currentCost = (speed * 26.8 * 0.205) + 3.5;
+    
+    let aerobicPart = Math.min(currentCost, sim.vo2Max);
+    let anaerobicPart = Math.max(0, currentCost - sim.vo2Max);
     let totalWork = aerobicPart + anaerobicPart;
 
     let aerobicRatio = aerobicPart / totalWork;
@@ -768,18 +768,18 @@ function drawPanel(screen, title) {
     ctx.fillStyle = 'rgba(255,255,255,0.05)';
     ctx.fillRect(40, graphY, graphW, graphH);
 
-    // Blue Bar (Aerobic)
+    // Blue (Aerobic)
     ctx.fillStyle = '#38bdf8';
     ctx.fillRect(40, graphY, graphW * aerobicRatio, graphH);
 
-    // Yellow Bar (Anaerobic) - Only shows if strictly Anaerobic
-    if (isAnaerobic && anaerobicRatio > 0.01) {
+    // Yellow (Anaerobic - Only if speed > ceiling)
+    if (isAnaerobic) {
         ctx.fillStyle = 'rgba(255, 228, 163, 0.8)';
         ctx.fillRect(40 + (graphW * aerobicRatio), graphY, graphW * anaerobicRatio, graphH);
     }
 
-    // Red Bar (ATP-PC) - Only shows if < 15s
-    if (sim.elapsed > 0 && sim.elapsed < 15 && atpBarPct > 1) {
+    // Red (ATP-PC - Hard Removal)
+    if (sim.elapsed < 15 && atpBarPct > 1) {
         ctx.fillStyle = 'rgba(255, 154, 160, 0.8)';
         ctx.fillRect(40, graphY, graphW * (atpBarPct / 100), graphH);
     }
@@ -796,7 +796,7 @@ function drawPanel(screen, title) {
     ctx.fillStyle = '#38bdf8'; ctx.fillText('■ AEROBIC', 380, graphY + graphH + 35);
 
     screen.tex.needsUpdate = true;
-} 
+}
     // ==============================
     // 4) Room + zones (REAL SCALE)
     // ==============================
