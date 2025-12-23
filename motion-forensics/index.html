@@ -172,15 +172,21 @@ window.showTab = function(tabName) {
     return;
   }
 
-  // 2. Global Section: Module Instructions
+// 2. Global Section: Module Instructions
   if (tabName === 'guide') {
     const guideRegex = /###\s*Module\s*Instructions/i;
     const guideMatch = cachedModuleMD.match(guideRegex);
     if (guideMatch) {
-      content.innerHTML = formatMD(cachedModuleMD.slice(guideMatch.index + guideMatch[0].length));
+      let guideBlock = cachedModuleMD.slice(guideMatch.index + guideMatch[0].length);
+      
+      // FIX: Stop reading if we hit the Questions section
+      const qIdx = guideBlock.search(/Checkpoint\s*Questions/i);
+      if (qIdx !== -1) guideBlock = guideBlock.slice(0, qIdx);
+      
+      content.innerHTML = formatMD(guideBlock);
     }
     return;
-  }
+  }}
 
   // 3. Trial-Specific Sections
 const trialMarker = new RegExp(`###\\s*Trial\\s*${currentTrial}\\b`, 'i');
@@ -195,12 +201,7 @@ const trialMarker = new RegExp(`###\\s*Trial\\s*${currentTrial}\\b`, 'i');
 const restOfFile = cachedModuleMD.slice(trialMatch.index + trialMatch[0].length);
 const nextHeader = restOfFile.search(/###\s*(Trial\s+[A-Z]\b|Module\s*Instructions)/i);
 const trialBlock = nextHeader !== -1 ? restOfFile.slice(0, nextHeader) : restOfFile;
-// --- ADD HIDE Questions fix ---
-// This stops the instruction window from showing any text starting from the MCQs
-const mcqIndex = trialBlock.indexOf('**Checkpoint');
-if (mcqIndex !== -1) {
-  trialBlock = trialBlock.slice(0, mcqIndex);
-}
+
 // -------------------------
   // 4. Robust Regex Search for Sub-Headings
   let searchRegex;
@@ -837,16 +838,13 @@ scene.fog = new THREE.Fog(0x07101b, 10, 45);
 
   // 9. CO-EXISTENCE LIST (Dynamic Status)
     ctx.font = '700 16px Inter, system-ui';
-    
-    // Moved Aerobic 
     ctx.fillStyle = '#38bdf8'; 
-    ctx.fillText("● Aerobic: Active", 420, 125);
+    ctx.fillText("● Aerobic: Active", 420, 100);
 
-    // Moved Anaerobic 
     if (isAnaerobicSpeed || isStartupDeficit) {
         ctx.fillStyle = '#ffe4a3';
-        ctx.fillText("● Anaerobic: Active", 420, 100);
-    }
+        ctx.fillText("● Anaerobic: Active", 420, 125);
+    }}
 
     // 10. PRIMARY LABEL
     let dominantText = isAnaerobicSpeed ? "PRIMARY: Anaerobic Glycolysis" : "PRIMARY: Aerobic Metabolism";
@@ -858,8 +856,9 @@ scene.fog = new THREE.Fog(0x07101b, 10, 45);
     // 11. LEGEND
     ctx.font = '600 16px Inter, system-ui';
     ctx.fillStyle = '#ff9aa0'; ctx.fillText('■ ATP-PC', 40, graphY + graphH + 35);
-    ctx.fillStyle = '#ffe4a3'; ctx.fillText('■ ANAEROBIC GLYCOLYSIS', 140, graphY + graphH + 35);
     ctx.fillStyle = '#38bdf8'; ctx.fillText('■ AEROBIC', 380, graphY + graphH + 35);
+    ctx.fillStyle = '#ffe4a3'; ctx.fillText('■ ANAEROBIC GLYCOLYSIS', 140, graphY + graphH + 35);
+
 
     screen.tex.needsUpdate = true;
 }   
