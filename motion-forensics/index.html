@@ -1807,7 +1807,7 @@ if (sim.energy <= 0 || trialTime <= 0) {
     // --- FINALIZED MCQ UNLOCK LOGIC ---
     if (trialTime <= 0 && document.getElementById('mcqBox').style.display !== 'block') {
         const activeModel = document.getElementById('modelSelect').value;
-        const targetSpeed = (activeModel === "Roma") ? 6.8 : 6.6;
+        const targetSpeed = (activeModel === "Roma") ? 6.7 : 6.3;
 
         // Check if they were at the correct speed when time ran out
         if (sim.speedMph === targetSpeed) {
