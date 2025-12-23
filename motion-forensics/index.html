@@ -223,18 +223,18 @@ let currentCorrectIndex = -1;
 
 window.renderMCQ = function(letter) {
     const trials = window.currentTrials;
-    if (!trials || !trials[letter]) return;
+    if (!trials || !trials[letter] || !trials[letter].mcqs[currentMcqStep]) return;
 
-    const trialData = trials[letter];
+    const data = trials[letter].mcqs[currentMcqStep];
     
-    // 1. Set the Question Text
-    document.getElementById('mcqQ').textContent = trialData.mcq.q;
+    // 1. Set the Question Text and Progress
+    document.getElementById('mcqQ').textContent = `Checkpoint (${currentMcqStep + 1}/${trials[letter].mcqs.length}): ${data.q}`;
 
     // 2. Clear and fill the Options
     const container = document.getElementById('mcqOpts');
     container.innerHTML = '';
     
-    trialData.mcq.opts.forEach((opt, idx) => {
+    data.opts.forEach((opt) => {
         const btn = document.createElement('div');
         btn.className = 'pill'; 
         btn.style.marginBottom = '5px';
@@ -243,6 +243,7 @@ window.renderMCQ = function(letter) {
         btn.onclick = () => {
             document.querySelectorAll('#mcqOpts .pill').forEach(p => p.classList.remove('active'));
             btn.classList.add('active');
+            btn.dataset.choice = opt.trim().charAt(0).toUpperCase(); // Saves 'A', 'B', etc.
         };
         container.appendChild(btn);
     });
@@ -1349,13 +1350,7 @@ function fl001PassTrial(){
   document.getElementById('mcqBox').style.display = 'block';
 }
     
-async function enterFL001(){
-  setZone('cardio');
-  document.getElementById('trialHelpContent').textContent = 'ENTER FL-001 CALLED';
-
-  
-
-  async function enterFL001() {
+async function enterFL001() {
   setZone('cardio');
   
   // 1. Fetch the Markdown file from GitHub
@@ -1382,6 +1377,8 @@ async function enterFL001(){
   document.getElementById('trialB').onclick = () => showFL001Trial(trials, 'B');
   document.getElementById('trialC').onclick = () => showFL001Trial(trials, 'C');
 }
+
+
 
 function enterModule(moduleId) {
   const mod = getModule(moduleId);
@@ -1422,25 +1419,40 @@ function enterModule(moduleId) {
     // ==============================
     // 8) Tick loop
     // ==============================
-    function updateHUD(){
-      $spdVal.textContent = sim.speedMph.toFixed(1);
-      $engVal.textContent = Math.round(sim.energy);
-      const st = (sim.energy <= 10) ? 'CRASH' : (sim.energy <= 25 ? 'Warning' : 'Stable');
-      $status.textContent = st;
-      $status.style.color = (st==='CRASH') ? '#ff9aa0' : (st==='Warning' ? '#ffe4a3' : '#cfe3ff');
+function updateHUD() {
+    $spdVal.textContent = sim.speedMph.toFixed(1);
+    $engVal.textContent = Math.round(sim.energy);
+
+    // MD Logic: Primary energy source check
+    let energySystem = "";
+    let systemColor = "";
+
+    if (sim.energy >= 60) {
+        energySystem = "Aerobic";
+        systemColor = "#38bdf8"; // Light Blue
+    } else if (sim.energy > 10) {
+        energySystem = "Anaerobic";
+        systemColor = "#ffe4a3"; // Yellow
+    } else {
+        energySystem = "CRITICAL";
+        systemColor = "#ff9aa0"; // Red
     }
+
+    $status.textContent = energySystem;
+    $status.style.color = systemColor;
+}
 
     const clock = new THREE.Clock();
 let lastT = clock.getElapsedTime();
 
-function animate(){
-  requestAnimationFrame(animate);
+function animate() {
+    requestAnimationFrame(animate);
 
-  const now = clock.getElapsedTime();
-  let dt = now - lastT;
-  lastT = now;
+    const now = clock.getElapsedTime();
+    let dt = now - lastT;
+    lastT = now;
 
-  controls.update();
+    controls.update();
   
 // ===== BLINK (works for BOTH Roma + Roman via auto-detect morph names) =====
 if (!animate._blink) animate._blink = { model:null, targets:[], state:0, t:0, next:0 };
