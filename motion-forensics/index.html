@@ -1865,11 +1865,6 @@ bake(bones.thighR, 0, 0, +hip);
     bone.quaternion.copy(baseQ).multiply(R.tmpQ);
   };
 
-  const restore = ()=>{
-    if (!R.rig) return;
-    for (const [b,q] of R.rig.base) b.quaternion.copy(q);
-  };
-
 // This tells the character: "Run only if the start button is on AND you have energy."
 const runNow = !!(sim.running && sim.energy > 0 && zoneCardio.visible);
 
