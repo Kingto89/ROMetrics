@@ -264,7 +264,6 @@ document.getElementById('mcqSubmit').onclick = () => {
     const trials = window.currentTrials;
     const currentLetter = document.getElementById('trialTag').textContent.trim();
     
-    // Safety check
     if (!trials || !trials[currentLetter] || !trials[currentLetter].mcqs[currentMcqStep]) return;
     
     const data = trials[currentLetter].mcqs[currentMcqStep];
@@ -274,9 +273,9 @@ document.getElementById('mcqSubmit').onclick = () => {
         return;
     }
 
-    // PURE DYNAMIC CHECK: Compares User Click to MD Key
     if (selected.dataset.choice === data.correct) {
         currentMcqStep++;
+        
         if (currentMcqStep < trials[currentLetter].mcqs.length) {
             msg.style.color = "#38bdf8";
             msg.textContent = "Correct! Advancing...";
@@ -285,10 +284,22 @@ document.getElementById('mcqSubmit').onclick = () => {
                 window.renderMCQ(currentLetter); 
             }, 1000);
         } else {
+            // TRIAL COMPLETE LOGIC
             document.getElementById('flScore').textContent = "100";
             msg.style.color = "#38bdf8";
-            msg.textContent = "Trial Passed. Data Saved.";
             document.getElementById('mcqSubmit').disabled = true;
+
+            if (currentLetter === 'A') {
+                msg.textContent = "Trial A Passed! Opening Trial B (Anaerobic)...";
+                setTimeout(() => {
+                    // Reset MCQ counter and switch UI to Trial B
+                    currentMcqStep = 0;
+                    document.getElementById('mcqBox').style.display = 'none';
+                    showFL001Trial(trials, 'B');
+                }, 2500);
+            } else {
+                msg.textContent = `Trial ${currentLetter} Complete. Data Saved.`;
+            }
         }
     } else {
         msg.style.color = "#ff9aa0";
