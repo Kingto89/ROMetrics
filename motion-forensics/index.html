@@ -1957,33 +1957,34 @@ if (runAction){
   }
 
 // 1. Update the Screen Displays
-  drawPanel(wallScreen, 'CARDIO BOARD');
-  drawTreadmillMph(consoleScreen);
+drawPanel(wallScreen, 'CARDIO BOARD');
+drawTreadmillMph(consoleScreen);
 
 // 2. Realistic Metabolic Engine
-  if (sim.running && sim.energy > 0) {
-    const key = sim.speedMph.toFixed(1);
-    const row = METABOLIC_TABLE[key];
+if (sim.running && sim.energy > 0) {
+    // CRITICAL: This line drives the board timers (ATP-PC 15s and Anaerobic 30s)
+    sim.elapsed += dt; 
+    
+    const speed = parseFloat(sim.speedMph.toFixed(1));
+    const currentCost = (speed * 26.8 * 0.205) + 3.5;
 
-    if (row && sim.vo2Max > 0) {
-        const deficit = row.cost - sim.vo2Max;
-        if (deficit > 0) {
-            // Realistic non-athlete drain speed
-            const anaerobicTankSize = 1200; 
-            const drainPerSecond = deficit / 60;
-            const percentDropPerSecond = (drainPerSecond / anaerobicTankSize) * 10000;
-            sim.energy -= percentDropPerSecond * dt;
-        } else {
-            sim.energy = Math.min(100, sim.energy + (0.05 * dt));
-        }
+    // Metabolic drain logic
+    if (currentCost > sim.vo2Max) {
+        const deficit = currentCost - sim.vo2Max;
+        const anaerobicTankSize = 1200; 
+        const percentDropPerSecond = (deficit / 60 / anaerobicTankSize) * 10000;
+        sim.energy -= percentDropPerSecond * dt;
+    } else {
+        // Recovery below threshold
+        sim.energy = Math.min(100, sim.energy + (0.05 * dt));
     }
-    // Update the 300s Trial Timer
+    
+    // 300s Trial Timer countdown
     if (currentModule?.id === 'FL-001') {
       trialTime = Math.max(0, trialTime - dt);
       document.getElementById('trialTime').textContent = Math.ceil(trialTime);
     }
-  }
-
+}
 // --- DYNAMIC TRIAL STOP & UNLOCK LOGIC ---
     if (sim.energy <= 0 || trialTime <= 0) {
         if (trialTime <= 0 && document.getElementById('mcqBox').style.display !== 'block') {
