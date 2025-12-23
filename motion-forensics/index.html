@@ -1841,43 +1841,40 @@ if (runAction){
     }
   }
 
-   // --- SIMPLE STOP & RESET ADD-IN ---
-if (sim.energy <= 0 || trialTime <= 0) {
-    
-// --- FINALIZED MCQ UNLOCK LOGIC ---
-if (trialTime <= 0 && document.getElementById('mcqBox').style.display !== 'block') {
-    const activeModel = document.getElementById('modelSelect').value;
-    const targetSpeed = (activeModel === "Roma") ? 6.7 : 6.3;
+// --- SIMPLE STOP & RESET ADD-IN ---
+    if (sim.energy <= 0 || trialTime <= 0) {
+        
+        // --- FINALIZED MCQ UNLOCK LOGIC ---
+        if (trialTime <= 0 && document.getElementById('mcqBox').style.display !== 'block') {
+            const activeModel = document.getElementById('modelSelect').value;
+            const targetSpeed = (activeModel === "Roma") ? 6.7 : 6.3;
 
-    if (sim.speedMph === targetSpeed) {
-        document.getElementById('mcqBox').style.display = 'block';
-        document.getElementById('trialMsg').innerHTML = 
-            '<b style="color:#38bdf8;">Requirement Met:</b> Session Unlocked. Select the correct answer below.';
-        // This triggers the specific MCQ question from the MD file
-        const currentTrial = document.getElementById('trialTag').textContent;
-        window.renderMCQ(currentTrial); 
-    } else {
-        document.getElementById('trialMsg').innerHTML = 
-            `<b style="color:#ff9aa0;">Trial Incomplete:</b> Speed must be exactly ${targetSpeed} mph at 0s.`;
+            if (sim.speedMph === targetSpeed) {
+                document.getElementById('mcqBox').style.display = 'block';
+                document.getElementById('trialMsg').innerHTML = 
+                    '<b style="color:#38bdf8;">Requirement Met:</b> Session Unlocked. Select the correct answer below.';
+                
+                const currentTrial = document.getElementById('trialTag').textContent;
+                // Ensure the MCQ is triggered
+                window.renderMCQ(currentTrial); 
+            } else {
+                document.getElementById('trialMsg').innerHTML = 
+                    `<b style="color:#ff9aa0;">Trial Incomplete:</b> Speed must be exactly ${targetSpeed} mph at 0s.`;
+            }
+        }
+
+        sim.running = false;
+        if (runAction) runAction.paused = true;
+        restore(); 
+        $start.textContent = "Start";
     }
-}  
 
-    sim.running = false;
-    if (runAction) runAction.paused = true;
-    restore(); 
-    $start.textContent = "Start";
-}   
-      sim.running = false;
-      if (runAction) runAction.paused = true;
-      restore(); // This snaps her to the anatomic position
-      $start.textContent = "Start";
-    }
-  // 3. Final Render
-  updateHUD();
-  renderer.render(scene, camera);
-} // Ends animate
+    // 3. Final Render
+    updateHUD();
+    renderer.render(scene, camera);
+} // This is the ONLY closing brace for animate()
 
-animate(); // Starts loop
+animate();
 // ==============================
 // 9) Enter Studio (gate -> studio)
 // ==============================
