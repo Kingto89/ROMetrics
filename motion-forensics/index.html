@@ -262,43 +262,39 @@ document.getElementById('mcqSubmit').onclick = () => {
     const selected = document.querySelector('#mcqOpts .pill.active');
     const msg = document.getElementById('mcqMsg');
     const trials = window.currentTrials;
+    const currentLetter = document.getElementById('trialTag').textContent.trim();
     
-    // FIX: Dynamically get the current trial letter (A, B, or C) from the HUD
-    const currentTrial = document.getElementById('trialTag').textContent.trim();
+    // Safety check
+    if (!trials || !trials[currentLetter] || !trials[currentLetter].mcqs[currentMcqStep]) return;
     
-    if (!trials || !trials[currentTrial] || !trials[currentTrial].mcqs[currentMcqStep]) return;
-    const data = trials[currentTrial].mcqs[currentMcqStep];
+    const data = trials[currentLetter].mcqs[currentMcqStep];
 
     if (!selected) {
         msg.textContent = "Please select an answer.";
         return;
     }
 
-    // Comparison logic
-    const userSelection = selected.dataset.choice.trim();
-    const correctKey = data.correct.trim();
-
-    if (userSelection === correctKey) {
+    // PURE DYNAMIC CHECK: Compares User Click to MD Key
+    if (selected.dataset.choice === data.correct) {
         currentMcqStep++;
-        
-        if (currentMcqStep < trials[currentTrial].mcqs.length) {
+        if (currentMcqStep < trials[currentLetter].mcqs.length) {
             msg.style.color = "#38bdf8";
-            msg.textContent = "Correct! Loading next checkpoint...";
+            msg.textContent = "Correct! Advancing...";
             setTimeout(() => { 
                 msg.textContent = ""; 
-                window.renderMCQ(currentTrial); 
+                window.renderMCQ(currentLetter); 
             }, 1000);
         } else {
             document.getElementById('flScore').textContent = "100";
             msg.style.color = "#38bdf8";
-            msg.textContent = "Trial Complete. Data Stored.";
+            msg.textContent = "Trial Passed. Data Saved.";
             document.getElementById('mcqSubmit').disabled = true;
         }
     } else {
         msg.style.color = "#ff9aa0";
-        msg.textContent = "Incorrect. Review the Trial Guide and try again.";
+        msg.textContent = "Incorrect. Reference the Trial Guide.";
     }
-}; 
+};
 
 // Global Fetch Trigger
 document.getElementById('trialHelp').onclick = async (e) => {
@@ -1302,39 +1298,31 @@ function setZone(which) {
 
 function parseFL001(md) {
     const trials = { 'A': { mcqs: [] }, 'B': { mcqs: [] }, 'C': { mcqs: [] } };
-    
-    // Split the file specifically by the Checkpoint marker
     const blocks = md.split('**Checkpoint');
-    blocks.shift(); // Remove introduction text
+    blocks.shift(); 
 
     blocks.forEach(block => {
         const lines = block.split('\n').map(l => l.trim()).filter(l => l);
-        
-        // 1. Determine which Trial this question belongs to (A, B, or C)
         const trialMatch = block.match(/Trial\s+([A-C])/i);
         if (!trialMatch) return;
         const letter = trialMatch[1].toUpperCase();
 
-        // 2. Extract the Question text (line after the header)
-        const qText = lines[1] || "Question missing";
-
-        // 3. Extract Options (Lines starting with A, B, C, D)
+        // Pull Options
         const options = lines.filter(l => /^[A-D]\./.test(l));
 
-        // 4. Extract Correct Answer
-        const ansMatch = block.match(/Correct\s*Answer:\s*([A-D])/i);
-        const correctLetter = ansMatch ? ansMatch[1].toUpperCase() : 'A';
+        // DYNAMIC KEY: Scans for the word "Answer" then captures the very next A, B, C, or D
+        const ansMatch = block.match(/Answer.*?([A-D])/i);
+        const correctLetter = ansMatch ? ansMatch[1].toUpperCase() : null;
 
-        if (options.length > 0) {
+        if (options.length > 0 && correctLetter) {
             trials[letter].mcqs.push({
-                q: qText,
+                q: lines[1] || "Question text error",
                 opts: options,
                 correct: correctLetter
             });
         }
     });
-
-    console.log("Final Parsed Data:", trials);
+    console.log("MD Loaded. Answer keys extracted dynamically:", trials);
     return trials;
 }
 
