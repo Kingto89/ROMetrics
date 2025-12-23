@@ -708,7 +708,7 @@ function drawPanel(screen, title) {
     ctx.lineWidth = 8;
     ctx.strokeRect(10, 10, c.width - 20, c.height - 20);
 
-    // 2. Header Info
+    // 2. Headers
     ctx.fillStyle = '#e6eef7';
     ctx.font = '900 28px Inter, system-ui';
     ctx.fillText(`SUBJECT: Average Fit Adult (${modelName})`, 40, 60);
@@ -716,13 +716,9 @@ function drawPanel(screen, title) {
     ctx.font = '700 24px Inter, system-ui';
     ctx.fillText(`CURRENT SESSION: Trial ${currentTrial}`, 40, 100);
 
-    // 3. UNIVERSAL ENFORCED DOMINANCE (Threshold based on current sim.vo2Max)
+    // 3. ENFORCED DOMINANCE (The Ceiling Logic)
     const currentCost = row ? parseFloat(row.cost) : 3.5;
-    
-    // Logic: If cost is within the budget, it is Aerobic. 
-    // We use a small 0.2 tolerance to ensure the 'max speed' stays blue.
-    const isAnaerobic = currentCost > (sim.vo2Max + 0.2);
-    
+    const isAnaerobic = currentCost > (sim.vo2Max + 0.5);
     let dominantText = isAnaerobic ? "PRIMARY: Anaerobic Glycolysis" : "PRIMARY: Aerobic Metabolism";
     let dominantColor = isAnaerobic ? "#ffe4a3" : "#38bdf8";
 
@@ -730,50 +726,53 @@ function drawPanel(screen, title) {
     ctx.font = '900 22px Inter, system-ui';
     ctx.fillText(dominantText, 40, 140);
 
-    // 4. ATP-PC BURST (Realistic 10-15s limit)
+    // 4. ATP-PC TEMPORARY ACTIVATION (Drains in 12 seconds)
     let atpContribution = 0;
-    if (sim.running && sim.speedMph > 0 && sim.elapsed < 15) {
-        const fade = 1.0 - (sim.elapsed / 15);
-        atpContribution = (sim.speedMph / 22) * 40 * fade; 
+    if (sim.running && sim.speedMph > 8 && sim.elapsed < 12) {
+        // Fades as it reaches the 12-second mark
+        const atpFade = 1.0 - (sim.elapsed / 12);
+        atpContribution = (sim.speedMph / 22) * 50 * atpFade; 
         
         ctx.fillStyle = '#ff9aa0';
         ctx.font = '700 18px Inter, system-ui';
-        ctx.fillText(`+ ATP-PC ACTIVE (${Math.ceil(15 - sim.elapsed)}s)`, 420, 140);
+        ctx.fillText(`+ ATP-PC ACTIVE (${Math.ceil(12 - sim.elapsed)}s)`, 420, 140);
     }
 
-    // 5. Dynamic Hybrid Graph
+    // 5. HYBRID GRAPH (Dominance Ratios)
     const graphY = 175;
     const graphW = c.width - 80;
     const graphH = 50;
 
-    // Split work between systems
+    // To show dominance, the bar must represent the % of Total Work
+    // At high speed, work = Aerobic (Budget) + Anaerobic (Debt)
     let aerobicPart = Math.min(currentCost, sim.vo2Max);
     let anaerobicPart = Math.max(0, currentCost - sim.vo2Max);
     let totalWork = aerobicPart + anaerobicPart;
 
-    let aerobicPct = (aerobicPart / totalWork) * 100;
-    let anaerobicPct = (anaerobicPart / totalWork) * 100;
+    let aerobicRatio = (aerobicPart / totalWork);
+    let anaerobicRatio = (anaerobicPart / totalWork);
 
+    // Draw Background
     ctx.fillStyle = 'rgba(255,255,255,0.05)';
     ctx.fillRect(40, graphY, graphW, graphH);
 
-    // Draw Aerobic base (Lungs meeting demand)
+    // Draw Aerobic (Blue) - Stays at budget level
     ctx.fillStyle = '#38bdf8';
-    ctx.fillRect(40, graphY, graphW * (aerobicPct / 100), graphH);
+    ctx.fillRect(40, graphY, graphW * aerobicRatio, graphH);
 
-    // Draw Anaerobic deficit (Borrowing from tank)
-    if (anaerobicPct > 0) {
+    // Draw Anaerobic (Yellow) - Shows as the majority at high speeds
+    if (anaerobicRatio > 0) {
         ctx.fillStyle = 'rgba(255, 228, 163, 0.8)';
-        ctx.fillRect(40 + (graphW * (aerobicPct / 100)), graphY, graphW * (anaerobicPct / 100), graphH);
+        ctx.fillRect(40 + (graphW * aerobicRatio), graphY, graphW * anaerobicRatio, graphH);
     }
 
-    // Draw ATP-PC fade overlay
+    // Draw ATP-PC Overlay (Red) - Only appears at the very start
     if (atpContribution > 0) {
         ctx.fillStyle = 'rgba(255, 154, 160, 0.8)';
         ctx.fillRect(40, graphY, graphW * (atpContribution / 100), graphH);
     }
 
-    // 6. Legend (Corrected Power Order)
+    // 6. Legend (Intensity Order)
     ctx.font = '600 16px Inter, system-ui';
     ctx.fillStyle = '#ff9aa0'; ctx.fillText('■ ATP-PC', 40, graphY + graphH + 35);
     ctx.fillStyle = '#ffe4a3'; ctx.fillText('■ ANAEROBIC GLYCOLYSIS', 140, graphY + graphH + 35);
