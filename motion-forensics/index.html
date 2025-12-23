@@ -152,7 +152,6 @@
     </div>
   </div>
   <script type="module">
-let restore = () => {}; // Placeholder to prevent early ReferenceErrors
 let speedViolation = false;
 let initialSpeed = 0;    
 let fuelUsedCount = 0;    
@@ -1835,16 +1834,6 @@ bake(bones.upArmR, 0, -er, +tuck);
 bake(bones.thighL, 0, 0, -hip);
 bake(bones.thighR, 0, 0, +hip);
 
-          restore = () => {
-        const R = animate._run;
-        if (!R || !R.rig) return;
-        for (const [b, q] of R.rig.base) {
-            b.quaternion.copy(q);
-        }
-    };
-
-    return { bones, base }; // This line already exists in your code
-};
       return { bones, base };
     };
   }
@@ -1863,6 +1852,11 @@ bake(bones.thighR, 0, 0, +hip);
     R.tmpE.set(ex, ey, ez);
     R.tmpQ.setFromEuler(R.tmpE);
     bone.quaternion.copy(baseQ).multiply(R.tmpQ);
+  };
+
+  const restore = ()=>{
+    if (!R.rig) return;
+    for (const [b,q] of R.rig.base) b.quaternion.copy(q);
   };
 
 // This tells the character: "Run only if the start button is on AND you have energy."
@@ -2067,6 +2061,7 @@ if (sim.energy <= 0 || trialTime <= 0) {
 
     updateHUD();
     renderer.render(scene, camera);
+} // End of animate()
 
 function triggerUnlock(msg) {
     document.getElementById('mcqBox').style.display = 'block';
