@@ -249,18 +249,40 @@ window.renderMCQ = function(letter) {
 };
 document.getElementById('mcqSubmit').onclick = () => {
     const selected = document.querySelector('#mcqOpts .pill.active');
-    if (!selected) return;
-
-    // Logic: Store result and update HUD score
-    const scoreEl = document.getElementById('flScore');
-    const msgEl = document.getElementById('mcqMsg');
+    const msg = document.getElementById('mcqMsg');
+    const trials = window.currentTrials;
+    const letter = document.getElementById('trialTag').textContent;
     
-    // Store logic (Example: If selection matches MD requirement)
-    scoreEl.textContent = "100"; 
-    msgEl.style.color = "#38bdf8";
-    msgEl.textContent = "Data Stored Successfully.";
-    document.getElementById('mcqSubmit').disabled = true;
-};
+    if (!trials || !trials[letter]) return;
+    const data = trials[letter].mcqs[currentMcqStep];
+
+    if (!selected) {
+        msg.textContent = "Please select an answer.";
+        return;
+    }
+
+    // Logic: Compare selection (A, B, C, D) to the correct answer in MD
+    if (selected.dataset.choice === data.correct) {
+        currentMcqStep++;
+        if (currentMcqStep < trials[letter].mcqs.length) {
+            msg.style.color = "#38bdf8";
+            msg.textContent = "Correct! Loading next checkpoint...";
+            setTimeout(() => { 
+                msg.textContent = ""; 
+                window.renderMCQ(letter); 
+            }, 1200);
+        } else {
+            document.getElementById('flScore').textContent = "100";
+            msg.style.color = "#38bdf8";
+            msg.textContent = "Trial Complete. Data Stored.";
+            document.getElementById('mcqSubmit').disabled = true;
+        }
+    } else {
+        msg.style.color = "#ff9aa0";
+        msg.textContent = "Incorrect. Review the Trial Guide and try again.";
+    }
+}
+
 // Global Fetch Trigger
 document.getElementById('trialHelp').onclick = async (e) => {
   e.preventDefault();
@@ -493,13 +515,14 @@ $fuel.onclick = () => {
 // Reset Button Logic
 $reset.addEventListener('click', () => {
   sim.energy = 100;
-  sim.vo2Max = 0; 
-  sim.running = false;
+// Keep the VO2 Max based on the currently selected model instead of 0
+const age = (document.getElementById('modelSelect').value === "Roman") ? 43 : 34;
+sim.vo2Max = 15.3 * ((220 - age) / 72);  sim.running = false;
   sim.hasStarted = false;
   sim.elapsed = 0;
 
   if (runAction) runAction.paused = true;
-
+  currentMcqStep = 0; // Reset the question tracker
   trialTime = 300;
   document.getElementById('trialTime').textContent = 300;
   document.getElementById('engVal').textContent = 100;
@@ -1260,58 +1283,37 @@ function setZone(which) {
   // snapCam() is excluded here to let OrbitControls keep your manual pan position
 }
 
-function parseFL001(md){
+function parseFL001(md) {
   const trials = {};
-  let current = null;
-  let capture = null;
+  const sections = md.split('###');
 
-  const lines = md.split('\n');
-  for (let line of lines){
-    line = line.trim();
+  sections.forEach(section => {
+    // Look for Trial headers (e.g., Trial A)
+    const trialMatch = section.match(/Trial ([A-C])\b/i);
+    if (trialMatch) {
+      const letter = trialMatch[1].toUpperCase();
+      if (!trials[letter]) trials[letter] = { mcqs: [] };
 
-    if (line.startsWith('### Trial')){
-      current = line.match(/Trial ([ABC])/)[1];
-      trials[current] = { clue:'', goal:'', pass:'', mcq:null };
-      capture = null;
-      continue;
+      // Look for Checkpoints within this trial section
+      const mcqBlocks = section.split('**Checkpoint');
+      mcqBlocks.shift(); // Remove text before first checkpoint
+
+      mcqBlocks.forEach(block => {
+        const lines = block.split('\n').map(l => l.trim()).filter(l => l);
+        const qText = lines[1]; // First line after the "Checkpoint" header
+        const options = lines.filter(l => /^[A-D]\./.test(l));
+        const answerMatch = block.match(/Correct Answer:\s*([A-D])/i);
+
+        if (qText && options.length > 0) {
+          trials[letter].mcqs.push({
+            q: qText,
+            opts: options,
+            correct: answerMatch ? answerMatch[1].toUpperCase() : 'A'
+          });
+        }
+      });
     }
-
-    if (!current) continue;
-
-    if (line.startsWith('**CASE CLUE')){
-      const inline = line.split('**:')[1]?.trim();
-      if (inline) trials[current].clue = inline;
-      capture = 'clue';
-      continue;
-    }
-
-    if (line.startsWith('**Goal:**')){
-      trials[current].goal = line.replace('**Goal:**','').trim();
-      capture = 'goal';
-      continue;
-    }
-
-    if (line.startsWith('**PASS when:**')){
-      trials[current].pass = line.replace('**PASS when:**','').trim();
-      capture = 'pass';
-      continue;
-    }
-
-    if (capture && line && !line.startsWith('**')){
-      trials[current][capture] += (trials[current][capture] ? ' ' : '') + line;
-      continue;
-    }
-
-    if (line.startsWith('Which') || line.startsWith('Why') || line.startsWith('What')){
-      trials[current].mcq = { q: line, opts: [] };
-      continue;
-    }
-
-    if (trials[current].mcq && /^[A-D]\)/.test(line)){
-      trials[current].mcq.opts.push(line);
-    }
-  }
-
+  });
   return trials;
 }
 
@@ -1352,47 +1354,53 @@ async function enterFL001(){
   document.getElementById('trialHelpContent').textContent = 'ENTER FL-001 CALLED';
 
   
-  const res = await fetch('../assets/forensics_modules/module_001.md');
 
-if (!res.ok) {
-  document.getElementById('trialHelpContent').textContent =
-    'MD LOAD FAILED: ' + res.status;
-  return;
-}
+  async function enterFL001() {
+  setZone('cardio');
+  
+  // 1. Fetch the Markdown file from GitHub
+  const res = await fetch('https://raw.githubusercontent.com/Kingto89/ROMetrics.com/main/assets/forensics_modules/module_001.md');
 
-const md = await res.text();
+  if (!res.ok) {
+    console.error("MD LOAD FAILED:", res.status);
+    return;
+  }
 
-document.getElementById('trialHelpContent').textContent =
-  'MD LOADED (' + md.length + ' chars)';
+  const md = await res.text();
+  
+  // 2. Parse and store globally so the MCQ system can see it
+  window.currentTrials = parseFL001(md); 
+  
+  // 3. Create local reference for the UI buttons
+  const trials = window.currentTrials; 
 
-  document.getElementById('trialHelpContent').innerHTML = md.replace(/\n/g, '<br>');
-
-window.currentTrials = parseFL001(md); // Global exposure
+  // 4. Initialize Trial A display
   showFL001Trial(trials, 'A');
 
-  trialA.onclick = ()=>showFL001Trial(trials,'A');
-  trialB.onclick = ()=>showFL001Trial(trials,'B');
-  trialC.onclick = ()=>showFL001Trial(trials,'C');
+  // 5. Wire up the Trial selection buttons
+  document.getElementById('trialA').onclick = () => showFL001Trial(trials, 'A');
+  document.getElementById('trialB').onclick = () => showFL001Trial(trials, 'B');
+  document.getElementById('trialC').onclick = () => showFL001Trial(trials, 'C');
 }
 
-function enterModule(moduleId){
+function enterModule(moduleId) {
   const mod = getModule(moduleId);
   currentModule = mod;
-  $moduleTitle.textContent = mod.label;
+  document.getElementById('moduleTitle').textContent = mod.label;
   
-  // SNAP CAMERA TO STATION
+  // Snap camera to the specific bay
   setZone(mod.zone || 'all');
   
-  // SHOW THE HUD (Slide it into view)
+  // Show the HUD badge
   const $badge = document.getElementById('badge');
   $badge.style.display = "block";
-  $badge.style.top = "14px"; // Moves it from -62px to 14px so it is visible
+  $badge.style.top = "14px"; 
   
-  if (typeof mod.onEnter === 'function'){
+  // Trigger the specific module logic (like enterFL001)
+  if (typeof mod.onEnter === 'function') {
     mod.onEnter(); 
   }
 }
-    // ==============================
     // 7) Studio UI wiring
     // ==============================
     const pills = [...document.querySelectorAll('.pill')];
@@ -1845,24 +1853,30 @@ if (runAction){
 // --- SIMPLE STOP & RESET ADD-IN ---
     if (sim.energy <= 0 || trialTime <= 0) {
         
-        // --- FINALIZED MCQ UNLOCK LOGIC ---
-        if (trialTime <= 0 && document.getElementById('mcqBox').style.display !== 'block') {
-            const activeModel = document.getElementById('modelSelect').value;
-            const targetSpeed = (activeModel === "Roma") ? 6.7 : 6.3;
+// --- FINALIZED MCQ UNLOCK LOGIC ---
+if (trialTime <= 0 && document.getElementById('mcqBox').style.display !== 'block') {
+    const activeModel = document.getElementById('modelSelect').value;
+    const targetSpeed = (activeModel === "Roma") ? 6.7 : 6.3;
 
-            if (sim.speedMph === targetSpeed) {
-                document.getElementById('mcqBox').style.display = 'block';
-                document.getElementById('trialMsg').innerHTML = 
-                    '<b style="color:#38bdf8;">Requirement Met:</b> Session Unlocked. Select the correct answer below.';
-                
-                const currentTrial = document.getElementById('trialTag').textContent;
-                // Ensure the MCQ is triggered
-                window.renderMCQ(currentTrial); 
-            } else {
-                document.getElementById('trialMsg').innerHTML = 
-                    `<b style="color:#ff9aa0;">Trial Incomplete:</b> Speed must be exactly ${targetSpeed} mph at 0s.`;
-            }
+    if (sim.speedMph === targetSpeed) {
+        // MD Logic: Primary energy source check (Stable energy = Aerobic)
+        if (sim.energy >= 60) {
+            document.getElementById('mcqBox').style.display = 'block';
+            document.getElementById('trialMsg').innerHTML = 
+                '<b style="color:#38bdf8;">Requirement Met:</b> Aerobic Dominance Confirmed. Session Unlocked.';
+            
+            // This triggers the specific MCQ question from your parsed currentTrials
+            const currentLetter = document.getElementById('trialTag').textContent;
+            window.renderMCQ(currentLetter); 
+        } else {
+            document.getElementById('trialMsg').innerHTML = 
+                '<b style="color:#ff9aa0;">Trial Incomplete:</b> Anaerobic fatigue too high. Maintain >60% energy.';
         }
+    } else {
+        document.getElementById('trialMsg').innerHTML = 
+            `<b style="color:#ff9aa0;">Trial Incomplete:</b> Speed must be exactly ${targetSpeed} mph at 0s.`;
+    }
+}
 
         sim.running = false;
         if (runAction) runAction.paused = true;
