@@ -530,18 +530,22 @@ $spd.addEventListener('input', () => {
 });
 // Start / Pause Button Logic
 $start.onclick = () => {
-  if (!sim.running) {
-    sim.elapsed = 0; 
-    
-    if (!sim.hasStarted) {
-      sim.hasStarted = true;
-      sim.workTime = 0;
-      trialTime = 300;
-      // Capture the speed they chose to start with
-      initialSpeed = parseFloat(sim.speedMph.toFixed(1));
-      speedViolation = false; 
+  if (sim.speedMph > 0) {
+    if (!sim.running) {
+      sim.elapsed = 0; 
+      if (!sim.hasStarted) {
+        sim.hasStarted = true;
+        sim.workTime = 0;
+        trialTime = 300;
+        initialSpeed = parseFloat(sim.speedMph.toFixed(1));
+        speedViolation = false; 
+      }
     }
+    sim.running = !sim.running;
+    if (runAction) runAction.paused = !sim.running;
+    $start.textContent = sim.running ? "Pause" : "Start";
   }
+};
   
   sim.running = !sim.running;
   if (runAction) runAction.paused = !sim.running;
@@ -1965,9 +1969,8 @@ if (runAction){
 }
 }
 
-// treadmill motion
-// CHANGE THIS LINE: Add the speed check here
-if (sim.running && sim.speedMph > 0) { 
+  // treadmill motion
+  if (sim.running){
     const treadSpeed = 0.35 + (sim.speedMph / 12) * 2.0;
     for (const s of treadStrips){
       s.position.z += dt * treadSpeed;
@@ -1975,7 +1978,7 @@ if (sim.running && sim.speedMph > 0) {
     }
     const beltSpeed = 0.10 + (sim.speedMph / 12) * 1.10;
     beltTex.offset.y = (beltTex.offset.y + dt * beltSpeed) % 1;
-}
+  }
 
   // billboard labels
   if (labelsOn){
@@ -2053,24 +2056,16 @@ if (sim.energy <= 0 || trialTime <= 0) {
         // Logic for other trials follows the same pattern...
     }
 
-// Auto-stop simulation when time or energy runs out
-        sim.running = false;
-        if (runAction) {
-            runAction.paused = true;
-            runAction.time = 0; // Reset animation frame to standing
-        }
+    sim.running = false;
+    if (runAction) runAction.paused = true;
+    restore(); 
+    document.getElementById('startBtn').textContent = "Start";
+}
 
-        // Fix: Use the globally accessible restore function
-        if (animate.restoreAvatar) animate.restoreAvatar(); 
-
-        document.getElementById('startBtn').textContent = "Start";
-        
-        // Reset the treadmill belt offset visually
-        beltTex.offset.y = 0;
     updateHUD();
     renderer.render(scene, camera);
 } // End of animate()
-}
+
 function triggerUnlock(msg) {
     document.getElementById('mcqBox').style.display = 'block';
     document.getElementById('trialMsg').innerHTML = `<b style="color:#38bdf8;">Goal Reached:</b> ${msg}`;
