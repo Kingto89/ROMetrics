@@ -245,11 +245,12 @@ window.renderMCQ = function(letter) {
         btn.style.marginBottom = '5px';
         btn.style.width = '100%';
         btn.textContent = opt;
-        btn.onclick = () => {
-            document.querySelectorAll('#mcqOpts .pill').forEach(p => p.classList.remove('active'));
-            btn.classList.add('active');
-            btn.dataset.choice = opt.trim().charAt(0).toUpperCase(); // Saves 'A', 'B', etc.
-        };
+      btn.onclick = () => {
+    document.querySelectorAll('#mcqOpts .pill').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    // Simple fix: Save only the first letter
+    btn.dataset.choice = opt.trim().substring(0, 1).toUpperCase(); 
+};
         container.appendChild(btn);
     });
 };
@@ -262,7 +263,7 @@ document.getElementById('mcqSubmit').onclick = () => {
     if (!trials || !trials[letter]) return;
     const data = trials[letter].mcqs[currentMcqStep];
 
-    if (!selected) {
+ if (!selected) {
         msg.textContent = "Please select an answer.";
         return;
     }
