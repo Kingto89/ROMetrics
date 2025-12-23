@@ -137,3 +137,39 @@ Changing fuel timing can affect fatigue, but it does **not** change the primary 
 3. Observe the **Primary Energy Source** indicator
 
 ---
+
+**Checkpoint — Trial A (Q1)**
+
+What determines whether aerobic metabolism can sustain the selected speed?
+
+A. Fuel timing relative to effort  
+B. VO₂ Max relative to cost  
+C. Size of anaerobic reserve  
+D. Duration of the trial  
+
+**Correct Answer:** B
+
+
+**Checkpoint — Trial A (Q2)**
+
+Why can anaerobic systems still contribute during an aerobic-dominant trial?
+
+A. All movement begins anaerobically  
+B. The body uses mixed systems  
+C. Fuel changes energy pathways  
+D. PCr activates at low speed  
+
+**Correct Answer:** B
+
+
+**Checkpoint — Trial A (Q3)**
+
+Which value represents the subject’s VO₂ Max used as the oxygen budget for the trial?
+
+A. 15.3 × ((220 − age) ÷ 72)  
+B. (Speed × 26.8 × 0.2) + 3.5  
+C. 0.22 × running speed  
+D. Resting metabolic rate  
+
+**Correct Answer:** A
+---
