@@ -550,7 +550,7 @@ $start.onclick = () => {
   sim.running = !sim.running;
   if (runAction) runAction.paused = !sim.running;
   $start.textContent = sim.running ? "Pause" : "Start";
-};
+
 // --- FUEL BUTTON LOGIC ---
 $fuel.onclick = () => {
   // Add 10 to current reserve
