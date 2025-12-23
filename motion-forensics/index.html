@@ -544,9 +544,11 @@ $start.onclick = () => {
     }
   }
   
-  sim.running = !sim.running;
-  if (runAction) runAction.paused = !sim.running;
-  $start.textContent = sim.running ? "Pause" : "Start";
+ sim.running = false;
+    if (runAction) runAction.paused = true;
+    // This will now work because restore is global
+    if (typeof window.restore === 'function') window.restore(); 
+    document.getElementById('startBtn').textContent = "Start";
 };
 // --- FUEL BUTTON LOGIC ---
 $fuel.onclick = () => {
