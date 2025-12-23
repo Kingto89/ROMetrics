@@ -137,6 +137,7 @@ Changing fuel timing can affect fatigue, but it does **not** change the primary 
 3. Observe the **Primary Energy Source** indicator
 
 ---
+### Checkpoint Questions 
 
 **Checkpoint — Trial A (Q1)**
 
