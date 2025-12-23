@@ -531,6 +531,7 @@ $spd.addEventListener('input', () => {
 // Start / Pause Button Logic
 $start.onclick = () => {
   if (!sim.running) {
+  if (sim.speedMph <= 0) return; // 1-step fix: Exit if speed is zero  
     sim.elapsed = 0; 
     
     if (!sim.hasStarted) {
