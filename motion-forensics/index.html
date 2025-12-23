@@ -258,6 +258,7 @@ window.renderMCQ = function(letter) {
     });
 };
 
+
 document.getElementById('mcqSubmit').onclick = () => {
     const selected = document.querySelector('#mcqOpts .pill.active');
     const msg = document.getElementById('mcqMsg');
@@ -265,7 +266,6 @@ document.getElementById('mcqSubmit').onclick = () => {
     const currentLetter = document.getElementById('trialTag').textContent.trim();
     
     if (!trials || !trials[currentLetter] || !trials[currentLetter].mcqs[currentMcqStep]) return;
-    
     const data = trials[currentLetter].mcqs[currentMcqStep];
 
     if (!selected) {
@@ -284,28 +284,33 @@ document.getElementById('mcqSubmit').onclick = () => {
                 window.renderMCQ(currentLetter); 
             }, 1000);
         } else {
-            // TRIAL COMPLETE LOGIC
+            // --- TRIAL COMPLETE LOGIC ---
             document.getElementById('flScore').textContent = "100";
             msg.style.color = "#38bdf8";
-            document.getElementById('mcqSubmit').disabled = true;
 
             if (currentLetter === 'A') {
-                msg.textContent = "Trial A Passed! Opening Trial B (Anaerobic)...";
+                msg.textContent = "Trial A Passed! Opening Trial B...";
                 setTimeout(() => {
-                    // Reset MCQ counter and switch UI to Trial B
+                    // CLEANUP & RESET FOR TRIAL B
                     currentMcqStep = 0;
-                    document.getElementById('mcqBox').style.display = 'none';
-                    showFL001Trial(trials, 'B');
+                    fuelUsedCount = 0; // Reset fuel tracker
+                    document.getElementById('mcqBox').style.display = 'none'; // Hide the A questions
+                    document.getElementById('mcqSubmit').disabled = false; // Re-enable for B questions
+                    document.getElementById('flScore').textContent = "0"; // Reset score for new trial
+                    msg.textContent = ""; 
+                    
+                    showFL001Trial(trials, 'B'); // Load B HUD/Instructions
                 }, 2500);
             } else {
                 msg.textContent = `Trial ${currentLetter} Complete. Data Saved.`;
+                document.getElementById('mcqSubmit').disabled = true;
             }
         }
     } else {
         msg.style.color = "#ff9aa0";
         msg.textContent = "Incorrect. Reference the Trial Guide.";
     }
-};
+};    
 
 // Global Fetch Trigger
 document.getElementById('trialHelp').onclick = async (e) => {
@@ -557,8 +562,10 @@ sim.vo2Max = 15.3 * ((220 - age) / 72);  sim.running = false;
   $start.textContent = "Start";
   $status.textContent = "Ready";
   $status.style.color = "#cfe3ff";
+// Add these lines inside the reset listener
 document.getElementById('mcqBox').style.display = 'none';
 document.getElementById('mcqSubmit').disabled = false;
+fuelUsedCount = 0;
 document.getElementById('mcqMsg').textContent = "";
   document.getElementById('trialMsg').textContent = 'Read the instructions above. When ready, press Start.';
 });
