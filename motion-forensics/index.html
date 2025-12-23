@@ -195,7 +195,13 @@ const trialMarker = new RegExp(`###\\s*Trial\\s*${currentTrial}\\b`, 'i');
 const restOfFile = cachedModuleMD.slice(trialMatch.index + trialMatch[0].length);
 const nextHeader = restOfFile.search(/###\s*(Trial\s+[A-Z]\b|Module\s*Instructions)/i);
 const trialBlock = nextHeader !== -1 ? restOfFile.slice(0, nextHeader) : restOfFile;
-
+// --- ADD HIDE Questions fix ---
+// This stops the instruction window from showing any text starting from the MCQs
+const mcqIndex = trialBlock.indexOf('**Checkpoint');
+if (mcqIndex !== -1) {
+  trialBlock = trialBlock.slice(0, mcqIndex);
+}
+// -------------------------
   // 4. Robust Regex Search for Sub-Headings
   let searchRegex;
   if (tabName === 'concept') searchRegex = /###\s*Concept\s*\(read\s*first\):/i;
@@ -413,8 +419,8 @@ const MODEL_URLS = {
 };
 
 const MODELS = [
-  { id:"Roma",  label:"Roma ",  desc:"Default ROMetrics model.",  url: MODEL_URLS.Roma },
-  { id:"Roman", label:"Roman",  desc:"Alternate ROMetrics model.", url: MODEL_URLS.Roman }
+  { id:"Roma",  label:"Roma ",  desc:"Female ROMetrics model.",  url: MODEL_URLS.Roma },
+  { id:"Roman", label:"Roman",  desc:"Male ROMetrics model.", url: MODEL_URLS.Roman }
 ];
 
 let ACTIVE_MODEL_ID = "Roma";
@@ -829,14 +835,17 @@ scene.fog = new THREE.Fog(0x07101b, 10, 45);
         ctx.fillRect(40, graphY, graphW * (atpBarPct / 100), graphH);
     }
 
-    // 9. CO-EXISTENCE LIST (Dynamic Status)
+  // 9. CO-EXISTENCE LIST (Dynamic Status)
     ctx.font = '700 16px Inter, system-ui';
+    
+    // Moved Aerobic 
     ctx.fillStyle = '#38bdf8'; 
-    ctx.fillText("● Aerobic: Active", 420, 100);
+    ctx.fillText("● Aerobic: Active", 420, 125);
 
+    // Moved Anaerobic 
     if (isAnaerobicSpeed || isStartupDeficit) {
         ctx.fillStyle = '#ffe4a3';
-        ctx.fillText("● Anaerobic: Active", 420, 125);
+        ctx.fillText("● Anaerobic: Active", 420, 100);
     }
 
     // 10. PRIMARY LABEL
