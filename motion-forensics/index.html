@@ -561,23 +561,37 @@ $start.onclick = () => {
 
 $fuel.onclick = () => {
     if (sim.fuelCount >= 2) return;
-    
-    // Energy Gain (Standard)
+
+    const currentLetter = document.getElementById('trialTag').textContent.trim();
+
+    // 1. TOO EARLY: 76-100% Energy
+    if (sim.energy > 75) {
+        sim.fuelPenaltyTimer = 30;    
+        sim.throughputAlert = 5;      
+        sim.fuelMsg = "TOO EARLY: Glycolytic Throughput Increased";
+    } 
+    // 2. TOO LATE: ≤ 20% Energy (Failure Imminent)
+    else if (sim.energy <= 20) {
+        sim.fuelPenaltyTimer = 0;
+        sim.throughputAlert = 0;
+        sim.fuelMsg = "TOO LATE: Little or no fuel benefit";
+        // Reduce gain to simulate failure to process
+        sim.energy += 2; 
+        sim.fuelCount++;
+        return;
+    }
+    // 3. OPTIMAL WINDOW: 21-75% Energy
+    else {
+        sim.fuelPenaltyTimer = 0;
+        sim.throughputAlert = 0;
+        sim.fuelMsg = "CORRECT WINDOW: Full fuel benefit";
+    }
+
+    // Standard Gain for Optimal/Early
     let gain = (sim.energy <= 75) ? 10 : Math.max(0, 85 - sim.energy);
     sim.energy += gain;
-    
-    // Logic: Timing Outcomes
-    // Only enforce Glycolytic Throughput penalty (Lactate Increase) if used at 76-100%
-    if (sim.energy > 75) {
-        sim.fuelPenaltyTimer = 30;    // "Too Early" penalty duration
-        sim.throughputAlert = 5;      // Visual warning duration
-    } else {
-        sim.fuelPenaltyTimer = 0;     // "Correct Window" - No penalty
-        sim.throughputAlert = 0;
-    }
-    
     sim.fuelCount++;
-};    
+};   
 
 // --- INSIDE THE DRAW/ANIMATE LOOP ---
 if (sim.running) {
@@ -902,7 +916,7 @@ function drawTrialA_View(ctx, c, speed, modelName) {
 }
 
 // ==========================================
-// 3. TRIAL B BOX (Add your new focused info here)
+// 3. TRIAL B BOX (Updated: Timing Outcomes Logic)
 // ==========================================
 function drawTrialB_View(ctx, c, speed) {
     const barY = 185, barW = c.width - 80, barH = 50;
@@ -912,9 +926,10 @@ function drawTrialB_View(ctx, c, speed) {
     const ceilingSpeed = (modelName === "Roman") ? 6.3 : 6.7;
     const currentCost = (speed * 26.8 * 0.205) + 3.5;
     const deficit = Math.max(0, currentCost - sim.vo2Max);
-// 2. LIVE PRODUCTION VS. WIPING WITH CONDITIONAL ACCELERATION
+
+    // 2. LIVE PRODUCTION VS. WIPING
     if (sim.running) {
-        // Penalty only applies if the timer was set (which only happens if fueled > 75% energy)
+        // Multiplier only exists if fuel was used > 75% energy
         const throughputMultiplier = (sim.fuelPenaltyTimer > 0) ? 1.2 : 1.0;
 
         if (speed <= ceilingSpeed && speed > 0) {
@@ -926,8 +941,6 @@ function drawTrialB_View(ctx, c, speed) {
         } else if (speed > ceilingSpeed) {
             // TOXIC DEBT: Accumulation outpaces clearance
             const fatigueMultiplier = (sim.lactate > 50) ? 1.4 : 1.0; 
-            
-            // Apply the 20% increase only if throughputMultiplier is 1.2
             const accumulation = (deficit * 0.0025) * fatigueMultiplier * throughputMultiplier; 
             sim.lactate = Math.min(100, sim.lactate + accumulation);
         }
@@ -938,7 +951,6 @@ function drawTrialB_View(ctx, c, speed) {
     }
 
     // 3. VISUALS (Heat-map and Bar)
-    // Red flash/tint if Glycolytic Throughput is spiked (first 5s)
     if (sim.throughputAlert > 0) {
         ctx.fillStyle = 'rgba(255, 0, 0, 0.15)';
         ctx.fillRect(0, 0, c.width, c.height);
@@ -970,11 +982,18 @@ function drawTrialB_View(ctx, c, speed) {
     ctx.fillText(`${displayVal}%`, 40 + (barW / 2), barY + 33);
     ctx.textAlign = 'left';
 
-    // 5. STATUS MESSAGING
+    // 5. STATUS MESSAGING (Timing Outcome Logic)
     ctx.font = '700 18px Inter';
-    if (sim.fuelPenaltyTimer > 0) {
+    
+    if (sim.energy <= 20 && sim.fuelCount > 0) {
         ctx.fillStyle = '#ff9aa0';
-        ctx.fillText(`STATUS: ACCELERATED WASTE PRODUCTION (${Math.ceil(sim.fuelPenaltyTimer)}s)`, 40, barY + barH + 40);
+        ctx.fillText("STATUS: TOO LATE - METABOLIC FAILURE", 40, barY + barH + 40);
+    } else if (sim.fuelPenaltyTimer > 0) {
+        ctx.fillStyle = '#ff9aa0';
+        ctx.fillText(`STATUS: ACCELERATED WASTE (${Math.ceil(sim.fuelPenaltyTimer)}s)`, 40, barY + barH + 40);
+    } else if (sim.energy > 20 && sim.energy <= 75 && sim.fuelCount > 0) {
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillText("STATUS: OPTIMAL FUELING SUSTAINED", 40, barY + barH + 40);
     } else if (speed <= ceilingSpeed && speed > 0) {
         ctx.fillStyle = '#38bdf8';
         ctx.fillText("STATUS: ACTIVE CLEARANCE (STEADY STATE)", 40, barY + barH + 40);
