@@ -568,7 +568,6 @@ $fuel.onclick = () => {
 };
 
 // Reset Button Logic
-// Reset Button Logic
 $reset.addEventListener('click', () => {
     // 1. CLEAR MESSAGES & UI (This makes it feel like a fresh start)
     document.getElementById('trialMsg').innerHTML = 'Read the instructions above. When ready, press Start.';
@@ -589,8 +588,11 @@ $reset.addEventListener('click', () => {
     sim.speedMph = 0;
 
     // 4. RESET HUD VALUES
-    trialTime = 300;
-    document.getElementById('trialTime').textContent = 300;
+    // 4. RESET HUD VALUES
+    const currentLetter = document.getElementById('trialTag').textContent.trim();
+    trialTime = (currentLetter === 'B') ? 180 : 300; // Identifies trial to set correct time
+    document.getElementById('trialTime').textContent = trialTime;
+    sim.lactate = 0; // Identifies reset for waste accumulation
     document.getElementById('engVal').textContent = 100;
     document.getElementById('spdVal').textContent = "0.0";
     $spd.value = 0;
@@ -1525,31 +1527,40 @@ function parseFL001(md) {
     return trials;
 }
 
-function showFL001Trial(trials, letter){
+function showFL001Trial(trials, letter) {
   const t = trials[letter];
-
   document.getElementById('trialTag').textContent = letter;
 
+  // 1. Set specific forensic timers: A=300s, B=180s
+  let timeLimit = (letter === 'B') ? 180 : 300;
+  
+  // 2. Update global simulation time and HUD display
+  window.setTrialTime(timeLimit);
+  document.getElementById('trialTime').textContent = timeLimit;
 
-  // IMPORTANT: instruction prompt
+  // 3. Clear any existing Trial B specific accumulation
+  if (window.sim) window.sim.lactate = 0;
+
+  // 4. Update instruction prompt
   document.getElementById('trialMsg').innerHTML =
     ` <b>Read the instructions above.</b><br>
-     When ready, press <b>Start</b> to begin Trial ${letter}.`;
+      When ready, press <b>Start</b> to begin Trial ${letter}.`;
 
   document.getElementById('mcqBox').style.display = 'none';
 
-  if (t.mcq){
+  // 5. Load MCQ data if available
+  if (t.mcq) {
     document.getElementById('mcqQ').textContent = t.mcq.q;
     const box = document.getElementById('mcqOpts');
     box.innerHTML = '';
-    t.mcq.opts.forEach(o=>{
+    t.mcq.opts.forEach(o => {
       const div = document.createElement('div');
+      div.className = 'pill'; // Ensure it matches your style
       div.textContent = o;
       box.appendChild(div);
     });
   }
 }
-
    
 function fl001PassTrial(){
   document.getElementById('trialMsg').textContent =
@@ -2066,11 +2077,19 @@ if (sim.running && sim.energy > 0) {
       document.getElementById('trialTime').textContent = Math.ceil(trialTime);
     }
 }
+
 // --- DYNAMIC TRIAL STOP & UNLOCK LOGIC ---
-if (sim.energy <= 0 || trialTime <= 0) {
-    if (trialTime <= 0 && document.getElementById('mcqBox').style.display !== 'block') {
-        const activeModel = document.getElementById('modelSelect').value;
-        const currentLetter = document.getElementById('trialTag').textContent.trim();
+if (sim.energy <= 0 || trialTime <= 0 || sim.lactate >= 100) {
+    const activeModel = document.getElementById('modelSelect').value;
+    const currentLetter = document.getElementById('trialTag').textContent.trim();
+
+    // Check for Lactate Failure specifically in Trial B
+    if (sim.lactate >= 100 && currentLetter === 'B') {
+        document.getElementById('statusVal').textContent = "CRITICAL FAILURE: METABOLIC ACIDOSIS";
+        document.getElementById('statusVal').style.color = "#ff9aa0";
+        document.getElementById('trialMsg').innerHTML = 
+            `<b style="color:#ff9aa0;">Trial Failed:</b> Waste accumulation exceeded clearance capacity. Reset and lower speed.`;
+    }  
         
         // Trial A Integrity Check
         if (currentLetter === 'A') {
