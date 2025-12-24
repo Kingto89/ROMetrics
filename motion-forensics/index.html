@@ -557,20 +557,27 @@ $start.onclick = () => {
   if (runAction) runAction.paused = !sim.running;
   $start.textContent = sim.running ? "Pause" : "Start";
 };
-// --- FUEL BUTTON LOGIC ---
-// --- UPDATED FUEL BUTTON ---
+
+
 $fuel.onclick = () => {
     if (sim.fuelCount >= 2) return;
     
-    // Energy Gain (Soft Cap)
+    // Energy Gain (Standard)
     let gain = (sim.energy <= 75) ? 10 : Math.max(0, 85 - sim.energy);
     sim.energy += gain;
     
-    // Timers
-    sim.fuelPenaltyTimer = 30;    // The 20% math penalty lasts 30s
-    sim.throughputAlert = 5;      // The VISUAL alert lasts 5s
+    // Logic: Timing Outcomes
+    // Only enforce Glycolytic Throughput penalty (Lactate Increase) if used at 76-100%
+    if (sim.energy > 75) {
+        sim.fuelPenaltyTimer = 30;    // "Too Early" penalty duration
+        sim.throughputAlert = 5;      // Visual warning duration
+    } else {
+        sim.fuelPenaltyTimer = 0;     // "Correct Window" - No penalty
+        sim.throughputAlert = 0;
+    }
+    
     sim.fuelCount++;
-};
+};    
 
 // --- INSIDE THE DRAW/ANIMATE LOOP ---
 if (sim.running) {
@@ -905,10 +912,9 @@ function drawTrialB_View(ctx, c, speed) {
     const ceilingSpeed = (modelName === "Roman") ? 6.3 : 6.7;
     const currentCost = (speed * 26.8 * 0.205) + 3.5;
     const deficit = Math.max(0, currentCost - sim.vo2Max);
-
-    // 2. LIVE PRODUCTION VS. WIPING WITH ACCELERATION RULE
+// 2. LIVE PRODUCTION VS. WIPING WITH CONDITIONAL ACCELERATION
     if (sim.running) {
-        // Apply 20% acceleration if fuel was recently used (30s window)
+        // Penalty only applies if the timer was set (which only happens if fueled > 75% energy)
         const throughputMultiplier = (sim.fuelPenaltyTimer > 0) ? 1.2 : 1.0;
 
         if (speed <= ceilingSpeed && speed > 0) {
@@ -920,13 +926,14 @@ function drawTrialB_View(ctx, c, speed) {
         } else if (speed > ceilingSpeed) {
             // TOXIC DEBT: Accumulation outpaces clearance
             const fatigueMultiplier = (sim.lactate > 50) ? 1.4 : 1.0; 
-            // Apply both the fatigue and the fuel-driven throughput multiplier
+            
+            // Apply the 20% increase only if throughputMultiplier is 1.2
             const accumulation = (deficit * 0.0025) * fatigueMultiplier * throughputMultiplier; 
             sim.lactate = Math.min(100, sim.lactate + accumulation);
         }
 
-        // Decrement timers (assuming dt or standard 1s frame rate logic)
-        if (sim.fuelPenaltyTimer > 0) sim.fuelPenaltyTimer -= 0.016; // approx 60fps
+        // Decrement timers
+        if (sim.fuelPenaltyTimer > 0) sim.fuelPenaltyTimer -= 0.016; 
         if (sim.throughputAlert > 0) sim.throughputAlert -= 0.016;
     }
 
