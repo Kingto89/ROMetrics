@@ -122,62 +122,49 @@ Compare your **Total Cost** to your **Oxygen Budget**:
 
 ---
 
-### Trial B — Anaerobic Investigation: Metabolic Integrity
+## Trial B — Anaerobic Metabolic Investigation
 
-**Concept (read first):**  
-Trial B continues from Trial A, exploring what happens when the subject exceeds the **Aerobic Ceiling**. In Trial A, oxygen delivery matched energy cost, so metabolic waste was minimal. In Trial B, metabolic waste accumulation is introduced to show the limits of anaerobic work.
+### Concept (read first)
 
----
 
-### 1. Lactate Proxy (Visualizing Waste)
+- **Carbohydrate energy/fuel:** isn’t instant; the body needs time to use it. During high-intensity, anaerobic-dominant exercise, glucose is broken down by glycolysis to make ATP, and if oxygen can’t keep up, pyruvate is converted to lactate—so early fueling can increase lactate without improving performance. Proper timing helps sustain effort and manage fatigue.
+- **Crash Condition:** Lactate reaching 100% ends the trial immediately, even if time remains or energy is sufficient.
 
-* Selecting a **speed above the Trial A Aerobic Ceiling** triggers **Lactate Accumulation**.  
-* **Lactate Bar behavior:**  
-  - Only increases over time — cannot be restored.  
-  - Represents metabolic “debt” in the muscles.  
-  - If the bar reaches **100%**, the subject **crashes**, even if energy remains high.  
-
-**Instruction to Students:**  
-> In Trial A, the system was “clean” because oxygen supply met demand. In Trial B, the Lactate Bar shows what happens when the subject runs beyond the aerobic ceiling.
+**Learning Goals:**  
+1. Observe how energy drains under anaerobic conditions.  
+2. Understand how **fuel timing** can maintain W′ energy without causing lactate to reach the crash threshold.  
+3. Recognize the trade-off between energy restoration and lactate accumulation.  
 
 ---
 
-### 2. Fuel Management
+### Trial Guide
 
-* The subject may use **up to 2 fuel boosts** during the trial.  
-* Fuel restores energy to help maintain performance at the selected speed.  
-* Fuel **does not change the primary energy system**, which remains anaerobic at speeds above the Aerobic Ceiling.  
-* Proper fuel timing ensures the subject completes the trial **without energy dropping below 60%**, while still experiencing the effects of metabolic stress.
+**Overview:** 
 
----
+In Trial B, the subject is operating **entirely above their aerobic ceiling** (7.0 mph), so **anaerobic glycolysis** is the primary energy system. The trial introduces     the **Lactate Proxy** to visualize metabolic waste and demonstrates how **fueling affects energy and lactate accumulation**.  
 
-### 3. Trial Goal & Target
+- In Trial A, oxygen delivery matched demand, so lactate was negligible.  
+- In Trial B, the system is stressed: oxygen supply is insufficient, and lactate begins to accumulate.
 
-**Goal:**  
-* Push the subject **above their aerobic ceiling** into anaerobic dominance.  
-* Use **no more than 2 fuel boosts** to maintain energy for trial completion.  
-* Observe the **Lactate Bar** to understand the limits of anaerobic work.
+### Module Instructions
 
-**Target / Success Criteria:**  
-* **Primary energy system = Anaerobic Glycolysis** (speed above Trial A ceiling).  
-* Maintain **energy ≥60%** with fuel assistance to complete the trial.  
-* Complete the trial without **Lactate Bar reaching 100%**.  
-* Build a **Metabolic Profile**: identify aerobic ceiling (Trial A) and anaerobic limits (Trial B).
+1. **Set the speed slider:** 7.0 mph for the full 3-minute trial.  
+2. **Pre-Test (Optional):** Run a short pre-trial to observe how early vs. late fueling affects:
+   - W′ energy recovery
+   - Lactate accumulation
+   - Timing of fuel pulses  
+   This helps plan **strategic fuel use** for the official trial.  
 
----
-
-### Trial Instructions:
-
-**Goal:** Demonstrate that **fuel timing affects outcome**, not **energy system selection**.
-
-**Steps**
-
-1. Press **Start Trial**  
-2. Use **exactly two** fuel uses at different times than Trial B  
-3. Observe Energy behavior  
-4. Observe the **Primary Energy Source** indicator
+3. **Official Trial:**
+   - Begin the 3-minute trial at **7.0 mph** and maintain throughout.  
+   - Monitor **Energy** and **Lactate** bars.  
+   - Apply exactly **2 fuel pulses (+10 each)** strategically to:
+     - Keep W′ energy above ~50%
+     - Avoid Lactate reaching **100%**  
+   - Decide whether to space the fuels **closer together** or **further apart** based on your pre-test observations.  
 
 ---
+
 
 ### Checkpoint Questions 
 
@@ -219,3 +206,32 @@ D. Resting metabolic rate
 **Correct Answer:** A
 
 ---
+### Checkpoint — Trial B
+
+**Checkpoint — Trial B (Q1)**
+
+Which of the following best explains the effect of carbohydrate fuel on the subject during Trial B?  
+
+A. Fuel adds energy while slightly raising lactate, due to glycolysis.  
+B. Fuel adds energy without changing lactate, under anaerobic conditions.  
+C. Fuel reduces lactate while also restoring energy to muscles.  
+D. Fuel has no effect on energy or lactate during exercise.  
+
+**Answer:** A  
+
+---
+
+**Checkpoint — Trial B (Q2)**
+What strategy allowed the subject to complete Trial B without crashing?  
+
+A. Fuel twice at any point, regardless of energy or lactate.  
+B. Wait to fuel; early carbohydrate energy isn’t available yet.  
+C. Fuel continuously from the start to keep energy high.  
+D. Fuel only once at the very end of the trial.  
+
+**Answer:** B  
+
+---
+
+
+
