@@ -981,18 +981,26 @@ function drawTrialB_View(ctx, c, speed) {
     ctx.textAlign = 'left';
 
 // 5. STATUS MESSAGING (Timing Outcomes)
+// 5. STATUS MESSAGING (Timing Outcomes Prioritized)
     ctx.font = '700 18px Inter';
     
+    // Priority 1: Too Late Feedback
     if (sim.fuelCount > 0 && sim.energy < 40) {
         ctx.fillStyle = '#ff9aa0';
         ctx.fillText("STATUS: TOO LATE - INEFFECTIVE UPTAKE", 40, barY + barH + 40);
-    } else if (sim.fuelPenaltyTimer > 0) {
+    } 
+    // Priority 2: Too Early Feedback (Active Penalty)
+    else if (sim.fuelPenaltyTimer > 0) {
         ctx.fillStyle = '#ff9aa0';
         ctx.fillText(`STATUS: TOO EARLY - WASTE SPIKE (${Math.ceil(sim.fuelPenaltyTimer)}s)`, 40, barY + barH + 40);
-    } else if (sim.fuelCount > 0 && sim.energy >= 40 && sim.energy <= 75) {
+    } 
+    // Priority 3: Optimal Window Feedback (Triggered by sim.fuelSuccess)
+    else if (sim.fuelSuccess && sim.energy >= 40 && sim.energy <= 85) {
         ctx.fillStyle = '#38bdf8';
         ctx.fillText("STATUS: OPTIMAL WINDOW - FUEL EFFECTIVE", 40, barY + barH + 40);
-    } else if (speed <= ceilingSpeed && speed > 0) {
+    } 
+    // Priority 4: Standard Environmental States
+    else if (speed <= ceilingSpeed && speed > 0) {
         ctx.fillStyle = '#38bdf8';
         ctx.fillText("STATUS: ACTIVE CLEARANCE (STEADY STATE)", 40, barY + barH + 40);
     } else if (sim.lactate > 1.5) {
