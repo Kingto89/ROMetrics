@@ -597,34 +597,34 @@ $fuel.onclick = () => {
 };
 
 // --- UPDATED METABOLIC TICK ---
-    if (sim.running) {
-        let rateMultiplier = (sim.fuelPenaltyTimer > 0) ? 1.2 : 1.0;
+if (sim.running) {
+    let rateMultiplier = (sim.fuelPenaltyTimer > 0) ? 1.2 : 1.0;
 
-        if (sim.fuelPenaltyTimer > 0) sim.fuelPenaltyTimer -= dt;
-        if (sim.throughputAlert > 0) sim.throughputAlert -= dt;
+    if (sim.fuelPenaltyTimer > 0) sim.fuelPenaltyTimer -= dt;
+    if (sim.throughputAlert > 0) sim.throughputAlert -= dt;
 
-        const currentLetter = document.getElementById('trialTag').textContent.trim();
-        const currentModel = document.getElementById('modelSelect').value.trim();
-        
-        // FIX: Ensure this variable name matches the 'if' condition below
-        const ceiling = (currentModel === "Roman") ? 6.3 : 6.7;
-        const speed = parseFloat(sim.speedMph.toFixed(1));
-        const currentCost = (speed * 26.8 * 0.205) + 3.5;
+    const currentLetter = document.getElementById('trialTag').textContent.trim();
+    const currentModel = document.getElementById('modelSelect').value.trim();
+    
+    // Define CEILING for this frame
+    const ceiling = (currentModel === "Roman") ? 6.3 : 6.7;
+    const speed = parseFloat(sim.speedMph.toFixed(1));
+    const currentCost = (speed * 26.8 * 0.205) + 3.5;
 
-        if (currentLetter === 'B') {
-            if (speed > ceiling) {
-                const deficit = currentCost - sim.vo2Max;
-                const fatigueMultiplier = (sim.lactate > 50) ? 1.4 : 1.0; 
-                // Using 0.0017 for the 8-minute duration
-                sim.lactate += (deficit * 0.0017) * fatigueMultiplier * rateMultiplier * dt * 60; 
-                sim.lactate = Math.min(100, sim.lactate);
-            } else if (speed > 0) {
-                sim.lactate = Math.min(1.4, sim.lactate + 0.04);
-                if (Math.sin(performance.now() / 250) > 0.9) sim.lactate = 0;
-            }
+    if (currentLetter === 'B') {
+        if (speed > ceiling) {
+            const deficit = currentCost - sim.vo2Max;
+            const fatigueMultiplier = (sim.lactate > 50) ? 1.4 : 1.0; 
+            // Forensic Rate scaled for 8-min trial
+            sim.lactate += (deficit * 0.0017) * fatigueMultiplier * rateMultiplier * dt * 60;
+            sim.lactate = Math.min(100, sim.lactate);
+        } else if (speed > 0) {
+            // Steady State "Breathing" Wipes Trace Lactate
+            sim.lactate = Math.min(1.4, sim.lactate + 0.04);
+            if (Math.sin(performance.now() / 250) > 0.9) sim.lactate = 0;
         }
-    }    
-
+    }
+}
 // Reset Button Logic
 $reset.addEventListener('click', () => {
     // 1. CLEAR MESSAGES & UI (This makes it feel like a fresh start)
@@ -918,16 +918,16 @@ function drawTrialA_View(ctx, c, speed, modelName) {
 // ==========================================
 // 3. TRIAL B BOX (Consolidated Forensic View)
 // ==========================================
-function drawTrialB_View(ctx, c, speed) {
+function drawTrialB_View(ctx, c, currentSpeedMph) {
     const barY = 185, barW = c.width - 80, barH = 50;
     const modelName = document.getElementById('modelSelect').value.trim();
-    const ceilingSpeed = (modelName === "Roman") ? 6.3 : 6.7;
+    const ceiling = (modelName === "Roman") ? 6.3 : 6.7;
+    const speed = parseFloat(sim.speedMph.toFixed(1)); // Define speed locally
 
-    // 1. VISUAL OVERLAY: Red flash if Too Early fuel used
+    // 1. VISUAL OVERLAY: Red flash if Too Early
     if (sim.throughputAlert > 0) {
         ctx.fillStyle = 'rgba(255, 60, 60, 0.15)';
         ctx.fillRect(0, 0, c.width, c.height);
-        
         ctx.fillStyle = "#ff4d4d";
         ctx.font = "900 24px Inter";
         ctx.textAlign = "center";
@@ -935,46 +935,44 @@ function drawTrialB_View(ctx, c, speed) {
         ctx.textAlign = "left";
     }
 
-    // 2. HEADER TEXT
     ctx.fillStyle = '#ffe4a3';
     ctx.font = '900 22px Inter';
     ctx.fillText("FORENSIC ANALYSIS: METABOLIC WASTE (LACTATE)", 40, 150);
     
-    // 3. DRAW THE BAR BACKGROUND
     ctx.fillStyle = 'rgba(255,255,255,0.05)';
     ctx.fillRect(40, barY, barW, barH);
     
-    // 4. DRAW THE DYNAMIC FILL (Heat-map transition)
-    // Turns from greenish-yellow to bright red as it nears 100%
+    // DRAW BAR FILL
     const r = 150 + (sim.lactate * 1.05);
     const g = 228 - (sim.lactate * 2.2);
     ctx.fillStyle = `rgb(${r}, ${g}, 163)`;
     ctx.fillRect(40, barY, barW * (sim.lactate / 100), barH);
     
-    // 5. PERCENTAGE READOUT
+    // PERCENTAGE TEXT
     ctx.fillStyle = (sim.lactate > 45) ? '#061222' : '#e6eef7';
     ctx.font = '900 20px Inter';
     ctx.textAlign = 'center';
-    const displayVal = speed <= ceilingSpeed ? sim.lactate.toFixed(1) : Math.round(sim.lactate);
+    const displayVal = speed <= ceiling ? sim.lactate.toFixed(1) : Math.round(sim.lactate);
     ctx.fillText(`${displayVal}%`, 40 + (barW / 2), barY + 33);
     ctx.textAlign = 'left';
 
-    // 6. STATUS MESSAGING (Window Logic)
+    // STATUS WINDOWS
+    ctx.font = '700 18px Inter';
     if (sim.fuelPenaltyTimer > 0) {
         ctx.fillStyle = '#ff9aa0';
         ctx.fillText(`STATUS: ACCELERATED WASTE (${Math.ceil(sim.fuelPenaltyTimer)}s)`, 40, barY + barH + 40);
     } else if (sim.energy <= 75 && sim.energy >= 30 && sim.fuelCount > 0) {
         ctx.fillStyle = '#38bdf8';
         ctx.fillText("STATUS: OPTIMAL FUEL BUFFER ACTIVE", 40, barY + barH + 40);
-    } 
-    // ADD THIS NEW BLOCK:
-    else if (sim.energy < 30 && sim.fuelCount > 0) {
-        ctx.fillStyle = '#ff9aa0'; // Warning color
+    } else if (sim.energy < 30 && sim.fuelCount > 0) {
+        ctx.fillStyle = '#ff9aa0';
         ctx.fillText("STATUS: FUEL USED TOO LATE - REDUCED UPTAKE", 40, barY + barH + 40);
-    } 
-    else if (speed > ceilingSpeed) {
+    } else if (speed > ceiling) {
         ctx.fillStyle = '#ffe4a3';
         ctx.fillText("STATUS: ANAEROBIC DEBT ACCUMULATING", 40, barY + barH + 40);
+    } else {
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillText("STATUS: STEADY STATE", 40, barY + barH + 40);
     }
 }
     // ==============================
