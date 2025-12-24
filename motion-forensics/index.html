@@ -865,62 +865,67 @@ function drawTrialB_View(ctx, c, speed) {
     const barY = 185, barW = c.width - 80, barH = 50;
     const modelName = document.getElementById('modelSelect').value.trim();
     
-    // A. DETERMINE THE CEILING
+    // 1. DETERMINE THE CEILING
     const ceilingSpeed = (modelName === "Roman") ? 6.3 : 6.7;
     const currentCost = (speed * 26.8 * 0.205) + 3.5;
     const deficit = Math.max(0, currentCost - sim.vo2Max);
 
-    // B. SPLIT-RATIO ENGINE
+    // 2. LIVE PRODUCTION VS. WIPING
     if (sim.running) {
-        if (speed <= ceilingSpeed) {
-            // STEADY STATE: Clearance matches production. 
-            // We use a micro-ratio so it never exceeds 1% even after 5 mins.
-            sim.lactate = Math.min(1, sim.lactate + (speed * 0.0001));
-        } else {
-            // TOXIC DEBT: Exponential accumulation for Trial B.
-            // 7.2 mph - 7.7 mph creates a "managed crisis" finish.
+        if (speed <= ceilingSpeed && speed > 0) {
+            // STEADY STATE "BREATHING"
+            // Accumulate a tiny "Trace" amount (reaches ~1% quickly)
+            sim.lactate = Math.min(1.4, sim.lactate + 0.04);
+            
+            // THE WIPE: Every ~1.5 seconds, the body "clears" the trace back to 0
+            // Uses a sine wave to trigger a reset pulse
+            if (Math.sin(performance.now() / 250) > 0.9) {
+                sim.lactate = 0; 
+            }
+        } else if (speed > ceilingSpeed) {
+            // TOXIC DEBT: Accumulation outpaces clearance (No more wiping)
             const fatigueMultiplier = (sim.lactate > 50) ? 1.4 : 1.0; 
             const accumulation = (deficit * 0.0038) * fatigueMultiplier; 
             sim.lactate = Math.min(100, sim.lactate + accumulation);
         }
     }
 
-    // C. VISUAL READOUT
+    // 3. VISUALS (Heat-map and Bar)
     ctx.fillStyle = '#ffe4a3';
     ctx.font = '900 22px Inter';
     ctx.fillText("FORENSIC ANALYSIS: METABOLIC WASTE (LACTATE)", 40, 150);
     
-    // Bar Background
     ctx.fillStyle = 'rgba(255,255,255,0.05)';
     ctx.fillRect(40, barY, barW, barH);
     
-    // Heat-Map Fill
     const r = 150 + (sim.lactate * 1.05);
     const g = 228 - (sim.lactate * 2.2);
     ctx.fillStyle = `rgb(${r}, ${g}, 163)`;
     ctx.fillRect(40, barY, barW * (sim.lactate / 100), barH);
     
-    // Dynamic Percentage Readout
+    // 4. PERCENTAGE READOUT (Shows the flicker at ceiling)
     ctx.fillStyle = (sim.lactate > 45) ? '#061222' : '#e6eef7';
     ctx.font = '900 20px Inter';
     ctx.textAlign = 'center';
-    ctx.fillText(`${Math.round(sim.lactate)}%`, 40 + (barW / 2), barY + 33);
+    // Show 1 decimal place to capture the "flicker" better
+    const displayVal = speed <= ceilingSpeed ? sim.lactate.toFixed(1) : Math.round(sim.lactate);
+    ctx.fillText(`${displayVal}%`, 40 + (barW / 2), barY + 33);
     ctx.textAlign = 'left';
 
-    // Status Messaging
+    // 5. STATUS MESSAGING
     ctx.font = '700 18px Inter';
-    if (sim.lactate >= 100) {
-        ctx.fillStyle = '#ff9aa0';
-        ctx.fillText("STATUS: SYSTEMIC COLLAPSE", 40, barY + barH + 40);
+    if (speed <= ceilingSpeed && speed > 0) {
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillText("STATUS: ACTIVE CLEARANCE (STEADY STATE)", 40, barY + barH + 40);
     } else if (sim.lactate > 85) {
         ctx.fillStyle = '#ff9aa0';
         ctx.fillText("STATUS: CRITICAL ACIDOSIS", 40, barY + barH + 40);
-    } else if (sim.lactate > 1) {
+    } else if (sim.lactate > 1.5) {
         ctx.fillStyle = '#ffe4a3';
         ctx.fillText("STATUS: ANAEROBIC DEBT ACCUMULATING", 40, barY + barH + 40);
     } else {
         ctx.fillStyle = '#38bdf8';
-        ctx.fillText("STATUS: AEROBIC STEADY STATE", 40, barY + barH + 40);
+        ctx.fillText("STATUS: READY", 40, barY + barH + 40);
     }
 }
     // ==============================
