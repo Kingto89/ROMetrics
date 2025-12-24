@@ -2188,7 +2188,28 @@ if (sim.energy <= 0 || trialTime <= 0 || sim.lactate >= 100) {
                 `<b style="color:#ff9aa0;">Trial Failed:</b> ${failMsg} Reset and try again.`;
         }
     }
+// 3. TRIAL B INTEGRITY CHECK
+    if (currentLetter === 'B' && trialTime <= 0) {
+        const targetSpeedB = (activeModel === "Roman") ? 6.7 : 7.0;
+        
+        const speedCorrect = (currentSpeed === targetSpeedB && !speedViolation);
+        const energyCorrect = (sim.energy > 50);
+        const fuelCorrect = (sim.fuelCount <= 2);
 
+        if (speedCorrect && energyCorrect && fuelCorrect) {
+            triggerUnlock("Metabolic Crisis Managed: Anaerobic Efficiency Confirmed.");
+        } else {
+            let failMsgB = "";
+            if (!speedCorrect) failMsgB = `Target speed (${targetSpeedB} mph) not maintained consistently.`;
+            else if (!energyCorrect) failMsgB = "Exhaustion: Energy dropped below 50% floor.";
+            else if (!fuelCorrect) failMsgB = "Efficiency Error: More than 2 fuels used.";
+
+            document.getElementById('trialMsg').innerHTML = 
+                `<b style="color:#ff9aa0;">Trial Failed:</b> ${failMsgB} Reset and try again.`;
+        }
+    }
+
+    // Stop Simulation
     sim.running = false;
     if (runAction) runAction.paused = true;
     restore(); 
