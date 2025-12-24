@@ -576,9 +576,9 @@ $fuel.onclick = () => {
         triggerPenalty = false; // CLEAN ABSORPTION
         $status.textContent = "FUEL OPTIMAL: CLEAN ENERGY UPTAKE";
     } 
-    else {
-        // TOO LATE
-        energyGain = 5; 
+  else {
+        // TOO LATE (<30%)
+        energyGain = 2; // Change from 5 to 2 to make it feel "useless"
         triggerPenalty = false;
         $status.textContent = "FUEL TOO LATE: SYSTEMIC EXHAUSTION";
     }
@@ -918,9 +918,6 @@ function drawTrialA_View(ctx, c, speed, modelName) {
 }
 
 // ==========================================
-// 3. TRIAL B BOX (Add your new focused info here)
-// ==========================================
-// ==========================================
 // 3. TRIAL B BOX (Consolidated Forensic View)
 // ==========================================
 function drawTrialB_View(ctx, c, speed) {
@@ -965,19 +962,21 @@ function drawTrialB_View(ctx, c, speed) {
     ctx.textAlign = 'left';
 
     // 6. STATUS MESSAGING (Window Logic)
-    ctx.font = '700 18px Inter';
     if (sim.fuelPenaltyTimer > 0) {
         ctx.fillStyle = '#ff9aa0';
         ctx.fillText(`STATUS: ACCELERATED WASTE (${Math.ceil(sim.fuelPenaltyTimer)}s)`, 40, barY + barH + 40);
     } else if (sim.energy <= 75 && sim.energy >= 30 && sim.fuelCount > 0) {
         ctx.fillStyle = '#38bdf8';
         ctx.fillText("STATUS: OPTIMAL FUEL BUFFER ACTIVE", 40, barY + barH + 40);
-    } else if (speed > ceilingSpeed) {
+    } 
+    // ADD THIS NEW BLOCK:
+    else if (sim.energy < 30 && sim.fuelCount > 0) {
+        ctx.fillStyle = '#ff9aa0'; // Warning color
+        ctx.fillText("STATUS: FUEL USED TOO LATE - REDUCED UPTAKE", 40, barY + barH + 40);
+    } 
+    else if (speed > ceilingSpeed) {
         ctx.fillStyle = '#ffe4a3';
         ctx.fillText("STATUS: ANAEROBIC DEBT ACCUMULATING", 40, barY + barH + 40);
-    } else {
-        ctx.fillStyle = '#38bdf8';
-        ctx.fillText("STATUS: STEADY STATE CLEARANCE", 40, barY + barH + 40);
     }
 }
     // ==============================
