@@ -865,49 +865,53 @@ function drawTrialB_View(ctx, c, speed) {
     const barY = 185, barW = c.width - 80, barH = 50;
     const modelName = document.getElementById('modelSelect').value.trim();
     
-    // A. DETERMINE THE CEILING
+    // 1. DETERMINE THE CEILING & DEFICIT
     const ceiling = (modelName === "Roman") ? 6.3 : 6.7;
     const currentCost = (speed * 26.8 * 0.205) + 3.5;
     const deficit = Math.max(0, currentCost - sim.vo2Max);
 
-    // B. REFINED ACCUMULATION MATH (Real-world scaling)
+    // 2. REFINED MATH: 7.7 mph (Roma) takes ~180s to hit ~95%
     if (sim.running) {
         if (deficit > 0) {
-            // Acidosis snowballs: higher deficit = exponential rise
-            // 0.008 is the base "toxic" multiplier
-            const fatigueMultiplier = (sim.lactate > 50) ? 1.5 : 1.0; 
-            const accumulation = (deficit * deficit * 0.008) * fatigueMultiplier;
+            // Throttled multiplier (0.0011) ensures a slow, forensic climb
+            const fatigueMultiplier = (sim.lactate > 50) ? 1.3 : 1.0; 
+            const accumulation = (deficit * 0.0011) * fatigueMultiplier; 
             sim.lactate = Math.min(100, sim.lactate + accumulation);
         } else {
-            // Clearance: Muscles flush waste slowly when below ceiling
-            // Recovery is much slower than accumulation
-            sim.lactate = Math.max(0, sim.lactate - 0.02);
+            // slow recovery if they drop below the ceiling
+            sim.lactate = Math.max(0, sim.lactate - 0.005);
         }
     }
 
-    // C. VISUALS
+    // 3. VISUALS: Header
     ctx.fillStyle = '#ffe4a3';
     ctx.font = '900 22px Inter';
     ctx.fillText("FORENSIC ANALYSIS: METABOLIC WASTE (LACTATE)", 40, 150);
     
-    // Background Bar
+    // 4. DRAW THE BAR
     ctx.fillStyle = 'rgba(255,255,255,0.05)';
-    ctx.fillRect(40, barY, barW, barH);
+    ctx.fillRect(40, barY, barW, barH); // Background
     
-    // Fill Bar with "Heat Map" Colors
-    const r = 150 + (sim.lactate * 1.05); // Shifts to Red
-    const g = 228 - (sim.lactate * 2.28); // Drains Green
+    const r = 150 + (sim.lactate * 1.05);
+    const g = 228 - (sim.lactate * 2.2);
     ctx.fillStyle = `rgb(${r}, ${g}, 163)`;
-    ctx.fillRect(40, barY, barW * (sim.lactate / 100), barH);
+    ctx.fillRect(40, barY, barW * (sim.lactate / 100), barH); // Fill
     
-    // Warning Tiers
+    // 5. PERCENTAGE READOUT (Centered in Bar)
+    ctx.fillStyle = (sim.lactate > 45) ? '#061222' : '#e6eef7'; // Contrast toggle
+    ctx.font = '900 20px Inter';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${Math.round(sim.lactate)}%`, 40 + (barW / 2), barY + 33);
+    ctx.textAlign = 'left'; // Reset
+
+    // 6. STATUS MESSAGES
     ctx.font = '700 18px Inter';
-    if (sim.lactate > 80) {
+    if (sim.lactate > 85) {
         ctx.fillStyle = '#ff9aa0';
-        ctx.fillText("CRITICAL: SYSTEMIC ACIDOSIS IMMINENT", 40, barY + barH + 40);
+        ctx.fillText("CRITICAL: ACIDOSIS IMMINENT", 40, barY + barH + 40);
     } else if (sim.lactate > 50) {
         ctx.fillStyle = '#ffe4a3';
-        ctx.fillText("WARNING: LACTATE THRESHOLD EXCEEDED", 40, barY + barH + 40);
+        ctx.fillText("WARNING: WASTE ACCUMULATING", 40, barY + barH + 40);
     } else {
         ctx.fillStyle = '#38bdf8';
         ctx.fillText("STATUS: STABLE ANAEROBIC OUTPUT", 40, barY + barH + 40);
