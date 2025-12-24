@@ -928,7 +928,7 @@ function drawTrialB_View(ctx, c, speed) {
     // 2. LIVE PRODUCTION VS. WIPING
     if (sim.running) {
         // Multiplier only exists if fuel was used > 75% energy
-        const throughputMultiplier = (sim.fuelPenaltyTimer > 0) ? 1.2 : 1.0;
+        const throughputMultiplier = (sim.fuelPenaltyTimer > 0) ? 1.4 : 1.0;
 
         if (speed <= ceilingSpeed && speed > 0) {
             // STEADY STATE "BREATHING"
