@@ -364,7 +364,8 @@ const sim = {
   running: false,
   elapsed: 0,
   workTime: 0,
-  hasStarted: false
+  hasStarted: false,
+  lactate: 0
 };
 
 // PLACE THE EXPOSURE LINES HERE (Outside the braces)
@@ -859,16 +860,43 @@ function drawTrialA_View(ctx, c, speed, modelName) {
 // ==========================================
 function drawTrialB_View(ctx, c, speed) {
     const barY = 185, barW = c.width - 80, barH = 50;
+    const currentCost = (speed * 26.8 * 0.205) + 3.5;
+    
+    // LACTATE MATH: Production starts when Cost > VO2Max
+    // We scale it so that being 5-10% over threshold fills the bar in ~3 minutes
+    if (sim.running && currentCost > sim.vo2Max) {
+        const deficit = currentCost - sim.vo2Max;
+        const accumulationRate = deficit * 0.015; // Realistic scaling factor
+        sim.lactate = Math.min(100, sim.lactate + (accumulationRate * 0.1)); // Incrementing per tick
+    } else if (sim.running && currentCost <= sim.vo2Max) {
+        // Slight clearance if they slow down
+        sim.lactate = Math.max(0, sim.lactate - 0.02);
+    }
+
+    // Visuals: Header
     ctx.fillStyle = '#ffe4a3';
     ctx.font = '900 22px Inter, system-ui';
-    ctx.fillText("FORENSIC ANALYSIS: LACTATE ACCUMULATION", 40, 150);
+    ctx.fillText("FORENSIC ANALYSIS: METABOLIC WASTE (LACTATE)", 40, 150);
     
-    ctx.fillStyle = 'rgba(255,255,255,0.1)';
+    // Draw Lactate Bar (Background)
+    ctx.fillStyle = 'rgba(255,255,255,0.05)';
     ctx.fillRect(40, barY, barW, barH);
     
+    // Draw Lactate Bar (Fill)
+    // The bar turns from Yellow to Red as it fills
+    const barColor = `rgb(${150 + (sim.lactate * 1.05)}, ${228 - (sim.lactate * 1.5)}, 163)`;
+    ctx.fillStyle = barColor;
+    ctx.fillRect(40, barY, barW * (sim.lactate / 100), barH);
+    
+    // Status Text
     ctx.font = '700 18px Inter, system-ui';
-    ctx.fillStyle = '#38bdf8';
-    ctx.fillText("STATUS: MONITORING WASTE THRESHOLD...", 40, barY + barH + 40);
+    ctx.fillStyle = sim.lactate > 80 ? '#ff9aa0' : '#38bdf8';
+    const statusText = sim.lactate > 80 ? "CRITICAL: ACIDOSIS RISK" : "MONITORING ACCUMULATION...";
+    ctx.fillText(`STATUS: ${statusText}`, 40, barY + barH + 40);
+
+    // Legend for Trial B
+    ctx.font = '600 16px Inter, system-ui';
+    ctx.fillStyle = '#ffe4a3'; ctx.fillText('■ LACTATE PRODUCTION', 40, barY + barH + 75);
 }
     // ==============================
     // 4) Room + zones (REAL SCALE)
