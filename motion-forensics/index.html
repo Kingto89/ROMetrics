@@ -557,76 +557,76 @@ $start.onclick = () => {
   if (runAction) runAction.paused = !sim.running;
   $start.textContent = sim.running ? "Pause" : "Start";
 };
-
 $fuel.onclick = () => {
-    // Limit to 2 fuel uses per trial as per forensic constraints
     if (sim.fuelCount >= 2) return; 
     
     let energyGain = 0;
     let triggerPenalty = false;
 
-    // 1. EVALUATE TIMING WINDOW
+    // 1. FORENSIC TIMING CHECK
     if (sim.energy > 75) {
-        // TOO EARLY: System is saturated
-        energyGain = Math.max(0, 85 - sim.energy); // Soft cap recovery
-        triggerPenalty = true; 
+        // TOO EARLY
+        energyGain = Math.max(0, 85 - sim.energy); // Soft cap at 85
+        triggerPenalty = true; // Increases Lactate Rate
         $status.textContent = "FUEL TOO EARLY: GLYCOLYTIC OVERLOAD";
-        $status.style.color = "#ff9aa0";
     } 
     else if (sim.energy <= 75 && sim.energy >= 30) {
-        // CORRECT WINDOW: Optimal uptake
+        // CORRECT WINDOW
         energyGain = 10;
-        triggerPenalty = false; 
+        triggerPenalty = false; // CLEAN ABSORPTION
         $status.textContent = "FUEL OPTIMAL: CLEAN ENERGY UPTAKE";
-        $status.style.color = "#38bdf8";
     } 
     else {
-        // TOO LATE: Systemic exhaustion
-        energyGain = 2; 
+        // TOO LATE
+        energyGain = 5; 
         triggerPenalty = false;
         $status.textContent = "FUEL TOO LATE: SYSTEMIC EXHAUSTION";
-        $status.style.color = "#ff9aa0";
     }
 
-    // 2. APPLY OUTCOMES
-    sim.energy = Math.min(100, sim.energy + energyGain);
+    // 2. APPLY VALUES
+    sim.energy += energyGain;
     sim.fuelCount++;
 
     if (triggerPenalty) {
-        sim.fuelPenaltyTimer = 30; // 30-second penalty duration
-        sim.throughputAlert = 5;   // Visual alert flash duration
+        sim.fuelPenaltyTimer = 30; // 1.2x Lactate Rate
+        sim.throughputAlert = 5;   // Red Visual Alert
+    } else {
+        sim.fuelPenaltyTimer = 0;  // Ensure no penalty for correct/late timing
+        sim.throughputAlert = 0;
     }
-};    
-
-// --- UPDATED METABOLIC TICK ---
+};
+// --- INSIDE THE DRAW/ANIMATE LOOP ---
 if (sim.running) {
-    let rateMultiplier = (sim.fuelPenaltyTimer > 0) ? 1.2 : 1.0;
+    let rateMultiplier = 1.0;
 
-    if (sim.fuelPenaltyTimer > 0) sim.fuelPenaltyTimer -= dt;
-    if (sim.throughputAlert > 0) sim.throughputAlert -= dt;
+    // 1. Math Penalty Logic
+    if (sim.fuelPenaltyTimer > 0) {
+        rateMultiplier = 1.2; 
+        sim.fuelPenaltyTimer -= (dt / 1);
+    }
 
-    const currentLetter = document.getElementById('trialTag').textContent.trim();
-    const currentModel = document.getElementById('modelSelect').value.trim();
-    
-    // Define CEILING for this frame
-    const ceiling = (currentModel === "Roman") ? 6.3 : 6.7;
-    const speed = parseFloat(sim.speedMph.toFixed(1));
-    const currentCost = (speed * 26.8 * 0.205) + 3.5;
+    // 2. Visual Throughput Alert (The 5-second window)
+    if (sim.throughputAlert > 0) {
+        sim.throughputAlert -= (dt / 1);
+        
+        // Draw the alert on screen
+        ctx.fillStyle = "rgba(255, 60, 60, 0.2)"; // Subtle red tint
+        ctx.fillRect(0, 0, c.width, c.height);
+        
+        ctx.fillStyle = "#ff9aa0";
+        ctx.font = "900 24px Inter";
+        ctx.textAlign = "center";
+        ctx.fillText("↑ GLYCOLYTIC THROUGHPUT INCREASED", c.width / 2, 100);
+        ctx.textAlign = "left";
+    }
 
-    if (currentLetter === 'B') {
-        if (speed > ceiling) {
-            const deficit = currentCost - sim.vo2Max;
-            const fatigueMultiplier = (sim.lactate > 50) ? 1.4 : 1.0; 
-            // Forensic Rate scaled for 8-min trial
-            sim.lactate += (deficit * 0.0017) * fatigueMultiplier * rateMultiplier * dt * 60;
-            sim.lactate = Math.min(100, sim.lactate);
-        } else if (speed > 0) {
-            // Steady State "Breathing" Wipes Trace Lactate
-            sim.lactate = Math.min(1.4, sim.lactate + 0.04);
-            if (Math.sin(performance.now() / 250) > 0.9) sim.lactate = 0;
-        }
+    // 3. Accumulation Logic
+    if (speed > ceilingSpeed) {
+        const deficit = currentCost - sim.vo2Max;
+        sim.lactate += (deficit * 0.0035) * rateMultiplier; 
     }
 }
+
 // Reset Button Logic
 $reset.addEventListener('click', () => {
     // 1. CLEAR MESSAGES & UI (This makes it feel like a fresh start)
@@ -918,76 +918,91 @@ function drawTrialA_View(ctx, c, speed, modelName) {
 }
 
 // ==========================================
-// 3. TRIAL B BOX (Consolidated Forensic View)
+// 3. TRIAL B BOX (Add your new focused info here)
 // ==========================================
-function drawTrialB_View(ctx, c, currentSpeedMph) {
+function drawTrialB_View(ctx, c, speed) {
     const barY = 185, barW = c.width - 80, barH = 50;
     const modelName = document.getElementById('modelSelect').value.trim();
-    const speed = parseFloat(currentSpeedMph.toFixed(1));
-    const ceiling = (modelName === "Roman") ? 6.3 : 6.7;
+    
+    // 1. DETERMINE THE CEILING
+    const ceilingSpeed = (modelName === "Roman") ? 6.3 : 6.7;
+    const currentCost = (speed * 26.8 * 0.205) + 3.5;
+    const deficit = Math.max(0, currentCost - sim.vo2Max);
 
-    // 1. VISUAL PENALTY FLASH (Triggered by Too Early timing)
-    if (sim.throughputAlert > 0) {
-        ctx.fillStyle = 'rgba(255, 60, 60, 0.2)';
-        ctx.fillRect(0, 0, c.width, c.height);
-        ctx.fillStyle = "#ff4d4d";
-        ctx.font = "900 24px Inter";
-        ctx.textAlign = "center";
-        ctx.fillText("↑ GLYCOLYTIC THROUGHPUT INCREASED (PENALTY)", c.width / 2, 50);
-        ctx.textAlign = "left";
+    // 2. LIVE PRODUCTION VS. WIPING WITH ACCELERATION RULE
+    if (sim.running) {
+        // Apply 20% acceleration if fuel was recently used (30s window)
+        const throughputMultiplier = (sim.fuelPenaltyTimer > 0) ? 1.2 : 1.0;
+
+        if (speed <= ceilingSpeed && speed > 0) {
+            // STEADY STATE "BREATHING"
+            sim.lactate = Math.min(1.4, sim.lactate + 0.04);
+            if (Math.sin(performance.now() / 250) > 0.9) {
+                sim.lactate = 0; 
+            }
+        } else if (speed > ceilingSpeed) {
+            // TOXIC DEBT: Accumulation outpaces clearance
+            const fatigueMultiplier = (sim.lactate > 50) ? 1.4 : 1.0; 
+            // Apply both the fatigue and the fuel-driven throughput multiplier
+            const accumulation = (deficit * 0.0017) * fatigueMultiplier * throughputMultiplier; 
+            sim.lactate = Math.min(100, sim.lactate + accumulation);
+        }
+
+        // Decrement timers (assuming dt or standard 1s frame rate logic)
+        if (sim.fuelPenaltyTimer > 0) sim.fuelPenaltyTimer -= 0.016; // approx 60fps
+        if (sim.throughputAlert > 0) sim.throughputAlert -= 0.016;
     }
 
-    // 2. HEADER
+    // 3. VISUALS (Heat-map and Bar)
+    // Red flash/tint if Glycolytic Throughput is spiked (first 5s)
+    if (sim.throughputAlert > 0) {
+        ctx.fillStyle = 'rgba(255, 0, 0, 0.15)';
+        ctx.fillRect(0, 0, c.width, c.height);
+        
+        ctx.fillStyle = '#ff4d4d';
+        ctx.font = '900 24px Inter';
+        ctx.textAlign = 'center';
+        ctx.fillText("↑ GLYCOLYTIC THROUGHPUT INCREASED", c.width / 2, 80);
+        ctx.textAlign = 'left';
+    }
+
     ctx.fillStyle = '#ffe4a3';
     ctx.font = '900 22px Inter';
     ctx.fillText("FORENSIC ANALYSIS: METABOLIC WASTE (LACTATE)", 40, 150);
     
-    // 3. LACTATE ACCUMULATION BAR
     ctx.fillStyle = 'rgba(255,255,255,0.05)';
     ctx.fillRect(40, barY, barW, barH);
     
-    const visualLactate = Math.max(0, Math.min(100, sim.lactate));
-    const r = 150 + (visualLactate * 1.05);
-    const g = 228 - (visualLactate * 2.2);
+    const r = 150 + (sim.lactate * 1.05);
+    const g = 228 - (sim.lactate * 2.2);
     ctx.fillStyle = `rgb(${r}, ${g}, 163)`;
-    ctx.fillRect(40, barY, barW * (visualLactate / 100), barH);
+    ctx.fillRect(40, barY, barW * (sim.lactate / 100), barH);
     
-    // PERCENTAGE TEXT
-    ctx.fillStyle = (visualLactate > 45) ? '#061222' : '#e6eef7';
+    // 4. PERCENTAGE READOUT
+    ctx.fillStyle = (sim.lactate > 45) ? '#061222' : '#e6eef7';
     ctx.font = '900 20px Inter';
     ctx.textAlign = 'center';
-    ctx.fillText(`${Math.round(visualLactate)}% ACCUMULATION`, 40 + (barW / 2), barY + 33);
+    const displayVal = speed <= ceilingSpeed ? sim.lactate.toFixed(1) : Math.round(sim.lactate);
+    ctx.fillText(`${displayVal}%`, 40 + (barW / 2), barY + 33);
     ctx.textAlign = 'left';
 
-    // 4. TIMING OUTCOMES (Logic based on W' Balance)
-    ctx.font = '700 16px Inter';
-    let timingMsg = "";
-    let timingColor = "";
-
-    if (sim.energy > 75) {
-        timingMsg = "TIMING: TOO EARLY (GLYCOLYTIC PENALTY)";
-        timingColor = "#ff9aa0"; 
-    } else if (sim.energy <= 75 && sim.energy >= 30) {
-        timingMsg = "TIMING: CORRECT WINDOW (CLEAN ABSORPTION)";
-        timingColor = "#38bdf8"; 
-    } else {
-        timingMsg = "TIMING: TOO LATE (INEFFECTIVE / EXHAUSTION)";
-        timingColor = "#ff4d4d"; 
-    }
-
-    ctx.fillStyle = timingColor;
-    ctx.fillText(timingMsg, 40, barY + barH + 35);
-
-    // 5. STATUS WINDOW
+    // 5. STATUS MESSAGING
+    ctx.font = '700 18px Inter';
     if (sim.fuelPenaltyTimer > 0) {
-        ctx.fillStyle = "#ff4d4d";
-        ctx.fillText(`STATUS: ACCELERATED WASTE (${Math.ceil(sim.fuelPenaltyTimer)}s)`, 40, barY + barH + 60);
-    } else if (speed > ceiling) {
-        ctx.fillStyle = "#ffe4a3";
-        ctx.fillText("STATUS: ANAEROBIC DEBT ACCUMULATING", 40, barY + barH + 60);
+        ctx.fillStyle = '#ff9aa0';
+        ctx.fillText(`STATUS: ACCELERATED WASTE PRODUCTION (${Math.ceil(sim.fuelPenaltyTimer)}s)`, 40, barY + barH + 40);
+    } else if (speed <= ceilingSpeed && speed > 0) {
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillText("STATUS: ACTIVE CLEARANCE (STEADY STATE)", 40, barY + barH + 40);
+    } else if (sim.lactate > 85) {
+        ctx.fillStyle = '#ff9aa0';
+        ctx.fillText("STATUS: CRITICAL ACIDOSIS", 40, barY + barH + 40);
+    } else if (sim.lactate > 1.5) {
+        ctx.fillStyle = '#ffe4a3';
+        ctx.fillText("STATUS: ANAEROBIC DEBT ACCUMULATING", 40, barY + barH + 40);
     } else {
-        ctx.fillStyle = "#38bdf8";
-        ctx.fillText("STATUS: STEADY STATE", 40, barY + barH + 60);
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillText("STATUS: READY", 40, barY + barH + 40);
     }
 }
     // ==============================
