@@ -545,8 +545,9 @@ $start.onclick = () => {
     if (!sim.hasStarted) {
       sim.hasStarted = true;
       sim.workTime = 0;
-      trialTime = 300;
-      // Capture the speed they chose to start with
+// Identify trial to set correct starting time
+      const currentLetter = document.getElementById('trialTag').textContent.trim();
+      trialTime = (currentLetter === 'B') ? 180 : 300;      // Capture the speed they chose to start with
       initialSpeed = parseFloat(sim.speedMph.toFixed(1));
       speedViolation = false; 
     }
