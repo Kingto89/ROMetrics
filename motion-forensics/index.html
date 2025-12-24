@@ -921,89 +921,31 @@ function drawTrialA_View(ctx, c, speed, modelName) {
 // 3. TRIAL B BOX (Add your new focused info here)
 // ==========================================
 function drawTrialB_View(ctx, c, speed) {
-    const barY = 185, barW = c.width - 80, barH = 50;
-    const modelName = document.getElementById('modelSelect').value.trim();
-    
-    // 1. DETERMINE THE CEILING
-    const ceilingSpeed = (modelName === "Roman") ? 6.3 : 6.7;
-    const currentCost = (speed * 26.8 * 0.205) + 3.5;
-    const deficit = Math.max(0, currentCost - sim.vo2Max);
+    // ... existing bar setup ...
 
-    // 2. LIVE PRODUCTION VS. WIPING WITH ACCELERATION RULE
-    if (sim.running) {
-        // Apply 20% acceleration if fuel was recently used (30s window)
-        const throughputMultiplier = (sim.fuelPenaltyTimer > 0) ? 1.2 : 1.0;
-
-        if (speed <= ceilingSpeed && speed > 0) {
-            // STEADY STATE "BREATHING"
-            sim.lactate = Math.min(1.4, sim.lactate + 0.04);
-            if (Math.sin(performance.now() / 250) > 0.9) {
-                sim.lactate = 0; 
-            }
-        } else if (speed > ceilingSpeed) {
-            // TOXIC DEBT: Accumulation outpaces clearance
-            const fatigueMultiplier = (sim.lactate > 50) ? 1.4 : 1.0; 
-            // Apply both the fatigue and the fuel-driven throughput multiplier
-            const accumulation = (deficit * 0.0017) * fatigueMultiplier * throughputMultiplier; 
-            sim.lactate = Math.min(100, sim.lactate + accumulation);
-        }
-
-        // Decrement timers (assuming dt or standard 1s frame rate logic)
-        if (sim.fuelPenaltyTimer > 0) sim.fuelPenaltyTimer -= 0.016; // approx 60fps
-        if (sim.throughputAlert > 0) sim.throughputAlert -= 0.016;
-    }
-
-    // 3. VISUALS (Heat-map and Bar)
-    // Red flash/tint if Glycolytic Throughput is spiked (first 5s)
+    // VISUAL OVERLAY: Only show if the THREAT is real (Too Early fuel used)
     if (sim.throughputAlert > 0) {
-        ctx.fillStyle = 'rgba(255, 0, 0, 0.15)';
+        ctx.fillStyle = 'rgba(255, 60, 60, 0.15)';
         ctx.fillRect(0, 0, c.width, c.height);
         
-        ctx.fillStyle = '#ff4d4d';
-        ctx.font = '900 24px Inter';
-        ctx.textAlign = 'center';
-        ctx.fillText("↑ GLYCOLYTIC THROUGHPUT INCREASED", c.width / 2, 80);
-        ctx.textAlign = 'left';
+        ctx.fillStyle = "#ff9aa0";
+        ctx.font = "900 24px Inter";
+        ctx.textAlign = "center";
+        ctx.fillText("↑ GLYCOLYTIC THROUGHPUT INCREASED (PENALTY)", c.width / 2, 100);
+        ctx.textAlign = "left";
     }
 
-    ctx.fillStyle = '#ffe4a3';
-    ctx.font = '900 22px Inter';
-    ctx.fillText("FORENSIC ANALYSIS: METABOLIC WASTE (LACTATE)", 40, 150);
-    
-    ctx.fillStyle = 'rgba(255,255,255,0.05)';
-    ctx.fillRect(40, barY, barW, barH);
-    
-    const r = 150 + (sim.lactate * 1.05);
-    const g = 228 - (sim.lactate * 2.2);
-    ctx.fillStyle = `rgb(${r}, ${g}, 163)`;
-    ctx.fillRect(40, barY, barW * (sim.lactate / 100), barH);
-    
-    // 4. PERCENTAGE READOUT
-    ctx.fillStyle = (sim.lactate > 45) ? '#061222' : '#e6eef7';
-    ctx.font = '900 20px Inter';
-    ctx.textAlign = 'center';
-    const displayVal = speed <= ceilingSpeed ? sim.lactate.toFixed(1) : Math.round(sim.lactate);
-    ctx.fillText(`${displayVal}%`, 40 + (barW / 2), barY + 33);
-    ctx.textAlign = 'left';
+    // ... existing lactate bar drawing ...
 
-    // 5. STATUS MESSAGING
-    ctx.font = '700 18px Inter';
+    // STATUS MESSAGING: Update to show clean uptake
     if (sim.fuelPenaltyTimer > 0) {
         ctx.fillStyle = '#ff9aa0';
-        ctx.fillText(`STATUS: ACCELERATED WASTE PRODUCTION (${Math.ceil(sim.fuelPenaltyTimer)}s)`, 40, barY + barH + 40);
-    } else if (speed <= ceilingSpeed && speed > 0) {
+        ctx.fillText(`STATUS: ACCELERATED WASTE (${Math.ceil(sim.fuelPenaltyTimer)}s)`, 40, 275);
+    } else if (sim.energy <= 75 && sim.energy >= 30 && sim.fuelCount > 0) {
         ctx.fillStyle = '#38bdf8';
-        ctx.fillText("STATUS: ACTIVE CLEARANCE (STEADY STATE)", 40, barY + barH + 40);
-    } else if (sim.lactate > 85) {
-        ctx.fillStyle = '#ff9aa0';
-        ctx.fillText("STATUS: CRITICAL ACIDOSIS", 40, barY + barH + 40);
-    } else if (sim.lactate > 1.5) {
-        ctx.fillStyle = '#ffe4a3';
-        ctx.fillText("STATUS: ANAEROBIC DEBT ACCUMULATING", 40, barY + barH + 40);
-    } else {
-        ctx.fillStyle = '#38bdf8';
-        ctx.fillText("STATUS: READY", 40, barY + barH + 40);
+        ctx.fillText("STATUS: OPTIMAL FUEL BUFFER ACTIVE", 40, 275);
     }
+    // ... rest of logic
 }
     // ==============================
     // 4) Room + zones (REAL SCALE)
