@@ -595,37 +595,37 @@ $fuel.onclick = () => {
         sim.throughputAlert = 0;
     }
 };
-// --- INSIDE THE DRAW/ANIMATE LOOP ---
+
+// --- UPDATED METABOLIC TICK ---
 if (sim.running) {
-    let rateMultiplier = 1.0;
+    // A. CALCULATE RATE PENALTY
+    let rateMultiplier = (sim.fuelPenaltyTimer > 0) ? 1.2 : 1.0;
 
-    // 1. Math Penalty Logic
-    if (sim.fuelPenaltyTimer > 0) {
-        rateMultiplier = 1.2; 
-        sim.fuelPenaltyTimer -= (dt / 1);
-    }
+    // B. COUNTDOWN TIMERS (Using dt from the clock)
+    if (sim.fuelPenaltyTimer > 0) sim.fuelPenaltyTimer -= dt;
+    if (sim.throughputAlert > 0) sim.throughputAlert -= dt;
 
-    // 2. Visual Throughput Alert (The 5-second window)
-    if (sim.throughputAlert > 0) {
-        sim.throughputAlert -= (dt / 1);
-        
-        // Draw the alert on screen
-        ctx.fillStyle = "rgba(255, 60, 60, 0.2)"; // Subtle red tint
-        ctx.fillRect(0, 0, c.width, c.height);
-        
-        ctx.fillStyle = "#ff9aa0";
-        ctx.font = "900 24px Inter";
-        ctx.textAlign = "center";
-        ctx.fillText("↑ GLYCOLYTIC THROUGHPUT INCREASED", c.width / 2, 100);
-        ctx.textAlign = "left";
-    }
+    // C. REALITY ACCUMULATION (Only for Trial B)
+    const currentLetter = document.getElementById('trialTag').textContent.trim();
+    const currentModel = document.getElementById('modelSelect').value.trim();
+    const ceilingSpeed = (currentModel === "Roman") ? 6.3 : 6.7;
+    const speed = parseFloat(sim.speedMph.toFixed(1));
+    const currentCost = (speed * 26.8 * 0.205) + 3.5;
 
-    // 3. Accumulation Logic
-    if (speed > ceilingSpeed) {
-        const deficit = currentCost - sim.vo2Max;
-        sim.lactate += (deficit * 0.0035) * rateMultiplier; 
+    if (currentLetter === 'B') {
+        if (speed > ceilingSpeed) {
+            const deficit = currentCost - sim.vo2Max;
+            const fatigueMultiplier = (sim.lactate > 50) ? 1.4 : 1.0; 
+            // Forensic Rate: 0.0017
+            sim.lactate += (deficit * 0.0017) * fatigueMultiplier * rateMultiplier * dt;
+            sim.lactate = Math.min(100, sim.lactate);
+        } else if (speed > 0) {
+            // Aerobic "Breathing" Flicker for Trial B
+            sim.lactate = Math.min(1.4, sim.lactate + 0.04);
+            if (Math.sin(performance.now() / 250) > 0.9) sim.lactate = 0;
+        }
     }
-}
+}    
 
 // Reset Button Logic
 $reset.addEventListener('click', () => {
