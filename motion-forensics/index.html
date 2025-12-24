@@ -547,7 +547,7 @@ $start.onclick = () => {
       sim.workTime = 0;
 // Identify trial to set correct starting time
       const currentLetter = document.getElementById('trialTag').textContent.trim();
-      trialTime = (currentLetter === 'B') ? 180 : 300;      // Capture the speed they chose to start with
+      trialTime = (currentLetter === 'B') ? 480 : 300;      // Capture the speed they chose to start with
       initialSpeed = parseFloat(sim.speedMph.toFixed(1));
       speedViolation = false; 
     }
@@ -627,7 +627,7 @@ $reset.addEventListener('click', () => {
     // 4. RESET HUD VALUES
     // 4. RESET HUD VALUES
     const currentLetter = document.getElementById('trialTag').textContent.trim();
-    trialTime = (currentLetter === 'B') ? 180 : 300; // Identifies trial to set correct time
+    trialTime = (currentLetter === 'B') ? 480 : 300; // Identifies trial to set correct time
     document.getElementById('trialTime').textContent = trialTime;
     sim.lactate = 0; // Identifies reset for waste accumulation
     document.getElementById('engVal').textContent = 100;
@@ -1613,8 +1613,8 @@ function showFL001Trial(trials, letter) {
   const t = trials[letter];
   document.getElementById('trialTag').textContent = letter;
 
-  // 1. Set specific forensic timers: A=300s, B=180s
-  let timeLimit = (letter === 'B') ? 180 : 300;
+  // 1. Set specific forensic timers: A=300s, B=480s
+  let timeLimit = (letter === 'B') ? 480 : 300;
   
   // 2. Update global simulation time and HUD display
   window.setTrialTime(timeLimit);
@@ -2160,56 +2160,52 @@ if (sim.running && sim.energy > 0) {
     }
 }
 
-// --- DYNAMIC TRIAL STOP & UNLOCK LOGIC ---
+
+ // --- DYNAMIC TRIAL STOP & UNLOCK LOGIC ---
 if (sim.energy <= 0 || trialTime <= 0 || sim.lactate >= 100) {
     const activeModel = document.getElementById('modelSelect').value;
     const currentLetter = document.getElementById('trialTag').textContent.trim();
+    const currentSpeed = parseFloat(sim.speedMph.toFixed(1));
 
-    // Check for Lactate Failure specifically in Trial B
-    if (sim.lactate >= 100 && currentLetter === 'B') {
+    // 1. PRIORITIZE SUCCESS: IF TIMER HITS ZERO AND SUBJECT IS STILL STANDING
+    if (trialTime <= 0 && sim.lactate < 100) {
+        if (currentLetter === 'A') {
+            const targetSpeedA = (activeModel === "Roma") ? 6.7 : 6.3;
+            if (initialSpeed === targetSpeedA && !speedViolation && sim.energy >= 60) {
+                triggerUnlock("Aerobic Dominance Confirmed.");
+            } else {
+                let failMsg = initialSpeed !== targetSpeedA ? `Incorrect speed (${initialSpeed} mph).` : 
+                              speedViolation ? "Speed was altered." : "Insufficient energy balance.";
+                document.getElementById('trialMsg').innerHTML = `<b style="color:#ff9aa0;">Trial Failed:</b> ${failMsg}`;
+            }
+        } 
+        else if (currentLetter === 'B') {
+            const targetSpeedB = (activeModel === "Roman") ? 6.7 : 7.0;
+            const speedCorrect = (currentSpeed === targetSpeedB && !speedViolation);
+            const energyCorrect = (sim.energy > 50);
+            const fuelCorrect = (sim.fuelCount <= 2);
+
+            if (speedCorrect && energyCorrect && fuelCorrect) {
+                triggerUnlock("Metabolic Crisis Managed: Anaerobic Efficiency Confirmed.");
+            } else {
+                let failMsgB = !speedCorrect ? `Target speed (${targetSpeedB} mph) not maintained.` :
+                               !energyCorrect ? "Exhaustion: Energy below 50% floor." : "Efficiency Error: >2 fuels used.";
+                document.getElementById('trialMsg').innerHTML = `<b style="color:#ff9aa0;">Trial Failed:</b> ${failMsgB}`;
+            }
+        }
+    }
+    // 2. SECONDARY: HANDLE HARD FAILURES (If timer hasn't reached zero yet)
+    else if (sim.lactate >= 100 && currentLetter === 'B') {
         document.getElementById('statusVal').textContent = "CRITICAL FAILURE: METABOLIC ACIDOSIS";
         document.getElementById('statusVal').style.color = "#ff9aa0";
-        document.getElementById('trialMsg').innerHTML = 
-            `<b style="color:#ff9aa0;">Trial Failed:</b> Waste accumulation exceeded clearance capacity. Reset and lower speed.`;
-    } 
-    
-    // Trial A Integrity Check
-    if (currentLetter === 'A' && trialTime <= 0) {
-        const targetSpeed = (activeModel === "Roma") ? 6.7 : 6.3;
-        if (initialSpeed === targetSpeed && !speedViolation && sim.energy >= 60) {
-            triggerUnlock("Aerobic Dominance Confirmed.");
-        } else {
-            let failMsg = "";
-            if (initialSpeed !== targetSpeed) failMsg = `Incorrect starting speed (${initialSpeed} mph).`;
-            else if (speedViolation) failMsg = "Speed was altered during the trial.";
-            else failMsg = "Insufficient energy balance.";
-
-            document.getElementById('trialMsg').innerHTML = 
-                `<b style="color:#ff9aa0;">Trial Failed:</b> ${failMsg} Reset and try again.`;
-        }
+        document.getElementById('trialMsg').innerHTML = `<b style="color:#ff9aa0;">Trial Failed:</b> 100% Acidosis reached before completion.`;
     }
-// 3. TRIAL B INTEGRITY CHECK
-    if (currentLetter === 'B' && trialTime <= 0) {
-        const targetSpeedB = (activeModel === "Roman") ? 6.7 : 7.0;
-        
-        const speedCorrect = (currentSpeed === targetSpeedB && !speedViolation);
-        const energyCorrect = (sim.energy > 50);
-        const fuelCorrect = (sim.fuelCount <= 2);
-
-        if (speedCorrect && energyCorrect && fuelCorrect) {
-            triggerUnlock("Metabolic Crisis Managed: Anaerobic Efficiency Confirmed.");
-        } else {
-            let failMsgB = "";
-            if (!speedCorrect) failMsgB = `Target speed (${targetSpeedB} mph) not maintained consistently.`;
-            else if (!energyCorrect) failMsgB = "Exhaustion: Energy dropped below 50% floor.";
-            else if (!fuelCorrect) failMsgB = "Efficiency Error: More than 2 fuels used.";
-
-            document.getElementById('trialMsg').innerHTML = 
-                `<b style="color:#ff9aa0;">Trial Failed:</b> ${failMsgB} Reset and try again.`;
-        }
+    else if (sim.energy <= 0) {
+        document.getElementById('statusVal').textContent = "CRITICAL FAILURE: EXHAUSTION";
+        document.getElementById('trialMsg').innerHTML = `<b style="color:#ff9aa0;">Trial Failed:</b> Usable energy ($W'$) depleted.`;
     }
 
-    // Stop Simulation
+    // Common Stop Logic
     sim.running = false;
     if (runAction) runAction.paused = true;
     restore(); 
