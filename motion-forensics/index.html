@@ -558,15 +558,51 @@ $start.onclick = () => {
   $start.textContent = sim.running ? "Pause" : "Start";
 };
 // --- FUEL BUTTON LOGIC ---
+// --- UPDATED FUEL BUTTON ---
 $fuel.onclick = () => {
-  // Add 10 to current reserve
-  sim.energy = Math.min(100, sim.energy + 10);
-  
-  // Update the UI
-  $engVal.textContent = Math.round(sim.energy);
-  $status.textContent = "Fueled +10%";
-  $status.style.color = "#38bdf8";
+    if (sim.fuelCount >= 2) return;
+    
+    // Energy Gain (Soft Cap)
+    let gain = (sim.energy <= 75) ? 10 : Math.max(0, 85 - sim.energy);
+    sim.energy += gain;
+    
+    // Timers
+    sim.fuelPenaltyTimer = 30;    // The 20% math penalty lasts 30s
+    sim.throughputAlert = 5;      // The VISUAL alert lasts 5s
+    sim.fuelCount++;
 };
+
+// --- INSIDE THE DRAW/ANIMATE LOOP ---
+if (sim.running) {
+    let rateMultiplier = 1.0;
+
+    // 1. Math Penalty Logic
+    if (sim.fuelPenaltyTimer > 0) {
+        rateMultiplier = 1.2; 
+        sim.fuelPenaltyTimer -= (dt / 1);
+    }
+
+    // 2. Visual Throughput Alert (The 5-second window)
+    if (sim.throughputAlert > 0) {
+        sim.throughputAlert -= (dt / 1);
+        
+        // Draw the alert on screen
+        ctx.fillStyle = "rgba(255, 60, 60, 0.2)"; // Subtle red tint
+        ctx.fillRect(0, 0, c.width, c.height);
+        
+        ctx.fillStyle = "#ff9aa0";
+        ctx.font = "900 24px Inter";
+        ctx.textAlign = "center";
+        ctx.fillText("↑ GLYCOLYTIC THROUGHPUT INCREASED", c.width / 2, 100);
+        ctx.textAlign = "left";
+    }
+
+    // 3. Accumulation Logic
+    if (speed > ceilingSpeed) {
+        const deficit = currentCost - sim.vo2Max;
+        sim.lactate += (deficit * 0.0035) * rateMultiplier; 
+    }
+}
 
 // Reset Button Logic
 $reset.addEventListener('click', () => {
