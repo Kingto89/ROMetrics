@@ -597,35 +597,33 @@ $fuel.onclick = () => {
 };
 
 // --- UPDATED METABOLIC TICK ---
-if (sim.running) {
-    // A. CALCULATE RATE PENALTY
-    let rateMultiplier = (sim.fuelPenaltyTimer > 0) ? 1.2 : 1.0;
+    if (sim.running) {
+        let rateMultiplier = (sim.fuelPenaltyTimer > 0) ? 1.2 : 1.0;
 
-    // B. COUNTDOWN TIMERS (Using dt from the clock)
-    if (sim.fuelPenaltyTimer > 0) sim.fuelPenaltyTimer -= dt;
-    if (sim.throughputAlert > 0) sim.throughputAlert -= dt;
+        if (sim.fuelPenaltyTimer > 0) sim.fuelPenaltyTimer -= dt;
+        if (sim.throughputAlert > 0) sim.throughputAlert -= dt;
 
-    // C. REALITY ACCUMULATION (Only for Trial B)
-    const currentLetter = document.getElementById('trialTag').textContent.trim();
-    const currentModel = document.getElementById('modelSelect').value.trim();
-    const ceilingSpeed = (currentModel === "Roman") ? 6.3 : 6.7;
-    const speed = parseFloat(sim.speedMph.toFixed(1));
-    const currentCost = (speed * 26.8 * 0.205) + 3.5;
+        const currentLetter = document.getElementById('trialTag').textContent.trim();
+        const currentModel = document.getElementById('modelSelect').value.trim();
+        
+        // FIX: Ensure this variable name matches the 'if' condition below
+        const ceiling = (currentModel === "Roman") ? 6.3 : 6.7;
+        const speed = parseFloat(sim.speedMph.toFixed(1));
+        const currentCost = (speed * 26.8 * 0.205) + 3.5;
 
-    if (currentLetter === 'B') {
-        if (speed > ceilingSpeed) {
-            const deficit = currentCost - sim.vo2Max;
-            const fatigueMultiplier = (sim.lactate > 50) ? 1.4 : 1.0; 
-            // Forensic Rate: 0.0017
-            sim.lactate += (deficit * 0.0017) * fatigueMultiplier * rateMultiplier * dt;
-            sim.lactate = Math.min(100, sim.lactate);
-        } else if (speed > 0) {
-            // Aerobic "Breathing" Flicker for Trial B
-            sim.lactate = Math.min(1.4, sim.lactate + 0.04);
-            if (Math.sin(performance.now() / 250) > 0.9) sim.lactate = 0;
+        if (currentLetter === 'B') {
+            if (speed > ceiling) {
+                const deficit = currentCost - sim.vo2Max;
+                const fatigueMultiplier = (sim.lactate > 50) ? 1.4 : 1.0; 
+                // Using 0.0017 for the 8-minute duration
+                sim.lactate += (deficit * 0.0017) * fatigueMultiplier * rateMultiplier * dt * 60; 
+                sim.lactate = Math.min(100, sim.lactate);
+            } else if (speed > 0) {
+                sim.lactate = Math.min(1.4, sim.lactate + 0.04);
+                if (Math.sin(performance.now() / 250) > 0.9) sim.lactate = 0;
+            }
         }
-    }
-}    
+    }    
 
 // Reset Button Logic
 $reset.addEventListener('click', () => {
