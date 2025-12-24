@@ -9,9 +9,7 @@
 **Lesson Focus:**  
 Running speed determines **which energy system contributes the most energy**.  
 As speed increases, the **primary** energy contribution shifts from **Aerobic Metabolism** to **Anaerobic Glycolysis**, and at very high speeds to **ATP-PC (PCr)**.  
-All energy systems are always active; “primary” refers to the **largest contributor**, not an exclusive system.
-
-**Energy Balance:** At any speed, the body functions as a "hybrid" engine.
+Multiple energy systems can contribute simultaneously. ‘Primary’ refers to the largest contributor. Some systems, like ATP-PC, are only active while their immediate stores are available.
 
 * **Aerobic Contribution:** Uses oxygen to meet energy demand. When this system is primary, energy levels remain stable.
 * **Oxygen Deficit:** When running speed exceeds aerobic capacity, oxygen supply cannot fully meet demand.
@@ -73,19 +71,17 @@ So for a 10-second sprint:
 
 ---
 
-* **The 60% Threshold (Lab-Defined):**  
-  In real physiology, the transition to anaerobic dominance occurs at an **individual-specific threshold.** This threshold commonly appears around 50–60% of VO₂ max in untrained individuals, 65–75% in recreationally trained individuals, and 80–90% or higher in endurance-trained athletes, but it is not determined by percentage alone and must be identified experimentally. 
-  **In this lab**, **60%** is used as a **standardized simulation threshold** to indicate when aerobic supply is no longer sufficient to meet demand. It is chosen for instructional clarity and consistency and is **not a universal biological constant**.
-
----
-
 ### Module Instructions
 
 ### Trial A 
 
-**1. Calculate the "Oxygen Budget" (VO₂ Max)**
-
 **Goal:** Find the highest speed at which the subject completes a **300 s trial** without crossing into Anaerobic Dominance (remaining at or above **60% energy**).
+
+* **The 60% Threshold (Lab-Defined):**  
+  In real physiology, the transition to anaerobic dominance occurs at an **individual-specific threshold.** This threshold commonly appears around 50–60% of VO₂ max in untrained individuals, 65–75% in recreationally trained individuals, and 80–90% or higher in endurance-trained athletes, but it is not determined by percentage alone and must be identified experimentally. 
+  **In this lab**, **60%** is used as a **standardized simulation threshold** to indicate when aerobic supply is no longer sufficient to meet demand. It is chosen for instructional clarity and consistency and is **not a universal biological constant**.
+
+**1. Calculate the "Oxygen Budget" (VO₂ Max)**
 
 **Formula (Lab Model):**  
 VO₂max ≈ 15.3 × (HRmax / HRrest)
