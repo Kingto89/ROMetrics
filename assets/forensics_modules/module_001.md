@@ -122,34 +122,47 @@ Compare your **Total Cost** to your **Oxygen Budget**:
 
 ---
 
-### Trial B — Anaerobic Glycolysis With Fuel Support
+### Trial B — Anaerobic Investigation: Metabolic Integrity
 
-### Concept (read first):
-
-At higher speeds, anaerobic glycolysis becomes the primary energy source.
-
-Fuel can support continued work but does not change which system is dominant.
+**Concept (read first):**  
+Trial B continues from Trial A, exploring what happens when the subject exceeds the **Aerobic Ceiling**. In Trial A, oxygen delivery matched energy cost, so metabolic waste was minimal. In Trial B, metabolic waste accumulation is introduced to show the limits of anaerobic work.
 
 ---
 
-### Trial Instructions:
+### 1. Lactate Proxy (Visualizing Waste)
 
-**Goal:** Maintain work while **Anaerobic Glycolysis** is the **primary energy source**, using fuel appropriately.
+* Selecting a **speed above the Trial A Aerobic Ceiling** triggers **Lactate Accumulation**.  
+* **Lactate Bar behavior:**  
+  - Only increases over time — cannot be restored.  
+  - Represents metabolic “debt” in the muscles.  
+  - If the bar reaches **100%**, the subject **crashes**, even if energy remains high.  
 
-**Steps**
-
-1. Press **Start Trial**  
-2. Confirm the **Primary Energy Source = Anaerobic Glycolysis**  
-3. Use **Fuel +10 exactly two times**  
-4. Monitor Energy during the trial
+**Instruction to Students:**  
+> In Trial A, the system was “clean” because oxygen supply met demand. In Trial B, the Lactate Bar shows what happens when the subject runs beyond the aerobic ceiling.
 
 ---
 
-### Trial C — Fuel Timing Does Not Change the Energy System
+### 2. Fuel Management
 
-### Concept (read first):
+* The subject may use **up to 2 fuel boosts** during the trial.  
+* Fuel restores energy to help maintain performance at the selected speed.  
+* Fuel **does not change the primary energy system**, which remains anaerobic at speeds above the Aerobic Ceiling.  
+* Proper fuel timing ensures the subject completes the trial **without energy dropping below 60%**, while still experiencing the effects of metabolic stress.
 
-Changing fuel timing can affect fatigue, but it does **not** change the primary energy source at a fixed speed.
+---
+
+### 3. Trial Goal & Target
+
+**Goal:**  
+* Push the subject **above their aerobic ceiling** into anaerobic dominance.  
+* Use **no more than 2 fuel boosts** to maintain energy for trial completion.  
+* Observe the **Lactate Bar** to understand the limits of anaerobic work.
+
+**Target / Success Criteria:**  
+* **Primary energy system = Anaerobic Glycolysis** (speed above Trial A ceiling).  
+* Maintain **energy ≥60%** with fuel assistance to complete the trial.  
+* Complete the trial without **Lactate Bar reaching 100%**.  
+* Build a **Metabolic Profile**: identify aerobic ceiling (Trial A) and anaerobic limits (Trial B).
 
 ---
 
