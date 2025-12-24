@@ -921,7 +921,7 @@ function drawTrialB_View(ctx, c, speed) {
             // TOXIC DEBT: Accumulation outpaces clearance
             const fatigueMultiplier = (sim.lactate > 50) ? 1.4 : 1.0; 
             // Apply both the fatigue and the fuel-driven throughput multiplier
-            const accumulation = (deficit * 0.0025) * fatigueMultiplier * throughputMultiplier; 
+            const accumulation = (deficit * 0.0027) * fatigueMultiplier * throughputMultiplier; 
             sim.lactate = Math.min(100, sim.lactate + accumulation);
         }
 
