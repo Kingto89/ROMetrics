@@ -365,7 +365,10 @@ const sim = {
   elapsed: 0,
   workTime: 0,
   hasStarted: false,
-  lactate: 0
+ lactate: 0,
+  fuelCount: 0,        // ADD THIS
+  fuelPenaltyTimer: 0,  // ADD THIS
+  throughputAlert: 0    // ADD THIS
 };
 
 // PLACE THE EXPOSURE LINES HERE (Outside the braces)
@@ -562,29 +565,31 @@ $start.onclick = () => {
 $fuel.onclick = () => {
     if (sim.fuelCount >= 2) return;
     
-    // 1. TOO EARLY: 76-100% (Saturated)
-    if (sim.energy > 75) {
+    // Increment fuel count so the HUD knows a fuel event occurred
+    sim.fuelCount++;
+
+    // 1. TOO EARLY: > 70% (Energy is already saturated)
+    if (sim.energy > 70) {
         sim.fuelPenaltyTimer = 30;    
         sim.throughputAlert = 5;
+        // Cap gain to prevent overflowing past 85%
         let gain = Math.max(0, 85 - sim.energy); 
         sim.energy += gain;
     } 
-    // 2. OPTIMAL WINDOW: 40-75% (Proactive)
+    // 2. OPTIMAL WINDOW: 40-70% (Realistic Proactive Fueling)
     else if (sim.energy >= 40) {
         sim.fuelPenaltyTimer = 0;
         sim.throughputAlert = 0;
-        sim.energy += 10; // Full effectiveness
+        sim.energy = Math.min(100, sim.energy + 10); 
     }
-    // 3. TOO LATE: < 40% (Reactive/Failure)
+    // 3. TOO LATE: < 40% (Metabolic Failure/Lag)
     else {
         sim.fuelPenaltyTimer = 0;
         sim.throughputAlert = 0;
-        // Simulates "Little or no fuel benefit" due to metabolic lag
-        sim.energy += 2; 
+        sim.energy += 2; // Minimal benefit as work capacity is already critical
     }
-
-    sim.fuelCount++;
-}; 
+};
+     
 
 // --- INSIDE THE DRAW/ANIMATE LOOP ---
 if (sim.running) {
