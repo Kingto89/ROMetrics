@@ -2089,26 +2089,22 @@ if (sim.energy <= 0 || trialTime <= 0 || sim.lactate >= 100) {
         document.getElementById('statusVal').style.color = "#ff9aa0";
         document.getElementById('trialMsg').innerHTML = 
             `<b style="color:#ff9aa0;">Trial Failed:</b> Waste accumulation exceeded clearance capacity. Reset and lower speed.`;
-    }  
-        
-        // Trial A Integrity Check
-        if (currentLetter === 'A') {
-            const targetSpeed = (activeModel === "Roma") ? 6.7 : 6.3;
-            
-            // Validation: Must be target speed AND no slider movement allowed
-            if (initialSpeed === targetSpeed && !speedViolation && sim.energy >= 60) {
-                triggerUnlock("Aerobic Dominance Confirmed.");
-            } else {
-                let failMsg = "";
-                if (initialSpeed !== targetSpeed) failMsg = `Incorrect starting speed (${initialSpeed} mph).`;
-                else if (speedViolation) failMsg = "Speed was altered during the trial.";
-                else failMsg = "Insufficient energy balance.";
+    } 
+    
+    // Trial A Integrity Check
+    if (currentLetter === 'A' && trialTime <= 0) {
+        const targetSpeed = (activeModel === "Roma") ? 6.7 : 6.3;
+        if (initialSpeed === targetSpeed && !speedViolation && sim.energy >= 60) {
+            triggerUnlock("Aerobic Dominance Confirmed.");
+        } else {
+            let failMsg = "";
+            if (initialSpeed !== targetSpeed) failMsg = `Incorrect starting speed (${initialSpeed} mph).`;
+            else if (speedViolation) failMsg = "Speed was altered during the trial.";
+            else failMsg = "Insufficient energy balance.";
 
-                document.getElementById('trialMsg').innerHTML = 
-                    `<b style="color:#ff9aa0;">Trial Failed:</b> ${failMsg} Reset and try again.`;
-            }
-        } 
-        // Logic for other trials follows the same pattern...
+            document.getElementById('trialMsg').innerHTML = 
+                `<b style="color:#ff9aa0;">Trial Failed:</b> ${failMsg} Reset and try again.`;
+        }
     }
 
     sim.running = false;
@@ -2119,7 +2115,7 @@ if (sim.energy <= 0 || trialTime <= 0 || sim.lactate >= 100) {
 
     updateHUD();
     renderer.render(scene, camera);
-} // End of animate()
+} // This is the single correct closing brace for animate()
 
 function triggerUnlock(msg) {
     document.getElementById('mcqBox').style.display = 'block';
