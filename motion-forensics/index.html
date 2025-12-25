@@ -571,13 +571,28 @@ $fuel.onclick = () => {
     sim.fuelCount++;
     sim.fuelAlertTimer = 5; // Alert stays for 5 seconds
 
-    // 1. TOO EARLY: > 70% 
+  // 1. TOO EARLY: > 70% (Tiered diminishing returns + Glycolytic Penalty)
     if (sim.energy > 70) {
         sim.fuelPenaltyTimer = 30;    
         sim.throughputAlert = 5;
-        sim.fuelMessage = "TOO EARLY: Glycolytic Throughput Increased";
-        let gain = Math.max(0, 85 - sim.energy); 
-        sim.energy += gain;
+        
+        let energyGain = 0;
+
+        if (sim.energy >= 90) {
+            // Tier: 90-100%
+            energyGain = 0;
+            sim.fuelMessage = "TOO EARLY: +0 Energy | Waste Spike";
+        } else if (sim.energy >= 80) {
+            // Tier: 80-89%
+            energyGain = 3;
+            sim.fuelMessage = "TOO EARLY: +3 Energy | Waste Spike";
+        } else {
+            // Tier: 71-79%
+            energyGain = 6;
+            sim.fuelMessage = "TOO EARLY: +6 Energy | Waste Spike";
+        }
+
+        sim.energy = Math.min(100, sim.energy + energyGain);
     } 
     // 2. OPTIMAL WINDOW: 40-70%
     else if (sim.energy >= 40) {
