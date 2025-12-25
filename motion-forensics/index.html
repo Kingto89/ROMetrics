@@ -234,9 +234,13 @@ let currentCorrectIndex = -1;
 window.renderMCQ = function(letter) {
     const trials = window.currentTrials;
     const data = trials[letter].mcqs[currentMcqStep];
+    
+    // Update the question text (This was missing)
+    document.getElementById('mcqQ').textContent = `Checkpoint (${currentMcqStep + 1}/${trials[letter].mcqs.length}): ${data.q}`;
+
     const container = document.getElementById('mcqOpts');
     container.innerHTML = '';
-    forensicUserChoice = null; // Reset selection for the new question
+    forensicUserChoice = null; // Reset selection variable
 
     data.opts.forEach((opt) => {
         const btn = document.createElement('div');
@@ -249,17 +253,18 @@ window.renderMCQ = function(letter) {
 
         btn.onmousedown = (e) => {
             e.stopPropagation();
-            // Visual feedback
+            // Glow Visual
             document.querySelectorAll('#mcqOpts .pill').forEach(p => p.classList.remove('active'));
             btn.classList.add('active');
             
-            // DIRECT RECORDING (Bypasses DOM searching)
+            // Set Selection
             forensicUserChoice = opt.trim().charAt(0).toUpperCase();
-            console.log("Recorded into forensicUserChoice: " + forensicUserChoice);
+            console.log("Choice detected and saved: " + forensicUserChoice);
         };
         container.appendChild(btn);
     });
 };
+    
 document.getElementById('mcqSubmit').onclick = () => {
     const msg = document.getElementById('mcqMsg');
     const trials = window.currentTrials;
@@ -268,7 +273,6 @@ document.getElementById('mcqSubmit').onclick = () => {
     if (!trials || !trials[currentLetter] || !trials[currentLetter].mcqs[currentMcqStep]) return;
     const data = trials[currentLetter].mcqs[currentMcqStep];
 
-    // Check if a choice was made via the direct variable
     if (!forensicUserChoice) {
         msg.textContent = "Please select an answer.";
         return;
@@ -287,21 +291,24 @@ document.getElementById('mcqSubmit').onclick = () => {
         } else {
             // --- TRIAL COMPLETE LOGIC ---
             document.getElementById('flScore').textContent = "100";
-            msg.style.color = "#38bdf8";
-            
             if (window.controls) window.controls.enabled = true;
 
             if (currentLetter === 'A') {
+                msg.style.color = "#38bdf8";
                 msg.textContent = "Trial A Passed! Opening Trial B...";
+                
+                // CRITICAL: Hide and clear UI immediately to prevent overlap
                 setTimeout(() => {
+                    document.getElementById('mcqBox').style.display = 'none';
+                    document.getElementById('mcqOpts').innerHTML = ''; // Wipe Trial A options
+                    document.getElementById('mcqQ').textContent = '';    // Wipe Trial A question
+                    
                     currentMcqStep = 0;
-                    sim.fuelCount = 0;
                     sim.hasStarted = false; 
-                    document.getElementById('mcqBox').style.display = 'none'; 
                     showFL001Trial(window.currentTrials, 'B'); 
                 }, 2500);
-            } else if (currentLetter === 'B') {
-                msg.textContent = "Trial B Complete. Simulation Validated.";
+            } else {
+                msg.textContent = "Trial B Complete. Simulation Fully Validated.";
                 document.getElementById('mcqSubmit').disabled = true;
             }
         }
@@ -309,7 +316,7 @@ document.getElementById('mcqSubmit').onclick = () => {
         msg.style.color = "#ff9aa0";
         msg.textContent = "Incorrect. Reference the Trial Guide.";
     }
-};         
+};        
 // Global Fetch Trigger
 document.getElementById('trialHelp').onclick = async (e) => {
   e.preventDefault();
