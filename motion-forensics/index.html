@@ -142,14 +142,14 @@
   <script type="module">
 let speedViolation = false;
 let initialSpeed = 0;    
-let fuelUsedCount = 0;    
-let currentMcqStep = 0; 
-let forensicUserChoice = null; // Direct bridge for the selection    
-window.currentTrials = { 'A': { mcqs: [] }, 'B': { mcqs: [] }, 'C': { mcqs: [] } };    
+let fuelUsedCount = 0;   
+// Internal MCQ counters removed - assessment is now external
+window.currentTrials = { mcqs: [] }; 
 let cachedModuleMD = "";
+
 window.showTab = function(tabName) {
   const content = document.getElementById('tabContent');
-  const currentTrial = document.getElementById('trialTag').textContent; // "A", "B", or "C"
+  const currentTrial = document.getElementById('trialTag').textContent.trim();
   
   // 1. Manage UI Tab States
   document.querySelectorAll('#trialHelpModal .pill').forEach(p => p.classList.remove('active'));
@@ -222,91 +222,42 @@ function formatMD(text) {
 let currentCorrectIndex = -1;
 
 window.renderMCQ = function(letter) {
-    const trials = window.currentTrials;
-    const data = trials[letter].mcqs[currentMcqStep];
-    
-    // Update the question text (This was missing)
-    document.getElementById('mcqQ').textContent = `Checkpoint (${currentMcqStep + 1}/${trials[letter].mcqs.length}): ${data.q}`;
+    const $trialMsg = document.getElementById('trialMsg');
+    sim.running = false;
+    if (runAction) runAction.paused = true;
+    if (window.controls) window.controls.enabled = true; 
 
-    const container = document.getElementById('mcqOpts');
-    container.innerHTML = '';
-    forensicUserChoice = null; // Reset selection variable
-
-    data.opts.forEach((opt) => {
-        const btn = document.createElement('div');
-        btn.className = 'pill';
-        btn.style.width = '100%';
-        btn.style.marginBottom = '5px';
-        btn.style.cursor = 'pointer';
-        btn.style.pointerEvents = 'auto';
-        btn.textContent = opt;
-
-        btn.onmousedown = (e) => {
-            e.stopPropagation();
-            // Glow Visual
-            document.querySelectorAll('#mcqOpts .pill').forEach(p => p.classList.remove('active'));
-            btn.classList.add('active');
-            
-            // Set Selection
-            forensicUserChoice = opt.trim().charAt(0).toUpperCase();
-            console.log("Choice detected and saved: " + forensicUserChoice);
-        };
-        container.appendChild(btn);
-    });
-};
-    
-document.getElementById('mcqSubmit').onclick = () => {
-    const msg = document.getElementById('mcqMsg');
-    const trials = window.currentTrials;
-    const currentLetter = document.getElementById('trialTag').textContent.trim();
-    
-    if (!trials || !trials[currentLetter] || !trials[currentLetter].mcqs[currentMcqStep]) return;
-    const data = trials[currentLetter].mcqs[currentMcqStep];
-
-    if (!forensicUserChoice) {
-        msg.textContent = "Please select an answer.";
-        return;
-    }
-
-    if (forensicUserChoice === data.correct) {
-        currentMcqStep++;
+    if (letter === 'A') {
+        $trialMsg.innerHTML = `<b style="color:#38bdf8;">Goal Reached:</b> Trial A validated. Unlocking Trial B...`;
         
-        if (currentMcqStep < trials[currentLetter].mcqs.length) {
-            msg.style.color = "#38bdf8";
-            msg.textContent = "Correct! Advancing...";
-            setTimeout(() => { 
-                msg.textContent = ""; 
-                window.renderMCQ(currentLetter); 
-            }, 1000);
-        } else {
-            // --- TRIAL COMPLETE LOGIC ---
-            document.getElementById('flScore').textContent = "100";
-            if (window.controls) window.controls.enabled = true;
+        setTimeout(() => {
+            // Forensic Reset for Transition
+            sim.hasStarted = false;
+            sim.fuelCount = 0;
+            sim.lactate = 0;
+            speedViolation = false;
+            
+            // Auto-load Trial B
+            showFL001Trial(window.currentTrials, 'B');
+            $trialMsg.innerHTML = `<b>Trial B Loaded.</b> Survive 480s and record 1 fueling event.`;
+        }, 3000);
 
-            if (currentLetter === 'A') {
-                msg.style.color = "#38bdf8";
-                msg.textContent = "Trial A Passed! Opening Trial B...";
-                
-                // CRITICAL: Hide and clear UI immediately to prevent overlap
-                setTimeout(() => {
-                    document.getElementById('mcqBox').style.display = 'none';
-                    document.getElementById('mcqOpts').innerHTML = ''; // Wipe Trial A options
-                    document.getElementById('mcqQ').textContent = '';    // Wipe Trial A question
-                    
-                    currentMcqStep = 0;
-                    sim.hasStarted = false; 
-                    showFL001Trial(window.currentTrials, 'B'); 
-                }, 2500);
-            } else {
-                msg.textContent = "Trial B Complete. Simulation Fully Validated.";
-                document.getElementById('mcqSubmit').disabled = true;
-            }
+    } else if (letter === 'B') {
+        $trialMsg.innerHTML = `<b style="color:#38bdf8;">Forensic Validation Successful.</b> All trials complete.`;
+        
+        // Show the Final Assessment Button to go to the new page
+        const aBtn = document.getElementById('assessmentBtn');
+        if (aBtn) {
+            aBtn.style.display = 'block';
+            const modId = document.getElementById('moduleSelect').value || "FL-001";
+            aBtn.onclick = () => { 
+                window.location.href = `assessment.html?module=${modId}`; 
+            };
         }
-    } else {
-        msg.style.color = "#ff9aa0";
-        msg.textContent = "Incorrect. Reference the Trial Guide.";
     }
-};        
+};
+
+    
 // Global Fetch Trigger
 document.getElementById('trialHelp').onclick = async (e) => {
   e.preventDefault();
@@ -639,12 +590,13 @@ if (sim.running) {
 
 $reset.addEventListener('click', () => {
 if (window.controls) window.controls.enabled = true;
-  
-    // 1. CLEAR MESSAGES & UI
+// 1. CLEAR MESSAGES & UI
     document.getElementById('trialMsg').innerHTML = 'Read the instructions above. When ready, press Start.';
-    document.getElementById('mcqBox').style.display = 'none';
-    document.getElementById('mcqMsg').textContent = "";
-    document.getElementById('mcqSubmit').disabled = false;
+    
+    // Ensure the external assessment button is hidden on reset
+    const aBtn = document.getElementById('assessmentBtn');
+    if (aBtn) aBtn.style.display = 'none';
+
 
     // 2. WIPE FORENSIC INTEGRITY FLAGS
     speedViolation = false; 
@@ -709,13 +661,12 @@ if (window.controls) window.controls.enabled = true;
   $status.textContent = "Ready";
   $status.style.color = "#cfe3ff";
 
-  // Reset MCQ Box & Messages
-  document.getElementById('mcqBox').style.display = 'none';
-  document.getElementById('mcqSubmit').disabled = false;
-  document.getElementById('mcqMsg').textContent = "";
-  document.getElementById('trialMsg').textContent = 'Read the instructions above. When ready, press Start.';
-});    
-
+// Reset Messages & Assessment Button
+    document.getElementById('trialMsg').textContent = 'Read the instructions above. When ready, press Start.';
+    
+    const aBtn = document.getElementById('assessmentBtn');
+    if (aBtn) aBtn.style.display = 'none';
+});
 // ==============================
 //  Studio: Three.js base
 // ==============================
@@ -1631,32 +1582,30 @@ function setZone(which) {
 }
 
 function parseFL001(md) {
-    const trials = { 'A': { mcqs: [] }, 'B': { mcqs: [] }, 'C': { mcqs: [] } };
+    const trials = { 'mcqs': [] }; // Simplified structure for external assessment
     const blocks = md.split('**Checkpoint');
     blocks.shift(); 
 
     blocks.forEach(block => {
         const lines = block.split('\n').map(l => l.trim()).filter(l => l);
-        const trialMatch = block.match(/Trial\s+([A-C])/i);
-        if (!trialMatch) return;
-        const letter = trialMatch[1].toUpperCase();
-
-        // Pull Options
+        
+        // Pull Options (A., B., etc)
         const options = lines.filter(l => /^[A-D]\./.test(l));
 
-        // DYNAMIC KEY: Scans for the word "Answer" then captures the very next A, B, C, or D
+        // DYNAMIC KEY: Scans for "Answer" then captures the letter
         const ansMatch = block.match(/Answer.*?([A-D])/i);
         const correctLetter = ansMatch ? ansMatch[1].toUpperCase() : null;
 
         if (options.length > 0 && correctLetter) {
-            trials[letter].mcqs.push({
+            trials.mcqs.push({
                 q: lines[1] || "Question text error",
                 opts: options,
                 correct: correctLetter
             });
         }
     });
-    console.log("MD Loaded. Answer keys extracted dynamically:", trials);
+
+    console.log("MD Loaded. Flat question list prepared for external assessment.");
     return trials;
 }
 
@@ -2284,15 +2233,16 @@ if (sim.energy <= 0 || trialTime <= 0 || sim.lactate >= 100) {
 } // This is the single correct closing brace for animate()
 
 function triggerUnlock(msg) {
-    const currentLetter = document.getElementById('trialTag').textContent.trim();
-    const $trialMsg = document.getElementById('trialMsg');
-    
     sim.running = false;
     if (runAction) runAction.paused = true;
-    if (window.controls) window.controls.enabled = true; // Ensure camera is always free
+    if (window.controls) window.controls.enabled = true; 
+
+    const currentLetter = document.getElementById('trialTag').textContent.trim();
+    const $trialMsg = document.getElementById('trialMsg');
 
     if (currentLetter === 'A') {
-        $trialMsg.innerHTML = `<b style="color:#38bdf8;">Trial A Complete.</b> Unlocking Trial B...`;
+        // SUCCESSFUL TRIAL A
+        $trialMsg.innerHTML = `<b style="color:#38bdf8;">Goal Reached:</b> Trial A validated. Unlocking Trial B...`;
         
         setTimeout(() => {
             // Clean state for transition
@@ -2301,24 +2251,26 @@ function triggerUnlock(msg) {
             sim.lactate = 0;
             speedViolation = false;
             
-            // Auto-load Trial B
+            // Auto-load Trial B parameters (480s, Fuel enabled)
             showFL001Trial(window.currentTrials, 'B');
-            $trialMsg.innerHTML = `<b>Trial B Loaded.</b> survives 480s and use 1 fuel event.`;
+            $trialMsg.innerHTML = `<b>Trial B Loaded.</b> Survive 480s and record 1 fueling event.`;
         }, 3000);
 
     } else if (currentLetter === 'B') {
-        $trialMsg.innerHTML = `<b style="color:#38bdf8;">Module 1 Validation Successful.</b>`;
+        // SUCCESSFUL TRIAL B
+        $trialMsg.innerHTML = `<b style="color:#38bdf8;">Forensic Validation Successful.</b> All trials complete.`;
         
-        // Show the link to the external MCQ page
+        // Show the Final Assessment Button
         const aBtn = document.getElementById('assessmentBtn');
-        aBtn.style.display = 'block';
-        aBtn.onclick = () => {
-            // Replace with your actual external URL
-            window.location.href = "assessment.html?module=FL001";
-        };
+        if (aBtn) {
+            aBtn.style.display = 'block';
+            const modId = document.getElementById('moduleSelect').value || "FL-001";
+            aBtn.onclick = () => { 
+                window.location.href = `assessment.html?module=${modId}`; 
+            };
+        }
     }
 }
-
 animate();
 
 // 9) Enter Studio (gate -> studio)
