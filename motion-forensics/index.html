@@ -234,42 +234,38 @@ let currentCorrectIndex = -1;
 window.renderMCQ = function(letter) {
     const trials = window.currentTrials;
     
-    // Safety check: Ensure data exists for this specific trial letter
     if (!trials || !trials[letter] || !trials[letter].mcqs || !trials[letter].mcqs[currentMcqStep]) {
         console.error("MCQ Data Missing for:", letter, "at step:", currentMcqStep);
         return;
     }
 
     const data = trials[letter].mcqs[currentMcqStep];
-    
-    // 1. Update Question Text
     document.getElementById('mcqQ').textContent = `Checkpoint (${currentMcqStep + 1}/${trials[letter].mcqs.length}): ${data.q}`;
 
-    // 2. Build Options
     const container = document.getElementById('mcqOpts');
     container.innerHTML = '';
     
     data.opts.forEach((opt) => {
         const btn = document.createElement('div');
-        btn.className = 'pill'; 
+        btn.className = 'pill'; // Uses your existing CSS (Line 11)
         btn.style.marginBottom = '5px';
         btn.style.width = '100%';
-        btn.style.cursor = 'pointer'; // Ensure user knows it is clickable
+        btn.style.pointerEvents = 'auto'; // Forces HTML to catch the click
         btn.textContent = opt;
 
-        // CLICK LOGIC: This captures the answer
-        btn.onclick = (e) => {
-            e.stopPropagation(); // Prevent 3D scene from intercepting
+        // Use onpointerdown to trigger BEFORE the 3D camera can move
+        btn.onpointerdown = (e) => {
+            e.stopPropagation(); // Stops OrbitControls from stealing the click
             
-            // Remove active class from others, add to this one
+            // This triggers your existing glow (Line 13: .pill.active)
             document.querySelectorAll('#mcqOpts .pill').forEach(p => p.classList.remove('active'));
             btn.classList.add('active');
             
-            // Extract the first letter (A, B, C, or D)
+            // Map the choice for your mcqSubmit logic
             const choice = opt.trim().charAt(0).toUpperCase();
             btn.dataset.choice = choice; 
             
-            console.log("Selected Choice:", choice); // Debugging
+            console.log("Choice selected:", choice);
         };
         container.appendChild(btn);
     });
