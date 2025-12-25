@@ -108,8 +108,7 @@
         <div class="v"><span id="flScore">0</span>/100</div>
       </div>
 
-      <div id="mcqBox" style="display:none; border:1px solid rgba(148,163,184,.18); border-radius:14px; background:rgba(7,16,27,.22); padding:10px;">
-        <div style="display:flex; justify-content:space-between; gap:10px; align-items:center;">
+<div id="mcqBox" style="display:none; position:relative; z-index:1000; pointer-events:auto !important; border:1px solid rgba(148,163,184,.18); border-radius:14px; background:rgba(7,16,27,0.9); padding:10px;">        <div style="display:flex; justify-content:space-between; gap:10px; align-items:center;">
           <div style="color:#cfe3ff; font-weight:900; font-size:12px;">MCQ</div>
           <div style="color:#a8c0da; font-size:12px;">Attempts: <span id="mcqAttempts">0</span>/3</div>
         </div>
@@ -240,37 +239,39 @@ window.renderMCQ = function(letter) {
     }
 
     const data = trials[letter].mcqs[currentMcqStep];
-    document.getElementById('mcqQ').textContent =
-        `Checkpoint (${currentMcqStep + 1}/${trials[letter].mcqs.length}): ${data.q}`;
+    document.getElementById('mcqQ').textContent = `Checkpoint (${currentMcqStep + 1}/${trials[letter].mcqs.length}): ${data.q}`;
 
     const container = document.getElementById('mcqOpts');
     container.innerHTML = '';
     
     data.opts.forEach((opt) => {
         const btn = document.createElement('div');
-        btn.className = 'pill';
+        btn.className = 'pill'; 
         btn.style.marginBottom = '5px';
         btn.style.width = '100%';
-        btn.style.pointerEvents = 'auto';
+        btn.style.cursor = 'pointer';
+        btn.style.pointerEvents = 'auto'; // Force interaction
         btn.textContent = opt;
 
-        btn.onpointerdown = (e) => {
-            e.preventDefault();          // ✅ ADD
-            e.stopPropagation();         // existing
-            e.stopImmediatePropagation(); // ✅ ADD (CRITICAL)
+        // Use mousedown AND stopPropagation to kill the event before Three.js sees it
+        const selectHandler = (e) => {
+            e.preventDefault();
+            e.stopPropagation(); 
+            e.stopImmediatePropagation();
 
-            document
-                .querySelectorAll('#mcqOpts .pill')
-                .forEach(p => p.classList.remove('active'));
-
+            // Handle UI selection
+            document.querySelectorAll('#mcqOpts .pill').forEach(p => p.classList.remove('active'));
             btn.classList.add('active');
-
-            const choice = opt.trim().charAt(0).toUpperCase();
-            btn.dataset.choice = choice;
-
-            console.log("Choice selected:", choice);
+            
+            // Map the choice
+            const choiceChar = opt.trim().charAt(0).toUpperCase();
+            btn.dataset.choice = choiceChar;
+            console.log("Forensic Selection:", choiceChar);
         };
 
+        btn.onmousedown = selectHandler;
+        btn.ontouchstart = selectHandler; // For mobile tablet support
+        
         container.appendChild(btn);
     });
 };
