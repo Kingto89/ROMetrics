@@ -1637,12 +1637,17 @@ function showFL001Trial(trials, letter) {
     sim.lactate = 0;
     sim.fuelCount = 0;
     sim.energy = 100;
-    sim.hasStarted = false; // Reset start flag so the new trial can begin
+    sim.hasStarted = false; 
     speedViolation = false;
     
     document.getElementById('engVal').textContent = "100";
     document.getElementById('trialMsg').innerHTML = `<b>Trial ${letter} Loaded.</b> Press Start.`;
 }
+
+// 5. WINDOW EXPOSURE
+window.sim = sim; 
+window.getTrialTime = () => trialTime;
+window.setTrialTime = (v) => trialTime = v;
 
 async function enterFL001() {
     setZone('cardio');
@@ -1651,51 +1656,19 @@ async function enterFL001() {
     if (!res.ok) return;
 
     const md = await res.text();
-    // Use the flat parser we built
     window.currentTrials = parseFL001(md); 
     const trials = window.currentTrials; 
 
-    // Re-wire buttons to ensure they point to the global showFL001Trial
-    document.getElementById('trialA').onclick = () => showFL001Trial(trials, 'A');
-    document.getElementById('trialB').onclick = () => showFL001Trial(trials, 'B');
+    // Wire buttons
+    const btnA = document.getElementById('trialA');
+    const btnB = document.getElementById('trialB');
+    if(btnA) btnA.onclick = () => showFL001Trial(trials, 'A');
+    if(btnB) btnB.onclick = () => showFL001Trial(trials, 'B');
 
     document.getElementById('trialTag').textContent = "-";
     document.getElementById('trialTime').textContent = "0";
     document.getElementById('trialMsg').innerHTML = "<b>Module Loaded.</b> Select Trial A or B to begin.";
 }
-
-  // 5. WINDOW EXPOSURE (Restored for Debugging)
-  window.sim = sim; 
-  window.getTrialTime = () => trialTime;
-  window.setTrialTime = (v) => trialTime = v;
-}
-    
-async function enterFL001() {
-  setZone('cardio');
-  
-  const res = await fetch('https://raw.githubusercontent.com/Kingto89/ROMetrics.com/main/assets/forensics_modules/module_001.md');
-  if (!res.ok) return;
-
-  const md = await res.text();
-  window.currentTrials = parseFL001(md); 
-  const trials = window.currentTrials; 
-
-  // Wire buttons: They only execute when CLICKED
-  const wire = (id, letter) => {
-    const btn = document.getElementById(id);
-    if (btn) btn.onclick = () => showFL001Trial(trials, letter);
-  };
-
-  wire('trialA', 'A');
-  wire('trialB', 'B');
-
-  // Set HUD to a neutral "Selection" state
-  document.getElementById('trialTag').textContent = "-";
-  document.getElementById('trialTime').textContent = "0";
-  document.getElementById('trialMsg').innerHTML = "<b>Module Loaded.</b> Select Trial A or B to begin.";
-}
-
-
 
 function enterModule(moduleId) {
   const mod = getModule(moduleId);
