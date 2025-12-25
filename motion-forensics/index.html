@@ -154,6 +154,7 @@ let speedViolation = false;
 let initialSpeed = 0;    
 let fuelUsedCount = 0;    
 let currentMcqStep = 0; 
+let forensicUserChoice = null; // Direct bridge for the selection    
 window.currentTrials = { 'A': { mcqs: [] }, 'B': { mcqs: [] }, 'C': { mcqs: [] } };    
 let cachedModuleMD = "";
 window.showTab = function(tabName) {
@@ -232,38 +233,30 @@ let currentCorrectIndex = -1;
 
 window.renderMCQ = function(letter) {
     const trials = window.currentTrials;
-    if (!trials || !trials[letter] || !trials[letter].mcqs || !trials[letter].mcqs[currentMcqStep]) return;
-
     const data = trials[letter].mcqs[currentMcqStep];
-    document.getElementById('mcqQ').textContent = `Checkpoint (${currentMcqStep + 1}/${trials[letter].mcqs.length}): ${data.q}`;
-
     const container = document.getElementById('mcqOpts');
     container.innerHTML = '';
-    
+    forensicUserChoice = null; // Reset selection for the new question
+
     data.opts.forEach((opt) => {
         const btn = document.createElement('div');
         btn.className = 'pill';
-        btn.style.marginBottom = '5px';
         btn.style.width = '100%';
+        btn.style.marginBottom = '5px';
         btn.style.cursor = 'pointer';
-        btn.style.pointerEvents = 'auto'; // CRITICAL
+        btn.style.pointerEvents = 'auto';
         btn.textContent = opt;
 
-        // Use onclick: OrbitControls.enabled = false makes this work again
-        btn.onclick = (e) => {
-            e.preventDefault();
-            e.stopPropagation(); 
-
-            // Glow logic
+        btn.onmousedown = (e) => {
+            e.stopPropagation();
+            // Visual feedback
             document.querySelectorAll('#mcqOpts .pill').forEach(p => p.classList.remove('active'));
             btn.classList.add('active');
-
-            // Data logic
-            const choiceChar = opt.trim().charAt(0).toUpperCase();
-            btn.dataset.choice = choiceChar;
-            console.log("Choice selected:", choiceChar);
+            
+            // DIRECT RECORDING (Bypasses DOM searching)
+            forensicUserChoice = opt.trim().charAt(0).toUpperCase();
+            console.log("Recorded into forensicUserChoice: " + forensicUserChoice);
         };
-
         container.appendChild(btn);
     });
 };
@@ -275,7 +268,7 @@ document.getElementById('mcqSubmit').onclick = () => {
     
     if (!trials || !trials[currentLetter] || !trials[currentLetter].mcqs[currentMcqStep]) return;
     const data = trials[currentLetter].mcqs[currentMcqStep];
-
+  if (forensicUserChoice === data.correct) {
     if (!selected) {
         msg.textContent = "Please select an answer.";
         return;
