@@ -240,33 +240,37 @@ window.renderMCQ = function(letter) {
     }
 
     const data = trials[letter].mcqs[currentMcqStep];
-    document.getElementById('mcqQ').textContent = `Checkpoint (${currentMcqStep + 1}/${trials[letter].mcqs.length}): ${data.q}`;
+    document.getElementById('mcqQ').textContent =
+        `Checkpoint (${currentMcqStep + 1}/${trials[letter].mcqs.length}): ${data.q}`;
 
     const container = document.getElementById('mcqOpts');
     container.innerHTML = '';
     
     data.opts.forEach((opt) => {
         const btn = document.createElement('div');
-        btn.className = 'pill'; // Uses your existing CSS (Line 11)
+        btn.className = 'pill';
         btn.style.marginBottom = '5px';
         btn.style.width = '100%';
-        btn.style.pointerEvents = 'auto'; // Forces HTML to catch the click
+        btn.style.pointerEvents = 'auto';
         btn.textContent = opt;
 
-        // Use onpointerdown to trigger BEFORE the 3D camera can move
         btn.onpointerdown = (e) => {
-            e.stopPropagation(); // Stops OrbitControls from stealing the click
-            
-            // This triggers your existing glow (Line 13: .pill.active)
-            document.querySelectorAll('#mcqOpts .pill').forEach(p => p.classList.remove('active'));
+            e.preventDefault();          // ✅ ADD
+            e.stopPropagation();         // existing
+            e.stopImmediatePropagation(); // ✅ ADD (CRITICAL)
+
+            document
+                .querySelectorAll('#mcqOpts .pill')
+                .forEach(p => p.classList.remove('active'));
+
             btn.classList.add('active');
-            
-            // Map the choice for your mcqSubmit logic
+
             const choice = opt.trim().charAt(0).toUpperCase();
-            btn.dataset.choice = choice; 
-            
+            btn.dataset.choice = choice;
+
             console.log("Choice selected:", choice);
         };
+
         container.appendChild(btn);
     });
 };
