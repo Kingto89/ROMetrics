@@ -103,12 +103,7 @@
       </div>
       <button id="trialHelp" class="btn" style="align-self:flex-start;">Instructions</button>
 
-      <div class="row">
-        <div class="k">Score</div>
-        <div class="v"><span id="flScore">0</span>/100</div>
-      </div>
 
-<div id="mcqBox" style="display:none; position:relative; z-index:1000; pointer-events:auto !important; border:1px solid rgba(148,163,184,.18); border-radius:14px; background:rgba(7,16,27,0.9); padding:10px;">        <div style="display:flex; justify-content:space-between; gap:10px; align-items:center;">
           <div style="color:#cfe3ff; font-weight:900; font-size:12px;">MCQ</div>
           <div style="color:#a8c0da; font-size:12px;">Attempts: <span id="mcqAttempts">0</span>/3</div>
         </div>
@@ -126,6 +121,9 @@
         <button id="startBtn" class="btn">Start</button>
         <button id="fuelBtn" class="btn">Fuel +10</button>
         <button id="resetBtn" class="btn">Reset</button>
+        <button id="assessmentBtn" class="primary" style="display:none; width:100%; margin-top:10px;">
+  Take Final MCQ Assessment
+</button>
       </div>
 
       <div class="row" style="justify-content:space-between;">
@@ -2294,17 +2292,39 @@ if (sim.energy <= 0 || trialTime <= 0 || sim.lactate >= 100) {
 } // This is the single correct closing brace for animate()
 
 function triggerUnlock(msg) {
+    const currentLetter = document.getElementById('trialTag').textContent.trim();
+    const $trialMsg = document.getElementById('trialMsg');
+    
     sim.running = false;
     if (runAction) runAction.paused = true;
-    
-    // DISABLE 3D controls so the HTML can be clicked
-    if (window.controls) window.controls.enabled = false; 
+    if (window.controls) window.controls.enabled = true; // Ensure camera is always free
 
-    document.getElementById('mcqBox').style.display = 'block';
-    document.getElementById('trialMsg').innerHTML = `<b style="color:#38bdf8;">Goal Reached:</b> ${msg}`;
-    currentMcqStep = 0;
-    const currentLetter = document.getElementById('trialTag').textContent.trim();
-    window.renderMCQ(currentLetter);
+    if (currentLetter === 'A') {
+        $trialMsg.innerHTML = `<b style="color:#38bdf8;">Trial A Complete.</b> Unlocking Trial B...`;
+        
+        setTimeout(() => {
+            // Clean state for transition
+            sim.hasStarted = false;
+            sim.fuelCount = 0;
+            sim.lactate = 0;
+            speedViolation = false;
+            
+            // Auto-load Trial B
+            showFL001Trial(window.currentTrials, 'B');
+            $trialMsg.innerHTML = `<b>Trial B Loaded.</b> survives 480s and use 1 fuel event.`;
+        }, 3000);
+
+    } else if (currentLetter === 'B') {
+        $trialMsg.innerHTML = `<b style="color:#38bdf8;">Module 1 Validation Successful.</b>`;
+        
+        // Show the link to the external MCQ page
+        const aBtn = document.getElementById('assessmentBtn');
+        aBtn.style.display = 'block';
+        aBtn.onclick = () => {
+            // Replace with your actual external URL
+            window.location.href = "assessment.html?module=FL001";
+        };
+    }
 }
 
 animate();
@@ -2342,7 +2362,17 @@ $enter.addEventListener('click', async () => {
 
     enterModule(moduleId);
     snapCam();
-
+// --- PERSISTENCE CHECKMARK LOGIC ---
+    // This checks if the user has a saved completion record for this specific module
+    const savedStatus = localStorage.getItem(`${moduleId}_Status`);
+    if (savedStatus === 'completed') {
+        const titleEl = document.getElementById('moduleTitle');
+        // Only add the checkmark if it's not already there
+        if (!titleEl.innerHTML.includes('✓')) {
+            titleEl.innerHTML += " <span style='color:#4ade80; margin-left:8px;'>[✓ Completed]</span>";
+        }
+    }
+    // -----------------------------------
   } catch (e) {
     console.error("Entry Error:", e);
     $enter.textContent = "Error - Check Console";
