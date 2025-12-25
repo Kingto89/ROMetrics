@@ -365,10 +365,13 @@ const sim = {
   elapsed: 0,
   workTime: 0,
   hasStarted: false,
- lactate: 0,
-  fuelCount: 0,        // ADD THIS
-  fuelPenaltyTimer: 0,  // ADD THIS
-  throughputAlert: 0    // ADD THIS
+  lactate: 0,
+  fuelCount: 0,
+  fuelPenaltyTimer: 0,
+  throughputAlert: 0,
+  fuelAlertTimer: 0,   // New: Duration for transient alerts
+  fuelMessage: "",     // New: Text for the specific timing alert
+  fuelSuccess: false   // New: Flag for correct timing feedback
 };
 
 // PLACE THE EXPOSURE LINES HERE (Outside the braces)
@@ -566,27 +569,26 @@ $fuel.onclick = () => {
     if (sim.fuelCount >= 2) return;
     
     sim.fuelCount++;
+    sim.fuelAlertTimer = 5; // Alert stays for 5 seconds
 
     // 1. TOO EARLY: > 70% 
     if (sim.energy > 70) {
         sim.fuelPenaltyTimer = 30;    
         sim.throughputAlert = 5;
-        sim.fuelSuccess = false; // Reset success if they fuel too early
+        sim.fuelMessage = "TOO EARLY: Glycolytic Throughput Increased";
         let gain = Math.max(0, 85 - sim.energy); 
         sim.energy += gain;
     } 
     // 2. OPTIMAL WINDOW: 40-70%
     else if (sim.energy >= 40) {
         sim.fuelPenaltyTimer = 0;
-        sim.throughputAlert = 0;
-        sim.fuelSuccess = true; // TRIGGER SUCCESS MESSAGE
+        sim.fuelMessage = "CORRECT WINDOW: Full fuel benefit";
         sim.energy = Math.min(100, sim.energy + 10); 
     }
     // 3. TOO LATE: < 40%
     else {
         sim.fuelPenaltyTimer = 0;
-        sim.throughputAlert = 0;
-        sim.fuelSuccess = false;
+        sim.fuelMessage = "TOO LATE: Little or no fuel benefit";
         sim.energy += 2; 
     }
 };
@@ -981,27 +983,21 @@ function drawTrialB_View(ctx, c, speed) {
     ctx.fillText(`${displayVal}%`, 40 + (barW / 2), barY + 33);
     ctx.textAlign = 'left';
 
-// 5. STATUS MESSAGING (Timing Outcomes)
-// 5. STATUS MESSAGING (Timing Outcomes Prioritized)
-    ctx.font = '700 18px Inter';
+// 5. STATUS & ALERTS (Timing Outcomes Corrected)
+ctx.font = '700 18px Inter';
+
+// --- TRANSIENT ALERTS (Triggered only when fuel is clicked) ---
+if (sim.fuelAlertTimer > 0) {
+    // Choose color based on success/failure
+    ctx.fillStyle = (sim.fuelMessage.includes("CORRECT")) ? "#38bdf8" : "#ff9aa0";
+    ctx.fillText(`ALERT: ${sim.fuelMessage}`, 40, barY + barH + 40);
     
-    // Priority 1: Too Late Feedback
-    if (sim.fuelCount > 0 && sim.energy < 40) {
-        ctx.fillStyle = '#ff9aa0';
-        ctx.fillText("STATUS: TOO LATE - INEFFECTIVE UPTAKE", 40, barY + barH + 40);
-    } 
-    // Priority 2: Too Early Feedback (Active Penalty)
-    else if (sim.fuelPenaltyTimer > 0) {
-        ctx.fillStyle = '#ff9aa0';
-        ctx.fillText(`STATUS: TOO EARLY - WASTE SPIKE (${Math.ceil(sim.fuelPenaltyTimer)}s)`, 40, barY + barH + 40);
-    } 
-    // Priority 3: Optimal Window Feedback (Triggered by sim.fuelSuccess)
-    else if (sim.fuelSuccess && sim.energy >= 40 && sim.energy <= 85) {
-        ctx.fillStyle = '#38bdf8';
-        ctx.fillText("STATUS: OPTIMAL WINDOW - FUEL EFFECTIVE", 40, barY + barH + 40);
-    } 
-    // Priority 4: Standard Environmental States
-    else if (speed <= ceilingSpeed && speed > 0) {
+    // Timer decrement is handled here (approx 60fps)
+    sim.fuelAlertTimer -= 0.016; 
+} 
+// --- PERSISTENT BODY STATUS (Active when no alert is timing out) ---
+else {
+    if (speed <= ceilingSpeed && speed > 0) {
         ctx.fillStyle = '#38bdf8';
         ctx.fillText("STATUS: ACTIVE CLEARANCE (STEADY STATE)", 40, barY + barH + 40);
     } else if (sim.lactate > 1.5) {
@@ -1011,7 +1007,7 @@ function drawTrialB_View(ctx, c, speed) {
         ctx.fillStyle = '#38bdf8';
         ctx.fillText("STATUS: READY", 40, barY + barH + 40);
     }
-  }
+}
     // ==============================
     // 4) Room + zones (REAL SCALE)
     // ==============================
