@@ -2172,9 +2172,9 @@ if (sim.running && sim.energy > 0) {
     // --- NEW: FATIGUE DRAIN CALCULATION ---
     let fatigueScalar = 1.0; 
     if (sim.lactate > 50) {
-        fatigueScalar = 1.10; // +10% extra drain total for 51-100% range
+        fatigueScalar = 1.15; // +% extra drain total for 51-100% range
     } else if (sim.lactate >= 1) {
-        fatigueScalar = 1.03; // +3% extra drain total for 1-50% range
+        fatigueScalar = 1.06; // +3% extra drain total for 1-50% range
     }
 
     // Metabolic drain logic
