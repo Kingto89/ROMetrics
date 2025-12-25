@@ -128,6 +128,7 @@ Compare your **Total Cost** to your **Oxygen Budget**:
 
 
 - **Carbohydrate energy/fuel:** isn’t instant; the body needs time to use it. During high-intensity, anaerobic-dominant exercise, glucose is broken down by glycolysis to make ATP, and if oxygen can’t keep up, pyruvate is converted to lactate—so early fueling can increase lactate without improving performance. Proper timing helps sustain effort and manage fatigue.
+- **uel Timing Optimization:** Fuel must be taken before fatigue becomes excessive, because once metabolic by-products accumulate, the body cannot efficiently restore usable energy. Waiting too long limits the performance benefit of fuel and increases the risk of rapid decline.
 - **Crash Condition:** Lactate reaching 100% ends the trial immediately, even if time remains or energy is sufficient.
 
 **Learning Goals:**  
@@ -141,14 +142,14 @@ Compare your **Total Cost** to your **Oxygen Budget**:
 
 **Overview:** 
 
-In Trial B, the subject is operating **entirely above their aerobic ceiling** (7.0 mph), so **anaerobic glycolysis** is the primary energy system. The trial introduces     the **Lactate Proxy** to visualize metabolic waste and demonstrates how **fueling affects energy and lactate accumulation**.  
+In Trial B, the subject is operating **entirely above their aerobic ceiling** (Roma - 6.8 mph), so **anaerobic glycolysis** is the primary energy system. The trial introduces     the **Lactate Proxy** to visualize metabolic waste and demonstrates how **fueling affects energy and lactate accumulation**.  
 
 - In Trial A, oxygen delivery matched demand, so lactate was negligible.  
 - In Trial B, the system is stressed: oxygen supply is insufficient, and lactate begins to accumulate.
 
 ### Module Instructions
 
-1. **Set the speed slider:** 7.0 mph for the full 3-minute trial.  
+1. **Set the speed slider:** 6.8 (Roma) mph for the full 3-minute trial.  
 2. **Pre-Test (Optional):** Run a short pre-trial to observe how early vs. late fueling affects:
    - W′ energy recovery
    - Lactate accumulation
@@ -156,12 +157,12 @@ In Trial B, the subject is operating **entirely above their aerobic ceiling** (7
    This helps plan **strategic fuel use** for the official trial.  
 
 3. **Official Trial:**
-   - Begin the 3-minute trial at **7.0 mph** and maintain throughout.  
+   - Begin the 3-minute trial at **6.8 mph (Roma)** and maintain throughout.  
    - Monitor **Energy** and **Lactate** bars.  
-   - Apply exactly **2 fuel pulses (+10 each)** strategically to:
-     - Keep W′ energy above ~50%
+   - Apply exactly **1 fuel pulse (+10 each)** strategically to:
+     - Keep W′ energy above 0% before the timer runs out
      - Avoid Lactate reaching **100%**  
-   - Decide whether to space the fuels **closer together** or **further apart** based on your pre-test observations.  
+   - Decide when to apply the fuel - when it is most **optimized.**  
 
 ---
 
