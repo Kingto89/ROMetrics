@@ -329,7 +329,7 @@ const romanAge = 43;
 
 // 1. Calculate the Max Capacity (VO2 Budget) first
 const romaMaxVO2 = (220 - romaAge) * 0.205; 
-const romanMaxVO2 = (220 - romanAge) * 0.205;
+const romanMaxVO2 = (220 - romanAge) * 0.206;
 
 // 2. Fill the table using the verified 0.205 coefficient
 for (let i = 0; i <= 220; i++) {
@@ -2126,7 +2126,7 @@ if (sim.running && sim.energy > 0) {
     // Define Model Profiles (Roma vs Roman vs Others) Metabolic rates
     const profiles = {
         Roma:  { lowLactateMulti: 1.1, highLactateMulti: 1.27, recoveryRate: 0.05, tankSize: 1200 },
-        Roman: { lowLactateMulti: 1.42, highLactateMulti: 1.65, recoveryRate: 0.04, tankSize: 1200 },
+        Roman: { lowLactateMulti: 1.42, highLactateMulti: 1.7, recoveryRate: 0.04, tankSize: 1200 },
         Default: { lowLactateMulti: 1.1, highLactateMulti: 1.2, recoveryRate: 0.05, tankSize: 1200 }
     };
 
