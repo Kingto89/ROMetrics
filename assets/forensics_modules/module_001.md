@@ -128,7 +128,7 @@ Compare your **Total Cost** to your **Oxygen Budget**:
 
 
 - **Carbohydrate energy/fuel:** isn’t instant; the body needs time to use it. During high-intensity, anaerobic-dominant exercise, glucose is broken down by glycolysis to make ATP, and if oxygen can’t keep up, pyruvate is converted to lactate—so early fueling can increase lactate without improving performance. Proper timing helps sustain effort and manage fatigue.
-- **uel Timing Optimization:** Fuel must be taken before fatigue becomes excessive, because once metabolic by-products accumulate, the body cannot efficiently restore usable energy. Waiting too long limits the performance benefit of fuel and increases the risk of rapid decline.
+- **Fuel Timing Optimization:** Fuel must be taken before fatigue becomes excessive, because once metabolic by-products accumulate, the body cannot efficiently restore usable energy. Waiting too long limits the performance benefit of fuel and increases the risk of rapid decline.
 - **Crash Condition:** Lactate reaching 100% ends the trial immediately, even if time remains or energy is sufficient.
 
 **Learning Goals:**  
@@ -211,7 +211,7 @@ D. Resting metabolic rate
 
 **Checkpoint — Trial B (Q1)**
 
-Which of the following best explains the effect of carbohydrate fuel on the subject during Trial B?  
+Which of the following best explains the effect of EARLY carbohydrate fuel on the subject during Trial B?  
 
 A. Fuel adds energy while slightly raising lactate, due to glycolysis.  
 B. Fuel adds energy without changing lactate, under anaerobic conditions.  
