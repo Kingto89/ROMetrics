@@ -294,34 +294,47 @@ document.getElementById('mcqSubmit').onclick = () => {
                 window.renderMCQ(currentLetter); 
             }, 1000);
         } else {
-            // --- TRIAL COMPLETE LOGIC ---
+// --- TRIAL COMPLETE LOGIC ---
             document.getElementById('flScore').textContent = "100";
             msg.style.color = "#38bdf8";
 
             if (currentLetter === 'A') {
                 msg.textContent = "Trial A Passed! Opening Trial B...";
                 setTimeout(() => {
-                    // CLEANUP & RESET FOR TRIAL B
+                    // 1. CLEANUP & RESET FOR TRANSITION
                     currentMcqStep = 0;
-                    fuelUsedCount = 0; // Reset fuel tracker
-                    document.getElementById('mcqBox').style.display = 'none'; // Hide the A questions
-                    document.getElementById('mcqSubmit').disabled = false; // Re-enable for B questions
-                    document.getElementById('flScore').textContent = "0"; // Reset score for new trial
+                    sim.fuelCount = 0;       // Reset fuel tracker
+                    speedViolation = false;  // Clear integrity flags
+                    sim.hasStarted = false;  // Allow trial switching for setup
+                    
+                    // 2. UI RESET
+                    document.getElementById('mcqBox').style.display = 'none'; 
+                    document.getElementById('mcqSubmit').disabled = false; 
+                    document.getElementById('flScore').textContent = "0"; 
                     msg.textContent = ""; 
                     
-                    showFL001Trial(trials, 'B'); // Load B HUD/Instructions
+                    // 3. LOAD TRIAL B
+                    // Note: showFL001Trial will handle the 480s timer and fuel button activation
+                    showFL001Trial(window.currentTrials, 'B'); 
                 }, 2500);
+            } else if (currentLetter === 'B') {
+                // TRIAL B SPECIFIC COMPLETION
+                msg.textContent = "Trial B Complete. Forensic Data Saved.";
+                document.getElementById('mcqSubmit').disabled = true;
+                
+                // Optional: Final score display based on performance
+                document.getElementById('flScore').textContent = "100";
             } else {
-                msg.textContent = `Trial ${currentLetter} Complete. Data Saved.`;
+                msg.textContent = `Trial ${currentLetter} Complete.`;
                 document.getElementById('mcqSubmit').disabled = true;
             }
         }
     } else {
+        // WRONG ANSWER FEEDBACK
         msg.style.color = "#ff9aa0";
         msg.textContent = "Incorrect. Reference the Trial Guide.";
     }
-};    
-
+};          
 // Global Fetch Trigger
 document.getElementById('trialHelp').onclick = async (e) => {
   e.preventDefault();
@@ -566,10 +579,14 @@ $start.onclick = () => {
 
 
 $fuel.onclick = () => {
-    if (sim.fuelCount >= 2) return;
+    if (sim.fuelCount >= 1) return; // Hard limit: 1 use
     
     sim.fuelCount++;
-    sim.fuelAlertTimer = 5; // Alert stays for 5 seconds
+    sim.fuelAlertTimer = 5; 
+    
+    // Disable button immediately
+    $fuel.disabled = true;
+    $fuel.style.opacity = "0.4";
 
   // 1. TOO EARLY: > 70% (Tiered diminishing returns + Glycolytic Penalty)
     if (sim.energy > 70) {
@@ -2218,32 +2235,59 @@ if (sim.running && sim.energy > 0) {
 if (sim.energy <= 0 || trialTime <= 0 || sim.lactate >= 100) {
     const activeModel = document.getElementById('modelSelect').value;
     const currentLetter = document.getElementById('trialTag').textContent.trim();
+    const $statusVal = document.getElementById('statusVal');
+    const $trialMsg = document.getElementById('trialMsg');
 
-    // Check for Lactate Failure specifically in Trial B
-    if (sim.lactate >= 100 && currentLetter === 'B') {
-        document.getElementById('statusVal').textContent = "CRITICAL FAILURE: METABOLIC ACIDOSIS";
-        document.getElementById('statusVal').style.color = "#ff9aa0";
-        document.getElementById('trialMsg').innerHTML = 
-            `<b style="color:#ff9aa0;">Trial Failed:</b> Waste accumulation exceeded clearance capacity. Reset and lower speed.`;
+    // 1. GLOBAL FAILURE: SPEED VIOLATION
+    // Any change to the slider during a run results in immediate forensic failure
+    if (speedViolation) {
+        $statusVal.textContent = "INTEGRITY BREACH";
+        $statusVal.style.color = "#ff9aa0";
+        $trialMsg.innerHTML = `<b style="color:#ff9aa0;">Trial Failed:</b> Speed was altered during session. Reset required.`;
     } 
     
-    // Trial A Integrity Check
-    if (currentLetter === 'A' && trialTime <= 0) {
-        const targetSpeed = (activeModel === "Roma") ? 6.7 : 6.3;
-        if (initialSpeed === targetSpeed && !speedViolation && sim.energy >= 60) {
-            triggerUnlock("Aerobic Dominance Confirmed.");
-        } else {
-            let failMsg = "";
-            if (initialSpeed !== targetSpeed) failMsg = `Incorrect starting speed (${initialSpeed} mph).`;
-            else if (speedViolation) failMsg = "Speed was altered during the trial.";
-            else failMsg = "Insufficient energy balance.";
-
-            document.getElementById('trialMsg').innerHTML = 
-                `<b style="color:#ff9aa0;">Trial Failed:</b> ${failMsg} Reset and try again.`;
+    // 2. TRIAL A LOGIC (Threshold Continuity)
+    else if (currentLetter === 'A') {
+        if (trialTime <= 0) {
+            const targetSpeed = (activeModel === "Roma") ? 6.7 : 6.3;
+            // Success conditions: Correct starting speed AND energy maintained above 60%
+            if (initialSpeed === targetSpeed && sim.energy >= 60) {
+                triggerUnlock("Trial A Complete: Aerobic Dominance Confirmed.");
+            } else {
+                let failReason = (initialSpeed !== targetSpeed) ? "Incorrect starting speed." : "Insufficient energy reserve.";
+                $trialMsg.innerHTML = `<b style="color:#ff9aa0;">Trial Failed:</b> ${failReason}`;
+            }
         }
     }
 
+    // 3. TRIAL B LOGIC (Metabolic Waste & Fueling)
+    else if (currentLetter === 'B') {
+        if (sim.lactate >= 100) {
+            $statusVal.textContent = "CRITICAL FAILURE: ACIDOSIS";
+            $statusVal.style.color = "#ff9aa0";
+            $trialMsg.innerHTML = `<b style="color:#ff9aa0;">Trial Failed:</b> Waste accumulation exceeded clearance capacity.`;
+        } else if (sim.energy <= 0) {
+            $statusVal.textContent = "FAILURE: EXHAUSTION";
+            $statusVal.style.color = "#ff9aa0";
+            $trialMsg.innerHTML = `<b style="color:#ff9aa0;">Trial Failed:</b> W' Balance depleted.`;
+        } else if (trialTime <= 0) {
+            // Success condition: Survived 480s AND exactly 1 fuel event used
+            if (sim.fuelCount === 1) {
+                triggerUnlock("Trial B Complete: Metabolic Waste Managed.");
+            } else {
+                $trialMsg.innerHTML = `<b style="color:#ff9aa0;">Trial Failed:</b> Required fuel event (1) was not recorded.`;
+            }
+        }
+    }
+
+    // 4. PLACEHOLDER FOR FUTURE TRIALS (C, D, etc.)
+    else if (currentLetter === 'C') {
+        // Trial C logic goes here...
+    }
+
+    // --- STOP SIMULATION ---
     sim.running = false;
+    sim.hasStarted = false; // Unlocks trial switcher in showFL001Trial
     if (runAction) runAction.paused = true;
     restore(); 
     document.getElementById('startBtn').textContent = "Start";
