@@ -520,29 +520,42 @@ $fuel.onclick = () => {
     $fuel.disabled = true;
     $fuel.style.opacity = "0.4";
 
-  // 1. TOO EARLY: > 70% (Tiered diminishing returns + Glycolytic Penalty)
+    // 1. TOO EARLY: > 70% (Tiered diminishing returns + Glycolytic Penalty)
     if (sim.energy > 70) {
-        sim.fuelPenaltyTimer = 30;    
-        sim.throughputAlert = 5;
+        sim.fuelPenaltyTimer = 30; // Triggers the 30-second waste spike in animate()
+        sim.throughputAlert = 5;   // Triggers the red visual warning
         
         let energyGain = 0;
 
         if (sim.energy >= 90) {
             // Tier: 90-100%
             energyGain = 0;
-            sim.fuelMessage = "TOO EARLY: +0 Energy | Waste Spike";
+            sim.fuelMessage = "TOO EARLY: +0 Energy | Waste Spike Detected";
         } else if (sim.energy >= 80) {
             // Tier: 80-89%
             energyGain = 3;
-            sim.fuelMessage = "TOO EARLY: +3 Energy | Waste Spike";
+            sim.fuelMessage = "TOO EARLY: +3 Energy | Waste Spike Detected";
         } else {
             // Tier: 71-79%
             energyGain = 4;
-            sim.fuelMessage = "TOO EARLY: +4 Energy | Waste Spike";
+            sim.fuelMessage = "TOO EARLY: +4 Energy | Waste Spike Detected";
         }
 
         sim.energy = Math.min(100, sim.energy + energyGain);
     } 
+    // 2. OPTIMAL WINDOW: 40-70%
+    else if (sim.energy >= 40) {
+        sim.fuelPenaltyTimer = 0; // No penalty
+        sim.fuelMessage = "CORRECT WINDOW: Full fuel benefit recorded";
+        sim.energy = Math.min(100, sim.energy + 10); 
+    }
+    // 3. TOO LATE: < 40%
+    else {
+        sim.fuelPenaltyTimer = 0; // No penalty, just poor efficiency
+        sim.fuelMessage = "TOO LATE: Malabsorption | Minimal benefit";
+        sim.energy = Math.min(100, sim.energy + 2); 
+    }
+};
     // 2. OPTIMAL WINDOW: 40-70%
     else if (sim.energy >= 40) {
         sim.fuelPenaltyTimer = 0;
@@ -898,19 +911,18 @@ function drawTrialA_View(ctx, c, speed, modelName) {
 // ==========================================
 // 3. TRIAL B BOX (Updated: Timing Outcomes Logic)
 // ==========================================
-function drawTrialB_View(ctx, c, speed) {
-    const barY = 185, barW = c.width - 80, barH = 50;
-    const modelName = document.getElementById('modelSelect').value.trim();
-    
-    // 1. DETERMINE THE CEILING
-    const ceilingSpeed = (modelName === "Roman") ? 6.3 : 6.7;
-    const currentCost = (speed * 26.8 * 0.205) + 3.5;
-    const deficit = Math.max(0, currentCost - sim.vo2Max);
-
-    // 2. LIVE PRODUCTION VS. WIPING
+// 2. LIVE PRODUCTION VS. WIPING
     if (sim.running) {
-        // Multiplier only exists if fuel was used > 75% energy
-        const throughputMultiplier = (sim.fuelPenaltyTimer > 0) ? 1.5 : 1.0;
+        // Pull the dynamic profiles for model-specific accuracy
+        const profiles = {
+            Roma:  { baseAccum: 0.00225, earlyPenalty: 1.5 },
+            Roman: { baseAccum: 0.00285, earlyPenalty: 2.2 },
+            Default: { baseAccum: 0.00225, earlyPenalty: 1.5 }
+        };
+        const p = profiles[modelName] || profiles.Default;
+
+        // ACCURACY FIX: Use model-specific early penalty (e.g., 2.2 for Roman)
+        const throughputMultiplier = (sim.fuelPenaltyTimer > 0) ? p.earlyPenalty : 1.0;
 
         if (speed <= ceilingSpeed && speed > 0) {
             // STEADY STATE "BREATHING"
@@ -921,7 +933,9 @@ function drawTrialB_View(ctx, c, speed) {
         } else if (speed > ceilingSpeed) {
             // TOXIC DEBT: Accumulation outpaces clearance
             const fatigueMultiplier = (sim.lactate > 50) ? 1.2 : 1.0; 
-            const accumulation = (deficit * 0.00225) * fatigueMultiplier * throughputMultiplier; 
+            
+            // ACCURACY FIX: Use model-specific base accumulation
+            const accumulation = (deficit * p.baseAccum) * fatigueMultiplier * throughputMultiplier; 
             sim.lactate = Math.min(100, sim.lactate + accumulation);
         }
 
@@ -929,7 +943,6 @@ function drawTrialB_View(ctx, c, speed) {
         if (sim.fuelPenaltyTimer > 0) sim.fuelPenaltyTimer -= 0.016; 
         if (sim.throughputAlert > 0) sim.throughputAlert -= 0.016;
     }
-
     // 3. VISUALS (Heat-map and Bar)
     if (sim.throughputAlert > 0) {
         ctx.fillStyle = 'rgba(255, 0, 0, 0.15)';
@@ -2123,11 +2136,11 @@ if (sim.running && sim.energy > 0) {
     const currentCost = (speed * 26.8 * 0.205) + 3.5;
     const activeModel = document.getElementById('modelSelect').value;
 
-    // Define Model Profiles (Roma vs Roman vs Others) Metabolic rates
+    // Define Model Profiles (Roma vs Roman vs Others)
     const profiles = {
-        Roma:  { lowLactateMulti: 1.1, highLactateMulti: 1.27, recoveryRate: 0.05, tankSize: 1200 },
-        Roman: { lowLactateMulti: 1.42, highLactateMulti: 1.7, recoveryRate: 0.04, tankSize: 1200 },
-        Default: { lowLactateMulti: 1.1, highLactateMulti: 1.2, recoveryRate: 0.05, tankSize: 1200 }
+        Roma:    { low: 1.1,  rising: 1.27, recovery: 0.05, earlyPenalty: 1.5 },
+        Roman:   { low: 1.42, rising: 1.70, recovery: 0.04, earlyPenalty: 2.2 },
+        Default: { low: 1.1,  rising: 1.20, recovery: 0.05, earlyPenalty: 1.5 }
     };
 
     const p = profiles[activeModel] || profiles.Default;
@@ -2135,28 +2148,33 @@ if (sim.running && sim.energy > 0) {
     // 1. MODEL-SPECIFIC FATIGUE SCALAR
     let fatigueScalar = 1.0;
     if (sim.lactate > 50) {
-        fatigueScalar = p.highLactateMulti; // Specific to Roma (1.27) or Roman (1.35)
+        fatigueScalar = p.rising; // Fixed variable name to match profile object
     } else if (sim.lactate >= 1) {
-        fatigueScalar = p.lowLactateMulti;
+        fatigueScalar = p.low;    // Fixed variable name to match profile object
     }
 
     // 2. MODEL-SPECIFIC ENERGY DRAIN
     if (currentCost > sim.vo2Max) {
         const deficit = currentCost - sim.vo2Max;
-        const percentDropPerSecond = (deficit / 60 / p.tankSize) * 10000;
+        // W' Tank size is 1200 as requested
+        const percentDropPerSecond = (deficit / 60 / 1200) * 10000;
         sim.energy -= (percentDropPerSecond * fatigueScalar) * dt;
     } else {
         // Model-specific recovery speed
-        sim.energy = Math.min(100, sim.energy + (p.recoveryRate * dt));
+        sim.energy = Math.min(100, sim.energy + (p.recovery * dt));
     }
     
-    // Updated Trial Timer
+    // 3. CENTRALIZED TIMER DECREMENT
+    // Decrement the fuel penalty timer (30s window) and red alert text
+    if (sim.fuelPenaltyTimer > 0) sim.fuelPenaltyTimer -= dt;
+    if (sim.throughputAlert > 0) sim.throughputAlert -= dt;
+
+    // 4. TRIAL TIMER (Module 1 specific)
     if (currentModule?.id === 'FL-001') {
         trialTime = Math.max(0, trialTime - dt);
         document.getElementById('trialTime').textContent = Math.ceil(trialTime);
     }
-}
-    
+} 
 
 // --- DYNAMIC TRIAL STOP & UNLOCK LOGIC ---
 if (sim.energy <= 0 || trialTime <= 0 || sim.lactate >= 100) {
