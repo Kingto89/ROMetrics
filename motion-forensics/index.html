@@ -233,18 +233,19 @@ let currentCorrectIndex = -1;
 
 window.renderMCQ = function(letter) {
     const trials = window.currentTrials;
-    // Check if data exists before trying to use currentMcqStep
+    
+    // Safety check: Ensure data exists for this specific trial letter
     if (!trials || !trials[letter] || !trials[letter].mcqs || !trials[letter].mcqs[currentMcqStep]) {
-        console.error("MCQ Data Missing for step:", currentMcqStep);
+        console.error("MCQ Data Missing for:", letter, "at step:", currentMcqStep);
         return;
     }
 
     const data = trials[letter].mcqs[currentMcqStep];
     
-    // 1. Set the Question Text and Progress
+    // 1. Update Question Text
     document.getElementById('mcqQ').textContent = `Checkpoint (${currentMcqStep + 1}/${trials[letter].mcqs.length}): ${data.q}`;
 
-    // 2. Clear and fill the Options
+    // 2. Build Options
     const container = document.getElementById('mcqOpts');
     container.innerHTML = '';
     
@@ -253,20 +254,26 @@ window.renderMCQ = function(letter) {
         btn.className = 'pill'; 
         btn.style.marginBottom = '5px';
         btn.style.width = '100%';
+        btn.style.cursor = 'pointer'; // Ensure user knows it is clickable
         btn.textContent = opt;
-        btn.onclick = () => {
+
+        // CLICK LOGIC: This captures the answer
+        btn.onclick = (e) => {
+            e.stopPropagation(); // Prevent 3D scene from intercepting
+            
+            // Remove active class from others, add to this one
             document.querySelectorAll('#mcqOpts .pill').forEach(p => p.classList.remove('active'));
             btn.classList.add('active');
             
-            // This grabs the very first character of the option text
-            // If the option is "D. VO2 Max...", it saves "D"
-            const letterOnly = opt.trim().charAt(0).toUpperCase();
-            btn.dataset.choice = letterOnly; 
+            // Extract the first letter (A, B, C, or D)
+            const choice = opt.trim().charAt(0).toUpperCase();
+            btn.dataset.choice = choice; 
+            
+            console.log("Selected Choice:", choice); // Debugging
         };
         container.appendChild(btn);
     });
 };
-
 
 document.getElementById('mcqSubmit').onclick = () => {
     const selected = document.querySelector('#mcqOpts .pill.active');
@@ -2300,11 +2307,13 @@ if (sim.energy <= 0 || trialTime <= 0 || sim.lactate >= 100) {
 } // This is the single correct closing brace for animate()
 
 function triggerUnlock(msg) {
+    sim.running = false; // Stop the athlete
     document.getElementById('mcqBox').style.display = 'block';
     document.getElementById('trialMsg').innerHTML = `<b style="color:#38bdf8;">Goal Reached:</b> ${msg}`;
-    currentMcqStep = 0;
+    
+    currentMcqStep = 0; // Reset to question 1
     const currentLetter = document.getElementById('trialTag').textContent.trim();
-    window.renderMCQ(currentLetter);
+    window.renderMCQ(currentLetter); // Call the fixed renderer
 }
 
 animate();
