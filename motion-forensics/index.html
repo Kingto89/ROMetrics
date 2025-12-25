@@ -661,11 +661,13 @@ if (window.controls) window.controls.enabled = true;
   $status.textContent = "Ready";
   $status.style.color = "#cfe3ff";
 
-// Reset Messages & Assessment Button
+// Reset Messages & Hide Assessment Button
     document.getElementById('trialMsg').textContent = 'Read the instructions above. When ready, press Start.';
     
-    const aBtn = document.getElementById('assessmentBtn');
-    if (aBtn) aBtn.style.display = 'none';
+    // We check for the button directly by ID without re-declaring it as a 'const'
+    if (document.getElementById('assessmentBtn')) {
+        document.getElementById('assessmentBtn').style.display = 'none';
+    }
 });
 // ==============================
 //  Studio: Three.js base
