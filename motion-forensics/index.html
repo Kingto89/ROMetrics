@@ -2161,26 +2161,38 @@ if (runAction) runAction.paused = false;
 drawPanel(wallScreen, 'CARDIO BOARD');
 drawTreadmillMph(consoleScreen);
 
-// 2. Realistic Metabolic Engine
+// 2. Realistic Metabolic Engine (Rules Coexistence)
 if (sim.running && sim.energy > 0) {
-    // CRITICAL: This line drives the board timers (ATP-PC 15s and Anaerobic 30s)
+    // Preserved: Drives board timers (ATP-PC / Anaerobic windows)
     sim.elapsed += dt; 
     
     const speed = parseFloat(sim.speedMph.toFixed(1));
     const currentCost = (speed * 26.8 * 0.205) + 3.5;
 
+    // --- NEW: FATIGUE DRAIN CALCULATION ---
+    let fatigueScalar = 1.0; 
+    if (sim.lactate > 50) {
+        fatigueScalar = 1.10; // +10% extra drain total for 51-100% range
+    } else if (sim.lactate >= 1) {
+        fatigueScalar = 1.03; // +3% extra drain total for 1-50% range
+    }
+
     // Metabolic drain logic
     if (currentCost > sim.vo2Max) {
         const deficit = currentCost - sim.vo2Max;
         const anaerobicTankSize = 1200; 
+        
+        // Preserved: Existing W' drain ratio
         const percentDropPerSecond = (deficit / 60 / anaerobicTankSize) * 10000;
-        sim.energy -= percentDropPerSecond * dt;
+        
+        // Coexistence: Apply fatigueScalar to existing drain rule
+        sim.energy -= (percentDropPerSecond * fatigueScalar) * dt;
     } else {
-        // Recovery below threshold
+        // Preserved: Recovery below threshold
         sim.energy = Math.min(100, sim.energy + (0.05 * dt));
     }
     
-    // 300s Trial Timer countdown
+    // Updated Trial Timer Logic (Supports 300s Trial A and 480s Trial B)
     if (currentModule?.id === 'FL-001') {
       trialTime = Math.max(0, trialTime - dt);
       document.getElementById('trialTime').textContent = Math.ceil(trialTime);
