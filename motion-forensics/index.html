@@ -931,7 +931,7 @@ function drawTrialB_View(ctx, c, speed) {
     // 2. LIVE PRODUCTION VS. WIPING
     if (sim.running) {
         // Multiplier only exists if fuel was used > 75% energy
-        const throughputMultiplier = (sim.fuelPenaltyTimer > 0) ? 1.4 : 1.0;
+        const throughputMultiplier = (sim.fuelPenaltyTimer > 0) ? 1.5 : 1.0;
 
         if (speed <= ceilingSpeed && speed > 0) {
             // STEADY STATE "BREATHING"
@@ -941,8 +941,8 @@ function drawTrialB_View(ctx, c, speed) {
             }
         } else if (speed > ceilingSpeed) {
             // TOXIC DEBT: Accumulation outpaces clearance
-            const fatigueMultiplier = (sim.lactate > 50) ? 1.4 : 1.0; 
-            const accumulation = (deficit * 0.0025) * fatigueMultiplier * throughputMultiplier; 
+            const fatigueMultiplier = (sim.lactate > 50) ? 1.2 : 1.0; 
+            const accumulation = (deficit * 0.00225) * fatigueMultiplier * throughputMultiplier; 
             sim.lactate = Math.min(100, sim.lactate + accumulation);
         }
 
