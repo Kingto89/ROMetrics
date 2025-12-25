@@ -1,1 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>ROMetrics — Forensic Assessment</title>
+  <style>
+    body { background:#07101b; color:#e5eefc; font-family:system-ui,-apple-system,sans-serif; margin:0; display:flex; justify-content:center; padding:40px 20px; }
+    #container { max-width:800px; width:100%; }
+    .card { background:rgba(15,23,42,.78); border:1px solid rgba(148,163,184,.25); border-radius:24px; padding:32px; backdrop-filter:blur(10px); box-shadow:0 20px 50px rgba(0,0,0,.3); }
+    h1 { font-size:24px; margin:0 0 10px 0; color:#38bdf8; }
+    .meta { color:#a8c0da; font-size:14px; margin-bottom:30px; border-bottom:1px solid rgba(148,163,184,.15); padding-bottom:15px; }
+    .q-block { margin-bottom:40px; }
+    .q-text { font-weight:700; font-size:17px; line-height:1.4; margin-bottom:18px; }
+    .opt { display:block; border:1px solid rgba(148,163,184,.2); background:rgba(7,16,27,.3); padding:14px 18px; border-radius:14px; margin-bottom:10px; cursor:pointer; transition:all .2s; }
+    .opt:hover { border-color:#38bdf8; background:rgba(56,189,248,.05); }
+    .opt.selected { border-color:#38bdf8; background:rgba(56,189,248,.15); box-shadow:0 0 15px rgba(56,189,248,0.2); }
+    .btn { background:#38bdf8; color:#07101b; border:none; padding:16px 32px; border-radius:14px; font-weight:900; font-size:15px; cursor:pointer; width:100%; margin-top:20px; }
+    .btn:disabled { opacity:0.5; cursor:not-allowed; }
+    #result { margin-top:25px; padding:20px; border-radius:14px; text-align:center; font-weight:700; display:none; }
+    .success { background:rgba(74,222,128,0.1); color:#4ade80; border:1px solid rgba(74,222,128,0.2); }
+    .fail { background:rgba(248,113,113,0.1); color:#f87171; border:1px solid rgba(248,113,113,0.2); }
+  </style>
+</head>
+<body>
 
+<div id="container">
+  <div class="card">
+    <h1 id="modLabel">Module Assessment</h1>
+    <div class="meta" id="modMeta">Forensic Data Validation</div>
+    
+    <div id="quizArea">Loading questions...</div>
+    
+    <button id="submitBtn" class="btn" style="display:none;">Submit Assessment</button>
+    <div id="result"></div>
+    <button id="backBtn" class="btn" style="display:none; background:transparent; border:1px solid #38bdf8; color:#38bdf8; margin-top:10px;">Return to Studio</button>
+  </div>
+</div>
+
+<script type="module">
+  const params = new URLSearchParams(window.location.search);
+  const modId = params.get('module') || "FL-001";
+  let quizData = [];
+
+  // 1. Fetch and Parse Markdown
+  async function loadQuiz() {
+    const fileName = modId.toLowerCase().replace('fl-', 'module_');
+    const path = `https://raw.githubusercontent.com/Kingto89/ROMetrics.com/main/assets/forensics_modules/${fileName}.md`;
+    
+    try {
+      const res = await fetch(path);
+      if (!res.ok) throw new Error("File not found");
+      const md = await res.text();
+      
+      quizData = parseQuiz(md);
+      renderQuiz();
+    } catch (err) {
+      document.getElementById('quizArea').innerHTML = "Error loading assessment data.";
+    }
+  }
+
+  function parseQuiz(md) {
+    const questions = [];
+    const blocks = md.split('**Checkpoint');
+    blocks.shift(); // Remove intro text
+    
+    blocks.forEach((block, idx) => {
+      const lines = block.split('\n').map(l => l.trim()).filter(l => l);
+      const options = lines.filter(l => /^[A-D]\./.test(l));
+      const ansMatch = block.match(/Answer.*?([A-D])/i);
+      
+      if (options.length && ansMatch) {
+        questions.push({
+          id: idx,
+          q: lines[1] || "Question text missing",
+          opts: options,
+          correct: ansMatch[1].toUpperCase()
+        });
+      }
+    });
+    return questions;
+  }
+
+  // 2. Render Questions
+  function renderQuiz() {
+    const area = document.getElementById('quizArea');
+    area.innerHTML = '';
+    document.getElementById('modLabel').textContent = `${modId} Assessment`;
+    
+    quizData.forEach((item, qIdx) => {
+      const block = document.createElement('div');
+      block.className = 'q-block';
+      block.innerHTML = `<div class="q-text">${qIdx + 1}. ${item.q}</div>`;
+      
+      item.opts.forEach(opt => {
+        const letter = opt.charAt(0);
+        const div = document.createElement('div');
+        div.className = 'opt';
+        div.textContent = opt;
+        div.onclick = () => {
+          block.querySelectorAll('.opt').forEach(el => el.classList.remove('selected'));
+          div.classList.add('selected');
+          item.userAnswer = letter;
+        };
+        block.appendChild(div);
+      });
+      area.appendChild(block);
+    });
+    
+    document.getElementById('submitBtn').style.display = 'block';
+  }
+
+  // 3. Handle Submission
+  document.getElementById('submitBtn').onclick = () => {
+    let score = 0;
+    let allAnswered = true;
+
+    quizData.forEach(item => {
+      if (!item.userAnswer) allAnswered = false;
+      if (item.userAnswer === item.correct) score++;
+    });
+
+    if (!allAnswered) {
+      alert("Please answer all questions before submitting.");
+      return;
+    }
+
+    const pass = score === quizData.length;
+    const resEl = document.getElementById('result');
+    resEl.style.display = 'block';
+    
+    if (pass) {
+      resEl.className = 'success';
+      resEl.textContent = `PERFECT SCORE: ${score}/${quizData.length}. Forensic validation verified.`;
+      // SAVE STATUS
+      localStorage.setItem(`${modId}_Status`, 'completed');
+    } else {
+      resEl.className = 'fail';
+      resEl.textContent = `SCORE: ${score}/${quizData.length}. Revision required. Please try again.`;
+    }
+
+    document.getElementById('submitBtn').disabled = true;
+    document.getElementById('backBtn').style.display = 'block';
+  };
+
+  document.getElementById('backBtn').onclick = () => {
+    // Go back to the main sim page (assumes naming convention)
+    window.location.href = "index.html"; 
+  };
+
+  loadQuiz();
+</script>
+
+</body>
+</html>
