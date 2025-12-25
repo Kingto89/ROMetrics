@@ -1680,41 +1680,33 @@ function parseFL001(md) {
 }
 
 function showFL001Trial(trials, letter) {
-  // 1. FORENSIC LOCKOUT: Prevent switching if the trial has already started
+  // 1. Forensic Lock
   if (sim.hasStarted) {
-    document.getElementById('trialMsg').innerHTML = 
-        `<b style="color:#ff9aa0;">LOCKED:</b> Cannot switch trials during an active session. Press Reset first.`;
+    document.getElementById('trialMsg').innerHTML = `<b style="color:#ff9aa0;">LOCKED:</b> Reset to switch trials.`;
     return;
   }
 
-  // 2. PROCEED WITH SWITCHING (Only if not started)
   const t = trials[letter];
+  if (!t) return;
+
   document.getElementById('trialTag').textContent = letter;
   
-  // Set Timers: A=300s, B=480s (8 mins)
+  // 2. Setup specific forensic parameters
   trialTime = (letter === 'B') ? 480 : 300;
   document.getElementById('trialTime').textContent = trialTime;
 
-  // 3. FUEL BUTTON PROTOCOL (Disabled in A, Enabled in B)
+  // 3. Fuel Button Protocol
   const $fBtn = document.getElementById('fuelBtn');
-  if (letter === 'A') {
-    $fBtn.disabled = true;
-    $fBtn.style.opacity = "0.4";
-  } else {
-    $fBtn.disabled = false;
-    $fBtn.style.opacity = "1";
-  }
+  const fuelAllowed = (letter === 'B');
+  $fBtn.disabled = !fuelAllowed;
+  $fBtn.style.opacity = fuelAllowed ? "1" : "0.4";
 
-  // 4. RESET INTERNAL TRIAL STATE
-  if (window.sim) {
-    sim.lactate = 0;
-    sim.fuelCount = 0;
-    sim.energy = 100;
-    document.getElementById('engVal').textContent = "100";
-  }
-
-  document.getElementById('trialMsg').innerHTML = `<b>Trial ${letter} Selected.</b> Adjust speed and press Start.`;
-  document.getElementById('mcqBox').style.display = 'none';
+  // 4. Clean State
+  sim.lactate = 0;
+  sim.fuelCount = 0;
+  sim.energy = 100;
+  document.getElementById('engVal').textContent = "100";
+  document.getElementById('trialMsg').innerHTML = `<b>Trial ${letter} Loaded.</b> Press Start.`;
 
   // 5. WINDOW EXPOSURE (Restored for Debugging)
   window.sim = sim; 
@@ -1725,29 +1717,26 @@ function showFL001Trial(trials, letter) {
 async function enterFL001() {
   setZone('cardio');
   
-  // 1. Fetch the Markdown file from GitHub
   const res = await fetch('https://raw.githubusercontent.com/Kingto89/ROMetrics.com/main/assets/forensics_modules/module_001.md');
-
-  if (!res.ok) {
-    console.error("MD LOAD FAILED:", res.status);
-    return;
-  }
+  if (!res.ok) return;
 
   const md = await res.text();
-  
-  // 2. Parse and store globally so the MCQ system can see it
   window.currentTrials = parseFL001(md); 
-  console.log("Parsed Trials Data:", window.currentTrials);
-  // 3. Create local reference for the UI buttons
   const trials = window.currentTrials; 
 
-  // 4. Initialize Trial A display
-  showFL001Trial(trials, 'A');
+  // Wire buttons: They only execute when CLICKED
+  const wire = (id, letter) => {
+    const btn = document.getElementById(id);
+    if (btn) btn.onclick = () => showFL001Trial(trials, letter);
+  };
 
-  // 5. Wire up the Trial selection buttons
-  document.getElementById('trialA').onclick = () => showFL001Trial(trials, 'A');
-  document.getElementById('trialB').onclick = () => showFL001Trial(trials, 'B');
-  document.getElementById('trialC').onclick = () => showFL001Trial(trials, 'C');
+  wire('trialA', 'A');
+  wire('trialB', 'B');
+
+  // Set HUD to a neutral "Selection" state
+  document.getElementById('trialTag').textContent = "-";
+  document.getElementById('trialTime').textContent = "0";
+  document.getElementById('trialMsg').innerHTML = "<b>Module Loaded.</b> Select Trial A or B to begin.";
 }
 
 
@@ -2293,7 +2282,9 @@ if (sim.energy <= 0 || trialTime <= 0 || sim.lactate >= 100) {
         }
     }
 
-    // 4. PLACEHOLDER FOR FUTURE TRIALS 
+    // 4. PLACEHOLDER FOR FUTURE TRIALS (C, D, etc.)
+    else if (currentLetter === 'C') {
+        // Trial C logic goes here...
     }
 
     // --- STOP SIMULATION ---
@@ -2306,6 +2297,7 @@ if (sim.energy <= 0 || trialTime <= 0 || sim.lactate >= 100) {
 
     updateHUD();
     renderer.render(scene, camera);
+} // This is the single correct closing brace for animate()
 
 function triggerUnlock(msg) {
     document.getElementById('mcqBox').style.display = 'block';
