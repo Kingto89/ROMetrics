@@ -233,43 +233,40 @@ let currentCorrectIndex = -1;
 
 window.renderMCQ = function(letter) {
     const trials = window.currentTrials;
-    
+    // Check if data exists before trying to use currentMcqStep
     if (!trials || !trials[letter] || !trials[letter].mcqs || !trials[letter].mcqs[currentMcqStep]) {
-        console.error("MCQ Data Missing for:", letter, "at step:", currentMcqStep);
+        console.error("MCQ Data Missing for step:", currentMcqStep);
         return;
     }
 
     const data = trials[letter].mcqs[currentMcqStep];
+    
+    // 1. Set the Question Text and Progress
     document.getElementById('mcqQ').textContent = `Checkpoint (${currentMcqStep + 1}/${trials[letter].mcqs.length}): ${data.q}`;
 
+    // 2. Clear and fill the Options
     const container = document.getElementById('mcqOpts');
     container.innerHTML = '';
     
     data.opts.forEach((opt) => {
         const btn = document.createElement('div');
-        btn.className = 'pill'; // Uses your existing CSS (Line 11)
+        btn.className = 'pill'; 
         btn.style.marginBottom = '5px';
         btn.style.width = '100%';
-        btn.style.pointerEvents = 'auto'; // Forces HTML to catch the click
         btn.textContent = opt;
-
-        // Use onpointerdown to trigger BEFORE the 3D camera can move
-        btn.onpointerdown = (e) => {
-            e.stopPropagation(); // Stops OrbitControls from stealing the click
-            
-            // This triggers your existing glow (Line 13: .pill.active)
+        btn.onclick = () => {
             document.querySelectorAll('#mcqOpts .pill').forEach(p => p.classList.remove('active'));
             btn.classList.add('active');
             
-            // Map the choice for your mcqSubmit logic
-            const choice = opt.trim().charAt(0).toUpperCase();
-            btn.dataset.choice = choice; 
-            
-            console.log("Choice selected:", choice);
+            // This grabs the very first character of the option text
+            // If the option is "D. VO2 Max...", it saves "D"
+            const letterOnly = opt.trim().charAt(0).toUpperCase();
+            btn.dataset.choice = letterOnly; 
         };
         container.appendChild(btn);
     });
 };
+
 
 document.getElementById('mcqSubmit').onclick = () => {
     const selected = document.querySelector('#mcqOpts .pill.active');
@@ -2303,13 +2300,11 @@ if (sim.energy <= 0 || trialTime <= 0 || sim.lactate >= 100) {
 } // This is the single correct closing brace for animate()
 
 function triggerUnlock(msg) {
-    sim.running = false; // Stop the athlete
     document.getElementById('mcqBox').style.display = 'block';
     document.getElementById('trialMsg').innerHTML = `<b style="color:#38bdf8;">Goal Reached:</b> ${msg}`;
-    
-    currentMcqStep = 0; // Reset to question 1
+    currentMcqStep = 0;
     const currentLetter = document.getElementById('trialTag').textContent.trim();
-    window.renderMCQ(currentLetter); // Call the fixed renderer
+    window.renderMCQ(currentLetter);
 }
 
 animate();
