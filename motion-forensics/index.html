@@ -1680,44 +1680,46 @@ function parseFL001(md) {
 }
 
 function showFL001Trial(trials, letter) {
+  // 1. FORENSIC LOCKOUT: Prevent switching if the trial has already started
+  if (sim.hasStarted) {
+    document.getElementById('trialMsg').innerHTML = 
+        `<b style="color:#ff9aa0;">LOCKED:</b> Cannot switch trials during an active session. Press Reset first.`;
+    return;
+  }
+
+  // 2. PROCEED WITH SWITCHING (Only if not started)
   const t = trials[letter];
   document.getElementById('trialTag').textContent = letter;
-
-  // 1. Set specific forensic timers: A=300s, B=480s
-  let timeLimit = (letter === 'B') ? 480 : 300;
   
-  // 2. Update global simulation time and HUD display
-  window.setTrialTime(timeLimit);
-  document.getElementById('trialTime').textContent = timeLimit;
+  // Set Timers: A=300s, B=480s (8 mins)
+  trialTime = (letter === 'B') ? 480 : 300;
+  document.getElementById('trialTime').textContent = trialTime;
 
-  // 3. Clear any existing Trial B specific accumulation
-  if (window.sim) window.sim.lactate = 0;
+  // 3. FUEL BUTTON PROTOCOL (Disabled in A, Enabled in B)
+  const $fBtn = document.getElementById('fuelBtn');
+  if (letter === 'A') {
+    $fBtn.disabled = true;
+    $fBtn.style.opacity = "0.4";
+  } else {
+    $fBtn.disabled = false;
+    $fBtn.style.opacity = "1";
+  }
 
-  // 4. Update instruction prompt
-  document.getElementById('trialMsg').innerHTML =
-    ` <b>Read the instructions above.</b><br>
-      When ready, press <b>Start</b> to begin Trial ${letter}.`;
+  // 4. RESET INTERNAL TRIAL STATE
+  if (window.sim) {
+    sim.lactate = 0;
+    sim.fuelCount = 0;
+    sim.energy = 100;
+    document.getElementById('engVal').textContent = "100";
+  }
 
+  document.getElementById('trialMsg').innerHTML = `<b>Trial ${letter} Selected.</b> Adjust speed and press Start.`;
   document.getElementById('mcqBox').style.display = 'none';
 
-  // 5. Load MCQ data if available
-  if (t.mcq) {
-    document.getElementById('mcqQ').textContent = t.mcq.q;
-    const box = document.getElementById('mcqOpts');
-    box.innerHTML = '';
-    t.mcq.opts.forEach(o => {
-      const div = document.createElement('div');
-      div.className = 'pill'; // Ensure it matches your style
-      div.textContent = o;
-      box.appendChild(div);
-    });
-  }
-}
-   
-function fl001PassTrial(){
-  document.getElementById('trialMsg').textContent =
-    'Trial passed. Answer the question.';
-  document.getElementById('mcqBox').style.display = 'block';
+  // 5. WINDOW EXPOSURE (Restored for Debugging)
+  window.sim = sim; 
+  window.getTrialTime = () => trialTime;
+  window.setTrialTime = (v) => trialTime = v;
 }
     
 async function enterFL001() {
