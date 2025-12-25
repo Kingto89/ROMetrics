@@ -1584,17 +1584,13 @@ function setZone(which) {
 }
 
 function parseFL001(md) {
-    const trials = { 'mcqs': [] }; // Simplified structure for external assessment
+    const trials = { 'mcqs': [] }; 
     const blocks = md.split('**Checkpoint');
     blocks.shift(); 
 
     blocks.forEach(block => {
         const lines = block.split('\n').map(l => l.trim()).filter(l => l);
-        
-        // Pull Options (A., B., etc)
         const options = lines.filter(l => /^[A-D]\./.test(l));
-
-        // DYNAMIC KEY: Scans for "Answer" then captures the letter
         const ansMatch = block.match(/Answer.*?([A-D])/i);
         const correctLetter = ansMatch ? ansMatch[1].toUpperCase() : null;
 
@@ -1606,48 +1602,37 @@ function parseFL001(md) {
             });
         }
     });
-
-    console.log("MD Loaded. Flat question list prepared for external assessment.");
     return trials;
 }
 
 function showFL001Trial(trials, letter) {
-    // We remove the strict 'sim.hasStarted' block so you can select trials
-    // but we still stop the simulation if it's currently running
+    // 1. Reset Simulation State immediately on switch
     sim.running = false;
+    sim.hasStarted = false; // This unlocks the 'Start' button logic
     if (runAction) runAction.paused = true;
+    restore(); // Returns avatar to anatomic pose
 
-    const t = trials[letter];
-    // If we are using the flat MCQ structure, we just check if the trials object exists
-    if (!trials) return;
-
+    // 2. Set UI Tags
     document.getElementById('trialTag').textContent = letter;
-    
-    // Setup specific forensic parameters
     trialTime = (letter === 'B') ? 480 : 300;
     document.getElementById('trialTime').textContent = trialTime;
 
-    // Fuel Button Protocol
+    // 3. Configure Fueling Protocol
     const $fBtn = document.getElementById('fuelBtn');
     const fuelAllowed = (letter === 'B');
     $fBtn.disabled = !fuelAllowed;
     $fBtn.style.opacity = fuelAllowed ? "1" : "0.4";
 
-    // Clean State for the new trial
+    // 4. Reset Metabolic Counters
     sim.lactate = 0;
     sim.fuelCount = 0;
     sim.energy = 100;
-    sim.hasStarted = false; 
     speedViolation = false;
     
     document.getElementById('engVal').textContent = "100";
-    document.getElementById('trialMsg').innerHTML = `<b>Trial ${letter} Loaded.</b> Press Start.`;
+    document.getElementById('trialMsg').innerHTML = `<b>Trial ${letter} Loaded.</b> Press Start to begin forensic validation.`;
+    document.getElementById('startBtn').textContent = "Start";
 }
-
-// 5. WINDOW EXPOSURE
-window.sim = sim; 
-window.getTrialTime = () => trialTime;
-window.setTrialTime = (v) => trialTime = v;
 
 async function enterFL001() {
     setZone('cardio');
@@ -1659,12 +1644,14 @@ async function enterFL001() {
     window.currentTrials = parseFL001(md); 
     const trials = window.currentTrials; 
 
-    // Wire buttons
+    // Wire Trial Buttons
     const btnA = document.getElementById('trialA');
     const btnB = document.getElementById('trialB');
-    if(btnA) btnA.onclick = () => showFL001Trial(trials, 'A');
-    if(btnB) btnB.onclick = () => showFL001Trial(trials, 'B');
+    
+    if (btnA) btnA.onclick = () => showFL001Trial(trials, 'A');
+    if (btnB) btnB.onclick = () => showFL001Trial(trials, 'B');
 
+    // HUD Initial state
     document.getElementById('trialTag').textContent = "-";
     document.getElementById('trialTime').textContent = "0";
     document.getElementById('trialMsg').innerHTML = "<b>Module Loaded.</b> Select Trial A or B to begin.";
