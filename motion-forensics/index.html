@@ -553,7 +553,7 @@ $start.onclick = () => {
       sim.workTime = 0;
 // Identify trial to set correct starting time
       const currentLetter = document.getElementById('trialTag').textContent.trim();
-      trialTime = (currentLetter === 'B') ? 180 : 300;      // Capture the speed they chose to start with
+      trialTime = (currentLetter === 'B') ? 480 : 300;      // Capture the speed they chose to start with
       initialSpeed = parseFloat(sim.speedMph.toFixed(1));
       speedViolation = false; 
     }
@@ -649,7 +649,7 @@ $reset.addEventListener('click', () => {
     // 4. RESET HUD VALUES
     // 4. RESET HUD VALUES
     const currentLetter = document.getElementById('trialTag').textContent.trim();
-    trialTime = (currentLetter === 'B') ? 180 : 300; // Identifies trial to set correct time
+    trialTime = (currentLetter === 'B') ? 480 : 300; // Identifies trial to set correct time
     document.getElementById('trialTime').textContent = trialTime;
     sim.lactate = 0; // Identifies reset for waste accumulation
     document.getElementById('engVal').textContent = 100;
@@ -1640,8 +1640,8 @@ function showFL001Trial(trials, letter) {
   const t = trials[letter];
   document.getElementById('trialTag').textContent = letter;
 
-  // 1. Set specific forensic timers: A=300s, B=180s
-  let timeLimit = (letter === 'B') ? 180 : 300;
+  // 1. Set specific forensic timers: A=300s, B=480s
+  let timeLimit = (letter === 'B') ? 480 : 300;
   
   // 2. Update global simulation time and HUD display
   window.setTrialTime(timeLimit);
