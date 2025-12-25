@@ -232,11 +232,7 @@ let currentCorrectIndex = -1;
 
 window.renderMCQ = function(letter) {
     const trials = window.currentTrials;
-    
-    if (!trials || !trials[letter] || !trials[letter].mcqs || !trials[letter].mcqs[currentMcqStep]) {
-        console.error("MCQ Data Missing for:", letter, "at step:", currentMcqStep);
-        return;
-    }
+    if (!trials || !trials[letter] || !trials[letter].mcqs || !trials[letter].mcqs[currentMcqStep]) return;
 
     const data = trials[letter].mcqs[currentMcqStep];
     document.getElementById('mcqQ').textContent = `Checkpoint (${currentMcqStep + 1}/${trials[letter].mcqs.length}): ${data.q}`;
@@ -246,32 +242,24 @@ window.renderMCQ = function(letter) {
     
     data.opts.forEach((opt) => {
         const btn = document.createElement('div');
-        btn.className = 'pill'; 
+        btn.className = 'pill';
         btn.style.marginBottom = '5px';
         btn.style.width = '100%';
-        btn.style.cursor = 'pointer';
         btn.style.pointerEvents = 'auto'; // Force interaction
         btn.textContent = opt;
 
-        // Use mousedown AND stopPropagation to kill the event before Three.js sees it
-        const selectHandler = (e) => {
+        btn.onpointerdown = (e) => {
             e.preventDefault();
             e.stopPropagation(); 
             e.stopImmediatePropagation();
 
-            // Handle UI selection
             document.querySelectorAll('#mcqOpts .pill').forEach(p => p.classList.remove('active'));
             btn.classList.add('active');
-            
-            // Map the choice
-            const choiceChar = opt.trim().charAt(0).toUpperCase();
-            btn.dataset.choice = choiceChar;
-            console.log("Forensic Selection:", choiceChar);
-        };
 
-        btn.onmousedown = selectHandler;
-        btn.ontouchstart = selectHandler; // For mobile tablet support
-        
+            const choice = opt.trim().charAt(0).toUpperCase();
+            btn.dataset.choice = choice;
+            console.log("Choice selected:", choice);
+        };
         container.appendChild(btn);
     });
 };
@@ -564,16 +552,23 @@ $spd.addEventListener('input', () => {
 });
 // Start / Pause Button Logic
 $start.onclick = () => {
+  // FORENSIC GATE: Block if no trial is selected
+  const currentLetter = document.getElementById('trialTag').textContent.trim();
+  if (currentLetter === "-" || currentLetter === "") {
+      document.getElementById('trialMsg').innerHTML = `<b style="color:#ff9aa0;">ACTION REQUIRED:</b> Select Trial A or B first.`;
+      return;
+  }
+
   if (!sim.running) {
-   if (sim.speedMph <= 0) return; 
+    if (sim.speedMph <= 0) return; 
     sim.elapsed = 0; 
     
     if (!sim.hasStarted) {
       sim.hasStarted = true;
       sim.workTime = 0;
-// Identify trial to set correct starting time
-      const currentLetter = document.getElementById('trialTag').textContent.trim();
-      trialTime = (currentLetter === 'B') ? 480 : 300;      // Capture the speed they chose to start with
+      // Identify trial to set correct starting time
+      trialTime = (currentLetter === 'B') ? 480 : 300; 
+      // Capture the speed they chose to start with
       initialSpeed = parseFloat(sim.speedMph.toFixed(1));
       speedViolation = false; 
     }
@@ -666,6 +661,8 @@ if (sim.running) {
 }
 
 $reset.addEventListener('click', () => {
+if (window.controls) window.controls.enabled = true;
+  
     // 1. CLEAR MESSAGES & UI
     document.getElementById('trialMsg').innerHTML = 'Read the instructions above. When ready, press Start.';
     document.getElementById('mcqBox').style.display = 'none';
@@ -2308,6 +2305,12 @@ if (sim.energy <= 0 || trialTime <= 0 || sim.lactate >= 100) {
 } // This is the single correct closing brace for animate()
 
 function triggerUnlock(msg) {
+    sim.running = false;
+    if (runAction) runAction.paused = true;
+    
+    // DISABLE 3D controls so the HTML can be clicked
+    if (window.controls) window.controls.enabled = false; 
+
     document.getElementById('mcqBox').style.display = 'block';
     document.getElementById('trialMsg').innerHTML = `<b style="color:#38bdf8;">Goal Reached:</b> ${msg}`;
     currentMcqStep = 0;
