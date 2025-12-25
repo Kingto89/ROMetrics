@@ -245,25 +245,28 @@ window.renderMCQ = function(letter) {
         btn.className = 'pill';
         btn.style.marginBottom = '5px';
         btn.style.width = '100%';
-        btn.style.pointerEvents = 'auto'; // Force interaction
+        btn.style.cursor = 'pointer';
+        btn.style.pointerEvents = 'auto'; // CRITICAL
         btn.textContent = opt;
 
-        btn.onpointerdown = (e) => {
+        // Use onclick: OrbitControls.enabled = false makes this work again
+        btn.onclick = (e) => {
             e.preventDefault();
             e.stopPropagation(); 
-            e.stopImmediatePropagation();
 
+            // Glow logic
             document.querySelectorAll('#mcqOpts .pill').forEach(p => p.classList.remove('active'));
             btn.classList.add('active');
 
-            const choice = opt.trim().charAt(0).toUpperCase();
-            btn.dataset.choice = choice;
-            console.log("Choice selected:", choice);
+            // Data logic
+            const choiceChar = opt.trim().charAt(0).toUpperCase();
+            btn.dataset.choice = choiceChar;
+            console.log("Choice selected:", choiceChar);
         };
+
         container.appendChild(btn);
     });
 };
-
 document.getElementById('mcqSubmit').onclick = () => {
     const selected = document.querySelector('#mcqOpts .pill.active');
     const msg = document.getElementById('mcqMsg');
@@ -282,6 +285,7 @@ document.getElementById('mcqSubmit').onclick = () => {
         currentMcqStep++;
         
         if (currentMcqStep < trials[currentLetter].mcqs.length) {
+            // ADVANCE TO NEXT QUESTION
             msg.style.color = "#38bdf8";
             msg.textContent = "Correct! Advancing...";
             setTimeout(() => { 
@@ -289,39 +293,44 @@ document.getElementById('mcqSubmit').onclick = () => {
                 window.renderMCQ(currentLetter); 
             }, 1000);
         } else {
-// --- TRIAL COMPLETE LOGIC ---
+            // --- TRIAL COMPLETE LOGIC ---
             document.getElementById('flScore').textContent = "100";
             msg.style.color = "#38bdf8";
+            
+            // 1. ALWAYS RE-ENABLE 3D CONTROLS WHEN QUESTIONS ARE FINISHED
+            if (window.controls) window.controls.enabled = true;
 
             if (currentLetter === 'A') {
+                // TRANSITION: A -> B
                 msg.textContent = "Trial A Passed! Opening Trial B...";
                 setTimeout(() => {
-                    // 1. CLEANUP & RESET FOR TRANSITION
+                    // Reset internal forensic flags for next run
                     currentMcqStep = 0;
-                    sim.fuelCount = 0;       // Reset fuel tracker
-                    speedViolation = false;  // Clear integrity flags
-                    sim.hasStarted = false;  // Allow trial switching for setup
+                    sim.fuelCount = 0;
+                    sim.lactate = 0;
+                    speedViolation = false;
+                    sim.hasStarted = false; 
                     
-                    // 2. UI RESET
+                    // UI Cleanup
                     document.getElementById('mcqBox').style.display = 'none'; 
                     document.getElementById('mcqSubmit').disabled = false; 
                     document.getElementById('flScore').textContent = "0"; 
                     msg.textContent = ""; 
                     
-                    // 3. LOAD TRIAL B
-                    // Note: showFL001Trial will handle the 480s timer and fuel button activation
+                    // Load Trial B Parameters (480s, Fuel enabled)
                     showFL001Trial(window.currentTrials, 'B'); 
                 }, 2500);
+
             } else if (currentLetter === 'B') {
-                // TRIAL B SPECIFIC COMPLETION
-                msg.textContent = "Trial B Complete. Forensic Data Saved.";
+                // END OF SIMULATION
+                msg.textContent = "Trial B Complete. Simulation Fully Validated.";
                 document.getElementById('mcqSubmit').disabled = true;
+                document.getElementById('trialMsg').innerHTML = `<b style="color:#38bdf8;">SIMULATION COMPLETE:</b> Forensic data for both trials saved.`;
                 
-                // Optional: Final score display based on performance
-                document.getElementById('flScore').textContent = "100";
-            } else {
-                msg.textContent = `Trial ${currentLetter} Complete.`;
-                document.getElementById('mcqSubmit').disabled = true;
+                // Keep the MCQ box visible but static as a "Finished" state
+                setTimeout(() => {
+                    document.getElementById('mcqOpts').innerHTML = `<div class="v" style="text-align:center; color:#38bdf8; padding:10px;">Metabolic Engine Module Validated</div>`;
+                }, 1000);
             }
         }
     } else {
@@ -755,8 +764,7 @@ scene.fog = new THREE.Fog(0x07101b, 10, 45);
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     document.body.appendChild(renderer.domElement);
 
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.target.set(0, 1.35, 0);
+    window.controls = new OrbitControls(camera, renderer.domElement);    controls.target.set(0, 1.35, 0);
     controls.enableDamping = true;
     controls.dampingFactor = 0.07;
     controls.maxPolarAngle = Math.PI * 0.49;
