@@ -2123,10 +2123,10 @@ if (sim.running && sim.energy > 0) {
     const currentCost = (speed * 26.8 * 0.205) + 3.5;
     const activeModel = document.getElementById('modelSelect').value;
 
-    // Define Model Profiles (Roma vs Roman vs Others)
+    // Define Model Profiles (Roma vs Roman vs Others) Metabolic rates
     const profiles = {
         Roma:  { lowLactateMulti: 1.1, highLactateMulti: 1.27, recoveryRate: 0.05, tankSize: 1200 },
-        Roman: { lowLactateMulti: 1.3, highLactateMulti: 1.37, recoveryRate: 0.04, tankSize: 1200 },
+        Roman: { lowLactateMulti: 1.4, highLactateMulti: 1.49, recoveryRate: 0.04, tankSize: 1200 },
         Default: { lowLactateMulti: 1.1, highLactateMulti: 1.2, recoveryRate: 0.05, tankSize: 1200 }
     };
 
