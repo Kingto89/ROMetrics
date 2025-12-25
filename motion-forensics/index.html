@@ -261,24 +261,23 @@ window.renderMCQ = function(letter) {
     });
 };
 document.getElementById('mcqSubmit').onclick = () => {
-    const selected = document.querySelector('#mcqOpts .pill.active');
     const msg = document.getElementById('mcqMsg');
     const trials = window.currentTrials;
     const currentLetter = document.getElementById('trialTag').textContent.trim();
     
     if (!trials || !trials[currentLetter] || !trials[currentLetter].mcqs[currentMcqStep]) return;
     const data = trials[currentLetter].mcqs[currentMcqStep];
-  if (forensicUserChoice === data.correct) {
-    if (!selected) {
+
+    // Check if a choice was made via the direct variable
+    if (!forensicUserChoice) {
         msg.textContent = "Please select an answer.";
         return;
     }
 
-    if (selected.dataset.choice === data.correct) {
+    if (forensicUserChoice === data.correct) {
         currentMcqStep++;
         
         if (currentMcqStep < trials[currentLetter].mcqs.length) {
-            // ADVANCE TO NEXT QUESTION
             msg.style.color = "#38bdf8";
             msg.textContent = "Correct! Advancing...";
             setTimeout(() => { 
@@ -290,48 +289,27 @@ document.getElementById('mcqSubmit').onclick = () => {
             document.getElementById('flScore').textContent = "100";
             msg.style.color = "#38bdf8";
             
-            // 1. ALWAYS RE-ENABLE 3D CONTROLS WHEN QUESTIONS ARE FINISHED
             if (window.controls) window.controls.enabled = true;
 
             if (currentLetter === 'A') {
-                // TRANSITION: A -> B
                 msg.textContent = "Trial A Passed! Opening Trial B...";
                 setTimeout(() => {
-                    // Reset internal forensic flags for next run
                     currentMcqStep = 0;
                     sim.fuelCount = 0;
-                    sim.lactate = 0;
-                    speedViolation = false;
                     sim.hasStarted = false; 
-                    
-                    // UI Cleanup
                     document.getElementById('mcqBox').style.display = 'none'; 
-                    document.getElementById('mcqSubmit').disabled = false; 
-                    document.getElementById('flScore').textContent = "0"; 
-                    msg.textContent = ""; 
-                    
-                    // Load Trial B Parameters (480s, Fuel enabled)
                     showFL001Trial(window.currentTrials, 'B'); 
                 }, 2500);
-
             } else if (currentLetter === 'B') {
-                // END OF SIMULATION
-                msg.textContent = "Trial B Complete. Simulation Fully Validated.";
+                msg.textContent = "Trial B Complete. Simulation Validated.";
                 document.getElementById('mcqSubmit').disabled = true;
-                document.getElementById('trialMsg').innerHTML = `<b style="color:#38bdf8;">SIMULATION COMPLETE:</b> Forensic data for both trials saved.`;
-                
-                // Keep the MCQ box visible but static as a "Finished" state
-                setTimeout(() => {
-                    document.getElementById('mcqOpts').innerHTML = `<div class="v" style="text-align:center; color:#38bdf8; padding:10px;">Metabolic Engine Module Validated</div>`;
-                }, 1000);
             }
         }
     } else {
-        // WRONG ANSWER FEEDBACK
         msg.style.color = "#ff9aa0";
         msg.textContent = "Incorrect. Reference the Trial Guide.";
     }
-};          
+};         
 // Global Fetch Trigger
 document.getElementById('trialHelp').onclick = async (e) => {
   e.preventDefault();
@@ -1804,7 +1782,14 @@ function updateHUD() {
 
     const clock = new THREE.Clock();
 let lastT = clock.getElapsedTime();
-
+// --- GLOBAL RESTORE FUNCTION ---
+// This resets the avatar bones to their original positions.
+const restore = () => {
+    const R = animate._run;
+    if (R && R.rig) {
+        for (const [b, q] of R.rig.base) b.quaternion.copy(q);
+    }
+};
 function animate() {
     requestAnimationFrame(animate);
 
@@ -2314,10 +2299,6 @@ function triggerUnlock(msg) {
     const currentLetter = document.getElementById('trialTag').textContent.trim();
     window.renderMCQ(currentLetter);
 }
-  const restore = ()=>{
-    if (!R.rig) return;
-    for (const [b,q] of R.rig.base) b.quaternion.copy(q);
-  };
 
 animate();
 
