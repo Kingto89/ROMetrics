@@ -2130,43 +2130,47 @@ if (runAction) runAction.paused = false;
 drawPanel(wallScreen, 'CARDIO BOARD');
 drawTreadmillMph(consoleScreen);
 
-// 2. Realistic Metabolic Engine (Rules Coexistence)
+// --- INSIDE THE ANIMATE LOOP (around Line 790) ---
 if (sim.running && sim.energy > 0) {
-    // Preserved: Drives board timers (ATP-PC / Anaerobic windows)
     sim.elapsed += dt; 
-    
     const speed = parseFloat(sim.speedMph.toFixed(1));
     const currentCost = (speed * 26.8 * 0.205) + 3.5;
+    const activeModel = document.getElementById('modelSelect').value;
 
-    // --- NEW: FATIGUE DRAIN CALCULATION ---
-    let fatigueScalar = 1.0; 
+    // Define Model Profiles (Roma vs Roman vs Others)
+    const profiles = {
+        Roma:  { lowLactateMulti: 1.1, highLactateMulti: 1.27, recoveryRate: 0.05, tankSize: 1200 },
+        Roman: { lowLactateMulti: 1.3, highLactateMulti: 1.37, recoveryRate: 0.04, tankSize: 1200 },
+        Default: { lowLactateMulti: 1.1, highLactateMulti: 1.2, recoveryRate: 0.05, tankSize: 1200 }
+    };
+
+    const p = profiles[activeModel] || profiles.Default;
+
+    // 1. MODEL-SPECIFIC FATIGUE SCALAR
+    let fatigueScalar = 1.0;
     if (sim.lactate > 50) {
-        fatigueScalar = 1.27; // +% extra drain total for 51-100% range
+        fatigueScalar = p.highLactateMulti; // Specific to Roma (1.27) or Roman (1.35)
     } else if (sim.lactate >= 1) {
-        fatigueScalar = 1.1; // +small extra drain total for 1-50% range
+        fatigueScalar = p.lowLactateMulti;
     }
 
-    // Metabolic drain logic
+    // 2. MODEL-SPECIFIC ENERGY DRAIN
     if (currentCost > sim.vo2Max) {
         const deficit = currentCost - sim.vo2Max;
-        const anaerobicTankSize = 1200; 
-        
-        // Preserved: Existing W' drain ratio
-        const percentDropPerSecond = (deficit / 60 / anaerobicTankSize) * 10000;
-        
-        // Coexistence: Apply fatigueScalar to existing drain rule
+        const percentDropPerSecond = (deficit / 60 / p.tankSize) * 10000;
         sim.energy -= (percentDropPerSecond * fatigueScalar) * dt;
     } else {
-        // Preserved: Recovery below threshold
-        sim.energy = Math.min(100, sim.energy + (0.05 * dt));
+        // Model-specific recovery speed
+        sim.energy = Math.min(100, sim.energy + (p.recoveryRate * dt));
     }
     
-    // Updated Trial Timer Logic (Supports 300s Trial A and 480s Trial B)
+    // Updated Trial Timer
     if (currentModule?.id === 'FL-001') {
-      trialTime = Math.max(0, trialTime - dt);
-      document.getElementById('trialTime').textContent = Math.ceil(trialTime);
+        trialTime = Math.max(0, trialTime - dt);
+        document.getElementById('trialTime').textContent = Math.ceil(trialTime);
     }
 }
+    
 
 // --- DYNAMIC TRIAL STOP & UNLOCK LOGIC ---
 if (sim.energy <= 0 || trialTime <= 0 || sim.lactate >= 100) {
