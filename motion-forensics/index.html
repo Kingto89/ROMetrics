@@ -1612,33 +1612,57 @@ function parseFL001(md) {
 }
 
 function showFL001Trial(trials, letter) {
-  // 1. Forensic Lock
-  if (sim.hasStarted) {
-    document.getElementById('trialMsg').innerHTML = `<b style="color:#ff9aa0;">LOCKED:</b> Reset to switch trials.`;
-    return;
-  }
+    // We remove the strict 'sim.hasStarted' block so you can select trials
+    // but we still stop the simulation if it's currently running
+    sim.running = false;
+    if (runAction) runAction.paused = true;
 
-  const t = trials[letter];
-  if (!t) return;
+    const t = trials[letter];
+    // If we are using the flat MCQ structure, we just check if the trials object exists
+    if (!trials) return;
 
-  document.getElementById('trialTag').textContent = letter;
-  
-  // 2. Setup specific forensic parameters
-  trialTime = (letter === 'B') ? 480 : 300;
-  document.getElementById('trialTime').textContent = trialTime;
+    document.getElementById('trialTag').textContent = letter;
+    
+    // Setup specific forensic parameters
+    trialTime = (letter === 'B') ? 480 : 300;
+    document.getElementById('trialTime').textContent = trialTime;
 
-  // 3. Fuel Button Protocol
-  const $fBtn = document.getElementById('fuelBtn');
-  const fuelAllowed = (letter === 'B');
-  $fBtn.disabled = !fuelAllowed;
-  $fBtn.style.opacity = fuelAllowed ? "1" : "0.4";
+    // Fuel Button Protocol
+    const $fBtn = document.getElementById('fuelBtn');
+    const fuelAllowed = (letter === 'B');
+    $fBtn.disabled = !fuelAllowed;
+    $fBtn.style.opacity = fuelAllowed ? "1" : "0.4";
 
-  // 4. Clean State
-  sim.lactate = 0;
-  sim.fuelCount = 0;
-  sim.energy = 100;
-  document.getElementById('engVal').textContent = "100";
-  document.getElementById('trialMsg').innerHTML = `<b>Trial ${letter} Loaded.</b> Press Start.`;
+    // Clean State for the new trial
+    sim.lactate = 0;
+    sim.fuelCount = 0;
+    sim.energy = 100;
+    sim.hasStarted = false; // Reset start flag so the new trial can begin
+    speedViolation = false;
+    
+    document.getElementById('engVal').textContent = "100";
+    document.getElementById('trialMsg').innerHTML = `<b>Trial ${letter} Loaded.</b> Press Start.`;
+}
+
+async function enterFL001() {
+    setZone('cardio');
+    
+    const res = await fetch('https://raw.githubusercontent.com/Kingto89/ROMetrics.com/main/assets/forensics_modules/module_001.md');
+    if (!res.ok) return;
+
+    const md = await res.text();
+    // Use the flat parser we built
+    window.currentTrials = parseFL001(md); 
+    const trials = window.currentTrials; 
+
+    // Re-wire buttons to ensure they point to the global showFL001Trial
+    document.getElementById('trialA').onclick = () => showFL001Trial(trials, 'A');
+    document.getElementById('trialB').onclick = () => showFL001Trial(trials, 'B');
+
+    document.getElementById('trialTag').textContent = "-";
+    document.getElementById('trialTime').textContent = "0";
+    document.getElementById('trialMsg').innerHTML = "<b>Module Loaded.</b> Select Trial A or B to begin.";
+}
 
   // 5. WINDOW EXPOSURE (Restored for Debugging)
   window.sim = sim; 
