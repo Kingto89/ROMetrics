@@ -112,12 +112,12 @@
             Take Final MCQ Assessment
         </button>
 
-      <div class="row" style="justify-content:flex-end; gap:10px; margin-top:10px;">
-    <button id="reviewBtn" class="btn" style="display:none; border-color:#4ade80; color:#4ade80; margin-right:auto;">Review MCQ</button>
-    
+<div class="row" style="display: flex; justify-content: flex-start; gap: 10px; margin-top: 10px;">
     <button id="startBtn" class="btn">Start</button>
     <button id="fuelBtn" class="btn">Fuel +10</button>
     <button id="resetBtn" class="btn">Reset</button>
+
+    <button id="reviewBtn" class="btn" style="display:none; border-color:#4ade80; color:#4ade80; margin-left:auto;">Review MCQ</button>
 </div>
 
         <div class="row" style="justify-content:space-between; margin-top:10px; padding-top:10px; border-top:1px solid rgba(148,163,184,.18);">
@@ -2297,29 +2297,30 @@ $enter.addEventListener('click', async () => {
 
     enterModule(moduleId);
     snapCam();
-// --- PERSISTENCE & REVIEW LOGIC ---
-    // Checks if the module is finished to show the Checkmark and Review Button
+
+ // --- PERSISTENCE & REVIEW LOGIC ---
     const savedStatus = localStorage.getItem(`${moduleId}_Status`);
     const reviewBtn = document.getElementById('reviewBtn');
 
     if (savedStatus === 'completed') {
-        // 1. Add Checkmark to title
+        // 1. Keep the Checkmark in the HUD title
         const titleEl = document.getElementById('moduleTitle');
         if (!titleEl.innerHTML.includes('✓')) {
             titleEl.innerHTML += " <span style='color:#4ade80; margin-left:8px;'>[✓ Completed]</span>";
         }
 
-        // 2. Show Review Button on the far left of the Start row
+        // 2. Show Review Button and Open in New Tab
         if (reviewBtn) {
             reviewBtn.style.display = 'block';
             reviewBtn.onclick = () => {
-                window.location.href = `assessment.html?module=${moduleId}&mode=review`;
+                const targetURL = `https://kingto89.github.io/ROMetrics.com/motion-forensics/MCQ/?module=${moduleId}`;
+                // Opens in a new browser tab/window
+                window.open(targetURL, '_blank');
             };
         }
     } else {
-        // Ensure Review button is hidden if not completed
         if (reviewBtn) reviewBtn.style.display = 'none';
-    }
+    }   
     // -----------------------------------
   } catch (e) {
     console.error("Entry Error:", e);
