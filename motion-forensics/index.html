@@ -1359,85 +1359,101 @@ zoneCardio.add(boardGlow);
     labelGroup.add(lblC);
 
     scene.add(zoneCardio);
-// Forensics zone (realistic)
-    const zoneForensics = new THREE.Group();
-    zoneForensics.name = 'forensics';
-    zoneForensics.position.copy(Z_FORENSIC);
 
-    const platF = zoneBasePlate(4.8, 3.6);
-    platF.position.set(0, 0.03, 0);
-    zoneForensics.add(platF);
 
-    const lineMat = new THREE.LineBasicMaterial({ color:0x38bdf8, transparent:true, opacity:0.55 });
-    const squarePts = [
-      new THREE.Vector3(-1.2, 0.06, -1.0),
-      new THREE.Vector3( 1.2, 0.06, -1.0),
-      new THREE.Vector3( 1.2, 0.06,  1.0),
-      new THREE.Vector3(-1.2, 0.06,  1.0),
-      new THREE.Vector3(-1.2, 0.06, -1.0)
-    ];
-    zoneForensics.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(squarePts), lineMat));
+    // Forensics zone (realistic)
+const zoneForensics = new THREE.Group();
+zoneForensics.name = 'forensics';
+zoneForensics.position.copy(Z_FORENSIC);
 
-    // --- MODULE 2 ADDITIONS START ---
-    // Force Plate (Base of Support Visualization)
-    const forcePlate = new THREE.Mesh(
-        new THREE.PlaneGeometry(0.6, 1.0),
-        new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.25, side: THREE.DoubleSide })
-    );
-    forcePlate.rotation.x = -Math.PI / 2;
-    forcePlate.position.set(0, 0.07, 0); 
-    forcePlate.visible = false;
-    forcePlate.name = "forcePlate";
-    zoneForensics.add(forcePlate);
+const platF = zoneBasePlate(4.8, 3.6);
+platF.position.set(0, 0.03, 0);
+zoneForensics.add(platF);
 
-    // Plumb Line (Line of Gravity laser)
-    const plumbLine = new THREE.Line(
-        new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, -3, 0)]),
-        new THREE.LineBasicMaterial({ color: 0xff4d4d, transparent: true, opacity: 0.8 })
-    );
-    plumbLine.visible = false;
-    plumbLine.name = "plumbLine";
-    scene.add(plumbLine); 
+const lineMat = new THREE.LineBasicMaterial({ color:0x38bdf8, transparent:true, opacity:0.55 });
+const squarePts = [
+  new THREE.Vector3(-1.2, 0.06, -1.0),
+  new THREE.Vector3( 1.2, 0.06, -1.0),
+  new THREE.Vector3( 1.2, 0.06,  1.0),
+  new THREE.Vector3(-1.2, 0.06,  1.0),
+  new THREE.Vector3(-1.2, 0.06, -1.0)
+];
+zoneForensics.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(squarePts), lineMat));
 
-    // Weight Ball (The Load)
-    const weightBall = new THREE.Mesh(
-        new THREE.SphereGeometry(0.15, 32, 32),
-        new THREE.MeshStandardMaterial({ color: 0x7a8aa0, metalness: 0.5, roughness: 0.2 })
-    );
-    weightBall.visible = false;
-    weightBall.name = "weightBall";
-    scene.add(weightBall);
-    // --- MODULE 2 ADDITIONS END ---
+// --- MODULE 2 ADDITIONS START ---
+// Force Plate (Base of Support Visualization)
+const forcePlate = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.6, 1.0),
+    new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.25, side: THREE.DoubleSide })
+);
+forcePlate.rotation.x = -Math.PI / 2;
+forcePlate.position.set(0, 0.07, 0); 
+forcePlate.visible = false;
+forcePlate.name = "forcePlate";
+zoneForensics.add(forcePlate);
 
-    function tripod(x,z){
-      const g = new THREE.Group();
-      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.05,1.05,10), matSteel);
-      pole.position.y = 0.52; pole.castShadow = true; g.add(pole);
-      const head = new THREE.Mesh(new THREE.BoxGeometry(0.20,0.12,0.20), matDark);
-      head.position.y = 1.05; head.castShadow = true; g.add(head);
-      const legGeo = new THREE.CylinderGeometry(0.02,0.02,0.80,8);
-      for (let i=0;i<3;i++){
-        const leg = new THREE.Mesh(legGeo, matSteel);
-        const ang = i * (Math.PI*2/3);
-        leg.position.set(Math.cos(ang)*0.18, 0.30, Math.sin(ang)*0.18);
-        leg.rotation.z = 0.55;
-        leg.rotation.y = ang;
-        g.add(leg);
-      }
-      g.position.set(x, 0, z);
-      return g;
-    }
-    zoneForensics.add(tripod(-1.55,-1.35), tripod(1.55,-1.35), tripod(0,1.55));
+// Plumb Line (Realistic rope plumb line)
+const plumbLine = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.01, 0.01, 3.0, 16),
+    new THREE.MeshStandardMaterial({
+        color: 0xb0b0b0,
+        roughness: 0.85,
+        metalness: 0.1
+    })
+);
 
-    const mon = new THREE.Mesh(new THREE.BoxGeometry(1.55, 0.95, 0.08), new THREE.MeshStandardMaterial({ color:0x111b2e, roughness:0.6, metalness:0.15 }));
-    const mon1 = mon.clone(); mon1.position.set(-1.05, 2.35, -1.70); zoneForensics.add(mon1);
-    const mon2 = mon.clone(); mon2.position.set( 1.05, 2.35, -1.70); zoneForensics.add(mon2);
+// Offset sideways so it does NOT pass through the body
+plumbLine.position.set(0.25, -1.5, 0);
+plumbLine.visible = false;
+plumbLine.name = "plumbLine";
+scene.add(plumbLine);
 
-    const lblF = makeLabel('Movement Analysis Booth');
-    lblF.position.copy(Z_FORENSIC).add(new THREE.Vector3(0, 2.7, -1.6));
-    labelGroup.add(lblF);
+// Weight Ball (Plumb bob)
+const weightBall = new THREE.Mesh(
+    new THREE.SphereGeometry(0.15, 32, 32),
+    new THREE.MeshStandardMaterial({
+        color: 0x7a8aa0,
+        metalness: 0.5,
+        roughness: 0.2
+    })
+);
 
-    scene.add(zoneForensics);
+// Positioned below rope and pushed forward so it is NOT inside the torso
+weightBall.position.set(0.25, -3.1, 0.25);
+weightBall.visible = false;
+weightBall.name = "weightBall";
+scene.add(weightBall);
+// --- MODULE 2 ADDITIONS END ---
+
+function tripod(x,z){
+  const g = new THREE.Group();
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.05,1.05,10), matSteel);
+  pole.position.y = 0.52; pole.castShadow = true; g.add(pole);
+  const head = new THREE.Mesh(new THREE.BoxGeometry(0.20,0.12,0.20), matDark);
+  head.position.y = 1.05; head.castShadow = true; g.add(head);
+  const legGeo = new THREE.CylinderGeometry(0.02,0.02,0.80,8);
+  for (let i=0;i<3;i++){
+    const leg = new THREE.Mesh(legGeo, matSteel);
+    const ang = i * (Math.PI*2/3);
+    leg.position.set(Math.cos(ang)*0.18, 0.30, Math.sin(ang)*0.18);
+    leg.rotation.z = 0.55;
+    leg.rotation.y = ang;
+    g.add(leg);
+  }
+  g.position.set(x, 0, z);
+  return g;
+}
+zoneForensics.add(tripod(-1.55,-1.35), tripod(1.55,-1.35), tripod(0,1.55));
+
+const mon = new THREE.Mesh(new THREE.BoxGeometry(1.55, 0.95, 0.08), new THREE.MeshStandardMaterial({ color:0x111b2e, roughness:0.6, metalness:0.15 }));
+const mon1 = mon.clone(); mon1.position.set(-1.05, 2.35, -1.70); zoneForensics.add(mon1);
+const mon2 = mon.clone(); mon2.position.set( 1.05, 2.35, -1.70); zoneForensics.add(mon2);
+
+const lblF = makeLabel('Movement Analysis Booth');
+lblF.position.copy(Z_FORENSIC).add(new THREE.Vector3(0, 2.7, -1.6));
+labelGroup.add(lblF);
+
+scene.add(zoneForensics);
 
     // ==============================
     // 5) Avatar / model loader
