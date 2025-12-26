@@ -152,12 +152,12 @@
   <script type="module">
 
  // Global reference for the modular loop
+// Global reference for the modular loop
 let activeModuleTick = null;
 
 const MODULE_REGISTRY = {
   'FL-001': {
     onEnter: () => {
-      // Re-link Module 1 specific buttons that are already in your HTML
       const $start = document.getElementById('startBtn');
       const $fuel = document.getElementById('fuelBtn');
       const $reset = document.getElementById('resetBtn');
@@ -174,7 +174,6 @@ const MODULE_REGISTRY = {
       }
     },
     onTick: (dt) => {
-      // Module 1 Live HUD Updates
       const $spdVal = document.getElementById('spdVal');
       const $engVal = document.getElementById('engVal');
       if ($spdVal) $spdVal.textContent = sim.speedMph.toFixed(1);
@@ -183,21 +182,29 @@ const MODULE_REGISTRY = {
   },
   'FL-002': {
     onEnter: () => {
-      // Module 2 logic initialization
       const mount = document.getElementById('dynamicConsoleMount');
+      // Reset logic state
+      sim.lean = 0;
+      sim.ballDist = 0;
+      sim.ballLocked = false;
+
       mount.innerHTML = `
-        <div class="row"><div class="k">Forward Lean</div><div class="v"><span id="leanVal">0</span>%</div></div>
+        <div class="row"><div class="k">Forward Lean Intensity</div><div class="v"><span id="leanVal">0</span>%</div></div>
         <input id="leanSlider" type="range" min="0" max="100" step="1" value="0"/>
-        <div id="loadUI" style="display:none; margin-top:10px; border-top:1px solid #38bdf8; padding-top:10px">
-            <div class="row"><div class="k">Ball Distance</div><div class="v"><span id="ballVal">0</span>%</div></div>
+        
+        <div id="loadUI" style="display:none; margin-top:10px; border-top:1px solid rgba(56,189,248,0.3); padding-top:10px">
+            <div class="row"><div class="k">Load (Ball) Extension</div><div class="v"><span id="ballVal">0</span>%</div></div>
             <input id="ballSlider" type="range" min="0" max="100" step="1" value="0"/>
         </div>
-        <div class="row" style="margin-top:10px; gap:8px;">
+
+        <div class="row" style="margin-top:15px; gap:8px;">
             <button id="btnSide" class="btn">Profile View</button>
             <button id="btnBall" class="btn">Add Load (Ball)</button>
         </div>
-        <div id="stabBox" style="margin-top:15px; padding:10px; border:2px solid #4ade80; background:rgba(74,222,128,0.1); text-align:center; border-radius:12px;">
-            <div id="stabStatus" style="font-weight:900; color:#4ade80;">STABLE</div>
+
+        <div id="stabBox" style="margin-top:15px; padding:12px; border:2px solid #4ade80; background:rgba(74,222,128,0.1); text-align:center; border-radius:12px;">
+            <div style="font-size:10px; color:#cfe3ff; margin-bottom:4px;">STABILITY TRACKER</div>
+            <div id="stabStatus" style="font-weight:900; color:#4ade80; font-size:14px;">STABLE</div>
         </div>
       `;
       
@@ -207,12 +214,14 @@ const MODULE_REGISTRY = {
       mount.querySelector('#btnSide').onclick = () => {
           camera.position.set(Z_FORENSIC.x + 5.5, 1.4, Z_FORENSIC.z);
           controls.target.set(Z_FORENSIC.x, 1.2, Z_FORENSIC.z);
+          controls.update();
       };
 
       mount.querySelector('#btnBall').onclick = (e) => {
           sim.ballLocked = !sim.ballLocked;
           mount.querySelector('#loadUI').style.display = sim.ballLocked ? 'block' : 'none';
           const wBall = scene.getObjectByName("weightBall");
+          // Ball is only visible when Add Load is active
           if(wBall) wBall.visible = sim.ballLocked;
           document.getElementById('trialTag').textContent = sim.ballLocked ? "B" : "A";
       };
@@ -221,23 +230,29 @@ const MODULE_REGISTRY = {
       ballIn.oninput = () => { sim.ballDist = ballIn.value; };
     },
     onTick: (dt) => {
-      // Module 2 Stability Logic
       const lean = parseFloat(sim.lean) || 0;
       const dist = parseFloat(sim.ballDist) || 0;
-      const tippingPoint = sim.ballLocked ? (70 - (dist * 0.4)) : 75;
-      const breached = lean > tippingPoint;
 
-      const status = document.getElementById('stabStatus');
-      if(status) {
-          status.textContent = breached ? "STABILITY BREACH" : "STABLE";
-          status.style.color = breached ? "#ff9aa0" : "#4ade80";
-          document.getElementById('leanVal').textContent = lean;
-      }
+      // Logic: Stability Calculation based on Lever Arms
+      // Plumb line remains at Z=0 as a fixed stationary reference
+      const tippingLimit = sim.ballLocked ? (70 - (dist * 0.45)) : 75;
+      const isBreached = lean > tippingPoint;
 
+      // Update 3D Model: Subject leans forward away from stationary plumb line
       if (avatarRoot) {
           avatarRoot.rotation.x = (lean / 100) * 0.8;
-          const pLine = scene.getObjectByName("plumbLine");
-          if(pLine) pLine.position.z = Z_FORENSIC.z + (lean * 0.015) + (sim.ballLocked ? dist * 0.01 : 0);
+      }
+
+      // Update UI Display
+      const statusText = document.getElementById('stabStatus');
+      const statusBox = document.getElementById('stabBox');
+      if(statusText && statusBox) {
+          statusText.textContent = isBreached ? "STABILITY BREACH" : "STABLE";
+          statusText.style.color = isBreached ? "#ff9aa0" : "#4ade80";
+          statusBox.style.borderColor = isBreached ? "#ff9aa0" : "#4ade80";
+          statusBox.style.background = isBreached ? "rgba(255, 154, 160, 0.1)" : "rgba(74, 222, 128, 0.1)";
+          document.getElementById('leanVal').textContent = lean;
+          if(sim.ballLocked) document.getElementById('ballVal').textContent = dist;
       }
     }
   }
@@ -1501,39 +1516,38 @@ forcePlate.visible = false;
 forcePlate.name = "forcePlate";
 zoneForensics.add(forcePlate);
 
-// Plumb Line (Realistic rope plumb line — NOT intersecting model)
-// Plumb Line (Realistic rope plumb line — visible & zone-relative)
+
+// Plumb Line (Stationary Reference Line — Independent of Model)
 const plumbLine = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.01, 0.01, 3.0, 16),
-    new THREE.MeshStandardMaterial({
-        color: 0xb0b0b0,
-        roughness: 0.85,
-        metalness: 0.1
-    })
+    new THREE.CylinderGeometry(0.005, 0.005, 4.0, 8),
+    new THREE.MeshStandardMaterial({ 
+        color: 0xffff00, 
+        emissive: 0xffff00, 
+        emissiveIntensity: 0.5 
+    }) // Bright Yellow "String" for visual forensics
 );
 
-// Positioned just lateral to avatar, NOT intersecting
-plumbLine.position.set(0.6, 1.5, 0.05);
-plumbLine.visible = true;                
+// Position at local (0, 2, 0) relative to Forensics Zone (The center of the Force Plate)
+plumbLine.position.set(0, 2.0, 0); 
+plumbLine.visible = true;
 plumbLine.name = "plumbLine";
 zoneForensics.add(plumbLine);
 
-// Weight Ball (Plumb bob — reachable floor position)
+// Plumb Bob (Weight attached to bottom of string)
 const weightBall = new THREE.Mesh(
-    new THREE.SphereGeometry(0.15, 32, 32),
+    new THREE.SphereGeometry(0.08, 32, 32),
     new THREE.MeshStandardMaterial({
         color: 0x7a8aa0,
-        metalness: 0.5,
+        metalness: 0.8,
         roughness: 0.2
     })
 );
 
-// Beside right foot area, on ground
-weightBall.position.set(0.6, 0.20, 1.35);
+// Positioned at the bottom of the line, just above the floor
+weightBall.position.set(0, 0.08, 0);
 weightBall.visible = true;
 weightBall.name = "weightBall";
-zoneForensics.add(weightBall);
-
+zoneForensics.add(weightBall);    
 
 function tripod(x,z){
   const g = new THREE.Group();
