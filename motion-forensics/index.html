@@ -2543,6 +2543,27 @@ addEventListener('resize', () => {
   renderer.setSize(innerWidth, innerHeight);
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 });
+
+// --- CAMERA DEBUG TOOL ---
+// Use your mouse to position the camera exactly where you want it.
+// Check the Browser Console (F12) to get the raw numbers.
+window.addEventListener('keydown', (e) => {
+    if (e.key.toLowerCase() === 'c') { // Press 'C' to log current camera
+        const pos = camera.position;
+        const tar = controls.target;
+        
+        console.log("%c--- RAW CAMERA DATA ---", "color: #38bdf8; font-weight: bold;");
+        console.log(`Pos: .set(${pos.x.toFixed(2)}, ${pos.y.toFixed(2)}, ${pos.z.toFixed(2)})`);
+        console.log(`Tar: .set(${tar.x.toFixed(2)}, ${tar.y.toFixed(2)}, ${tar.z.toFixed(2)})`);
+        
+        // Helper calculation for offsets relative to Forensics Zone (0, 0, -3.1)
+        const offX = pos.x - Z_FORENSIC.x;
+        const offZ = pos.z - Z_FORENSIC.z;
+        console.log(`Forensics Offset: Z_FORENSIC.x ${offX >= 0 ? '+' : ''} ${offX.toFixed(2)}, ${pos.y.toFixed(2)}, Z_FORENSIC.z ${offZ >= 0 ? '+' : ''} ${offZ.toFixed(2)}`);
+    }
+});
+
+    
 </script>
 </body>
 </html>
