@@ -2374,7 +2374,6 @@ if (sim.running && sim.energy > 0) {
 if (currentModule?.id === 'FL-002' && avatarRoot) {
     
     // 1. APPLY DUAL-AXIS TIPPING (Degrees to Radians)
-    // Removed sim.running conflict; allows sliders to work immediately
     avatarRoot.rotation.x = (sim.leanZ * Math.PI) / 180;  // Forward/Back
     avatarRoot.rotation.z = -(sim.leanX * Math.PI) / 180; // Left/Right
 
@@ -2384,15 +2383,14 @@ if (currentModule?.id === 'FL-002' && avatarRoot) {
     const wBall = scene.getObjectByName("weightBall");
 
     // 2. FIXED CLINICAL PLUMB LINE
-    // Stationary gravity reference at the forensic zone center
     if (pLine) {
         pLine.position.set(Z_FORENSIC.x, 1.5, Z_FORENSIC.z);
     }
 
     // 3. TRACK ANATOMIC KEYPOINTS
     avatarRoot.traverse(o => { 
-        if(o.name.toLowerCase().includes("spine02")) o.getWorldPosition(chestPos); 
-        if(o.name.toLowerCase().includes("hand_r")) o.getWorldPosition(handPos);
+        if(o.name && o.name.toLowerCase().includes("spine02")) o.getWorldPosition(chestPos); 
+        if(o.name && o.name.toLowerCase().includes("hand_r")) o.getWorldPosition(handPos);
     });
 
     // 4. CALCULATE COMBINED CENTER OF MASS (CoM)
@@ -2400,20 +2398,17 @@ if (currentModule?.id === 'FL-002' && avatarRoot) {
     let comX = chestPos.x;
 
     if (sim.ballLocked && wBall) {
-        // Model "Holds" the ball: Snap ball to hand mesh
         wBall.position.copy(handPos); 
-        // Forensic Shift: Average the torso and hand position to simulate weight
         comZ = (chestPos.z + handPos.z) / 2;
         comX = (chestPos.x + handPos.x) / 2;
     } else {
-        // Ball stays on floor in neutral starting position
         if(wBall) wBall.position.set(Z_FORENSIC.x + 0.6, 0.15, Z_FORENSIC.z + 0.8);
     }
 
     // 5. FORENSIC STABILITY BREACH
     const $statusVal = document.getElementById('statusVal');
-    const limitZ = 0.45; // Clinical limit for anterior/posterior displacement
-    const limitX = 0.25; // Clinical limit for lateral displacement
+    const limitZ = 0.45; 
+    const limitX = 0.25;
 
     const breachedZ = Math.abs(comZ - Z_FORENSIC.z) > limitZ;
     const breachedX = Math.abs(comX - Z_FORENSIC.x) > limitX;
@@ -2421,15 +2416,13 @@ if (currentModule?.id === 'FL-002' && avatarRoot) {
     if (breachedZ || breachedX) {
         $statusVal.textContent = "STABILITY BREACH";
         $statusVal.style.color = "#ff9aa0";
-        // Plumb line turns red to signal the breach
         if(pLine) pLine.material.color.setHex(0xff9aa0);
     } else {
         $statusVal.textContent = "Stable";
         $statusVal.style.color = "#4ade80";
-        // Plumb line is cyan when within the base of support
         if(pLine) pLine.material.color.setHex(0x38bdf8);
     }
-}
+} // <--- This closing brace was missing
 
 // --- Module 1 Metabolic Timer ---
 if (currentModule?.id === 'FL-001' && sim.running) {
@@ -2437,8 +2430,6 @@ if (currentModule?.id === 'FL-001' && sim.running) {
     const timeEl = document.getElementById('trialTime');
     if (timeEl) timeEl.textContent = Math.ceil(trialTime);
 }
-  
-
 // --- DYNAMIC TRIAL STOP & UNLOCK LOGIC ---
 if (sim.energy <= 0 || trialTime <= 0 || sim.lactate >= 100) {
     const activeModel = document.getElementById('modelSelect').value;
