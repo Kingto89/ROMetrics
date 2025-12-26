@@ -2149,7 +2149,7 @@ if (sim.running && sim.energy > 0) {
     if (speed > ceilingSpeed) {
         const deficit = currentCost - sim.vo2Max;
         // Multiplier increased to 0.045 so Lactate moves MUCH faster than Energy drains
-        sim.lactate = Math.min(100, sim.lactate + (deficit * 0.027 * activePenalty * dt));
+        sim.lactate = Math.min(100, sim.lactate + (deficit * 0.012 * activePenalty * dt));
     } else if (speed > 0) {
         // Fast independent clearance (0.8) so Lactate drops while Energy stays depleted
         sim.lactate = Math.max(0, sim.lactate - (0.8 * dt)); 
