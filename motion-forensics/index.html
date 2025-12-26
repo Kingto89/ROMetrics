@@ -1656,15 +1656,16 @@ function setZone(which) {
   zoneForensics.visible = true;
 
   if (which === 'strength') {
+    // Zoomed out slightly to match studio feel
     camGoalTarget.set(Z_STRENGTH.x, 1.25, Z_STRENGTH.z);
-    camGoalPos.set(Z_STRENGTH.x + 3.2, 2.6, Z_STRENGTH.z + 4.8);
+    camGoalPos.set(Z_STRENGTH.x + 3.8, 2.8, Z_STRENGTH.z + 5.5);
   } else if (which === 'cardio') {
-    // Zoomed out slightly as requested
+    // Zoomed out as requested to provide better bay context
     camGoalTarget.set(Z_CARDIO.x, 1.10, Z_CARDIO.z);
     camGoalPos.set(Z_CARDIO.x, 2.4, Z_CARDIO.z + 4.5); 
   } else if (which === 'forensics') {
     camGoalTarget.set(Z_FORENSIC.x, 1.25, Z_FORENSIC.z);
-    camGoalPos.set(Z_FORENSIC.x - 3.5, 3.8, Z_FORENSIC.z + 5.5); 
+    camGoalPos.set(Z_FORENSIC.x - 4.2, 2.8, Z_FORENSIC.z + 5.5); 
   }
 
   placeAvatarForZone(which);
