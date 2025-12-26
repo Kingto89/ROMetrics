@@ -2124,11 +2124,11 @@ if (sim.running && sim.energy > 0) {
     const activeModel = document.getElementById('modelSelect').value;
 
     // Define Model Profiles (Roma vs Roman vs Others) Metabolic rates
-    const profiles = {
-        Roma:  { lowLactateMulti: 1.1, highLactateMulti: 1.27, recoveryRate: 0.05, tankSize: 1200 },
-        Roman: { lowLactateMulti: 1.42, highLactateMulti: 1.7, recoveryRate: 0.04, tankSize: 1200 },
-        Default: { lowLactateMulti: 1.1, highLactateMulti: 1.2, recoveryRate: 0.05, tankSize: 1200 }
-    };
+const profiles = {
+    Roma:  { lowLactateMulti: 1.1,  highLactateMulti: 1.27, recoveryRate: 0.05, tankSize: 1200, penaltySeverity: 1.5 },
+    Roman: { lowLactateMulti: 1.42, highLactateMulti: 1.7,  recoveryRate: 0.04, tankSize: 1200, penaltySeverity: 2.0 },
+    Default: { lowLactateMulti: 1.1, highLactateMulti: 1.2, recoveryRate: 0.05, tankSize: 1200, penaltySeverity: 1.5 }
+};
 
     const p = profiles[activeModel] || profiles.Default;
 
@@ -2149,7 +2149,24 @@ if (sim.running && sim.energy > 0) {
         // Model-specific recovery speed
         sim.energy = Math.min(100, sim.energy + (p.recoveryRate * dt));
     }
-    
+// 1. Calculate the active penalty multiplier
+    let activePenalty = (sim.fuelPenaltyTimer > 0) ? p.penaltySeverity : 1.0;
+
+    // 2. Define ceilingSpeed for this scope
+    const ceilingSpeed = (activeModel === "Roman") ? 6.3 : 6.7;
+
+    // 3. Apply it to Lactate (Increased multiplier to 0.7 for realistic speed)
+    if (speed > ceilingSpeed) {
+        const deficit = currentCost - sim.vo2Max;
+        sim.lactate = Math.min(100, sim.lactate + (deficit * 0.7 * fatigueScalar * activePenalty * dt));
+    }
+
+    // 4. Keep timers running
+    if (sim.fuelPenaltyTimer > 0) sim.fuelPenaltyTimer -= dt;
+    if (sim.fuelAlertTimer > 0) sim.fuelAlertTimer -= dt;
+    if (sim.throughputAlert > 0) sim.throughputAlert -= dt;
+
+  
     // Updated Trial Timer
     if (currentModule?.id === 'FL-001') {
         trialTime = Math.max(0, trialTime - dt);
