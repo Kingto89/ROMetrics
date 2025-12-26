@@ -13,8 +13,8 @@
 
 In this lab, **stability** is determined by the position of the subject’s **Center of Mass (COM)** relative to the **Base of Support (BOS)**, represented by the blue **Force Plate**.
 
-* The **Plumb Line (rope)** shows the vertical projection of the COM.
-* **Torque** is generated when the weighted ball is extended forward or when the body leans forward.
+* Center of Mass (COM): The point in the body where all weight is evenly **balanced.** Imagine placing the body on a seesaw — the COM is the exact spot where the seesaw would stay perfectly level. For a typical standing person, this point is usually around the lower belly or hips, near the **body’s midpoint** between feet and shoulders. The Plumb Line drops straight down from the COM, showing where the body’s weight presses **toward the ground.**
+* Base of Support (BOS): The area under the feet — like the platform the seesaw rests on. The body remains stable as long as the COM projection (Plumb Line) stays within this area. **If the COM moves outside, the body tips and balance is lost.**
 * Stability is maintained **only while the Plumb Line remains within the BOS**. Once it crosses the toes, the subject experiences a **Stability Breach**.
 * The lab separates **body-only balance** (Trial A) from **load-influenced balance** (Trial B) for clarity.
 
@@ -34,7 +34,6 @@ In this lab, **stability** is determined by the position of the subject’s **Ce
 2. **Interact:** Slowly increase the **Forward Reach / Lean** slider.
 3. **Camera Strategy:** Rotate to a **Profile (Side) View** to clearly see the relationship between the Plumb Line and the toes.
 4. **Forensic Goal:** Identify the **exact slider value** where the Status changes from **“Stable”** to **“Stability Breach”**.
-5. **Record:** Note the value for your final assessment.
 
 **Trial B — Load Placement and Stability (Ball Added)**
 
@@ -42,25 +41,16 @@ In this lab, **stability** is determined by the position of the subject’s **Ce
 2. **Interact:** Move the ball closer or farther from the body while adjusting the **Forward Reach / Lean** slider.
 3. **Camera Strategy:** Rotate to a **Profile (Side) View** to track the Plumb Line relative to the BOS.
 4. **Forensic Goal:** Determine the **load position** that maximizes stability without exceeding the tipping point.
-5. **Record:** Note the slider and ball positions at the moment of **Stability Breach**.
 
 ---
 
 ### Module Instructions:
 
-1. Select your model (Roma or Roman) at the gate.
-2. Enter the Movement Analysis Booth and orient the camera to a side view.
-3. **Trial A:** Slowly adjust the **Forward Reach / Lean** slider without the ball to find the body-only tipping point.
-4. **Trial B:** Add the weighted ball and experiment with different hand positions while leaning forward.
-5. Observe the **Plumb Line rope** in relation to the **blue Force Plate**.
-6. Note all critical slider and ball positions for your assessment.
-
-**Tips for Accuracy:**
-
+* Enter the Movement Analysis Booth and orient the camera to a side view.
 * Keep the feet fully on the Force Plate.
 * Use slow, incremental movements with the slider.
 * Always check the Plumb Line’s position relative to the toes.
-* The Plumb Line is rope-like and tangible; use it to judge COM visually.
+* The Plumb Line is the rope-like/long pole; use it to judge COM visually.
 
 ---
 
@@ -106,10 +96,10 @@ D) Shift weight onto one foot
 What happens to the Plumb Line when the weighted ball is moved forward?
 
 A) It moves backward toward the heels
-B) It moves forward toward the toes
-C) It remains unchanged
+B) It remains unchanged
+C) It moves forward toward the toes
 D) It disappears
 
-**Answer:** B
+**Answer:** C
 
 ---
