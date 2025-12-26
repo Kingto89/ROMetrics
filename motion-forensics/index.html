@@ -1766,36 +1766,55 @@ async function enterFL001() {
     document.getElementById('trialMsg').innerHTML = "<b>Module Loaded.</b> Select Trial A or B to begin.";
 }
 
-
 async function enterFL002() {
-    // 1. ANATOMIC RESET: Stop any leftover Module 1 motion
+    // 1. ANATOMIC & SIM RESET
     sim.running = false; 
-    sim.speedMph = 0; 
-    document.getElementById('spd').value = 0;
+    sim.speedMph = 0; // In Module 2, we reuse this for the Lean Angle
+    sim.ballLocked = false;
     if (runAction) runAction.paused = true;
     restore(); // Resets bones to neutral anatomic position
 
-    setZone('forensics'); // Move to Analysis Bay
-    
-    // 2. UI & Console Setup
-    document.querySelector('.k').textContent = "Forward Lean Intensity"; 
-    document.getElementById('analysisConsole').style.display = 'flex';
-    document.getElementById('badge').style.display = 'block';
-    document.getElementById('trialTag').textContent = "A";
-    
-    const $trialMsg = document.getElementById('trialMsg');
-    $trialMsg.innerHTML = "<b>Lab Objective:</b> Locate the Tipping Point. Snap to Side View and Lock Ball to begin.";
+    setZone('forensics'); // Move camera to Analysis Bay
 
-    // Tool 1: Side View Snap
+    // 2. UI REFERENCES
+    const leanSlider = document.getElementById('leanSlider');
+    const leanVal = document.getElementById('leanVal');
+    const lockBtn = document.getElementById('lockBallBtn');
+    const baseBtn = document.getElementById('toggleBaseBtn');
+    const forcePlate = scene.getObjectByName("forcePlate");
+    const $trialMsg = document.getElementById('trialMsg');
+
+    $trialMsg.innerHTML = "<b>Lab Objective:</b> Use the Lean Intensity slider to identify the Tipping Point.";
+
+    // 3. SLIDER LOGIC: Drives Avatar Rotation
+    leanSlider.oninput = (e) => {
+        const degrees = parseFloat(e.target.value);
+        leanVal.textContent = degrees.toFixed(1);
+        sim.speedMph = degrees; 
+        sim.running = true; // Signals the animate() loop to apply rotation
+    };
+
+    // 4. VIEW SNAPPING: Lateral view for stability check
     document.getElementById('btnSideView').onclick = () => {
-        camera.position.set(Z_FORENSIC.x + 5.5, 1.4, Z_FORENSIC.z);
+        // Lateral side view snap
+        camera.position.set(Z_FORENSIC.x - 3.5, 1.4, Z_FORENSIC.z);
         controls.target.set(Z_FORENSIC.x, 1.2, Z_FORENSIC.z);
         controls.update();
     };
 
-    // Tool 2 & 3 Logic...
-    sim.ballLocked = false;
-    sim.running = true; 
+    // 5. TOOL TOGGLES
+    lockBtn.onclick = () => {
+        sim.ballLocked = !sim.ballLocked;
+        lockBtn.classList.toggle('active', sim.ballLocked);
+        lockBtn.textContent = sim.ballLocked ? "Unlock CoM" : "Lock CoM (Weight Ball)";
+    };
+
+    baseBtn.onclick = () => {
+        if (forcePlate) {
+            forcePlate.visible = !forcePlate.visible;
+            baseBtn.classList.toggle('active', forcePlate.visible);
+        }
+    };
 }
     
 function enterModule(moduleId) {
