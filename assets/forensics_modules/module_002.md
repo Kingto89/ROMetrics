@@ -93,13 +93,13 @@ D) Shift weight onto one foot
 ---
 
 **Checkpoint — Trial B (Q4)**
-What happens to the Plumb Line when the weighted ball is moved forward?
+When a subject holds a weighted ball away from their body, what happens?
 
-A) It moves backward toward the heels
-B) It remains unchanged
-C) It moves forward toward the toes
-D) It disappears
+A) Stability increases
+B) Nothing changes
+C) COM shifts forward, tipping risk rises
+D) Plumb Line moves independently
 
-**Answer:** C
+Answer: C
 
 ---
