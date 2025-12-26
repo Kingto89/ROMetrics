@@ -1773,50 +1773,47 @@ async function enterFL001() {
 }
 
 async function enterFL002() {
-    // --- EXISTING DEFAULTS ---
-    sim.running = false; 
-    sim.speedMph = 0; // Forward/Back Lean
-    sim.leanX = 0;    // Lateral Left/Right Lean
+    // --- RESET DEFAULTS & CLEAN VARIABLES ---
+    sim.running = false;          // Stops cardio logic
+    sim.isStabilityMode = true;   // Enables tipping physics in animate loop
+    sim.leanZ = 0;                // Forward/Back Lean (degrees)
+    sim.leanX = 0;                // Lateral Left/Right Lean (degrees)
     sim.ballLocked = false;
-    sim.isTesting = false; // New: To track "Start Test" state
 
     if (runAction) {
-        runAction.stop(); // Use stop instead of pause to kill the running cycle
+        runAction.stop(); // Kills the running animation cycle
     }
     restore(); 
     setZone('forensics'); 
 
     // --- UI REFERENCES ---
-    const leanSlider = document.getElementById('leanSlider');     // Z-Axis
+    const leanZSlider = document.getElementById('leanSlider');    // Z-Axis
     const leanXSlider = document.getElementById('leanXSlider');   // X-Axis
-    const leanVal = document.getElementById('leanVal');
+    const leanZVal = document.getElementById('leanVal');
     const leanXVal = document.getElementById('leanXVal');
-    const lockBtn = document.getElementById('lockBallBtn');       // "Start Test" Button
+    const ballBtn = document.getElementById('lockBallBtn');       // The "Pick Up Ball" Toggle
     const baseBtn = document.getElementById('toggleBaseBtn');
     const forcePlate = scene.getObjectByName("forcePlate");
 
     // --- 1. VIEW SNAPPING ---
-    // Corrected Side View
     document.getElementById('btnSideView').onclick = () => {
         camera.position.set(Z_FORENSIC.x + 3.5, 1.4, Z_FORENSIC.z);
         controls.target.set(Z_FORENSIC.x, 1.2, Z_FORENSIC.z);
         controls.update();
     };
 
-    // New Front View (To see Left/Right tipping)
     document.getElementById('btnFrontView').onclick = () => {
         camera.position.set(Z_FORENSIC.x, 1.4, Z_FORENSIC.z + 4.5);
         controls.target.set(Z_FORENSIC.x, 1.2, Z_FORENSIC.z);
         controls.update();
     };
 
-    // --- 2. MULTI-AXIS SLIDER LOGIC ---
+    // --- 2. MULTI-AXIS TIPPING LOGIC ---
     // Forward / Back (Z)
-    leanSlider.oninput = (e) => {
+    leanZSlider.oninput = (e) => {
         const degrees = parseFloat(e.target.value);
-        if (leanVal) leanVal.textContent = degrees.toFixed(1);
-        sim.speedMph = degrees; 
-        sim.running = true; // Signals animate loop
+        if (leanZVal) leanZVal.textContent = degrees.toFixed(1);
+        sim.leanZ = degrees; 
     };
 
     // Left / Right (X)
@@ -1825,26 +1822,22 @@ async function enterFL002() {
             const degrees = parseFloat(e.target.value);
             if (leanXVal) leanXVal.textContent = degrees.toFixed(1);
             sim.leanX = degrees; 
-            sim.running = true; 
         };
     }
 
-    // --- 3. START TEST / BALL ATTACHMENT ---
-    lockBtn.onclick = () => {
-        // Toggle the test/ball state
+    // --- 3. PICK UP WEIGHT BALL ---
+    ballBtn.onclick = () => {
         sim.ballLocked = !sim.ballLocked;
-        sim.isTesting = sim.ballLocked; 
+        ballBtn.classList.toggle('active', sim.ballLocked);
         
-        lockBtn.classList.toggle('active', sim.ballLocked);
-        
-        // Contextual Labeling for Clinical Test
-        lockBtn.textContent = sim.ballLocked ? "Stop Test / Drop Ball" : "Start Forensic Test";
+        // Update label to reflect picking up/dropping the ball
+        ballBtn.textContent = sim.ballLocked ? "Drop Weight Ball" : "Pick Up Weight Ball";
         
         const $msg = document.getElementById('trialMsg');
         if (sim.ballLocked) {
-            $msg.innerHTML = "<b>TEST ACTIVE:</b> Subject is holding the load. Combined CoM is now active.";
+            $msg.innerHTML = "<b>TEST ACTIVE:</b> Weight ball picked up. Combined Center of Mass (CoM) shifted.";
         } else {
-            $msg.innerHTML = "<b>TEST ENDED:</b> Weight dropped. Anatomic CoM restored.";
+            $msg.innerHTML = "<b>TEST ENDED:</b> Ball dropped. Anatomic CoM restored.";
         }
     };
 
@@ -2369,49 +2362,63 @@ if (sim.running && sim.energy > 0) {
     if (sim.throughputAlert > 0) sim.throughputAlert -= dt;
   
 
-  // added for module two stability (CORRECTED — no forced attachment)
-if (sim.running && currentModule?.id === 'FL-002') {
-    const leanRads = (sim.speedMph * Math.PI) / 180; 
-    avatarRoot.rotation.x = leanRads; 
+// --- Inside animate() loop: Module 2 Stability Physics ---
+if (currentModule?.id === 'FL-002' && avatarRoot) {
+    
+    // 1. APPLY DUAL-AXIS TIPPING (Degrees to Radians)
+    // No more "speedMph" — purely degree-based clinical displacement
+    avatarRoot.rotation.x = (sim.leanZ * Math.PI) / 180;  // Forward/Back
+    avatarRoot.rotation.z = -(sim.leanX * Math.PI) / 180; // Left/Right
 
     const chestPos = new THREE.Vector3();
     const handPos = new THREE.Vector3();
     const pLine = scene.getObjectByName("plumbLine");
     const wBall = scene.getObjectByName("weightBall");
 
-    // 1. SET FIXED PLUMB LINE (Example: 0.4m in front of center)
-    const fixedLineZ = Z_FORENSIC.z + 0.4; 
+    // 2. SET FIXED CLINICAL PLUMB LINE
+    // Positioned at neutral center; stays perfectly vertical and stationary
     if (pLine) {
-        pLine.position.set(Z_FORENSIC.x + 0.6, 1.5, fixedLineZ);
+        pLine.position.set(Z_FORENSIC.x, 1.5, Z_FORENSIC.z);
     }
 
-    // 2. GET CURRENT ANATOMIC POSITIONS
+    // 3. TRACK ANATOMIC KEYPOINTS
     avatarRoot.traverse(o => { 
         if(o.name.toLowerCase().includes("spine02")) o.getWorldPosition(chestPos); 
         if(o.name.toLowerCase().includes("hand_r")) o.getWorldPosition(handPos);
     });
 
-    // 3. CALCULATE COMBINED CENTER OF MASS (CoM)
-    let currentCoM_Z = chestPos.z;
+    // 4. CALCULATE COMBINED CENTER OF MASS (CoM)
+    // If holding ball, CoM is the average of torso and hand
+    let comZ = chestPos.z;
+    let comX = chestPos.x;
+
     if (sim.ballLocked && wBall) {
-        wBall.position.copy(handPos); // Ball is in hand
-        currentCoM_Z = (chestPos.z + handPos.z) / 2; // CoM shifts forward
+        wBall.position.copy(handPos); // Snap ball to hand
+        comZ = (chestPos.z + handPos.z) / 2;
+        comX = (chestPos.x + handPos.x) / 2;
     } else {
-        if(wBall) wBall.position.set(Z_FORENSIC.x + 0.6, 0.15, Z_FORENSIC.z + 1.2); // Ball on floor
+        // Ball stays on floor in front of subject
+        if(wBall) wBall.position.set(Z_FORENSIC.x + 0.6, 0.15, Z_FORENSIC.z + 0.8);
     }
 
-    // 4. FORENSIC BREACH: Does the CoM cross the fixed Plumb Line?
+    // 5. FORENSIC STABILITY BREACH
+    // Clinical thresholds: ~45cm forward/back, ~25cm lateral from center
     const $statusVal = document.getElementById('statusVal');
-    
-    if (currentCoM_Z > fixedLineZ) {
+    const limitZ = 0.45; 
+    const limitX = 0.25;
+
+    const breachedZ = Math.abs(comZ - Z_FORENSIC.z) > limitZ;
+    const breachedX = Math.abs(comX - Z_FORENSIC.x) > limitX;
+
+    if (breachedZ || breachedX) {
         $statusVal.textContent = "STABILITY BREACH";
         $statusVal.style.color = "#ff9aa0";
-        // Visual cue: Turn the plumb line red when breached
+        // Visual indicator: Plumb line glows red on failure
         if(pLine) pLine.material.color.setHex(0xff9aa0);
     } else {
         $statusVal.textContent = "Stable";
         $statusVal.style.color = "#4ade80";
-        if(pLine) pLine.material.color.setHex(0xb0b0b0);
+        if(pLine) pLine.material.color.setHex(0x38bdf8); // Cyan for stable
     }
 }
   
