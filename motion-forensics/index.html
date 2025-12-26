@@ -2132,7 +2132,7 @@ if (sim.running && sim.energy > 0) {
 
     // 1. ENERGY DRAIN (Linear / Fatigue-Driven)
     // Energy only links to Lactate here: if Lactate > 50, drain is harder.
-    let fatigueScalar = (sim.lactate > 50) ? p.highLactateMulti : 1.0;
+    let fatigueScalar = (sim.lactate > 50) ? p.highLactateMulti : 0.7;
     
     if (currentCost > sim.vo2Max) {
         const deficit = currentCost - sim.vo2Max;
