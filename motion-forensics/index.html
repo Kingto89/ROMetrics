@@ -127,19 +127,25 @@
         </div>
     </div>
 
-    <div id="console-FL-002" class="module-ui-box" style="display:none;">
-        <div class="row">
-            <div class="k">Forward Lean Intensity</div>
-            <div class="v"><span id="leanVal">0.0</span>°</div>
-        </div>
-        <input id="leanSlider" type="range" min="0" max="45" step="0.5" value="0"/>
-        
-        <div class="row" style="margin-top: 10px; gap: 8px; flex-wrap: wrap;">
-            <button id="btnSideView" class="btn">Snap Side View</button>
-            <button id="lockBallBtn" class="btn">Lock CoM</button>
-            <button id="toggleBaseBtn" class="btn">Show Base of Support</button>
-        </div>
+  <div id="console-FL-002" class="module-ui-box" style="display:none;">
+    <div class="row">
+        <div class="k">Forward/Back Lean</div>
+        <div class="v"><span id="leanZVal">0.0</span>°</div>
     </div>
+    <input id="leanZSlider" type="range" min="-30" max="45" step="0.5" value="0"/>
+
+    <div class="row" style="margin-top:10px;">
+        <div class="k">Left/Right Lean</div>
+        <div class="v"><span id="leanXVal">0.0</span>°</div>
+    </div>
+    <input id="leanXSlider" type="range" min="-30" max="30" step="0.5" value="0"/>
+
+    <div class="row" style="margin-top: 15px; gap: 8px; flex-wrap: wrap;">
+        <button id="btnSideView" class="btn">Snap Side View</button>
+        <button id="btnFrontView" class="btn">Snap Front View</button>
+        <button id="startTestBtn" class="primary" style="width:100%;">Start Forensic Test</button>
+    </div>
+</div>>
 
     <div id="console-FL-003" class="module-ui-box" style="display:none;"></div>
     <div id="console-FL-004" class="module-ui-box" style="display:none;"></div>
@@ -1767,49 +1773,82 @@ async function enterFL001() {
 }
 
 async function enterFL002() {
+    // --- EXISTING DEFAULTS ---
     sim.running = false; 
-    sim.speedMph = 0; 
+    sim.speedMph = 0; // Forward/Back Lean
+    sim.leanX = 0;    // Lateral Left/Right Lean
     sim.ballLocked = false;
-    if (runAction) runAction.paused = true;
-    restore(); 
+    sim.isTesting = false; // New: To track "Start Test" state
 
+    if (runAction) {
+        runAction.stop(); // Use stop instead of pause to kill the running cycle
+    }
+    restore(); 
     setZone('forensics'); 
 
-    const leanSlider = document.getElementById('leanSlider');
+    // --- UI REFERENCES ---
+    const leanSlider = document.getElementById('leanSlider');     // Z-Axis
+    const leanXSlider = document.getElementById('leanXSlider');   // X-Axis
     const leanVal = document.getElementById('leanVal');
-    const lockBtn = document.getElementById('lockBallBtn');
+    const leanXVal = document.getElementById('leanXVal');
+    const lockBtn = document.getElementById('lockBallBtn');       // "Start Test" Button
     const baseBtn = document.getElementById('toggleBaseBtn');
     const forcePlate = scene.getObjectByName("forcePlate");
 
-    // 1. Corrected Snap Side View (Moved to opposite side)
+    // --- 1. VIEW SNAPPING ---
+    // Corrected Side View
     document.getElementById('btnSideView').onclick = () => {
-        // Shifted from -3.5 to +3.5 on X to look from the other side
         camera.position.set(Z_FORENSIC.x + 3.5, 1.4, Z_FORENSIC.z);
         controls.target.set(Z_FORENSIC.x, 1.2, Z_FORENSIC.z);
         controls.update();
     };
 
-    // 2. Slider Logic (Moving the Model)
+    // New Front View (To see Left/Right tipping)
+    document.getElementById('btnFrontView').onclick = () => {
+        camera.position.set(Z_FORENSIC.x, 1.4, Z_FORENSIC.z + 4.5);
+        controls.target.set(Z_FORENSIC.x, 1.2, Z_FORENSIC.z);
+        controls.update();
+    };
+
+    // --- 2. MULTI-AXIS SLIDER LOGIC ---
+    // Forward / Back (Z)
     leanSlider.oninput = (e) => {
         const degrees = parseFloat(e.target.value);
-        leanVal.textContent = degrees.toFixed(1);
+        if (leanVal) leanVal.textContent = degrees.toFixed(1);
         sim.speedMph = degrees; 
-        sim.running = true; // Signals animate() loop to apply tilt
+        sim.running = true; // Signals animate loop
     };
 
-    // 3. The CoM Lock Purpose
+    // Left / Right (X)
+    if (leanXSlider) {
+        leanXSlider.oninput = (e) => {
+            const degrees = parseFloat(e.target.value);
+            if (leanXVal) leanXVal.textContent = degrees.toFixed(1);
+            sim.leanX = degrees; 
+            sim.running = true; 
+        };
+    }
+
+    // --- 3. START TEST / BALL ATTACHMENT ---
     lockBtn.onclick = () => {
+        // Toggle the test/ball state
         sim.ballLocked = !sim.ballLocked;
+        sim.isTesting = sim.ballLocked; 
+        
         lockBtn.classList.toggle('active', sim.ballLocked);
-        // This button represents "Carrying a Load" vs "No Load"
-        lockBtn.textContent = sim.ballLocked ? "Drop Weight (Reset CoM)" : "Carry Weight (Shift CoM)";
+        
+        // Contextual Labeling for Clinical Test
+        lockBtn.textContent = sim.ballLocked ? "Stop Test / Drop Ball" : "Start Forensic Test";
         
         const $msg = document.getElementById('trialMsg');
-        $msg.innerHTML = sim.ballLocked ? 
-            "<b>Forensic Note:</b> CoM has shifted forward due to the load. Stability will breach earlier." :
-            "<b>Forensic Note:</b> Weight dropped. CoM returned to anatomic center.";
+        if (sim.ballLocked) {
+            $msg.innerHTML = "<b>TEST ACTIVE:</b> Subject is holding the load. Combined CoM is now active.";
+        } else {
+            $msg.innerHTML = "<b>TEST ENDED:</b> Weight dropped. Anatomic CoM restored.";
+        }
     };
 
+    // --- 4. BASE OF SUPPORT VISUALS ---
     baseBtn.onclick = () => {
         if (forcePlate) {
             forcePlate.visible = !forcePlate.visible;
