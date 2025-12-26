@@ -2124,8 +2124,8 @@ if (sim.running && sim.energy > 0) {
     const ceilingSpeed = (activeModel === "Roman") ? 6.3 : 6.7;
 
     const profiles = {
-        Roma:    { lowLactateMulti: 1.17, highLactateMulti: 1.41, recoveryRate: 0.07, tankSize: 1200, penaltySeverity: 1.9 },
-        Roman:   { lowLactateMulti: 1.27, highLactateMulti: 1.52, recoveryRate: 0.05, tankSize: 1200, penaltySeverity: 2.3 },
+        Roma:    { lowLactateMulti: 1.01, highLactateMulti: 1.41, recoveryRate: 0.07, tankSize: 1200, penaltySeverity: 1.9 },
+        Roman:   { lowLactateMulti: 1.07, highLactateMulti: 1.52, recoveryRate: 0.05, tankSize: 1200, penaltySeverity: 2.3 },
         Default: { lowLactateMulti: 1.2,  highLactateMulti: 1.2,  recoveryRate: 0.05, tankSize: 1200, penaltySeverity: 1.5 }
     };
     const p = profiles[activeModel] || profiles.Default;
@@ -2136,7 +2136,7 @@ if (sim.running && sim.energy > 0) {
     
     if (currentCost > sim.vo2Max) {
         const deficit = currentCost - sim.vo2Max;
-        const percentDrop = (deficit / 60 / p.tankSize) * 10000;
+        const percentDrop = (deficit / 60 / p.tankSize) * 12000;
         sim.energy -= (percentDrop * fatigueScalar) * dt;
     } else {
         sim.energy = Math.min(100, sim.energy + (p.recoveryRate * dt));
