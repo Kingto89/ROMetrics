@@ -1462,39 +1462,6 @@ labelGroup.add(lblF);
 
 scene.add(zoneForensics);
 
-
-    
-
-function tripod(x,z){
-  const g = new THREE.Group();
-  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.05,1.05,10), matSteel);
-  pole.position.y = 0.52; pole.castShadow = true; g.add(pole);
-  const head = new THREE.Mesh(new THREE.BoxGeometry(0.20,0.12,0.20), matDark);
-  head.position.y = 1.05; head.castShadow = true; g.add(head);
-  const legGeo = new THREE.CylinderGeometry(0.02,0.02,0.80,8);
-  for (let i=0;i<3;i++){
-    const leg = new THREE.Mesh(legGeo, matSteel);
-    const ang = i * (Math.PI*2/3);
-    leg.position.set(Math.cos(ang)*0.18, 0.30, Math.sin(ang)*0.18);
-    leg.rotation.z = 0.55;
-    leg.rotation.y = ang;
-    g.add(leg);
-  }
-  g.position.set(x, 0, z);
-  return g;
-}
-zoneForensics.add(tripod(-1.55,-1.35), tripod(1.55,-1.35), tripod(0,1.55));
-
-const mon = new THREE.Mesh(new THREE.BoxGeometry(1.55, 0.95, 0.08), new THREE.MeshStandardMaterial({ color:0x111b2e, roughness:0.6, metalness:0.15 }));
-const mon1 = mon.clone(); mon1.position.set(-1.05, 2.35, -1.70); zoneForensics.add(mon1);
-const mon2 = mon.clone(); mon2.position.set( 1.05, 2.35, -1.70); zoneForensics.add(mon2);
-
-const lblF = makeLabel('Movement Analysis Booth');
-lblF.position.copy(Z_FORENSIC).add(new THREE.Vector3(0, 2.7, -1.6));
-labelGroup.add(lblF);
-
-scene.add(zoneForensics);
-
     // ==============================
     // 5) Avatar / model loader
     // ==============================
