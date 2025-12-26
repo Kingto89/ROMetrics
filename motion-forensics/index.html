@@ -392,18 +392,18 @@ const FORENSICS_MODULES = [
     onEnter: enterFL001 
   },
   { 
-    id:'FL-002', 
-    label:'Module 2 — Joint Load Lever', 
-    desc:'Strength Station: effort vs lever distance.', 
-    zone:'strength', 
-    onEnter: null 
+  id:'FL-002', 
+    label:'Module 2 — Stability & Center of Mass', 
+    desc:'Analysis Booth: identify the tipping point.', 
+    zone:'forensics', // Moved to Analysis Area
+    onEnter: enterFL002  // New function defined below
   },
   { 
     id:'FL-003', 
     label:'Module 3 — Motion Analysis Lite', 
     desc:'Reactive Balance: Best Stability %', 
     zone:'forensics', 
-    onEnter: null 
+    onEnter: null
   }
 ];
     
@@ -1687,7 +1687,34 @@ async function enterFL001() {
     document.getElementById('trialTime').textContent = "0";
     document.getElementById('trialMsg').innerHTML = "<b>Module Loaded.</b> Select Trial A or B to begin.";
 }
+async function enterFL002() {
+    // 1. Position camera and avatar in the Analysis Booth
+    setZone('forensics');
+    
+    const $trialMsg = document.getElementById('trialMsg');
+    const $spdLabel = document.querySelector('.k'); 
+    
+    // 2. UI Updates for Stability Lab
+    $spdLabel.textContent = "Forward Lean / Reach";
+    document.getElementById('spdVal').textContent = "0.0";
+    document.getElementById('trialTag').textContent = "A";
+    document.getElementById('trialTime').textContent = "---";
+    
+    $trialMsg.innerHTML = "<b>Stability Test:</b> Use the slider to reach forward. Identify the exact point where the laser leaves the blue box.";
 
+    // 3. Unhide Forensic Equipment
+    const fPlate = scene.getObjectByName("forcePlate");
+    const pLine = scene.getObjectByName("plumbLine");
+    const wBall = scene.getObjectByName("weightBall");
+
+    if (fPlate) fPlate.visible = true;
+    if (pLine) pLine.visible = true;
+    if (wBall) wBall.visible = true;
+
+    // 4. Force Simulation State
+    sim.running = true; 
+    sim.hasStarted = true;
+}
 function enterModule(moduleId) {
   const mod = getModule(moduleId);
   currentModule = mod;
@@ -2189,7 +2216,45 @@ if (sim.running && sim.energy > 0) {
     if (sim.fuelPenaltyTimer > 0) sim.fuelPenaltyTimer -= dt;
     if (sim.fuelAlertTimer > 0) sim.fuelAlertTimer -= dt;
     if (sim.throughputAlert > 0) sim.throughputAlert -= dt;
+//added for module two stability//
+if (sim.running && currentModule?.id === 'FL-002') {
+    if (avatarRoot) {
+        // 1. Attach Plumb Line and Weight to the Avatar
+        const chestPos = new THREE.Vector3();
+        // Find a spine bone to act as the Center of Mass anchor
+        avatarRoot.traverse(o => { 
+            if(o.name.toLowerCase().includes("spine02")) o.getWorldPosition(chestPos); 
+        });
+        
+        // 2. Control Reach with Slider
+        const reachFactor = sim.speedMph * 0.04; 
+        const pLine = scene.getObjectByName("plumbLine");
+        const wBall = scene.getObjectByName("weightBall");
 
+        if (pLine) {
+            pLine.position.set(chestPos.x, chestPos.y, chestPos.z - reachFactor);
+        }
+        if (wBall) {
+            wBall.position.set(chestPos.x, chestPos.y, chestPos.z - (reachFactor * 1.2));
+        }
+
+        // 3. Stability Check (Forensic Pass/Fail)
+        // Base of Support is +/- 0.5m from the center of Z_FORENSIC
+        const currentZ = chestPos.z - reachFactor;
+        const limitZ = Z_FORENSIC.z + 0.5; 
+        const $statusVal = document.getElementById('statusVal');
+
+        if (currentZ > limitZ || currentZ < Z_FORENSIC.z - 0.5) {
+            $statusVal.textContent = "STABILITY BREACH";
+            $statusVal.style.color = "#ff9aa0";
+        } else {
+            $statusVal.textContent = "Stable";
+            $statusVal.style.color = "#4ade80";
+        }
+    }
+}
+
+  
     if (currentModule?.id === 'FL-001') {
         trialTime = Math.max(0, trialTime - dt);
         document.getElementById('trialTime').textContent = Math.ceil(trialTime);
