@@ -1931,6 +1931,53 @@ function animate() {
 
     controls.update();
   if (activeModuleTick) activeModuleTick(dt);
+
+// Corrected Module 2 Stability Block
+if (sim.running && currentModule?.id === 'FL-002') {
+    if (avatarRoot) {
+        const handPos = new THREE.Vector3();
+        
+        // 1. Apply Lean to Model
+        avatarRoot.rotation.x = (sim.speedMph / 22) * 0.8; 
+
+        // 2. Reference Objects
+        const pLine = scene.getObjectByName("plumbLine");
+        const wBall = scene.getObjectByName("weightBall");
+
+        // 3. FIX: Keep Plumb Line stationary at the center of the bay
+        pLine.position.set(Z_FORENSIC.x + 0.6, 1.5, Z_FORENSIC.z);
+
+        // 4. Handle Load (Ball)
+        if (sim.ballLocked && wBall) {
+            avatarRoot.traverse(o => { 
+                if(o.name.toLowerCase().includes("hand_r")) o.getWorldPosition(handPos); 
+            });
+            wBall.position.copy(handPos);
+        }
+
+        // 5. Stability Logic (Triggers when Model's Chest/COM passes the Plumb Line)
+        const chestPos = new THREE.Vector3();
+        avatarRoot.traverse(o => { 
+            if(o.name.toLowerCase().includes("spine02")) o.getWorldPosition(chestPos); 
+        });
+
+        const $statusVal = document.getElementById('statusVal');
+        if (chestPos.z > Z_FORENSIC.z + 0.5) {
+            $statusVal.textContent = "STABILITY BREACH";
+            $statusVal.style.color = "#ff9aa0";
+        } else {
+            $statusVal.textContent = "Stable";
+            $statusVal.style.color = "#4ade80";
+        }
+    }
+}
+
+
+
+
+
+
+  
 // ===== BLINK (works for BOTH Roma + Roman via auto-detect morph names) =====
 if (!animate._blink) animate._blink = { model:null, targets:[], state:0, t:0, next:0 };
 
@@ -2359,47 +2406,6 @@ if (sim.running && sim.energy > 0) {
     if (sim.fuelAlertTimer > 0) sim.fuelAlertTimer -= dt;
     if (sim.throughputAlert > 0) sim.throughputAlert -= dt;
   
-
-  // added for module two stability (CORRECTED — no forced attachment)
-if (sim.running && currentModule?.id === 'FL-002') {
-    if (avatarRoot) {
-        const chestPos = new THREE.Vector3();
-        const handPos = new THREE.Vector3();
-        
-        // Find Bones for Attachment
-        avatarRoot.traverse(o => { 
-            if(o.name.toLowerCase().includes("spine02")) o.getWorldPosition(chestPos); 
-            if(o.name.toLowerCase().includes("hand_r")) o.getWorldPosition(handPos);
-        });
-
-        const pLine = scene.getObjectByName("plumbLine");
-        const wBall = scene.getObjectByName("weightBall");
-
-        // Use the speed slider (0-22) to rotate the model forward (Lean)
-        const leanRads = (sim.speedMph / 22) * 0.8; // Max lean ~45 degrees
-        avatarRoot.rotation.x = leanRads; 
-
-        if (sim.ballLocked && wBall) {
-            wBall.position.copy(handPos); // Ball moves with hand
-            // Plumb line drops from the new combined Center of Mass
-            pLine.position.set(chestPos.x, chestPos.y, (chestPos.z + handPos.z) / 2);
-        } else {
-            pLine.position.copy(chestPos); // Plumb line drops from chest only
-        }
-
-        // Stability Breach Forensic Logic
-        const limitZ = Z_FORENSIC.z + 0.5; // Toe edge of the plate
-        const $statusVal = document.getElementById('statusVal');
-        
-        if (pLine.position.z > limitZ) {
-            $statusVal.textContent = "STABILITY BREACH";
-            $statusVal.style.color = "#ff9aa0";
-        } else {
-            $statusVal.textContent = "Stable";
-            $statusVal.style.color = "#4ade80";
-        }
-    }
-}
 
   
     if (currentModule?.id === 'FL-001') {
