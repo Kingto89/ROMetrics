@@ -2154,10 +2154,10 @@ const profiles = {
     // 2. Define ceilingSpeed for this scope
     const ceilingSpeed = (activeModel === "Roman") ? 6.3 : 6.7;
 
-    // 3. Apply it to Lactate (Increased multiplier to 0.0037 for realistic speed)
+    // 3. Apply it to Lactate (Increased multiplier to 0.0055 for realistic speed)
     if (speed > ceilingSpeed) {
         const deficit = currentCost - sim.vo2Max;
-        sim.lactate = Math.min(100, sim.lactate + (deficit * 0.0035 * fatigueScalar * activePenalty * dt));
+        sim.lactate = Math.min(100, sim.lactate + (deficit * 0.0055 * fatigueScalar * activePenalty * dt));
     }
 
     // 4. Keep timers running
