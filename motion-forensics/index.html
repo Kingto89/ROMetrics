@@ -1359,8 +1359,7 @@ zoneCardio.add(boardGlow);
     labelGroup.add(lblC);
 
     scene.add(zoneCardio);
-
-    // Forensics zone (realistic)
+// Forensics zone (realistic)
     const zoneForensics = new THREE.Group();
     zoneForensics.name = 'forensics';
     zoneForensics.position.copy(Z_FORENSIC);
@@ -1378,6 +1377,37 @@ zoneCardio.add(boardGlow);
       new THREE.Vector3(-1.2, 0.06, -1.0)
     ];
     zoneForensics.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(squarePts), lineMat));
+
+    // --- MODULE 2 ADDITIONS START ---
+    // Force Plate (Base of Support Visualization)
+    const forcePlate = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.6, 1.0),
+        new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.25, side: THREE.DoubleSide })
+    );
+    forcePlate.rotation.x = -Math.PI / 2;
+    forcePlate.position.set(0, 0.07, 0); 
+    forcePlate.visible = false;
+    forcePlate.name = "forcePlate";
+    zoneForensics.add(forcePlate);
+
+    // Plumb Line (Line of Gravity laser)
+    const plumbLine = new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, -3, 0)]),
+        new THREE.LineBasicMaterial({ color: 0xff4d4d, transparent: true, opacity: 0.8 })
+    );
+    plumbLine.visible = false;
+    plumbLine.name = "plumbLine";
+    scene.add(plumbLine); 
+
+    // Weight Ball (The Load)
+    const weightBall = new THREE.Mesh(
+        new THREE.SphereGeometry(0.15, 32, 32),
+        new THREE.MeshStandardMaterial({ color: 0x7a8aa0, metalness: 0.5, roughness: 0.2 })
+    );
+    weightBall.visible = false;
+    weightBall.name = "weightBall";
+    scene.add(weightBall);
+    // --- MODULE 2 ADDITIONS END ---
 
     function tripod(x,z){
       const g = new THREE.Group();
