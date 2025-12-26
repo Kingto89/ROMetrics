@@ -2124,8 +2124,8 @@ if (sim.running && sim.energy > 0) {
 
     // Define Model Profiles (Roma vs Roman vs Others) Metabolic rates
 const profiles = {
-    Roma:  { lowLactateMulti: 1.27,  highLactateMulti: 1.51, recoveryRate: 0.07, tankSize: 1200, penaltySeverity: 0.4 },
-    Roman: { lowLactateMulti: 1.37, highLactateMulti: 1.62,  recoveryRate: 0.05, tankSize: 1200, penaltySeverity: 0.4 },
+    Roma:  { lowLactateMulti: 1.17,  highLactateMulti: 1.41, recoveryRate: 0.07, tankSize: 1200, penaltySeverity: 0.4 },
+    Roman: { lowLactateMulti: 1.27, highLactateMulti: 1.52,  recoveryRate: 0.05, tankSize: 1200, penaltySeverity: 0.4 },
     Default: { lowLactateMulti: 1.2, highLactateMulti: 1.2, recoveryRate: 0.05, tankSize: 1200, penaltySeverity: 0.4 }
 };
 
@@ -2157,7 +2157,7 @@ const profiles = {
     // 3. Apply it to Lactate (Increased multiplier to 0.055 for realistic speed)
     if (speed > ceilingSpeed) {
         const deficit = currentCost - sim.vo2Max;
-        sim.lactate = Math.min(100, sim.lactate + (deficit * 0.027 * fatigueScalar * activePenalty * dt));
+        sim.lactate = Math.min(100, sim.lactate + (deficit * 0.02 * fatigueScalar * activePenalty * dt));
     }
 
     // 4. Keep timers running
