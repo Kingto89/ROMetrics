@@ -2239,34 +2239,34 @@ if (sim.running && sim.energy > 0) {
     if (sim.fuelPenaltyTimer > 0) sim.fuelPenaltyTimer -= dt;
     if (sim.fuelAlertTimer > 0) sim.fuelAlertTimer -= dt;
     if (sim.throughputAlert > 0) sim.throughputAlert -= dt;
-//added for module two stability//
+  
+
+  // added for module two stability (CORRECTED — no forced attachment)
 if (sim.running && currentModule?.id === 'FL-002') {
-    if (avatarRoot) {
-        // 1. Attach Plumb Line and Weight to the Avatar
-        const chestPos = new THREE.Vector3();
-        // Find a spine bone to act as the Center of Mass anchor
-        avatarRoot.traverse(o => { 
-            if(o.name.toLowerCase().includes("spine02")) o.getWorldPosition(chestPos); 
-        });
-        
-        // 2. Control Reach with Slider
-        const reachFactor = sim.speedMph * 0.15; 
-        const pLine = scene.getObjectByName("plumbLine");
-        const wBall = scene.getObjectByName("weightBall");
+    if (!avatarRoot) return;
 
-        if (pLine) {
-            pLine.position.set(chestPos.x, chestPos.y, chestPos.z - reachFactor);
+    // 1. Get COM reference (measurement ONLY)
+    const chestPos = new THREE.Vector3();
+    avatarRoot.traverse(o => { 
+        if (o.name.toLowerCase().includes("spine02")) {
+            o.getWorldPosition(chestPos);
         }
-        if (wBall) {
-            wBall.position.set(chestPos.x, chestPos.y, chestPos.z - (reachFactor * 1.2));
-        }
+    });
 
-        // 3. Stability Check (Forensic Pass/Fail)
-        // Base of Support is +/- 0.5m from the center of Z_FORENSIC
-        const currentZ = chestPos.z - reachFactor;
-        const limitZ = Z_FORENSIC.z + 0.5; 
-        const $statusVal = document.getElementById('statusVal');
+    // 2. Read objects WITHOUT repositioning them
+    const pLine = zoneForensics.getObjectByName("plumbLine");
+    const wBall = zoneForensics.getObjectByName("weightBall");
 
+    // (Intentionally NO position.set calls here)
+    // Objects remain where the environment placed them
+
+    // 3. Stability Check (Forensic Pass / Fail)
+    // Base of Support is +/- 0.5m from zone center
+    const currentZ = chestPos.z;
+    const limitZ = Z_FORENSIC.z + 0.5;
+    const $statusVal = document.getElementById('statusVal');
+
+    if ($statusVal) {
         if (currentZ > limitZ || currentZ < Z_FORENSIC.z - 0.5) {
             $statusVal.textContent = "STABILITY BREACH";
             $statusVal.style.color = "#ff9aa0";
@@ -2276,6 +2276,7 @@ if (sim.running && currentModule?.id === 'FL-002') {
         }
     }
 }
+
 
   
     if (currentModule?.id === 'FL-001') {
