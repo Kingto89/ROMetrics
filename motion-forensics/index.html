@@ -1718,20 +1718,17 @@ async function enterFL001() {
 
 
 async function enterFL002() {
-    // 1. ANATOMIC RESET: Stop any leftover Module 1 motion
+    // 1. FORCE NEUTRAL POSITION
     sim.running = false; 
     sim.speedMph = 0; 
     document.getElementById('spd').value = 0;
     if (runAction) runAction.paused = true;
-    restore(); // Resets bones to neutral anatomic position
-
-    setZone('forensics'); // Move to Analysis Bay
     
-    // 2. UI & Console Setup
-    document.querySelector('.k').textContent = "Forward Lean Intensity"; 
-    document.getElementById('analysisConsole').style.display = 'flex';
-    document.getElementById('badge').style.display = 'block';
-    document.getElementById('trialTag').textContent = "A";
+    // This removes procedural rotations and GLB animations
+    restore(); 
+
+    // 2. POSITION CAMERA & AVATAR
+    setZone('forensics'); 
     
     const $trialMsg = document.getElementById('trialMsg');
     $trialMsg.innerHTML = "<b>Lab Objective:</b> Locate the Tipping Point. Snap to Side View and Lock Ball to begin.";
@@ -1743,7 +1740,20 @@ async function enterFL002() {
         controls.update();
     };
 
-    // Tool 2 & 3 Logic...
+    // Tool 2 & 3: Ball Logic
+    document.getElementById('btnSelectBall').onclick = function() {
+        this.classList.toggle('active');
+        const ball = scene.getObjectByName("weightBall");
+        if (ball) ball.visible = !ball.visible;
+        document.getElementById('btnLockBall').disabled = !ball.visible;
+    };
+
+    document.getElementById('btnLockBall').onclick = function() {
+        this.classList.toggle('active');
+        sim.ballLocked = !sim.ballLocked;
+        this.textContent = sim.ballLocked ? "Ball Locked" : "Lock to Hand";
+    };
+
     sim.ballLocked = false;
     sim.running = true; 
 }
@@ -1753,31 +1763,27 @@ function enterModule(moduleId) {
   currentModule = mod;
   document.getElementById('moduleTitle').textContent = mod.label;
 
-  // 1. GLOBAL UI RESET
-  // Hide the Module 1 Fuel button and the Module 2 Analysis Console by default
+  // 1. UI CLEANUP (Hide everything first)
   document.getElementById('fuelBtn').style.display = "none";
   document.getElementById('analysisConsole').style.display = "none";
   
-  // 2. MODULE SPECIFIC UI SETUP
+  // 2. SHOW CORRECT MENU
   if (moduleId === 'FL-001') {
       document.getElementById('fuelBtn').style.display = "inline-block";
       document.querySelector('.k').textContent = "Cardio Speed";
   } 
   else if (moduleId === 'FL-002') {
       document.getElementById('analysisConsole').style.display = "flex";
-      document.querySelector('.k').textContent = "Forward Lean Intensity";
+      document.querySelector('.k').textContent = "Lean Intensity";
   }
 
-  // Snap camera and trigger the onEnter function
   setZone(mod.zone || 'all');
-  const $badge = document.getElementById('badge');
-  $badge.style.display = "block";
+  document.getElementById('badge').style.display = "block";
 
   if (typeof mod.onEnter === 'function') {
     mod.onEnter(); 
   }
 }
-
     
     // 7) Studio UI wiring
     // ==============================
