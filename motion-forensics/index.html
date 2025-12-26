@@ -2521,8 +2521,7 @@ function triggerUnlock(msg) {
             showFL001Trial(window.currentTrials, 'B');
             $trialMsg.innerHTML = `<b>Trial B Loaded.</b> Survive 480s and record 1 fueling event.`;
         }, 3000);
-
-    } else if (currentLetter === 'B') {
+} else if (currentLetter === 'B') {
         // SUCCESSFUL TRIAL B
         // 1. Mark as valid for this session (Security Gate)
         sessionStorage.setItem(`${moduleId}_Session_Valid`, 'true');
@@ -2545,7 +2544,7 @@ function triggerUnlock(msg) {
             };
         }
     }
-}
+} // This properly closes the triggerUnlock function
 
 // Ensure the loop continues
 animate();
