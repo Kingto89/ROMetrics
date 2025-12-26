@@ -1442,7 +1442,7 @@ const plumbLine = new THREE.Mesh(
 );
 
 // Positioned just lateral to avatar, NOT intersecting
-plumbLine.position.set(0.6, 1.5, -0.05);
+plumbLine.position.set(0.6, 1.5, 0.01);
 plumbLine.visible = true;                
 plumbLine.name = "plumbLine";
 zoneForensics.add(plumbLine);
@@ -1650,11 +1650,10 @@ function placeAvatarForZone(which) {
   avatarRoot.rotation.set(0, rotY, 0);
 }
 
-  function setZone(which){
-      const all = (which === 'all');
-      zoneStrength.visible  = all || which === 'strength';
-      zoneCardio.visible    = all || which === 'cardio';
-      zoneForensics.visible = all || which === 'forensics';
+ function setZone(which) {
+  zoneStrength.visible = true;
+  zoneCardio.visible = true;
+  zoneForensics.visible = true;
 
       if (which === 'strength'){
         camGoalTarget.set(Z_STRENGTH.x, 1.25, Z_STRENGTH.z);
@@ -1671,7 +1670,6 @@ function placeAvatarForZone(which) {
       }
 
       placeAvatarForZone(which);
-      snapCam();
     }
 
 function parseFL001(md) {
