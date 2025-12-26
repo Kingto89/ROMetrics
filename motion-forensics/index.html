@@ -2273,6 +2273,14 @@ if (b.head) applyAdd(b.head, 0, torsoYaw * 0.15, 0);
 
 
 if (runAction) runAction.paused = false;
+} else {
+    // FIX: Only restore (snap to upright) if we ARE NOT in Module 2
+    // If isStabilityMode is true, we SKIP restore so sliders can work
+    if (!sim.isStabilityMode) {
+        restore();
+    }
+    if (runAction) runAction.paused = true;
+}
 
   } else {
     // THIS FIXES THE RESET: If not running, force anatomic position
@@ -2364,14 +2372,18 @@ if (sim.running && sim.energy > 0) {
 
 // --- Inside animate() loop: Module 2 Stability Physics ---
 if (currentModule?.id === 'FL-002' && avatarRoot) {
-    
-    // Convert slider degrees to radians
+    // Convert slider degrees to Radians
     const radZ = (sim.leanZ * Math.PI) / 180;
     const radX = (sim.leanX * Math.PI) / 180;
 
-    // Apply the rotation directly to the root of the model
-    avatarRoot.rotation.x = radZ; 
-    avatarRoot.rotation.z = -radX;
+    // Apply rotation to the entire avatar group
+    avatarRoot.rotation.x = radZ;  // Forward/Back
+    avatarRoot.rotation.z = -radX; // Left/Right (negative to match slider direction)
+} else if (avatarRoot) {
+    // Reset root rotation when leaving the booth
+    avatarRoot.rotation.x = 0;
+    avatarRoot.rotation.z = 0;
+}
 
     const chestPos = new THREE.Vector3();
     const handPos = new THREE.Vector3();
