@@ -140,35 +140,40 @@ const MODULE_REGISTRY = {
       </div>
     `,
     onEnter: (container) => {
-      // Re-link all your existing Module 1 button logic
-      container.querySelector('#startBtn').onclick = () => window.handleStart(); // You'll need to wrap your logic in these functions
+      // Re-link UI elements to the Module 1 logic
+      container.querySelector('#startBtn').onclick = () => window.handleStart();
       container.querySelector('#resetBtn').onclick = () => window.handleReset();
       container.querySelector('#fuelBtn').onclick = () => window.handleFuel();
       container.querySelector('#trialA').onclick = () => showFL001Trial(window.currentTrials, 'A');
       container.querySelector('#trialB').onclick = () => showFL001Trial(window.currentTrials, 'B');
-      // Link the speed slider
       const $spd = container.querySelector('#spd');
-      $spd.oninput = () => { sim.speedMph = parseFloat($spd.value); if(sim.running) speedViolation = true; };
+      $spd.oninput = () => { 
+        sim.speedMph = parseFloat($spd.value); 
+        if(sim.running) speedViolation = true; 
+      };
     },
     onTick: (dt) => {
-      // Logic unique to Module 1 UI updates
-      document.getElementById('spdVal').textContent = sim.speedMph.toFixed(1);
-      document.getElementById('engVal').textContent = Math.round(sim.energy);
+      const sV = document.getElementById('spdVal');
+      const eV = document.getElementById('engVal');
+      if (sV) sV.textContent = sim.speedMph.toFixed(1);
+      if (eV) eV.textContent = Math.round(sim.energy);
     }
   },
   'FL-002': {
     template: `
       <div id="controls">
-        <div class="row"><div class="k">Stability Index</div><div class="v" id="stbVal">100%</div></div>
-        <input id="lean" type="range" min="0" max="10" step="0.1" value="0"/>
-        <div id="trialMsg" style="color:#a8c0da; font-size:12px; margin-top:10px;">Find the tipping point.</div>
+        <div class="row"><div class="k">Center of Mass Lean</div><div class="v" id="leanVal">0°</div></div>
+        <input id="leanInput" type="range" min="0" max="22" step="0.1" value="0"/>
+        <div id="statusVal" style="margin-top:10px; font-weight:900;">Stable</div>
       </div>
     `,
     onEnter: (container) => {
-      container.querySelector('#lean').oninput = (e) => { /* Module 2 specific logic */ };
+      const $lean = container.querySelector('#leanInput');
+      $lean.oninput = () => { sim.speedMph = parseFloat($lean.value); };
     },
     onTick: (dt) => {
-      // Module 2 logic
+      const lV = document.getElementById('leanVal');
+      if (lV) lV.textContent = Math.round(sim.speedMph * 2) + "°";
     }
   }
 };
@@ -481,27 +486,7 @@ const FORENSICS_MODULES = [
     refreshGate();
 
     // ==============================
-    // 2) Studio: Three.js base
-    // ==============================
-const $spd = document.getElementById('spd');
-const $spdVal = document.getElementById('spdVal');
-const $engVal = document.getElementById('engVal');
-const $status = document.getElementById('statusVal');
-const $start = document.getElementById('startBtn');
-const $fuel = document.getElementById('fuelBtn');
-const $reset = document.getElementById('resetBtn');
 
-
-// ==============================
-// UI & CONTROL INITIALIZATION
-// ==============================
-$spdVal.textContent = sim.speedMph.toFixed(1);
-$engVal.textContent = Math.round(sim.energy);
-$status.textContent = "Ready";
-$status.style.color = "#cfe3ff";
-$start.textContent = "Start";
-
-// Update speed from slider
 $spd.addEventListener('input', () => { 
   sim.speedMph = parseFloat($spd.value); 
   
