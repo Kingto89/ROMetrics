@@ -1817,15 +1817,6 @@ async function enterFL001() {
     document.getElementById('trialMsg').innerHTML = "<b>Module Loaded.</b> Select Trial A or B to begin.";
 }
 
-async function enterFL002() {
-    // 1. ANATOMIC RESET: Stop any leftover Module 1 motion
-    sim.running = false; 
-    sim.speedMph = 0; 
-    document.getElementById('spd').value = 0;
-    if (runAction) runAction.paused = true;
-    
-    // Resets bones to neutral anatomic position defined in ANAT_PRESETS
-    restore(); 
 
     // --- MODULE 2: Plumb Line / COM Console Creation ---
     const container = document.getElementById('moduleConsoles');
