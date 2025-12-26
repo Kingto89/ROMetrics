@@ -1817,69 +1817,95 @@ async function enterFL001() {
     document.getElementById('trialMsg').innerHTML = "<b>Module Loaded.</b> Select Trial A or B to begin.";
 }
 
-
 async function enterFL002() {
     // 1. ANATOMIC RESET: Stop any leftover Module 1 motion
     sim.running = false; 
     sim.speedMph = 0; 
     document.getElementById('spd').value = 0;
     if (runAction) runAction.paused = true;
-    restore(); // Resets bones to neutral anatomic position
+    
+    // Resets bones to neutral anatomic position defined in ANAT_PRESETS
+    restore(); 
 
-    // --- MODULE 2: Plumb Line / COM Console (isolated) ---
+    // --- MODULE 2: Plumb Line / COM Console Creation ---
     const container = document.getElementById('moduleConsoles');
-    container.innerHTML = ''; // Clear any previous module consoles
+    container.innerHTML = ''; // Clear previous module consoles
 
     const consoleDiv = document.createElement('div');
     consoleDiv.id = 'module2Console';
+    // Style as a game-style tool overlay
     consoleDiv.style.cssText = `
-        background: rgba(9,20,37,0.95);
+        background: rgba(9, 20, 37, 0.95);
         border: 2px solid #38bdf8;
         border-radius: 16px;
         padding: 12px 16px;
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 10px;
         pointer-events: auto;
         width: 240px;
+        box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
     `;
 
     const header = document.createElement('div');
-    header.textContent = "Module 2 — Plumb Line";
-    header.style.fontWeight = "900";
-    header.style.color = "#38bdf8";
+    header.textContent = "STABILITY CONSOLE";
+    header.style.cssText = "font-weight: 900; color: #38bdf8; font-size: 12px; letter-spacing: 1px;";
     consoleDiv.appendChild(header);
 
-    const ballSelect = document.createElement('select');
-    ballSelect.innerHTML = `<option value="ball1">Ball 1</option><option value="ball2">Ball 2</option>`;
-    consoleDiv.appendChild(ballSelect);
+    // Side View Button (Accuracy Snap)
+    const viewBtn = document.createElement('button');
+    viewBtn.className = "console-btn";
+    viewBtn.textContent = "Snap Side View";
+    viewBtn.onclick = () => {
+        camera.position.set(Z_FORENSIC.x + 5.5, 1.4, Z_FORENSIC.z);
+        controls.target.set(Z_FORENSIC.x, 1.2, Z_FORENSIC.z);
+        controls.update();
+    };
+    consoleDiv.appendChild(viewBtn);
 
+    // Ball Toggle Button
+    const ballBtn = document.createElement('button');
+    ballBtn.className = "console-btn";
+    ballBtn.textContent = "Toggle Weight Ball";
+    ballBtn.onclick = function() {
+        const wBall = scene.getObjectByName("weightBall");
+        if (wBall) {
+            wBall.visible = !wBall.visible;
+            this.classList.toggle('active', wBall.visible);
+            lockBtn.disabled = !wBall.visible;
+        }
+    };
+    consoleDiv.appendChild(ballBtn);
+
+    // Lock Ball Button
     const lockBtn = document.createElement('button');
-    lockBtn.textContent = "Lock Ball";
-    lockBtn.style.cursor = "pointer";
-    lockBtn.onclick = () => {
-        const selected = ballSelect.value;
-        console.log(`Locked ${selected} to module hands`);
+    lockBtn.className = "console-btn";
+    lockBtn.textContent = "Lock to Hand";
+    lockBtn.disabled = true; // Disabled until ball is toggled on
+    lockBtn.onclick = function() {
+        sim.ballLocked = !sim.ballLocked;
+        this.classList.toggle('active', sim.ballLocked);
+        this.textContent = sim.ballLocked ? "Ball Locked" : "Lock to Hand";
     };
     consoleDiv.appendChild(lockBtn);
 
-    const moveBtn = document.createElement('button');
-    moveBtn.textContent = "Move Module";
-    moveBtn.style.cursor = "pointer";
-    moveBtn.onclick = () => {
-        console.log("Module moved for testing");
-    };
-    consoleDiv.appendChild(moveBtn);
+    container.appendChild(consoleDiv);
 
-    container.appendChild(consoleDiv); // <-- End of Module 2 isolated console
+    // 3. UI STATE SYNC
+    document.getElementById('moduleTitle').textContent = "Module 2 — Stability & Center of Mass";
+    document.querySelector('.k').textContent = "Forward Lean Intensity";
+    document.getElementById('trialTag').textContent = "A";
+    
+    const $trialMsg = document.getElementById('trialMsg');
+    $trialMsg.innerHTML = "<b>Objective:</b> Identify the Tipping Point. Use the console to equip the weight and rotate to side view.";
 
-    // Update module title badge
-    document.getElementById('moduleTitle').textContent = "Module 2 — Stability & COM";
-    currentModule = 'FL-002';
+    // 4. CORE SIMULATION FLAGS
+    sim.ballLocked = false;
+    sim.running = true; 
+    currentModule = FORENSICS_MODULES.find(m => m.id === 'FL-002');
 
-    setZone('forensics'); // Move to Analysis Bay
+    setZone('forensics'); // Teleport camera and model to Analysis Bay
 }
-
     
     // 2. UI & Console Setup
     document.querySelector('.k').textContent = "Forward Lean Intensity"; 
@@ -1906,16 +1932,25 @@ function enterModule(moduleId) {
   const mod = getModule(moduleId);
   currentModule = mod;
   document.getElementById('moduleTitle').textContent = mod.label;
+
+  // 1. UI CLEANUP (Hide everything first)
+  document.getElementById('fuelBtn').style.display = "none";
+  document.getElementById('analysisConsole').style.display = "none";
   
-  // Snap camera to the specific bay
+  // 2. SHOW CORRECT MENU
+  if (moduleId === 'FL-001') {
+      document.getElementById('fuelBtn').style.display = "inline-block";
+      document.querySelector('.k').textContent = "Cardio Speed";
+  } 
+  else if (moduleId === 'FL-002') {
+      // THIS LINE MAKES THE ANALYSIS MENU APPEAR
+      document.getElementById('analysisConsole').style.display = "flex";
+      document.querySelector('.k').textContent = "Lean Intensity";
+  }
+
   setZone(mod.zone || 'all');
-  
-  // Show the HUD badge
-  const $badge = document.getElementById('badge');
-  $badge.style.display = "block";
-  $badge.style.top = "14px"; 
-  
-  // Trigger the specific module logic (like enterFL001)
+  document.getElementById('badge').style.display = "block";
+
   if (typeof mod.onEnter === 'function') {
     mod.onEnter(); 
   }
