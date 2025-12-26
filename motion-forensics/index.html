@@ -2114,7 +2114,8 @@ if (runAction) runAction.paused = false;
 // 1. Update the Screen Displays
 drawPanel(wallScreen, 'CARDIO BOARD');
 drawTreadmillMph(consoleScreen);
-// --- INSIDE THE ANIMATE LOOP (Logic Cleaned & Braces Fixed) ---
+
+// --- METABOLIC ENGINE & SIMULATION LOGIC ---
 if (sim.running && sim.energy > 0) {
     sim.elapsed += dt; 
     const speed = parseFloat(sim.speedMph.toFixed(1));
@@ -2129,7 +2130,7 @@ if (sim.running && sim.energy > 0) {
 
     const p = profiles[activeModel] || profiles.Default;
 
-    // 1. MODEL-SPECIFIC FATIGUE SCALAR (Affects Energy Drain only)
+    // A. FATIGUE SCALAR (Affects Energy Drain only)
     let fatigueScalar = 1.0;
     if (sim.lactate > 50) {
         fatigueScalar = p.highLactateMulti; 
@@ -2137,7 +2138,7 @@ if (sim.running && sim.energy > 0) {
         fatigueScalar = p.lowLactateMulti;
     }
 
-    // 2. ENERGY DRAIN (W' Balance)
+    // B. ENERGY DRAIN (W' Balance)
     if (currentCost > sim.vo2Max) {
         const deficit = currentCost - sim.vo2Max;
         const percentDropPerSecond = (deficit / 60 / p.tankSize) * 10000;
@@ -2146,7 +2147,7 @@ if (sim.running && sim.energy > 0) {
         sim.energy = Math.min(100, sim.energy + (p.recoveryRate * dt));
     }
 
-    // 3. INDEPENDENT LACTATE LOGIC (Breaks the Inverse Mirror)
+    // C. INDEPENDENT LACTATE LOGIC (Breaks Mirror Effect)
     let activePenalty = (sim.fuelPenaltyTimer > 0) ? p.penaltySeverity : 1.0;
     const ceilingSpeed = (activeModel === "Roman") ? 6.3 : 6.7;
 
@@ -2154,35 +2155,20 @@ if (sim.running && sim.energy > 0) {
         const deficit = currentCost - sim.vo2Max;
         sim.lactate = Math.min(100, sim.lactate + (deficit * 0.017 * activePenalty * dt));
     } else if (speed > 0) {
+        // Waste clears while running/walking below threshold
         sim.lactate = Math.max(0, sim.lactate - (0.4 * dt));
     }
 
-    // 4. HOUSEKEEPING (Timers) - ONE set only
+    // D. HOUSEKEEPING (Timers & HUD)
     if (sim.fuelPenaltyTimer > 0) sim.fuelPenaltyTimer -= dt;
     if (sim.fuelAlertTimer > 0) sim.fuelAlertTimer -= dt;
     if (sim.throughputAlert > 0) sim.throughputAlert -= dt;
 
-    // 5. TRIAL TIMER
     if (currentModule?.id === 'FL-001') {
         trialTime = Math.max(0, trialTime - dt);
         document.getElementById('trialTime').textContent = Math.ceil(trialTime);
     }
 }
-// --- END OF CORRECTED BLOCK ---
-
-    // 4. Keep timers running
-    if (sim.fuelPenaltyTimer > 0) sim.fuelPenaltyTimer -= dt;
-    if (sim.fuelAlertTimer > 0) sim.fuelAlertTimer -= dt;
-    if (sim.throughputAlert > 0) sim.throughputAlert -= dt;
-
-  
-    // Updated Trial Timer
-    if (currentModule?.id === 'FL-001') {
-        trialTime = Math.max(0, trialTime - dt);
-        document.getElementById('trialTime').textContent = Math.ceil(trialTime);
-    }
-}
-    
 
 // --- DYNAMIC TRIAL STOP & UNLOCK LOGIC ---
 if (sim.energy <= 0 || trialTime <= 0 || sim.lactate >= 100) {
