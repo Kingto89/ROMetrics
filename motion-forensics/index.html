@@ -86,9 +86,6 @@
 <div id="dynamicConsoleMount"></div>
   <script type="module">
 // --- MODULE 1 UI BUILDER ---
-/** * MODULE 1: CARDIO ENGINE 
- * Contains all original speed, fuel, and trial logic.
- */
 function buildModule1UI() {
     const mount = document.getElementById('dynamicConsoleMount');
     mount.innerHTML = `
@@ -111,21 +108,36 @@ function buildModule1UI() {
         </div>
     `;
 
-    // Re-attach Module 1 Specific Listeners
+    // --- RE-ATTACH LISTENERS HERE ---
     document.getElementById('spd').oninput = (e) => { 
         sim.speedMph = parseFloat(e.target.value); 
         if(sim.running) speedViolation = true;
     };
-    
+
+    // This fixes the 'null' onclick error
     document.getElementById('trialHelp').onclick = async (e) => {
         e.preventDefault();
+        e.stopPropagation();
         document.getElementById('trialHelpModal').style.display = 'flex';
-        // ... include your existing fetch logic here ...
+        const modId = document.getElementById('moduleSelect').value || "FL-001";
+        const fileName = modId.toLowerCase().replace('fl-', 'module_');
+        const path = `https://raw.githubusercontent.com/Kingto89/ROMetrics.com/main/assets/forensics_modules/${fileName}.md`;
+        try {
+            const res = await fetch(path);
+            if (res.ok) { cachedModuleMD = await res.text(); window.showTab('concept'); }
+        } catch (err) { console.error("MD Load Error", err); }
     };
 
-    // Re-bind Start/Fuel/Reset (Copy your existing onclick logic here)
-    document.getElementById('startBtn').onclick = () => { /* Logic from your original startBtn */ };
-    document.getElementById('fuelBtn').onclick = () => { /* Logic from your original fuelBtn */ };
+    // Re-bind global buttons to their specific M1 logic
+    document.getElementById('startBtn').onclick = () => { /* Your M1 Start Logic */ };
+    document.getElementById('fuelBtn').onclick = () => { /* Your M1 Fuel Logic */ };
+    document.getElementById('resetBtn').onclick = () => { /* Your M1 Reset Logic */ };
+    
+    // Wire up trial buttons
+    const btnA = document.getElementById('trialA');
+    const btnB = document.getElementById('trialB');
+    if (btnA) btnA.onclick = () => showFL001Trial(window.currentTrials, 'A');
+    if (btnB) btnB.onclick = () => showFL001Trial(window.currentTrials, 'B');
 }
 
 /** * MODULE 2: STABILITY ANALYSIS
@@ -288,30 +300,6 @@ window.renderMCQ = function(letter) {
 };
 
     
-// Global Fetch Trigger
-document.getElementById('trialHelp').onclick = async (e) => {
-  e.preventDefault();
-  e.stopPropagation(); // Stops the click from reaching the 3D scene
-  document.getElementById('trialHelpModal').style.display = 'flex';
-  
-  const modId = document.getElementById('moduleSelect').value || "FL-001";
-  const fileName = modId.toLowerCase().replace('fl-', 'module_');
-  const path = `https://raw.githubusercontent.com/Kingto89/ROMetrics.com/main/assets/forensics_modules/${fileName}.md`;
-  
-  try {
-    const res = await fetch(path);
-    if (res.ok) {
-      cachedModuleMD = await res.text();
-      window.showTab('concept'); 
-    }
-  } catch (err) { console.error("MD Load Error", err); }
-};
-
-document.getElementById('trialHelpClose').onclick = (e) => {
-  e.preventDefault();
-  e.stopPropagation();
-  document.getElementById('trialHelpModal').style.display = 'none';
-};
     
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -1783,14 +1771,15 @@ function enterModule(moduleId) {
     currentModule = mod;
     document.getElementById('moduleTitle').textContent = mod.label;
 
-    // 1. Swap the UI Console
+    // Clear and build the UI
+    document.getElementById('dynamicConsoleMount').innerHTML = "";
+
     if (moduleId === 'FL-001') {
         buildModule1UI();
     } else if (moduleId === 'FL-002') {
-        buildModule2UI();
+        buildModule2UI(); // This ensures Module 2's UI appears
     }
 
-    // 2. Set the 3D Scene
     setZone(mod.zone || 'all');
     if (typeof mod.onEnter === 'function') mod.onEnter();
 }
