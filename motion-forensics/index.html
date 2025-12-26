@@ -50,7 +50,7 @@
   </script>
 </head>
 <body>
-<div id="gate">
+  <div id="gate">
     <div id="gateCard">
       <div id="gateTop">
         <div>
@@ -58,90 +58,101 @@
           <div id="gateSub">Select a model, then choose a lab module.</div>
         </div>
       </div>
-
       <div id="gateGrid">
         <div class="field">
           <div class="lbl">MODEL</div>
           <select id="modelSelect"></select>
           <div class="desc" id="modelDesc"></div>
         </div>
-
         <div class="field">
           <div class="lbl">MODULE</div>
           <select id="moduleSelect"></select>
           <div class="desc" id="moduleDesc"></div>
         </div>
       </div>
-
       <div id="gateActions">
         <button id="enterBtn" class="primary">Enter Studio</button>
       </div>
     </div>
   </div>
 
- <div id="badge" style="display:none;">
+  <div id="badge" style="display:none;">
     <div class="t">Forensics Labs — Studio</div>
     <div class="p" id="moduleTitle">Module</div>
 
-    <div id="controls">
+    <div id="console-FL-001" class="module-container" style="display:none;">
+      <div id="controls">
         <div class="row">
-            <div class="k">Cardio Speed</div>
-            <div class="v"><span id="spdVal">6.0</span> mph</div>
+          <div class="k">Cardio Speed</div>
+          <div class="v"><span id="spdVal">0.0</span> mph</div>
         </div>
-
         <input id="spd" type="range" min="0" max="22" step="0.1" value="0"/>
-
         <div class="row">
-            <div class="k">W′ Balance / % Anaerobic Used</div>
-            <div class="v"><span id="engVal">100</span>%</div>
+          <div class="k">W′ Balance / % Anaerobic Used</div>
+          <div class="v"><span id="engVal">100</span>%</div>
         </div>
-
         <div class="row">
-            <div class="k">Trial</div>
-            <div class="v"><span id="trialTag">A</span> • <span id="trialTime">300</span>s</div>
+          <div class="k">Trial</div>
+          <div class="v"><span id="trialTag">-</span> • <span id="trialTime">0</span>s</div>
         </div>
-
         <div class="row" style="justify-content:flex-start; gap:8px; flex-wrap:wrap;">
-            <button id="trialA" class="btn">Trial A</button>
-            <button id="trialB" class="btn">Trial B</button>
+          <button id="trialA" class="btn">Trial A</button>
+          <button id="trialB" class="btn">Trial B</button>
         </div>
-        
         <button id="trialHelp" class="btn" style="align-self:flex-start; margin-top:5px;">Instructions</button>
-
-        <div id="trialMsg" style="color:#a8c0da; font-size:12px; line-height:1.25; margin-top:10px; min-height:30px;">
-            Read instructions. Select Trial A or B to begin.
+        <div class="row" style="display: flex; justify-content: flex-start; gap: 10px; margin-top: 10px;">
+          <button id="startBtn" class="btn">Start</button>
+          <button id="fuelBtn" class="btn">Fuel +10</button>
+          <button id="resetBtn" class="btn">Reset</button>
         </div>
+      </div>
+    </div>
 
-        <button id="assessmentBtn" class="primary" style="display:none; width:100%; margin-top:10px;">
-            Take Final MCQ Assessment
-        </button>
-
-<div class="row" style="display: flex; justify-content: flex-start; gap: 10px; margin-top: 10px;">
-    <button id="startBtn" class="btn">Start</button>
-    <button id="fuelBtn" class="btn">Fuel +10</button>
-    <button id="resetBtn" class="btn">Reset</button>
-
-    <button id="reviewBtn" class="btn" style="display:none; border-color:#4ade80; color:#4ade80; margin-left:auto;">Review MCQ</button>
-</div>
-
-        <div class="row" style="justify-content:space-between; margin-top:10px; padding-top:10px; border-top:1px solid rgba(148,163,184,.18);">
-            <div class="k">Status</div>
-            <div class="v" id="statusVal">Stable</div>
+    <div id="console-FL-002" class="module-container" style="display:none;">
+        <div class="row">
+          <div class="k">Forward Lean Intensity</div>
+          <div class="v"><span id="leanVal">0.0</span>°</div>
+        </div>
+        <input id="leanSlider" type="range" min="0" max="45" step="0.5" value="0"/>
+        <div class="row" style="gap:8px; margin-top:10px;">
+          <button id="btnSideView" class="btn">Snap Side View</button>
+          <button id="lockBallBtn" class="btn">Lock Ball</button>
         </div>
     </div>
-</div>
+
+    <div id="console-FL-003" class="module-container" style="display:none;"></div>
+    <div id="console-FL-004" class="module-container" style="display:none;"></div>
+    <div id="console-FL-005" class="module-container" style="display:none;"></div>
+    <div id="console-FL-006" class="module-container" style="display:none;"></div>
+    <div id="console-FL-007" class="module-container" style="display:none;"></div>
+    <div id="console-FL-008" class="module-container" style="display:none;"></div>
+    <div id="console-FL-009" class="module-container" style="display:none;"></div>
+    <div id="console-FL-010" class="module-container" style="display:none;"></div>
+
+    <div id="trialMsg" style="color:#a8c0da; font-size:12px; line-height:1.25; margin-top:10px; min-height:30px;">
+        Read instructions. Select Trial A or B to begin.
+    </div>
+    <button id="assessmentBtn" class="primary" style="display:none; width:100%; margin-top:10px;">
+        Take Final MCQ Assessment
+    </button>
+    <button id="reviewBtn" class="btn" style="display:none; border-color:#4ade80; color:#4ade80; width:100%; margin-top:5px;">Review MCQ</button>
+    
+    <div class="row" style="justify-content:space-between; margin-top:10px; padding-top:10px; border-top:1px solid rgba(148,163,184,.18);">
+        <div class="k">Status</div>
+        <div class="v" id="statusVal">Stable</div>
+    </div>
+  </div>
 
   <div id="trialHelpModal" style="display:none; position:fixed; inset:0; z-index:100; background:rgba(7,16,27,.85); align-items:center; justify-content:center;">
     <div id="gateCard" style="max-width:600px; padding:0; overflow:hidden; display:flex; flex-direction:column;">
       <div style="display:flex; background:rgba(15,23,42,.95); border-bottom:1px solid rgba(148,163,184,.25);">
-        <div id="tab-concept" class="pill active" style="border-radius:0; border:none; flex:1; text-align:center; cursor:pointer;" onclick="event.stopPropagation(); showTab('concept')">Concept (read first):</div>
-<div id="tab-systems" class="pill" style="border-radius:0; border:none; flex:1; text-align:center; cursor:pointer;" onclick="event.stopPropagation(); showTab('systems')">Trial Guide:</div>
-<div id="tab-guide" class="pill" style="border-radius:0; border:none; flex:1; text-align:center; cursor:pointer;" onclick="event.stopPropagation(); showTab('guide')">Module Instructions</div>
-            </div>
-
+        <div id="tab-concept" class="pill active" style="border-radius:0; border:none; flex:1; text-align:center; cursor:pointer;" onclick="event.stopPropagation(); showTab('concept')">Concept:</div>
+        <div id="tab-systems" class="pill" style="border-radius:0; border:none; flex:1; text-align:center; cursor:pointer;" onclick="event.stopPropagation(); showTab('systems')">Trial Guide:</div>
+        <div id="tab-guide" class="pill" style="border-radius:0; border:none; flex:1; text-align:center; cursor:pointer;" onclick="event.stopPropagation(); showTab('guide')">Instructions</div>
+      </div>
       <div id="tabContent" style="padding:24px; color:#a8c0da; font-size:13px; line-height:1.5; min-height:350px; max-height:500px; overflow-y:auto;"></div>
       <div style="padding:14px; border-top:1px solid rgba(148,163,184,.18); display:flex; justify-content:flex-end; background:rgba(9,20,37,.72);">
-<button id="trialHelpClose" type="button" class="primary">Close Instructions</button>
+        <button id="trialHelpClose" type="button" class="primary">Close</button>
       </div>
     </div>
   </div>
