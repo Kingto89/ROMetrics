@@ -127,12 +127,12 @@
         </div>
     </div>
 
-  <div id="console-FL-002" class="module-ui-box" style="display:none;">
+<div id="console-FL-002" class="module-ui-box" style="display:none;">
     <div class="row">
         <div class="k">Forward/Back Lean</div>
-        <div class="v"><span id="leanZVal">0.0</span>°</div>
+        <div class="v"><span id="leanVal">0.0</span>°</div>
     </div>
-    <input id="leanZSlider" type="range" min="-30" max="45" step="0.5" value="0"/>
+    <input id="leanSlider" type="range" min="-30" max="45" step="0.5" value="0"/>
 
     <div class="row" style="margin-top:10px;">
         <div class="k">Left/Right Lean</div>
@@ -140,12 +140,16 @@
     </div>
     <input id="leanXSlider" type="range" min="-30" max="30" step="0.5" value="0"/>
 
-    <div class="row" style="margin-top: 15px; gap: 8px; flex-wrap: wrap;">
-        <button id="btnSideView" class="btn">Snap Side View</button>
-        <button id="btnFrontView" class="btn">Snap Front View</button>
-        <button id="startTestBtn" class="primary" style="width:100%;">Start Forensic Test</button>
+    <div class="row" style="margin-top: 15px; gap: 8px;">
+        <button id="btnSideView" class="btn" style="flex:1;">Side View</button>
+        <button id="btnFrontView" class="btn" style="flex:1;">Front View</button>
     </div>
-</div>>
+
+    <div class="row" style="margin-top: 10px; gap: 8px;">
+        <button id="lockBallBtn" class="btn" style="flex:1; border-color:#38bdf8;">Pick Up Weight Ball</button>
+        <button id="toggleBaseBtn" class="btn" style="flex:1;">Base of Support</button>
+    </div>
+</div>
 
     <div id="console-FL-003" class="module-ui-box" style="display:none;"></div>
     <div id="console-FL-004" class="module-ui-box" style="display:none;"></div>
@@ -1772,30 +1776,27 @@ async function enterFL001() {
     document.getElementById('trialMsg').innerHTML = "<b>Module Loaded.</b> Select Trial A or B to begin.";
 }
 
+// UPDATE enterFL002 function to match new buttons
 async function enterFL002() {
-    // --- RESET DEFAULTS & CLEAN VARIABLES ---
-    sim.running = false;          // Stops cardio logic
-    sim.isStabilityMode = true;   // Enables tipping physics in animate loop
-    sim.leanZ = 0;                // Forward/Back Lean (degrees)
-    sim.leanX = 0;                // Lateral Left/Right Lean (degrees)
+    sim.running = false;          
+    sim.isStabilityMode = true;   
+    sim.leanZ = 0;                
+    sim.leanX = 0;                
     sim.ballLocked = false;
 
-    if (runAction) {
-        runAction.stop(); // Kills the running animation cycle
-    }
+    if (runAction) runAction.stop(); 
     restore(); 
     setZone('forensics'); 
 
-    // --- UI REFERENCES ---
-    const leanZSlider = document.getElementById('leanSlider');    // Z-Axis
-    const leanXSlider = document.getElementById('leanXSlider');   // X-Axis
+    const leanZSlider = document.getElementById('leanSlider');
+    const leanXSlider = document.getElementById('leanXSlider');
     const leanZVal = document.getElementById('leanVal');
     const leanXVal = document.getElementById('leanXVal');
-    const ballBtn = document.getElementById('lockBallBtn');       // The "Pick Up Ball" Toggle
+    const ballBtn = document.getElementById('lockBallBtn');
     const baseBtn = document.getElementById('toggleBaseBtn');
     const forcePlate = scene.getObjectByName("forcePlate");
 
-    // --- 1. VIEW SNAPPING ---
+    // Snap Camera Views
     document.getElementById('btnSideView').onclick = () => {
         camera.position.set(Z_FORENSIC.x + 3.5, 1.4, Z_FORENSIC.z);
         controls.target.set(Z_FORENSIC.x, 1.2, Z_FORENSIC.z);
@@ -1808,47 +1809,42 @@ async function enterFL002() {
         controls.update();
     };
 
-    // --- 2. MULTI-AXIS TIPPING LOGIC ---
-    // Forward / Back (Z)
+    // Slider Logic
     leanZSlider.oninput = (e) => {
         const degrees = parseFloat(e.target.value);
         if (leanZVal) leanZVal.textContent = degrees.toFixed(1);
         sim.leanZ = degrees; 
     };
 
-    // Left / Right (X)
-    if (leanXSlider) {
-        leanXSlider.oninput = (e) => {
-            const degrees = parseFloat(e.target.value);
-            if (leanXVal) leanXVal.textContent = degrees.toFixed(1);
-            sim.leanX = degrees; 
-        };
-    }
+    leanXSlider.oninput = (e) => {
+        const degrees = parseFloat(e.target.value);
+        if (leanXVal) leanXVal.textContent = degrees.toFixed(1);
+        sim.leanX = degrees; 
+    };
 
-    // --- 3. PICK UP WEIGHT BALL ---
+    // Toggle Weight Ball (Hold/Drop)
     ballBtn.onclick = () => {
         sim.ballLocked = !sim.ballLocked;
         ballBtn.classList.toggle('active', sim.ballLocked);
-        
-        // Update label to reflect picking up/dropping the ball
         ballBtn.textContent = sim.ballLocked ? "Drop Weight Ball" : "Pick Up Weight Ball";
+        ballBtn.style.background = sim.ballLocked ? "rgba(56, 189, 248, 0.2)" : "";
         
         const $msg = document.getElementById('trialMsg');
-        if (sim.ballLocked) {
-            $msg.innerHTML = "<b>TEST ACTIVE:</b> Weight ball picked up. Combined Center of Mass (CoM) shifted.";
-        } else {
-            $msg.innerHTML = "<b>TEST ENDED:</b> Ball dropped. Anatomic CoM restored.";
-        }
+        $msg.innerHTML = sim.ballLocked 
+            ? "<b>SYSTEM ACTIVE:</b> Ball attached to Right Hand. CoM shifted forward." 
+            : "<b>SYSTEM UPDATED:</b> Ball released.";
     };
 
-    // --- 4. BASE OF SUPPORT VISUALS ---
+    // Toggle Base of Support Visual
     baseBtn.onclick = () => {
         if (forcePlate) {
             forcePlate.visible = !forcePlate.visible;
             baseBtn.classList.toggle('active', forcePlate.visible);
+            baseBtn.style.borderColor = forcePlate.visible ? "#38bdf8" : "";
         }
     };
 }
+    
     
 function enterModule(moduleId) {
   const mod = getModule(moduleId);
