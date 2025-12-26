@@ -594,11 +594,6 @@ if (sim.running) {
 }
 
 $reset.addEventListener('click', () => {
-document.getElementById('analysisConsole').style.display = 'none';
-sim.ballLocked = false;
-if(avatarRoot) {
-    avatarRoot.rotation.x = 0; // Resets the lean tilt only
-}  
 if (window.controls) window.controls.enabled = true;
 // 1. CLEAR MESSAGES & UI
     document.getElementById('trialMsg').innerHTML = 'Read the instructions above. When ready, press Start.';
@@ -1718,17 +1713,20 @@ async function enterFL001() {
 
 
 async function enterFL002() {
-    // 1. FORCE NEUTRAL POSITION
+    // 1. ANATOMIC RESET: Stop any leftover Module 1 motion
     sim.running = false; 
     sim.speedMph = 0; 
     document.getElementById('spd').value = 0;
     if (runAction) runAction.paused = true;
-    
-    // This removes procedural rotations and GLB animations
-    restore(); 
+    restore(); // Resets bones to neutral anatomic position
 
-    // 2. POSITION CAMERA & AVATAR
-    setZone('forensics'); 
+    setZone('forensics'); // Move to Analysis Bay
+    
+    // 2. UI & Console Setup
+    document.querySelector('.k').textContent = "Forward Lean Intensity"; 
+    document.getElementById('analysisConsole').style.display = 'flex';
+    document.getElementById('badge').style.display = 'block';
+    document.getElementById('trialTag').textContent = "A";
     
     const $trialMsg = document.getElementById('trialMsg');
     $trialMsg.innerHTML = "<b>Lab Objective:</b> Locate the Tipping Point. Snap to Side View and Lock Ball to begin.";
@@ -1740,20 +1738,7 @@ async function enterFL002() {
         controls.update();
     };
 
-    // Tool 2 & 3: Ball Logic
-    document.getElementById('btnSelectBall').onclick = function() {
-        this.classList.toggle('active');
-        const ball = scene.getObjectByName("weightBall");
-        if (ball) ball.visible = !ball.visible;
-        document.getElementById('btnLockBall').disabled = !ball.visible;
-    };
-
-    document.getElementById('btnLockBall').onclick = function() {
-        this.classList.toggle('active');
-        sim.ballLocked = !sim.ballLocked;
-        this.textContent = sim.ballLocked ? "Ball Locked" : "Lock to Hand";
-    };
-
+    // Tool 2 & 3 Logic...
     sim.ballLocked = false;
     sim.running = true; 
 }
@@ -1762,29 +1747,20 @@ function enterModule(moduleId) {
   const mod = getModule(moduleId);
   currentModule = mod;
   document.getElementById('moduleTitle').textContent = mod.label;
-
-  // 1. UI CLEANUP (Hide everything first)
-  document.getElementById('fuelBtn').style.display = "none";
-  document.getElementById('analysisConsole').style.display = "none";
   
-  // 2. SHOW CORRECT MENU
-  if (moduleId === 'FL-001') {
-      document.getElementById('fuelBtn').style.display = "inline-block";
-      document.querySelector('.k').textContent = "Cardio Speed";
-  } 
-  else if (moduleId === 'FL-002') {
-      document.getElementById('analysisConsole').style.display = "flex";
-      document.querySelector('.k').textContent = "Lean Intensity";
-  }
-
+  // Snap camera to the specific bay
   setZone(mod.zone || 'all');
-  document.getElementById('badge').style.display = "block";
-
+  
+  // Show the HUD badge
+  const $badge = document.getElementById('badge');
+  $badge.style.display = "block";
+  $badge.style.top = "14px"; 
+  
+  // Trigger the specific module logic (like enterFL001)
   if (typeof mod.onEnter === 'function') {
     mod.onEnter(); 
   }
 }
-    
     // 7) Studio UI wiring
     // ==============================
     const pills = [...document.querySelectorAll('.pill')];
