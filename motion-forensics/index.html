@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>ROMetrics — Forensics Labs (Studio Preview)</title>
+  <title>ROMetrics — Motion Forensics Labs</title>
   <style>
     html,body{height:100%;margin:0;overflow:hidden;background:#07101b;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;}
     #ui{position:fixed;left:14px;top:14px;z-index:10;display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
@@ -2404,6 +2404,8 @@ function triggerUnlock(msg) {
 
     const currentLetter = document.getElementById('trialTag').textContent.trim();
     const $trialMsg = document.getElementById('trialMsg');
+    const moduleId = document.getElementById('moduleSelect').value || "FL-001";
+    const aBtn = document.getElementById('assessmentBtn');
 
     if (currentLetter === 'A') {
         // SUCCESSFUL TRIAL A
@@ -2416,25 +2418,37 @@ function triggerUnlock(msg) {
             sim.lactate = 0;
             speedViolation = false;
             
-            // Auto-load Trial B parameters (480s, Fuel enabled)
+            // Auto-load Trial B parameters
             showFL001Trial(window.currentTrials, 'B');
             $trialMsg.innerHTML = `<b>Trial B Loaded.</b> Survive 480s and record 1 fueling event.`;
         }, 3000);
 
     } else if (currentLetter === 'B') {
         // SUCCESSFUL TRIAL B
-        $trialMsg.innerHTML = `<b style="color:#38bdf8;">Forensic Validation Successful.</b> All trials complete.`;
+        // 1. Mark as valid for this session (Security Gate)
+        sessionStorage.setItem(`${moduleId}_Session_Valid`, 'true');
         
-        // Show the Final Assessment Button
-        const aBtn = document.getElementById('assessmentBtn');
+        // 2. HUD Feedback
+        $trialMsg.innerHTML = `<b style="color:#4ade80;">VALIDATION SUCCESS:</b> All forensic trials complete. Assessment unlocked.`;
+        
+        // 3. Unlock and Style Assessment Button
         if (aBtn) {
             aBtn.style.display = 'block';
-            const modId = document.getElementById('moduleSelect').value || "FL-001";
+            aBtn.style.opacity = "1";
+            aBtn.style.cursor = "pointer";
+            aBtn.style.borderColor = "#4ade80";
+            aBtn.style.color = "#4ade80";
+            aBtn.textContent = "Take Final MCQ Assessment (Unlocked)";
+            
+            // 4. Secure Hyperlink
             aBtn.onclick = () => { 
-window.location.href = `https://kingto89.github.io/ROMetrics.com/motion-forensics/MCQ/?module=${moduleId}&mode=review`;            };
+                window.location.href = `https://kingto89.github.io/ROMetrics.com/motion-forensics/MCQ/?module=${moduleId}`;
+            };
         }
     }
 }
+
+// Ensure the loop continues
 animate();
 
 // 9) Enter Studio (gate -> studio)
