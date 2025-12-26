@@ -1767,46 +1767,47 @@ async function enterFL001() {
 }
 
 async function enterFL002() {
-    // 1. ANATOMIC & SIM RESET
     sim.running = false; 
-    sim.speedMph = 0; // In Module 2, we reuse this for the Lean Angle
+    sim.speedMph = 0; 
     sim.ballLocked = false;
     if (runAction) runAction.paused = true;
-    restore(); // Resets bones to neutral anatomic position
+    restore(); 
 
-    setZone('forensics'); // Move camera to Analysis Bay
+    setZone('forensics'); 
 
-    // 2. UI REFERENCES
     const leanSlider = document.getElementById('leanSlider');
     const leanVal = document.getElementById('leanVal');
     const lockBtn = document.getElementById('lockBallBtn');
     const baseBtn = document.getElementById('toggleBaseBtn');
     const forcePlate = scene.getObjectByName("forcePlate");
-    const $trialMsg = document.getElementById('trialMsg');
 
-    $trialMsg.innerHTML = "<b>Lab Objective:</b> Use the Lean Intensity slider to identify the Tipping Point.";
-
-    // 3. SLIDER LOGIC: Drives Avatar Rotation
-    leanSlider.oninput = (e) => {
-        const degrees = parseFloat(e.target.value);
-        leanVal.textContent = degrees.toFixed(1);
-        sim.speedMph = degrees; 
-        sim.running = true; // Signals the animate() loop to apply rotation
-    };
-
-    // 4. VIEW SNAPPING: Lateral view for stability check
+    // 1. Corrected Snap Side View (Moved to opposite side)
     document.getElementById('btnSideView').onclick = () => {
-        // Lateral side view snap
-        camera.position.set(Z_FORENSIC.x - 3.5, 1.4, Z_FORENSIC.z);
+        // Shifted from -3.5 to +3.5 on X to look from the other side
+        camera.position.set(Z_FORENSIC.x + 3.5, 1.4, Z_FORENSIC.z);
         controls.target.set(Z_FORENSIC.x, 1.2, Z_FORENSIC.z);
         controls.update();
     };
 
-    // 5. TOOL TOGGLES
+    // 2. Slider Logic (Moving the Model)
+    leanSlider.oninput = (e) => {
+        const degrees = parseFloat(e.target.value);
+        leanVal.textContent = degrees.toFixed(1);
+        sim.speedMph = degrees; 
+        sim.running = true; // Signals animate() loop to apply tilt
+    };
+
+    // 3. The CoM Lock Purpose
     lockBtn.onclick = () => {
         sim.ballLocked = !sim.ballLocked;
         lockBtn.classList.toggle('active', sim.ballLocked);
-        lockBtn.textContent = sim.ballLocked ? "Unlock CoM" : "Lock CoM (Weight Ball)";
+        // This button represents "Carrying a Load" vs "No Load"
+        lockBtn.textContent = sim.ballLocked ? "Drop Weight (Reset CoM)" : "Carry Weight (Shift CoM)";
+        
+        const $msg = document.getElementById('trialMsg');
+        $msg.innerHTML = sim.ballLocked ? 
+            "<b>Forensic Note:</b> CoM has shifted forward due to the load. Stability will breach earlier." :
+            "<b>Forensic Note:</b> Weight dropped. CoM returned to anatomic center.";
     };
 
     baseBtn.onclick = () => {
@@ -2331,43 +2332,49 @@ if (sim.running && sim.energy > 0) {
 
   // added for module two stability (CORRECTED — no forced attachment)
 if (sim.running && currentModule?.id === 'FL-002') {
-    if (avatarRoot) {
-        const chestPos = new THREE.Vector3();
-        const handPos = new THREE.Vector3();
-        
-        // Find Bones for Attachment
-        avatarRoot.traverse(o => { 
-            if(o.name.toLowerCase().includes("spine02")) o.getWorldPosition(chestPos); 
-            if(o.name.toLowerCase().includes("hand_r")) o.getWorldPosition(handPos);
-        });
+    const leanRads = (sim.speedMph * Math.PI) / 180; 
+    avatarRoot.rotation.x = leanRads; 
 
-        const pLine = scene.getObjectByName("plumbLine");
-        const wBall = scene.getObjectByName("weightBall");
+    const chestPos = new THREE.Vector3();
+    const handPos = new THREE.Vector3();
+    const pLine = scene.getObjectByName("plumbLine");
+    const wBall = scene.getObjectByName("weightBall");
 
-        // Use the speed slider (0-22) to rotate the model forward (Lean)
-        const leanRads = (sim.speedMph / 22) * 0.8; // Max lean ~45 degrees
-        avatarRoot.rotation.x = leanRads; 
-
-        if (sim.ballLocked && wBall) {
-            wBall.position.copy(handPos); // Ball moves with hand
-            // Plumb line drops from the new combined Center of Mass
-            pLine.position.set(chestPos.x, chestPos.y, (chestPos.z + handPos.z) / 2);
-        } else {
-            pLine.position.copy(chestPos); // Plumb line drops from chest only
-        }
-
-        // Stability Breach Forensic Logic
-        const limitZ = Z_FORENSIC.z + 0.5; // Toe edge of the plate
-        const $statusVal = document.getElementById('statusVal');
-        
-        if (pLine.position.z > limitZ) {
-            $statusVal.textContent = "STABILITY BREACH";
-            $statusVal.style.color = "#ff9aa0";
-        } else {
-            $statusVal.textContent = "Stable";
-            $statusVal.style.color = "#4ade80";
-        }
+    // 1. SET FIXED PLUMB LINE (Example: 0.4m in front of center)
+    const fixedLineZ = Z_FORENSIC.z + 0.4; 
+    if (pLine) {
+        pLine.position.set(Z_FORENSIC.x + 0.6, 1.5, fixedLineZ);
     }
+
+    // 2. GET CURRENT ANATOMIC POSITIONS
+    avatarRoot.traverse(o => { 
+        if(o.name.toLowerCase().includes("spine02")) o.getWorldPosition(chestPos); 
+        if(o.name.toLowerCase().includes("hand_r")) o.getWorldPosition(handPos);
+    });
+
+    // 3. CALCULATE COMBINED CENTER OF MASS (CoM)
+    let currentCoM_Z = chestPos.z;
+    if (sim.ballLocked && wBall) {
+        wBall.position.copy(handPos); // Ball is in hand
+        currentCoM_Z = (chestPos.z + handPos.z) / 2; // CoM shifts forward
+    } else {
+        if(wBall) wBall.position.set(Z_FORENSIC.x + 0.6, 0.15, Z_FORENSIC.z + 1.2); // Ball on floor
+    }
+
+    // 4. FORENSIC BREACH: Does the CoM cross the fixed Plumb Line?
+    const $statusVal = document.getElementById('statusVal');
+    
+    if (currentCoM_Z > fixedLineZ) {
+        $statusVal.textContent = "STABILITY BREACH";
+        $statusVal.style.color = "#ff9aa0";
+        // Visual cue: Turn the plumb line red when breached
+        if(pLine) pLine.material.color.setHex(0xff9aa0);
+    } else {
+        $statusVal.textContent = "Stable";
+        $statusVal.style.color = "#4ade80";
+        if(pLine) pLine.material.color.setHex(0xb0b0b0);
+    }
+}
 }
 
   
