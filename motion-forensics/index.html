@@ -1826,7 +1826,60 @@ async function enterFL002() {
     if (runAction) runAction.paused = true;
     restore(); // Resets bones to neutral anatomic position
 
+    // --- MODULE 2: Plumb Line / COM Console (isolated) ---
+    const container = document.getElementById('moduleConsoles');
+    container.innerHTML = ''; // Clear any previous module consoles
+
+    const consoleDiv = document.createElement('div');
+    consoleDiv.id = 'module2Console';
+    consoleDiv.style.cssText = `
+        background: rgba(9,20,37,0.95);
+        border: 2px solid #38bdf8;
+        border-radius: 16px;
+        padding: 12px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        pointer-events: auto;
+        width: 240px;
+    `;
+
+    const header = document.createElement('div');
+    header.textContent = "Module 2 — Plumb Line";
+    header.style.fontWeight = "900";
+    header.style.color = "#38bdf8";
+    consoleDiv.appendChild(header);
+
+    const ballSelect = document.createElement('select');
+    ballSelect.innerHTML = `<option value="ball1">Ball 1</option><option value="ball2">Ball 2</option>`;
+    consoleDiv.appendChild(ballSelect);
+
+    const lockBtn = document.createElement('button');
+    lockBtn.textContent = "Lock Ball";
+    lockBtn.style.cursor = "pointer";
+    lockBtn.onclick = () => {
+        const selected = ballSelect.value;
+        console.log(`Locked ${selected} to module hands`);
+    };
+    consoleDiv.appendChild(lockBtn);
+
+    const moveBtn = document.createElement('button');
+    moveBtn.textContent = "Move Module";
+    moveBtn.style.cursor = "pointer";
+    moveBtn.onclick = () => {
+        console.log("Module moved for testing");
+    };
+    consoleDiv.appendChild(moveBtn);
+
+    container.appendChild(consoleDiv); // <-- End of Module 2 isolated console
+
+    // Update module title badge
+    document.getElementById('moduleTitle').textContent = "Module 2 — Stability & COM";
+    currentModule = 'FL-002';
+
     setZone('forensics'); // Move to Analysis Bay
+}
+
     
     // 2. UI & Console Setup
     document.querySelector('.k').textContent = "Forward Lean Intensity"; 
