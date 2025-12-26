@@ -2114,15 +2114,13 @@ if (runAction) runAction.paused = false;
 // 1. Update the Screen Displays
 drawPanel(wallScreen, 'CARDIO BOARD');
 drawTreadmillMph(consoleScreen);
-
-// --- INSIDE THE ANIMATE LOOP (around Line 790) ---
+// --- INSIDE THE ANIMATE LOOP (Logic Cleaned & Braces Fixed) ---
 if (sim.running && sim.energy > 0) {
     sim.elapsed += dt; 
     const speed = parseFloat(sim.speedMph.toFixed(1));
     const currentCost = (speed * 26.8 * 0.205) + 3.5;
     const activeModel = document.getElementById('modelSelect').value;
 
-    // Define Model Profiles: penaltySeverity set to 1.5 - 2.0x for visible impact
     const profiles = {
         Roma:    { lowLactateMulti: 1.17, highLactateMulti: 1.41, recoveryRate: 0.07, tankSize: 1200, penaltySeverity: 1.5 },
         Roman:   { lowLactateMulti: 1.27, highLactateMulti: 1.52, recoveryRate: 0.05, tankSize: 1200, penaltySeverity: 2.0 },
@@ -2139,13 +2137,12 @@ if (sim.running && sim.energy > 0) {
         fatigueScalar = p.lowLactateMulti;
     }
 
-    // 2. MODEL-SPECIFIC ENERGY DRAIN (W' Balance)
+    // 2. ENERGY DRAIN (W' Balance)
     if (currentCost > sim.vo2Max) {
         const deficit = currentCost - sim.vo2Max;
         const percentDropPerSecond = (deficit / 60 / p.tankSize) * 10000;
         sim.energy -= (percentDropPerSecond * fatigueScalar) * dt;
     } else {
-        // Model-specific recovery speed
         sim.energy = Math.min(100, sim.energy + (p.recoveryRate * dt));
     }
 
@@ -2155,24 +2152,23 @@ if (sim.running && sim.energy > 0) {
 
     if (speed > ceilingSpeed) {
         const deficit = currentCost - sim.vo2Max;
-        // Logic: Deficit * Base Coefficient * Fuel Penalty. (Fatigue Scalar removed to prevent mirroring)
         sim.lactate = Math.min(100, sim.lactate + (deficit * 0.017 * activePenalty * dt));
     } else if (speed > 0) {
-        // Active Clearance: Lactate drops while walking, even if energy is still low
         sim.lactate = Math.max(0, sim.lactate - (0.4 * dt));
     }
 
-    // 4. HOUSEKEEPING (Timers)
+    // 4. HOUSEKEEPING (Timers) - ONE set only
     if (sim.fuelPenaltyTimer > 0) sim.fuelPenaltyTimer -= dt;
     if (sim.fuelAlertTimer > 0) sim.fuelAlertTimer -= dt;
     if (sim.throughputAlert > 0) sim.throughputAlert -= dt;
 
-    // Updated Trial Timer
+    // 5. TRIAL TIMER
     if (currentModule?.id === 'FL-001') {
         trialTime = Math.max(0, trialTime - dt);
         document.getElementById('trialTime').textContent = Math.ceil(trialTime);
     }
 }
+// --- END OF CORRECTED BLOCK ---
 
     // 4. Keep timers running
     if (sim.fuelPenaltyTimer > 0) sim.fuelPenaltyTimer -= dt;
