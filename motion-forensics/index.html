@@ -50,7 +50,7 @@
   </script>
 </head>
 <body>
-<div id="gate">
+  <div id="gate">
     <div id="gateCard">
       <div id="gateTop">
         <div>
@@ -58,94 +58,121 @@
           <div id="gateSub">Select a model, then choose a lab module.</div>
         </div>
       </div>
-
       <div id="gateGrid">
         <div class="field">
           <div class="lbl">MODEL</div>
           <select id="modelSelect"></select>
           <div class="desc" id="modelDesc"></div>
         </div>
-
         <div class="field">
           <div class="lbl">MODULE</div>
           <select id="moduleSelect"></select>
           <div class="desc" id="moduleDesc"></div>
         </div>
       </div>
-
       <div id="gateActions">
         <button id="enterBtn" class="primary">Enter Studio</button>
       </div>
     </div>
   </div>
 
- <div id="badge" style="display:none;">
+  <div id="badge" style="display:none;">
     <div class="t">Forensics Labs — Studio</div>
     <div class="p" id="moduleTitle">Module</div>
-
-    <div id="controls">
-        <div class="row">
-            <div class="k">Cardio Speed</div>
-            <div class="v"><span id="spdVal">6.0</span> mph</div>
-        </div>
-
-        <input id="spd" type="range" min="0" max="22" step="0.1" value="0"/>
-
-        <div class="row">
-            <div class="k">W′ Balance / % Anaerobic Used</div>
-            <div class="v"><span id="engVal">100</span>%</div>
-        </div>
-
-        <div class="row">
-            <div class="k">Trial</div>
-            <div class="v"><span id="trialTag">A</span> • <span id="trialTime">300</span>s</div>
-        </div>
-
-        <div class="row" style="justify-content:flex-start; gap:8px; flex-wrap:wrap;">
-            <button id="trialA" class="btn">Trial A</button>
-            <button id="trialB" class="btn">Trial B</button>
-        </div>
-        
-        <button id="trialHelp" class="btn" style="align-self:flex-start; margin-top:5px;">Instructions</button>
-
-        <div id="trialMsg" style="color:#a8c0da; font-size:12px; line-height:1.25; margin-top:10px; min-height:30px;">
-            Read instructions. Select Trial A or B to begin.
-        </div>
-
-        <button id="assessmentBtn" class="primary" style="display:none; width:100%; margin-top:10px;">
-            Take Final MCQ Assessment
-        </button>
-
-<div class="row" style="display: flex; justify-content: flex-start; gap: 10px; margin-top: 10px;">
-    <button id="startBtn" class="btn">Start</button>
-    <button id="fuelBtn" class="btn">Fuel +10</button>
-    <button id="resetBtn" class="btn">Reset</button>
-
-    <button id="reviewBtn" class="btn" style="display:none; border-color:#4ade80; color:#4ade80; margin-left:auto;">Review MCQ</button>
-</div>
-
-        <div class="row" style="justify-content:space-between; margin-top:10px; padding-top:10px; border-top:1px solid rgba(148,163,184,.18);">
-            <div class="k">Status</div>
-            <div class="v" id="statusVal">Stable</div>
-        </div>
-    </div>
-</div>
+    <div id="dynamicConsoleMount"></div>
+  </div>
 
   <div id="trialHelpModal" style="display:none; position:fixed; inset:0; z-index:100; background:rgba(7,16,27,.85); align-items:center; justify-content:center;">
     <div id="gateCard" style="max-width:600px; padding:0; overflow:hidden; display:flex; flex-direction:column;">
       <div style="display:flex; background:rgba(15,23,42,.95); border-bottom:1px solid rgba(148,163,184,.25);">
-        <div id="tab-concept" class="pill active" style="border-radius:0; border:none; flex:1; text-align:center; cursor:pointer;" onclick="event.stopPropagation(); showTab('concept')">Concept (read first):</div>
-<div id="tab-systems" class="pill" style="border-radius:0; border:none; flex:1; text-align:center; cursor:pointer;" onclick="event.stopPropagation(); showTab('systems')">Trial Guide:</div>
-<div id="tab-guide" class="pill" style="border-radius:0; border:none; flex:1; text-align:center; cursor:pointer;" onclick="event.stopPropagation(); showTab('guide')">Module Instructions</div>
-            </div>
-
+        <div id="tab-concept" class="pill active" style="border-radius:0; border:none; flex:1; text-align:center; cursor:pointer;" onclick="event.stopPropagation(); showTab('concept')">Concept:</div>
+        <div id="tab-systems" class="pill" style="border-radius:0; border:none; flex:1; text-align:center; cursor:pointer;" onclick="event.stopPropagation(); showTab('systems')">Trial Guide:</div>
+        <div id="tab-guide" class="pill" style="border-radius:0; border:none; flex:1; text-align:center; cursor:pointer;" onclick="event.stopPropagation(); showTab('guide')">Instructions</div>
+      </div>
       <div id="tabContent" style="padding:24px; color:#a8c0da; font-size:13px; line-height:1.5; min-height:350px; max-height:500px; overflow-y:auto;"></div>
       <div style="padding:14px; border-top:1px solid rgba(148,163,184,.18); display:flex; justify-content:flex-end; background:rgba(9,20,37,.72);">
-<button id="trialHelpClose" type="button" class="primary">Close Instructions</button>
+        <button id="trialHelpClose" type="button" class="primary">Close Instructions</button>
       </div>
     </div>
   </div>
+
   <script type="module">
+
+// Global reference to the current tick function
+let activeModuleTick = null;
+
+const MODULE_REGISTRY = {
+  'FL-001': {
+    template: `
+      <div id="controls">
+        <div class="row">
+          <div class="k">Cardio Speed</div>
+          <div class="v"><span id="spdVal">0.0</span> mph</div>
+        </div>
+        <input id="spd" type="range" min="0" max="22" step="0.1" value="0"/>
+        <div class="row">
+          <div class="k">W′ Balance / % Anaerobic Used</div>
+          <div class="v"><span id="engVal">100</span>%</div>
+        </div>
+        <div class="row">
+          <div class="k">Trial</div>
+          <div class="v"><span id="trialTag">-</span> • <span id="trialTime">0</span>s</div>
+        </div>
+        <div class="row" style="justify-content:flex-start; gap:8px; flex-wrap:wrap;">
+          <button id="trialA" class="btn">Trial A</button>
+          <button id="trialB" class="btn">Trial B</button>
+        </div>
+        <button id="trialHelp" class="btn" style="align-self:flex-start; margin-top:5px;">Instructions</button>
+        <div id="trialMsg" style="color:#a8c0da; font-size:12px; line-height:1.25; margin-top:10px; min-height:30px;">
+          Select Trial A or B to begin.
+        </div>
+        <button id="assessmentBtn" class="primary" style="display:none; width:100%; margin-top:10px;">Take Final MCQ</button>
+        <div class="row" style="display: flex; justify-content: flex-start; gap: 10px; margin-top: 10px;">
+          <button id="startBtn" class="btn">Start</button>
+          <button id="fuelBtn" class="btn">Fuel +10</button>
+          <button id="resetBtn" class="btn">Reset</button>
+          <button id="reviewBtn" class="btn" style="display:none; border-color:#4ade80; color:#4ade80; margin-left:auto;">Review MCQ</button>
+        </div>
+        <div class="row" style="justify-content:space-between; margin-top:10px; padding-top:10px; border-top:1px solid rgba(148,163,184,.18);">
+          <div class="k">Status</div>
+          <div class="v" id="statusVal">Stable</div>
+        </div>
+      </div>
+    `,
+    onEnter: (container) => {
+      // Re-link all your existing Module 1 button logic
+      container.querySelector('#startBtn').onclick = () => window.handleStart(); // You'll need to wrap your logic in these functions
+      container.querySelector('#resetBtn').onclick = () => window.handleReset();
+      container.querySelector('#fuelBtn').onclick = () => window.handleFuel();
+      container.querySelector('#trialA').onclick = () => showFL001Trial(window.currentTrials, 'A');
+      container.querySelector('#trialB').onclick = () => showFL001Trial(window.currentTrials, 'B');
+      // Link the speed slider
+      const $spd = container.querySelector('#spd');
+      $spd.oninput = () => { sim.speedMph = parseFloat($spd.value); if(sim.running) speedViolation = true; };
+    },
+    onTick: (dt) => {
+      // Logic unique to Module 1 UI updates
+      document.getElementById('spdVal').textContent = sim.speedMph.toFixed(1);
+      document.getElementById('engVal').textContent = Math.round(sim.energy);
+    }
+  },
+  'FL-002': {
+    template: `
+      <div id="controls">
+        <div class="row"><div class="k">Stability Index</div><div class="v" id="stbVal">100%</div></div>
+        <input id="lean" type="range" min="0" max="10" step="0.1" value="0"/>
+        <div id="trialMsg" style="color:#a8c0da; font-size:12px; margin-top:10px;">Find the tipping point.</div>
+      </div>
+    `,
+    onEnter: (container) => {
+      container.querySelector('#lean').oninput = (e) => { /* Module 2 specific logic */ };
+    },
+    onTick: (dt) => {
+      // Module 2 logic
+    }
+  }
+};
+    
 let speedViolation = false;
 let initialSpeed = 0;    
 let fuelUsedCount = 0;   
@@ -1713,111 +1740,60 @@ async function enterFL001() {
 
 
 async function enterFL002() {
-    // 1. ANATOMIC RESET
+    // 1. ANATOMIC RESET: Stop any leftover Module 1 motion
     sim.running = false; 
     sim.speedMph = 0; 
     document.getElementById('spd').value = 0;
     if (runAction) runAction.paused = true;
-    restore(); 
+    restore(); // Resets bones to neutral anatomic position
 
-    // 2. CREATE ISOLATED CONSOLE
-    const container = document.getElementById('moduleConsoles');
-    container.innerHTML = ''; 
+    setZone('forensics'); // Move to Analysis Bay
+    
+    // 2. UI & Console Setup
+    document.querySelector('.k').textContent = "Forward Lean Intensity"; 
+    document.getElementById('analysisConsole').style.display = 'flex';
+    document.getElementById('badge').style.display = 'block';
+    document.getElementById('trialTag').textContent = "A";
+    
+    const $trialMsg = document.getElementById('trialMsg');
+    $trialMsg.innerHTML = "<b>Lab Objective:</b> Locate the Tipping Point. Snap to Side View and Lock Ball to begin.";
 
-    const consoleDiv = document.createElement('div');
-    consoleDiv.id = 'module2Console';
-    consoleDiv.style.cssText = `
-        background: rgba(9, 20, 37, 0.95);
-        border: 2px solid #38bdf8;
-        border-radius: 16px;
-        padding: 12px 16px;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        pointer-events: auto;
-        width: 240px;
-        box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
-    `;
-
-    const header = document.createElement('div');
-    header.textContent = "STABILITY CONSOLE";
-    header.style.cssText = "font-weight: 900; color: #38bdf8; font-size: 12px; letter-spacing: 1px;";
-    consoleDiv.appendChild(header);
-
-    // Snap View Button
-    const viewBtn = document.createElement('button');
-    viewBtn.className = "console-btn";
-    viewBtn.textContent = "Snap Side View";
-    viewBtn.onclick = () => {
+    // Tool 1: Side View Snap
+    document.getElementById('btnSideView').onclick = () => {
         camera.position.set(Z_FORENSIC.x + 5.5, 1.4, Z_FORENSIC.z);
         controls.target.set(Z_FORENSIC.x, 1.2, Z_FORENSIC.z);
         controls.update();
     };
-    consoleDiv.appendChild(viewBtn);
 
-    // Ball Toggle Button
-    const ballBtn = document.createElement('button');
-    ballBtn.className = "console-btn";
-    ballBtn.textContent = "Toggle Weight Ball";
-    ballBtn.onclick = function() {
-        const wBall = scene.getObjectByName("weightBall");
-        if (wBall) {
-            wBall.visible = !wBall.visible;
-            this.classList.toggle('active', wBall.visible);
-            lockBtn.disabled = !wBall.visible;
-        }
-    };
-    consoleDiv.appendChild(ballBtn);
-
-    // Lock Ball Button
-    const lockBtn = document.createElement('button');
-    lockBtn.className = "console-btn";
-    lockBtn.textContent = "Lock to Hand";
-    lockBtn.disabled = true; 
-    lockBtn.onclick = function() {
-        sim.ballLocked = !sim.ballLocked;
-        this.classList.toggle('active', sim.ballLocked);
-        this.textContent = sim.ballLocked ? "Ball Locked" : "Lock to Hand";
-    };
-    consoleDiv.appendChild(lockBtn);
-
-    container.appendChild(consoleDiv);
-
-    // 3. UI SYNC
-    document.getElementById('moduleTitle').textContent = "Module 2 — Stability & Center of Mass";
-    document.querySelector('.k').textContent = "Forward Lean Intensity";
-    document.getElementById('trialTag').textContent = "A";
-    document.getElementById('trialMsg').innerHTML = "<b>Goal:</b> Identify the Tipping Point. Snap to Side View and Lock Ball to begin.";
-
+    // Tool 2 & 3 Logic...
     sim.ballLocked = false;
     sim.running = true; 
-    setZone('forensics'); 
 }
     
 function enterModule(moduleId) {
-    const mod = getModule(moduleId);
-    currentModule = mod;
-    document.getElementById('moduleTitle').textContent = mod.label;
-
-    // UI Reset
-    document.getElementById('fuelBtn').style.display = "none";
-    document.getElementById('analysisConsole').style.display = "none";
-    document.getElementById('moduleConsoles').innerHTML = ''; // Clear floating consoles
+  const mount = document.getElementById('dynamicConsoleMount');
+  const modData = MODULE_REGISTRY[moduleId];
   
-    if (moduleId === 'FL-001') {
-        document.getElementById('fuelBtn').style.display = "inline-block";
-        document.querySelector('.k').textContent = "Cardio Speed";
-    } 
-    else if (moduleId === 'FL-002') {
-        document.getElementById('analysisConsole').style.display = "flex";
-    }
+  // 1. Clear previous console logic
+  mount.innerHTML = "";
+  activeModuleTick = null;
 
-    setZone(mod.zone || 'all');
-    document.getElementById('badge').style.display = "block";
+  if (modData) {
+    // 2. Inject the specific HTML for this module
+    mount.innerHTML = modData.template;
+    
+    // 3. Setup the buttons and the tick function
+    modData.onEnter(mount);
+    activeModuleTick = modData.onTick;
 
-    if (typeof mod.onEnter === 'function') {
-        mod.onEnter(); 
-    }
+    // 4. Update Global State
+    const mod = getModule(moduleId);
+    document.getElementById('moduleTitle').textContent = mod.label;
+    setZone(mod.zone || 'cardio');
+    
+    // 5. Trigger specific data fetches (like your MD fetcher)
+    if (moduleId === 'FL-001') enterFL001();
+  }
 }
     // 7) Studio UI wiring
     // ==============================
