@@ -79,9 +79,13 @@
     </div>
   </div>
 
- <div id="badge" style="display:none;">
+<div id="badge" style="display:none;">
     <div class="t">Forensics Labs — Studio</div>
     <div class="p" id="moduleTitle">Module</div>
+
+    <div id="dynamicConsoleMount">
+        </div>
+ </div>
 
     <div id="controls">
         <div class="row">
@@ -146,6 +150,98 @@
     </div>
   </div>
   <script type="module">
+
+ // Global reference for the modular loop
+let activeModuleTick = null;
+
+const MODULE_REGISTRY = {
+  'FL-001': {
+    onEnter: () => {
+      // Re-link Module 1 specific buttons that are already in your HTML
+      const $start = document.getElementById('startBtn');
+      const $fuel = document.getElementById('fuelBtn');
+      const $reset = document.getElementById('resetBtn');
+      const $spd = document.getElementById('spd');
+
+      if($start) $start.onclick = () => window.handleModule1Start();
+      if($fuel) $fuel.onclick = () => window.handleModule1Fuel();
+      if($reset) $reset.onclick = () => window.handleModule1Reset();
+      if($spd) {
+        $spd.oninput = () => {
+          sim.speedMph = parseFloat($spd.value);
+          if (sim.running) speedViolation = true;
+        };
+      }
+    },
+    onTick: (dt) => {
+      // Module 1 Live HUD Updates
+      const $spdVal = document.getElementById('spdVal');
+      const $engVal = document.getElementById('engVal');
+      if ($spdVal) $spdVal.textContent = sim.speedMph.toFixed(1);
+      if ($engVal) $engVal.textContent = Math.round(sim.energy);
+    }
+  },
+  'FL-002': {
+    onEnter: () => {
+      // Module 2 logic initialization
+      const mount = document.getElementById('dynamicConsoleMount');
+      mount.innerHTML = `
+        <div class="row"><div class="k">Forward Lean</div><div class="v"><span id="leanVal">0</span>%</div></div>
+        <input id="leanSlider" type="range" min="0" max="100" step="1" value="0"/>
+        <div id="loadUI" style="display:none; margin-top:10px; border-top:1px solid #38bdf8; padding-top:10px">
+            <div class="row"><div class="k">Ball Distance</div><div class="v"><span id="ballVal">0</span>%</div></div>
+            <input id="ballSlider" type="range" min="0" max="100" step="1" value="0"/>
+        </div>
+        <div class="row" style="margin-top:10px; gap:8px;">
+            <button id="btnSide" class="btn">Profile View</button>
+            <button id="btnBall" class="btn">Add Load (Ball)</button>
+        </div>
+        <div id="stabBox" style="margin-top:15px; padding:10px; border:2px solid #4ade80; background:rgba(74,222,128,0.1); text-align:center; border-radius:12px;">
+            <div id="stabStatus" style="font-weight:900; color:#4ade80;">STABLE</div>
+        </div>
+      `;
+      
+      const leanIn = mount.querySelector('#leanSlider');
+      const ballIn = mount.querySelector('#ballSlider');
+      
+      mount.querySelector('#btnSide').onclick = () => {
+          camera.position.set(Z_FORENSIC.x + 5.5, 1.4, Z_FORENSIC.z);
+          controls.target.set(Z_FORENSIC.x, 1.2, Z_FORENSIC.z);
+      };
+
+      mount.querySelector('#btnBall').onclick = (e) => {
+          sim.ballLocked = !sim.ballLocked;
+          mount.querySelector('#loadUI').style.display = sim.ballLocked ? 'block' : 'none';
+          const wBall = scene.getObjectByName("weightBall");
+          if(wBall) wBall.visible = sim.ballLocked;
+          document.getElementById('trialTag').textContent = sim.ballLocked ? "B" : "A";
+      };
+
+      leanIn.oninput = () => { sim.lean = leanIn.value; };
+      ballIn.oninput = () => { sim.ballDist = ballIn.value; };
+    },
+    onTick: (dt) => {
+      // Module 2 Stability Logic
+      const lean = parseFloat(sim.lean) || 0;
+      const dist = parseFloat(sim.ballDist) || 0;
+      const tippingPoint = sim.ballLocked ? (70 - (dist * 0.4)) : 75;
+      const breached = lean > tippingPoint;
+
+      const status = document.getElementById('stabStatus');
+      if(status) {
+          status.textContent = breached ? "STABILITY BREACH" : "STABLE";
+          status.style.color = breached ? "#ff9aa0" : "#4ade80";
+          document.getElementById('leanVal').textContent = lean;
+      }
+
+      if (avatarRoot) {
+          avatarRoot.rotation.x = (lean / 100) * 0.8;
+          const pLine = scene.getObjectByName("plumbLine");
+          if(pLine) pLine.position.z = Z_FORENSIC.z + (lean * 0.015) + (sim.ballLocked ? dist * 0.01 : 0);
+      }
+    }
+  }
+};   
 let speedViolation = false;
 let initialSpeed = 0;    
 let fuelUsedCount = 0;   
@@ -1757,20 +1853,26 @@ function enterModule(moduleId) {
   const mod = getModule(moduleId);
   currentModule = mod;
   document.getElementById('moduleTitle').textContent = mod.label;
+  
+  const mount = document.getElementById('dynamicConsoleMount');
+  const mod1Controls = document.getElementById('controls');
 
-  // 1. Hide ALL consoles in the index first
-  Object.values(MODULE_CONSOLES).forEach(el => { if(el) el.style.display = 'none'; });
+  // Modular Reset
+  if (mod1Controls) mod1Controls.style.display = 'none';
+  mount.innerHTML = "";
+  activeModuleTick = null;
 
-  // 2. Show only the console for this specific module
-  const activeConsole = MODULE_CONSOLES[moduleId];
-  if (activeConsole) {
-    activeConsole.style.display = (moduleId === 'FL-002') ? 'flex' : 'grid';
+  const reg = MODULE_REGISTRY[moduleId];
+  if (reg) {
+    if (moduleId === 'FL-001' && mod1Controls) {
+       mod1Controls.style.display = 'grid';
+    }
+    reg.onEnter();
+    activeModuleTick = reg.onTick;
   }
 
-  // 3. Keep your existing logic
   setZone(mod.zone || 'all');
-  const $badge = document.getElementById('badge');
-  $badge.style.display = "block";
+  document.getElementById('badge').style.display = "block";
   if (typeof mod.onEnter === 'function') mod.onEnter();
 }
     // 7) Studio UI wiring
@@ -1828,7 +1930,7 @@ function animate() {
     lastT = now;
 
     controls.update();
-  
+  if (activeModuleTick) activeModuleTick(dt);
 // ===== BLINK (works for BOTH Roma + Roman via auto-detect morph names) =====
 if (!animate._blink) animate._blink = { model:null, targets:[], state:0, t:0, next:0 };
 
