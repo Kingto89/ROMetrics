@@ -594,6 +594,11 @@ if (sim.running) {
 }
 
 $reset.addEventListener('click', () => {
+document.getElementById('analysisConsole').style.display = 'none';
+sim.ballLocked = false;
+if(avatarRoot) {
+    avatarRoot.rotation.x = 0; // Resets the lean tilt only
+}  
 if (window.controls) window.controls.enabled = true;
 // 1. CLEAR MESSAGES & UI
     document.getElementById('trialMsg').innerHTML = 'Read the instructions above. When ready, press Start.';
@@ -1747,20 +1752,33 @@ function enterModule(moduleId) {
   const mod = getModule(moduleId);
   currentModule = mod;
   document.getElementById('moduleTitle').textContent = mod.label;
+
+  // 1. GLOBAL UI RESET
+  // Hide the Module 1 Fuel button and the Module 2 Analysis Console by default
+  document.getElementById('fuelBtn').style.display = "none";
+  document.getElementById('analysisConsole').style.display = "none";
   
-  // Snap camera to the specific bay
+  // 2. MODULE SPECIFIC UI SETUP
+  if (moduleId === 'FL-001') {
+      document.getElementById('fuelBtn').style.display = "inline-block";
+      document.querySelector('.k').textContent = "Cardio Speed";
+  } 
+  else if (moduleId === 'FL-002') {
+      document.getElementById('analysisConsole').style.display = "flex";
+      document.querySelector('.k').textContent = "Forward Lean Intensity";
+  }
+
+  // Snap camera and trigger the onEnter function
   setZone(mod.zone || 'all');
-  
-  // Show the HUD badge
   const $badge = document.getElementById('badge');
   $badge.style.display = "block";
-  $badge.style.top = "14px"; 
-  
-  // Trigger the specific module logic (like enterFL001)
+
   if (typeof mod.onEnter === 'function') {
     mod.onEnter(); 
   }
 }
+
+    
     // 7) Studio UI wiring
     // ==============================
     const pills = [...document.querySelectorAll('.pill')];
