@@ -1392,6 +1392,7 @@ forcePlate.name = "forcePlate";
 zoneForensics.add(forcePlate);
 
 // Plumb Line (Realistic rope plumb line — NOT intersecting model)
+// Plumb Line (Realistic rope plumb line — visible & zone-relative)
 const plumbLine = new THREE.Mesh(
     new THREE.CylinderGeometry(0.01, 0.01, 3.0, 16),
     new THREE.MeshStandardMaterial({
@@ -1401,13 +1402,13 @@ const plumbLine = new THREE.Mesh(
     })
 );
 
-// Clearly lateral + anterior so it never enters body volume
-plumbLine.position.set(0.45, -1.5, 0.45);
-plumbLine.visible = false;
+// Positioned just lateral to avatar, NOT intersecting
+plumbLine.position.set(0.6, -1.5, 0.15);
+plumbLine.visible = true;                 // 🔴 WAS FALSE
 plumbLine.name = "plumbLine";
-scene.add(plumbLine);
+zoneForensics.add(plumbLine);
 
-// Weight Ball (Plumb bob — staged on ground for later clipping)
+// Weight Ball (Plumb bob — reachable floor position)
 const weightBall = new THREE.Mesh(
     new THREE.SphereGeometry(0.15, 32, 32),
     new THREE.MeshStandardMaterial({
@@ -1417,17 +1418,12 @@ const weightBall = new THREE.Mesh(
     })
 );
 
-/*
-  Side staging position:
-  - Off the body
-  - On the floor
-  - Neutral pickup spot for future modules
-*/
-weightBall.position.set(1.15, 0.15, -0.65);
-weightBall.visible = false;
+// Beside right foot area, on ground
+weightBall.position.set(0.6, 0.15, -0.25);
+weightBall.visible = true;
 weightBall.name = "weightBall";
-scene.add(weightBall);
-// --- MODULE 2 ADDITIONS END ---
+zoneForensics.add(weightBall);
+
 
 function tripod(x,z){
   const g = new THREE.Group();
