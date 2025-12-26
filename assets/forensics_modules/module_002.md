@@ -1,99 +1,115 @@
-# FL-002 — Joint Load Lever Lab
+---
 
-**Objective:** Predict when a joint becomes “harder” using lever distance.  
-**Audience:** 1st-year DPT, Exercise Science  
-**Time-on-task:** 6–12 minutes  
-**Environment:** Strength / Load Station
+## FL-002 — Stability Forensics Lab
+
+**Objective:** Investigate how **Center of Mass (COM)** and **Base of Support (BOS)** affect stability, and identify the exact point at which a subject loses balance.
+**Audience:** 1st-year Kinesiology / Exercise Science
+**Time-on-task:** 4–8 minutes
+**Environment:** Movement Analysis Booth
 
 ---
 
-## IN-APP INSTRUCTIONS (STUDENT VIEW)
+### Concept (read first):
 
-### Key word (read once)
-**Torque** = the **twisting stress at a joint**.  
-In ROMetrics: **Torque goes up when the weight is farther from the joint.**
+In this lab, **stability** is determined by the position of the subject’s **Center of Mass (COM)** relative to the **Base of Support (BOS)**, represented by the blue **Force Plate**.
 
-### Complete all 3 trials (A → B → C)
+* The **Plumb Line (rope)** shows the vertical projection of the COM.
+* **Torque** is generated when the weighted ball is extended forward or when the body leans forward.
+* Stability is maintained **only while the Plumb Line remains within the BOS**. Once it crosses the toes, the subject experiences a **Stability Breach**.
+* The lab separates **body-only balance** (Trial A) from **load-influenced balance** (Trial B) for clarity.
 
----
+**Key Concepts:**
 
-### Trial A — “Farther = Harder” (guided)
-**CASE CLUE (read first):** The same weight can feel harder if it’s held farther from the joint.
-
-**Goal:** Keep Force constant and make torque increase by moving distance.
-
-**Steps**
-1) Set **Force = 60 N** (locked)  
-2) Move **Distance From Joint** to **Near** → observe Torque  
-3) Move to **Mid** → observe Torque  
-4) Move to **Far** → observe Torque
-
-**PASS when:** Torque clearly increases from Near → Mid → Far.
-
-**Question (after Trial A) — 3 attempts**
-Why did torque change if force stayed the same?  
-A) Torque changes because distance from the joint changed  
-B) Torque only changes when force changes  
-C) Torque depends only on speed  
-D) Torque is random
+* **Line of Gravity (Plumb Line):** Visual representation of vertical COM projection
+* **Base of Support:** The area under the feet represented by the Force Plate
+* **Critical Tipping Point:** The maximum forward lean or reach before the COM exceeds the BOS
 
 ---
 
-### Trial B — “Match the Target Torque” (simple)
-**CASE CLUE (read first):** If you must hit a certain torque, you can do it with different combinations.
+### Trial Guide:
 
-**Goal:** Hit the displayed **Torque Target** three times.
+**Trial A — Finding the Point of Failure (Body Only)**
 
-**Steps**
-1) A **Torque Target** appears  
-2) Set Distance to **Near**, adjust Force until Torque = Target  
-3) Set Distance to **Mid**, adjust Force until Torque = Target  
-4) Set Distance to **Far**, adjust Force until Torque = Target
+1. **Observe:** Your subject is standing on the Force Plate **without holding the ball**.
+2. **Interact:** Slowly increase the **Forward Reach / Lean** slider.
+3. **Camera Strategy:** Rotate to a **Profile (Side) View** to clearly see the relationship between the Plumb Line and the toes.
+4. **Forensic Goal:** Identify the **exact slider value** where the Status changes from **“Stable”** to **“Stability Breach”**.
+5. **Record:** Note the value for your final assessment.
 
-**PASS when:** You hit the target 3 times (Near/Mid/Far).
+**Trial B — Load Placement and Stability (Ball Added)**
 
-**Question (after Trial B) — 3 attempts**
-If distance gets smaller but you must keep the same torque, force must:  
-A) Increase  
-B) Decrease  
-C) Stay the same  
-D) Become zero
+1. **Observe:** Your subject now holds the weighted ball in their hand.
+2. **Interact:** Move the ball closer or farther from the body while adjusting the **Forward Reach / Lean** slider.
+3. **Camera Strategy:** Rotate to a **Profile (Side) View** to track the Plumb Line relative to the BOS.
+4. **Forensic Goal:** Determine the **load position** that maximizes stability without exceeding the tipping point.
+5. **Record:** Note the slider and ball positions at the moment of **Stability Breach**.
 
 ---
 
-### Trial C — “Choose the Safer Setup” (real-world)
-**CASE CLUE (read first):** In real life, you often choose a setup that reduces joint stress.
+### Module Instructions:
 
-**Goal:** Choose the setup that produces the **lowest torque** for the same force.
+1. Select your model (Roma or Roman) at the gate.
+2. Enter the Movement Analysis Booth and orient the camera to a side view.
+3. **Trial A:** Slowly adjust the **Forward Reach / Lean** slider without the ball to find the body-only tipping point.
+4. **Trial B:** Add the weighted ball and experiment with different hand positions while leaning forward.
+5. Observe the **Plumb Line rope** in relation to the **blue Force Plate**.
+6. Note all critical slider and ball positions for your assessment.
 
-**Steps**
-1) Force locks to a fixed value (example: 60 N)  
-2) You are shown two setups:
-   - Setup 1: Distance = Near  
-   - Setup 2: Distance = Far  
-3) Select which setup produces lower torque  
-4) Confirm by toggling between them and watching Torque
+**Tips for Accuracy:**
 
-**PASS when:** You correctly identify the lower-torque setup.
-
-**Question (after Trial C) — 3 attempts**
-For the same force, which setup produces less torque at the joint?  
-A) Holding the load closer to the joint  
-B) Holding the load farther from the joint  
-C) They are identical  
-D) It depends only on speed
+* Keep the feet fully on the Force Plate.
+* Use slow, incremental movements with the slider.
+* Always check the Plumb Line’s position relative to the toes.
+* The Plumb Line is rope-like and tangible; use it to judge COM visually.
 
 ---
 
-## (INTERNAL) SCORING + RECORDING (NOT SHOWN TO STUDENTS)
+### Checkpoint Questions:
 
-### MCQ scoring (per question, max 4.0)
-- Attempt 1 correct = 4.0
-- Attempt 2 correct = 3.5
-- Attempt 3 correct = 2.5
-- Miss all 3 = 1.5
+**Checkpoint — Trial A (Q1)**
+Why does the subject tip over even if no load is held?
 
-### Data recorded
-- Per trial: forceN, distanceLevel (Near/Mid/Far), torqueNm, timeToSolve
-- Per question: correct, attemptsUsed, pointsAwarded
-- Module totals: totalPoints, completionTimeSec
+A) Because the lever arm distance increased, shifting the Center of Mass
+B) Because the ball became heavier
+C) Because the subject ran out of energy
+D) Stability is random
+
+**Answer:** A
+
+---
+
+**Checkpoint — Trial A (Q2)**
+To reduce joint stress and increase stability, a subject should:
+
+A) Lean less forward
+B) Lean further forward
+C) Stand on tiptoes
+D) Close their eyes
+
+**Answer:** A
+
+---
+
+**Checkpoint — Trial B (Q3)**
+Which adjustment maximizes stability while holding a forward load?
+
+A) Extend arms fully and lean forward
+B) Keep the load close and maintain upright posture
+C) Stand on tiptoes
+D) Shift weight onto one foot
+
+**Answer:** B
+
+---
+
+**Checkpoint — Trial B (Q4)**
+What happens to the Plumb Line when the weighted ball is moved forward?
+
+A) It moves backward toward the heels
+B) It moves forward toward the toes
+C) It remains unchanged
+D) It disappears
+
+**Answer:** B
+
+---
