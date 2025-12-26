@@ -1663,27 +1663,34 @@ function placeAvatarForZone(which) {
   avatarRoot.rotation.set(0, rotY, 0);
 }
 
- function setZone(which) {
+function setZone(which) {
   zoneStrength.visible = true;
   zoneCardio.visible = true;
   zoneForensics.visible = true;
 
-      if (which === 'strength'){
-        camGoalTarget.set(Z_STRENGTH.x, 1.25, Z_STRENGTH.z);
-        camGoalPos.set(Z_STRENGTH.x + 3.2, 2.6, Z_STRENGTH.z + 4.8);
-      } else if (which === 'cardio'){
-        camGoalTarget.set(Z_CARDIO.x, 1.10, Z_CARDIO.z);
-        camGoalPos.set(Z_CARDIO.x, 2.1, Z_CARDIO.z + 4.4);
-      } else if (which === 'forensics'){
-        camGoalTarget.set(Z_FORENSIC.x, 0.95, Z_FORENSIC.z);
-        camGoalPos.set(Z_FORENSIC.x + 3.6, 3.6, Z_FORENSIC.z + 6.3);
-      } else {
-        camGoalTarget.set(0, 1.35, 0);
-        camGoalPos.set(6.8, 3.9, 8.6);
-      }
+  if (which === 'strength') {
+    camGoalTarget.set(Z_STRENGTH.x, 1.25, Z_STRENGTH.z);
+    camGoalPos.set(Z_STRENGTH.x + 3.2, 2.6, Z_STRENGTH.z + 4.8);
 
-      placeAvatarForZone(which);
-    }
+  } else if (which === 'cardio') {
+    // Applied Debug: Forensics Offset + 4.25, 2.71, + 10.43
+    // This gives you the wide, zoomed-out view of the Cardio Bay
+    camGoalTarget.set(Z_CARDIO.x, 1.10, Z_CARDIO.z);
+    camGoalPos.set(Z_FORENSIC.x + 4.25, 2.71, Z_FORENSIC.z + 10.43); 
+
+  } else if (which === 'forensics') {
+    // Applied Debug: Forensics Offset + 1.01, 2.66, + 6.07
+    // This provides the corrected Forensic Movement Analysis view
+    camGoalTarget.set(Z_FORENSIC.x, 1.25, Z_FORENSIC.z);
+    camGoalPos.set(Z_FORENSIC.x + 1.01, 2.66, Z_FORENSIC.z + 6.07); 
+
+  } else {
+    camGoalTarget.set(0, 1.35, 0);
+    camGoalPos.set(6.8, 3.9, 8.6);
+  }
+
+  placeAvatarForZone(which);
+}
 
 function parseFL001(md) {
     const trials = { 'mcqs': [] }; 
