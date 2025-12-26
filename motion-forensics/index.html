@@ -79,13 +79,9 @@
     </div>
   </div>
 
-<div id="badge" style="display:none;">
+ <div id="badge" style="display:none;">
     <div class="t">Forensics Labs — Studio</div>
     <div class="p" id="moduleTitle">Module</div>
-
-    <div id="dynamicConsoleMount">
-        </div>
- </div>
 
     <div id="controls">
         <div class="row">
@@ -150,98 +146,6 @@
     </div>
   </div>
   <script type="module">
-
- // Global reference for the modular loop
-let activeModuleTick = null;
-
-const MODULE_REGISTRY = {
-  'FL-001': {
-    onEnter: () => {
-      // Re-link Module 1 specific buttons that are already in your HTML
-      const $start = document.getElementById('startBtn');
-      const $fuel = document.getElementById('fuelBtn');
-      const $reset = document.getElementById('resetBtn');
-      const $spd = document.getElementById('spd');
-
-      if($start) $start.onclick = () => window.handleModule1Start();
-      if($fuel) $fuel.onclick = () => window.handleModule1Fuel();
-      if($reset) $reset.onclick = () => window.handleModule1Reset();
-      if($spd) {
-        $spd.oninput = () => {
-          sim.speedMph = parseFloat($spd.value);
-          if (sim.running) speedViolation = true;
-        };
-      }
-    },
-    onTick: (dt) => {
-      // Module 1 Live HUD Updates
-      const $spdVal = document.getElementById('spdVal');
-      const $engVal = document.getElementById('engVal');
-      if ($spdVal) $spdVal.textContent = sim.speedMph.toFixed(1);
-      if ($engVal) $engVal.textContent = Math.round(sim.energy);
-    }
-  },
-  'FL-002': {
-    onEnter: () => {
-      // Module 2 logic initialization
-      const mount = document.getElementById('dynamicConsoleMount');
-      mount.innerHTML = `
-        <div class="row"><div class="k">Forward Lean</div><div class="v"><span id="leanVal">0</span>%</div></div>
-        <input id="leanSlider" type="range" min="0" max="100" step="1" value="0"/>
-        <div id="loadUI" style="display:none; margin-top:10px; border-top:1px solid #38bdf8; padding-top:10px">
-            <div class="row"><div class="k">Ball Distance</div><div class="v"><span id="ballVal">0</span>%</div></div>
-            <input id="ballSlider" type="range" min="0" max="100" step="1" value="0"/>
-        </div>
-        <div class="row" style="margin-top:10px; gap:8px;">
-            <button id="btnSide" class="btn">Profile View</button>
-            <button id="btnBall" class="btn">Add Load (Ball)</button>
-        </div>
-        <div id="stabBox" style="margin-top:15px; padding:10px; border:2px solid #4ade80; background:rgba(74,222,128,0.1); text-align:center; border-radius:12px;">
-            <div id="stabStatus" style="font-weight:900; color:#4ade80;">STABLE</div>
-        </div>
-      `;
-      
-      const leanIn = mount.querySelector('#leanSlider');
-      const ballIn = mount.querySelector('#ballSlider');
-      
-      mount.querySelector('#btnSide').onclick = () => {
-          camera.position.set(Z_FORENSIC.x + 5.5, 1.4, Z_FORENSIC.z);
-          controls.target.set(Z_FORENSIC.x, 1.2, Z_FORENSIC.z);
-      };
-
-      mount.querySelector('#btnBall').onclick = (e) => {
-          sim.ballLocked = !sim.ballLocked;
-          mount.querySelector('#loadUI').style.display = sim.ballLocked ? 'block' : 'none';
-          const wBall = scene.getObjectByName("weightBall");
-          if(wBall) wBall.visible = sim.ballLocked;
-          document.getElementById('trialTag').textContent = sim.ballLocked ? "B" : "A";
-      };
-
-      leanIn.oninput = () => { sim.lean = leanIn.value; };
-      ballIn.oninput = () => { sim.ballDist = ballIn.value; };
-    },
-    onTick: (dt) => {
-      // Module 2 Stability Logic
-      const lean = parseFloat(sim.lean) || 0;
-      const dist = parseFloat(sim.ballDist) || 0;
-      const tippingPoint = sim.ballLocked ? (70 - (dist * 0.4)) : 75;
-      const breached = lean > tippingPoint;
-
-      const status = document.getElementById('stabStatus');
-      if(status) {
-          status.textContent = breached ? "STABILITY BREACH" : "STABLE";
-          status.style.color = breached ? "#ff9aa0" : "#4ade80";
-          document.getElementById('leanVal').textContent = lean;
-      }
-
-      if (avatarRoot) {
-          avatarRoot.rotation.x = (lean / 100) * 0.8;
-          const pLine = scene.getObjectByName("plumbLine");
-          if(pLine) pLine.position.z = Z_FORENSIC.z + (lean * 0.015) + (sim.ballLocked ? dist * 0.01 : 0);
-      }
-    }
-  }
-};   
 let speedViolation = false;
 let initialSpeed = 0;    
 let fuelUsedCount = 0;   
@@ -506,14 +410,7 @@ const FORENSICS_MODULES = [
     onEnter: null
   }
 ];
-
-
-// --- MODULE CONSOLE INDEX ---
-const MODULE_CONSOLES = {
-  'FL-001': document.getElementById('controls'), // Existing Module 1 Console
-  'FL-002': document.getElementById('analysisConsole'), // Module 2 Special Console
-  'FL-003': null, // Add more here as you build them
-};    
+    
     let currentModule = null;
 
     // ==============================
@@ -559,17 +456,14 @@ const MODULE_CONSOLES = {
     // ==============================
     // 2) Studio: Three.js base
     // ==============================
-// Wrap existing UI variables in a safety check
-let $spd, $spdVal, $engVal, $status, $start, $fuel, $reset;
-if (document.getElementById('spd')) {
-    $spd = document.getElementById('spd');
-    $spdVal = document.getElementById('spdVal');
-    $engVal = document.getElementById('engVal');
-    $status = document.getElementById('statusVal');
-    $start = document.getElementById('startBtn');
-    $fuel = document.getElementById('fuelBtn');
-    $reset = document.getElementById('resetBtn');
-}
+const $spd = document.getElementById('spd');
+const $spdVal = document.getElementById('spdVal');
+const $engVal = document.getElementById('engVal');
+const $status = document.getElementById('statusVal');
+const $start = document.getElementById('startBtn');
+const $fuel = document.getElementById('fuelBtn');
+const $reset = document.getElementById('resetBtn');
+
 
 // ==============================
 // UI & CONTROL INITIALIZATION
@@ -1854,26 +1748,18 @@ function enterModule(moduleId) {
   currentModule = mod;
   document.getElementById('moduleTitle').textContent = mod.label;
   
-  const mount = document.getElementById('dynamicConsoleMount');
-  const mod1Controls = document.getElementById('controls');
-
-  // Modular Reset
-  if (mod1Controls) mod1Controls.style.display = 'none';
-  mount.innerHTML = "";
-  activeModuleTick = null;
-
-  const reg = MODULE_REGISTRY[moduleId];
-  if (reg) {
-    if (moduleId === 'FL-001' && mod1Controls) {
-       mod1Controls.style.display = 'grid';
-    }
-    reg.onEnter();
-    activeModuleTick = reg.onTick;
-  }
-
+  // Snap camera to the specific bay
   setZone(mod.zone || 'all');
-  document.getElementById('badge').style.display = "block";
-  if (typeof mod.onEnter === 'function') mod.onEnter();
+  
+  // Show the HUD badge
+  const $badge = document.getElementById('badge');
+  $badge.style.display = "block";
+  $badge.style.top = "14px"; 
+  
+  // Trigger the specific module logic (like enterFL001)
+  if (typeof mod.onEnter === 'function') {
+    mod.onEnter(); 
+  }
 }
     // 7) Studio UI wiring
     // ==============================
@@ -1930,53 +1816,6 @@ function animate() {
     lastT = now;
 
     controls.update();
-  if (activeModuleTick) activeModuleTick(dt);
-
-// Corrected Module 2 Stability Block
-if (sim.running && currentModule?.id === 'FL-002') {
-    if (avatarRoot) {
-        const handPos = new THREE.Vector3();
-        
-        // 1. Apply Lean to Model
-        avatarRoot.rotation.x = (sim.speedMph / 22) * 0.8; 
-
-        // 2. Reference Objects
-        const pLine = scene.getObjectByName("plumbLine");
-        const wBall = scene.getObjectByName("weightBall");
-
-        // 3. FIX: Keep Plumb Line stationary at the center of the bay
-        pLine.position.set(Z_FORENSIC.x + 0.6, 1.5, Z_FORENSIC.z);
-
-        // 4. Handle Load (Ball)
-        if (sim.ballLocked && wBall) {
-            avatarRoot.traverse(o => { 
-                if(o.name.toLowerCase().includes("hand_r")) o.getWorldPosition(handPos); 
-            });
-            wBall.position.copy(handPos);
-        }
-
-        // 5. Stability Logic (Triggers when Model's Chest/COM passes the Plumb Line)
-        const chestPos = new THREE.Vector3();
-        avatarRoot.traverse(o => { 
-            if(o.name.toLowerCase().includes("spine02")) o.getWorldPosition(chestPos); 
-        });
-
-        const $statusVal = document.getElementById('statusVal');
-        if (chestPos.z > Z_FORENSIC.z + 0.5) {
-            $statusVal.textContent = "STABILITY BREACH";
-            $statusVal.style.color = "#ff9aa0";
-        } else {
-            $statusVal.textContent = "Stable";
-            $statusVal.style.color = "#4ade80";
-        }
-    }
-}
-
-
-
-
-
-
   
 // ===== BLINK (works for BOTH Roma + Roman via auto-detect morph names) =====
 if (!animate._blink) animate._blink = { model:null, targets:[], state:0, t:0, next:0 };
@@ -2406,6 +2245,47 @@ if (sim.running && sim.energy > 0) {
     if (sim.fuelAlertTimer > 0) sim.fuelAlertTimer -= dt;
     if (sim.throughputAlert > 0) sim.throughputAlert -= dt;
   
+
+  // added for module two stability (CORRECTED — no forced attachment)
+if (sim.running && currentModule?.id === 'FL-002') {
+    if (avatarRoot) {
+        const chestPos = new THREE.Vector3();
+        const handPos = new THREE.Vector3();
+        
+        // Find Bones for Attachment
+        avatarRoot.traverse(o => { 
+            if(o.name.toLowerCase().includes("spine02")) o.getWorldPosition(chestPos); 
+            if(o.name.toLowerCase().includes("hand_r")) o.getWorldPosition(handPos);
+        });
+
+        const pLine = scene.getObjectByName("plumbLine");
+        const wBall = scene.getObjectByName("weightBall");
+
+        // Use the speed slider (0-22) to rotate the model forward (Lean)
+        const leanRads = (sim.speedMph / 22) * 0.8; // Max lean ~45 degrees
+        avatarRoot.rotation.x = leanRads; 
+
+        if (sim.ballLocked && wBall) {
+            wBall.position.copy(handPos); // Ball moves with hand
+            // Plumb line drops from the new combined Center of Mass
+            pLine.position.set(chestPos.x, chestPos.y, (chestPos.z + handPos.z) / 2);
+        } else {
+            pLine.position.copy(chestPos); // Plumb line drops from chest only
+        }
+
+        // Stability Breach Forensic Logic
+        const limitZ = Z_FORENSIC.z + 0.5; // Toe edge of the plate
+        const $statusVal = document.getElementById('statusVal');
+        
+        if (pLine.position.z > limitZ) {
+            $statusVal.textContent = "STABILITY BREACH";
+            $statusVal.style.color = "#ff9aa0";
+        } else {
+            $statusVal.textContent = "Stable";
+            $statusVal.style.color = "#4ade80";
+        }
+    }
+}
 
   
     if (currentModule?.id === 'FL-001') {
