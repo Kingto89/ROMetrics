@@ -2139,25 +2139,24 @@ const profiles = {
         fatigueScalar = p.lowLactateMulti;
     }
 
-    // 2. MODEL-SPECIFIC ENERGY DRAIN
+  // 1. ENERGY DRAIN (Linear / Constant)
     if (currentCost > sim.vo2Max) {
         const deficit = currentCost - sim.vo2Max;
         const percentDropPerSecond = (deficit / 60 / p.tankSize) * 10000;
         sim.energy -= (percentDropPerSecond * fatigueScalar) * dt;
-    } else {
-        // Model-specific recovery speed
-        sim.energy = Math.min(100, sim.energy + (p.recoveryRate * dt));
     }
-// 1. Calculate the active penalty multiplier
-    let activePenalty = (sim.fuelPenaltyTimer > 0) ? p.penaltySeverity : 1.0;
 
-    // 2. Define ceilingSpeed for this scope
+    // 2. LACTATE ACCUMULATION (Independent / Non-Linear)
     const ceilingSpeed = (activeModel === "Roman") ? 6.3 : 6.7;
-
-    // 3. Apply it to Lactate (Increased multiplier to 0.055 for realistic speed)
     if (speed > ceilingSpeed) {
         const deficit = currentCost - sim.vo2Max;
-        sim.lactate = Math.min(100, sim.lactate + (deficit * 0.017 * fatigueScalar * activePenalty * dt));
+        // Use a different multiplier (0.0035) and different scaling
+        // This ensures lactate moves at its own "forensic speed"
+        sim.lactate = Math.min(100, sim.lactate + (deficit * 0.0035 * fatigueScalar * activePenalty * dt));
+    } else {
+        // LACTATE CLEARS (Energy does NOT recover this fast)
+        // This breaks the inverse link: Lactate can drop while Energy stays low
+        sim.lactate = Math.max(0, sim.lactate - (0.5 * dt)); 
     }
 
     // 4. Keep timers running
