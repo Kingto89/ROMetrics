@@ -1781,19 +1781,26 @@ function enterModule(moduleId) {
   currentModule = mod;
   document.getElementById('moduleTitle').textContent = mod.label;
 
-  // 1. Hide ALL consoles in the index first
-  Object.values(MODULE_CONSOLES).forEach(el => { if(el) el.style.display = 'none'; });
-
-  // 2. Show only the console for this specific module
-  const activeConsole = MODULE_CONSOLES[moduleId];
-  if (activeConsole) {
-    activeConsole.style.display = (moduleId === 'FL-002') ? 'flex' : 'grid';
+  // 1. Hide ALL possible consoles (FL-001 through FL-010)
+  for (let i = 1; i <= 10; i++) {
+    // This formats the number to match your IDs: 1 becomes 001, 10 becomes 010
+    const padId = `FL-${String(i).padStart(3, '0')}`;
+    const el = document.getElementById(`console-${padId}`);
+    if (el) el.style.display = 'none';
   }
 
-  // 3. Keep your existing logic
+  // 2. Show ONLY the console for the currently selected module
+  const activeConsole = document.getElementById(`console-${moduleId}`);
+  if (activeConsole) {
+    // Switch from 'none' to 'block' so buttons appear
+    activeConsole.style.display = 'block'; 
+  }
+
+  // 3. Keep your existing camera and setup logic
   setZone(mod.zone || 'all');
   const $badge = document.getElementById('badge');
   $badge.style.display = "block";
+  
   if (typeof mod.onEnter === 'function') mod.onEnter();
 }
     // 7) Studio UI wiring
