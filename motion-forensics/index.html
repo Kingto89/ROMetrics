@@ -1651,12 +1651,10 @@ function placeAvatarForZone(which) {
 }
 
 function setZone(which) {
-  // Keep all zones visible to maintain the studio environment
   zoneStrength.visible = true;
   zoneCardio.visible = true;
   zoneForensics.visible = true;
 
-  // Only update camera goals if we aren't already locked into a module
   if (which === 'strength') {
     camGoalTarget.set(Z_STRENGTH.x, 1.25, Z_STRENGTH.z);
     camGoalPos.set(Z_STRENGTH.x + 3.2, 2.6, Z_STRENGTH.z + 4.8);
@@ -1664,12 +1662,13 @@ function setZone(which) {
     camGoalTarget.set(Z_CARDIO.x, 1.10, Z_CARDIO.z);
     camGoalPos.set(Z_CARDIO.x, 1.8, Z_CARDIO.z + 2.4);
   } else if (which === 'forensics') {
+    // ADJUSTED: Moved X and Z further out to avoid the Cardio Board obstruction
+    // Moved Y higher (3.5) to look down into the booth
     camGoalTarget.set(Z_FORENSIC.x, 1.25, Z_FORENSIC.z);
-    camGoalPos.set(Z_FORENSIC.x + 3.6, 2.6, Z_FORENSIC.z + 5.1);
+    camGoalPos.set(Z_FORENSIC.x + 4.5, 3.5, Z_FORENSIC.z + 6.0); 
   }
 
   placeAvatarForZone(which);
-  // snapCam() is excluded here to let OrbitControls keep your manual pan position
 }
 
 function parseFL001(md) {
