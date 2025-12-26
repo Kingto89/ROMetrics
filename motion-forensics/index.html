@@ -145,6 +145,10 @@
       </div>
     </div>
   </div>
+
+</div>
+<div id="moduleConsoles" style="position: fixed; bottom: 10px; right: 10px; display: flex; flex-direction: column; gap: 12px; z-index: 9999; pointer-events: none;"></div>
+  
   <script type="module">
 let speedViolation = false;
 let initialSpeed = 0;    
@@ -413,6 +417,108 @@ const FORENSICS_MODULES = [
     
     let currentModule = null;
 
+// --- MODULE 2: Plumb Line / COM Console (isolated) ---
+function enterFL002() {
+    // Clear any existing module consoles
+    const container = document.getElementById('moduleConsoles');
+    container.innerHTML = '';
+
+    // Create Module 2 console
+    const consoleDiv = document.createElement('div');
+    consoleDiv.id = 'module2Console';
+    consoleDiv.style.cssText = `
+        background: rgba(9,20,37,0.95);
+        border: 2px solid #38bdf8;
+        border-radius: 16px;
+        padding: 12px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        pointer-events: auto;
+        width: 240px;
+    `;
+
+    // Console header
+    const header = document.createElement('div');
+    header.textContent = "Module 2 — Plumb Line";
+    header.style.fontWeight = "900";
+    header.style.color = "#38bdf8";
+    consoleDiv.appendChild(header);
+
+    // Select ball
+    const ballSelect = document.createElement('select');
+    ballSelect.innerHTML = `<option value="ball1">Ball 1</option><option value="ball2">Ball 2</option>`;
+    consoleDiv.appendChild(ballSelect);
+
+    // Lock ball button
+    const lockBtn = document.createElement('button');
+    lockBtn.textContent = "Lock Ball";
+    lockBtn.style.cursor = "pointer";
+    lockBtn.onclick = () => {
+        const selected = ballSelect.value;
+        console.log(`Locked ${selected} to module hands`);
+        lockModule2BallToHand();
+    };
+    consoleDiv.appendChild(lockBtn);
+
+    // Move module button
+    const moveBtn = document.createElement('button');
+    moveBtn.textContent = "Move Module";
+    moveBtn.style.cursor = "pointer";
+    moveBtn.onclick = () => {
+        console.log("Module moved for testing");
+        // TODO: implement module movement logic
+    };
+    consoleDiv.appendChild(moveBtn);
+
+    // Append console to container
+    container.appendChild(consoleDiv);
+
+    // Update module title badge
+    document.getElementById('moduleTitle').textContent = "Module 2 — Stability & COM";
+    currentModule = 'FL-002';
+
+    // Initialize ball if not already
+    initModule2Ball();
+}
+
+// --- Module 2: Ball follow hands stub ---
+let module2Ball = null;
+let module2BallOffset = new THREE.Vector3(0,0,0);
+
+function initModule2Ball() {
+    if (module2Ball) return; // Already exists
+    const geometry = new THREE.SphereGeometry(0.04, 16, 16);
+    const material = new THREE.MeshStandardMaterial({ color: 0xffaa00 });
+    module2Ball = new THREE.Mesh(geometry, material);
+    module2Ball.position.set(0, 1.2, 0); // start near hands
+    scene.add(module2Ball);
+    module2BallOffset.set(0, 0, 0);
+}
+
+function updateModule2Ball() {
+    if (!module2Ball || !currentModule || currentModule !== 'FL-002') return;
+    if (!avatarRoot) return;
+    const rightHand = avatarRoot.getObjectByName('RightHand'); 
+    if (rightHand) {
+        module2Ball.position.copy(rightHand.getWorldPosition(new THREE.Vector3()).add(module2BallOffset));
+    }
+}
+
+function lockModule2BallToHand() {
+    if (!module2Ball || !avatarRoot) return;
+    const rightHand = avatarRoot.getObjectByName('RightHand');
+    if (rightHand) {
+        module2BallOffset.copy(module2Ball.position).sub(rightHand.getWorldPosition(new THREE.Vector3()));
+        console.log("Ball locked to right hand offset:", module2BallOffset);
+    }
+}
+
+    
+
+
+
+    
     // ==============================
     // 1) Gate UI wiring
     // ==============================
