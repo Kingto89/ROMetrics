@@ -83,116 +83,69 @@
     <div class="t">Forensics Labs — Studio</div>
     <div class="p" id="moduleTitle">Module</div>
 
-<div id="dynamicConsoleMount"></div>
-  <script type="module">
-// --- MODULE 1 UI BUILDER ---
-function buildModule1UI() {
-    const mount = document.getElementById('dynamicConsoleMount');
-    mount.innerHTML = `
-        <div id="controls">
-            <div class="row"><div class="k">Cardio Speed</div><div class="v"><span id="spdVal">0.0</span> mph</div></div>
-            <input id="spd" type="range" min="0" max="22" step="0.1" value="0"/>
-            <div class="row"><div class="k">W′ Balance</div><div class="v"><span id="engVal">100</span>%</div></div>
-            <div class="row"><div class="k">Trial</div><div class="v"><span id="trialTag">A</span> • <span id="trialTime">300</span>s</div></div>
-            <div class="row" style="gap:8px;"><button id="trialA" class="btn">Trial A</button><button id="trialB" class="btn">Trial B</button></div>
-            <button id="trialHelp" class="btn" style="margin-top:5px;">Instructions</button>
-            <div id="trialMsg" style="color:#a8c0da; font-size:12px; margin-top:10px; min-height:30px;">Select Trial A or B to begin.</div>
-            <div class="row" style="gap: 10px; margin-top: 10px;">
-                <button id="startBtn" class="btn">Start</button>
-                <button id="fuelBtn" class="btn">Fuel +10</button>
-                <button id="resetBtn" class="btn">Reset</button>
-            </div>
-            <div class="row" style="margin-top:10px; padding-top:10px; border-top:1px solid rgba(148,163,184,.18);">
-                <div class="k">Status</div><div class="v" id="statusVal">Stable</div>
-            </div>
+    <div id="controls">
+        <div class="row">
+            <div class="k">Cardio Speed</div>
+            <div class="v"><span id="spdVal">6.0</span> mph</div>
         </div>
-    `;
 
-    // --- RE-ATTACH LOCAL UI REFERENCES ---
-    const $spd = document.getElementById('spd');
-    const $spdVal = document.getElementById('spdVal');
-    const $engVal = document.getElementById('engVal');
-    const $status = document.getElementById('statusVal');
-    const $start = document.getElementById('startBtn');
-    const $fuel = document.getElementById('fuelBtn');
-    const $reset = document.getElementById('resetBtn');
+        <input id="spd" type="range" min="0" max="22" step="0.1" value="0"/>
 
-    // --- INITIALIZE UI STATE ---
-    $spdVal.textContent = sim.speedMph.toFixed(1);
-    $engVal.textContent = Math.round(sim.energy);
-    $status.textContent = "Ready";
-    $status.style.color = "#cfe3ff";
-    $start.textContent = "Start";
+        <div class="row">
+            <div class="k">W′ Balance / % Anaerobic Used</div>
+            <div class="v"><span id="engVal">100</span>%</div>
+        </div>
 
-    // --- RE-ATTACH LISTENERS ---
-    $spd.oninput = (e) => { 
-        sim.speedMph = parseFloat(e.target.value); 
-        $spdVal.textContent = sim.speedMph.toFixed(1);
-        if(sim.running) speedViolation = true;
-    };
+        <div class="row">
+            <div class="k">Trial</div>
+            <div class="v"><span id="trialTag">A</span> • <span id="trialTime">300</span>s</div>
+        </div>
 
-    $start.onclick = () => {
-        const currentLetter = document.getElementById('trialTag').textContent.trim();
-        if (currentLetter === "-" || currentLetter === "") {
-            document.getElementById('trialMsg').innerHTML = `<b style="color:#ff9aa0;">ACTION REQUIRED:</b> Select Trial A or B first.`;
-            return;
-        }
-        if (!sim.running) {
-            if (sim.speedMph <= 0) return; 
-            if (!sim.hasStarted) {
-                sim.hasStarted = true;
-                trialTime = (currentLetter === 'B') ? 480 : 300; 
-                initialSpeed = parseFloat(sim.speedMph.toFixed(1));
-                speedViolation = false; 
-            }
-        }
-        sim.running = !sim.running;
-        if (runAction) runAction.paused = !sim.running;
-        $start.textContent = sim.running ? "Pause" : "Start";
-    };
+        <div class="row" style="justify-content:flex-start; gap:8px; flex-wrap:wrap;">
+            <button id="trialA" class="btn">Trial A</button>
+            <button id="trialB" class="btn">Trial B</button>
+        </div>
+        
+        <button id="trialHelp" class="btn" style="align-self:flex-start; margin-top:5px;">Instructions</button>
 
-    $fuel.onclick = () => {
-        if (sim.fuelCount >= 1) return;
-        sim.fuelCount++;
-        sim.fuelAlertTimer = 5; 
-        $fuel.disabled = true;
-        $fuel.style.opacity = "0.4";
-        // ... (Keep the rest of your fuel logic here)
-    };
+        <div id="trialMsg" style="color:#a8c0da; font-size:12px; line-height:1.25; margin-top:10px; min-height:30px;">
+            Read instructions. Select Trial A or B to begin.
+        </div>
 
-    $reset.onclick = () => {
-        // ... (Move your existing Reset logic here)
-        location.reload(); // Simplest way to reset the dynamic state for now
-    };
+        <button id="assessmentBtn" class="primary" style="display:none; width:100%; margin-top:10px;">
+            Take Final MCQ Assessment
+        </button>
 
-    // Instructions/Modal Logic
-    document.getElementById('trialHelp').onclick = async (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        document.getElementById('trialHelpModal').style.display = 'flex';
-        const modId = document.getElementById('moduleSelect').value || "FL-001";
-        const path = `https://raw.githubusercontent.com/Kingto89/ROMetrics.com/main/assets/forensics_modules/${modId.toLowerCase().replace('fl-', 'module_')}.md`;
-        try {
-            const res = await fetch(path);
-            if (res.ok) { cachedModuleMD = await res.text(); window.showTab('concept'); }
-        } catch (err) { console.error("MD Load Error", err); }
-    };
-}
+<div class="row" style="display: flex; justify-content: flex-start; gap: 10px; margin-top: 10px;">
+    <button id="startBtn" class="btn">Start</button>
+    <button id="fuelBtn" class="btn">Fuel +10</button>
+    <button id="resetBtn" class="btn">Reset</button>
 
-    // Module 2 Specific Listeners
-    document.getElementById('leanSlider').oninput = (e) => {
-        sim.speedMph = e.target.value; // Map lean to speed for your animate function
-        document.getElementById('leanVal').textContent = e.target.value;
-    };
+    <button id="reviewBtn" class="btn" style="display:none; border-color:#4ade80; color:#4ade80; margin-left:auto;">Review MCQ</button>
+</div>
 
-    document.getElementById('btnBall').onclick = () => {
-        sim.ballLocked = !sim.ballLocked;
-        document.getElementById('loadUI').style.display = sim.ballLocked ? 'block' : 'none';
-        const wBall = scene.getObjectByName("weightBall");
-        if(wBall) wBall.visible = sim.ballLocked;
-    };
+        <div class="row" style="justify-content:space-between; margin-top:10px; padding-top:10px; border-top:1px solid rgba(148,163,184,.18);">
+            <div class="k">Status</div>
+            <div class="v" id="statusVal">Stable</div>
+        </div>
+    </div>
+</div>
 
-    
+  <div id="trialHelpModal" style="display:none; position:fixed; inset:0; z-index:100; background:rgba(7,16,27,.85); align-items:center; justify-content:center;">
+    <div id="gateCard" style="max-width:600px; padding:0; overflow:hidden; display:flex; flex-direction:column;">
+      <div style="display:flex; background:rgba(15,23,42,.95); border-bottom:1px solid rgba(148,163,184,.25);">
+        <div id="tab-concept" class="pill active" style="border-radius:0; border:none; flex:1; text-align:center; cursor:pointer;" onclick="event.stopPropagation(); showTab('concept')">Concept (read first):</div>
+<div id="tab-systems" class="pill" style="border-radius:0; border:none; flex:1; text-align:center; cursor:pointer;" onclick="event.stopPropagation(); showTab('systems')">Trial Guide:</div>
+<div id="tab-guide" class="pill" style="border-radius:0; border:none; flex:1; text-align:center; cursor:pointer;" onclick="event.stopPropagation(); showTab('guide')">Module Instructions</div>
+            </div>
+
+      <div id="tabContent" style="padding:24px; color:#a8c0da; font-size:13px; line-height:1.5; min-height:350px; max-height:500px; overflow-y:auto;"></div>
+      <div style="padding:14px; border-top:1px solid rgba(148,163,184,.18); display:flex; justify-content:flex-end; background:rgba(9,20,37,.72);">
+<button id="trialHelpClose" type="button" class="primary">Close Instructions</button>
+      </div>
+    </div>
+  </div>
+  <script type="module">
 let speedViolation = false;
 let initialSpeed = 0;    
 let fuelUsedCount = 0;   
@@ -310,6 +263,30 @@ window.renderMCQ = function(letter) {
 };
 
     
+// Global Fetch Trigger
+document.getElementById('trialHelp').onclick = async (e) => {
+  e.preventDefault();
+  e.stopPropagation(); // Stops the click from reaching the 3D scene
+  document.getElementById('trialHelpModal').style.display = 'flex';
+  
+  const modId = document.getElementById('moduleSelect').value || "FL-001";
+  const fileName = modId.toLowerCase().replace('fl-', 'module_');
+  const path = `https://raw.githubusercontent.com/Kingto89/ROMetrics.com/main/assets/forensics_modules/${fileName}.md`;
+  
+  try {
+    const res = await fetch(path);
+    if (res.ok) {
+      cachedModuleMD = await res.text();
+      window.showTab('concept'); 
+    }
+  } catch (err) { console.error("MD Load Error", err); }
+};
+
+document.getElementById('trialHelpClose').onclick = (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  document.getElementById('trialHelpModal').style.display = 'none';
+};
     
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -487,8 +464,8 @@ const MODULE_CONSOLES = {
     // 2) Studio: Three.js base
     // ==============================
 // Wrap existing UI variables in a safety check
-let $spd = null, $spdVal = null, $engVal = null, $status = null, $start = null, $fuel = null, $reset = null;
-    if (document.getElementById('spd')) {
+let $spd, $spdVal, $engVal, $status, $start, $fuel, $reset;
+if (document.getElementById('spd')) {
     $spd = document.getElementById('spd');
     $spdVal = document.getElementById('spdVal');
     $engVal = document.getElementById('engVal');
@@ -498,6 +475,14 @@ let $spd = null, $spdVal = null, $engVal = null, $status = null, $start = null, 
     $reset = document.getElementById('resetBtn');
 }
 
+// ==============================
+// UI & CONTROL INITIALIZATION
+// ==============================
+$spdVal.textContent = sim.speedMph.toFixed(1);
+$engVal.textContent = Math.round(sim.energy);
+$status.textContent = "Ready";
+$status.style.color = "#cfe3ff";
+$start.textContent = "Start";
 
 // Update speed from slider
 $spd.addEventListener('input', () => { 
@@ -1769,21 +1754,24 @@ async function enterFL002() {
 }
     
 function enterModule(moduleId) {
-    const mod = getModule(moduleId);
-    currentModule = mod;
-    document.getElementById('moduleTitle').textContent = mod.label;
+  const mod = getModule(moduleId);
+  currentModule = mod;
+  document.getElementById('moduleTitle').textContent = mod.label;
 
-    // Clear and build the UI
-    document.getElementById('dynamicConsoleMount').innerHTML = "";
+  // 1. Hide ALL consoles in the index first
+  Object.values(MODULE_CONSOLES).forEach(el => { if(el) el.style.display = 'none'; });
 
-    if (moduleId === 'FL-001') {
-        buildModule1UI();
-    } else if (moduleId === 'FL-002') {
-        buildModule2UI(); // This ensures Module 2's UI appears
-    }
+  // 2. Show only the console for this specific module
+  const activeConsole = MODULE_CONSOLES[moduleId];
+  if (activeConsole) {
+    activeConsole.style.display = (moduleId === 'FL-002') ? 'flex' : 'grid';
+  }
 
-    setZone(mod.zone || 'all');
-    if (typeof mod.onEnter === 'function') mod.onEnter();
+  // 3. Keep your existing logic
+  setZone(mod.zone || 'all');
+  const $badge = document.getElementById('badge');
+  $badge.style.display = "block";
+  if (typeof mod.onEnter === 'function') mod.onEnter();
 }
     // 7) Studio UI wiring
     // ==============================
@@ -1807,23 +1795,21 @@ function enterModule(moduleId) {
     // 8) Tick loop
     // ==============================
 function updateHUD() {
-    // Only update if the elements have been assigned by the builder
-    if ($spdVal) $spdVal.textContent = sim.speedMph.toFixed(1);
-    if ($engVal) $engVal.textContent = Math.round(sim.energy);
+    $spdVal.textContent = sim.speedMph.toFixed(1);
+    $engVal.textContent = Math.round(sim.energy);
 
-    if ($status) {
-        if (sim.energy <= 0) {
-            $status.textContent = "CRITICAL FAILURE: EXHAUSTED";
-            $status.style.color = "#ff9aa0";
-        } else if (sim.running) {
-            $status.textContent = "Simulation Active";
-            $status.style.color = "#38bdf8";
-        } else {
-            $status.textContent = "Ready";
-            $status.style.color = "#cfe3ff";
-        }
+    if (sim.energy <= 0) {
+        $status.textContent = "CRITICAL FAILURE: EXHAUSTED";
+        $status.style.color = "#ff9aa0";
+    } else if (sim.running) {
+        $status.textContent = "Simulation Active";
+        $status.style.color = "#38bdf8";
+    } else {
+        $status.textContent = "Ready";
+        $status.style.color = "#cfe3ff";
     }
-}
+}    
+
     const clock = new THREE.Clock();
 let lastT = clock.getElapsedTime();
 // --- GLOBAL RESTORE FUNCTION ---
