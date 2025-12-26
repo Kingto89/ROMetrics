@@ -1662,10 +1662,10 @@ function setZone(which) {
     camGoalTarget.set(Z_CARDIO.x, 1.10, Z_CARDIO.z);
     camGoalPos.set(Z_CARDIO.x, 1.8, Z_CARDIO.z + 2.4);
   } else if (which === 'forensics') {
-    // ADJUSTED: Moved X and Z further out to avoid the Cardio Board obstruction
-    // Moved Y higher (3.5) to look down into the booth
+    // Moves camera toward Strength Zone (-X) and back (+Z) 
+    // This creates a ~40° diagonal view that clears the cardio board
     camGoalTarget.set(Z_FORENSIC.x, 1.25, Z_FORENSIC.z);
-    camGoalPos.set(Z_FORENSIC.x + 4.5, 3.5, Z_FORENSIC.z + 6.0); 
+    camGoalPos.set(Z_FORENSIC.x - 5.8, 3.2, Z_FORENSIC.z + 5.2); 
   }
 
   placeAvatarForZone(which);
