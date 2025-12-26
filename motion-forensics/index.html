@@ -19,7 +19,11 @@
     input[type=range]{width:100%;accent-color:#38bdf8;}
     .btn{border:1px solid rgba(148,163,184,.35);background:rgba(15,23,42,.78);color:#e5eefc;padding:8px 10px;border-radius:12px;font-size:12px;cursor:pointer;}
     #hint{position:fixed;left:14px;bottom:14px;z-index:10;padding:10px 12px;border-radius:14px;border:1px solid rgba(148,163,184,.20);background:rgba(15,23,42,.55);color:#a8c0da;font-size:12px;backdrop-filter: blur(8px);}
-
+      #analysisConsole { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); display: none; background: rgba(9, 20, 37, 0.95); border: 2px solid #38bdf8; border-radius: 20px; padding: 12px 20px; gap: 12px; z-index: 200; box-shadow: 0 0 25px rgba(56, 189, 248, 0.3); align-items: center; backdrop-filter: blur(10px); }
+  .console-btn { background: #1e293b; color: #e6eef7; border: 1px solid rgba(56, 189, 248, 0.5); padding: 8px 16px; border-radius: 12px; font-weight: 800; font-size: 11px; cursor: pointer; text-transform: uppercase; transition: all 0.2s ease; }
+  .console-btn:hover { background: rgba(56, 189, 248, 0.2); border-color: #38bdf8; }
+  .console-btn.active { background: #38bdf8; color: #07101b; }
+  .console-btn:disabled { opacity: 0.3; cursor: not-allowed; }
     #gate{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:radial-gradient(900px 600px at 50% 35%, rgba(56,189,248,0.10), rgba(7,16,27,0.96));backdrop-filter: blur(6px);}
     #gateCard{width:min(740px, calc(100vw - 28px));border-radius:24px;border:1px solid rgba(148,163,184,.28);background:rgba(9,20,37,.72);box-shadow:0 20px 80px rgba(0,0,0,.40);padding:22px;}
     #gateTop{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;}
@@ -1706,34 +1710,39 @@ async function enterFL001() {
     document.getElementById('trialTime').textContent = "0";
     document.getElementById('trialMsg').innerHTML = "<b>Module Loaded.</b> Select Trial A or B to begin.";
 }
+
+
 async function enterFL002() {
-    // 1. Position camera and avatar in the Analysis Booth
-    setZone('forensics');
+    // 1. ANATOMIC RESET: Stop any leftover Module 1 motion
+    sim.running = false; 
+    sim.speedMph = 0; 
+    document.getElementById('spd').value = 0;
+    if (runAction) runAction.paused = true;
+    restore(); // Resets bones to neutral anatomic position
+
+    setZone('forensics'); // Move to Analysis Bay
+    
+    // 2. UI & Console Setup
+    document.querySelector('.k').textContent = "Forward Lean Intensity"; 
+    document.getElementById('analysisConsole').style.display = 'flex';
+    document.getElementById('badge').style.display = 'block';
+    document.getElementById('trialTag').textContent = "A";
     
     const $trialMsg = document.getElementById('trialMsg');
-    const $spdLabel = document.querySelector('.k'); 
-    
-    // 2. UI Updates for Stability Lab
-    $spdLabel.textContent = "Forward Lean / Reach";
-    document.getElementById('spdVal').textContent = "0.0";
-    document.getElementById('trialTag').textContent = "A";
-    document.getElementById('trialTime').textContent = "---";
-    
-    $trialMsg.innerHTML = "<b>Stability Test:</b> Use the slider to reach forward. Identify the exact point where the laser leaves the blue box.";
+    $trialMsg.innerHTML = "<b>Lab Objective:</b> Locate the Tipping Point. Snap to Side View and Lock Ball to begin.";
 
-    // 3. Unhide Forensic Equipment
-    const fPlate = scene.getObjectByName("forcePlate");
-    const pLine = scene.getObjectByName("plumbLine");
-    const wBall = scene.getObjectByName("weightBall");
+    // Tool 1: Side View Snap
+    document.getElementById('btnSideView').onclick = () => {
+        camera.position.set(Z_FORENSIC.x + 5.5, 1.4, Z_FORENSIC.z);
+        controls.target.set(Z_FORENSIC.x, 1.2, Z_FORENSIC.z);
+        controls.update();
+    };
 
-    if (fPlate) fPlate.visible = true;
-    if (pLine) pLine.visible = true;
-    if (wBall) wBall.visible = true;
-
-    // 4. Force Simulation State
+    // Tool 2 & 3 Logic...
+    sim.ballLocked = false;
     sim.running = true; 
-    sim.hasStarted = true;
 }
+    
 function enterModule(moduleId) {
   const mod = getModule(moduleId);
   currentModule = mod;
@@ -2239,31 +2248,36 @@ if (sim.running && sim.energy > 0) {
 
   // added for module two stability (CORRECTED — no forced attachment)
 if (sim.running && currentModule?.id === 'FL-002') {
-    if (!avatarRoot) return;
+    if (avatarRoot) {
+        const chestPos = new THREE.Vector3();
+        const handPos = new THREE.Vector3();
+        
+        // Find Bones for Attachment
+        avatarRoot.traverse(o => { 
+            if(o.name.toLowerCase().includes("spine02")) o.getWorldPosition(chestPos); 
+            if(o.name.toLowerCase().includes("hand_r")) o.getWorldPosition(handPos);
+        });
 
-    // 1. Get COM reference (measurement ONLY)
-    const chestPos = new THREE.Vector3();
-    avatarRoot.traverse(o => { 
-        if (o.name.toLowerCase().includes("spine02")) {
-            o.getWorldPosition(chestPos);
+        const pLine = scene.getObjectByName("plumbLine");
+        const wBall = scene.getObjectByName("weightBall");
+
+        // Use the speed slider (0-22) to rotate the model forward (Lean)
+        const leanRads = (sim.speedMph / 22) * 0.8; // Max lean ~45 degrees
+        avatarRoot.rotation.x = leanRads; 
+
+        if (sim.ballLocked && wBall) {
+            wBall.position.copy(handPos); // Ball moves with hand
+            // Plumb line drops from the new combined Center of Mass
+            pLine.position.set(chestPos.x, chestPos.y, (chestPos.z + handPos.z) / 2);
+        } else {
+            pLine.position.copy(chestPos); // Plumb line drops from chest only
         }
-    });
 
-    // 2. Read objects WITHOUT repositioning them
-    const pLine = zoneForensics.getObjectByName("plumbLine");
-    const wBall = zoneForensics.getObjectByName("weightBall");
-
-    // (Intentionally NO position.set calls here)
-    // Objects remain where the environment placed them
-
-    // 3. Stability Check (Forensic Pass / Fail)
-    // Base of Support is +/- 0.5m from zone center
-    const currentZ = chestPos.z;
-    const limitZ = Z_FORENSIC.z + 0.5;
-    const $statusVal = document.getElementById('statusVal');
-
-    if ($statusVal) {
-        if (currentZ > limitZ || currentZ < Z_FORENSIC.z - 0.5) {
+        // Stability Breach Forensic Logic
+        const limitZ = Z_FORENSIC.z + 0.5; // Toe edge of the plate
+        const $statusVal = document.getElementById('statusVal');
+        
+        if (pLine.position.z > limitZ) {
             $statusVal.textContent = "STABILITY BREACH";
             $statusVal.style.color = "#ff9aa0";
         } else {
@@ -2272,7 +2286,6 @@ if (sim.running && currentModule?.id === 'FL-002') {
         }
     }
 }
-
 
   
     if (currentModule?.id === 'FL-001') {
