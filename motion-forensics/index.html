@@ -1360,8 +1360,7 @@ zoneCardio.add(boardGlow);
 
     scene.add(zoneCardio);
 
-
-    // Forensics zone (realistic)
+// Forensics zone (realistic)
 const zoneForensics = new THREE.Group();
 zoneForensics.name = 'forensics';
 zoneForensics.position.copy(Z_FORENSIC);
@@ -1392,7 +1391,7 @@ forcePlate.visible = false;
 forcePlate.name = "forcePlate";
 zoneForensics.add(forcePlate);
 
-// Plumb Line (Realistic rope plumb line)
+// Plumb Line (Realistic rope plumb line — NOT intersecting model)
 const plumbLine = new THREE.Mesh(
     new THREE.CylinderGeometry(0.01, 0.01, 3.0, 16),
     new THREE.MeshStandardMaterial({
@@ -1402,13 +1401,13 @@ const plumbLine = new THREE.Mesh(
     })
 );
 
-// Offset sideways so it does NOT pass through the body
-plumbLine.position.set(0.25, -1.5, 0);
+// Clearly lateral + anterior so it never enters body volume
+plumbLine.position.set(0.45, -1.5, 0.45);
 plumbLine.visible = false;
 plumbLine.name = "plumbLine";
 scene.add(plumbLine);
 
-// Weight Ball (Plumb bob)
+// Weight Ball (Plumb bob — staged on ground for later clipping)
 const weightBall = new THREE.Mesh(
     new THREE.SphereGeometry(0.15, 32, 32),
     new THREE.MeshStandardMaterial({
@@ -1418,12 +1417,53 @@ const weightBall = new THREE.Mesh(
     })
 );
 
-// Positioned below rope and pushed forward so it is NOT inside the torso
-weightBall.position.set(0.25, -3.1, 0.25);
+/*
+  Side staging position:
+  - Off the body
+  - On the floor
+  - Neutral pickup spot for future modules
+*/
+weightBall.position.set(1.15, 0.15, -0.65);
 weightBall.visible = false;
 weightBall.name = "weightBall";
 scene.add(weightBall);
 // --- MODULE 2 ADDITIONS END ---
+
+function tripod(x,z){
+  const g = new THREE.Group();
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.05,1.05,10), matSteel);
+  pole.position.y = 0.52; pole.castShadow = true; g.add(pole);
+  const head = new THREE.Mesh(new THREE.BoxGeometry(0.20,0.12,0.20), matDark);
+  head.position.y = 1.05; head.castShadow = true; g.add(head);
+  const legGeo = new THREE.CylinderGeometry(0.02,0.02,0.80,8);
+  for (let i=0;i<3;i++){
+    const leg = new THREE.Mesh(legGeo, matSteel);
+    const ang = i * (Math.PI*2/3);
+    leg.position.set(Math.cos(ang)*0.18, 0.30, Math.sin(ang)*0.18);
+    leg.rotation.z = 0.55;
+    leg.rotation.y = ang;
+    g.add(leg);
+  }
+  g.position.set(x, 0, z);
+  return g;
+}
+zoneForensics.add(tripod(-1.55,-1.35), tripod(1.55,-1.35), tripod(0,1.55));
+
+const mon = new THREE.Mesh(
+  new THREE.BoxGeometry(1.55, 0.95, 0.08),
+  new THREE.MeshStandardMaterial({ color:0x111b2e, roughness:0.6, metalness:0.15 })
+);
+const mon1 = mon.clone(); mon1.position.set(-1.05, 2.35, -1.70); zoneForensics.add(mon1);
+const mon2 = mon.clone(); mon2.position.set( 1.05, 2.35, -1.70); zoneForensics.add(mon2);
+
+const lblF = makeLabel('Movement Analysis Booth');
+lblF.position.copy(Z_FORENSIC).add(new THREE.Vector3(0, 2.7, -1.6));
+labelGroup.add(lblF);
+
+scene.add(zoneForensics);
+
+
+    
 
 function tripod(x,z){
   const g = new THREE.Group();
