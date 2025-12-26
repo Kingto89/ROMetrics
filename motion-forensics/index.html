@@ -360,7 +360,11 @@ const sim = {
   throughputAlert: 0,
   fuelAlertTimer: 0,   // New: Duration for transient alerts
   fuelMessage: "",     // New: Text for the specific timing alert
-  fuelSuccess: false   // New: Flag for correct timing feedback
+  fuelSuccess: false,   // New: Flag for correct timing feedback
+  isStabilityMode: false,
+    leanZ: 0,
+    leanX: 0,
+    ballLocked: false
 };
 
 // PLACE THE EXPOSURE LINES HERE (Outside the braces)
@@ -2361,10 +2365,13 @@ if (sim.running && sim.energy > 0) {
 // --- Inside animate() loop: Module 2 Stability Physics ---
 if (currentModule?.id === 'FL-002' && avatarRoot) {
     
-    // 1. APPLY DUAL-AXIS TIPPING (Degrees to Radians)
-    // No more "speedMph" — purely degree-based clinical displacement
-    avatarRoot.rotation.x = (sim.leanZ * Math.PI) / 180;  // Forward/Back
-    avatarRoot.rotation.z = -(sim.leanX * Math.PI) / 180; // Left/Right
+    // Convert slider degrees to radians
+    const radZ = (sim.leanZ * Math.PI) / 180;
+    const radX = (sim.leanX * Math.PI) / 180;
+
+    // Apply the rotation directly to the root of the model
+    avatarRoot.rotation.x = radZ; 
+    avatarRoot.rotation.z = -radX;
 
     const chestPos = new THREE.Vector3();
     const handPos = new THREE.Vector3();
