@@ -2121,45 +2121,41 @@ if (sim.running && sim.energy > 0) {
     const speed = parseFloat(sim.speedMph.toFixed(1));
     const currentCost = (speed * 26.8 * 0.205) + 3.5;
     const activeModel = document.getElementById('modelSelect').value;
+    const ceilingSpeed = (activeModel === "Roman") ? 6.3 : 6.7;
 
     const profiles = {
         Roma:    { lowLactateMulti: 1.17, highLactateMulti: 1.41, recoveryRate: 0.07, tankSize: 1200, penaltySeverity: 1.5 },
         Roman:   { lowLactateMulti: 1.27, highLactateMulti: 1.52, recoveryRate: 0.05, tankSize: 1200, penaltySeverity: 2.0 },
         Default: { lowLactateMulti: 1.2,  highLactateMulti: 1.2,  recoveryRate: 0.05, tankSize: 1200, penaltySeverity: 1.5 }
     };
-
     const p = profiles[activeModel] || profiles.Default;
 
-    // A. FATIGUE SCALAR (Affects Energy Drain only)
-    let fatigueScalar = 1.0;
-    if (sim.lactate > 50) {
-        fatigueScalar = p.highLactateMulti; 
-    } else if (sim.lactate >= 1) {
-        fatigueScalar = p.lowLactateMulti;
-    }
-
-    // B. ENERGY DRAIN (W' Balance)
+    // 1. ENERGY DRAIN (Linear / Fatigue-Driven)
+    // Energy only links to Lactate here: if Lactate > 50, drain is harder.
+    let fatigueScalar = (sim.lactate > 50) ? p.highLactateMulti : 1.0;
+    
     if (currentCost > sim.vo2Max) {
         const deficit = currentCost - sim.vo2Max;
-        const percentDropPerSecond = (deficit / 60 / p.tankSize) * 10000;
-        sim.energy -= (percentDropPerSecond * fatigueScalar) * dt;
+        const percentDrop = (deficit / 60 / p.tankSize) * 10000;
+        sim.energy -= (percentDrop * fatigueScalar) * dt;
     } else {
         sim.energy = Math.min(100, sim.energy + (p.recoveryRate * dt));
     }
 
-    // C. INDEPENDENT LACTATE LOGIC (Breaks Mirror Effect)
+    // 2. INDEPENDENT LACTATE (Exponential / Speed-Driven)
+    // We remove fatigueScalar from here to break the "Inverse Mirror"
     let activePenalty = (sim.fuelPenaltyTimer > 0) ? p.penaltySeverity : 1.0;
-    const ceilingSpeed = (activeModel === "Roman") ? 6.3 : 6.7;
 
     if (speed > ceilingSpeed) {
         const deficit = currentCost - sim.vo2Max;
-        sim.lactate = Math.min(100, sim.lactate + (deficit * 0.017 * activePenalty * dt));
+        // Multiplier increased to 0.045 so Lactate moves MUCH faster than Energy drains
+        sim.lactate = Math.min(100, sim.lactate + (deficit * 0.045 * activePenalty * dt));
     } else if (speed > 0) {
-        // Waste clears while running/walking below threshold
-        sim.lactate = Math.max(0, sim.lactate - (0.4 * dt));
+        // Fast independent clearance (0.8) so Lactate drops while Energy stays depleted
+        sim.lactate = Math.max(0, sim.lactate - (0.8 * dt)); 
     }
 
-    // D. HOUSEKEEPING (Timers & HUD)
+    // 3. HOUSEKEEPING (Timers)
     if (sim.fuelPenaltyTimer > 0) sim.fuelPenaltyTimer -= dt;
     if (sim.fuelAlertTimer > 0) sim.fuelAlertTimer -= dt;
     if (sim.throughputAlert > 0) sim.throughputAlert -= dt;
@@ -2168,6 +2164,7 @@ if (sim.running && sim.energy > 0) {
         trialTime = Math.max(0, trialTime - dt);
         document.getElementById('trialTime').textContent = Math.ceil(trialTime);
     }
+}
 }
 
 // --- DYNAMIC TRIAL STOP & UNLOCK LOGIC ---
