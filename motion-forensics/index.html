@@ -84,17 +84,31 @@
     <div class="p" id="moduleTitle">Module</div>
 
     <div id="console-FL-001" class="module-ui-box" style="display:none;">
-        <div id="controls">
-            <div class="row">
-                <div class="k">Cardio Speed</div>
-                <div class="v"><span id="spdVal">0.0</span> mph</div>
-            </div>
-            <input id="spd" type="range" min="0" max="22" step="0.1" value="0"/>
-            <div class="row" style="display: flex; gap: 10px; margin-top: 10px;">
-                <button id="startBtn" class="btn">Start</button>
-                <button id="fuelBtn" class="btn">Fuel +10</button>
-                <button id="resetBtn" class="btn">Reset</button>
-            </div>
+        <div class="row">
+            <div class="k">Cardio Speed</div>
+            <div class="v"><span id="spdVal">0.0</span> mph</div>
+        </div>
+        <input id="spd" type="range" min="0" max="22" step="0.1" value="0"/>
+        
+        <div class="row">
+            <div class="k">W′ Balance</div>
+            <div class="v"><span id="engVal">100</span>%</div>
+        </div>
+        
+        <div class="row">
+            <div class="k">Trial</div>
+            <div class="v"><span id="trialTag">-</span> • <span id="trialTime">0</span>s</div>
+        </div>
+
+        <div class="row" style="justify-content:flex-start; gap:8px; flex-wrap:wrap; margin-top:5px;">
+            <button id="trialA" class="btn">Trial A</button>
+            <button id="trialB" class="btn">Trial B</button>
+        </div>
+
+        <div class="row" style="display: flex; gap: 10px; margin-top: 10px;">
+            <button id="startBtn" class="btn">Start</button>
+            <button id="fuelBtn" class="btn">Fuel +10</button>
+            <button id="resetBtn" class="btn">Reset</button>
         </div>
     </div>
 
@@ -104,12 +118,22 @@
             <div class="v"><span id="leanVal">0.0</span>°</div>
         </div>
         <input id="leanSlider" type="range" min="0" max="45" step="0.5" value="0"/>
+        
         <div class="row" style="margin-top: 10px; gap: 8px; flex-wrap: wrap;">
             <button id="btnSideView" class="btn">Snap Side View</button>
             <button id="lockBallBtn" class="btn">Lock CoM</button>
             <button id="toggleBaseBtn" class="btn">Show Base of Support</button>
         </div>
     </div>
+
+    <div id="console-FL-003" class="module-ui-box" style="display:none;"></div>
+    <div id="console-FL-004" class="module-ui-box" style="display:none;"></div>
+    <div id="console-FL-005" class="module-ui-box" style="display:none;"></div>
+    <div id="console-FL-006" class="module-ui-box" style="display:none;"></div>
+    <div id="console-FL-007" class="module-ui-box" style="display:none;"></div>
+    <div id="console-FL-008" class="module-ui-box" style="display:none;"></div>
+    <div id="console-FL-009" class="module-ui-box" style="display:none;"></div>
+    <div id="console-FL-010" class="module-ui-box" style="display:none;"></div>
 
     <div id="trialMsg" style="color:#a8c0da; font-size:12px; line-height:1.25; margin-top:10px; min-height:30px;">
         Read instructions before beginning.
@@ -128,33 +152,6 @@
         <div class="v" id="statusVal">Stable</div>
     </div>
 </div>
-
-    <div id="console-FL-003" class="module-ui-box" style="display:none;"></div>
-    <div id="console-FL-004" class="module-ui-box" style="display:none;"></div>
-    <div id="console-FL-005" class="module-ui-box" style="display:none;"></div>
-    <div id="console-FL-006" class="module-ui-box" style="display:none;"></div>
-    <div id="console-FL-007" class="module-ui-box" style="display:none;"></div>
-    <div id="console-FL-008" class="module-ui-box" style="display:none;"></div>
-    <div id="console-FL-009" class="module-ui-box" style="display:none;"></div>
-    <div id="console-FL-010" class="module-ui-box" style="display:none;"></div>
-
-    <div id="trialMsg" style="color:#a8c0da; font-size:12px; line-height:1.25; margin-top:10px; min-height:30px;">
-      Read instructions. Select Trial A or B to begin.
-    </div>
-
-    <button id="assessmentBtn" class="primary" style="display:none; width:100%; margin-top:10px;">
-      Take Final MCQ Assessment
-    </button>
-
-    <button id="reviewBtn" class="btn" style="display:none; border-color:#4ade80; color:#4ade80; margin-top: 10px; width: 100%;">
-      Review MCQ
-    </button>
-
-    <div class="row" style="justify-content:space-between; margin-top:10px; padding-top:10px; border-top:1px solid rgba(148,163,184,.18);">
-      <div class="k">Status</div>
-      <div class="v" id="statusVal">Stable</div>
-    </div>
-  </div>
 
   <div id="trialHelpModal" style="display:none; position:fixed; inset:0; z-index:100; background:rgba(7,16,27,.85); align-items:center; justify-content:center;">
     <div id="gateCard" style="max-width:600px; padding:0; overflow:hidden; display:flex; flex-direction:column;">
