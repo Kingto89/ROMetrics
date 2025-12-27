@@ -1702,7 +1702,6 @@ if (gltf.animations && gltf.animations.length) {
       camera.position.copy(camGoalPos);
       controls.target.copy(camGoalTarget);
       controls.update();
-      updateGlobalBlink(dt);
     }
 
 function placeAvatarForZone(which) {
@@ -2007,39 +2006,6 @@ function animate() {
     const dt = clock.getDelta(); 
     controls.update();
 
-    function updateGlobalBlink(dt) {
-    const BL = animate._blink;
-    if (!BL || !BL.targets.length) return;
-
-    const now = performance.now() / 1000;
-    if (BL.state === 0 && now >= BL.next) {
-        BL.state = 1;
-        BL.t = 0;
-        BL.next = now + 4 + Math.random() * 2;
-    }
-
-    const down = 0.06, hold = 0.02, up = 0.10;
-
-    const setBlink = (v) => {
-        BL.targets.forEach(t => { t.mesh.morphTargetInfluences[t.idx] = v; });
-    };
-
-    if (BL.state !== 0) {
-        BL.t += dt;
-        if (BL.state === 1) { // closing
-            setBlink(Math.min(1, BL.t / down));
-            if (BL.t >= down) { BL.state = 2; BL.t = 0; }
-        } else if (BL.state === 2) { // hold
-            setBlink(1);
-            if (BL.t >= hold) { BL.state = 3; BL.t = 0; }
-        } else if (BL.state === 3) { // opening
-            setBlink(1 - Math.min(1, BL.t / up));
-            if (BL.t >= up) { BL.state = 0; setBlink(0); }
-        }
-    }
-}
-  
-
     // 2. INDEPENDENT MODULE ENGINE
     // This executes ONLY the logic for the specific lab module currently active.
     if (activeUpdateFunction) {
@@ -2048,102 +2014,6 @@ function animate() {
 
     renderer.render(scene, camera);
 }
-    
-// ===== BLINK (works for BOTH Roma + Roman via auto-detect morph names) =====
-if (!animate._blink) animate._blink = { model:null, targets:[], state:0, t:0, next:0 };
-
-const BL = animate._blink;
-
-// (re)build targets when model changes
-if (avatarRoot && BL.model !== avatarRoot){
-  BL.model = avatarRoot;
-  BL.targets = [];
-  BL.state = 0;
-  BL.t = 0;
-  BL.next = performance.now()/1000 + 1.5;
-
-  // Find morph targets on any mesh that has them
-  const addTarget = (mesh, name)=>{
-    const d = mesh.morphTargetDictionary;
-    if (!d || d[name] == null) return false;
-    BL.targets.push({ mesh, idx: d[name] });
-    return true;
-  };
-
-  // Prefer Roman blink morphs if present, else Roma eyeClosed morphs
-  let foundRoman = false;
-  let foundRoma  = false;
-
-  avatarRoot.traverse(o=>{
-    if (!o.isMesh || !o.morphTargetInfluences || !o.morphTargetDictionary) return;
-
-    // Roman
-    foundRoman = addTarget(o, "Eye_Blink")   || foundRoman;
-    foundRoman = addTarget(o, "Eye_Blink_L") || foundRoman;
-    foundRoman = addTarget(o, "Eye_Blink_R") || foundRoman;
-
-    // Roma
-    foundRoma  = addTarget(o, "Expressions_eyeClosedL_max") || foundRoma;
-    foundRoma  = addTarget(o, "Expressions_eyeClosedR_max") || foundRoma;
-  });
-
-  // If Roman + Roma both got added somehow, keep the one that actually matches this model:
-  // (simple rule: if any Eye_Blink exists on this model, keep only Roman targets)
-  const hasEyeBlink = BL.targets.some(t=>{
-    const dict = t.mesh.morphTargetDictionary;
-    return dict && (dict["Eye_Blink"] != null || dict["Eye_Blink_L"] != null || dict["Eye_Blink_R"] != null);
-  });
-  if (hasEyeBlink){
-    BL.targets = BL.targets.filter(t=>{
-      const dict = t.mesh.morphTargetDictionary;
-      return dict && (dict["Eye_Blink"] != null || dict["Eye_Blink_L"] != null || dict["Eye_Blink_R"] != null);
-    });
-  } else {
-    BL.targets = BL.targets.filter(t=>{
-      const dict = t.mesh.morphTargetDictionary;
-      return dict && (dict["Expressions_eyeClosedL_max"] != null || dict["Expressions_eyeClosedR_max"] != null);
-    });
-  }
-}
-
-if (BL.targets.length){ const now = performance.now()/1000; const dt = clock.getDelta();
-
-  // schedule next blink (about every ~5s with slight randomness)
-  if (BL.state === 0 && now >= BL.next){
-    BL.state = 1;        // closing
-    BL.t = 0;
-    BL.next = now + 4.2 + Math.random()*1.6;
-  }
-
-  // timings
-  const down = 0.06;     // close
-  const hold = 0.02;     // closed
-  const up   = 0.10;     // open
-
-  const setBlink = (v)=>{
-    for (const t of BL.targets){
-      t.mesh.morphTargetInfluences[t.idx] = v;
-    }
-  };
-
-  if (BL.state !== 0){
-    BL.t += dt;
-
-    if (BL.state === 1){ // closing
-      const v = Math.min(1, BL.t / down);
-      setBlink(v);
-      if (BL.t >= down){ BL.state = 2; BL.t = 0; }
-    } else if (BL.state === 2){ // hold
-      setBlink(1);
-      if (BL.t >= hold){ BL.state = 3; BL.t = 0; }
-    } else if (BL.state === 3){ // opening
-      const v = 1 - Math.min(1, BL.t / up);
-      setBlink(v);
-      if (BL.t >= up){ BL.state = 0; BL.t = 0; setBlink(0); }
-    }
-  }
-}
-
 
 function updateProceduralRun(dt) {
     if (!animate._run) {
