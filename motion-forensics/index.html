@@ -380,9 +380,24 @@ const MODULE_CONTROLLERS = {
 let activeUpdateFunction = null; 
 
 let avatarRoot = null;
+let skeleton = null;
 let spine01 = null;
 let mixer = null;
 let runAction = null;
+// ==============================
+// Skeleton capture (GLOBAL, one-time)
+// ==============================
+if (!animate._getSkeleton) {
+  animate._getSkeleton = (root) => {
+    let sk = null;
+    root.traverse(o => {
+      if (sk) return;
+      if (o.isSkinnedMesh && o.skeleton) sk = o.skeleton;
+    });
+    return sk;
+  };
+}
+
 
 
 const METABOLIC_TABLE = {};
@@ -440,6 +455,55 @@ const ANAT_PRESETS = {
 
 
 let ANAT = { ...ANAT_PRESETS[ACTIVE_MODEL_ID] };
+// ==============================
+// FL-002 — Module 2 Upper-Body Poses
+// ==============================
+const FL002_POSES = {
+  idle: { // default: NOT holding ball
+    upperarm_L: { x: 0.0, y:  0.10, z:  -7.5 },
+    lowerarm_L: { x: -0.0, y:  0.00, z:  0.0 },
+    hand_L:     { x:  0.00, y:  0.00, z:  0.0 },
+
+    upperarm_R: { x: -0.0, y: -0.10, z: 7.5 },
+    lowerarm_R: { x: -0.0, y:  0.00, z: -0.00 },
+    hand_R:     { x:  0.00, y:  0.00, z:  0.00 }
+  },
+
+  holdingBall: { // applied when ball is picked up
+    upperarm_L: { x: -0.75, y:  0.20, z:  0.30 },
+    lowerarm_L: { x: -1.10, y:  0.00, z:  0.15 },
+    hand_L:     { x:  0.10, y:  0.00, z:  0.00 },
+
+    upperarm_R: { x: -0.75, y: -0.20, z: -0.30 },
+    lowerarm_R: { x: -1.10, y:  0.00, z: -0.15 },
+    hand_R:     { x:  0.10, y:  0.00, z:  0.00 }
+  }
+};
+
+// ==============================
+// FL-002 Pose Applier (Upper Body Only)
+// ==============================
+function applyFL002Pose(poseName) {
+    if (!skeleton) {
+        console.warn("Pose failed: Global skeleton variable is null.");
+        return;
+    }
+
+    const pose = FL002_POSES[poseName];
+    if (!pose) return;
+
+    console.log(`Applying ${poseName} pose...`);
+
+    for (const boneName in pose) {
+        // Use getBoneByName or find a partial match to handle prefixes
+        const bone = skeleton.bones.find(b => b.name.includes(boneName));
+        
+        if (bone) {
+            const r = pose[boneName];
+            bone.rotation.set(r.x, r.y, r.z);
+        }
+    }
+}
 
 function setAnatForModel(id){
   ACTIVE_MODEL_ID = (id === "Roman" || id === "Roma") ? id : "Roma";
@@ -1609,6 +1673,7 @@ async function loadSelectedModel(modelId, onProgress) {
 
     avatarRoot = buildPreviewMannequin();
     scene.add(avatarRoot);
+    animate._getSkeleton(avatarRoot);
     return avatarRoot;
   }
 
@@ -1830,19 +1895,43 @@ async function enterFL001() {
 
 // UPDATE enterFL002 function to match new buttons and wire spine01
 async function enterFL002() {
+    currentModule = "FL-002";
     console.log("FL-002 ENTERED — Stability & CoM Analysis");
 
-    // 1. Initialize Simulation State for Module 2
+    // 1. SIMULATION STATE
     sim.running = false;          
     sim.isStabilityMode = true;   
     sim.leanZ = 0;                
     sim.leanX = 0;                
     sim.ballLocked = false;
 
-    // 2. Stop cardio animations and reset pose
-    if (runAction) runAction.stop(); 
-    restore(); 
+    // 2. STOP ANIMATION OVERRIDES
+    // This is critical: if the mixer is running, it will overwrite manual bone rotations
+    if (mixer) {
+        mixer.stopAllAction(); 
+        // Optional: stop the mixer from updating entirely
+        mixer.update(0); 
+    }
+
+    // 3. REFRESH SKELETON REFERENCE
+    // Ensures we have the latest bone handles for the current model
+    if (avatarRoot) {
+        avatarRoot.traverse(o => {
+            if (o.isSkinnedMesh && o.skeleton) {
+                skeleton = o.skeleton;
+            }
+        });
+    }
+
     setZone('forensics'); 
+
+    // 4. APPLY INITIAL POSE
+    // Use a small timeout to ensure the mixer has released the bones
+    setTimeout(() => {
+        console.log("Applying FL-002 static idle pose...");
+        applyFL002Pose("idle");
+    }, 50);
+
 
     // 3. UI References
     const leanZSlider = document.getElementById('leanSlider');
@@ -1850,6 +1939,22 @@ async function enterFL002() {
     const leanZVal = document.getElementById('leanVal');
     const leanXVal = document.getElementById('leanXVal');
     const ballBtn = document.getElementById('lockBallBtn');
+ballBtn.onclick = () => {
+
+  // Toggle ball state
+  sim.ballLocked = !sim.ballLocked;
+
+  if (sim.ballLocked) {
+    // Pick up ball → apply holding pose
+    applyFL002Pose("holdingBall");
+    ballBtn.textContent = "Release Weight Ball";
+  } else {
+    // Release ball → return to idle pose
+    applyFL002Pose("idle");
+    ballBtn.textContent = "Pick Up Weight Ball";
+  }
+};
+
     const baseBtn = document.getElementById('toggleBaseBtn');
     const forcePlate = scene.getObjectByName("forcePlate");
     const $msg = document.getElementById('trialMsg');
@@ -2066,7 +2171,7 @@ function updateProceduralRun(dt) {
             tmpE: new THREE.Euler(),
         };
 
-        animate._getSkeleton = (root) => {
+    animate._getSkeleton = (root) => {
             let sk = null;
             root.traverse(o => {
                 if (sk) return;
@@ -2087,6 +2192,7 @@ function updateProceduralRun(dt) {
                 }
                 return null;
             };
+
 
             const bones = {
                 spine01: find(['spine01', 'Spine1', 'mixamorigSpine1', 'spine']),
