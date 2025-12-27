@@ -2177,8 +2177,7 @@ function updateProceduralRun(dt) {
     };
 
     const runNow = !!(sim.running && sim.energy > 0 && zoneCardio.visible);
-
-    if (runNow) {
+if (runNow) {
         const mph = sim.speedMph;
         const k = clamp(mph / 6.0, 0, 2.0);
         const amp = clamp(k, 0, 1.35);
@@ -2188,22 +2187,29 @@ function updateProceduralRun(dt) {
         const s = Math.sin(R.phase);
         const b = R.rig.bones;
 
+        // Constants from ANAT (ensure these are available in scope)
+        const tuck = THREE.MathUtils.degToRad(ANAT.shTuck);
+        const hip = THREE.MathUtils.degToRad(ANAT.hipAdd);
+
         const hipAmp = THREE.MathUtils.degToRad(28) * amp;
         const kneeAmp = THREE.MathUtils.degToRad(90) * amp;
         const armAmp = THREE.MathUtils.degToRad(22) * amp;
         const torsoYaw = THREE.MathUtils.degToRad(9) * amp * (-s);
 
-        // Legs
-        applyAdd(b.thighL, hipAmp * s, 0, 0);
-        applyAdd(b.thighR, -hipAmp * s, 0, 0);
+        // --- LEGS (X-Swing + Z-Adduction) ---
+        applyAdd(b.thighL, hipAmp * s, 0, -hip); // Added -hip
+        applyAdd(b.thighR, -hipAmp * s, 0, +hip); // Added +hip
+        
         applyAdd(b.calfL, -(Math.max(0, -s) * kneeAmp), 0, 0);
         applyAdd(b.calfR, -(Math.max(0, s) * kneeAmp), 0, 0);
 
-        // Arms
+        // --- ARMS (X-Swing + Z-Adduction) ---
         const armBack = THREE.MathUtils.degToRad(10);
         const elbowHold = THREE.MathUtils.degToRad(90);
-        applyAdd(b.upArmL, (-armAmp * s) - armBack, 0, 0);
-        applyAdd(b.upArmR, (armAmp * s) - armBack, 0, 0);
+        
+        applyAdd(b.upArmL, (-armAmp * s) - armBack, 0, -tuck); // Added -tuck
+        applyAdd(b.upArmR, (armAmp * s) - armBack, 0, +tuck);  // Added +tuck
+        
         applyAdd(b.loArmL, elbowHold, 0, 0);
         applyAdd(b.loArmR, elbowHold, 0, 0);
 
@@ -2212,9 +2218,6 @@ function updateProceduralRun(dt) {
         if (b.neck) applyAdd(b.neck, 0, torsoYaw * 0.35, 0);
 
         if (runAction) runAction.paused = false;
-    } else {
-        if (!sim.isStabilityMode) restore();
-        if (runAction) runAction.paused = true;
     }
 }
   // treadmill motion
