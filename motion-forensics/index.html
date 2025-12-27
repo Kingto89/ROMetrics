@@ -2271,23 +2271,15 @@ else if (b.spine03){
 if (b.neck) applyAdd(b.neck, 0, torsoYaw * 0.35, 0);
 if (b.head) applyAdd(b.head, 0, torsoYaw * 0.15, 0);
 
-
-if (runAction) runAction.paused = false;
-} else {
-    // FIX: Only restore (snap to upright) if we ARE NOT in Module 2
-    // If isStabilityMode is true, we SKIP restore so sliders can work
-    if (!sim.isStabilityMode) {
-        restore();
+if (runNow) {
+        if (runAction) runAction.paused = false;
+    } else {
+        // FIX: Skip restore in Stability Mode (Module 2) so sliders work
+        if (!sim.isStabilityMode) {
+            restore();
+        }
+        if (runAction) runAction.paused = true;
     }
-    if (runAction) runAction.paused = true;
-}
-
-  } else {
-    // THIS FIXES THE RESET: If not running, force anatomic position
-    restore();
-    if (runAction) runAction.paused = true;
-  }
-
   // treadmill motion
   if (sim.running){
     const treadSpeed = 0.35 + (sim.speedMph / 12) * 2.0;
