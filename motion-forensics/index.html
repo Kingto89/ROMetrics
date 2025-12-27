@@ -2561,18 +2561,30 @@ function updateMetabolicModule(dt) {
 // --- MODULE 2 LOGIC (STABILITY BOOTH) ---
 function updateStabilityModule(dt) {
     if (!avatarRoot) return;
+    const b = animate._run.rig.bones;
 
-    // Apply rotation from sliders
+    // A. RESET TO BASE ANATOMIC POSE
+    restore(); 
+
+    // B. APPLY MODULE-SPECIFIC ARM POSITIONS
+    if (sim.ballLocked) {
+        // POSITION 2: Elbow at 90° to hold weight
+        // Flex the shoulder slightly and the elbow to 90
+        applyFlex(b.upArmR, 15);  // Shoulder Flexion
+        applyFlex(b.loArmR, 90);  // Elbow Flexion
+    } else {
+        // POSITION 1: Pure Anatomic
+        // Arms remain at sides (handled by restore() above)
+    }
+
+    // C. APPLY SLIDER LEANS
     avatarRoot.rotation.x = (sim.leanZ * Math.PI) / 180;
     avatarRoot.rotation.z = -(sim.leanX * Math.PI) / 180;
 
-    // Track Center of Mass
+    // D. STABILITY BREACH LOGIC
     const chestPos = new THREE.Vector3();
-    avatarRoot.traverse(o => { 
-        if(o.name.toLowerCase().includes("spine02")) o.getWorldPosition(chestPos); 
-    });
-
-    // Forensic Breach Logic
+    if(b.spine02) b.spine02.getWorldPosition(chestPos);
+    
     const statusVal = document.getElementById('statusVal');
     if (Math.abs(chestPos.z - Z_FORENSIC.z) > 0.45) {
         statusVal.textContent = "STABILITY BREACH";
