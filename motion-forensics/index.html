@@ -2380,45 +2380,58 @@ if (sim.running && sim.energy > 0) {
     if (sim.fuelAlertTimer > 0) sim.fuelAlertTimer -= dt;
     if (sim.throughputAlert > 0) sim.throughputAlert -= dt;
   
-
 // --- Inside animate() loop: Module 2 Stability Physics ---
 if (currentModule?.id === 'FL-002' && avatarRoot) {
-    // 1. APPLY LEAN (Degrees to Radians)
-    avatarRoot.rotation.x = (sim.leanZ * Math.PI) / 180;  // Forward/Back
-    avatarRoot.rotation.z = -(sim.leanX * Math.PI) / 180; // Left/Right
+    const R = animate._run;
+    const b = R?.rig?.bones;
 
+    // 1. APPLY BONE-SPECIFIC ROTATION (spine01)
+    if (b && b.spine01) {
+        const baseQ = R.rig.base.get(b.spine01);
+        
+        // Convert slider degrees to radians
+        const radFlex = (sim.leanZ * Math.PI) / 180; // Flexion/Extension
+        const radLat  = (sim.leanX * Math.PI) / 180; // Lateral Flexion
+
+        // Euler mapping: X = Flexion, Z = Lateral Flexion
+        R.tmpE.set(radFlex, 0, -radLat); 
+        R.tmpQ.setFromEuler(R.tmpE);
+        
+        // Multiply against the baseline anatomic pose
+        b.spine01.quaternion.copy(baseQ).multiply(R.tmpQ);
+    }
+
+    // 2. TRACK ANATOMIC KEYPOINTS FOR STABILITY
     const chestPos = new THREE.Vector3();
     const handPos = new THREE.Vector3();
     const pLine = scene.getObjectByName("plumbLine");
     const wBall = scene.getObjectByName("weightBall");
 
-    // 2. SET FIXED CLINICAL PLUMB LINE
-    if (pLine) {
-        pLine.position.set(Z_FORENSIC.x, 1.5, Z_FORENSIC.z);
-    }
-
-    // 3. TRACK ANATOMIC KEYPOINTS
+    // Get world positions of spine and hand for CoM calculation
     avatarRoot.traverse(o => { 
         if(o.name.toLowerCase().includes("spine02")) o.getWorldPosition(chestPos); 
         if(o.name.toLowerCase().includes("hand_r")) o.getWorldPosition(handPos);
     });
 
-    // 4. CALCULATE COMBINED CENTER OF MASS (CoM)
+    // 3. CALCULATE COMBINED CENTER OF MASS (CoM)
     let comZ = chestPos.z;
     let comX = chestPos.x;
 
     if (sim.ballLocked && wBall) {
-        wBall.position.copy(handPos); 
+        wBall.position.copy(handPos); // Snap weight to hand
         comZ = (chestPos.z + handPos.z) / 2;
         comX = (chestPos.x + handPos.x) / 2;
-    } else {
-        if(wBall) wBall.position.set(Z_FORENSIC.x + 0.6, 0.15, Z_FORENSIC.z + 0.8);
+    } else if (wBall) {
+        // Default floor position when not held
+        wBall.position.set(Z_FORENSIC.x + 0.6, 0.15, Z_FORENSIC.z + 0.8);
     }
 
-    // 5. FORENSIC STABILITY BREACH
+    // 4. CLINICAL STABILITY BREACH DETECTION
+    if (pLine) pLine.position.set(Z_FORENSIC.x, 1.5, Z_FORENSIC.z);
+
     const $statusVal = document.getElementById('statusVal');
-    const limitZ = 0.45; 
-    const limitX = 0.25;
+    const limitZ = 0.45; // 45cm Anterior/Posterior limit
+    const limitX = 0.25; // 25cm Lateral limit
 
     const breachedZ = Math.abs(comZ - Z_FORENSIC.z) > limitZ;
     const breachedX = Math.abs(comX - Z_FORENSIC.x) > limitX;
@@ -2426,66 +2439,18 @@ if (currentModule?.id === 'FL-002' && avatarRoot) {
     if (breachedZ || breachedX) {
         $statusVal.textContent = "STABILITY BREACH";
         $statusVal.style.color = "#ff9aa0";
-        if(pLine) pLine.material.color.setHex(0xff9aa0);
+        if(pLine) pLine.material.color.setHex(0xff9aa0); // Red alert
     } else {
         $statusVal.textContent = "Stable";
         $statusVal.style.color = "#4ade80";
-        if(pLine) pLine.material.color.setHex(0x38bdf8);
+        if(pLine) pLine.material.color.setHex(0x38bdf8); // Cyan stable
     }
-} else if (avatarRoot) {
-    // Reset root rotation when leaving Module 2
-    avatarRoot.rotation.x = 0;
-    avatarRoot.rotation.z = 0;
-}
-    const chestPos = new THREE.Vector3();
-    const handPos = new THREE.Vector3();
-    const pLine = scene.getObjectByName("plumbLine");
-    const wBall = scene.getObjectByName("weightBall");
-
-    // 2. SET FIXED CLINICAL PLUMB LINE
-    // Positioned at neutral center; stays perfectly vertical and stationary
-    if (pLine) {
-        pLine.position.set(Z_FORENSIC.x, 1.5, Z_FORENSIC.z);
-    }
-
-    // 3. TRACK ANATOMIC KEYPOINTS
-    avatarRoot.traverse(o => { 
-        if(o.name.toLowerCase().includes("spine02")) o.getWorldPosition(chestPos); 
-        if(o.name.toLowerCase().includes("hand_r")) o.getWorldPosition(handPos);
-    });
-
-    // 4. CALCULATE COMBINED CENTER OF MASS (CoM)
-    // If holding ball, CoM is the average of torso and hand
-    let comZ = chestPos.z;
-    let comX = chestPos.x;
-
-    if (sim.ballLocked && wBall) {
-        wBall.position.copy(handPos); // Snap ball to hand
-        comZ = (chestPos.z + handPos.z) / 2;
-        comX = (chestPos.x + handPos.x) / 2;
-    } else {
-        // Ball stays on floor in front of subject
-        if(wBall) wBall.position.set(Z_FORENSIC.x + 0.6, 0.15, Z_FORENSIC.z + 0.8);
-    }
-
-    // 5. FORENSIC STABILITY BREACH
-    // Clinical thresholds: ~45cm forward/back, ~25cm lateral from center
-    const $statusVal = document.getElementById('statusVal');
-    const limitZ = 0.45; 
-    const limitX = 0.25;
-
-    const breachedZ = Math.abs(comZ - Z_FORENSIC.z) > limitZ;
-    const breachedX = Math.abs(comX - Z_FORENSIC.x) > limitX;
-
-    if (breachedZ || breachedX) {
-        $statusVal.textContent = "STABILITY BREACH";
-        $statusVal.style.color = "#ff9aa0";
-        // Visual indicator: Plumb line glows red on failure
-        if(pLine) pLine.material.color.setHex(0xff9aa0);
-    } else {
-        $statusVal.textContent = "Stable";
-        $statusVal.style.color = "#4ade80";
-        if(pLine) pLine.material.color.setHex(0x38bdf8); // Cyan for stable
+} else if (avatarRoot && !sim.running) {
+    // If not in Module 2 and not running, ensure spine is restored to baseline
+    const R = animate._run;
+    if (R?.rig?.bones?.spine01) {
+        const baseQ = R.rig.base.get(R.rig.bones.spine01);
+        if (baseQ) R.rig.bones.spine01.quaternion.copy(baseQ);
     }
 }
   
