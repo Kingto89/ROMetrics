@@ -2090,255 +2090,143 @@ if (BL.targets.length){
 }
 
 
-  // --- Procedural run-in-place (NO GLB animation clips required) ---
-  if (!animate._run){
-    animate._run = {
-      rig: null,
-      phase: 0,
-      wasRunning: false,
-      tmpQ: new THREE.Quaternion(),
-      tmpE: new THREE.Euler(),
-    };
+function updateProceduralRun(dt) {
+    if (!animate._run) {
+        animate._run = {
+            rig: null,
+            phase: 0,
+            wasRunning: false,
+            tmpQ: new THREE.Quaternion(),
+            tmpE: new THREE.Euler(),
+        };
 
-    animate._getSkeleton = (root)=>{
-      let sk = null;
-      root.traverse(o=>{
-        if (sk) return;
-        if (o.isSkinnedMesh && o.skeleton) sk = o.skeleton;
-      });
-      return sk;
-    };
+        animate._getSkeleton = (root) => {
+            let sk = null;
+            root.traverse(o => {
+                if (sk) return;
+                if (o.isSkinnedMesh && o.skeleton) sk = o.skeleton;
+            });
+            return sk;
+        };
 
-    animate._initRig = ()=>{
-      if (!avatarRoot) return null;
-      const sk = animate._getSkeleton(avatarRoot);
-      if (!sk) return null;
+        animate._initRig = () => {
+            if (!avatarRoot) return null;
+            const sk = animate._getSkeleton(avatarRoot);
+            if (!sk) return null;
 
-      const find = (names)=>{
-        for (const n of names){
-          const b = sk.getBoneByName(n);
-          if (b) return b;
-        }
-        return null;
-      };
+            const find = (names) => {
+                for (const n of names) {
+                    const b = sk.getBoneByName(n);
+                    if (b) return b;
+                }
+                return null;
+            };
 
-      const bones = {
-        spine01: find(['spine01','Spine1','mixamorigSpine1','spine']),
-        spine02: find(['spine02','Spine2','mixamorigSpine2']),
-        neck:  find(['neck','Neck','mixamorigNeck']),
-        head:  find(['head','Head','mixamorigHead']),
-        thighL: find(['thigh_L','thigh.L','LeftUpLeg','mixamorigLeftUpLeg']),
-        thighR: find(['thigh_R','thigh.R','RightUpLeg','mixamorigRightUpLeg']),
-        calfL:  find(['calf_L','shin_L','calf.L','LeftLeg','mixamorigLeftLeg']),
-        calfR:  find(['calf_R','shin_R','calf.R','RightLeg','mixamorigRightLeg']),
-        upArmL: find(['upperarm_L','upper_arm_L','upperarm.L','LeftArm','mixamorigLeftArm']),
-        upArmR: find(['upperarm_R','upper_arm_R','upperarm.R','RightArm','mixamorigRightArm']),
-        loArmL: find(['lowerarm_L','forearm_L','lowerarm.L','LeftForeArm','mixamorigLeftForeArm']),
-        loArmR: find(['lowerarm_R','forearm_R','lowerarm.R','RightForeArm','mixamorigRightForeArm']),
-        footL: find(['foot_L','foot.L','LeftFoot','mixamorigLeftFoot']),
-        footR: find(['foot_R','foot.R','RightFoot','mixamorigRightFoot']),
-        toesL: find(['toes_L','toe_L','toes.L','LeftToeBase','mixamorigLeftToeBase']),
-        toesR: find(['toes_R','toe_R','toes.R','RightToeBase','mixamorigRightToeBase'])
-      };
+            const bones = {
+                spine01: find(['spine01', 'Spine1', 'mixamorigSpine1', 'spine']),
+                spine02: find(['spine02', 'Spine2', 'mixamorigSpine2']),
+                neck: find(['neck', 'Neck', 'mixamorigNeck']),
+                head: find(['head', 'Head', 'mixamorigHead']),
+                thighL: find(['thigh_L', 'thigh.L', 'LeftUpLeg', 'mixamorigLeftUpLeg']),
+                thighR: find(['thigh_R', 'thigh.R', 'RightUpLeg', 'mixamorigRightUpLeg']),
+                calfL: find(['calf_L', 'shin_L', 'calf.L', 'LeftLeg', 'mixamorigLeftLeg']),
+                calfR: find(['calf_R', 'shin_R', 'calf.R', 'RightLeg', 'mixamorigRightLeg']),
+                upArmL: find(['upperarm_L', 'upper_arm_L', 'upperarm.L', 'LeftArm', 'mixamorigLeftArm']),
+                upArmR: find(['upperarm_R', 'upper_arm_R', 'upperarm.R', 'RightArm', 'mixamorigRightArm']),
+                loArmL: find(['lowerarm_L', 'forearm_L', 'lowerarm.L', 'LeftForeArm', 'mixamorigLeftForeArm']),
+                loArmR: find(['lowerarm_R', 'forearm_R', 'lowerarm.R', 'RightForeArm', 'mixamorigRightForeArm']),
+                footL: find(['foot_L', 'foot.L', 'LeftFoot', 'mixamorigLeftFoot']),
+                footR: find(['foot_R', 'foot.R', 'RightFoot', 'mixamorigRightFoot']),
+                toesL: find(['toes_L', 'toe_L', 'toes.L', 'LeftToeBase', 'mixamorigLeftToeBase']),
+                toesR: find(['toes_R', 'toe_R', 'toes.R', 'RightToeBase', 'mixamorigRightToeBase'])
+            };
 
-      const base = new Map();
-      Object.values(bones).forEach(b=>{ if (b) base.set(b, b.quaternion.clone()); });
- // bake anatomic baseline into stored "base" so restore() keeps it
-const uaFlex = THREE.MathUtils.degToRad(ANAT.upperarmFlex || 0);
-if (uaFlex){
-  const qUAFlex = new THREE.Quaternion().setFromEuler(new THREE.Euler(uaFlex, 0, 0)); // X = shoulder flex
+            const base = new Map();
+            Object.values(bones).forEach(b => { if (b) base.set(b, b.quaternion.clone()); });
 
-  if (bones.upArmL){
-    const bq = base.get(bones.upArmL);
-    if (bq){
-      const baked = bq.clone().multiply(qUAFlex);
-      base.set(bones.upArmL, baked);
-      bones.upArmL.quaternion.copy(baked);
+            const tuck = THREE.MathUtils.degToRad(ANAT.shTuck);
+            const er = THREE.MathUtils.degToRad(ANAT.shER);
+            const hip = THREE.MathUtils.degToRad(ANAT.hipAdd);
+            const spineFlex = THREE.MathUtils.degToRad(ANAT.spine01Flex || 0);
+
+            const tE = new THREE.Euler();
+            const tQ = new THREE.Quaternion();
+
+            const bake = (bone, ex, ey, ez) => {
+                if (!bone) return;
+                const q = base.get(bone);
+                if (!q) return;
+                tE.set(ex, ey, ez);
+                tQ.setFromEuler(tE);
+                q.multiply(tQ);
+                bone.quaternion.copy(q);
+            };
+
+            bake(bones.upArmL, 0, +er, -tuck);
+            bake(bones.upArmR, 0, -er, +tuck);
+            bake(bones.thighL, 0, 0, -hip);
+            bake(bones.thighR, 0, 0, +hip);
+            bake(bones.spine01, spineFlex, 0, 0);
+
+            return { bones, base };
+        };
     }
-  }
-  if (bones.upArmR){
-    const bq = base.get(bones.upArmR);
-    if (bq){
-      const baked = bq.clone().multiply(qUAFlex);
-      base.set(bones.upArmR, baked);
-      bones.upArmR.quaternion.copy(baked);
+
+    const R = animate._run;
+    if (!R.rig && avatarRoot && !avatarRoot.userData.__isMannequin) {
+        R.rig = animate._initRig();
     }
-  }
-}
-     
-// --- bake anatomic baseline into stored "base" so restore() keeps it ---
-if (bones.spine01){
-  const flex = THREE.MathUtils.degToRad(ANAT.spine01Flex || 0); // Roman=5, Roma=0
-  const qFlex = new THREE.Quaternion().setFromEuler(new THREE.Euler(flex, 0, 0));
 
-  const baseQ = base.get(bones.spine01);
-  if (baseQ){
-    const newBase = baseQ.clone().multiply(qFlex);
-    base.set(bones.spine01, newBase);
-    bones.spine01.quaternion.copy(newBase);
-  }
-}
-
-      // If we found basically nothing, don't pretend it worked
-      const foundCount = [...base.keys()].length;
-      if (foundCount < 4) return null;
-// --- bake model-specific anatomic baseline into base quaternions ---
-const tuck = THREE.MathUtils.degToRad(ANAT.shTuck);
-const er   = THREE.MathUtils.degToRad(ANAT.shER);
-const hip  = THREE.MathUtils.degToRad(ANAT.hipAdd);
-
-const tE = new THREE.Euler();
-const tQ = new THREE.Quaternion();
-
-const bake = (bone, ex, ey, ez)=>{
-  if (!bone) return;
-  const q = base.get(bone);
-  if (!q) return;
-  tE.set(ex, ey, ez);
-  tQ.setFromEuler(tE);
-  q.multiply(tQ);         // update stored base
-  bone.quaternion.copy(q); // apply immediately on load
-};
-
-// shoulders (mirrored)
-bake(bones.upArmL, 0, +er, -tuck);
-bake(bones.upArmR, 0, -er, +tuck);
-
-// hips/thigh adduction (mirrored) — Roma=5°, Roman=0°
-bake(bones.thighL, 0, 0, -hip);
-bake(bones.thighR, 0, 0, +hip);
-
-      return { bones, base };
+    const applyAdd = (bone, ex, ey, ez) => {
+        if (!R.rig || !bone) return;
+        const baseQ = R.rig.base.get(bone);
+        if (!baseQ) return;
+        R.tmpE.set(ex, ey, ez);
+        R.tmpQ.setFromEuler(R.tmpE);
+        bone.quaternion.copy(baseQ).multiply(R.tmpQ);
     };
-  }
 
-  const R = animate._run;
+    const runNow = !!(sim.running && sim.energy > 0 && zoneCardio.visible);
 
-  // init rig once model exists
-  if (!R.rig && avatarRoot && !avatarRoot.userData.__isMannequin){
-    R.rig = animate._initRig();
-  }
+    if (runNow) {
+        const mph = sim.speedMph;
+        const k = clamp(mph / 6.0, 0, 2.0);
+        const amp = clamp(k, 0, 1.35);
+        const freq = (1.6 * k) + 0.15;
 
-  const applyAdd = (bone, ex, ey, ez)=>{
-    if (!R.rig || !bone) return;
-    const baseQ = R.rig.base.get(bone);
-    if (!baseQ) return;
-    R.tmpE.set(ex, ey, ez);
-    R.tmpQ.setFromEuler(R.tmpE);
-    bone.quaternion.copy(baseQ).multiply(R.tmpQ);
-  };
+        R.phase += dt * (Math.PI * 2) * freq;
+        const s = Math.sin(R.phase);
+        const b = R.rig.bones;
 
+        const hipAmp = THREE.MathUtils.degToRad(28) * amp;
+        const kneeAmp = THREE.MathUtils.degToRad(90) * amp;
+        const armAmp = THREE.MathUtils.degToRad(22) * amp;
+        const torsoYaw = THREE.MathUtils.degToRad(9) * amp * (-s);
 
-// This tells the character: "Run only if the start button is on AND you have energy."
-const runNow = !!(sim.running && sim.energy > 0 && zoneCardio.visible);
+        // Legs
+        applyAdd(b.thighL, hipAmp * s, 0, 0);
+        applyAdd(b.thighR, -hipAmp * s, 0, 0);
+        applyAdd(b.calfL, -(Math.max(0, -s) * kneeAmp), 0, 0);
+        applyAdd(b.calfR, -(Math.max(0, s) * kneeAmp), 0, 0);
 
-  if (runNow){
-    const mph = sim.speedMph;
-    const k = clamp(mph / 6.0, 0, 2.0);           // 1.0 at 6mph
-    const amp = clamp(k, 0, 1.35);
-    const freq = (1.6 * k) + 0.15;                // cycles/sec
+        // Arms
+        const armBack = THREE.MathUtils.degToRad(10);
+        const elbowHold = THREE.MathUtils.degToRad(90);
+        applyAdd(b.upArmL, (-armAmp * s) - armBack, 0, 0);
+        applyAdd(b.upArmR, (armAmp * s) - armBack, 0, 0);
+        applyAdd(b.loArmL, elbowHold, 0, 0);
+        applyAdd(b.loArmR, elbowHold, 0, 0);
 
-    R.phase += dt * (Math.PI * 2) * freq;
+        // Torso & Head
+        if (b.spine01) applyAdd(b.spine01, 0, torsoYaw, 0);
+        if (b.neck) applyAdd(b.neck, 0, torsoYaw * 0.35, 0);
 
-    const s  = Math.sin(R.phase);
-    const s2 = Math.sin(R.phase * 2.0);
-
-    const hipAmp  = THREE.MathUtils.degToRad(28) * amp;
-    const kneeAmp = THREE.MathUtils.degToRad(90) * amp;
-    const armAmp  = THREE.MathUtils.degToRad(22) * amp;
-    const spineTw = THREE.MathUtils.degToRad(4)  * (amp * 0.6);
-    const b = R.rig.bones;
-
-// legs (hip swing + 5° THIGH ADDUCTION on Z) — ROMA ONLY
-if (ACTIVE_MODEL_ID === "Roma") {
-  const thighAdd = THREE.MathUtils.degToRad(5);
-  applyAdd(b.thighL,  hipAmp * s, 0, -thighAdd);
-  applyAdd(b.thighR, -hipAmp * s, 0, +thighAdd);
-} else {
-  applyAdd(b.thighL,  hipAmp * s, 0, 0);
-  applyAdd(b.thighR, -hipAmp * s, 0, 0);
-}
-
-
-
-    const bendL = Math.max(0, -s) * kneeAmp;
-    const bendR = Math.max(0,  s) * kneeAmp;
-    // knee flexion = X axis (rx). keep your existing bendL/bendR logic.
-  applyAdd(b.calfL, -bendL, 0, 0);
-  applyAdd(b.calfR, -bendR, 0, 0);
-// ankles/toes (dorsi in swing, plantar at toe-off)
-const swingL  = Math.max(0, -s);
-const swingR  = Math.max(0,  s);
-const stanceL = Math.max(0,  s);
-const stanceR = Math.max(0, -s);
-
-const ankleDorsi = THREE.MathUtils.degToRad(12) * amp; // toe clearance
-const anklePF    = THREE.MathUtils.degToRad(18) * amp; // toe-off
-const toeExt     = THREE.MathUtils.degToRad(15) * amp; // MTP extension at toe-off
-
-const ankleL = (+ankleDorsi * swingL) + (-anklePF * stanceL);
-const ankleR = (+ankleDorsi * swingR) + (-anklePF * stanceR);
-
-applyAdd(b.footL, ankleL, 0, 0);
-applyAdd(b.footR, ankleR, 0, 0);
-
-applyAdd(b.toesL, toeExt * stanceL, 0, 0);
-applyAdd(b.toesR, toeExt * stanceR, 0, 0);
-
-
-// arms (opposite) + MORE adduction + slight back bias + elbows
-// arms (swing reacts to mph; pose does NOT)
-const armTuck   = THREE.MathUtils.degToRad(17);  // adduction (Z)
-const armBack   = THREE.MathUtils.degToRad(10);  // slight shoulder extension (X)
-const humER     = THREE.MathUtils.degToRad(7);  // external rotation (Y)
-const elbowHold = THREE.MathUtils.degToRad(90);  // elbow flex (X)
-
-// one applyAdd per bone (no overwrites)
-applyAdd(b.upArmL, (-armAmp * s) - armBack, +humER, -armTuck);
-applyAdd(b.upArmR, ( armAmp * s) - armBack, -humER, +armTuck);
-
-applyAdd(b.loArmL, elbowHold, 0, 0);
-applyAdd(b.loArmR, elbowHold, 0, 0);
-
-
-// torso: rotate so the OPPOSITE shoulder comes forward to the STANCE leg (NO side-to-side shake)
-const torsoYaw  = THREE.MathUtils.degToRad(9) * amp * (-s);  // Y = axial rotation
-const torsoLean = THREE.MathUtils.degToRad(1.5) * amp * ( s); // Z = tiny counterbalance (optional)
-
-// use spine01 / spine02 / spine03 if available; otherwise fall back cleanly
-if (b.spine01 && b.spine02 && b.spine03){
-  applyAdd(b.spine01, 0, torsoYaw * 0.45, torsoLean * 0.45); // lower trunk
-  applyAdd(b.spine02, 0, torsoYaw * 0.35, torsoLean * 0.35); // mid trunk
-  applyAdd(b.spine03, 0, torsoYaw * 0.20, torsoLean * 0.20); // upper trunk
-} 
-else if (b.spine01 && b.spine02){
-  applyAdd(b.spine01, 0, torsoYaw * 0.60, torsoLean * 0.60);
-  applyAdd(b.spine02, 0, torsoYaw * 0.40, torsoLean * 0.40);
-}
-else if (b.spine01){
-  applyAdd(b.spine01, 0, torsoYaw, torsoLean);
-}
-else if (b.spine02){
-  applyAdd(b.spine02, 0, torsoYaw, torsoLean);
-}
-else if (b.spine03){
-  applyAdd(b.spine03, 0, torsoYaw, torsoLean);
-}
-
-
-// head/neck: FOLLOW the torso yaw slightly (don’t use s2 here or it “shakes”)
-if (b.neck) applyAdd(b.neck, 0, torsoYaw * 0.35, 0);
-if (b.head) applyAdd(b.head, 0, torsoYaw * 0.15, 0);
-
-if (runNow) {
         if (runAction) runAction.paused = false;
     } else {
-        // FIX: Skip restore in Stability Mode (Module 2) so sliders work
-        if (!sim.isStabilityMode) {
-            restore();
-        }
+        if (!sim.isStabilityMode) restore();
         if (runAction) runAction.paused = true;
     }
+}
   // treadmill motion
   if (sim.running){
     const treadSpeed = 0.35 + (sim.speedMph / 12) * 2.0;
