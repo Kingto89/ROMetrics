@@ -1843,7 +1843,21 @@ async function enterFL002() {
     if (runAction) runAction.stop(); 
     restore(); 
     setZone('forensics'); 
+// --- SNAP TO ANATOMIC PRESET IMMEDIATELY ---
+    if (avatarRoot && animate._run && animate._run.rig) {
+        const b = animate._run.rig.bones;
+        const p = ANAT_PRESETS[ACTIVE_MODEL_ID];
+        
+        const tuck = THREE.MathUtils.degToRad(p.shTuck);
+        const er = THREE.MathUtils.degToRad(p.shER);
+        const hip = THREE.MathUtils.degToRad(p.hipAdd);
 
+        applyAdd(b.upArmL, 0, +er, -tuck);
+        applyAdd(b.upArmR, 0, -er, +tuck);
+        applyAdd(b.thighL, 0, 0, -hip);
+        applyAdd(b.thighR, 0, 0, +hip);
+    }
+    // ------------------------------------------
     // 3. UI References
     const leanZSlider = document.getElementById('leanSlider');
     const leanXSlider = document.getElementById('leanXSlider');
@@ -2560,41 +2574,19 @@ function updateMetabolicModule(dt) {
     
 // --- MODULE 2 LOGIC (STABILITY BOOTH) ---
 function updateStabilityModule(dt) {
-    if (!avatarRoot || !animate._run || !animate._run.rig) return;
+    if (!avatarRoot) return;
 
-    const b = animate._run.rig.bones;
-    // Use the existing ACTIVE_MODEL_ID to pull from your constant
-    const p = ANAT_PRESETS[ACTIVE_MODEL_ID];
-
-    const tuck = THREE.MathUtils.degToRad(p.shTuck);
-    const er = THREE.MathUtils.degToRad(p.shER);
-    const hip = THREE.MathUtils.degToRad(p.hipAdd);
-    const spineFlex = THREE.MathUtils.degToRad(p.spine01Flex);
-
-    // 1. APPLY ANATOMIC PRESETS FROM CONSTANT
-    applyAdd(b.upArmL, 0, +er, -tuck);
-    applyAdd(b.upArmR, 0, -er, +tuck);
-    applyAdd(b.thighL, 0, 0, -hip);
-    applyAdd(b.thighR, 0, 0, +hip);
-    applyAdd(b.spine01, spineFlex, 0, 0);
-
-    // 2. ELBOW FLEXION (90° only if ballLocked, otherwise anatomic)
-    if (sim.ballLocked && b.loArmR) {
-        applyAdd(b.loArmR, Math.PI / 2, 0, 0); 
-    } else if (b.loArmR) {
-        // Keeps elbow neutral when ball is dropped
-        applyAdd(b.loArmR, 0, 0, 0); 
-    }
-
-    // --- YOUR WORKING LOGIC UNTOUCHED ---
+    // Apply rotation from sliders
     avatarRoot.rotation.x = (sim.leanZ * Math.PI) / 180;
     avatarRoot.rotation.z = -(sim.leanX * Math.PI) / 180;
 
+    // Track Center of Mass
     const chestPos = new THREE.Vector3();
     avatarRoot.traverse(o => { 
         if(o.name.toLowerCase().includes("spine02")) o.getWorldPosition(chestPos); 
     });
 
+    // Forensic Breach Logic
     const statusVal = document.getElementById('statusVal');
     if (Math.abs(chestPos.z - Z_FORENSIC.z) > 0.45) {
         statusVal.textContent = "STABILITY BREACH";
@@ -2602,6 +2594,37 @@ function updateStabilityModule(dt) {
     } else {
         statusVal.textContent = "Stable";
         statusVal.style.color = "#4ade80";
+    }
+}
+function updateGlobalBlink(dt) {
+    const BL = animate._blink;
+    if (!BL || !BL.targets.length) return;
+
+    const now = performance.now() / 1000;
+    if (BL.state === 0 && now >= BL.next) {
+        BL.state = 1;
+        BL.t = 0;
+        BL.next = now + 4 + Math.random() * 2;
+    }
+
+    const down = 0.06, hold = 0.02, up = 0.10;
+
+    const setBlink = (v) => {
+        BL.targets.forEach(t => { t.mesh.morphTargetInfluences[t.idx] = v; });
+    };
+
+    if (BL.state !== 0) {
+        BL.t += dt;
+        if (BL.state === 1) { // closing
+            setBlink(Math.min(1, BL.t / down));
+            if (BL.t >= down) { BL.state = 2; BL.t = 0; }
+        } else if (BL.state === 2) { // hold
+            setBlink(1);
+            if (BL.t >= hold) { BL.state = 3; BL.t = 0; }
+        } else if (BL.state === 3) { // opening
+            setBlink(1 - Math.min(1, BL.t / up));
+            if (BL.t >= up) { BL.state = 0; setBlink(0); }
+        }
     }
 }
     
