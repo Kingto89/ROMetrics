@@ -434,8 +434,8 @@ const MODELS = [
 let ACTIVE_MODEL_ID = "Roma";
 
 const ANAT_PRESETS = {
-  Roma:  { shTuck: 25, shER: 10, hipAdd: 5, spine01Flex: 0, upperarmFlex: 0 },  // degrees
-  Roman: { shTuck: 42, shER: 12, hipAdd: 0, spine01Flex: 5, upperarmFlex: 5 }   // degrees
+  Roma:  { shTuck: 35, shER: 10, hipAdd: 5, spine01Flex: 0, upperarmFlex: 0 },  // degrees
+  Roman: { shTuck: 52, shER: 12, hipAdd: 0, spine01Flex: 5, upperarmFlex: 5 }   // degrees
 };
 
 
@@ -2242,7 +2242,7 @@ if (runNow) {
         applyAdd(b.calfR, -(Math.max(0, s) * kneeAmp), 0, 0);
 
         // --- ARMS (X-Swing + Z-Adduction) ---
-        const armBack = THREE.MathUtils.degToRad(10);
+        const armBack = THREE.MathUtils.degToRad(1);
         const elbowHold = THREE.MathUtils.degToRad(90);
         
         applyAdd(b.upArmL, (-armAmp * s) - armBack, 0, -tuck); // Added -tuck
