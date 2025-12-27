@@ -2365,6 +2365,8 @@ if (sim.running && sim.energy > 0) {
 
 // Inside your animate() function, near the end:
 
+// Inside your animate() function, near the end:
+
 if (currentModule?.id === 'FL-002' && avatarRoot) {
     // 1. APPLY LEAN (This is what moves the model)
     avatarRoot.rotation.x = (sim.leanZ * Math.PI) / 180;  
@@ -2405,62 +2407,6 @@ if (currentModule?.id === 'FL-002' && avatarRoot) {
         document.getElementById('statusVal').textContent = "Stable";
         document.getElementById('statusVal').style.color = "#4ade80";
         if(pLine) pLine.material.color.setHex(0x38bdf8);
-    }
-}
-} else if (avatarRoot) {
-    // Reset root rotation when leaving Module 2
-    avatarRoot.rotation.x = 0;
-    avatarRoot.rotation.z = 0;
-}
-    const chestPos = new THREE.Vector3();
-    const handPos = new THREE.Vector3();
-    const pLine = scene.getObjectByName("plumbLine");
-    const wBall = scene.getObjectByName("weightBall");
-
-    // 2. SET FIXED CLINICAL PLUMB LINE
-    // Positioned at neutral center; stays perfectly vertical and stationary
-    if (pLine) {
-        pLine.position.set(Z_FORENSIC.x, 1.5, Z_FORENSIC.z);
-    }
-
-    // 3. TRACK ANATOMIC KEYPOINTS
-    avatarRoot.traverse(o => { 
-        if(o.name.toLowerCase().includes("spine02")) o.getWorldPosition(chestPos); 
-        if(o.name.toLowerCase().includes("hand_r")) o.getWorldPosition(handPos);
-    });
-
-    // 4. CALCULATE COMBINED CENTER OF MASS (CoM)
-    // If holding ball, CoM is the average of torso and hand
-    let comZ = chestPos.z;
-    let comX = chestPos.x;
-
-    if (sim.ballLocked && wBall) {
-        wBall.position.copy(handPos); // Snap ball to hand
-        comZ = (chestPos.z + handPos.z) / 2;
-        comX = (chestPos.x + handPos.x) / 2;
-    } else {
-        // Ball stays on floor in front of subject
-        if(wBall) wBall.position.set(Z_FORENSIC.x + 0.6, 0.15, Z_FORENSIC.z + 0.8);
-    }
-
-    // 5. FORENSIC STABILITY BREACH
-    // Clinical thresholds: ~45cm forward/back, ~25cm lateral from center
-    const $statusVal = document.getElementById('statusVal');
-    const limitZ = 0.45; 
-    const limitX = 0.25;
-
-    const breachedZ = Math.abs(comZ - Z_FORENSIC.z) > limitZ;
-    const breachedX = Math.abs(comX - Z_FORENSIC.x) > limitX;
-
-    if (breachedZ || breachedX) {
-        $statusVal.textContent = "STABILITY BREACH";
-        $statusVal.style.color = "#ff9aa0";
-        // Visual indicator: Plumb line glows red on failure
-        if(pLine) pLine.material.color.setHex(0xff9aa0);
-    } else {
-        $statusVal.textContent = "Stable";
-        $statusVal.style.color = "#4ade80";
-        if(pLine) pLine.material.color.setHex(0x38bdf8); // Cyan for stable
     }
 }
   
