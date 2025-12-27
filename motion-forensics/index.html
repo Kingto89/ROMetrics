@@ -2560,38 +2560,40 @@ function updateMetabolicModule(dt) {
     
 // --- MODULE 2 LOGIC (STABILITY BOOTH) ---
 function updateStabilityModule(dt) {
-    if (!avatarRoot) return;
+    // 1. SAFETY GATE: If model isn't loaded yet, exit early so we don't crash the script
+    if (!avatarRoot || !animate._run || !animate._run.rig) return;
+    
     const b = animate._run.rig.bones;
 
-    // A. RESET TO BASE ANATOMIC POSE
+    // 2. RESET TO BASE ANATOMIC POSE
     restore(); 
 
-    // B. APPLY MODULE-SPECIFIC ARM POSITIONS
+    // 3. APPLY MODULE-SPECIFIC ARM POSITIONS
     if (sim.ballLocked) {
-        // POSITION 2: Elbow at 90° to hold weight
-        // Flex the shoulder slightly and the elbow to 90
-        applyFlex(b.upArmR, 15);  // Shoulder Flexion
-        applyFlex(b.loArmR, 90);  // Elbow Flexion
-    } else {
-        // POSITION 1: Pure Anatomic
-        // Arms remain at sides (handled by restore() above)
+        // POSITION: Elbow at 90° to hold weight
+        // Shoulder flexion + Elbow flexion
+        applyFlex(b.upArmR, 15);  
+        applyFlex(b.loArmR, 90);  
     }
 
-    // C. APPLY SLIDER LEANS
+    // 4. APPLY SLIDER LEANS (Universal)
     avatarRoot.rotation.x = (sim.leanZ * Math.PI) / 180;
     avatarRoot.rotation.z = -(sim.leanX * Math.PI) / 180;
 
-    // D. STABILITY BREACH LOGIC
-    const chestPos = new THREE.Vector3();
-    if(b.spine02) b.spine02.getWorldPosition(chestPos);
-    
+    // 5. STABILITY BREACH LOGIC
     const statusVal = document.getElementById('statusVal');
-    if (Math.abs(chestPos.z - Z_FORENSIC.z) > 0.45) {
-        statusVal.textContent = "STABILITY BREACH";
-        statusVal.style.color = "#ff9aa0";
-    } else {
-        statusVal.textContent = "Stable";
-        statusVal.style.color = "#4ade80";
+    const chestPos = new THREE.Vector3();
+    
+    // Find a reference point (Spine02) to track balance
+    if (b.spine02) {
+        b.spine02.getWorldPosition(chestPos);
+        if (Math.abs(chestPos.z - Z_FORENSIC.z) > 0.45) {
+            statusVal.textContent = "STABILITY BREACH";
+            statusVal.style.color = "#ff9aa0";
+        } else {
+            statusVal.textContent = "Stable";
+            statusVal.style.color = "#4ade80";
+        }
     }
 }
 function updateGlobalBlink(dt) {
