@@ -914,78 +914,74 @@ function drawPanel(screen, title) {
 // ==========================================
 function drawTrialA_View(ctx, c, speed, modelName) {
     // 1. FORCED THRESHOLD REALISM
-    // Fixed: 6.8 mph and above is strictly anaerobic dominant
+    // 6.8 mph and above is strictly anaerobic dominant for these trials
+    const ceiling = (modelName === "Roman") ? 6.3 : 6.7;
     const isAboveThreshold = speed >= 6.8;
     
-    // 2. METABOLIC LAG LOGIC (Forcing activation on startup)
-    // ATP-PC is forced active for the first 15 seconds of the run
-    const isAtpActive = (sim.elapsed > 0 && sim.elapsed < 15);
-    // Anaerobic is active if over 6.8mph OR during the 30s startup lag
-    const isAnaerobicActive = (isAboveThreshold || (sim.elapsed > 0 && sim.elapsed < 30));
+    // 2. METABOLIC LAG ACTIVATION (Forced True on Startup)
+    // Matches logic in Checkpoint.html: Forces system activation markers
+    const isAtpActive = (sim.elapsed > 0 && sim.elapsed < 15 && speed > 0);
+    const isAnaerobicActive = (speed > ceiling || (sim.elapsed > 0 && sim.elapsed < 30 && speed > 0));
     
     // 3. VISUAL CALCULATIONS
-    const currentCost = (speed * 26.8 * 0.205) + 3.5;
     const graphY = 185, graphW = c.width - 80, graphH = 50;
+    const currentCost = (speed * 26.8 * 0.205) + 3.5;
     
-    // Force a visual lag factor so yellow/pink bars appear even at slow speeds on startup
-    const startupLagFactor = (sim.elapsed > 0 && sim.elapsed < 30) ? (0.28 * (1.0 - (sim.elapsed / 30))) : 0;
+    // CRITICAL FIX: The "Startup Lag Value"
+    // This adds a temporary visual width to the anaerobic bar during the first 30s
+    const startUpVal = (sim.elapsed > 0 && sim.elapsed < 30) ? (0.15 * (1.0 - (sim.elapsed / 30))) : 0;
     
     let aerobicPart = Math.min(currentCost, sim.vo2Max);
     let anaerobicPart = Math.max(0, currentCost - sim.vo2Max);
     let totalWork = aerobicPart + anaerobicPart;
     
-    // Combine real metabolic cost with the startup lag factor
-    let anaerobicRatio = (totalWork > 0) ? (anaerobicPart / totalWork) + startupLagFactor : startupLagFactor;
+    // Apply the lag value to the ratio so the bar is physically visible
+    let anaerobicRatio = (totalWork > 0 ? (anaerobicPart / totalWork) : 0) + startUpVal;
     let aerobicRatio = 1.0 - anaerobicRatio;
 
     // 4. DRAW BARS
-    // Background Track
     ctx.fillStyle = 'rgba(255,255,255,0.05)';
     ctx.fillRect(40, graphY, graphW, graphH);
 
-    // Aerobic Base (Blue)
+    // Aerobic Base
     ctx.fillStyle = '#38bdf8';
-    ctx.fillRect(40, graphY, graphW * Math.max(0.05, aerobicRatio), graphH);
+    ctx.fillRect(40, graphY, graphW * Math.max(0.1, aerobicRatio), graphH);
 
-    // Anaerobic Overlay (Yellow - Glycolysis)
-    if (isAnaerobicActive && speed > 0) {
-        ctx.fillStyle = 'rgba(255, 228, 163, 0.9)';
+    // Anaerobic Overlay (Glycolysis)
+    if (isAnaerobicActive) {
+        ctx.fillStyle = 'rgba(255, 228, 163, 0.85)';
         ctx.fillRect(40 + (graphW * aerobicRatio), graphY, graphW * anaerobicRatio, graphH);
     }
 
-    // ATP-PC Peak Overlay (Pink - Immediate)
-    if (isAtpActive && speed > 0) {
+    // ATP-PC Peak Overlay
+    if (isAtpActive) {
         const fade = 1.0 - (sim.elapsed / 15);
-        let atpWidth = (graphW * 0.45) * fade; 
-        ctx.fillStyle = '#ff9aa0';
-        ctx.fillRect(40, graphY, atpWidth, graphH);
+        // Uses a percentage of the total graph width for the initial burst
+        let atpBarPct = (speed / 22) * 55 * fade; 
+        ctx.fillStyle = 'rgba(255, 154, 160, 0.9)';
+        ctx.fillRect(40, graphY, graphW * (atpBarPct / 100), graphH);
         
-        // Timer Label for ATP-PC
         ctx.fillStyle = '#ff9aa0';
         ctx.font = '700 18px Inter';
-        ctx.fillText(`● ATP-PC: SYSTEM ACTIVE (${Math.ceil(15 - sim.elapsed)}s)`, 420, 150);
+        ctx.fillText(`● ATP-PC: ACTIVE (${Math.ceil(15 - sim.elapsed)}s)`, 420, 150);
     }
 
     // 5. STATUS TEXT & SYSTEM DOMINANCE
     ctx.font = '700 16px Inter';
-    
-    // Aerobic Status
     ctx.fillStyle = '#38bdf8'; 
     ctx.fillText("● Aerobic: Active", 420, 100);
     
-    // Anaerobic Status (Visible during lag even if slow)
     if (isAnaerobicActive) {
         ctx.fillStyle = '#ffe4a3';
         ctx.fillText("● Anaerobic: Active", 420, 125);
     }
 
-    // Large Dominance Label
     let dominantText = isAboveThreshold ? "PRIMARY: Anaerobic Glycolysis" : "PRIMARY: Aerobic Metabolism";
     let dominantColor = isAboveThreshold ? "#ffe4a3" : "#38bdf8";
-    
-    // Override dominance text during initial lag to show "Mixed" or "Deficit"
+
+    // Change indicator to show the Metabolic Lag phase
     if (sim.elapsed > 0 && sim.elapsed < 15) {
-        dominantText = "PRIMARY: ATP-PC / Anaerobic Deficit";
+        dominantText = "SYSTEMS: Initial Metabolic Lag";
         dominantColor = "#ff9aa0";
     }
 
