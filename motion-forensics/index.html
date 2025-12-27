@@ -913,14 +913,16 @@ function drawPanel(screen, title) {
 // 2. TRIAL A BOX (All Trial A Logic & Visuals)
 // ==========================================
 function drawTrialA_View(ctx, c, speed, modelName) {
-    // calculation logic (untouched)
     const ceiling = (modelName === "Roman") ? 6.3 : 6.7;
     const isAnaerobicSpeed = speed > ceiling;
-    const isAtpActive = sim.elapsed > 0 && sim.elapsed < 15 && speed > 0;
-    const isStartupDeficit = sim.elapsed > 0 && sim.elapsed < 30 && speed > 0;
-    const startUpVal = isStartupDeficit ? (0.15 * (1.0 - (sim.elapsed / 30))) : 0;
-    const graphY = 185, graphW = c.width - 80, graphH = 50;
     const currentCost = (speed * 26.8 * 0.205) + 3.5;
+    
+    // 1. Deficit Logic
+    const isAtpActive = sim.elapsed > 0 && sim.elapsed < 15;
+    const isStartupDeficit = sim.elapsed > 0 && sim.elapsed < 30;
+    const startUpVal = isStartupDeficit ? (0.15 * (1.0 - (sim.elapsed / 30))) : 0;
+    
+    const graphY = 185, graphW = c.width - 80, graphH = 50;
     
     let aerobicPart = Math.min(currentCost, sim.vo2Max);
     let anaerobicPart = Math.max(0, currentCost - sim.vo2Max);
@@ -928,38 +930,39 @@ function drawTrialA_View(ctx, c, speed, modelName) {
     let anaerobicRatio = (anaerobicPart / totalWork) + startUpVal;
     let aerobicRatio = 1.0 - anaerobicRatio;
 
-    // Visuals (untouched reorder)
+    // 2. Background
     ctx.fillStyle = 'rgba(255,255,255,0.05)';
     ctx.fillRect(40, graphY, graphW, graphH);
 
-    // Aerobic Bar
+    // 3. Main Metabolic Bars (Aerobic & Anaerobic)
     ctx.fillStyle = '#38bdf8';
     ctx.fillRect(40, graphY, graphW * Math.max(0, aerobicRatio), graphH);
 
-    // Anaerobic Bar - Logic allows display if ratio exists (lag or speed)
     if (anaerobicRatio > 0.01) {
         ctx.fillStyle = 'rgba(255, 228, 163, 0.8)';
         ctx.fillRect(40 + (graphW * Math.max(0, aerobicRatio)), graphY, graphW * anaerobicRatio, graphH);
     }
 
-    // ATP-PC Overlay (For first 15s)
-    if (isAtpActive) {
+    // 4. ATP-PC OVERLAY (Moved to bottom of visuals to ensure it sits ON TOP)
+    if (isAtpActive && speed > 0) {
         const fade = 1.0 - (sim.elapsed / 15);
-        let atpBarPct = (speed / 22) * 55 * fade; 
-        ctx.fillStyle = 'rgba(255, 154, 160, 0.9)';
-        ctx.fillRect(40, graphY, graphW * (atpBarPct / 100), graphH);
+        // Force a visible width even at low speeds for metabolic lag accuracy
+        let atpWidth = Math.max(20, (graphW * 0.25) * fade); 
         
+        ctx.fillStyle = 'rgba(255, 154, 160, 0.95)'; // Increased opacity
+        ctx.fillRect(40, graphY, atpWidth, graphH);
+        
+        // ATP Text Indicator
         ctx.fillStyle = '#ff9aa0';
         ctx.font = '700 18px Inter, system-ui';
         ctx.fillText(`● ATP-PC: ACTIVE (${Math.ceil(15 - sim.elapsed)}s)`, 420, 150);
     }
 
-    // Status Text Logic
+    // 5. Status Text
     ctx.font = '700 16px Inter, system-ui';
     ctx.fillStyle = '#38bdf8'; 
     ctx.fillText("● Aerobic: Active", 420, 100);
     
-    // Shows Anaerobic Active during metabolic lag or high speed
     if (isAnaerobicSpeed || isStartupDeficit) {
         ctx.fillStyle = '#ffe4a3';
         ctx.fillText("● Anaerobic: Active", 420, 125);
