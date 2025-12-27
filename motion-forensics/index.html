@@ -2242,11 +2242,11 @@ if (runNow) {
         applyAdd(b.calfR, -(Math.max(0, s) * kneeAmp), 0, 0);
 
         // --- ARMS (X-Swing + Z-Adduction) ---
-        const armBack = THREE.MathUtils.degToRad(1);
+        const armBack = THREE.MathUtils.degToRad(10);
         const elbowHold = THREE.MathUtils.degToRad(90);
         
-        applyAdd(b.upArmL, (-armAmp * s) - armBack, 0, -tuck); // Added -tuck
-        applyAdd(b.upArmR, (armAmp * s) - armBack, 0, +tuck);  // Added +tuck
+       applyAdd(b.upArmL, (-armAmp * s) - armBack, 0, -tuck - 0.5); 
+       applyAdd(b.upArmR, (armAmp * s) - armBack, 0, +tuck + 0.5);
         
         applyAdd(b.loArmL, elbowHold, 0, 0);
         applyAdd(b.loArmR, elbowHold, 0, 0);
