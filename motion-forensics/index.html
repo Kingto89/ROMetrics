@@ -1780,7 +1780,6 @@ async function enterFL001() {
     document.getElementById('trialMsg').innerHTML = "<b>Module Loaded.</b> Select Trial A or B to begin.";
 }
 
-// UPDATE enterFL002 function to match new buttons
 async function enterFL002() {
     sim.running = false;          
     sim.isStabilityMode = true;   
@@ -1792,13 +1791,15 @@ async function enterFL002() {
     restore(); 
     setZone('forensics'); 
 
-    // Re-grab elements to ensure they are active in the DOM
+    // Re-grab all UI elements
     const lZSlider = document.getElementById('leanSlider');
     const lXSlider = document.getElementById('leanXSlider');
     const lZVal = document.getElementById('leanVal');
     const lXVal = document.getElementById('leanXVal');
     const ballBtn = document.getElementById('lockBallBtn');
     const baseBtn = document.getElementById('toggleBaseBtn');
+    const sideViewBtn = document.getElementById('btnSideView');
+    const frontViewBtn = document.getElementById('btnFrontView');
 
     // Reset slider UI to match state
     if(lZSlider) lZSlider.value = 0;
@@ -1806,7 +1807,24 @@ async function enterFL002() {
     if(lZVal) lZVal.textContent = "0.0";
     if(lXVal) lXVal.textContent = "0.0";
 
-    // Slider Logic
+    // --- RESTORED VIEW CONTROLS ---
+    if(sideViewBtn) {
+        sideViewBtn.onclick = () => {
+            camera.position.set(Z_FORENSIC.x + 3.5, 1.4, Z_FORENSIC.z);
+            controls.target.set(Z_FORENSIC.x, 1.2, Z_FORENSIC.z);
+            controls.update();
+        };
+    }
+
+    if(frontViewBtn) {
+        frontViewBtn.onclick = () => {
+            camera.position.set(Z_FORENSIC.x, 1.4, Z_FORENSIC.z + 4.5);
+            controls.target.set(Z_FORENSIC.x, 1.2, Z_FORENSIC.z);
+            controls.update();
+        };
+    }
+
+    // --- SLIDER LOGIC ---
     lZSlider.oninput = (e) => {
         sim.leanZ = parseFloat(e.target.value);
         if (lZVal) lZVal.textContent = sim.leanZ.toFixed(1);
@@ -1817,7 +1835,7 @@ async function enterFL002() {
         if (lXVal) lXVal.textContent = sim.leanX.toFixed(1);
     };
 
-    // Button Logic
+    // --- SYSTEM TOGGLES ---
     ballBtn.onclick = () => {
         sim.ballLocked = !sim.ballLocked;
         ballBtn.textContent = sim.ballLocked ? "Drop Weight Ball" : "Pick Up Weight Ball";
@@ -1830,7 +1848,7 @@ async function enterFL002() {
         const fp = scene.getObjectByName("forcePlate");
         if (fp) fp.visible = !fp.visible;
     };
-}    
+}   
     
 function enterModule(moduleId) {
   const mod = getModule(moduleId);
