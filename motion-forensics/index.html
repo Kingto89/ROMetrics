@@ -2605,32 +2605,42 @@ $enter.addEventListener('click', async () => {
 });
 // --- MODULE 1 LOGIC (METABOLIC BAY) ---
 function updateMetabolicModule(dt) {
-    if (!sim.running || sim.energy <= 0) {
-        if (runAction) runAction.paused = true;
-        return;
-    }
-
     const speed = parseFloat(sim.speedMph.toFixed(1));
-    const activeModel = document.getElementById('modelSelect').value;
-    const currentCost = (speed * 26.8 * 0.205) + 3.5;
+    
+    // 1. MPH SCREEN UPDATE
+    drawTreadmillMph(consoleScreen);
+    drawPanel(wallScreen, 'METABOLIC DATA');
 
-    // Metabolism calculations
-    if (currentCost > sim.vo2Max) {
-        sim.energy -= ((currentCost - sim.vo2Max) / 5) * dt; 
+    // 2. ANIMATION CONTROL
+    const runNow = !!(sim.running && sim.energy > 0);
+    if (runNow) {
+        if (runAction) {
+            runAction.paused = false;
+            // Scale animation speed to treadmill speed
+            mixer.update(dt * (0.5 + speed / 10)); 
+        }
+        
+        // 3. TREADMILL BELT PHYSICS
+        beltTex.offset.y = (beltTex.offset.y + dt * (0.1 + speed / 10)) % 1;
+        treadStrips.forEach(s => {
+            s.position.z += dt * (0.35 + speed / 12);
+            if (s.position.z > TREAD_MAX_Z) s.position.z = TREAD_MIN_Z;
+        });
+
+        // 4. METABOLIC MATH
+        const currentCost = (speed * 26.8 * 0.205) + 3.5;
+        if (currentCost > sim.vo2Max) {
+            sim.energy -= ((currentCost - sim.vo2Max) / 5) * dt;
+        } else {
+            sim.energy = Math.min(100, sim.energy + (0.05 * dt));
+        }
     } else {
-        sim.energy = Math.min(100, sim.energy + (0.05 * dt));
+        if (runAction) runAction.paused = true;
+        restore(); // Snap back to anatomic pose
     }
-
-    // Hardware Visuals
-    beltTex.offset.y = (beltTex.offset.y + dt * (0.1 + speed/10)) % 1;
-    treadStrips.forEach(s => {
-        s.position.z += dt * (0.35 + speed/12);
-        if (s.position.z > TREAD_MAX_Z) s.position.z = TREAD_MIN_Z;
-    });
 
     updateHUD();
 }
-
 // --- MODULE 2 LOGIC (STABILITY BOOTH) ---
 function updateStabilityModule(dt) {
     if (!avatarRoot) return;
@@ -2655,6 +2665,22 @@ function updateStabilityModule(dt) {
         statusVal.style.color = "#4ade80";
     }
 }
+
+ function drawTreadmillMph(screen) {
+    const { ctx, c } = screen;
+    ctx.clearRect(0, 0, c.width, c.height);
+    ctx.fillStyle = 'rgba(6,18,34,1)';
+    ctx.fillRect(0, 0, c.width, c.height);
+    ctx.strokeStyle = 'rgba(56,189,248,0.85)';
+    ctx.lineWidth = 10;
+    ctx.strokeRect(10, 10, c.width - 20, c.height - 20);
+    ctx.fillStyle = '#e6eef7';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = '900 64px Inter, system-ui';
+    ctx.fillText(`${sim.speedMph.toFixed(1)} mph`, c.width / 2, c.height / 2);
+    screen.tex.needsUpdate = true;
+}   
 addEventListener('resize', () => {
   camera.aspect = innerWidth / innerHeight;
   camera.updateProjectionMatrix();
