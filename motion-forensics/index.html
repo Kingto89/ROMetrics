@@ -1791,8 +1791,8 @@ async function enterFL002() {
     restore(); 
     setZone('forensics'); 
 
-    // Re-grab all UI elements
-    const lZSlider = document.getElementById('leanSlider');
+    // Match these exactly to your HTML IDs
+    const lZSlider = document.getElementById('leanSlider'); 
     const lXSlider = document.getElementById('leanXSlider');
     const lZVal = document.getElementById('leanVal');
     const lXVal = document.getElementById('leanXVal');
@@ -1801,13 +1801,11 @@ async function enterFL002() {
     const sideViewBtn = document.getElementById('btnSideView');
     const frontViewBtn = document.getElementById('btnFrontView');
 
-    // Reset slider UI to match state
+    // Reset UI state
     if(lZSlider) lZSlider.value = 0;
     if(lXSlider) lXSlider.value = 0;
-    if(lZVal) lZVal.textContent = "0.0";
-    if(lXVal) lXVal.textContent = "0.0";
 
-    // --- RESTORED VIEW CONTROLS ---
+    // Side View Camera
     if(sideViewBtn) {
         sideViewBtn.onclick = () => {
             camera.position.set(Z_FORENSIC.x + 3.5, 1.4, Z_FORENSIC.z);
@@ -1816,6 +1814,7 @@ async function enterFL002() {
         };
     }
 
+    // Front View Camera
     if(frontViewBtn) {
         frontViewBtn.onclick = () => {
             camera.position.set(Z_FORENSIC.x, 1.4, Z_FORENSIC.z + 4.5);
@@ -1824,18 +1823,21 @@ async function enterFL002() {
         };
     }
 
-    // --- SLIDER LOGIC ---
-    lZSlider.oninput = (e) => {
-        sim.leanZ = parseFloat(e.target.value);
-        if (lZVal) lZVal.textContent = sim.leanZ.toFixed(1);
-    };
+    // Slider Logic
+    if(lZSlider) {
+        lZSlider.oninput = (e) => {
+            sim.leanZ = parseFloat(e.target.value);
+            if (lZVal) lZVal.textContent = sim.leanZ.toFixed(1);
+        };
+    }
 
-    lXSlider.oninput = (e) => {
-        sim.leanX = parseFloat(e.target.value);
-        if (lXVal) lXVal.textContent = sim.leanX.toFixed(1);
-    };
+    if(lXSlider) {
+        lXSlider.oninput = (e) => {
+            sim.leanX = parseFloat(e.target.value);
+            if (lXVal) lXVal.textContent = sim.leanX.toFixed(1);
+        };
+    }
 
-    // --- SYSTEM TOGGLES ---
     ballBtn.onclick = () => {
         sim.ballLocked = !sim.ballLocked;
         ballBtn.textContent = sim.ballLocked ? "Drop Weight Ball" : "Pick Up Weight Ball";
@@ -1848,8 +1850,7 @@ async function enterFL002() {
         const fp = scene.getObjectByName("forcePlate");
         if (fp) fp.visible = !fp.visible;
     };
-}   
-    
+}  
 function enterModule(moduleId) {
   const mod = getModule(moduleId);
   currentModule = mod;
