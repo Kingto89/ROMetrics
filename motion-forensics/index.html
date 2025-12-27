@@ -1775,20 +1775,23 @@ async function enterFL001() {
     document.getElementById('trialMsg').innerHTML = "<b>Module Loaded.</b> Select Trial A or B to begin.";
 }
 
-// UPDATE enterFL002 function to match new buttons
+// UPDATE enterFL002 function to match new buttons and wire spine01
 async function enterFL002() {
-console.log("FL-002 ENTERED — console element =", MODULE_CONSOLES['FL-002']);
-  
+    console.log("FL-002 ENTERED — Stability & CoM Analysis");
+
+    // 1. Initialize Simulation State for Module 2
     sim.running = false;          
     sim.isStabilityMode = true;   
     sim.leanZ = 0;                
     sim.leanX = 0;                
     sim.ballLocked = false;
 
+    // 2. Stop cardio animations and reset pose
     if (runAction) runAction.stop(); 
     restore(); 
     setZone('forensics'); 
 
+    // 3. UI References
     const leanZSlider = document.getElementById('leanSlider');
     const leanXSlider = document.getElementById('leanXSlider');
     const leanZVal = document.getElementById('leanVal');
@@ -1796,8 +1799,15 @@ console.log("FL-002 ENTERED — console element =", MODULE_CONSOLES['FL-002']);
     const ballBtn = document.getElementById('lockBallBtn');
     const baseBtn = document.getElementById('toggleBaseBtn');
     const forcePlate = scene.getObjectByName("forcePlate");
+    const $msg = document.getElementById('trialMsg');
 
-    // Snap Camera Views
+    // 4. Reset Slider UI positions
+    if (leanZSlider) leanZSlider.value = 0;
+    if (leanXSlider) leanXSlider.value = 0;
+    if (leanZVal) leanZVal.textContent = "0.0";
+    if (leanXVal) leanXVal.textContent = "0.0";
+
+    // 5. Camera Presets (Snap Views)
     document.getElementById('btnSideView').onclick = () => {
         camera.position.set(Z_FORENSIC.x + 3.5, 1.4, Z_FORENSIC.z);
         controls.target.set(Z_FORENSIC.x, 1.2, Z_FORENSIC.z);
@@ -1810,40 +1820,52 @@ console.log("FL-002 ENTERED — console element =", MODULE_CONSOLES['FL-002']);
         controls.update();
     };
 
-    // Slider Logic
-    leanZSlider.oninput = (e) => {
-        const degrees = parseFloat(e.target.value);
-        if (leanZVal) leanZVal.textContent = degrees.toFixed(1);
-        sim.leanZ = degrees; 
-    };
+    // 6. Slider Logic (Forward/Back & Left/Right)
+    // Values are passed to the sim object and handled in the animate() loop
+    if (leanZSlider) {
+        leanZSlider.oninput = (e) => {
+            const degrees = parseFloat(e.target.value);
+            if (leanZVal) leanZVal.textContent = degrees.toFixed(1);
+            sim.leanZ = degrees; 
+        };
+    }
 
-    leanXSlider.oninput = (e) => {
-        const degrees = parseFloat(e.target.value);
-        if (leanXVal) leanXVal.textContent = degrees.toFixed(1);
-        sim.leanX = degrees; 
-    };
+    if (leanXSlider) {
+        leanXSlider.oninput = (e) => {
+            const degrees = parseFloat(e.target.value);
+            if (leanXVal) leanXVal.textContent = degrees.toFixed(1);
+            sim.leanX = degrees; 
+        };
+    }
 
-    // Toggle Weight Ball (Hold/Drop)
-    ballBtn.onclick = () => {
-        sim.ballLocked = !sim.ballLocked;
-        ballBtn.classList.toggle('active', sim.ballLocked);
-        ballBtn.textContent = sim.ballLocked ? "Drop Weight Ball" : "Pick Up Weight Ball";
-        ballBtn.style.background = sim.ballLocked ? "rgba(56, 189, 248, 0.2)" : "";
-        
-        const $msg = document.getElementById('trialMsg');
-        $msg.innerHTML = sim.ballLocked 
-            ? "<b>SYSTEM ACTIVE:</b> Ball attached to Right Hand. CoM shifted forward." 
-            : "<b>SYSTEM UPDATED:</b> Ball released.";
-    };
+    // 7. Toggle Weight Ball (Hold/Drop)
+    if (ballBtn) {
+        ballBtn.onclick = () => {
+            sim.ballLocked = !sim.ballLocked;
+            ballBtn.classList.toggle('active', sim.ballLocked);
+            ballBtn.textContent = sim.ballLocked ? "Drop Weight Ball" : "Pick Up Weight Ball";
+            ballBtn.style.background = sim.ballLocked ? "rgba(56, 189, 248, 0.2)" : "";
+            
+            if ($msg) {
+                $msg.innerHTML = sim.ballLocked 
+                    ? "<b>SYSTEM ACTIVE:</b> Weight attached to Right Hand. Center of Mass shifted." 
+                    : "<b>SYSTEM UPDATED:</b> Weight released.";
+            }
+        };
+    }
 
-    // Toggle Base of Support Visual
-    baseBtn.onclick = () => {
-        if (forcePlate) {
-            forcePlate.visible = !forcePlate.visible;
-            baseBtn.classList.toggle('active', forcePlate.visible);
-            baseBtn.style.borderColor = forcePlate.visible ? "#38bdf8" : "";
-        }
-    };
+    // 8. Toggle Base of Support Visual
+    if (baseBtn) {
+        baseBtn.onclick = () => {
+            if (forcePlate) {
+                forcePlate.visible = !forcePlate.visible;
+                baseBtn.classList.toggle('active', forcePlate.visible);
+                baseBtn.style.borderColor = forcePlate.visible ? "#38bdf8" : "";
+            }
+        };
+    }
+
+    if ($msg) $msg.innerHTML = "<b>Module 2 Loaded:</b> Use sliders to test Center of Mass limits.";
 }
     
     
