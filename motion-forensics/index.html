@@ -867,6 +867,9 @@ scene.fog = new THREE.Fog(0x07101b, 10, 45);
 // ==========================================
 // 1. THE ROUTER (The "Brain")
 // ==========================================
+// ==========================================
+// 1. THE ROUTER (The "Brain")
+// ==========================================
 function drawPanel(screen, title) {
     const { ctx, c } = screen;
     const currentTrial = document.getElementById('trialTag').textContent.trim();
@@ -889,21 +892,26 @@ function drawPanel(screen, title) {
     ctx.font = '700 24px Inter, system-ui';
     ctx.fillText(`CURRENT SESSION: Trial ${currentTrial}`, 40, 100);
 
-    // C. ACTIVATION GATE
-    if (!sim.running && sim.elapsed <= 0) {
-        ctx.fillStyle = 'rgba(148,163,184,0.3)';
-        ctx.font = 'italic 600 22px Inter, system-ui';
-        ctx.fillText("WAITING FOR SESSION START...", 40, 150);
-    } else {
+    // C. ACTIVATION GATE (Fixed for Realism)
+    // We must enter the view if the treadmill is moving (speed > 0) 
+    // OR if time has elapsed, to show the metabolic lag phase accurately.
+    if (sim.running || sim.elapsed > 0 || speed > 0) {
+        
         // D. ROUTE TO SPECIFIC TRIAL VIEW
         if (currentTrial === 'A') {
             drawTrialA_View(ctx, c, speed, modelName);
         } else if (currentTrial === 'B') {
             drawTrialB_View(ctx, c, speed);
         } else {
-            // Future trials go here (e.g., else if currentTrial === 'C')
+            // Default fallback to Trial A if state is ambiguous
             drawTrialA_View(ctx, c, speed, modelName);
         }
+        
+    } else {
+        // Show idle state only when fully stopped at 0.0s
+        ctx.fillStyle = 'rgba(148,163,184,0.3)';
+        ctx.font = 'italic 600 22px Inter, system-ui';
+        ctx.fillText("WAITING FOR SESSION START...", 40, 150);
     }
 
     screen.tex.needsUpdate = true;
