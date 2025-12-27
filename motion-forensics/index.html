@@ -2560,19 +2560,41 @@ function updateMetabolicModule(dt) {
     
 // --- MODULE 2 LOGIC (STABILITY BOOTH) ---
 function updateStabilityModule(dt) {
-    if (!avatarRoot) return;
+    if (!avatarRoot || !animate._run || !animate._run.rig) return;
 
-    // Apply rotation from sliders
+    const b = animate._run.rig.bones;
+    // Use the existing ACTIVE_MODEL_ID to pull from your constant
+    const p = ANAT_PRESETS[ACTIVE_MODEL_ID];
+
+    const tuck = THREE.MathUtils.degToRad(p.shTuck);
+    const er = THREE.MathUtils.degToRad(p.shER);
+    const hip = THREE.MathUtils.degToRad(p.hipAdd);
+    const spineFlex = THREE.MathUtils.degToRad(p.spine01Flex);
+
+    // 1. APPLY ANATOMIC PRESETS FROM CONSTANT
+    applyAdd(b.upArmL, 0, +er, -tuck);
+    applyAdd(b.upArmR, 0, -er, +tuck);
+    applyAdd(b.thighL, 0, 0, -hip);
+    applyAdd(b.thighR, 0, 0, +hip);
+    applyAdd(b.spine01, spineFlex, 0, 0);
+
+    // 2. ELBOW FLEXION (90° only if ballLocked, otherwise anatomic)
+    if (sim.ballLocked && b.loArmR) {
+        applyAdd(b.loArmR, Math.PI / 2, 0, 0); 
+    } else if (b.loArmR) {
+        // Keeps elbow neutral when ball is dropped
+        applyAdd(b.loArmR, 0, 0, 0); 
+    }
+
+    // --- YOUR WORKING LOGIC UNTOUCHED ---
     avatarRoot.rotation.x = (sim.leanZ * Math.PI) / 180;
     avatarRoot.rotation.z = -(sim.leanX * Math.PI) / 180;
 
-    // Track Center of Mass
     const chestPos = new THREE.Vector3();
     avatarRoot.traverse(o => { 
         if(o.name.toLowerCase().includes("spine02")) o.getWorldPosition(chestPos); 
     });
 
-    // Forensic Breach Logic
     const statusVal = document.getElementById('statusVal');
     if (Math.abs(chestPos.z - Z_FORENSIC.z) > 0.45) {
         statusVal.textContent = "STABILITY BREACH";
@@ -2582,6 +2604,7 @@ function updateStabilityModule(dt) {
         statusVal.style.color = "#4ade80";
     }
 }
+    
 function updateGlobalBlink(dt) {
     const BL = animate._blink;
     if (!BL || !BL.targets.length) return;
