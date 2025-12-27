@@ -369,29 +369,29 @@ const sim = {
 
 // PLACE THE EXPOSURE LINES HERE (Outside the braces)
 window.sim = sim; 
-window.getTrialTime = () => trialTime; // Use a function to get the current value
-window.setTrialTime = (v) => trialTime = v; // Use a function to set the value
+window.getTrialTime = () => trialTime;
+window.setTrialTime = (v) => trialTime = v;
+
 // --- MODULE UPDATE REGISTRY ---
-// Each function here is a "Mini-App" that only runs when that module is active.
 const MODULE_CONTROLLERS = {
     'FL-001': updateMetabolicModule,
     'FL-002': updateStabilityModule,
-    'FL-003': (dt) => { /* Logic for 3 */ },
-    'FL-004': (dt) => { /* Logic for 4 */ },
-    'FL-005': (dt) => { /* Logic for 5 */ },
-    'FL-006': (dt) => { /* Logic for 6 */ },
-    'FL-007': (dt) => { /* Logic for 7 */ },
-    'FL-008': (dt) => { /* Logic for 8 */ },
-    'FL-009': (dt) => { /* Logic for 9 */ },
-    'FL-010': (dt) => { /* Logic for 10 */ }
+    'FL-003': (dt) => { }, 
+    'FL-004': (dt) => { }, 
+    'FL-005': (dt) => { },
+    'FL-006': (dt) => { },
+    'FL-007': (dt) => { },
+    'FL-008': (dt) => { },
+    'FL-009': (dt) => { },
+    'FL-010': (dt) => { }
 };
 
-let activeUpdateFunction = null; // The currently "plugged in" logic
+let activeUpdateFunction = null; 
 
-   let avatarRoot = null;
-    let spine01 = null;
-    let mixer = null;
-    let runAction = null;
+let avatarRoot = null;
+let spine01 = null;
+let mixer = null;
+let runAction = null;
 
 
 const METABOLIC_TABLE = {};
@@ -1973,7 +1973,7 @@ let moduleUpdateAction = null;
 function animate() {
     requestAnimationFrame(animate);
 
-    // Use Three.js clock for precise delta timing
+    // Precise timing for logic
     const dt = clock.getDelta(); 
     controls.update();
 
@@ -1983,14 +1983,13 @@ function animate() {
     }
 
     // 2. INDEPENDENT MODULE ENGINE
-    // This executes ONLY the logic for the active module
+    // This executes ONLY the logic for the specific lab module currently active.
     if (activeUpdateFunction) {
         activeUpdateFunction(dt);
     }
 
     renderer.render(scene, camera);
 }
-
     
 // ===== BLINK (works for BOTH Roma + Roman via auto-detect morph names) =====
 if (!animate._blink) animate._blink = { model:null, targets:[], state:0, t:0, next:0 };
@@ -2503,31 +2502,27 @@ $enter.addEventListener('click', async () => {
 
     
 // --- MODULE 1 LOGIC (Cardio BAY) ---
-// --- MODULE 1 LOGIC (Cardio BAY) ---
 function updateMetabolicModule(dt) {
     const speed = parseFloat(sim.speedMph.toFixed(1));
     
-    // 1. HARDWARE SCREEN UPDATE
+    // 1. MPH SCREEN UPDATE
     drawTreadmillMph(consoleScreen);
     drawPanel(wallScreen, 'METABOLIC DATA');
 
-    // 2. ANIMATION ENGINE CONTROL
-    const runNow = !!(sim.running && sim.energy > 0);
-    
-    if (runNow) {
-        if (mixer) {
-            // This is the "Spark Plug": dt is delta time, scaled by speed
-            mixer.update(dt * (0.5 + speed / 8)); 
-        }
-        
-        // 3. TREADMILL BELT PHYSICS
+    // 2. RUN PROCEDURAL ANIMATION MATH
+    // This calls the giant function you shared that calculates bone rotations
+    updateProceduralRun(dt);
+
+    // 3. HARDWARE & METABOLIC LOGIC
+    if (sim.running && sim.energy > 0) {
+        // TREADMILL BELT PHYSICS
         beltTex.offset.y = (beltTex.offset.y + dt * (0.1 + speed / 10)) % 1;
         treadStrips.forEach(s => {
             s.position.z += dt * (0.35 + speed / 12);
             if (s.position.z > TREAD_MAX_Z) s.position.z = TREAD_MIN_Z;
         });
 
-        // 4. METABOLIC CALCULATIONS
+        // METABOLIC CALCULATIONS
         const currentCost = (speed * 26.8 * 0.205) + 3.5;
         if (currentCost > sim.vo2Max) {
             sim.energy -= ((currentCost - sim.vo2Max) / 5) * dt;
@@ -2535,9 +2530,7 @@ function updateMetabolicModule(dt) {
             sim.energy = Math.min(100, sim.energy + (0.05 * dt));
         }
     } else {
-        // When paused or out of energy, stop the legs
-        if (runAction) runAction.paused = true;
-        restore(); 
+        // If not running, ensure the model stops/restores via procedural logic
     }
 
     updateHUD();
