@@ -931,25 +931,35 @@ function drawTrialA_View(ctx, c, speed, modelName) {
     // Visuals (untouched reorder)
     ctx.fillStyle = 'rgba(255,255,255,0.05)';
     ctx.fillRect(40, graphY, graphW, graphH);
+
+    // Aerobic Bar
     ctx.fillStyle = '#38bdf8';
-    ctx.fillRect(40, graphY, graphW * aerobicRatio, graphH);
+    ctx.fillRect(40, graphY, graphW * Math.max(0, aerobicRatio), graphH);
+
+    // Anaerobic Bar - Logic allows display if ratio exists (lag or speed)
     if (anaerobicRatio > 0.01) {
         ctx.fillStyle = 'rgba(255, 228, 163, 0.8)';
-        ctx.fillRect(40 + (graphW * aerobicRatio), graphY, graphW * anaerobicRatio, graphH);
+        ctx.fillRect(40 + (graphW * Math.max(0, aerobicRatio)), graphY, graphW * anaerobicRatio, graphH);
     }
+
+    // ATP-PC Overlay (For first 15s)
     if (isAtpActive) {
         const fade = 1.0 - (sim.elapsed / 15);
         let atpBarPct = (speed / 22) * 55 * fade; 
         ctx.fillStyle = 'rgba(255, 154, 160, 0.9)';
         ctx.fillRect(40, graphY, graphW * (atpBarPct / 100), graphH);
+        
         ctx.fillStyle = '#ff9aa0';
         ctx.font = '700 18px Inter, system-ui';
         ctx.fillText(`● ATP-PC: ACTIVE (${Math.ceil(15 - sim.elapsed)}s)`, 420, 150);
     }
 
+    // Status Text Logic
     ctx.font = '700 16px Inter, system-ui';
     ctx.fillStyle = '#38bdf8'; 
     ctx.fillText("● Aerobic: Active", 420, 100);
+    
+    // Shows Anaerobic Active during metabolic lag or high speed
     if (isAnaerobicSpeed || isStartupDeficit) {
         ctx.fillStyle = '#ffe4a3';
         ctx.fillText("● Anaerobic: Active", 420, 125);
@@ -961,12 +971,12 @@ function drawTrialA_View(ctx, c, speed, modelName) {
     ctx.font = '900 22px Inter, system-ui';
     ctx.fillText(dominantText, 40, 140);
 
+    // Legend
     ctx.font = '600 16px Inter, system-ui';
     ctx.fillStyle = '#ff9aa0'; ctx.fillText('■ ATP-PC', 40, graphY + graphH + 35);
     ctx.fillStyle = '#38bdf8'; ctx.fillText('■ AEROBIC', 140, graphY + graphH + 35);
     ctx.fillStyle = '#ffe4a3'; ctx.fillText('■ ANAEROBIC GLYCOLYSIS', 280, graphY + graphH + 35);
 }
-
 // ==========================================
 // 3. TRIAL B BOX (Updated: Timing Outcomes Logic)
 // ==========================================
