@@ -2245,8 +2245,8 @@ if (runNow) {
         const armBack = THREE.MathUtils.degToRad(10);
         const elbowHold = THREE.MathUtils.degToRad(90);
         
-       applyAdd(b.upArmL, (-armAmp * s) - armBack, 0, -tuck + 0.5); 
-       applyAdd(b.upArmR, (armAmp * s) - armBack, 0, +tuck - 0.5);
+       applyAdd(b.upArmL, (-armAmp * s) - armBack, 0, -tuck + 0.3); 
+       applyAdd(b.upArmR, (armAmp * s) - armBack, 0, +tuck - 0.3);
         
         applyAdd(b.loArmL, elbowHold, 0, 0);
         applyAdd(b.loArmR, elbowHold, 0, 0);
