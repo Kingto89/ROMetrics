@@ -914,62 +914,66 @@ function drawPanel(screen, title) {
 // ==========================================
 function drawTrialA_View(ctx, c, speed, modelName) {
     const ceiling = (modelName === "Roman") ? 6.3 : 6.7;
-    const isAnaerobicSpeed = speed > ceiling;
+    const isAboveThreshold = speed > ceiling;
     const currentCost = (speed * 26.8 * 0.205) + 3.5;
     
-    // 1. Deficit Logic
-    const isAtpActive = sim.elapsed > 0 && sim.elapsed < 15;
-    const isStartupDeficit = sim.elapsed > 0 && sim.elapsed < 30;
-    const startUpVal = isStartupDeficit ? (0.15 * (1.0 - (sim.elapsed / 30))) : 0;
+    // 1. CORE DEFICIT LOGIC
+    // Force these to true if we just started (sim.elapsed < 15/30)
+    const isAtpActive = (sim.elapsed > 0 && sim.elapsed < 15);
+    const isAnaerobicActive = (isAboveThreshold || (sim.elapsed > 0 && sim.elapsed < 30));
+    
+    // Calculate the "Lag Value" - this ensures the bar actually has width at low speeds
+    const startupLagFactor = (sim.elapsed > 0 && sim.elapsed < 30) ? (0.20 * (1.0 - (sim.elapsed / 30))) : 0;
     
     const graphY = 185, graphW = c.width - 80, graphH = 50;
     
     let aerobicPart = Math.min(currentCost, sim.vo2Max);
     let anaerobicPart = Math.max(0, currentCost - sim.vo2Max);
     let totalWork = aerobicPart + anaerobicPart;
-    let anaerobicRatio = (anaerobicPart / totalWork) + startUpVal;
+    
+    // 2. RATIO CALCULATION
+    let anaerobicRatio = (anaerobicPart / totalWork) + startupLagFactor;
     let aerobicRatio = 1.0 - anaerobicRatio;
 
-    // 2. Background
+    // 3. DRAW BACKGROUND
     ctx.fillStyle = 'rgba(255,255,255,0.05)';
     ctx.fillRect(40, graphY, graphW, graphH);
 
-    // 3. Main Metabolic Bars (Aerobic & Anaerobic)
+    // 4. DRAW AEROBIC (Base)
     ctx.fillStyle = '#38bdf8';
-    ctx.fillRect(40, graphY, graphW * Math.max(0, aerobicRatio), graphH);
+    ctx.fillRect(40, graphY, graphW * Math.max(0.1, aerobicRatio), graphH);
 
+    // 5. DRAW ANAEROBIC (Overlay on top of Aerobic)
     if (anaerobicRatio > 0.01) {
-        ctx.fillStyle = 'rgba(255, 228, 163, 0.8)';
-        ctx.fillRect(40 + (graphW * Math.max(0, aerobicRatio)), graphY, graphW * anaerobicRatio, graphH);
+        ctx.fillStyle = 'rgba(255, 228, 163, 0.85)';
+        ctx.fillRect(40 + (graphW * aerobicRatio), graphY, graphW * anaerobicRatio, graphH);
     }
 
-    // 4. ATP-PC OVERLAY (Moved to bottom of visuals to ensure it sits ON TOP)
+    // 6. DRAW ATP-PC (Forced top-layer overlay)
     if (isAtpActive && speed > 0) {
         const fade = 1.0 - (sim.elapsed / 15);
-        // Force a visible width even at low speeds for metabolic lag accuracy
-        let atpWidth = Math.max(20, (graphW * 0.25) * fade); 
+        let atpWidth = (graphW * 0.3) * fade; // Fades out over 15s
         
-        ctx.fillStyle = 'rgba(255, 154, 160, 0.95)'; // Increased opacity
+        ctx.fillStyle = '#ff9aa0'; // Solid color to ensure visibility
         ctx.fillRect(40, graphY, atpWidth, graphH);
         
-        // ATP Text Indicator
         ctx.fillStyle = '#ff9aa0';
         ctx.font = '700 18px Inter, system-ui';
         ctx.fillText(`● ATP-PC: ACTIVE (${Math.ceil(15 - sim.elapsed)}s)`, 420, 150);
     }
 
-    // 5. Status Text
+    // 7. STATUS TEXT
     ctx.font = '700 16px Inter, system-ui';
     ctx.fillStyle = '#38bdf8'; 
     ctx.fillText("● Aerobic: Active", 420, 100);
     
-    if (isAnaerobicSpeed || isStartupDeficit) {
+    if (isAnaerobicActive) {
         ctx.fillStyle = '#ffe4a3';
         ctx.fillText("● Anaerobic: Active", 420, 125);
     }
 
-    let dominantText = isAnaerobicSpeed ? "PRIMARY: Anaerobic Glycolysis" : "PRIMARY: Aerobic Metabolism";
-    let dominantColor = isAnaerobicSpeed ? "#ffe4a3" : "#38bdf8";
+    let dominantText = (speed > ceiling) ? "PRIMARY: Anaerobic Glycolysis" : "PRIMARY: Aerobic Metabolism";
+    let dominantColor = (speed > ceiling) ? "#ffe4a3" : "#38bdf8";
     ctx.fillStyle = dominantColor;
     ctx.font = '900 22px Inter, system-ui';
     ctx.fillText(dominantText, 40, 140);
