@@ -922,79 +922,82 @@ function drawPanel(screen, title) {
 // ==========================================
 function drawTrialA_View(ctx, c, speed, modelName) {
     // 1. FORCED THRESHOLD REALISM
-    // 6.8 mph and above is strictly anaerobic dominant
+    // 6.8 mph and above is anaerobic dominant
     const isAboveThreshold = speed >= 6.8; 
     
-    // 2. METABOLIC LAG ACTIVATION (Reacts to Start Button via hasStarted)
-    // ATP-PC is forced active for the first 15 seconds after Start is clicked
+    // 2. METABOLIC LAG ACTIVATION (Tied to Start Button)
+    // Forced active for specific time windows then disappear
     const isAtpActive = (sim.hasStarted && sim.elapsed < 15);
-    // Anaerobic is active if over 6.8mph OR during the 30s startup lag window
     const isAnaerobicActive = (isAboveThreshold || (sim.hasStarted && sim.elapsed < 30));
     
     // 3. VISUAL CALCULATIONS
     const graphY = 185, graphW = c.width - 80, graphH = 50;
     const currentCost = (speed * 26.8 * 0.205) + 3.5;
     
-    // CRITICAL FIX: startupLagFactor provides physical bar width so systems show as "on" instantly
-    const startupLagFactor = (sim.hasStarted && sim.elapsed < 30) ? (0.25 * (1.0 - (sim.elapsed / 30))) : 0;
+    // Physical width buffer for the lag phase so bars aren't 0-pixels wide on startup
+    const startupLagFactor = (sim.hasStarted && sim.elapsed < 30) ? (0.22 * (1.0 - (sim.elapsed / 30))) : 0;
     
     let aerobicPart = Math.min(currentCost, sim.vo2Max);
     let anaerobicPart = Math.max(0, currentCost - sim.vo2Max);
     let totalWork = aerobicPart + anaerobicPart;
     
-    // Inject lag into ratio to ensure visual presence even if current speed-math is 0
+    // Inject lag into ratio to ensure visual presence during startup
     let anaerobicRatio = (totalWork > 0 ? (anaerobicPart / totalWork) : 0) + startupLagFactor;
     let aerobicRatio = 1.0 - anaerobicRatio;
 
-    // 4. DRAWING PHASE
-    ctx.fillStyle = 'rgba(255,255,255,0.05)'; // Background track
+    // 4. DRAW BARS
+    ctx.fillStyle = 'rgba(255,255,255,0.05)'; // Track background
     ctx.fillRect(40, graphY, graphW, graphH);
 
     // Aerobic Base (Blue)
     ctx.fillStyle = '#38bdf8';
     ctx.fillRect(40, graphY, graphW * Math.max(0.05, aerobicRatio), graphH);
 
-    // Anaerobic Overlay (Yellow)
-    if (isAnaerobicActive && (sim.running || sim.hasStarted)) {
+    // Anaerobic Overlay (Yellow) - Disappears if speed < 6.8 and elapsed > 30s
+    if (isAnaerobicActive) {
         ctx.fillStyle = 'rgba(255, 228, 163, 0.9)';
         ctx.fillRect(40 + (graphW * Math.max(0.05, aerobicRatio)), graphY, graphW * anaerobicRatio, graphH);
     }
 
-    // ATP-PC Peak Overlay (Pink)
-    if (isAtpActive && (sim.running || sim.hasStarted)) {
+    // ATP-PC Peak Overlay (Pink) - Disappears after 15s
+    if (isAtpActive) {
         const fade = 1.0 - (sim.elapsed / 15);
-        let atpWidth = (graphW * 0.40) * fade; 
+        let atpWidth = (graphW * 0.45) * fade; 
         ctx.fillStyle = '#ff9aa0';
         ctx.fillRect(40, graphY, atpWidth, graphH);
         
+        // Status indicator for ATP-PC (Disappears after 15s)
         ctx.fillStyle = '#ff9aa0';
         ctx.font = '700 18px Inter';
-        ctx.fillText(`● ATP-PC: SYSTEM ACTIVE (${Math.ceil(15 - sim.elapsed)}s)`, 420, 150);
+        ctx.fillText(`● ATP-PC: ACTIVE (${Math.ceil(15 - sim.elapsed)}s)`, 420, 150);
     }
 
-    // 5. STATUS TEXT (Forced by hasStarted/running)
+    // 5. STATUS TEXT (LIST)
     ctx.font = '700 16px Inter';
+    
+    // Aerobic is always active if treadmill is moving
     ctx.fillStyle = '#38bdf8'; 
     ctx.fillText("● Aerobic: Active", 420, 100);
     
+    // Anaerobic status (Disappears after 30s if under threshold)
     if (isAnaerobicActive) {
         ctx.fillStyle = '#ffe4a3';
         ctx.fillText("● Anaerobic: Active", 420, 125);
     }
 
-    // Large Dominance Label
+    // 6. DOMINANCE MESSAGE (Original Requirement)
     let dominantText = isAboveThreshold ? "PRIMARY: Anaerobic Glycolysis" : "PRIMARY: Aerobic Metabolism";
     let dominantColor = isAboveThreshold ? "#ffe4a3" : "#38bdf8";
-
-    // Immediate feedback override during lag
-    if (sim.hasStarted && sim.elapsed < 15) {
-        dominantText = "SYSTEMS: Initial Metabolic Deficit";
-        dominantColor = "#ff9aa0";
-    }
 
     ctx.fillStyle = dominantColor;
     ctx.font = '900 22px Inter';
     ctx.fillText(dominantText, 40, 140);
+
+    // Legend
+    ctx.font = '600 16px Inter';
+    ctx.fillStyle = '#ff9aa0'; ctx.fillText('■ ATP-PC', 40, graphY + graphH + 35);
+    ctx.fillStyle = '#38bdf8'; ctx.fillText('■ AEROBIC', 140, graphY + graphH + 35);
+    ctx.fillStyle = '#ffe4a3'; ctx.fillText('■ ANAEROBIC GLYCOLYSIS', 280, graphY + graphH + 35);
 } 
 // ==========================================
 // 3. TRIAL B BOX (Updated: Timing Outcomes Logic)
