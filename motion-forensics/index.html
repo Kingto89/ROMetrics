@@ -1843,21 +1843,7 @@ async function enterFL002() {
     if (runAction) runAction.stop(); 
     restore(); 
     setZone('forensics'); 
-// --- SNAP TO ANATOMIC PRESET IMMEDIATELY ---
-    if (avatarRoot && animate._run && animate._run.rig) {
-        const b = animate._run.rig.bones;
-        const p = ANAT_PRESETS[ACTIVE_MODEL_ID];
-        
-        const tuck = THREE.MathUtils.degToRad(p.shTuck);
-        const er = THREE.MathUtils.degToRad(p.shER);
-        const hip = THREE.MathUtils.degToRad(p.hipAdd);
 
-        applyAdd(b.upArmL, 0, +er, -tuck);
-        applyAdd(b.upArmR, 0, -er, +tuck);
-        applyAdd(b.thighL, 0, 0, -hip);
-        applyAdd(b.thighR, 0, 0, +hip);
-    }
-    // ------------------------------------------
     // 3. UI References
     const leanZSlider = document.getElementById('leanSlider');
     const leanXSlider = document.getElementById('leanXSlider');
@@ -2596,38 +2582,6 @@ function updateStabilityModule(dt) {
         statusVal.style.color = "#4ade80";
     }
 }
-function updateGlobalBlink(dt) {
-    const BL = animate._blink;
-    if (!BL || !BL.targets.length) return;
-
-    const now = performance.now() / 1000;
-    if (BL.state === 0 && now >= BL.next) {
-        BL.state = 1;
-        BL.t = 0;
-        BL.next = now + 4 + Math.random() * 2;
-    }
-
-    const down = 0.06, hold = 0.02, up = 0.10;
-
-    const setBlink = (v) => {
-        BL.targets.forEach(t => { t.mesh.morphTargetInfluences[t.idx] = v; });
-    };
-
-    if (BL.state !== 0) {
-        BL.t += dt;
-        if (BL.state === 1) { // closing
-            setBlink(Math.min(1, BL.t / down));
-            if (BL.t >= down) { BL.state = 2; BL.t = 0; }
-        } else if (BL.state === 2) { // hold
-            setBlink(1);
-            if (BL.t >= hold) { BL.state = 3; BL.t = 0; }
-        } else if (BL.state === 3) { // opening
-            setBlink(1 - Math.min(1, BL.t / up));
-            if (BL.t >= up) { BL.state = 0; setBlink(0); }
-        }
-    }
-}
-    
 function updateGlobalBlink(dt) {
     const BL = animate._blink;
     if (!BL || !BL.targets.length) return;
