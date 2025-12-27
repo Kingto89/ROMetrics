@@ -2372,19 +2372,60 @@ if (sim.running && sim.energy > 0) {
 
 // --- Inside animate() loop: Module 2 Stability Physics ---
 if (currentModule?.id === 'FL-002' && avatarRoot) {
-    // Convert slider degrees to Radians
-    const radZ = (sim.leanZ * Math.PI) / 180;
-    const radX = (sim.leanX * Math.PI) / 180;
+    // 1. APPLY LEAN (Degrees to Radians)
+    avatarRoot.rotation.x = (sim.leanZ * Math.PI) / 180;  // Forward/Back
+    avatarRoot.rotation.z = -(sim.leanX * Math.PI) / 180; // Left/Right
 
-    // Apply rotation to the entire avatar group
-    avatarRoot.rotation.x = radZ;  // Forward/Back
-    avatarRoot.rotation.z = -radX; // Left/Right (negative to match slider direction)
+    const chestPos = new THREE.Vector3();
+    const handPos = new THREE.Vector3();
+    const pLine = scene.getObjectByName("plumbLine");
+    const wBall = scene.getObjectByName("weightBall");
+
+    // 2. SET FIXED CLINICAL PLUMB LINE
+    if (pLine) {
+        pLine.position.set(Z_FORENSIC.x, 1.5, Z_FORENSIC.z);
+    }
+
+    // 3. TRACK ANATOMIC KEYPOINTS
+    avatarRoot.traverse(o => { 
+        if(o.name.toLowerCase().includes("spine02")) o.getWorldPosition(chestPos); 
+        if(o.name.toLowerCase().includes("hand_r")) o.getWorldPosition(handPos);
+    });
+
+    // 4. CALCULATE COMBINED CENTER OF MASS (CoM)
+    let comZ = chestPos.z;
+    let comX = chestPos.x;
+
+    if (sim.ballLocked && wBall) {
+        wBall.position.copy(handPos); 
+        comZ = (chestPos.z + handPos.z) / 2;
+        comX = (chestPos.x + handPos.x) / 2;
+    } else {
+        if(wBall) wBall.position.set(Z_FORENSIC.x + 0.6, 0.15, Z_FORENSIC.z + 0.8);
+    }
+
+    // 5. FORENSIC STABILITY BREACH
+    const $statusVal = document.getElementById('statusVal');
+    const limitZ = 0.45; 
+    const limitX = 0.25;
+
+    const breachedZ = Math.abs(comZ - Z_FORENSIC.z) > limitZ;
+    const breachedX = Math.abs(comX - Z_FORENSIC.x) > limitX;
+
+    if (breachedZ || breachedX) {
+        $statusVal.textContent = "STABILITY BREACH";
+        $statusVal.style.color = "#ff9aa0";
+        if(pLine) pLine.material.color.setHex(0xff9aa0);
+    } else {
+        $statusVal.textContent = "Stable";
+        $statusVal.style.color = "#4ade80";
+        if(pLine) pLine.material.color.setHex(0x38bdf8);
+    }
 } else if (avatarRoot) {
-    // Reset root rotation when leaving the booth
+    // Reset root rotation when leaving Module 2
     avatarRoot.rotation.x = 0;
     avatarRoot.rotation.z = 0;
 }
-
     const chestPos = new THREE.Vector3();
     const handPos = new THREE.Vector3();
     const pLine = scene.getObjectByName("plumbLine");
