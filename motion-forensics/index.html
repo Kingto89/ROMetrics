@@ -2500,17 +2500,50 @@ function updateMetabolicModule(dt) {
 function updateStabilityModule(dt) {
     if (!avatarRoot) return;
 
-    // Apply rotation from sliders
+    // 1. Apply Base Model Rotation from Sliders (Forward/Side Lean)
     avatarRoot.rotation.x = (sim.leanZ * Math.PI) / 180;
     avatarRoot.rotation.z = -(sim.leanX * Math.PI) / 180;
 
-    // Track Center of Mass
+    // 2. Bone Overrides for Module 2 Logic
+    const R = animate._run;
+    if (R && R.rig) {
+        const b = R.rig.bones;
+        const radLeanZ = (sim.leanZ * Math.PI) / 180;
+
+        // SPINE OVERRIDE: Distribute lean through the lower spine
+        if (b.spine01) applyAdd(b.spine01, radLeanZ * 0.5, 0, 0);
+
+        // WEIGHT BALL LOGIC: If "Pick Up Weight Ball" is active
+        if (sim.ballLocked) {
+            // Force Right Arm into a carry position (90-degree elbow, shoulder slightly forward)
+            const shoulderFlex = THREE.MathUtils.degToRad(35);
+            const elbowFlex = THREE.MathUtils.degToRad(90);
+            
+            if (b.upArmR) applyAdd(b.upArmR, shoulderFlex, 0, 0);
+            if (b.loArmR) applyAdd(b.loArmR, elbowFlex, 0, 0);
+            
+            // Snap the actual Weight Ball mesh to the Right Hand position
+            const handPos = new THREE.Vector3();
+            if (b.loArmR) {
+                b.loArmR.getWorldPosition(handPos);
+                const ball = scene.getObjectByName("weightBall");
+                if (ball) ball.position.copy(handPos);
+            }
+        } else {
+            // Return Weight Ball to ground if dropped
+            const ball = scene.getObjectByName("weightBall");
+            if (ball && ball.position.y > 0.21) {
+                ball.position.set(0.6, 0.20, 1.35); // Reset to original forensic floor position
+            }
+        }
+    }
+
+    // 3. Track Center of Mass for Breach Detection
     const chestPos = new THREE.Vector3();
     avatarRoot.traverse(o => { 
         if(o.name.toLowerCase().includes("spine02")) o.getWorldPosition(chestPos); 
     });
 
-    // Forensic Breach Logic
     const statusVal = document.getElementById('statusVal');
     if (Math.abs(chestPos.z - Z_FORENSIC.z) > 0.45) {
         statusVal.textContent = "STABILITY BREACH";
