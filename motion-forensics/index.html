@@ -1702,6 +1702,7 @@ if (gltf.animations && gltf.animations.length) {
       camera.position.copy(camGoalPos);
       controls.target.copy(camGoalTarget);
       controls.update();
+      updateGlobalBlink(dt);
     }
 
 function placeAvatarForZone(which) {
@@ -2105,9 +2106,7 @@ if (avatarRoot && BL.model !== avatarRoot){
   }
 }
 
-// drive blink
-if (BL.targets.length){
-  const now = performance.now()/1000;
+if (BL.targets.length){ const now = performance.now()/1000; const dt = clock.getDelta();
 
   // schedule next blink (about every ~5s with slight randomness)
   if (BL.state === 0 && now >= BL.next){
