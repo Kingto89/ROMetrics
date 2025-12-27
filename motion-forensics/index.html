@@ -2487,7 +2487,6 @@ function updateMetabolicModule(dt) {
     drawPanel(wallScreen, 'METABOLIC DATA');
 
     // 2. RUN PROCEDURAL ANIMATION MATH
-    // This calls the giant function you shared that calculates bone rotations
     updateProceduralRun(dt);
 
     // 3. HARDWARE & METABOLIC LOGIC
@@ -2506,8 +2505,13 @@ function updateMetabolicModule(dt) {
         } else {
             sim.energy = Math.min(100, sim.energy + (0.05 * dt));
         }
-    } else {
-        // If not running, ensure the model stops/restores via procedural logic
+
+        // TIMER COUNTDOWN
+        if (currentModule && currentModule.id === 'FL-001') {
+            trialTime = Math.max(0, trialTime - dt);
+            const timeDisplay = document.getElementById('trialTime');
+            if (timeDisplay) timeDisplay.textContent = Math.ceil(trialTime);
+        }
     }
 
     updateHUD();
