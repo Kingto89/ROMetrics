@@ -177,14 +177,17 @@
         <div class="v" id="statusVal">Stable</div>
     </div>
 </div>
-<div id="trialHelpModal" style="display:none; position:fixed; inset:0; z-index:100; background:rgba(7,16,27,.85); align-items:center; justify-content:center;">
+
+  <div id="trialHelpModal" style="display:none; position:fixed; inset:0; z-index:100; background:rgba(7,16,27,.85); align-items:center; justify-content:center;">
     <div id="gateCard" style="max-width:600px; padding:0; overflow:hidden; display:flex; flex-direction:column;">
       <div style="display:flex; background:rgba(15,23,42,.95); border-bottom:1px solid rgba(148,163,184,.25);">
-        <div id="tab-concept" class="pill active" style="border-radius:0; border:none; flex:1; text-align:center; cursor:pointer;" onclick="showTab('concept')">Concept</div>
-        <div id="tab-systems" class="pill" style="border-radius:0; border:none; flex:1; text-align:center; cursor:pointer;" onclick="showTab('systems')">Trial Guide</div>
-        <div id="tab-guide" class="pill" style="border-radius:0; border:none; flex:1; text-align:center; cursor:pointer;" onclick="showTab('guide')">Module Instructions</div>
+        <div id="tab-concept" class="pill active" style="border-radius:0; border:none; flex:1; text-align:center; cursor:pointer;" onclick="event.stopPropagation(); showTab('concept')">Concept</div>
+        <div id="tab-systems" class="pill" style="border-radius:0; border:none; flex:1; text-align:center; cursor:pointer;" onclick="event.stopPropagation(); showTab('systems')">Trial Guide</div>
+        <div id="tab-guide" class="pill" style="border-radius:0; border:none; flex:1; text-align:center; cursor:pointer;" onclick="event.stopPropagation(); showTab('guide')">Module Instructions</div>
       </div>
+
       <div id="tabContent" style="padding:24px; color:#a8c0da; font-size:13px; line-height:1.5; min-height:350px; max-height:500px; overflow-y:auto;"></div>
+      
       <div style="padding:14px; border-top:1px solid rgba(148,163,184,.18); display:flex; justify-content:flex-end; background:rgba(9,20,37,.72);">
         <button id="trialHelpClose" type="button" class="primary">Close Instructions</button>
       </div>
@@ -1889,8 +1892,7 @@ async function enterFL002() {
     if ($msg) $msg.innerHTML = "<b>Module 2 Loaded:</b> Use sliders to test Center of Mass limits.";
 }
     
-
-    function enterModule(moduleId) {
+function enterModule(moduleId) {
     const mod = getModule(moduleId);
     currentModule = mod;
     
@@ -1909,18 +1911,14 @@ async function enterFL002() {
     const activeBox = document.getElementById(`console-${moduleId}`);
     if (activeBox) activeBox.style.display = 'block';
 
-    // 4. Physical Reset (CRITICAL: Prevents pose bleeding between modules)
-    restore(); 
-
-    // 5. Logic Switch & Scene Setup
+    // 4. Scene Setup
     setZone(mod.zone || 'all');
-    activeUpdateFunction = MODULE_CONTROLLERS[moduleId];  
-
-    // 6. Run specific initialization logic for that module
+  activeUpdateFunction = MODULE_CONTROLLERS[moduleId];  
+    // 5. Run specific initialization logic for that module
     if (typeof mod.onEnter === 'function') {
         mod.onEnter();
     }
-}   
+}    
     // 7) Studio UI wiring
     // ==============================
     const pills = [...document.querySelectorAll('.pill')];
@@ -2294,12 +2292,11 @@ if (sim.running && sim.energy > 0) {
     if (sim.throughputAlert > 0) sim.throughputAlert -= dt;
 
   
- // Timer logic: Only decrement if simulation is running and has energy
-    if (sim.running && sim.energy > 0) {
+    if (currentModule?.id === 'FL-001') {
         trialTime = Math.max(0, trialTime - dt);
-        const trialTimeEl = document.getElementById('trialTime');
-        if (trialTimeEl) trialTimeEl.textContent = Math.ceil(trialTime);
+        document.getElementById('trialTime').textContent = Math.ceil(trialTime);
     }
+}
 
 // --- DYNAMIC TRIAL STOP & UNLOCK LOGIC ---
 if (sim.energy <= 0 || trialTime <= 0 || sim.lactate >= 100) {
@@ -2491,34 +2488,34 @@ $enter.addEventListener('click', async () => {
 function updateMetabolicModule(dt) {
     const speed = parseFloat(sim.speedMph.toFixed(1));
     
+    // 1. MPH SCREEN UPDATE
     drawTreadmillMph(consoleScreen);
     drawPanel(wallScreen, 'METABOLIC DATA');
+
+    // 2. RUN PROCEDURAL ANIMATION MATH
+    // This calls the giant function you shared that calculates bone rotations
     updateProceduralRun(dt);
 
+    // 3. HARDWARE & METABOLIC LOGIC
     if (sim.running && sim.energy > 0) {
-        sim.elapsed += dt;
-        
-        // Corrected Timer Logic
-        trialTime = Math.max(0, trialTime - dt);
-        const trialTimeEl = document.getElementById('trialTime');
-        if (trialTimeEl) trialTimeEl.textContent = Math.ceil(trialTime);
-
-        // Hardware Visuals
+        // TREADMILL BELT PHYSICS
         beltTex.offset.y = (beltTex.offset.y + dt * (0.1 + speed / 10)) % 1;
         treadStrips.forEach(s => {
             s.position.z += dt * (0.35 + speed / 12);
             if (s.position.z > TREAD_MAX_Z) s.position.z = TREAD_MIN_Z;
         });
 
-        // Metabolic Math Logic
+        // METABOLIC CALCULATIONS
         const currentCost = (speed * 26.8 * 0.205) + 3.5;
         if (currentCost > sim.vo2Max) {
             sim.energy -= ((currentCost - sim.vo2Max) / 5) * dt;
         } else {
             sim.energy = Math.min(100, sim.energy + (0.05 * dt));
         }
+    } else {
+        // If not running, ensure the model stops/restores via procedural logic
     }
-    
+
     updateHUD();
 }
 
