@@ -1780,6 +1780,7 @@ async function enterFL001() {
     document.getElementById('trialMsg').innerHTML = "<b>Module Loaded.</b> Select Trial A or B to begin.";
 }
 
+// UPDATE enterFL002 function to match new buttons
 async function enterFL002() {
     sim.running = false;          
     sim.isStabilityMode = true;   
@@ -1791,66 +1792,64 @@ async function enterFL002() {
     restore(); 
     setZone('forensics'); 
 
-    // Match these exactly to your HTML IDs
-    const lZSlider = document.getElementById('leanSlider'); 
-    const lXSlider = document.getElementById('leanXSlider');
-    const lZVal = document.getElementById('leanVal');
-    const lXVal = document.getElementById('leanXVal');
+    const leanZSlider = document.getElementById('leanSlider');
+    const leanXSlider = document.getElementById('leanXSlider');
+    const leanZVal = document.getElementById('leanVal');
+    const leanXVal = document.getElementById('leanXVal');
     const ballBtn = document.getElementById('lockBallBtn');
     const baseBtn = document.getElementById('toggleBaseBtn');
-    const sideViewBtn = document.getElementById('btnSideView');
-    const frontViewBtn = document.getElementById('btnFrontView');
+    const forcePlate = scene.getObjectByName("forcePlate");
 
-    // Reset UI state
-    if(lZSlider) lZSlider.value = 0;
-    if(lXSlider) lXSlider.value = 0;
+    // Snap Camera Views
+    document.getElementById('btnSideView').onclick = () => {
+        camera.position.set(Z_FORENSIC.x + 3.5, 1.4, Z_FORENSIC.z);
+        controls.target.set(Z_FORENSIC.x, 1.2, Z_FORENSIC.z);
+        controls.update();
+    };
 
-    // Side View Camera
-    if(sideViewBtn) {
-        sideViewBtn.onclick = () => {
-            camera.position.set(Z_FORENSIC.x + 3.5, 1.4, Z_FORENSIC.z);
-            controls.target.set(Z_FORENSIC.x, 1.2, Z_FORENSIC.z);
-            controls.update();
-        };
-    }
-
-    // Front View Camera
-    if(frontViewBtn) {
-        frontViewBtn.onclick = () => {
-            camera.position.set(Z_FORENSIC.x, 1.4, Z_FORENSIC.z + 4.5);
-            controls.target.set(Z_FORENSIC.x, 1.2, Z_FORENSIC.z);
-            controls.update();
-        };
-    }
+    document.getElementById('btnFrontView').onclick = () => {
+        camera.position.set(Z_FORENSIC.x, 1.4, Z_FORENSIC.z + 4.5);
+        controls.target.set(Z_FORENSIC.x, 1.2, Z_FORENSIC.z);
+        controls.update();
+    };
 
     // Slider Logic
-    if(lZSlider) {
-        lZSlider.oninput = (e) => {
-            sim.leanZ = parseFloat(e.target.value);
-            if (lZVal) lZVal.textContent = sim.leanZ.toFixed(1);
-        };
-    }
+    leanZSlider.oninput = (e) => {
+        const degrees = parseFloat(e.target.value);
+        if (leanZVal) leanZVal.textContent = degrees.toFixed(1);
+        sim.leanZ = degrees; 
+    };
 
-    if(lXSlider) {
-        lXSlider.oninput = (e) => {
-            sim.leanX = parseFloat(e.target.value);
-            if (lXVal) lXVal.textContent = sim.leanX.toFixed(1);
-        };
-    }
+    leanXSlider.oninput = (e) => {
+        const degrees = parseFloat(e.target.value);
+        if (leanXVal) leanXVal.textContent = degrees.toFixed(1);
+        sim.leanX = degrees; 
+    };
 
+    // Toggle Weight Ball (Hold/Drop)
     ballBtn.onclick = () => {
         sim.ballLocked = !sim.ballLocked;
+        ballBtn.classList.toggle('active', sim.ballLocked);
         ballBtn.textContent = sim.ballLocked ? "Drop Weight Ball" : "Pick Up Weight Ball";
-        document.getElementById('trialMsg').innerHTML = sim.ballLocked 
-            ? "<b>SYSTEM ACTIVE:</b> Ball attached. CoM shifted." 
+        ballBtn.style.background = sim.ballLocked ? "rgba(56, 189, 248, 0.2)" : "";
+        
+        const $msg = document.getElementById('trialMsg');
+        $msg.innerHTML = sim.ballLocked 
+            ? "<b>SYSTEM ACTIVE:</b> Ball attached to Right Hand. CoM shifted forward." 
             : "<b>SYSTEM UPDATED:</b> Ball released.";
     };
 
+    // Toggle Base of Support Visual
     baseBtn.onclick = () => {
-        const fp = scene.getObjectByName("forcePlate");
-        if (fp) fp.visible = !fp.visible;
+        if (forcePlate) {
+            forcePlate.visible = !forcePlate.visible;
+            baseBtn.classList.toggle('active', forcePlate.visible);
+            baseBtn.style.borderColor = forcePlate.visible ? "#38bdf8" : "";
+        }
     };
-}  
+}
+    
+    
 function enterModule(moduleId) {
   const mod = getModule(moduleId);
   currentModule = mod;
@@ -2363,50 +2362,111 @@ if (sim.running && sim.energy > 0) {
     if (sim.throughputAlert > 0) sim.throughputAlert -= dt;
   
 
-// Inside your animate() function, near the end:
-
-// Inside your animate() function, near the end:
-
+// --- Inside animate() loop: Module 2 Stability Physics ---
 if (currentModule?.id === 'FL-002' && avatarRoot) {
-    // 1. APPLY LEAN (This is what moves the model)
-    avatarRoot.rotation.x = (sim.leanZ * Math.PI) / 180;  
-    avatarRoot.rotation.z = -(sim.leanX * Math.PI) / 180; 
+    // 1. APPLY LEAN (Degrees to Radians)
+    avatarRoot.rotation.x = (sim.leanZ * Math.PI) / 180;  // Forward/Back
+    avatarRoot.rotation.z = -(sim.leanX * Math.PI) / 180; // Left/Right
 
     const chestPos = new THREE.Vector3();
     const handPos = new THREE.Vector3();
     const pLine = scene.getObjectByName("plumbLine");
     const wBall = scene.getObjectByName("weightBall");
 
-    // 2. TRACK ANATOMIC KEYPOINTS
+    // 2. SET FIXED CLINICAL PLUMB LINE
+    if (pLine) {
+        pLine.position.set(Z_FORENSIC.x, 1.5, Z_FORENSIC.z);
+    }
+
+    // 3. TRACK ANATOMIC KEYPOINTS
     avatarRoot.traverse(o => { 
         if(o.name.toLowerCase().includes("spine02")) o.getWorldPosition(chestPos); 
         if(o.name.toLowerCase().includes("hand_r")) o.getWorldPosition(handPos);
     });
 
-    // 3. CENTER OF MASS CALCULATION
+    // 4. CALCULATE COMBINED CENTER OF MASS (CoM)
     let comZ = chestPos.z;
     let comX = chestPos.x;
 
     if (sim.ballLocked && wBall) {
-        wBall.position.copy(handPos);
+        wBall.position.copy(handPos); 
         comZ = (chestPos.z + handPos.z) / 2;
         comX = (chestPos.x + handPos.x) / 2;
-    } else if (wBall) {
-        wBall.position.set(Z_FORENSIC.x + 0.6, 0.15, Z_FORENSIC.z + 0.8);
+    } else {
+        if(wBall) wBall.position.set(Z_FORENSIC.x + 0.6, 0.15, Z_FORENSIC.z + 0.8);
     }
 
-    // 4. BREACH DETECTION
+    // 5. FORENSIC STABILITY BREACH
+    const $statusVal = document.getElementById('statusVal');
     const limitZ = 0.45; 
-    const breachedZ = Math.abs(comZ - Z_FORENSIC.z) > limitZ;
+    const limitX = 0.25;
 
-    if (breachedZ) {
-        document.getElementById('statusVal').textContent = "STABILITY BREACH";
-        document.getElementById('statusVal').style.color = "#ff9aa0";
+    const breachedZ = Math.abs(comZ - Z_FORENSIC.z) > limitZ;
+    const breachedX = Math.abs(comX - Z_FORENSIC.x) > limitX;
+
+    if (breachedZ || breachedX) {
+        $statusVal.textContent = "STABILITY BREACH";
+        $statusVal.style.color = "#ff9aa0";
         if(pLine) pLine.material.color.setHex(0xff9aa0);
     } else {
-        document.getElementById('statusVal').textContent = "Stable";
-        document.getElementById('statusVal').style.color = "#4ade80";
+        $statusVal.textContent = "Stable";
+        $statusVal.style.color = "#4ade80";
         if(pLine) pLine.material.color.setHex(0x38bdf8);
+    }
+} else if (avatarRoot) {
+    // Reset root rotation when leaving Module 2
+    avatarRoot.rotation.x = 0;
+    avatarRoot.rotation.z = 0;
+}
+    const chestPos = new THREE.Vector3();
+    const handPos = new THREE.Vector3();
+    const pLine = scene.getObjectByName("plumbLine");
+    const wBall = scene.getObjectByName("weightBall");
+
+    // 2. SET FIXED CLINICAL PLUMB LINE
+    // Positioned at neutral center; stays perfectly vertical and stationary
+    if (pLine) {
+        pLine.position.set(Z_FORENSIC.x, 1.5, Z_FORENSIC.z);
+    }
+
+    // 3. TRACK ANATOMIC KEYPOINTS
+    avatarRoot.traverse(o => { 
+        if(o.name.toLowerCase().includes("spine02")) o.getWorldPosition(chestPos); 
+        if(o.name.toLowerCase().includes("hand_r")) o.getWorldPosition(handPos);
+    });
+
+    // 4. CALCULATE COMBINED CENTER OF MASS (CoM)
+    // If holding ball, CoM is the average of torso and hand
+    let comZ = chestPos.z;
+    let comX = chestPos.x;
+
+    if (sim.ballLocked && wBall) {
+        wBall.position.copy(handPos); // Snap ball to hand
+        comZ = (chestPos.z + handPos.z) / 2;
+        comX = (chestPos.x + handPos.x) / 2;
+    } else {
+        // Ball stays on floor in front of subject
+        if(wBall) wBall.position.set(Z_FORENSIC.x + 0.6, 0.15, Z_FORENSIC.z + 0.8);
+    }
+
+    // 5. FORENSIC STABILITY BREACH
+    // Clinical thresholds: ~45cm forward/back, ~25cm lateral from center
+    const $statusVal = document.getElementById('statusVal');
+    const limitZ = 0.45; 
+    const limitX = 0.25;
+
+    const breachedZ = Math.abs(comZ - Z_FORENSIC.z) > limitZ;
+    const breachedX = Math.abs(comX - Z_FORENSIC.x) > limitX;
+
+    if (breachedZ || breachedX) {
+        $statusVal.textContent = "STABILITY BREACH";
+        $statusVal.style.color = "#ff9aa0";
+        // Visual indicator: Plumb line glows red on failure
+        if(pLine) pLine.material.color.setHex(0xff9aa0);
+    } else {
+        $statusVal.textContent = "Stable";
+        $statusVal.style.color = "#4ade80";
+        if(pLine) pLine.material.color.setHex(0x38bdf8); // Cyan for stable
     }
 }
   
@@ -2608,6 +2668,26 @@ addEventListener('resize', () => {
   renderer.setSize(innerWidth, innerHeight);
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 });
+
+// --- CAMERA DEBUG TOOL ---
+// Use your mouse to position the camera exactly where you want it.
+// Check the Browser Console (F12) to get the raw numbers.
+window.addEventListener('keydown', (e) => {
+    if (e.key.toLowerCase() === 'c') { // Press 'C' to log current camera
+        const pos = camera.position;
+        const tar = controls.target;
+        
+        console.log("%c--- RAW CAMERA DATA ---", "color: #38bdf8; font-weight: bold;");
+        console.log(`Pos: .set(${pos.x.toFixed(2)}, ${pos.y.toFixed(2)}, ${pos.z.toFixed(2)})`);
+        console.log(`Tar: .set(${tar.x.toFixed(2)}, ${tar.y.toFixed(2)}, ${tar.z.toFixed(2)})`);
+        
+        // Helper calculation for offsets relative to Forensics Zone (0, 0, -3.1)
+        const offX = pos.x - Z_FORENSIC.x;
+        const offZ = pos.z - Z_FORENSIC.z;
+        console.log(`Forensics Offset: Z_FORENSIC.x ${offX >= 0 ? '+' : ''} ${offX.toFixed(2)}, ${pos.y.toFixed(2)}, Z_FORENSIC.z ${offZ >= 0 ? '+' : ''} ${offZ.toFixed(2)}`);
+    }
+});
+
     
 </script>
 </body>
