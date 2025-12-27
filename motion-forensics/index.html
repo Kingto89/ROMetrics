@@ -1701,7 +1701,7 @@ if (gltf.animations && gltf.animations.length) {
     function snapCam(){
       camera.position.copy(camGoalPos);
       controls.target.copy(camGoalTarget);
-      controls.update();
+      controls.update();   
     }
 
 function placeAvatarForZone(which) {
@@ -2005,7 +2005,48 @@ function animate() {
     // Precise timing for logic
     const dt = clock.getDelta(); 
     controls.update();
+// --- UNIVERSAL BLINK LOGIC ---
+    if (!animate._blink) animate._blink = { targets: [], state: 0, t: 0, next: 0, lastModel: null };
+    const BL = animate._blink;
 
+    // 1. Auto-detect Morph Targets if model changed
+    if (avatarRoot && BL.lastModel !== avatarRoot) {
+        BL.targets = [];
+        BL.lastModel = avatarRoot;
+        BL.next = (performance.now() / 1000) + 2;
+        avatarRoot.traverse(o => {
+            if (o.isMesh && o.morphTargetDictionary) {
+                const keys = ["Eye_Blink", "Eye_Blink_L", "Eye_Blink_R", "Expressions_eyeClosedL_max", "Expressions_eyeClosedR_max"];
+                keys.forEach(k => {
+                    if (o.morphTargetDictionary[k] != null) BL.targets.push({ mesh: o, idx: o.morphTargetDictionary[k] });
+                });
+            }
+        });
+    }
+
+    // 2. Execution Loop
+    if (BL.targets.length) {
+        const now = performance.now() / 1000;
+        if (BL.state === 0 && now >= BL.next) {
+            BL.state = 1; BL.t = 0;
+            BL.next = now + 3 + Math.random() * 4; // Randomize next blink 3-7s
+        }
+        const setB = (v) => BL.targets.forEach(t => t.mesh.morphTargetInfluences[t.idx] = v);
+        const dur = { down: 0.07, hold: 0.03, up: 0.12 };
+        if (BL.state !== 0) {
+            BL.t += dt;
+            if (BL.state === 1) { // Closing
+                setB(Math.min(1, BL.t / dur.down));
+                if (BL.t >= dur.down) { BL.state = 2; BL.t = 0; }
+            } else if (BL.state === 2) { // Hold
+                setB(1);
+                if (BL.t >= dur.hold) { BL.state = 3; BL.t = 0; }
+            } else if (BL.state === 3) { // Opening
+                setB(1 - Math.min(1, BL.t / dur.up));
+                if (BL.t >= dur.up) { BL.state = 0; setB(0); }
+            }
+        }
+    }
     // 2. INDEPENDENT MODULE ENGINE
     // This executes ONLY the logic for the specific lab module currently active.
     if (activeUpdateFunction) {
