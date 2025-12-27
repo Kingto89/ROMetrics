@@ -2500,31 +2500,26 @@ function updateMetabolicModule(dt) {
 function updateStabilityModule(dt) {
     if (!avatarRoot) return;
 
-    // 1. Apply Global Lean (The Tipping Effect)
-    avatarRoot.rotation.x = (sim.leanZ * Math.PI) / 180;
-    avatarRoot.rotation.z = -(sim.leanX * Math.PI) / 180;
-
+    // 1. Enforce Module 2 Pose Logic
     const R = animate._run;
     if (R && R.rig) {
         const b = R.rig.bones;
         const tuck = ANAT.shTuck;
 
-        // Define the specific overrides using your requested format
-        const StabilityOverrides = {
+        // BONE OVERRIDES FOR STABILITY MODULE
+        const BONE_OVERRIDES = {
             "unweighted": {
-                upArmL: { x: 110, y: 0, z: tuck },
-                upArmR: { x: 0, y: 250, z: -tuck },
-                loArmL: { x: 0, y: 90, z: 0 },
+                upArmL: { x: 100, y: 0, z: tuck },
+                upArmR: { x: 0, y: 0, z: -tuck },
+                loArmL: { x: 0, y: 0, z: 0 },
                 loArmR: { x: 0, y: 0, z: 0 }
             },
             "weighted": {
-                // Elbow flexed 90, lower arm internally rotated ~65
-                loArmR: { x: 90, y: -65, z: 0 } 
+                loArmR: { x: 90, y: -65, z: 0 } // Elbow flexed + Internal rotation
             }
         };
 
-        // Helper to apply the {x,y,z} object to the bone quaternion
-        const applyOverride = (bone, rot) => {
+        const applyRot = (bone, rot) => {
             if (!bone || !R.rig.base.get(bone)) return;
             const q = new THREE.Quaternion().setFromEuler(
                 new THREE.Euler(
@@ -2536,17 +2531,16 @@ function updateStabilityModule(dt) {
             bone.quaternion.copy(R.rig.base.get(bone)).multiply(q);
         };
 
-        // 2. APPLY LOGIC
-        // Always apply neutral side position first
-        Object.entries(StabilityOverrides.unweighted).forEach(([name, rot]) => {
-            applyOverride(b[name], rot);
+        // AUTOMATICALLY ENFORCE UNWEIGHTED POSE
+        Object.entries(BONE_OVERRIDES.unweighted).forEach(([name, rot]) => {
+            applyRot(b[name], rot);
         });
 
-        // Override Right Arm if ball is picked up
+        // APPLY WEIGHTED OVERRIDE IF BUTTON IS CLICKED
         if (sim.ballLocked) {
-            applyOverride(b.loArmR, StabilityOverrides.weighted.loArmR);
+            applyRot(b.loArmR, BONE_OVERRIDES.weighted.loArmR);
 
-            // Snap the Weight Ball mesh to the hand
+            // PHYSICALLY SNAP BALL TO HAND
             const handPos = new THREE.Vector3();
             if (b.loArmR) {
                 b.loArmR.getWorldPosition(handPos);
@@ -2554,7 +2548,7 @@ function updateStabilityModule(dt) {
                 if (ball) ball.position.copy(handPos);
             }
         } else {
-            // Drop ball to floor
+            // RETURN BALL TO FLOOR
             const ball = scene.getObjectByName("weightBall");
             if (ball && ball.position.y > 0.25) {
                 ball.position.set(0.6, 0.20, 1.35);
@@ -2562,7 +2556,11 @@ function updateStabilityModule(dt) {
         }
     }
 
-    // 3. Stability Status Readout
+    // 2. APPLY GLOBAL LEAN (The tipping effect)
+    avatarRoot.rotation.x = (sim.leanZ * Math.PI) / 180;
+    avatarRoot.rotation.z = -(sim.leanX * Math.PI) / 180;
+
+    // 3. TRACK CENTER OF MASS
     const chestPos = new THREE.Vector3();
     avatarRoot.traverse(o => { 
         if(o.name.toLowerCase().includes("spine02")) o.getWorldPosition(chestPos); 
@@ -2577,7 +2575,6 @@ function updateStabilityModule(dt) {
         statusVal.style.color = "#4ade80";
     }
 }
-
 
     
  function drawTreadmillMph(screen) {
