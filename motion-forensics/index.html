@@ -371,7 +371,22 @@ const sim = {
 window.sim = sim; 
 window.getTrialTime = () => trialTime; // Use a function to get the current value
 window.setTrialTime = (v) => trialTime = v; // Use a function to set the value
+// --- MODULE UPDATE REGISTRY ---
+// Each function here is a "Mini-App" that only runs when that module is active.
+const MODULE_CONTROLLERS = {
+    'FL-001': updateMetabolicModule,
+    'FL-002': updateStabilityModule,
+    'FL-003': (dt) => { /* Logic for 3 */ },
+    'FL-004': (dt) => { /* Logic for 4 */ },
+    'FL-005': (dt) => { /* Logic for 5 */ },
+    'FL-006': (dt) => { /* Logic for 6 */ },
+    'FL-007': (dt) => { /* Logic for 7 */ },
+    'FL-008': (dt) => { /* Logic for 8 */ },
+    'FL-009': (dt) => { /* Logic for 9 */ },
+    'FL-010': (dt) => { /* Logic for 10 */ }
+};
 
+let activeUpdateFunction = null; // The currently "plugged in" logic
 
    let avatarRoot = null;
     let spine01 = null;
@@ -1868,34 +1883,33 @@ async function enterFL002() {
     if ($msg) $msg.innerHTML = "<b>Module 2 Loaded:</b> Use sliders to test Center of Mass limits.";
 }
     
-    
 function enterModule(moduleId) {
-  const mod = getModule(moduleId);
-  currentModule = mod;
-  document.getElementById('moduleTitle').textContent = mod.label;
+    const mod = getModule(moduleId);
+    currentModule = mod;
+    
+    // 1. Update Title
+    document.getElementById('moduleTitle').textContent = mod.label;
 
-  // 1. Hide ALL possible consoles (FL-001 through FL-010)
-  for (let i = 1; i <= 10; i++) {
-    // This formats the number to match your IDs: 1 becomes 001, 10 becomes 010
-    const padId = `FL-${String(i).padStart(3, '0')}`;
-    const el = document.getElementById(`console-${padId}`);
-    if (el) el.style.display = 'none';
-  }
+    // 2. Clear Shared UI
+    document.getElementById('trialMsg').textContent = "Module Loaded.";
+    document.getElementById('assessmentBtn').style.display = 'none';
 
-  // 2. Show ONLY the console for the currently selected module
-  const activeConsole = document.getElementById(`console-${moduleId}`);
-  if (activeConsole) {
-    // Switch from 'none' to 'block' so buttons appear
-    activeConsole.style.display = 'block'; 
-  }
+    // 3. UI Switcher: Hide all console boxes, show only the active one
+    document.querySelectorAll('.module-ui-box').forEach(box => {
+        box.style.display = 'none';
+    });
+    
+    const activeBox = document.getElementById(`console-${moduleId}`);
+    if (activeBox) activeBox.style.display = 'block';
 
-  // 3. Keep your existing camera and setup logic
-  setZone(mod.zone || 'all');
-  const $badge = document.getElementById('badge');
-  $badge.style.display = "block";
-  
-  if (typeof mod.onEnter === 'function') mod.onEnter();
-}
+    // 4. Scene Setup
+    setZone(mod.zone || 'all');
+  activeUpdateFunction = MODULE_CONTROLLERS[moduleId];  
+    // 5. Run specific initialization logic for that module
+    if (typeof mod.onEnter === 'function') {
+        mod.onEnter();
+    }
+}    
     // 7) Studio UI wiring
     // ==============================
     const pills = [...document.querySelectorAll('.pill')];
@@ -1943,74 +1957,32 @@ const restore = () => {
         for (const [b, q] of R.rig.base) b.quaternion.copy(q);
     }
 };
+
+// Global registry for module-specific update functions
+let moduleUpdateAction = null;
+
 function animate() {
     requestAnimationFrame(animate);
 
-    const now = clock.getElapsedTime();
-    let dt = now - lastT;
-    lastT = now;
-
+    // Use Three.js clock for precise delta timing
+    const dt = clock.getDelta(); 
     controls.update();
 
-    // =========================================================
-    // ISOLATED MODULE 2 PHYSICS (STANDALONEPostural Analysis)
-    // =========================================================
-    if (currentModule?.id === 'FL-002' && avatarRoot) {
-        const R = animate._run;
-        const b = R?.rig?.bones;
-
-        if (b && b.spine01) {
-            const baseQ = R.rig.base.get(b.spine01);
-            const radFlex = (sim.leanZ * Math.PI) / 180; 
-            const radLat  = (sim.leanX * Math.PI) / 180; 
-            R.tmpE.set(radFlex, 0, -radLat); 
-            R.tmpQ.setFromEuler(R.tmpE);
-            b.spine01.quaternion.copy(baseQ).multiply(R.tmpQ);
-        }
-
-        const chestPos = new THREE.Vector3();
-        const handPos = new THREE.Vector3();
-        const pLine = scene.getObjectByName("plumbLine");
-        const wBall = scene.getObjectByName("weightBall");
-
-        avatarRoot.traverse(o => { 
-            if(o.name.toLowerCase().includes("spine02")) o.getWorldPosition(chestPos); 
-            if(o.name.toLowerCase().includes("hand_r")) o.getWorldPosition(handPos);
-        });
-
-        let comZ = chestPos.z;
-        let comX = chestPos.x;
-
-        if (sim.ballLocked && wBall) {
-            wBall.position.copy(handPos); 
-            comZ = (chestPos.z + handPos.z) / 2;
-            comX = (chestPos.x + handPos.x) / 2;
-        } else if (wBall) {
-            wBall.position.set(Z_FORENSIC.x + 0.6, 0.15, Z_FORENSIC.z + 0.8);
-        }
-
-        const $statusVal = document.getElementById('statusVal');
-        const limitZ = 0.45; const limitX = 0.25;
-        const breachedZ = Math.abs(comZ - Z_FORENSIC.z) > limitZ;
-        const breachedX = Math.abs(comX - Z_FORENSIC.x) > limitX;
-
-        if (breachedZ || breachedX) {
-            $statusVal.textContent = "STABILITY BREACH";
-            $statusVal.style.color = "#ff9aa0";
-            if(pLine) pLine.material.color.setHex(0xff9aa0);
-        } else {
-            $statusVal.textContent = "Stable";
-            $statusVal.style.color = "#4ade80";
-            if(pLine) pLine.material.color.setHex(0x38bdf8);
-        }
-    } else if (avatarRoot && !sim.running) {
-        const R = animate._run;
-        if (R?.rig?.bones?.spine01) {
-            const baseQ = R.rig.base.get(R.rig.bones.spine01);
-            if (baseQ) R.rig.bones.spine01.quaternion.copy(baseQ);
-        }
+    // 1. GLOBAL VISUALS (Universal systems like eye blinking)
+    if (typeof updateGlobalBlink === 'function') {
+        updateGlobalBlink(dt);
     }
-  
+
+    // 2. INDEPENDENT MODULE ENGINE
+    // This executes ONLY the logic for the active module
+    if (activeUpdateFunction) {
+        activeUpdateFunction(dt);
+    }
+
+    renderer.render(scene, camera);
+}
+
+    
 // ===== BLINK (works for BOTH Roma + Roman via auto-detect morph names) =====
 if (!animate._blink) animate._blink = { model:null, targets:[], state:0, t:0, next:0 };
 
@@ -2631,7 +2603,58 @@ $enter.addEventListener('click', async () => {
     $enter.disabled = false;
   }
 });
+// --- MODULE 1 LOGIC (METABOLIC BAY) ---
+function updateMetabolicModule(dt) {
+    if (!sim.running || sim.energy <= 0) {
+        if (runAction) runAction.paused = true;
+        return;
+    }
 
+    const speed = parseFloat(sim.speedMph.toFixed(1));
+    const activeModel = document.getElementById('modelSelect').value;
+    const currentCost = (speed * 26.8 * 0.205) + 3.5;
+
+    // Metabolism calculations
+    if (currentCost > sim.vo2Max) {
+        sim.energy -= ((currentCost - sim.vo2Max) / 5) * dt; 
+    } else {
+        sim.energy = Math.min(100, sim.energy + (0.05 * dt));
+    }
+
+    // Hardware Visuals
+    beltTex.offset.y = (beltTex.offset.y + dt * (0.1 + speed/10)) % 1;
+    treadStrips.forEach(s => {
+        s.position.z += dt * (0.35 + speed/12);
+        if (s.position.z > TREAD_MAX_Z) s.position.z = TREAD_MIN_Z;
+    });
+
+    updateHUD();
+}
+
+// --- MODULE 2 LOGIC (STABILITY BOOTH) ---
+function updateStabilityModule(dt) {
+    if (!avatarRoot) return;
+
+    // Apply rotation from sliders
+    avatarRoot.rotation.x = (sim.leanZ * Math.PI) / 180;
+    avatarRoot.rotation.z = -(sim.leanX * Math.PI) / 180;
+
+    // Track Center of Mass
+    const chestPos = new THREE.Vector3();
+    avatarRoot.traverse(o => { 
+        if(o.name.toLowerCase().includes("spine02")) o.getWorldPosition(chestPos); 
+    });
+
+    // Forensic Breach Logic
+    const statusVal = document.getElementById('statusVal');
+    if (Math.abs(chestPos.z - Z_FORENSIC.z) > 0.45) {
+        statusVal.textContent = "STABILITY BREACH";
+        statusVal.style.color = "#ff9aa0";
+    } else {
+        statusVal.textContent = "Stable";
+        statusVal.style.color = "#4ade80";
+    }
+}
 addEventListener('resize', () => {
   camera.aspect = innerWidth / innerHeight;
   camera.updateProjectionMatrix();
