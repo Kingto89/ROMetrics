@@ -2497,85 +2497,21 @@ function updateMetabolicModule(dt) {
 
     
 function updateStabilityModule(dt) {
-    // SAFETY GATE: If model isn't loaded yet, stop here so we don't crash
-    if (!avatarRoot || avatarRoot.userData.__isMannequin) return;
+    if (!avatarRoot) return;
 
-    // 1. ENSURE RIG OBJECT EXISTS
-    if (!animate._run) animate._run = { rig: null, tmpE: new THREE.Euler() };
-    const R = animate._run;
-
-    // 2. INITIALIZE BONES (Only runs once when needed)
-    if (!R.rig) {
-        R.rig = animate._initRig();
-        if (!R.rig) return; // Still not ready? Exit.
-    }
-
-    const b = R.rig.bones;
-    const tuck = ANAT.shTuck;
-    const tmpE = new THREE.Euler();
-
-    // 3. BONE OVERRIDES
-    const BONE_OVERRIDES = {
-        "unweighted": {
-            upArmL: { x: 0, y: 0, z: tuck },
-            upArmR: { x: 0, y: 0, z: -tuck },
-            loArmL: { x: 0, y: 0, z: 0 },
-            loArmR: { x: 0, y: 0, z: 0 }
-        },
-        "weighted": {
-            loArmR: { x: 90, y: -90, z: 45 } 
-        }
-    };
-
-    const applyRot = (bone, rot) => {
-        if (!bone || !R.rig.base.get(bone)) return;
-        const q = new THREE.Quaternion().setFromEuler(
-            tmpE.set(rot.x * (Math.PI / 180), rot.y * (Math.PI / 180), rot.z * (Math.PI / 180))
-        );
-        bone.quaternion.copy(R.rig.base.get(bone)).multiply(q);
-    };
-
-    // 4. APPLY POSES
-    Object.entries(BONE_OVERRIDES.unweighted).forEach(([name, rot]) => {
-        applyRot(b[name], rot);
-    });
-
-    if (sim.ballLocked) {
-        applyRot(b.loArmR, BONE_OVERRIDES.weighted.loArmR);
-
-        // SNAP BALL TO HAND
-        const handPos = new THREE.Vector3();
-        if (b.loArmR) {
-            b.loArmR.getWorldPosition(handPos);
-            const ball = scene.getObjectByName("weightBall");
-            if (ball) ball.position.copy(handPos);
-        }
-    } else {
-        const ball = scene.getObjectByName("weightBall");
-        if (ball && ball.position.y > 0.25) {
-            ball.position.set(0.6, 0.20, 1.35);
-        }
-    }
-
-    // 5. APPLY GLOBAL LEAN (Slider Control)
+    // Apply rotation from sliders
     avatarRoot.rotation.x = (sim.leanZ * Math.PI) / 180;
     avatarRoot.rotation.z = -(sim.leanX * Math.PI) / 180;
 
-    // 6. TRACK CENTER OF MASS (Chest Position)
+    // Track Center of Mass
     const chestPos = new THREE.Vector3();
-    let spineFound = false;
     avatarRoot.traverse(o => { 
-        if(!spineFound && o.name.toLowerCase().includes("spine02")) {
-            o.getWorldPosition(chestPos); 
-            spineFound = true;
-        }
+        if(o.name.toLowerCase().includes("spine02")) o.getWorldPosition(chestPos); 
     });
 
+    // Forensic Breach Logic
     const statusVal = document.getElementById('statusVal');
-    const driftZ = Math.abs(chestPos.z - Z_FORENSIC.z);
-    const driftX = Math.abs(chestPos.x - Z_FORENSIC.x);
-
-    if (driftZ > 0.45 || driftX > 0.45) {
+    if (Math.abs(chestPos.z - Z_FORENSIC.z) > 0.45) {
         statusVal.textContent = "STABILITY BREACH";
         statusVal.style.color = "#ff9aa0";
     } else {
