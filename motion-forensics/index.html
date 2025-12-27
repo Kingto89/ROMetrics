@@ -914,48 +914,53 @@ function drawPanel(screen, title) {
 // ==========================================
 function drawTrialA_View(ctx, c, speed, modelName) {
     // 1. FORCED THRESHOLD REALISM
-    const ceiling = 6.75; // 6.8 and above is anaerobic dominant
+    // Fixed: 6.8 mph and above is strictly anaerobic dominant
     const isAboveThreshold = speed >= 6.8;
     
-    // 2. METABOLIC LAG LOGIC (Time-based forced activation)
+    // 2. METABOLIC LAG LOGIC (Forcing activation on startup)
+    // ATP-PC is forced active for the first 15 seconds of the run
     const isAtpActive = (sim.elapsed > 0 && sim.elapsed < 15);
+    // Anaerobic is active if over 6.8mph OR during the 30s startup lag
     const isAnaerobicActive = (isAboveThreshold || (sim.elapsed > 0 && sim.elapsed < 30));
     
     // 3. VISUAL CALCULATIONS
     const currentCost = (speed * 26.8 * 0.205) + 3.5;
     const graphY = 185, graphW = c.width - 80, graphH = 50;
     
-    // Calculate the startup "Oxygen Deficit" visual factor
-    const startupLagFactor = (sim.elapsed > 0 && sim.elapsed < 30) ? (0.25 * (1.0 - (sim.elapsed / 30))) : 0;
+    // Force a visual lag factor so yellow/pink bars appear even at slow speeds on startup
+    const startupLagFactor = (sim.elapsed > 0 && sim.elapsed < 30) ? (0.28 * (1.0 - (sim.elapsed / 30))) : 0;
     
     let aerobicPart = Math.min(currentCost, sim.vo2Max);
     let anaerobicPart = Math.max(0, currentCost - sim.vo2Max);
     let totalWork = aerobicPart + anaerobicPart;
     
-    let anaerobicRatio = (anaerobicPart / totalWork) + startupLagFactor;
+    // Combine real metabolic cost with the startup lag factor
+    let anaerobicRatio = (totalWork > 0) ? (anaerobicPart / totalWork) + startupLagFactor : startupLagFactor;
     let aerobicRatio = 1.0 - anaerobicRatio;
 
     // 4. DRAW BARS
+    // Background Track
     ctx.fillStyle = 'rgba(255,255,255,0.05)';
     ctx.fillRect(40, graphY, graphW, graphH);
 
-    // Aerobic Base
+    // Aerobic Base (Blue)
     ctx.fillStyle = '#38bdf8';
-    ctx.fillRect(40, graphY, graphW * Math.max(0.1, aerobicRatio), graphH);
+    ctx.fillRect(40, graphY, graphW * Math.max(0.05, aerobicRatio), graphH);
 
-    // Anaerobic Overlay (Glycolysis)
+    // Anaerobic Overlay (Yellow - Glycolysis)
     if (isAnaerobicActive && speed > 0) {
-        ctx.fillStyle = 'rgba(255, 228, 163, 0.85)';
+        ctx.fillStyle = 'rgba(255, 228, 163, 0.9)';
         ctx.fillRect(40 + (graphW * aerobicRatio), graphY, graphW * anaerobicRatio, graphH);
     }
 
-    // ATP-PC Peak Overlay (The immediate burst)
+    // ATP-PC Peak Overlay (Pink - Immediate)
     if (isAtpActive && speed > 0) {
         const fade = 1.0 - (sim.elapsed / 15);
-        let atpWidth = (graphW * 0.4) * fade; 
+        let atpWidth = (graphW * 0.45) * fade; 
         ctx.fillStyle = '#ff9aa0';
         ctx.fillRect(40, graphY, atpWidth, graphH);
         
+        // Timer Label for ATP-PC
         ctx.fillStyle = '#ff9aa0';
         ctx.font = '700 18px Inter';
         ctx.fillText(`● ATP-PC: SYSTEM ACTIVE (${Math.ceil(15 - sim.elapsed)}s)`, 420, 150);
@@ -963,16 +968,27 @@ function drawTrialA_View(ctx, c, speed, modelName) {
 
     // 5. STATUS TEXT & SYSTEM DOMINANCE
     ctx.font = '700 16px Inter';
+    
+    // Aerobic Status
     ctx.fillStyle = '#38bdf8'; 
     ctx.fillText("● Aerobic: Active", 420, 100);
     
+    // Anaerobic Status (Visible during lag even if slow)
     if (isAnaerobicActive) {
         ctx.fillStyle = '#ffe4a3';
         ctx.fillText("● Anaerobic: Active", 420, 125);
     }
 
+    // Large Dominance Label
     let dominantText = isAboveThreshold ? "PRIMARY: Anaerobic Glycolysis" : "PRIMARY: Aerobic Metabolism";
     let dominantColor = isAboveThreshold ? "#ffe4a3" : "#38bdf8";
+    
+    // Override dominance text during initial lag to show "Mixed" or "Deficit"
+    if (sim.elapsed > 0 && sim.elapsed < 15) {
+        dominantText = "PRIMARY: ATP-PC / Anaerobic Deficit";
+        dominantColor = "#ff9aa0";
+    }
+
     ctx.fillStyle = dominantColor;
     ctx.font = '900 22px Inter';
     ctx.fillText(dominantText, 40, 140);
