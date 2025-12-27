@@ -1792,63 +1792,45 @@ async function enterFL002() {
     restore(); 
     setZone('forensics'); 
 
-    const leanZSlider = document.getElementById('leanSlider');
-    const leanXSlider = document.getElementById('leanXSlider');
-    const leanZVal = document.getElementById('leanVal');
-    const leanXVal = document.getElementById('leanXVal');
+    // Re-grab elements to ensure they are active in the DOM
+    const lZSlider = document.getElementById('leanSlider');
+    const lXSlider = document.getElementById('leanXSlider');
+    const lZVal = document.getElementById('leanVal');
+    const lXVal = document.getElementById('leanXVal');
     const ballBtn = document.getElementById('lockBallBtn');
     const baseBtn = document.getElementById('toggleBaseBtn');
-    const forcePlate = scene.getObjectByName("forcePlate");
 
-    // Snap Camera Views
-    document.getElementById('btnSideView').onclick = () => {
-        camera.position.set(Z_FORENSIC.x + 3.5, 1.4, Z_FORENSIC.z);
-        controls.target.set(Z_FORENSIC.x, 1.2, Z_FORENSIC.z);
-        controls.update();
-    };
-
-    document.getElementById('btnFrontView').onclick = () => {
-        camera.position.set(Z_FORENSIC.x, 1.4, Z_FORENSIC.z + 4.5);
-        controls.target.set(Z_FORENSIC.x, 1.2, Z_FORENSIC.z);
-        controls.update();
-    };
+    // Reset slider UI to match state
+    if(lZSlider) lZSlider.value = 0;
+    if(lXSlider) lXSlider.value = 0;
+    if(lZVal) lZVal.textContent = "0.0";
+    if(lXVal) lXVal.textContent = "0.0";
 
     // Slider Logic
-    leanZSlider.oninput = (e) => {
-        const degrees = parseFloat(e.target.value);
-        if (leanZVal) leanZVal.textContent = degrees.toFixed(1);
-        sim.leanZ = degrees; 
+    lZSlider.oninput = (e) => {
+        sim.leanZ = parseFloat(e.target.value);
+        if (lZVal) lZVal.textContent = sim.leanZ.toFixed(1);
     };
 
-    leanXSlider.oninput = (e) => {
-        const degrees = parseFloat(e.target.value);
-        if (leanXVal) leanXVal.textContent = degrees.toFixed(1);
-        sim.leanX = degrees; 
+    lXSlider.oninput = (e) => {
+        sim.leanX = parseFloat(e.target.value);
+        if (lXVal) lXVal.textContent = sim.leanX.toFixed(1);
     };
 
-    // Toggle Weight Ball (Hold/Drop)
+    // Button Logic
     ballBtn.onclick = () => {
         sim.ballLocked = !sim.ballLocked;
-        ballBtn.classList.toggle('active', sim.ballLocked);
         ballBtn.textContent = sim.ballLocked ? "Drop Weight Ball" : "Pick Up Weight Ball";
-        ballBtn.style.background = sim.ballLocked ? "rgba(56, 189, 248, 0.2)" : "";
-        
-        const $msg = document.getElementById('trialMsg');
-        $msg.innerHTML = sim.ballLocked 
-            ? "<b>SYSTEM ACTIVE:</b> Ball attached to Right Hand. CoM shifted forward." 
+        document.getElementById('trialMsg').innerHTML = sim.ballLocked 
+            ? "<b>SYSTEM ACTIVE:</b> Ball attached. CoM shifted." 
             : "<b>SYSTEM UPDATED:</b> Ball released.";
     };
 
-    // Toggle Base of Support Visual
     baseBtn.onclick = () => {
-        if (forcePlate) {
-            forcePlate.visible = !forcePlate.visible;
-            baseBtn.classList.toggle('active', forcePlate.visible);
-            baseBtn.style.borderColor = forcePlate.visible ? "#38bdf8" : "";
-        }
+        const fp = scene.getObjectByName("forcePlate");
+        if (fp) fp.visible = !fp.visible;
     };
-}
-    
+}    
     
 function enterModule(moduleId) {
   const mod = getModule(moduleId);
