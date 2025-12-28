@@ -36,7 +36,7 @@
 
 ---
 
-# Case 5: Chronic Low Back Stiffness with Pelvic Involvement
+# Case 5: Chronic Low Back 
 
 ## Patient Profile
 - Name: Alex R.
