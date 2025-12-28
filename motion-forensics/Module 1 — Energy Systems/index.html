@@ -1,0 +1,2349 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>ROMetrics — Forensics Labs (Studio Preview)</title>
+  <style>
+    html,body{height:100%;margin:0;overflow:hidden;background:#07101b;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;}
+    #ui{position:fixed;left:14px;top:14px;z-index:10;display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+    .pill{border:1px solid rgba(148,163,184,.35);background:rgba(15,23,42,.78);color:#e5eefc;padding:10px 12px;border-radius:999px;font-size:13px;cursor:pointer;user-select:none;backdrop-filter: blur(8px);}
+    .pill.active{border-color:rgba(56,189,248,.8);box-shadow:0 0 0 2px rgba(56,189,248,.14) inset;}
+    #badge{position:fixed;right:14px;top:14px;z-index:100;padding:12px 12px;border-radius:16px;border:1px solid rgba(148,163,184,.25);background:rgba(15,23,42,.65);color:#cfe3ff;font-size:13px;max-width:420px;backdrop-filter: blur(8px);display:none;}
+    #badge .t{font-weight:900;letter-spacing:.2px;}
+    #badge .p{opacity:.92;margin-top:6px;line-height:1.25;}
+    #controls{margin-top:10px;padding-top:10px;border-top:1px solid rgba(148,163,184,.18);display:grid;gap:8px;}
+    .row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+    .k{opacity:.88;}
+    .v{font-weight:900;letter-spacing:.2px;}
+    input[type=range]{width:100%;accent-color:#38bdf8;}
+    .btn{border:1px solid rgba(148,163,184,.35);background:rgba(15,23,42,.78);color:#e5eefc;padding:8px 10px;border-radius:12px;font-size:12px;cursor:pointer;}
+    #hint{position:fixed;left:14px;bottom:14px;z-index:10;padding:10px 12px;border-radius:14px;border:1px solid rgba(148,163,184,.20);background:rgba(15,23,42,.55);color:#a8c0da;font-size:12px;backdrop-filter: blur(8px);}
+
+    #gate{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:radial-gradient(900px 600px at 50% 35%, rgba(56,189,248,0.10), rgba(7,16,27,0.96));backdrop-filter: blur(6px);}
+    #gateCard{width:min(740px, calc(100vw - 28px));border-radius:24px;border:1px solid rgba(148,163,184,.28);background:rgba(9,20,37,.72);box-shadow:0 20px 80px rgba(0,0,0,.40);padding:22px;}
+    #gateTop{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;}
+    #gateTitle{font-weight:950;font-size:22px;color:#e6eef7;letter-spacing:.2px;}
+    #gateSub{margin-top:6px;color:#a8c0da;line-height:1.25;font-size:13px;}
+    #gateGrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px;}
+    @media (max-width:640px){ #gateGrid{grid-template-columns:1fr;} }
+    .field{border:1px solid rgba(148,163,184,.22);border-radius:18px;background:rgba(15,23,42,.55);padding:14px;}
+    .field .lbl{color:#cfe3ff;font-weight:800;font-size:12px;letter-spacing:.25px;opacity:.95;}
+    .field select{width:100%;margin-top:10px;background:rgba(7,16,27,.35);border:1px solid rgba(148,163,184,.22);color:#e6eef7;border-radius:14px;padding:10px 12px;font-size:14px;outline:none;}
+    .field .desc{margin-top:10px;color:#a8c0da;font-size:12px;line-height:1.25;min-height:32px;}
+    #gateActions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px;flex-wrap:wrap;}
+    .primary{border:1px solid rgba(56,189,248,.55);background:rgba(56,189,248,.16);color:#e6eef7;padding:10px 14px;border-radius:16px;font-size:13px;cursor:pointer;font-weight:900;}
+    canvas{display:block;}
+  </style>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+<div id="gate">
+    <div id="gateCard">
+      <div id="gateTop">
+        <div>
+          <div id="gateTitle">Forensics Labs</div>
+          <div id="gateSub">Select a model, then choose a lab module.</div>
+        </div>
+      </div>
+
+      <div id="gateGrid">
+        <div class="field">
+          <div class="lbl">MODEL</div>
+          <select id="modelSelect"></select>
+          <div class="desc" id="modelDesc"></div>
+        </div>
+
+        <div class="field">
+          <div class="lbl">MODULE</div>
+          <select id="moduleSelect"></select>
+          <div class="desc" id="moduleDesc"></div>
+        </div>
+      </div>
+
+      <div id="gateActions">
+        <button id="enterBtn" class="primary">Enter Studio</button>
+      </div>
+    </div>
+  </div>
+
+ <div id="badge" style="display:none;">
+    <div class="t">Forensics Labs — Studio</div>
+    <div class="p" id="moduleTitle">Module</div>
+
+    <div id="controls">
+        <div class="row">
+            <div class="k">Cardio Speed</div>
+            <div class="v"><span id="spdVal">6.0</span> mph</div>
+        </div>
+
+        <input id="spd" type="range" min="0" max="22" step="0.1" value="0"/>
+
+        <div class="row">
+            <div class="k">W′ Balance / % Anaerobic Used</div>
+            <div class="v"><span id="engVal">100</span>%</div>
+        </div>
+
+        <div class="row">
+            <div class="k">Trial</div>
+            <div class="v"><span id="trialTag">A</span> • <span id="trialTime">300</span>s</div>
+        </div>
+
+        <div class="row" style="justify-content:flex-start; gap:8px; flex-wrap:wrap;">
+            <button id="trialA" class="btn">Trial A</button>
+            <button id="trialB" class="btn">Trial B</button>
+        </div>
+        
+        <button id="trialHelp" class="btn" style="align-self:flex-start; margin-top:5px;">Instructions</button>
+
+        <div id="trialMsg" style="color:#a8c0da; font-size:12px; line-height:1.25; margin-top:10px; min-height:30px;">
+            Read instructions. Select Trial A or B to begin.
+        </div>
+
+        <button id="assessmentBtn" class="primary" style="display:none; width:100%; margin-top:10px;">
+            Take Final MCQ Assessment
+        </button>
+
+<div class="row" style="display: flex; justify-content: flex-start; gap: 10px; margin-top: 10px;">
+    <button id="startBtn" class="btn">Start</button>
+    <button id="fuelBtn" class="btn">Fuel +10</button>
+    <button id="resetBtn" class="btn">Reset</button>
+
+    <button id="reviewBtn" class="btn" style="display:none; border-color:#4ade80; color:#4ade80; margin-left:auto;">Review MCQ</button>
+</div>
+
+        <div class="row" style="justify-content:space-between; margin-top:10px; padding-top:10px; border-top:1px solid rgba(148,163,184,.18);">
+            <div class="k">Status</div>
+            <div class="v" id="statusVal">Stable</div>
+        </div>
+    </div>
+</div>
+
+  <div id="trialHelpModal" style="display:none; position:fixed; inset:0; z-index:100; background:rgba(7,16,27,.85); align-items:center; justify-content:center;">
+    <div id="gateCard" style="max-width:600px; padding:0; overflow:hidden; display:flex; flex-direction:column;">
+      <div style="display:flex; background:rgba(15,23,42,.95); border-bottom:1px solid rgba(148,163,184,.25);">
+        <div id="tab-concept" class="pill active" style="border-radius:0; border:none; flex:1; text-align:center; cursor:pointer;" onclick="event.stopPropagation(); showTab('concept')">Concept (read first):</div>
+<div id="tab-systems" class="pill" style="border-radius:0; border:none; flex:1; text-align:center; cursor:pointer;" onclick="event.stopPropagation(); showTab('systems')">Trial Guide:</div>
+<div id="tab-guide" class="pill" style="border-radius:0; border:none; flex:1; text-align:center; cursor:pointer;" onclick="event.stopPropagation(); showTab('guide')">Module Instructions</div>
+            </div>
+
+      <div id="tabContent" style="padding:24px; color:#a8c0da; font-size:13px; line-height:1.5; min-height:350px; max-height:500px; overflow-y:auto;"></div>
+      <div style="padding:14px; border-top:1px solid rgba(148,163,184,.18); display:flex; justify-content:flex-end; background:rgba(9,20,37,.72);">
+<button id="trialHelpClose" type="button" class="primary">Close Instructions</button>
+      </div>
+    </div>
+  </div>
+  <script type="module">
+let speedViolation = false;
+let initialSpeed = 0;    
+let fuelUsedCount = 0;   
+// Internal MCQ counters removed - assessment is now external
+window.currentTrials = { mcqs: [] }; 
+let cachedModuleMD = "";
+
+window.showTab = function(tabName) {
+  const content = document.getElementById('tabContent');
+  const currentTrial = document.getElementById('trialTag').textContent.trim();
+  
+  // 1. Manage UI Tab States
+  document.querySelectorAll('#trialHelpModal .pill').forEach(p => p.classList.remove('active'));
+  const activeTab = document.getElementById('tab-' + tabName);
+  if (activeTab) activeTab.classList.add('active');
+
+  if (!cachedModuleMD) {
+    content.innerHTML = "Fetching forensic module data...";
+    return;
+  }
+
+// 2. Global Section: Module Instructions
+  if (tabName === 'guide') {
+    const guideRegex = /###\s*Module\s*Instructions/i;
+    const guideMatch = cachedModuleMD.match(guideRegex);
+    if (guideMatch) {
+      let guideBlock = cachedModuleMD.slice(guideMatch.index + guideMatch[0].length);
+      
+      // FIX: Stop reading if we hit the Questions section
+      const qIdx = guideBlock.search(/Checkpoint\s*Questions/i);
+      if (qIdx !== -1) guideBlock = guideBlock.slice(0, qIdx);
+      
+      content.innerHTML = formatMD(guideBlock);
+    }
+    return;
+  }
+
+  // 3. Trial-Specific Sections
+const trialMarker = new RegExp(`###\\s*Trial\\s*${currentTrial}\\b`, 'i');
+  const trialMatch = cachedModuleMD.match(trialMarker);
+
+  if (!trialMatch) {
+    content.innerHTML = `Data for Trial ${currentTrial} not found.`;
+    return;
+  }
+
+  // Isolate the current Trial's text block
+const restOfFile = cachedModuleMD.slice(trialMatch.index + trialMatch[0].length);
+const nextHeader = restOfFile.search(/###\s*(Trial\s+[A-Z]\b|Module\s*Instructions)/i);
+const trialBlock = nextHeader !== -1 ? restOfFile.slice(0, nextHeader) : restOfFile;
+
+// -------------------------
+  // 4. Robust Regex Search for Sub-Headings
+  let searchRegex;
+  if (tabName === 'concept') searchRegex = /###\s*Concept\s*\(read\s*first\):/i;
+  if (tabName === 'systems') searchRegex = /###\s*Trial\s*Guide:/i;
+
+  const headerMatch = trialBlock.match(searchRegex);
+
+  if (headerMatch) {
+    // Rejoin from the found line onwards
+    const fromStart = trialBlock.slice(headerMatch.index + headerMatch[0].length);
+    const endIdx = fromStart.indexOf('---');
+    content.innerHTML = formatMD(endIdx !== -1 ? fromStart.slice(0, endIdx) : fromStart);
+  } else {
+    content.innerHTML = `Heading for "${tabName}" not found in Trial ${currentTrial}. Check MD syntax.`;
+  }
+};
+
+// Formatting Helper
+function formatMD(text) {
+  return text.trim()
+    .replace(/\n/g, '<br>')
+    .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+    .replace(/\_(.*?)\_/g, '<i>$1</i>')
+    .replace(/\#+/g, '') 
+    .replace(/\$\$(.*?)\$\$/g, '<div style="background:rgba(56,189,248,0.1); padding:12px; border-radius:10px; color:#38bdf8; font-family:monospace; margin:15px 0; text-align:center; border:1px solid rgba(56,189,248,0.2); font-size:1.1em;">$1</div>');
+}
+// Global storage for the correct answer index per trial MCQ CHECK
+let currentCorrectIndex = -1;
+
+window.renderMCQ = function(letter) {
+    const $trialMsg = document.getElementById('trialMsg');
+    sim.running = false;
+    if (runAction) runAction.paused = true;
+    if (window.controls) window.controls.enabled = true; 
+
+    if (letter === 'A') {
+        $trialMsg.innerHTML = `<b style="color:#38bdf8;">Goal Reached:</b> Trial A validated. Unlocking Trial B...`;
+        
+        setTimeout(() => {
+            // Forensic Reset for Transition
+            sim.hasStarted = false;
+            sim.fuelCount = 0;
+            sim.lactate = 0;
+            speedViolation = false;
+            
+            // Auto-load Trial B
+            $trialMsg.innerHTML = `<b>Trial B Loaded.</b> Survive 480s and record 1 fueling event.`;
+        }, 3000);
+
+    } else if (letter === 'B') {
+        $trialMsg.innerHTML = `<b style="color:#38bdf8;">Forensic Validation Successful.</b> All trials complete.`;
+        
+        // Show the Final Assessment Button to go to the new page
+        const aBtn = document.getElementById('assessmentBtn');
+        if (aBtn) {
+            aBtn.style.display = 'block';
+            const modId = document.getElementById('moduleSelect').value || "FL-001";
+            aBtn.onclick = () => { 
+                window.location.href = `assessment.html?module=${modId}`; 
+            };
+        }
+    }
+};
+
+    
+// Global Fetch Trigger
+document.getElementById('trialHelp').onclick = async (e) => {
+  e.preventDefault();
+  e.stopPropagation(); // Stops the click from reaching the 3D scene
+  document.getElementById('trialHelpModal').style.display = 'flex';
+  
+  const modId = document.getElementById('moduleSelect').value || "FL-001";
+  const fileName = modId.toLowerCase().replace('fl-', 'module_');
+  const path = `https://raw.githubusercontent.com/Kingto89/ROMetrics.com/main/assets/forensics_modules/${fileName}.md`;
+  
+  try {
+    const res = await fetch(path);
+    if (res.ok) {
+      cachedModuleMD = await res.text();
+      window.showTab('concept'); 
+    }
+  } catch (err) { console.error("MD Load Error", err); }
+};
+
+document.getElementById('trialHelpClose').onclick = (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  document.getElementById('trialHelpModal').style.display = 'none';
+};
+    
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+// ==============================
+// SIMULATION STATE (GLOBAL)
+// ==============================
+let trialTime = 300; // seconds
+
+const sim = {
+  speedMph: 0,
+  energy: 100,
+  vo2Max: 0,
+  running: false,
+  elapsed: 0,
+  workTime: 0,
+  hasStarted: false,
+  lactate: 0,
+  fuelCount: 0,
+  fuelPenaltyTimer: 0,
+  throughputAlert: 0,
+  fuelAlertTimer: 0,   // New: Duration for transient alerts
+  fuelMessage: "",     // New: Text for the specific timing alert
+  fuelSuccess: false   // New: Flag for correct timing feedback
+};
+
+// PLACE THE EXPOSURE LINES HERE (Outside the braces)
+window.sim = sim; 
+window.getTrialTime = () => trialTime; // Use a function to get the current value
+window.setTrialTime = (v) => trialTime = v; // Use a function to set the value
+
+
+   let avatarRoot = null;
+    let mixer = null;
+    let runAction = null;
+
+
+const METABOLIC_TABLE = {};
+const romaAge = 34;
+const romanAge = 43;
+
+// 1. Calculate the Max Capacity (VO2 Budget) first
+const romaMaxVO2 = (220 - romaAge) * 0.205; 
+const romanMaxVO2 = (220 - romanAge) * 0.206;
+
+// 2. Fill the table using the verified 0.205 coefficient
+for (let i = 0; i <= 220; i++) {
+    let mph = (i / 10).toFixed(1);
+    let mPerMin = parseFloat(mph) * 26.8;
+    
+    // VERIFIED ACSM FORMULA
+    let cost = (0.205 * mPerMin) + 3.5;
+    
+    // Calculate Pct for internal logic
+    let romaPct = (cost / romaMaxVO2) * 100;
+    let romanPct = (cost / romanMaxVO2) * 100;
+
+    METABOLIC_TABLE[mph] = { 
+        cost: parseFloat(cost.toFixed(2)),
+        roma: { 
+            intensity: romaPct.toFixed(1) + "%",
+            status: romaPct > 100 ? "Anaerobic" : "Aerobic"
+        },
+        roman: { 
+            intensity: romanPct.toFixed(1) + "%",
+            status: romanPct > 100 ? "Anaerobic" : "Aerobic"
+        }
+    };
+}
+// ==============================
+// ==============================
+    // 0) REGISTRY (Model + Modules)
+    // ==============================
+const MODEL_URLS = {
+  Roma:  "https://kingto89.github.io/ROMetrics.com/assets/Roma_ROMetrics.glb",
+  Roman: "https://kingto89.github.io/ROMetrics.com/assets/Roman_ROMetrics.glb"
+};
+
+const MODELS = [
+  { id:"Roma",  label:"Roma ",  desc:"Female ROMetrics model.",  url: MODEL_URLS.Roma },
+  { id:"Roman", label:"Roman",  desc:"Male ROMetrics model.", url: MODEL_URLS.Roman }
+];
+
+let ACTIVE_MODEL_ID = "Roma";
+
+const ANAT_PRESETS = {
+  Roma:  { shTuck: 35, shER: 10, hipAdd: 5, spine01Flex: 0, upperarmFlex: 0 },  // degrees
+  Roman: { shTuck: 52, shER: 12, hipAdd: 0, spine01Flex: 5, upperarmFlex: 5 }   // degrees
+};
+
+
+let ANAT = { ...ANAT_PRESETS[ACTIVE_MODEL_ID] };
+
+function setAnatForModel(id){
+  ACTIVE_MODEL_ID = (id === "Roman" || id === "Roma") ? id : "Roma";
+  ANAT = { ...ANAT_PRESETS[ACTIVE_MODEL_ID] };
+}
+
+const FORENSICS_MODULES = [
+  { 
+    id:'FL-001', 
+    label:'Module 1 — Metabolic Demand: Energy Systems',  
+    desc:'Cardio Bay: speed, energy, fuel timing.', 
+    zone:'cardio', 
+    onEnter: enterFL001 
+  },
+  { 
+    id:'FL-002', 
+    label:'Module 2 — Joint Load Lever', 
+    desc:'Strength Station: effort vs lever distance.', 
+    zone:'strength', 
+    onEnter: null 
+  },
+  { 
+    id:'FL-003', 
+    label:'Module 3 — Motion Analysis Lite', 
+    desc:'Reactive Balance: Best Stability %', 
+    zone:'forensics', 
+    onEnter: null 
+  }
+];
+    
+    let currentModule = null;
+
+    // ==============================
+    // 1) Gate UI wiring
+    // ==============================
+    const $gate = document.getElementById('gate');
+    const $modelSel = document.getElementById('modelSelect');
+    const $modSel = document.getElementById('moduleSelect');
+    const $modelDesc = document.getElementById('modelDesc');
+    const $modDesc = document.getElementById('moduleDesc');
+    const $enter = document.getElementById('enterBtn');
+
+    const $ui = document.getElementById('ui');
+    const $badge = document.getElementById('badge');
+    const $hint = document.getElementById('hint');
+    const $moduleTitle = document.getElementById('moduleTitle');
+
+    function fillSelect($sel, items){
+      $sel.innerHTML = '';
+      for (const it of items){
+        const opt = document.createElement('option');
+        opt.value = it.id;
+        opt.textContent = it.label;
+        $sel.appendChild(opt);
+      }
+    }
+    function getModel(id){ return MODELS.find(m=>m.id===id) || MODELS[0]; }
+    function getModule(id){ return FORENSICS_MODULES.find(m=>m.id===id) || FORENSICS_MODULES[0]; }
+
+    fillSelect($modelSel, MODELS);
+    fillSelect($modSel, FORENSICS_MODULES);
+
+    function refreshGate(){
+      const m = getModel($modelSel.value);
+      const mod = getModule($modSel.value);
+      $modelDesc.textContent = m.desc || '';
+      $modDesc.textContent = mod.desc || '';
+    }
+    $modelSel.addEventListener('change', refreshGate);
+    $modSel.addEventListener('change', refreshGate);
+    refreshGate();
+
+    // ==============================
+    // 2) Studio: Three.js base
+    // ==============================
+const $spd = document.getElementById('spd');
+const $spdVal = document.getElementById('spdVal');
+const $engVal = document.getElementById('engVal');
+const $status = document.getElementById('statusVal');
+const $start = document.getElementById('startBtn');
+const $fuel = document.getElementById('fuelBtn');
+const $reset = document.getElementById('resetBtn');
+
+
+// ==============================
+// UI & CONTROL INITIALIZATION
+// ==============================
+$spdVal.textContent = sim.speedMph.toFixed(1);
+$engVal.textContent = Math.round(sim.energy);
+$status.textContent = "Ready";
+$status.style.color = "#cfe3ff";
+$start.textContent = "Start";
+
+// Update speed from slider
+$spd.addEventListener('input', () => { 
+  sim.speedMph = parseFloat($spd.value); 
+  
+  // If they change speed while running, they fail the continuity requirement
+  if (sim.running) {
+      speedViolation = true;
+  }
+});
+// Start / Pause Button Logic
+$start.onclick = () => {
+  // FORENSIC GATE: Block if no trial is selected
+  const currentLetter = document.getElementById('trialTag').textContent.trim();
+  if (currentLetter === "-" || currentLetter === "") {
+      document.getElementById('trialMsg').innerHTML = `<b style="color:#ff9aa0;">ACTION REQUIRED:</b> Select Trial A or B first.`;
+      return;
+  }
+
+  if (!sim.running) {
+    if (sim.speedMph <= 0) return; 
+    sim.elapsed = 0; 
+    
+    if (!sim.hasStarted) {
+      sim.hasStarted = true;
+      sim.workTime = 0;
+      // Identify trial to set correct starting time
+      trialTime = (currentLetter === 'B') ? 480 : 300; 
+      // Capture the speed they chose to start with
+      initialSpeed = parseFloat(sim.speedMph.toFixed(1));
+      speedViolation = false; 
+    }
+  }
+  
+  sim.running = !sim.running;
+  if (runAction) runAction.paused = !sim.running;
+  $start.textContent = sim.running ? "Pause" : "Start";
+};
+
+
+$fuel.onclick = () => {
+    if (sim.fuelCount >= 1) return; // Hard limit: 1 use
+    
+    sim.fuelCount++;
+    sim.fuelAlertTimer = 5; 
+    
+    // Disable button immediately
+    $fuel.disabled = true;
+    $fuel.style.opacity = "0.4";
+
+  // 1. TOO EARLY: > 70% (Tiered diminishing returns + Glycolytic Penalty)
+    if (sim.energy > 70) {
+        sim.fuelPenaltyTimer = 30;    
+        sim.throughputAlert = 5;
+        
+        let energyGain = 0;
+
+        if (sim.energy >= 90) {
+            // Tier: 90-100%
+            energyGain = 0;
+            sim.fuelMessage = "TOO EARLY: +0 Energy | Waste Spike";
+        } else if (sim.energy >= 80) {
+            // Tier: 80-89%
+            energyGain = 3;
+            sim.fuelMessage = "TOO EARLY: +3 Energy | Waste Spike";
+        } else {
+            // Tier: 71-79%
+            energyGain = 4;
+            sim.fuelMessage = "TOO EARLY: +4 Energy | Waste Spike";
+        }
+
+        sim.energy = Math.min(100, sim.energy + energyGain);
+    } 
+    // 2. OPTIMAL WINDOW: 40-70%
+    else if (sim.energy >= 40) {
+        sim.fuelPenaltyTimer = 0;
+        sim.fuelMessage = "CORRECT WINDOW: Full fuel benefit";
+        sim.energy = Math.min(100, sim.energy + 10); 
+    }
+    // 3. TOO LATE: < 40%
+    else {
+        sim.fuelPenaltyTimer = 0;
+        sim.fuelMessage = "TOO LATE: Little or no fuel benefit";
+        sim.energy += 2; 
+    }
+};
+     
+
+// --- INSIDE THE DRAW/ANIMATE LOOP ---
+if (sim.running) {
+    let rateMultiplier = 1.0;
+
+    // 1. Math Penalty Logic
+    if (sim.fuelPenaltyTimer > 0) {
+        rateMultiplier = 1.2; 
+        sim.fuelPenaltyTimer -= (dt / 1);
+    }
+
+    // 2. Visual Throughput Alert (The 5-second window)
+    if (sim.throughputAlert > 0) {
+        sim.throughputAlert -= (dt / 1);
+        
+        // Draw the alert on screen
+        ctx.fillStyle = "rgba(255, 60, 60, 0.2)"; // Subtle red tint
+        ctx.fillRect(0, 0, c.width, c.height);
+        
+        ctx.fillStyle = "#ff9aa0";
+        ctx.font = "900 24px Inter";
+        ctx.textAlign = "center";
+        ctx.fillText("↑ GLYCOLYTIC THROUGHPUT INCREASED", c.width / 2, 100);
+        ctx.textAlign = "left";
+    }
+
+    // 3. Accumulation Logic
+    if (speed > ceilingSpeed) {
+        const deficit = currentCost - sim.vo2Max;
+        sim.lactate += (deficit * 0.0035) * rateMultiplier; 
+    }
+}
+
+$reset.addEventListener('click', () => {
+if (window.controls) window.controls.enabled = true;
+// 1. CLEAR MESSAGES & UI
+    document.getElementById('trialMsg').innerHTML = 'Read the instructions above. When ready, press Start.';
+    
+    // Ensure the external assessment button is hidden on reset
+    const aBtn = document.getElementById('assessmentBtn');
+    if (aBtn) aBtn.style.display = 'none';
+
+
+    // 2. WIPE FORENSIC INTEGRITY FLAGS
+    speedViolation = false; 
+    initialSpeed = 0;
+    sim.fuelCount = 0;
+    sim.hasStarted = false; // CRITICAL: This unlocks the trial switching buttons
+
+    // 3. REFRESH FUEL BUTTON BASED ON ACTIVE TRIAL
+    const $fBtn = document.getElementById('fuelBtn');
+    const currentLetter = document.getElementById('trialTag').textContent.trim();
+    
+    if (currentLetter === 'B') {
+        $fBtn.disabled = false;
+        $fBtn.style.opacity = "1";
+    } else {
+        $fBtn.disabled = true; // Trial A remains disabled
+        $fBtn.style.opacity = "0.4";
+    }
+
+    // 4. RESET SIMULATION STATE
+    sim.energy = 100;
+    sim.running = false;
+    sim.elapsed = 0; 
+    sim.speedMph = 0;
+    sim.lactate = 0;
+    sim.fuelPenaltyTimer = 0;
+    sim.fuelAlertTimer = 0;
+    sim.throughputAlert = 0;
+
+    // 5. RESET HUD VALUES
+    trialTime = (currentLetter === 'B') ? 480 : 300; 
+    document.getElementById('trialTime').textContent = trialTime;
+    document.getElementById('engVal').textContent = 100;
+    document.getElementById('spdVal').textContent = "0.0";
+    $spd.value = 0;
+    $start.textContent = "Start";
+    
+    const $status = document.getElementById('statusVal');
+    $status.textContent = "Ready";
+    $status.style.color = "#cfe3ff";
+
+    // 6. RESET AVATAR & ANIMATION
+    if (runAction) {
+        runAction.paused = true;
+        runAction.time = 0;
+    }
+    restore();
+
+    // 7. RE-SYNC VO2 BUDGET
+    const currentModel = document.getElementById('modelSelect').value;
+    const age = (currentModel === "Roman") ? 43 : 34;
+    sim.vo2Max = 15.3 * ((220 - age) / 72);
+
+  //  Reset the HUD/Menu
+  trialTime = 300;
+  document.getElementById('trialTime').textContent = 300;
+  document.getElementById('engVal').textContent = 100;
+  document.getElementById('spdVal').textContent = "0.0";
+  $spd.value = 0;
+  sim.speedMph = 0;
+  $start.textContent = "Start";
+  $status.textContent = "Ready";
+  $status.style.color = "#cfe3ff";
+
+// Reset Messages & Hide Assessment Button
+    document.getElementById('trialMsg').textContent = 'Read the instructions above. When ready, press Start.';
+    
+    // We check for the button directly by ID without re-declaring it as a 'const'
+    if (document.getElementById('assessmentBtn')) {
+        document.getElementById('assessmentBtn').style.display = 'none';
+    }
+});
+// ==============================
+//  Studio: Three.js base
+// ==============================
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0x07101b, 10, 45);
+
+    const camera = new THREE.PerspectiveCamera(55, innerWidth/innerHeight, 0.1, 120);
+    camera.position.set(6.8, 3.9, 8.6);
+
+    const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:false });
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.shadowMap.enabled = false;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    document.body.appendChild(renderer.domElement);
+
+    window.controls = new OrbitControls(camera, renderer.domElement);
+    window.controls.target.set(0, 1.35, 0);    controls.enableDamping = true;
+    controls.dampingFactor = 0.07;
+    controls.maxPolarAngle = Math.PI * 0.49;
+    controls.minDistance = 0.5;
+    controls.maxDistance = 18.0;
+
+    // Lights
+    scene.add(new THREE.AmbientLight(0x6aa0d8, 1.77));
+
+    const key = new THREE.DirectionalLight(0xffffff, 1.05);
+    key.position.set(7, 10, 5);
+    key.castShadow = true;
+    key.shadow.mapSize.set(2048,2048);
+    key.shadow.camera.near = 0.5;
+    key.shadow.camera.far = 40;
+    key.shadow.camera.left = -10;
+    key.shadow.camera.right = 10;
+    key.shadow.camera.top = 10;
+    key.shadow.camera.bottom = -10;
+    scene.add(key);
+
+    const rim = new THREE.DirectionalLight(0x38bdf8, 0.28);
+    rim.position.set(-9, 6, -7);
+    scene.add(rim);
+
+    // Materials
+    const matFloor = new THREE.MeshStandardMaterial({ color:0x0a1a2e, roughness:0.95, metalness:0.05 });
+    const matWall  = new THREE.MeshStandardMaterial({ color:0x091425, roughness:0.9, metalness:0.05 });
+    const matDark  = new THREE.MeshStandardMaterial({ color:0x0b1220, roughness:0.85, metalness:0.08 });
+    const matSteel = new THREE.MeshStandardMaterial({ color:0x7a8aa0, roughness:0.35, metalness:0.55 });
+    const matGlow  = new THREE.MeshStandardMaterial({ color:0x38bdf8, roughness:0.35, metalness:0.25, emissive:0x103040, emissiveIntensity:0.8 });
+
+    // ==============================
+    // 3) Live screens + Belt texture
+    // ==============================
+    function makeScreenCanvas(w=512,h=256){
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      const ctx = c.getContext('2d');
+      const tex = new THREE.CanvasTexture(c);
+      tex.anisotropy = 8;
+      return { c, ctx, tex };
+    }
+    const wallScreen = makeScreenCanvas(1024, 320);
+    const consoleScreen = makeScreenCanvas(512, 256);
+
+    const beltCanvas = document.createElement('canvas');
+    beltCanvas.width = 512;
+    beltCanvas.height = 512;
+    const bctx = beltCanvas.getContext('2d');
+
+    {
+      const g = bctx.createLinearGradient(0,0,512,0);
+      g.addColorStop(0.00,'#0a0f16');
+      g.addColorStop(0.35,'#0c1522');
+      g.addColorStop(0.65,'#0b1320');
+      g.addColorStop(1.00,'#09101a');
+      bctx.fillStyle = g;
+      bctx.fillRect(0,0,512,512);
+      bctx.fillStyle = 'rgba(0,0,0,0.18)';
+      bctx.fillRect(252, 0, 8, 512);
+
+      let y = 0;
+      while (y < 512){
+        const h = 1 + Math.floor(Math.random()*2);
+        const a = 0.020 + Math.random()*0.030;
+        bctx.fillStyle = `rgba(255,255,255,${a})`;
+        bctx.fillRect(0, y, 512, h);
+        y += 12 + Math.floor(Math.random()*16);
+      }
+      for (let i=0;i<900;i++){
+        const x = Math.random()*512;
+        const yy = Math.random()*512;
+        bctx.fillStyle = `rgba(255,255,255,${Math.random()*0.05})`;
+        bctx.fillRect(x,yy,1,1);
+      }
+    }
+
+    const beltTex = new THREE.CanvasTexture(beltCanvas);
+    beltTex.anisotropy = 8;
+    beltTex.wrapS = THREE.RepeatWrapping;
+    beltTex.wrapT = THREE.RepeatWrapping;
+    beltTex.repeat.set(1, 8.0);
+    beltTex.offset.set(0, 0);
+
+    const matBelt = new THREE.MeshStandardMaterial({
+      map: beltTex,
+      color: 0x0b1018,
+      roughness: 0.98,
+      metalness: 0.00
+    });
+
+ function roundRect(ctx, x, y, w, h, r){
+  const min = Math.min(w,h);
+  if (r > min/2) r = min/2;
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.arcTo(x+w, y, x+w, y+h, r);
+  ctx.arcTo(x+w, y+h, x, y+h, r);
+  ctx.arcTo(x, y+h, x, y, r);
+  ctx.arcTo(x, y, x+w, y, r);
+  ctx.closePath();
+}
+
+// ==========================================
+// 1. THE ROUTER (The "Brain")
+// ==========================================
+function drawPanel(screen, title) {
+    const { ctx, c } = screen;
+    const currentTrial = document.getElementById('trialTag').textContent.trim();
+    const modelName = document.getElementById('modelSelect').value.trim();
+    const speed = parseFloat(sim.speedMph.toFixed(1));
+
+    // A. GLOBAL CLEAR & BACKGROUND
+    ctx.clearRect(0, 0, c.width, c.height);
+    ctx.fillStyle = '#061222';
+    ctx.fillRect(0, 0, c.width, c.height);
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 8;
+    ctx.strokeRect(10, 10, c.width - 20, c.height - 20);
+
+    // B. GLOBAL HEADER
+    ctx.fillStyle = '#e6eef7';
+    ctx.font = '900 28px Inter, system-ui';
+    ctx.fillText(`SUBJECT: Average Fit Adult (${modelName})`, 40, 60);
+    ctx.fillStyle = '#38bdf8';
+    ctx.font = '700 24px Inter, system-ui';
+    ctx.fillText(`CURRENT SESSION: Trial ${currentTrial}`, 40, 100);
+
+    // C. ACTIVATION GATE
+    if (!sim.running && sim.elapsed <= 0) {
+        ctx.fillStyle = 'rgba(148,163,184,0.3)';
+        ctx.font = 'italic 600 22px Inter, system-ui';
+        ctx.fillText("WAITING FOR SESSION START...", 40, 150);
+    } else {
+        // D. ROUTE TO SPECIFIC TRIAL VIEW
+        if (currentTrial === 'A') {
+            drawTrialA_View(ctx, c, speed, modelName);
+        } else if (currentTrial === 'B') {
+            drawTrialB_View(ctx, c, speed);
+        } else {
+            // Future trials go here (e.g., else if currentTrial === 'C')
+            drawTrialA_View(ctx, c, speed, modelName);
+        }
+    }
+
+    screen.tex.needsUpdate = true;
+}
+
+// ==========================================
+// 2. TRIAL A BOX (All Trial A Logic & Visuals)
+// ==========================================
+function drawTrialA_View(ctx, c, speed, modelName) {
+    // calculation logic (untouched)
+    const ceiling = (modelName === "Roman") ? 6.3 : 6.7;
+    const isAnaerobicSpeed = speed > ceiling;
+    const isAtpActive = sim.elapsed > 0 && sim.elapsed < 15 && speed > 0;
+    const isStartupDeficit = sim.elapsed > 0 && sim.elapsed < 30 && speed > 0;
+    const startUpVal = isStartupDeficit ? (0.15 * (1.0 - (sim.elapsed / 30))) : 0;
+    const graphY = 185, graphW = c.width - 80, graphH = 50;
+    const currentCost = (speed * 26.8 * 0.205) + 3.5;
+    
+    let aerobicPart = Math.min(currentCost, sim.vo2Max);
+    let anaerobicPart = Math.max(0, currentCost - sim.vo2Max);
+    let totalWork = aerobicPart + anaerobicPart;
+    let anaerobicRatio = (anaerobicPart / totalWork) + startUpVal;
+    let aerobicRatio = 1.0 - anaerobicRatio;
+
+    // Visuals (untouched reorder)
+    ctx.fillStyle = 'rgba(255,255,255,0.05)';
+    ctx.fillRect(40, graphY, graphW, graphH);
+    ctx.fillStyle = '#38bdf8';
+    ctx.fillRect(40, graphY, graphW * aerobicRatio, graphH);
+    if (anaerobicRatio > 0.01) {
+        ctx.fillStyle = 'rgba(255, 228, 163, 0.8)';
+        ctx.fillRect(40 + (graphW * aerobicRatio), graphY, graphW * anaerobicRatio, graphH);
+    }
+    if (isAtpActive) {
+        const fade = 1.0 - (sim.elapsed / 15);
+        let atpBarPct = (speed / 22) * 55 * fade; 
+        ctx.fillStyle = 'rgba(255, 154, 160, 0.9)';
+        ctx.fillRect(40, graphY, graphW * (atpBarPct / 100), graphH);
+        ctx.fillStyle = '#ff9aa0';
+        ctx.font = '700 18px Inter, system-ui';
+        ctx.fillText(`● ATP-PC: ACTIVE (${Math.ceil(15 - sim.elapsed)}s)`, 420, 150);
+    }
+
+    ctx.font = '700 16px Inter, system-ui';
+    ctx.fillStyle = '#38bdf8'; 
+    ctx.fillText("● Aerobic: Active", 420, 100);
+    if (isAnaerobicSpeed || isStartupDeficit) {
+        ctx.fillStyle = '#ffe4a3';
+        ctx.fillText("● Anaerobic: Active", 420, 125);
+    }
+
+    let dominantText = isAnaerobicSpeed ? "PRIMARY: Anaerobic Glycolysis" : "PRIMARY: Aerobic Metabolism";
+    let dominantColor = isAnaerobicSpeed ? "#ffe4a3" : "#38bdf8";
+    ctx.fillStyle = dominantColor;
+    ctx.font = '900 22px Inter, system-ui';
+    ctx.fillText(dominantText, 40, 140);
+
+    ctx.font = '600 16px Inter, system-ui';
+    ctx.fillStyle = '#ff9aa0'; ctx.fillText('■ ATP-PC', 40, graphY + graphH + 35);
+    ctx.fillStyle = '#38bdf8'; ctx.fillText('■ AEROBIC', 140, graphY + graphH + 35);
+    ctx.fillStyle = '#ffe4a3'; ctx.fillText('■ ANAEROBIC GLYCOLYSIS', 280, graphY + graphH + 35);
+}
+
+// ==========================================
+// 3. TRIAL B BOX (Updated: Timing Outcomes Logic)
+// ==========================================
+function drawTrialB_View(ctx, c, speed) {
+    const barY = 185, barW = c.width - 80, barH = 50;
+    const modelName = document.getElementById('modelSelect').value.trim();
+    
+    // 1. DETERMINE THE CEILING
+    const ceilingSpeed = (modelName === "Roman") ? 6.3 : 6.7;
+    const currentCost = (speed * 26.8 * 0.205) + 3.5;
+    const deficit = Math.max(0, currentCost - sim.vo2Max);
+
+    // 2. LIVE PRODUCTION VS. WIPING
+    if (sim.running) {
+        // Multiplier only exists if fuel was used > 75% energy
+        const throughputMultiplier = (sim.fuelPenaltyTimer > 0) ? 1.5 : 1.0;
+
+        if (speed <= ceilingSpeed && speed > 0) {
+            // STEADY STATE "BREATHING"
+            sim.lactate = Math.min(1.4, sim.lactate + 0.04);
+            if (Math.sin(performance.now() / 250) > 0.9) {
+                sim.lactate = 0; 
+            }
+        } else if (speed > ceilingSpeed) {
+            // TOXIC DEBT: Accumulation outpaces clearance
+            const fatigueMultiplier = (sim.lactate > 50) ? 1.2 : 1.0; 
+            const accumulation = (deficit * 0.00225) * fatigueMultiplier * throughputMultiplier; 
+            sim.lactate = Math.min(100, sim.lactate + accumulation);
+        }
+
+        // Decrement timers
+        if (sim.fuelPenaltyTimer > 0) sim.fuelPenaltyTimer -= 0.016; 
+        if (sim.throughputAlert > 0) sim.throughputAlert -= 0.016;
+    }
+
+    // 3. VISUALS (Heat-map and Bar)
+    if (sim.throughputAlert > 0) {
+        ctx.fillStyle = 'rgba(255, 0, 0, 0.15)';
+        ctx.fillRect(0, 0, c.width, c.height);
+        
+        ctx.fillStyle = '#ff4d4d';
+        ctx.font = '900 24px Inter';
+        ctx.textAlign = 'center';
+        ctx.fillText("↑ GLYCOLYTIC THROUGHPUT INCREASED", c.width / 2, 80);
+        ctx.textAlign = 'left';
+    }
+
+    ctx.fillStyle = '#ffe4a3';
+    ctx.font = '900 22px Inter';
+    ctx.fillText("FORENSIC ANALYSIS: METABOLIC WASTE (LACTATE)", 40, 150);
+    
+    ctx.fillStyle = 'rgba(255,255,255,0.05)';
+    ctx.fillRect(40, barY, barW, barH);
+    
+    const r = 150 + (sim.lactate * 1.05);
+    const g = 228 - (sim.lactate * 2.2);
+    ctx.fillStyle = `rgb(${r}, ${g}, 163)`;
+    ctx.fillRect(40, barY, barW * (sim.lactate / 100), barH);
+    
+    // 4. PERCENTAGE READOUT
+    ctx.fillStyle = (sim.lactate > 45) ? '#061222' : '#e6eef7';
+    ctx.font = '900 20px Inter';
+    ctx.textAlign = 'center';
+    const displayVal = speed <= ceilingSpeed ? sim.lactate.toFixed(1) : Math.round(sim.lactate);
+    ctx.fillText(`${displayVal}%`, 40 + (barW / 2), barY + 33);
+    ctx.textAlign = 'left';
+
+// 5. STATUS & ALERTS (Timing Outcomes Corrected)
+ctx.font = '700 18px Inter';
+
+// --- TRANSIENT ALERTS (Triggered only when fuel is clicked) ---
+if (sim.fuelAlertTimer > 0) {
+    // Choose color based on success/failure
+    ctx.fillStyle = (sim.fuelMessage.includes("CORRECT")) ? "#38bdf8" : "#ff9aa0";
+    ctx.fillText(`ALERT: ${sim.fuelMessage}`, 40, barY + barH + 40);
+    
+    // Timer decrement is handled here (approx 60fps)
+    sim.fuelAlertTimer -= 0.016; 
+} 
+// --- PERSISTENT BODY STATUS (Active when no alert is timing out) ---
+else {
+    if (speed <= ceilingSpeed && speed > 0) {
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillText("STATUS: ACTIVE CLEARANCE (STEADY STATE)", 40, barY + barH + 40);
+    } else if (sim.lactate > 1.5) {
+        ctx.fillStyle = '#ffe4a3';
+        ctx.fillText("STATUS: ANAEROBIC DEBT ACCUMULATING", 40, barY + barH + 40);
+    } else {
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillText("STATUS: READY", 40, barY + barH + 40);
+    }
+  }
+}  
+    // ==============================
+    // 4) Room + zones (REAL SCALE)
+    // ==============================
+    // Room in meters
+    const ROOM_W = 14.0;
+    const ROOM_D = 11.0;
+    const WALL_H = 6.6;
+
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(ROOM_W, ROOM_D), matFloor);
+    floor.rotation.x = -Math.PI/2;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    const room = new THREE.Group();
+
+    const wallBack = new THREE.Mesh(new THREE.BoxGeometry(ROOM_W, WALL_H, 0.30), matWall);
+    wallBack.position.set(0, WALL_H/2, -(ROOM_D/2) + 0.15);
+    wallBack.receiveShadow = true;
+    room.add(wallBack);
+
+    const wallLeft = new THREE.Mesh(new THREE.BoxGeometry(0.30, WALL_H, ROOM_D), matWall);
+    wallLeft.position.set(-(ROOM_W/2) + 0.15, WALL_H/2, 0);
+    room.add(wallLeft);
+
+    const wallRight = wallLeft.clone();
+    wallRight.position.x = (ROOM_W/2) - 0.15;
+    room.add(wallRight);
+
+    const grid = new THREE.GridHelper(ROOM_W, Math.round(ROOM_W), 0x1f3b5a, 0x10243a);
+    grid.position.y = 0.01;
+    room.add(grid);
+
+    scene.add(room);
+
+    // Labels
+    let labelsOn = false;
+    const labelGroup = new THREE.Group();
+    scene.add(labelGroup);
+
+    function makeLabel(text){
+      const canvas = document.createElement('canvas');
+      canvas.width = 512; canvas.height = 128;
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.fillStyle = 'rgba(15,23,42,0.72)';
+      ctx.strokeStyle = 'rgba(56,189,248,0.65)';
+      ctx.lineWidth = 6;
+      roundRect(ctx, 14, 16, 484, 96, 26);
+      ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#e6eef7';
+      ctx.font = '800 36px system-ui, -apple-system, Segoe UI, Roboto, Inter';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, 34, 64);
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.anisotropy = 8;
+      const mat = new THREE.MeshBasicMaterial({ map: tex, transparent:true });
+      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 0.85), mat);
+      mesh.renderOrder = 10;
+      return mesh;
+    }
+    function setLabels(v){
+      labelsOn = v;
+      labelGroup.traverse(o=>{ if (o.isMesh) o.visible = labelsOn; });
+    }
+    setLabels(false);
+
+    function zoneBasePlate(w, d){
+      const plate = new THREE.Mesh(new THREE.BoxGeometry(w, 0.06, d), new THREE.MeshStandardMaterial({ color:0x0b1a2e, roughness:0.9, metalness:0.06 }));
+      plate.receiveShadow = true;
+      return plate;
+    }
+
+    // Zone centers
+    const Z_STRENGTH = new THREE.Vector3(-4.4, 0, 2.1);
+    const Z_CARDIO   = new THREE.Vector3( 4.4, 0, 2.1);
+    const Z_FORENSIC = new THREE.Vector3( 0.0, 0, -3.1);
+
+    // Strength zone (scaled realistic)
+    const zoneStrength = new THREE.Group();
+    zoneStrength.name = 'strength';
+    zoneStrength.position.copy(Z_STRENGTH);
+
+    const platS = zoneBasePlate(4.2, 3.2);
+    platS.position.set(0, 0.03, 0);
+    zoneStrength.add(platS);
+
+    // Simple bench press rack (realistic)
+    const benchTop = new THREE.Mesh(new THREE.BoxGeometry(1.35, 0.10, 0.34), matDark);
+    benchTop.position.set(0, 0.48, 0.35);
+    benchTop.castShadow = true;
+    zoneStrength.add(benchTop);
+
+    const benchLegGeo = new THREE.BoxGeometry(0.06, 0.45, 0.06);
+    [[-0.55,0.22,0.23],[0.55,0.22,0.23],[-0.55,0.22,0.47],[0.55,0.22,0.47]].forEach(p=>{
+      const l = new THREE.Mesh(benchLegGeo, matSteel);
+      l.position.set(p[0], p[1], p[2]);
+      l.castShadow = true;
+      zoneStrength.add(l);
+    });
+
+    const upGeo = new THREE.BoxGeometry(0.08, 1.55, 0.08);
+    const uprL = new THREE.Mesh(upGeo, matSteel); uprL.position.set(-0.55, 0.80, -0.55); uprL.castShadow = true;
+    const uprR = uprL.clone(); uprR.position.x = 0.55;
+    zoneStrength.add(uprL, uprR);
+
+    const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.025,1.25,18), matSteel);
+    bar.rotation.z = Math.PI/2;
+    bar.position.set(0, 1.45, -0.55);
+    bar.castShadow = true;
+    zoneStrength.add(bar);
+
+    // Dumbbell rack (near bench, offset left so it won’t collide)
+{
+  const rack = new THREE.Group();
+  const matRubber = new THREE.MeshStandardMaterial({ color:0x121923, roughness:0.98, metalness:0.03 });
+
+  const W = 1.85, D = 0.55, H = 0.95;
+  const legGeo   = new THREE.BoxGeometry(0.06, H, 0.06);
+  const shelfGeo = new THREE.BoxGeometry(W, 0.06, 0.36);
+
+  const legs = [
+    [-W/2+0.07, H/2, -D/2+0.07],
+    [ W/2-0.07, H/2, -D/2+0.07],
+    [-W/2+0.07, H/2,  D/2-0.07],
+    [ W/2-0.07, H/2,  D/2-0.07],
+  ];
+  for (const p of legs){
+    const leg = new THREE.Mesh(legGeo, matSteel);
+    leg.position.set(p[0], p[1], p[2]);
+    leg.castShadow = true;
+    rack.add(leg);
+  }
+
+  const shelf1 = new THREE.Mesh(shelfGeo, matDark);
+  shelf1.position.set(0, 0.68, 0);
+  shelf1.rotation.x = -0.14;
+  shelf1.castShadow = true;
+  shelf1.receiveShadow = true;
+  rack.add(shelf1);
+
+  const shelf2 = new THREE.Mesh(shelfGeo, matDark);
+  shelf2.position.set(0, 0.32, 0);
+  shelf2.rotation.x = -0.14;
+  shelf2.castShadow = true;
+  shelf2.receiveShadow = true;
+  rack.add(shelf2);
+
+  const base = new THREE.Mesh(new THREE.BoxGeometry(W+0.12, 0.05, D+0.18), matDark);
+  base.position.set(0, 0.03, 0);
+  base.receiveShadow = true;
+  rack.add(base);
+
+  const handleGeo = new THREE.CylinderGeometry(0.022, 0.022, 0.24, 16);
+  const hexGeo    = new THREE.CylinderGeometry(0.070, 0.070, 0.050, 6);
+
+  function dumbbell(scale=1){
+    const g = new THREE.Group();
+    const handle = new THREE.Mesh(handleGeo, matSteel);
+    handle.rotation.z = Math.PI/2;
+    handle.castShadow = true;
+    g.add(handle);
+
+    const wL = new THREE.Mesh(hexGeo, matRubber);
+    wL.position.x = -0.145;
+    wL.rotation.z = Math.PI/2;
+    wL.castShadow = true;
+    g.add(wL);
+
+    const wR = wL.clone();
+    wR.position.x = 0.145;
+    g.add(wR);
+
+    g.scale.setScalar(scale);
+    return g;
+  }
+
+  const xs = [-0.68, -0.34, 0.00, 0.34, 0.68];
+  xs.forEach((x,i)=>{
+    const db = dumbbell(0.92 + i*0.02);
+    db.position.set(x, 0.73, -0.06);
+    db.rotation.y = 0.08;
+    rack.add(db);
+  });
+  xs.forEach((x,i)=>{
+    const db = dumbbell(1.00 + i*0.03);
+    db.position.set(x, 0.37, -0.06);
+    db.rotation.y = 0.08;
+    rack.add(db);
+  });
+
+  // placement relative to YOUR bench (bench is around x=0, z≈0.35)
+  rack.position.set(-1.15, 0.0, 0.45);
+  rack.rotation.y = 1.60;
+
+  zoneStrength.add(rack);
+}
+
+
+    const lblS = makeLabel('Strength / Load Station');
+    lblS.position.copy(Z_STRENGTH).add(new THREE.Vector3(0, 2.7, -1.6));
+    labelGroup.add(lblS);
+
+    scene.add(zoneStrength);
+
+    // Cardio zone (realistic treadmill size)
+    const zoneCardio = new THREE.Group();
+    zoneCardio.name = 'cardio';
+    zoneCardio.position.copy(Z_CARDIO);
+
+    const platC = zoneBasePlate(4.2, 3.2);
+    platC.position.set(0, 0.03, 0);
+    zoneCardio.add(platC);
+
+    const treadmill = new THREE.Group();
+    treadmill.position.set(0, 0.03, 0);
+    zoneCardio.add(treadmill);
+
+    const treadStrips = [];
+    let TREAD_MIN_Z = -0.7;
+    let TREAD_MAX_Z =  0.7;
+
+    // Real treadmill dims (meters)
+    const BELT_W = 0.55;
+    const BELT_L = 1.55;
+    const FRAME_W = 0.82;
+    const FRAME_L = 2.05;
+
+    TREAD_MIN_Z = -(BELT_L/2) + 0.10;
+    TREAD_MAX_Z =  (BELT_L/2) - 0.10;
+
+    const tmFrame = new THREE.Mesh(new THREE.BoxGeometry(FRAME_W, 0.22, FRAME_L), matDark);
+    tmFrame.position.set(0, 0.16, 0);
+    tmFrame.castShadow = true;
+    treadmill.add(tmFrame);
+
+    const tmDeck = new THREE.Mesh(
+      new THREE.BoxGeometry(BELT_W + 0.14, 0.06, BELT_L + 0.18),
+      new THREE.MeshStandardMaterial({ color:0x0c1728, roughness:0.95, metalness:0.05 })
+    );
+    tmDeck.position.set(0, 0.26, 0);
+    tmDeck.receiveShadow = true;
+    treadmill.add(tmDeck);
+
+    const tmBelt = new THREE.Mesh(new THREE.PlaneGeometry(BELT_W, BELT_L), matBelt);
+    tmBelt.rotation.x = -Math.PI/2;
+    tmBelt.position.set(0, 0.295, 0);
+    tmBelt.receiveShadow = true;
+    treadmill.add(tmBelt);
+
+    const beltEdges = new THREE.LineSegments(
+      new THREE.EdgesGeometry(new THREE.BoxGeometry(BELT_W + 0.10, 0.02, BELT_L + 0.10)),
+      new THREE.LineBasicMaterial({ color:0x38bdf8, transparent:true, opacity:0.55 })
+    );
+    beltEdges.position.set(0, 0.305, 0);
+    beltEdges.renderOrder = 9;
+    treadmill.add(beltEdges);
+
+    const stripMat = new THREE.MeshStandardMaterial({ color: 0x1a2738, roughness: 0.95, metalness: 0.02, transparent:true, opacity:0.30 });
+    const stripCount = 12;
+    for (let i=0;i<stripCount;i++){
+      const s = new THREE.Mesh(new THREE.BoxGeometry(BELT_W - 0.04, 0.01, 0.06), stripMat);
+      s.position.set(0, 0.300, TREAD_MIN_Z + i * ((TREAD_MAX_Z - TREAD_MIN_Z) / stripCount));
+      s.renderOrder = 10;
+      treadmill.add(s);
+      treadStrips.push(s);
+    }
+
+    const rollerGeo = new THREE.CylinderGeometry(0.08, 0.08, BELT_W + 0.08, 18);
+    const rollerMat = new THREE.MeshStandardMaterial({ color:0x1a2a44, roughness:0.55, metalness:0.25 });
+    const rFront = new THREE.Mesh(rollerGeo, rollerMat);
+    rFront.rotation.z = Math.PI/2;
+    rFront.position.set(0, 0.33, -(BELT_L/2) - 0.04);
+    rFront.castShadow = true;
+    treadmill.add(rFront);
+
+    const rBack = rFront.clone();
+    rBack.position.z = (BELT_L/2) + 0.04;
+    treadmill.add(rBack);
+
+    // rails + console (front)
+    const upPole = new THREE.Mesh(new THREE.CylinderGeometry(0.035,0.035,1.05,16), matSteel);
+    const upX = (FRAME_W/2) - 0.10;
+    const frontZ = -(BELT_L/2) - 0.42;
+
+    const upL = upPole.clone(); upL.position.set(-upX, 0.62, frontZ); upL.castShadow = true;
+    const upR = upPole.clone(); upR.position.set( upX, 0.62, frontZ); upR.castShadow = true;
+    treadmill.add(upL, upR);
+
+    const topBar = new THREE.Mesh(new THREE.CylinderGeometry(0.032,0.032, FRAME_W - 0.10, 16), matSteel);
+    topBar.rotation.z = Math.PI/2;
+    topBar.position.set(0, 1.15, frontZ);
+    topBar.castShadow = true;
+    treadmill.add(topBar);
+
+    const sideRail = new THREE.Mesh(new THREE.CylinderGeometry(0.028,0.028, BELT_L + 0.35, 16), matSteel);
+    sideRail.rotation.x = Math.PI/2;
+    sideRail.position.set(-upX, 0.95, -0.02);
+    sideRail.castShadow = true;
+    treadmill.add(sideRail);
+
+    const sideRailR = sideRail.clone();
+    sideRailR.position.x = upX;
+    treadmill.add(sideRailR);
+
+    const tmConsole = new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.40, 0.22), new THREE.MeshStandardMaterial({ color:0x111b2e, roughness:0.55, metalness:0.12 }));
+    tmConsole.position.set(0, 1.02, frontZ + 0.14);
+    tmConsole.castShadow = true;
+    treadmill.add(tmConsole);
+    
+const tmScreen = new THREE.Mesh(
+  new THREE.PlaneGeometry(0.56, 0.30),
+ new THREE.MeshBasicMaterial({
+  map: consoleScreen.tex,
+  side: THREE.DoubleSide,
+  transparent: true,
+  depthTest: true,      // <-- IMPORTANT: allow avatar to occlude it
+  depthWrite: false,
+  toneMapped: false,
+  polygonOffset: true,  // prevents z-fighting with the console face
+  polygonOffsetFactor: -1,
+  polygonOffsetUnits: -1
+})
+);
+
+// attach to console (NOT treadmill / NOT zone)
+tmConsole.add(tmScreen);
+
+// local coords on the console front face (console depth = 0.32 -> half = 0.16)
+tmScreen.position.set(0, 0.02, 0.162);
+tmScreen.rotation.set(-0.10, 0, 0);
+
+
+
+    // Wall board (live)
+    const board = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.88, 0.08), new THREE.MeshStandardMaterial({ color:0x111b2e, roughness:0.6, metalness:0.15 }));
+    board.position.set(0, 2.55, -1.55);
+    zoneCardio.add(board);
+
+    const boardFace = new THREE.Mesh(
+  new THREE.PlaneGeometry(2.46, 0.78),
+  new THREE.MeshBasicMaterial({
+    map: wallScreen.tex,
+    transparent: true,
+    depthTest: false,
+    depthWrite: false,
+    toneMapped: false
+  })
+);
+boardFace.position.set(0, 2.55, -1.495);   // <-- moved in front of the board
+boardFace.renderOrder = 1000;
+zoneCardio.add(boardFace);
+
+const boardGlow = new THREE.Mesh(
+  new THREE.PlaneGeometry(2.6, 0.92),
+  new THREE.MeshBasicMaterial({
+    color:0x38bdf8,
+    transparent:true,
+    opacity:0.10,
+    depthWrite:false,
+    depthTest:false
+  })
+);
+boardGlow.position.set(0, 2.55, -1.505);   // <-- behind the text plane
+boardGlow.renderOrder = 900;
+zoneCardio.add(boardGlow);
+
+
+    const lblC = makeLabel('Cardio Bay');
+    lblC.position.copy(Z_CARDIO).add(new THREE.Vector3(0, 4.1, -1.6));
+    labelGroup.add(lblC);
+
+    scene.add(zoneCardio);
+
+    // Forensics zone (realistic)
+    const zoneForensics = new THREE.Group();
+    zoneForensics.name = 'forensics';
+    zoneForensics.position.copy(Z_FORENSIC);
+
+    const platF = zoneBasePlate(4.8, 3.6);
+    platF.position.set(0, 0.03, 0);
+    zoneForensics.add(platF);
+
+    const lineMat = new THREE.LineBasicMaterial({ color:0x38bdf8, transparent:true, opacity:0.55 });
+    const squarePts = [
+      new THREE.Vector3(-1.2, 0.06, -1.0),
+      new THREE.Vector3( 1.2, 0.06, -1.0),
+      new THREE.Vector3( 1.2, 0.06,  1.0),
+      new THREE.Vector3(-1.2, 0.06,  1.0),
+      new THREE.Vector3(-1.2, 0.06, -1.0)
+    ];
+    zoneForensics.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(squarePts), lineMat));
+
+    function tripod(x,z){
+      const g = new THREE.Group();
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.05,1.05,10), matSteel);
+      pole.position.y = 0.52; pole.castShadow = true; g.add(pole);
+      const head = new THREE.Mesh(new THREE.BoxGeometry(0.20,0.12,0.20), matDark);
+      head.position.y = 1.05; head.castShadow = true; g.add(head);
+      const legGeo = new THREE.CylinderGeometry(0.02,0.02,0.80,8);
+      for (let i=0;i<3;i++){
+        const leg = new THREE.Mesh(legGeo, matSteel);
+        const ang = i * (Math.PI*2/3);
+        leg.position.set(Math.cos(ang)*0.18, 0.30, Math.sin(ang)*0.18);
+        leg.rotation.z = 0.55;
+        leg.rotation.y = ang;
+        g.add(leg);
+      }
+      g.position.set(x, 0, z);
+      return g;
+    }
+    zoneForensics.add(tripod(-1.55,-1.35), tripod(1.55,-1.35), tripod(0,1.55));
+
+    const mon = new THREE.Mesh(new THREE.BoxGeometry(1.55, 0.95, 0.08), new THREE.MeshStandardMaterial({ color:0x111b2e, roughness:0.6, metalness:0.15 }));
+    const mon1 = mon.clone(); mon1.position.set(-1.05, 2.35, -1.70); zoneForensics.add(mon1);
+    const mon2 = mon.clone(); mon2.position.set( 1.05, 2.35, -1.70); zoneForensics.add(mon2);
+
+    const lblF = makeLabel('Movement Analysis Booth');
+    lblF.position.copy(Z_FORENSIC).add(new THREE.Vector3(0, 2.7, -1.6));
+    labelGroup.add(lblF);
+
+    scene.add(zoneForensics);
+
+    // ==============================
+    // 5) Avatar / model loader
+    // ==============================
+ 
+    function buildPreviewMannequin(){
+      const avatar = new THREE.Group();
+      avatar.userData.__isMannequin = true;
+      const bodyMat = new THREE.MeshStandardMaterial({ color:0xdbe7f7, roughness:0.65, metalness:0.08 });
+
+      const pelvis = new THREE.Mesh(new THREE.CapsuleGeometry(0.20, 0.14, 6, 14), bodyMat);
+      pelvis.position.set(0, 0.95, 0); pelvis.castShadow = true;
+
+      const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.26, 0.55, 8, 18), bodyMat);
+      torso.position.set(0, 1.55, 0); torso.castShadow = true;
+
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.17, 18, 18), bodyMat);
+      head.position.set(0, 2.15, 0); head.castShadow = true;
+
+      const limb = (r,l)=>{ const m=new THREE.Mesh(new THREE.CapsuleGeometry(r,l,6,12), bodyMat); m.castShadow=true; return m; };
+      const armL = limb(0.06, 0.45); armL.position.set(-0.38, 1.65, 0); armL.rotation.z = 0.45;
+      const armR = limb(0.06, 0.45); armR.position.set( 0.38, 1.65, 0); armR.rotation.z = -0.45;
+      const legL = limb(0.07, 0.60); legL.position.set(-0.14, 0.55, 0);
+      const legR = limb(0.07, 0.60); legR.position.set( 0.14, 0.55, 0);
+
+      avatar.add(pelvis, torso, head, armL, armR, legL, legR);
+      return avatar;
+    }
+
+    async function loadSelectedModel(modelId, onProgress){
+      const m = getModel(modelId);
+      ACTIVE_MODEL_ID = m.id;
+
+      if (avatarRoot){
+        scene.remove(avatarRoot);
+        avatarRoot = null;
+      }
+
+      if (!m || !m.url){
+        avatarRoot = buildPreviewMannequin();
+        scene.add(avatarRoot);
+        return avatarRoot;
+      }
+
+      return await new Promise((resolve, reject)=>{
+        const loader = new GLTFLoader();
+
+        loader.load(
+          m.url,
+          (gltf)=>{
+            avatarRoot = gltf.scene || (gltf.scenes && gltf.scenes[0]) || null;
+            if (!avatarRoot) return reject(new Error("GLB loaded but scene is empty"));
+
+            avatarRoot.traverse(o=>{ if (o.isMesh){ o.castShadow=true; o.receiveShadow=true; } });
+            scene.add(avatarRoot);
+            // --- animation setup (run/walk/first clip) ---
+mixer = null;
+runAction = null;
+
+const clips = (gltf.animations || []);
+if (clips.length){
+  mixer = new THREE.AnimationMixer(avatarRoot);
+  const clip =
+    clips.find(c => /run|jog/i.test(c.name)) ||
+    clips.find(c => /walk/i.test(c.name)) ||
+    clips[0];
+
+  runAction = mixer.clipAction(clip);
+  runAction.play();
+  runAction.paused = true; // wait for Start
+}
+
+            // normalize to ~1.75m tall (ignore far outliers)
+            avatarRoot.updateWorldMatrix(true, true);
+
+            const meshBoxes = [];
+            const mean = new THREE.Vector3();
+            let n = 0;
+
+            avatarRoot.traverse(o=>{
+              if (!(o.isMesh || o.isSkinnedMesh) || !o.geometry) return;
+              if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
+              const b = new THREE.Box3().copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld);
+              const center = new THREE.Vector3();
+              b.getCenter(center);
+              meshBoxes.push({ b, center });
+              mean.add(center);
+              n++;
+            });
+
+            if (n){
+              mean.multiplyScalar(1 / n);
+              const box = new THREE.Box3();
+              for (const it of meshBoxes){
+                if (it.center.distanceTo(mean) < 5.0) box.union(it.b);
+              }
+              const size = new THREE.Vector3();
+              box.getSize(size);
+
+              if (size.y > 1e-6){
+                const targetH = 1.75;
+                const s = targetH / size.y;
+                avatarRoot.scale.setScalar(s);
+                avatarRoot.updateWorldMatrix(true, true);
+              }
+            }
+            resolve(avatarRoot);
+          },
+          (xhr)=>{
+            if (!onProgress) return;
+            const loaded = (xhr && xhr.loaded) ? xhr.loaded : 0;
+            const totalRaw = (xhr && xhr.total) ? xhr.total : 0;
+            const total = (totalRaw >= loaded) ? totalRaw : loaded;
+            onProgress(total ? Math.round((loaded / total) * 100) : null);
+          },
+          (err)=>reject(err)
+        );
+      });
+    }
+
+    // ==============================
+    // 6) Zone + Module router (with snap)
+    // ==============================
+
+    const camGoalPos = new THREE.Vector3(6.8, 3.9, 8.6);
+    const camGoalTarget = new THREE.Vector3(0, 1.35, 0);
+
+    function snapCam(){
+      camera.position.copy(camGoalPos);
+      controls.target.copy(camGoalTarget);
+      controls.update();
+    }
+
+function placeAvatarForZone(which) {
+  if (!avatarRoot) return;
+  
+  // Hard-lock to currentModule.zone if it exists to stop jumping between bays
+  const targetZone = (currentModule && currentModule.zone) ? currentModule.zone : which;
+  let rotY = 0;
+
+  if (targetZone === 'strength') {
+    avatarRoot.position.copy(Z_STRENGTH).add(new THREE.Vector3(0, 0.06, -0.10));
+    rotY = 0;
+  } else if (targetZone === 'cardio') {
+    // Lock to Cardio Bay treadmill
+    avatarRoot.position.copy(Z_CARDIO).add(new THREE.Vector3(0, 0.30, 0.05));
+    rotY = Math.PI; 
+  } else if (targetZone === 'forensics' || targetZone === 'analysis') {
+    avatarRoot.position.copy(Z_FORENSIC).add(new THREE.Vector3(0, 0.06, 0.00));
+    rotY = 0;
+  }
+  avatarRoot.rotation.set(0, rotY, 0);
+}
+
+function setZone(which) {
+  // Keep all zones visible to maintain the studio environment
+  zoneStrength.visible = true;
+  zoneCardio.visible = true;
+  zoneForensics.visible = true;
+
+  // Only update camera goals if we aren't already locked into a module
+  if (which === 'strength') {
+    camGoalTarget.set(Z_STRENGTH.x, 1.25, Z_STRENGTH.z);
+    camGoalPos.set(Z_STRENGTH.x + 3.2, 2.6, Z_STRENGTH.z + 4.8);
+  } else if (which === 'cardio') {
+    camGoalTarget.set(Z_CARDIO.x, 1.10, Z_CARDIO.z);
+    camGoalPos.set(Z_CARDIO.x, 1.8, Z_CARDIO.z + 2.4);
+  } else if (which === 'forensics') {
+    camGoalTarget.set(Z_FORENSIC.x, 1.25, Z_FORENSIC.z);
+    camGoalPos.set(Z_FORENSIC.x + 3.6, 2.6, Z_FORENSIC.z + 5.1);
+  }
+
+  placeAvatarForZone(which);
+  // snapCam() is excluded here to let OrbitControls keep your manual pan position
+}
+
+function parseFL001(md) {
+    const trials = { 'mcqs': [] }; 
+    const blocks = md.split('**Checkpoint');
+    blocks.shift(); 
+
+    blocks.forEach(block => {
+        const lines = block.split('\n').map(l => l.trim()).filter(l => l);
+        const options = lines.filter(l => /^[A-D]\./.test(l));
+        const ansMatch = block.match(/Answer.*?([A-D])/i);
+        const correctLetter = ansMatch ? ansMatch[1].toUpperCase() : null;
+
+        if (options.length > 0 && correctLetter) {
+            trials.mcqs.push({
+                q: lines[1] || "Question text error",
+                opts: options,
+                correct: correctLetter
+            });
+        }
+    });
+    return trials;
+}
+
+function showFL001Trial(trials, letter) {
+    // 1. Reset Simulation State immediately on switch
+    sim.running = false;
+    sim.hasStarted = false; // This unlocks the 'Start' button logic
+    if (runAction) runAction.paused = true;
+    restore(); // Returns avatar to anatomic pose
+
+    // 2. Set UI Tags
+    document.getElementById('trialTag').textContent = letter;
+    trialTime = (letter === 'B') ? 480 : 300;
+    document.getElementById('trialTime').textContent = trialTime;
+
+    // 3. Configure Fueling Protocol
+    const $fBtn = document.getElementById('fuelBtn');
+    const fuelAllowed = (letter === 'B');
+    $fBtn.disabled = !fuelAllowed;
+    $fBtn.style.opacity = fuelAllowed ? "1" : "0.4";
+
+    // 4. Reset Metabolic Counters
+    sim.lactate = 0;
+    sim.fuelCount = 0;
+    sim.energy = 100;
+    speedViolation = false;
+    
+    document.getElementById('engVal').textContent = "100";
+    document.getElementById('trialMsg').innerHTML = `<b>Trial ${letter} Loaded.</b> Press Start to begin forensic validation.`;
+    document.getElementById('startBtn').textContent = "Start";
+}
+
+async function enterFL001() {
+    setZone('cardio');
+    
+    const res = await fetch('https://raw.githubusercontent.com/Kingto89/ROMetrics.com/main/assets/forensics_modules/module_001.md');
+    if (!res.ok) return;
+
+    const md = await res.text();
+    window.currentTrials = parseFL001(md); 
+    const trials = window.currentTrials; 
+
+    // Wire Trial Buttons
+    const btnA = document.getElementById('trialA');
+    const btnB = document.getElementById('trialB');
+    
+    if (btnA) btnA.onclick = () => showFL001Trial(trials, 'A');
+    if (btnB) btnB.onclick = () => showFL001Trial(trials, 'B');
+
+    // HUD Initial state
+    document.getElementById('trialTag').textContent = "-";
+    document.getElementById('trialTime').textContent = "0";
+    document.getElementById('trialMsg').innerHTML = "<b>Module Loaded.</b> Select Trial A or B to begin.";
+}
+
+function enterModule(moduleId) {
+  const mod = getModule(moduleId);
+  currentModule = mod;
+  document.getElementById('moduleTitle').textContent = mod.label;
+  
+  // Snap camera to the specific bay
+  setZone(mod.zone || 'all');
+  
+  // Show the HUD badge
+  const $badge = document.getElementById('badge');
+  $badge.style.display = "block";
+  $badge.style.top = "14px"; 
+  
+  // Trigger the specific module logic (like enterFL001)
+  if (typeof mod.onEnter === 'function') {
+    mod.onEnter(); 
+  }
+}
+    // 7) Studio UI wiring
+    // ==============================
+    const pills = [...document.querySelectorAll('.pill')];
+    function setActive(btn){ pills.forEach(p=>p.classList.toggle('active', p === btn && btn.dataset.zone !== 'labels')); }
+
+    pills.forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const z = btn.dataset.zone;
+        if (z === 'labels'){
+          setLabels(!labelsOn);
+          btn.classList.toggle('active', labelsOn);
+          return;
+        }
+        setZone(z);
+        setActive(btn);
+      });
+    });
+
+    // ==============================
+    // 8) Tick loop
+    // ==============================
+function updateHUD() {
+    $spdVal.textContent = sim.speedMph.toFixed(1);
+    $engVal.textContent = Math.round(sim.energy);
+
+    if (sim.energy <= 0) {
+        $status.textContent = "CRITICAL FAILURE: EXHAUSTED";
+        $status.style.color = "#ff9aa0";
+    } else if (sim.running) {
+        $status.textContent = "Simulation Active";
+        $status.style.color = "#38bdf8";
+    } else {
+        $status.textContent = "Ready";
+        $status.style.color = "#cfe3ff";
+    }
+}    
+
+    const clock = new THREE.Clock();
+let lastT = clock.getElapsedTime();
+// --- GLOBAL RESTORE FUNCTION ---
+// This resets the avatar bones to their original positions.
+const restore = () => {
+    const R = animate._run;
+    if (R && R.rig) {
+        for (const [b, q] of R.rig.base) b.quaternion.copy(q);
+    }
+};
+function animate() {
+    requestAnimationFrame(animate);
+
+    const now = clock.getElapsedTime();
+    let dt = now - lastT;
+    lastT = now;
+
+    controls.update();
+  
+// ===== BLINK (works for BOTH Roma + Roman via auto-detect morph names) =====
+if (!animate._blink) animate._blink = { model:null, targets:[], state:0, t:0, next:0 };
+
+const BL = animate._blink;
+
+// (re)build targets when model changes
+if (avatarRoot && BL.model !== avatarRoot){
+  BL.model = avatarRoot;
+  BL.targets = [];
+  BL.state = 0;
+  BL.t = 0;
+  BL.next = performance.now()/1000 + 1.5;
+
+  // Find morph targets on any mesh that has them
+  const addTarget = (mesh, name)=>{
+    const d = mesh.morphTargetDictionary;
+    if (!d || d[name] == null) return false;
+    BL.targets.push({ mesh, idx: d[name] });
+    return true;
+  };
+
+  // Prefer Roman blink morphs if present, else Roma eyeClosed morphs
+  let foundRoman = false;
+  let foundRoma  = false;
+
+  avatarRoot.traverse(o=>{
+    if (!o.isMesh || !o.morphTargetInfluences || !o.morphTargetDictionary) return;
+
+    // Roman
+    foundRoman = addTarget(o, "Eye_Blink")   || foundRoman;
+    foundRoman = addTarget(o, "Eye_Blink_L") || foundRoman;
+    foundRoman = addTarget(o, "Eye_Blink_R") || foundRoman;
+
+    // Roma
+    foundRoma  = addTarget(o, "Expressions_eyeClosedL_max") || foundRoma;
+    foundRoma  = addTarget(o, "Expressions_eyeClosedR_max") || foundRoma;
+  });
+
+  // If Roman + Roma both got added somehow, keep the one that actually matches this model:
+  // (simple rule: if any Eye_Blink exists on this model, keep only Roman targets)
+  const hasEyeBlink = BL.targets.some(t=>{
+    const dict = t.mesh.morphTargetDictionary;
+    return dict && (dict["Eye_Blink"] != null || dict["Eye_Blink_L"] != null || dict["Eye_Blink_R"] != null);
+  });
+  if (hasEyeBlink){
+    BL.targets = BL.targets.filter(t=>{
+      const dict = t.mesh.morphTargetDictionary;
+      return dict && (dict["Eye_Blink"] != null || dict["Eye_Blink_L"] != null || dict["Eye_Blink_R"] != null);
+    });
+  } else {
+    BL.targets = BL.targets.filter(t=>{
+      const dict = t.mesh.morphTargetDictionary;
+      return dict && (dict["Expressions_eyeClosedL_max"] != null || dict["Expressions_eyeClosedR_max"] != null);
+    });
+  }
+}
+
+// drive blink
+if (BL.targets.length){
+  const now = performance.now()/1000;
+
+  // schedule next blink (about every ~5s with slight randomness)
+  if (BL.state === 0 && now >= BL.next){
+    BL.state = 1;        // closing
+    BL.t = 0;
+    BL.next = now + 4.2 + Math.random()*1.6;
+  }
+
+  // timings
+  const down = 0.06;     // close
+  const hold = 0.02;     // closed
+  const up   = 0.10;     // open
+
+  const setBlink = (v)=>{
+    for (const t of BL.targets){
+      t.mesh.morphTargetInfluences[t.idx] = v;
+    }
+  };
+
+  if (BL.state !== 0){
+    BL.t += dt;
+
+    if (BL.state === 1){ // closing
+      const v = Math.min(1, BL.t / down);
+      setBlink(v);
+      if (BL.t >= down){ BL.state = 2; BL.t = 0; }
+    } else if (BL.state === 2){ // hold
+      setBlink(1);
+      if (BL.t >= hold){ BL.state = 3; BL.t = 0; }
+    } else if (BL.state === 3){ // opening
+      const v = 1 - Math.min(1, BL.t / up);
+      setBlink(v);
+      if (BL.t >= up){ BL.state = 0; BL.t = 0; setBlink(0); }
+    }
+  }
+}
+
+
+  // --- Procedural run-in-place (NO GLB animation clips required) ---
+  if (!animate._run){
+    animate._run = {
+      rig: null,
+      phase: 0,
+      wasRunning: false,
+      tmpQ: new THREE.Quaternion(),
+      tmpE: new THREE.Euler(),
+    };
+
+    animate._getSkeleton = (root)=>{
+      let sk = null;
+      root.traverse(o=>{
+        if (sk) return;
+        if (o.isSkinnedMesh && o.skeleton) sk = o.skeleton;
+      });
+      return sk;
+    };
+
+    animate._initRig = ()=>{
+      if (!avatarRoot) return null;
+      const sk = animate._getSkeleton(avatarRoot);
+      if (!sk) return null;
+
+      const find = (names)=>{
+        for (const n of names){
+          const b = sk.getBoneByName(n);
+          if (b) return b;
+        }
+        return null;
+      };
+
+      const bones = {
+        spine01: find(['spine01','Spine1','mixamorigSpine1','spine']),
+        spine02: find(['spine02','Spine2','mixamorigSpine2']),
+        neck:  find(['neck','Neck','mixamorigNeck']),
+        head:  find(['head','Head','mixamorigHead']),
+        thighL: find(['thigh_L','thigh.L','LeftUpLeg','mixamorigLeftUpLeg']),
+        thighR: find(['thigh_R','thigh.R','RightUpLeg','mixamorigRightUpLeg']),
+        calfL:  find(['calf_L','shin_L','calf.L','LeftLeg','mixamorigLeftLeg']),
+        calfR:  find(['calf_R','shin_R','calf.R','RightLeg','mixamorigRightLeg']),
+        upArmL: find(['upperarm_L','upper_arm_L','upperarm.L','LeftArm','mixamorigLeftArm']),
+        upArmR: find(['upperarm_R','upper_arm_R','upperarm.R','RightArm','mixamorigRightArm']),
+        loArmL: find(['lowerarm_L','forearm_L','lowerarm.L','LeftForeArm','mixamorigLeftForeArm']),
+        loArmR: find(['lowerarm_R','forearm_R','lowerarm.R','RightForeArm','mixamorigRightForeArm']),
+        footL: find(['foot_L','foot.L','LeftFoot','mixamorigLeftFoot']),
+        footR: find(['foot_R','foot.R','RightFoot','mixamorigRightFoot']),
+        toesL: find(['toes_L','toe_L','toes.L','LeftToeBase','mixamorigLeftToeBase']),
+        toesR: find(['toes_R','toe_R','toes.R','RightToeBase','mixamorigRightToeBase'])
+      };
+
+      const base = new Map();
+      Object.values(bones).forEach(b=>{ if (b) base.set(b, b.quaternion.clone()); });
+ // bake anatomic baseline into stored "base" so restore() keeps it
+const uaFlex = THREE.MathUtils.degToRad(ANAT.upperarmFlex || 0);
+if (uaFlex){
+  const qUAFlex = new THREE.Quaternion().setFromEuler(new THREE.Euler(uaFlex, 0, 0)); // X = shoulder flex
+
+  if (bones.upArmL){
+    const bq = base.get(bones.upArmL);
+    if (bq){
+      const baked = bq.clone().multiply(qUAFlex);
+      base.set(bones.upArmL, baked);
+      bones.upArmL.quaternion.copy(baked);
+    }
+  }
+  if (bones.upArmR){
+    const bq = base.get(bones.upArmR);
+    if (bq){
+      const baked = bq.clone().multiply(qUAFlex);
+      base.set(bones.upArmR, baked);
+      bones.upArmR.quaternion.copy(baked);
+    }
+  }
+}
+     
+// --- bake anatomic baseline into stored "base" so restore() keeps it ---
+if (bones.spine01){
+  const flex = THREE.MathUtils.degToRad(ANAT.spine01Flex || 0); // Roman=5, Roma=0
+  const qFlex = new THREE.Quaternion().setFromEuler(new THREE.Euler(flex, 0, 0));
+
+  const baseQ = base.get(bones.spine01);
+  if (baseQ){
+    const newBase = baseQ.clone().multiply(qFlex);
+    base.set(bones.spine01, newBase);
+    bones.spine01.quaternion.copy(newBase);
+  }
+}
+
+      // If we found basically nothing, don't pretend it worked
+      const foundCount = [...base.keys()].length;
+      if (foundCount < 4) return null;
+// --- bake model-specific anatomic baseline into base quaternions ---
+const tuck = THREE.MathUtils.degToRad(ANAT.shTuck);
+const er   = THREE.MathUtils.degToRad(ANAT.shER);
+const hip  = THREE.MathUtils.degToRad(ANAT.hipAdd);
+
+const tE = new THREE.Euler();
+const tQ = new THREE.Quaternion();
+
+const bake = (bone, ex, ey, ez)=>{
+  if (!bone) return;
+  const q = base.get(bone);
+  if (!q) return;
+  tE.set(ex, ey, ez);
+  tQ.setFromEuler(tE);
+  q.multiply(tQ);         // update stored base
+  bone.quaternion.copy(q); // apply immediately on load
+};
+
+// shoulders (mirrored)
+bake(bones.upArmL, 0, +er, -tuck);
+bake(bones.upArmR, 0, -er, +tuck);
+
+// hips/thigh adduction (mirrored) — Roma=5°, Roman=0°
+bake(bones.thighL, 0, 0, -hip);
+bake(bones.thighR, 0, 0, +hip);
+
+      return { bones, base };
+    };
+  }
+
+  const R = animate._run;
+
+  // init rig once model exists
+  if (!R.rig && avatarRoot && !avatarRoot.userData.__isMannequin){
+    R.rig = animate._initRig();
+  }
+
+  const applyAdd = (bone, ex, ey, ez)=>{
+    if (!R.rig || !bone) return;
+    const baseQ = R.rig.base.get(bone);
+    if (!baseQ) return;
+    R.tmpE.set(ex, ey, ez);
+    R.tmpQ.setFromEuler(R.tmpE);
+    bone.quaternion.copy(baseQ).multiply(R.tmpQ);
+  };
+
+
+// This tells the character: "Run only if the start button is on AND you have energy."
+const runNow = !!(sim.running && sim.energy > 0 && zoneCardio.visible);
+
+  if (runNow){
+    const mph = sim.speedMph;
+    const k = clamp(mph / 6.0, 0, 2.0);           // 1.0 at 6mph
+    const amp = clamp(k, 0, 1.35);
+    const freq = (1.6 * k) + 0.15;                // cycles/sec
+
+    R.phase += dt * (Math.PI * 2) * freq;
+
+    const s  = Math.sin(R.phase);
+    const s2 = Math.sin(R.phase * 2.0);
+
+    const hipAmp  = THREE.MathUtils.degToRad(28) * amp;
+    const kneeAmp = THREE.MathUtils.degToRad(90) * amp;
+    const armAmp  = THREE.MathUtils.degToRad(22) * amp;
+    const spineTw = THREE.MathUtils.degToRad(4)  * (amp * 0.6);
+    const b = R.rig.bones;
+
+// legs (hip swing + 5° THIGH ADDUCTION on Z) — ROMA ONLY
+if (ACTIVE_MODEL_ID === "Roma") {
+  const thighAdd = THREE.MathUtils.degToRad(5);
+  applyAdd(b.thighL,  hipAmp * s, 0, -thighAdd);
+  applyAdd(b.thighR, -hipAmp * s, 0, +thighAdd);
+} else {
+  applyAdd(b.thighL,  hipAmp * s, 0, 0);
+  applyAdd(b.thighR, -hipAmp * s, 0, 0);
+}
+
+
+
+    const bendL = Math.max(0, -s) * kneeAmp;
+    const bendR = Math.max(0,  s) * kneeAmp;
+    // knee flexion = X axis (rx). keep your existing bendL/bendR logic.
+  applyAdd(b.calfL, -bendL, 0, 0);
+  applyAdd(b.calfR, -bendR, 0, 0);
+// ankles/toes (dorsi in swing, plantar at toe-off)
+const swingL  = Math.max(0, -s);
+const swingR  = Math.max(0,  s);
+const stanceL = Math.max(0,  s);
+const stanceR = Math.max(0, -s);
+
+const ankleDorsi = THREE.MathUtils.degToRad(12) * amp; // toe clearance
+const anklePF    = THREE.MathUtils.degToRad(18) * amp; // toe-off
+const toeExt     = THREE.MathUtils.degToRad(15) * amp; // MTP extension at toe-off
+
+const ankleL = (+ankleDorsi * swingL) + (-anklePF * stanceL);
+const ankleR = (+ankleDorsi * swingR) + (-anklePF * stanceR);
+
+applyAdd(b.footL, ankleL, 0, 0);
+applyAdd(b.footR, ankleR, 0, 0);
+
+applyAdd(b.toesL, toeExt * stanceL, 0, 0);
+applyAdd(b.toesR, toeExt * stanceR, 0, 0);
+
+
+// arms (opposite) + MORE adduction + slight back bias + elbows
+// arms (swing reacts to mph; pose does NOT)
+const armTuck   = THREE.MathUtils.degToRad(17);  // adduction (Z)
+const armBack   = THREE.MathUtils.degToRad(10);  // slight shoulder extension (X)
+const humER     = THREE.MathUtils.degToRad(7);  // external rotation (Y)
+const elbowHold = THREE.MathUtils.degToRad(90);  // elbow flex (X)
+
+// one applyAdd per bone (no overwrites)
+applyAdd(b.upArmL, (-armAmp * s) - armBack, +humER, -armTuck);
+applyAdd(b.upArmR, ( armAmp * s) - armBack, -humER, +armTuck);
+
+applyAdd(b.loArmL, elbowHold, 0, 0);
+applyAdd(b.loArmR, elbowHold, 0, 0);
+
+
+// torso: rotate so the OPPOSITE shoulder comes forward to the STANCE leg (NO side-to-side shake)
+const torsoYaw  = THREE.MathUtils.degToRad(9) * amp * (-s);  // Y = axial rotation
+const torsoLean = THREE.MathUtils.degToRad(1.5) * amp * ( s); // Z = tiny counterbalance (optional)
+
+// use spine01 / spine02 / spine03 if available; otherwise fall back cleanly
+if (b.spine01 && b.spine02 && b.spine03){
+  applyAdd(b.spine01, 0, torsoYaw * 0.45, torsoLean * 0.45); // lower trunk
+  applyAdd(b.spine02, 0, torsoYaw * 0.35, torsoLean * 0.35); // mid trunk
+  applyAdd(b.spine03, 0, torsoYaw * 0.20, torsoLean * 0.20); // upper trunk
+} 
+else if (b.spine01 && b.spine02){
+  applyAdd(b.spine01, 0, torsoYaw * 0.60, torsoLean * 0.60);
+  applyAdd(b.spine02, 0, torsoYaw * 0.40, torsoLean * 0.40);
+}
+else if (b.spine01){
+  applyAdd(b.spine01, 0, torsoYaw, torsoLean);
+}
+else if (b.spine02){
+  applyAdd(b.spine02, 0, torsoYaw, torsoLean);
+}
+else if (b.spine03){
+  applyAdd(b.spine03, 0, torsoYaw, torsoLean);
+}
+
+
+// head/neck: FOLLOW the torso yaw slightly (don’t use s2 here or it “shakes”)
+if (b.neck) applyAdd(b.neck, 0, torsoYaw * 0.35, 0);
+if (b.head) applyAdd(b.head, 0, torsoYaw * 0.15, 0);
+
+
+if (runAction) runAction.paused = false;
+
+  } else {
+    // THIS FIXES THE RESET: If not running, force anatomic position
+    restore();
+    if (runAction) runAction.paused = true;
+  }
+
+  // treadmill motion
+  if (sim.running){
+    const treadSpeed = 0.35 + (sim.speedMph / 12) * 2.0;
+    for (const s of treadStrips){
+      s.position.z += dt * treadSpeed;
+      if (s.position.z > TREAD_MAX_Z) s.position.z = TREAD_MIN_Z;
+    }
+    const beltSpeed = 0.10 + (sim.speedMph / 12) * 1.10;
+    beltTex.offset.y = (beltTex.offset.y + dt * beltSpeed) % 1;
+  }
+
+  // billboard labels
+  if (labelsOn){
+    for (const ch of labelGroup.children) ch.lookAt(camera.position);
+  }
+
+  function drawTreadmillMph(screen){
+    const { ctx, c } = screen;
+    ctx.clearRect(0,0,c.width,c.height);
+    ctx.fillStyle = 'rgba(6,18,34,1)';
+    ctx.fillRect(0,0,c.width,c.height);
+    ctx.strokeStyle = 'rgba(56,189,248,0.85)';
+    ctx.lineWidth = 10;
+    ctx.strokeRect(10,10,c.width-20,c.height-20);
+    ctx.fillStyle = '#e6eef7';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = '900 64px system-ui, -apple-system, Segoe UI, Roboto, Inter';
+    ctx.fillText(`${sim.speedMph.toFixed(1)} mph`, c.width/2, c.height/2);
+    screen.tex.needsUpdate = true;
+  }
+
+// 1. Update the Screen Displays
+drawPanel(wallScreen, 'CARDIO BOARD');
+drawTreadmillMph(consoleScreen);
+
+// --- METABOLIC ENGINE & SIMULATION LOGIC ---
+if (sim.running && sim.energy > 0) {
+    sim.elapsed += dt; 
+    const speed = parseFloat(sim.speedMph.toFixed(1));
+    const currentCost = (speed * 26.8 * 0.205) + 3.5;
+    const activeModel = document.getElementById('modelSelect').value;
+    const ceilingSpeed = (activeModel === "Roman") ? 6.3 : 6.7;
+
+    const profiles = {
+        Roma:    { lowLactateMulti: 1.01, highLactateMulti: 1.11, recoveryRate: 0.07, tankSize: 1200, penaltySeverity: 1.9 },
+        Roman:   { lowLactateMulti: 1.07, highLactateMulti: 1.22, recoveryRate: 0.05, tankSize: 1200, penaltySeverity: 2.3 },
+        Default: { lowLactateMulti: 1.2,  highLactateMulti: 1.2,  recoveryRate: 0.05, tankSize: 1200, penaltySeverity: 1.5 }
+    };
+    const p = profiles[activeModel] || profiles.Default;
+
+    // 1. ENERGY DRAIN (Linear / Fatigue-Driven)
+    // Energy only links to Lactate here: if Lactate > 50, drain is harder.
+    let fatigueScalar = (sim.lactate > 50) ? p.highLactateMulti : 0.85;
+    
+    if (currentCost > sim.vo2Max) {
+        const deficit = currentCost - sim.vo2Max;
+        const percentDrop = (deficit / 60 / p.tankSize) * 12000;
+        sim.energy -= (percentDrop * fatigueScalar) * dt;
+    } else {
+        sim.energy = Math.min(100, sim.energy + (p.recoveryRate * dt));
+    }
+
+    // 2. INDEPENDENT LACTATE (Exponential / Speed-Driven)
+    // We remove fatigueScalar from here to break the "Inverse Mirror"
+    let activePenalty = (sim.fuelPenaltyTimer > 0) ? p.penaltySeverity : 1.0;
+
+    if (speed > ceilingSpeed) {
+        const deficit = currentCost - sim.vo2Max;
+        // Multiplier increased to 0.045 so Lactate moves MUCH faster than Energy drains
+        sim.lactate = Math.min(100, sim.lactate + (deficit * 0.0055 * activePenalty * dt));
+    } else if (speed > 0) {
+        // Fast independent clearance (0.8) so Lactate drops while Energy stays depleted
+        sim.lactate = Math.max(0, sim.lactate - (0.8 * dt)); 
+    }
+
+    // 3. HOUSEKEEPING (Timers)
+    if (sim.fuelPenaltyTimer > 0) sim.fuelPenaltyTimer -= dt;
+    if (sim.fuelAlertTimer > 0) sim.fuelAlertTimer -= dt;
+    if (sim.throughputAlert > 0) sim.throughputAlert -= dt;
+
+    if (currentModule?.id === 'FL-001') {
+        trialTime = Math.max(0, trialTime - dt);
+        document.getElementById('trialTime').textContent = Math.ceil(trialTime);
+    }
+}
+
+// --- DYNAMIC TRIAL STOP & UNLOCK LOGIC ---
+if (sim.energy <= 0 || trialTime <= 0 || sim.lactate >= 100) {
+    const activeModel = document.getElementById('modelSelect').value;
+    const currentLetter = document.getElementById('trialTag').textContent.trim();
+    const $statusVal = document.getElementById('statusVal');
+    const $trialMsg = document.getElementById('trialMsg');
+
+    // 1. GLOBAL FAILURE: SPEED VIOLATION
+    // Any change to the slider during a run results in immediate forensic failure
+    if (speedViolation) {
+        $statusVal.textContent = "INTEGRITY BREACH";
+        $statusVal.style.color = "#ff9aa0";
+        $trialMsg.innerHTML = `<b style="color:#ff9aa0;">Trial Failed:</b> Speed was altered during session. Reset required.`;
+    } 
+    
+    // 2. TRIAL A LOGIC (Threshold Continuity)
+    else if (currentLetter === 'A') {
+        if (trialTime <= 0) {
+            const targetSpeed = (activeModel === "Roma") ? 6.7 : 6.3;
+            // Success conditions: Correct starting speed AND energy maintained above 60%
+            if (initialSpeed === targetSpeed && sim.energy >= 60) {
+                triggerUnlock("Trial A Complete: Aerobic Dominance Confirmed.");
+            } else {
+                let failReason = (initialSpeed !== targetSpeed) ? "Incorrect starting speed." : "Insufficient energy reserve.";
+                $trialMsg.innerHTML = `<b style="color:#ff9aa0;">Trial Failed:</b> ${failReason}`;
+            }
+        }
+    }
+
+    // 3. TRIAL B LOGIC (Metabolic Waste & Fueling)
+    else if (currentLetter === 'B') {
+        if (sim.lactate >= 100) {
+            $statusVal.textContent = "CRITICAL FAILURE: ACIDOSIS";
+            $statusVal.style.color = "#ff9aa0";
+            $trialMsg.innerHTML = `<b style="color:#ff9aa0;">Trial Failed:</b> Waste accumulation exceeded clearance capacity.`;
+        } else if (sim.energy <= 0) {
+            $statusVal.textContent = "FAILURE: EXHAUSTION";
+            $statusVal.style.color = "#ff9aa0";
+            $trialMsg.innerHTML = `<b style="color:#ff9aa0;">Trial Failed:</b> W' Balance depleted.`;
+        } else if (trialTime <= 0) {
+            // Success condition: Survived 480s AND exactly 1 fuel event used
+            if (sim.fuelCount === 1) {
+                triggerUnlock("Trial B Complete: Metabolic Waste Managed.");
+            } else {
+                $trialMsg.innerHTML = `<b style="color:#ff9aa0;">Trial Failed:</b> Required fuel event (1) was not recorded.`;
+            }
+        }
+    }
+
+    // 4. PLACEHOLDER FOR FUTURE TRIALS (C, D, etc.)
+    else if (currentLetter === 'C') {
+        // Trial C logic goes here...
+    }
+
+    // --- STOP SIMULATION ---
+    sim.running = false;
+    sim.hasStarted = false; // Unlocks trial switcher in showFL001Trial
+    if (runAction) runAction.paused = true;
+    restore(); 
+    document.getElementById('startBtn').textContent = "Start";
+}
+
+    updateHUD();
+    renderer.render(scene, camera);
+} // This is the single correct closing brace for animate()
+
+function triggerUnlock(msg) {
+    sim.running = false;
+    if (runAction) runAction.paused = true;
+    if (window.controls) window.controls.enabled = true; 
+
+    const currentLetter = document.getElementById('trialTag').textContent.trim();
+    const $trialMsg = document.getElementById('trialMsg');
+
+    if (currentLetter === 'A') {
+        // SUCCESSFUL TRIAL A
+        $trialMsg.innerHTML = `<b style="color:#38bdf8;">Goal Reached:</b> Trial A validated. Unlocking Trial B...`;
+        
+        setTimeout(() => {
+            // Clean state for transition
+            sim.hasStarted = false;
+            sim.fuelCount = 0;
+            sim.lactate = 0;
+            speedViolation = false;
+            
+            // Auto-load Trial B parameters (480s, Fuel enabled)
+            showFL001Trial(window.currentTrials, 'B');
+            $trialMsg.innerHTML = `<b>Trial B Loaded.</b> Survive 480s and record 1 fueling event.`;
+        }, 3000);
+
+    } else if (currentLetter === 'B') {
+        // SUCCESSFUL TRIAL B
+        $trialMsg.innerHTML = `<b style="color:#38bdf8;">Forensic Validation Successful.</b> All trials complete.`;
+        
+        // Show the Final Assessment Button
+        const aBtn = document.getElementById('assessmentBtn');
+        if (aBtn) {
+            aBtn.style.display = 'block';
+            const modId = document.getElementById('moduleSelect').value || "FL-001";
+            aBtn.onclick = () => { 
+window.location.href = `https://kingto89.github.io/ROMetrics.com/motion-forensics/MCQ/?module=${moduleId}&mode=review`;            };
+        }
+    }
+}
+animate();
+
+// 9) Enter Studio (gate -> studio)
+$enter.addEventListener('click', async () => {
+  const modelId = document.getElementById('modelSelect').value; 
+  const moduleId = document.getElementById('moduleSelect').value;
+  
+  let age = (modelId === "Roman") ? 43 : 34;
+  let hrMax = 220 - age;
+  sim.vo2Max = 15.3 * (hrMax / 72); 
+
+  setAnatForModel(modelId);
+  $enter.disabled = true;
+  $enter.textContent = "Loading...";
+
+  try {
+    await loadSelectedModel(modelId, (p) => { 
+      $enter.textContent = `Loading ${p}%`; 
+    });
+
+    document.getElementById('gate').style.display = "none";
+    
+    const uiMain = document.getElementById('ui');
+    const badgeMenu = document.getElementById('badge');
+
+    if (uiMain) uiMain.style.display = "flex";
+    if (badgeMenu) {
+        badgeMenu.style.display = "block";
+        badgeMenu.style.top = "14px";
+    }
+
+    if (moduleId === 'FL-001') setZone('cardio'); 
+
+    enterModule(moduleId);
+    snapCam();
+
+ // --- PERSISTENCE & REVIEW LOGIC ---
+    const savedStatus = localStorage.getItem(`${moduleId}_Status`);
+    const reviewBtn = document.getElementById('reviewBtn');
+
+    if (savedStatus === 'completed') {
+        // 1. Keep the Checkmark in the HUD title
+        const titleEl = document.getElementById('moduleTitle');
+        if (!titleEl.innerHTML.includes('✓')) {
+            titleEl.innerHTML += " <span style='color:#4ade80; margin-left:8px;'>[✓ Completed]</span>";
+        }
+
+        // 2. Show Review Button and Open in New Tab
+        if (reviewBtn) {
+            reviewBtn.style.display = 'block';
+            reviewBtn.onclick = () => {
+                const targetURL = `https://kingto89.github.io/ROMetrics.com/motion-forensics/MCQ/?module=${moduleId}`;
+                // Opens in a new browser tab/window
+                window.open(targetURL, '_blank');
+            };
+        }
+    } else {
+        if (reviewBtn) reviewBtn.style.display = 'none';
+    }   
+    // -----------------------------------
+  } catch (e) {
+    console.error("Entry Error:", e);
+    $enter.textContent = "Error - Check Console";
+  } finally {
+    $enter.disabled = false;
+  }
+});
+
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+});
+</script>
+</body>
+</html>
