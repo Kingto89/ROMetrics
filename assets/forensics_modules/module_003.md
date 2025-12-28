@@ -1,138 +1,246 @@
-# FL-003 — Reactive Balance Lab (Stability & Recovery)
-
-**Objective:** Maintain upright posture and recover from external balance disturbances.  
-**Audience:** 1st-year DPT, 1st-year Exercise Science  
-**Time-on-task:** 6–10 minutes  
-**Environment:** Movement Analysis Booth (capture square + monitors)
+# FL-003 — Repeated Effort Performance
 
 ---
 
-## IN-APP INSTRUCTIONS (STUDENT VIEW)
+### Concept (read first):
 
-### Definitions (read once)
-- **External perturbation** = the system applies a short push that knocks the avatar LEFT or RIGHT.
-- **Stability %** = how upright the avatar is (100% = steady, 0% = fall).
-- **Fall** = the avatar tips too far and cannot recover without resetting.
+**Lesson Focus:**  
+Repeated short, high-effort movements can fail even when rest intervals appear sufficient.  
+Task failure does not automatically indicate a loss of strength.
 
-### Controls
-- **A** = shift weight LEFT (small correction)
-- **D** = shift weight RIGHT (small correction)
-- **SPACE** = BRACE (stiffen posture for a moment to reduce wobble)
-- **←** = STEP LEFT (big recovery move)
-- **→** = STEP RIGHT (big recovery move)
+- **State-Dependent Performance:**  
+  Strength capacity may still exist, but the body’s current state can limit how effectively force is expressed.
 
-You will SEE the avatar react: sway, brace, step, or fall.
+- **Non-Equivalent Solutions:**  
+  Performance can be restored in multiple ways, but not all solutions preserve the original purpose of the task.
 
----
+- **Task Success vs System Readiness:**  
+  Completing a movement does not guarantee that the system has recovered or adapted.
+### Concept (read first):
 
-## COMPLETE ALL 3 TRIALS (A → B → C)
+**Lesson Focus:**  
+Repeated short, high-effort movements can fail even when rest intervals appear sufficient.  
+Task failure does not automatically indicate a loss of strength.
 
----
-
-### Trial A — Base of Support (30s)
-**CASE CLUE:** A wider foot stance improves stability during normal sway.
-
-**Goal:** Pick the stance that gives the best Stability % at the end of 30 seconds.
-
-**Steps**
-1) Select **STANCE**:
-   - **Narrow** = feet close together
-   - **Shoulder** = feet shoulder-width
-   - **Wide** = feet wider than shoulders
-2) Press **Start Trial**
-3) Use **A / D** only (no stepping in Trial A)
-4) Keep the avatar upright for 30 seconds
-
-**PASS when:** No fall AND **Stability ≥ 70%** at the end.
-
-**Question (after Trial A) — 3 attempts**
-Why does a wider stance usually improve stability?  
-A) It increases base of support  
-B) It decreases gravity  
-C) It increases speed  
-D) It makes muscles stronger instantly
+This lab teaches that **performance failure can occur without a reduction in physical capacity** and that how performance is restored matters for the body and the exercise being performed.
 
 ---
 
-### Trial B — Unstable Surface Control (30s)
-**CASE CLUE:** Standing on a foam pad increases sway and makes balance harder.
+**What This Lab Is Teaching:**
 
-**Goal:** Stay upright on **FOAM** using brace correctly.
+When performance declines, there are multiple ways to make a task “work again.”  
+However, **not all solutions affect the body or the exercise in the same way**.
 
-**Steps**
-1) Set **SURFACE = FOAM** (unstable)
-2) Choose any **STANCE** (you decide)
-3) Press **Start Trial**
-4) Use **A / D** to correct sway
-5) Use **SPACE (BRACE)** up to **2 times** when sway gets large
-6) Finish the 30 seconds without a fall
+This lab distinguishes between:
 
-**PASS when:** No fall AND **Stability ≥ 60%** at the end.
+- **Restoring the system**  
+- **Changing the task**  
+- **Changing how the task is performed**
 
-**Question (after Trial B) — 3 attempts**
-What changed in Trial B that increased sway?  
-A) The surface became unstable (foam)  
-B) The avatar became heavier  
-C) The camera moved  
-D) The treadmill speed increased
+Although all three may result in successful movement, **only some preserve the original purpose of the exercise**.
 
 ---
 
-### Trial C — Reactive Recovery From External Pushes (30s)
-**CASE CLUE:** In real life, balance loss often happens from a sudden bump or shove.
+**Key Implications:**
 
-**What “push” means in this lab**
-- **PUSH LEFT** = the system applies a quick lateral force to the avatar’s torso toward the LEFT.
-- **PUSH RIGHT** = the system applies a quick lateral force to the avatar’s torso toward the RIGHT.
+- **Increasing rest** improves readiness but may not fully restore performance during repeated high-force efforts.  
+  *This may be appropriate when recovery time is available but does not guarantee consistent output.*
 
-**Goal:** Recover from pushes without falling.
+- **Reducing load** restores success by lowering task demands.  
+  *This is useful when completion is the priority, but it does not reflect recovery or preserved capacity.*
 
-**Steps**
-1) Press **Start Trial**
-2) When you see **PUSH LEFT**, you must respond immediately with:
-   - **D** (small counter-shift RIGHT), OR
-   - **→** (step RIGHT) if the sway is large
-3) When you see **PUSH RIGHT**, respond immediately with:
-   - **A** (small counter-shift LEFT), OR
-   - **←** (step LEFT) if the sway is large
-4) Use **SPACE (BRACE)** only when the avatar is close to falling
-5) Finish the 30 seconds
-
-**PASS when:** No fall AND **Correct recoveries ≥ 70%**.
-
-**Question (after Trial C) — 3 attempts**
-If the push is strong and the avatar is near falling, the best response is:  
-A) Step to restore balance  
-B) Freeze and do nothing  
-C) Increase speed  
-D) Narrow the stance mid-fall
+- **Reducing movement speed** restores performance without lowering load or increasing rest.  
+  *This preserves the original exercise demand and is preferred when the goal is to maintain strength capacity while managing fatigue.*
 
 ---
 
-## WHAT THE ROOM MUST SHOW (VISIBLE FEEDBACK)
+**Why This Matters:**
 
-- The avatar visibly **leans/sways** with each push
-- **Brace** visibly reduces wobble briefly
-- **Step** visibly repositions the feet/body to recover
-- Monitor shows live:
-  - **Stability %**
-  - **Falls (0/1)**
-  - **Recovery Accuracy %**
-  - Optional: **Reaction Time (ms)** after each push
+In practice, successful movement does not always mean the system is ready or recovered.  
+Understanding **which adjustment restores performance — and why —** helps distinguish between:
+
+- managing fatigue  
+- preserving training intent  
+- simply making a task easier  
+
+This lab trains students to evaluate performance outcomes based on **what changed in the body and the exercise**, not just whether the task was completed.
 
 ---
 
-## (INTERNAL) SCORING + RECORDING (NOT SHOWN TO STUDENTS)
+### Trial Guide
 
-### MCQ scoring (per question, max 4.0)
-- Attempt 1 correct = 4.0
-- Attempt 2 correct = 3.5
-- Attempt 3 correct = 2.5
-- Miss all 3 = 1.5
+Follow the steps below in order.  
+Do not change multiple variables at once.
 
-### Data recorded
-- Trial A: stanceChoice, stabilityEndPct, swayAvg, fall (T/F)
-- Trial B: surface=FOAM, braceCount, stabilityEndPct, fall (T/F)
-- Trial C: pushCount, correctRecoveriesPct, avgReactionMs, stepCount, braceCount, fall (T/F)
-- MCQ: correct, attemptsUsed, pointsAwarded
-- Module totals: totalPoints, completionTimeSec
+---
+
+#### Trial 1 — Establish Repeated Effort Performance
+
+1. Begin the task using the default load and movement speed.  
+2. Perform repeated efforts until the task can no longer be completed.  
+3. Observe when failure occurs and note whether it happens at a consistent point in the movement.
+
+**Record:**  
+- Whether early repetitions are successful  
+- Where in the movement failure occurs  
+
+---
+
+#### Trial 2 — Increase Rest Interval
+
+1. Increase the rest interval between efforts.  
+2. Keep load and movement speed unchanged.  
+3. Repeat the task until failure occurs again.
+
+**Observe:**  
+- Whether performance improves  
+- Whether failure still occurs earlier than initial repetitions  
+
+---
+
+#### Trial 3 — Reduce External Load
+
+1. Return the rest interval to its original value.  
+2. Reduce the external load.  
+3. Perform the task again.
+
+**Observe:**  
+- Whether the task can be completed  
+- How effort and movement quality change  
+
+---
+
+#### Trial 4 — Reduce Movement Speed
+
+1. Restore the original load and rest interval.  
+2. Reduce movement speed while maintaining control.  
+3. Perform the task again.
+
+**Observe:**  
+- Whether the task can be completed at the original load  
+- Whether effort appears reduced or redistributed  
+
+---
+
+### Outcome Comparison
+
+| Adjustment | What Changed | What It Means |
+|-----------|-------------|---------------|
+| More rest | Partial recovery | Recovery alone does not guarantee readiness |
+| Less load | Task demand lowered | Task success does not equal system recovery |
+| Slower speed | Force applied more effectively | Performance restored without reducing capacity |
+
+---
+
+### Key Inference
+
+**Restoring performance is not the same as restoring capacity.**
+
+Some solutions preserve the original purpose of the exercise.  
+Others simply make the task easier.
+
+---
+
+### Checkpoint Questions
+
+**Checkpoint — Q1**  
+Why did performance decline even though task duration, load, and rest were unchanged?
+
+A. Strength capacity was lost  
+B. Energy availability was insufficient  
+C. Performance depends on more than strength alone  
+D. The task became longer  
+
+**Correct Answer:** C
+
+---
+
+**Checkpoint — Q2**  
+Which adjustment restored performance without lowering the demands of the task?
+
+A. Increasing rest  
+B. Reducing load  
+C. Reducing movement speed  
+D. Ending the task  
+
+**Correct Answer:** C
+
+---
+
+**Checkpoint — Q3**  
+When load was reduced and the task succeeded, what changed?
+
+A. Strength capacity increased  
+B. The system fully recovered  
+C. The task demand was lowered  
+D. The body adapted  
+
+**Correct Answer:** C
+
+
+
+> **Developer Build Spec:**  
+> • Subject: single avatar only  
+> • Task: repeated high-force movement  
+> • Effort duration per repetition: 6 seconds  
+> • External load: fixed (unless reduced in Trial 3)  
+>
+> **Rest Selection Rule:**
+> • Student selects rest duration before each attempt
+> • Available rest options: 30s, 60s, 90s, 120s
+> • Rest choice must be visible and logged per attempt
+>
+> **Trial Structure (fixed order, student-controlled rest):**
+>
+> 1. **Trial 1 – Repeated Effort Exploration**
+>    - Conditions: default load, default speed
+>    - Student selects rest duration before each repetition
+>    - Trial continues until failure occurs
+>    - Pass = full movement completed
+>    - Fail = movement cannot be completed through full range
+>
+>    **Expected Behavior:**
+>    - Shorter rest (30–60s): earlier failure
+>    - Longer rest (90–120s): delayed failure, but not eliminated
+>    - why? perhaps in question it will also provide answer still fatigued?
+>
+> 2. **Trial 2 – Rest-Based Recovery Test**
+>    - Conditions unchanged (same load, same speed)
+>    - Student increases rest duration deliberately
+>    - Trial continues until failure
+>
+>    **Expected Behavior:**
+>    - Increased rest improves performance
+>    - Failure still occurs at the same point in the movement
+>    - Performance does not fully return to initial levels
+>
+> 3. **Trial 3 – Load Reduction Test**
+>    - Conditions: reduced load, student-selected rest
+>    - Run a single attempt
+>
+>    **Expected Behavior:**
+>    - Task passes regardless of rest duration
+>    - Effort is visibly lower
+>
+> 4. **Trial 4 – Speed Reduction Test**
+>    - Conditions: original load, original rest options available
+>    - Student selects slower movement speed
+>    - Run a single attempt
+>
+>    **Expected Behavior:**
+>    - Task passes at original load
+>    - Performance restored without reducing task demand
+>
+> **Failure Criteria:**
+> • Failure occurs when motion stalls at a consistent point in the range
+> • Failure must occur even at the longest rest option (120s)
+>
+> **Key Instructional Requirement:**
+> • The lab must make it visually clear that:
+>   – More rest improves but does not guarantee readiness
+>   – Less load changes the exercise
+>   – Slower speed preserves the original task and capacity
+>
+> **Critical Constraint:**
+> • The system must never imply a “correct” rest value
+> • Students must discover that rest time and performance are related, but not sufficient
