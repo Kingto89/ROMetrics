@@ -35,7 +35,7 @@
 
 ---
 
-# Case 7:Progressive Neck Pain with Upper Extremity Weakness
+# Case 7:Neck Pain with Arm Weakness
 
 ## Patient Profile
 - Name: Karen L.
