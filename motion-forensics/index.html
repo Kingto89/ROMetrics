@@ -19,7 +19,8 @@
 html,body{
   margin:0;
   height:100%;
-  background:radial-gradient(900px 600px at 50% 20%, rgba(56,189,248,.08), var(--bg));
+  background:
+    radial-gradient(900px 600px at 50% 20%, rgba(56,189,248,.08), var(--bg));
   font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;
   color:var(--text);
 }
@@ -33,7 +34,7 @@ main{
 }
 
 .card{
-  width:min(980px,100%);
+  width:min(1000px,100%);
   background:rgba(9,20,37,.78);
   border:1px solid var(--border);
   border-radius:28px;
@@ -42,11 +43,7 @@ main{
 }
 
 .header{
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-end;
-  gap:16px;
-  flex-wrap:wrap;
+  margin-bottom:22px;
 }
 
 .title{
@@ -61,30 +58,22 @@ main{
   font-size:14px;
 }
 
-.model-select{
-  background:rgba(15,23,42,.7);
-  border:1px solid var(--border);
-  color:var(--text);
-  padding:10px 14px;
-  border-radius:14px;
-  font-size:14px;
-}
-
 .grid{
-  margin-top:22px;
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
   gap:16px;
 }
 
 .module{
-  position:relative;
   background:linear-gradient(180deg, rgba(15,23,42,.9), rgba(8,16,28,.9));
   border:1px solid var(--border);
   border-radius:22px;
   padding:22px;
   cursor:pointer;
-  transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+  transition:
+    transform .18s ease,
+    box-shadow .18s ease,
+    border-color .18s ease;
 }
 
 .module:hover{
@@ -94,7 +83,7 @@ main{
 }
 
 .mod-num{
-  font-size:40px;
+  font-size:38px;
   font-weight:900;
   color:var(--accent);
 }
@@ -125,34 +114,70 @@ main{
   <div class="card">
 
     <div class="header">
-      <div>
-        <div class="title">Forensics Labs</div>
-        <div class="subtitle">Choose a model, then select a module</div>
-      </div>
-
-      <select id="modelSelect" class="model-select">
-        <option value="Roma">Roma (default)</option>
-        <option value="Roman">Roman</option>
-      </select>
+      <div class="title">Forensics Labs</div>
+      <div class="subtitle">Select a module to begin</div>
     </div>
 
     <div class="grid">
-      <div class="module" data-module="FL-001" data-href="/forensics/fl001/">
+      <!-- 10 placeholder modules -->
+      <div class="module" data-href="/forensics/fl001/">
         <div class="mod-num">01</div>
-        <div class="mod-title">Metabolic Demand</div>
-        <div class="mod-desc">Cardio Bay — speed, energy, fatigue</div>
+        <div class="mod-title">Module 1</div>
+        <div class="mod-desc">Placeholder description</div>
       </div>
 
-      <div class="module" data-module="FL-002" data-href="/forensics/fl002/">
+      <div class="module" data-href="/forensics/fl002/">
         <div class="mod-num">02</div>
-        <div class="mod-title">Joint Load Lever</div>
-        <div class="mod-desc">Movement Analysis Booth</div>
+        <div class="mod-title">Module 2</div>
+        <div class="mod-desc">Placeholder description</div>
       </div>
 
-      <div class="module" data-module="FL-003" data-href="/forensics/fl003/">
+      <div class="module" data-href="/forensics/fl003/">
         <div class="mod-num">03</div>
-        <div class="mod-title">Motion Forensics</div>
-        <div class="mod-desc">Stability, balance, reaction</div>
+        <div class="mod-title">Module 3</div>
+        <div class="mod-desc">Placeholder description</div>
+      </div>
+
+      <div class="module" data-href="/forensics/fl004/">
+        <div class="mod-num">04</div>
+        <div class="mod-title">Module 4</div>
+        <div class="mod-desc">Placeholder description</div>
+      </div>
+
+      <div class="module" data-href="/forensics/fl005/">
+        <div class="mod-num">05</div>
+        <div class="mod-title">Module 5</div>
+        <div class="mod-desc">Placeholder description</div>
+      </div>
+
+      <div class="module" data-href="/forensics/fl006/">
+        <div class="mod-num">06</div>
+        <div class="mod-title">Module 6</div>
+        <div class="mod-desc">Placeholder description</div>
+      </div>
+
+      <div class="module" data-href="/forensics/fl007/">
+        <div class="mod-num">07</div>
+        <div class="mod-title">Module 7</div>
+        <div class="mod-desc">Placeholder description</div>
+      </div>
+
+      <div class="module" data-href="/forensics/fl008/">
+        <div class="mod-num">08</div>
+        <div class="mod-title">Module 8</div>
+        <div class="mod-desc">Placeholder description</div>
+      </div>
+
+      <div class="module" data-href="/forensics/fl009/">
+        <div class="mod-num">09</div>
+        <div class="mod-title">Module 9</div>
+        <div class="mod-desc">Placeholder description</div>
+      </div>
+
+      <div class="module" data-href="/forensics/fl010/">
+        <div class="mod-num">10</div>
+        <div class="mod-title">Module 10</div>
+        <div class="mod-desc">Placeholder description</div>
       </div>
     </div>
 
@@ -164,16 +189,9 @@ main{
 </main>
 
 <script>
-const modelSelect = document.getElementById('modelSelect');
-
 document.querySelectorAll('.module').forEach(card=>{
   card.addEventListener('click', ()=>{
-    const model = modelSelect.value;
-    const moduleId = card.dataset.module;
-    const href = card.dataset.href;
-
-    window.location.href =
-      `${href}?model=${encodeURIComponent(model)}&module=${encodeURIComponent(moduleId)}`;
+    window.location.href = card.dataset.href;
   });
 });
 </script>
