@@ -132,17 +132,32 @@ canvas{display:block}
         <button id="btnFrontView" style="flex:1; background:rgba(30,41,59,.8); color:#e5eefc; border:1px solid rgba(148,163,184,.3); padding:8px; border-radius:10px; cursor:pointer; font-size:11px;">Front View</button>
     </div>
 
-    <div style="display:flex; gap:8px;">
-        <button id="lockBallBtn" style="flex:1; background:rgba(30,41,59,.8); color:#e5eefc; border:1px solid #38bdf8; padding:8px; border-radius:10px; cursor:pointer; font-size:11px;">Pick Up Weight Ball</button>
-        <button id="toggleBaseBtn" style="flex:1; background:rgba(30,41,59,.8); color:#e5eefc; border:1px solid rgba(148,163,184,.3); padding:8px; border-radius:10px; cursor:pointer; font-size:11px;">Base of Support</button>
+    <div style="display:flex; gap:8px; margin-bottom:10px;">
+        <button id="lockBallBtn" style="flex:1.2; background:rgba(30,41,59,.8); color:#e5eefc; border:1px solid #38bdf8; padding:8px; border-radius:10px; cursor:pointer; font-size:11px;">Pick Up Ball</button>
+        <button id="toggleBaseBtn" style="flex:1; background:rgba(30,41,59,.8); color:#e5eefc; border:1px solid rgba(148,163,184,.3); padding:8px; border-radius:10px; cursor:pointer; font-size:11px;">Base Map</button>
+        <button id="resetBtn" style="flex:1; background:rgba(30,41,59,.8); color:#ffedd5; border:1px solid rgba(251,146,60,.5); padding:8px; border-radius:10px; cursor:pointer; font-size:11px;">Reset</button>
     </div>
 
-    <div style="margin-top:12px; padding-top:12px; border-top:1px solid rgba(148,163,184,.2); display:flex; justify-content:space-between;">
-        <span>Status</span>
-        <span id="statusVal" style="font-weight:900; color:#4ade80;">Stable</span>
+    <div style="border-top:1px solid rgba(148,163,184,.18); padding-top:10px; margin-top:10px;">
+        <button id="reviewBtn" style="display:none; width:100%; background:transparent; border:1px solid #4ade80; color:#4ade80; padding:8px; border-radius:10px; cursor:pointer; font-size:11px; margin-bottom:8px;">Review MCQ</button>
+        
+        <button id="assessmentBtn" style="display:none; width:100%; background:#4ade80; color:#0f172a; border:none; padding:10px; border-radius:10px; cursor:pointer; font-weight:700; font-size:11px;">
+            Take Final MCQ Assessment
+        </button>
+    </div>
+
+    <div id="trialMsg" style="color:#a8c0da; font-size:11px; line-height:1.25; margin-top:12px; text-align:center;">
+        Read instructions before beginning.
+    </div>
+    <button id="trialHelp" style="width: 100%; margin-top: 8px; background:transparent; border: 1px solid #38bdf8; color: #38bdf8; padding:8px; border-radius:10px; cursor:pointer; font-size:11px;">
+        View Module Instructions & Lab Guide
+    </button>
+
+    <div style="display:flex; justify-content:space-between; margin-top:12px; padding-top:10px; border-top:1px solid rgba(148,163,184,.18);">
+        <div style="color:#a8c0da; font-weight:600;">Status</div>
+        <div id="statusVal" style="color:#4ade80; font-weight:800;">Stable</div>
     </div>
 </div>
-
 
 <script type="module">
 import * as THREE from 'three';
@@ -676,6 +691,24 @@ const baseBtn     = document.getElementById('toggleBaseBtn');
 // reuse existing forcePlate from scene
 const forcePlateMesh = scene.getObjectByName("forcePlate");
 const $msg        = document.getElementById('trialMsg');
+const resetBtn = document.getElementById('resetBtn');
+
+if (resetBtn) {
+    resetBtn.onclick = () => {
+        sim.leanZ = 0; sim.leanX = 0; sim.ballLocked = false;
+        leanZSlider.value = 0; leanXSlider.value = 0;
+        leanZVal.textContent = "0.0"; leanXVal.textContent = "0.0";
+        ballBtn.textContent = "Pick Up Ball";
+        const ball = scene.getObjectByName("weightBall");
+        if (ball) ball.position.set(0.6, 0.20, 1.35);
+        applyFL002Pose("idle");
+        if (skeleton) {
+            const spine = skeleton.bones.find(b => b.name.toLowerCase().includes('spine'));
+            if (spine) spine.rotation.set(0, 0, 0);
+        }
+    };
+}
+
 
 // 2. Reset UI
 if (leanZSlider) leanZSlider.value = 0;
@@ -700,60 +733,86 @@ document.getElementById('btnFrontView').onclick = () => {
 };
 
 // 4. Lean Sliders
+// 4. Lean Sliders (Updated Home)
 if (leanZSlider) {
-  leanZSlider.oninput = e => {
-    const d = parseFloat(e.target.value);
-    sim.leanZ = d;
-    if (leanZVal) leanZVal.textContent = d.toFixed(1);
-  };
+    leanZSlider.oninput = e => {
+        const d = parseFloat(e.target.value);
+        sim.leanZ = d;
+        if (leanZVal) leanZVal.textContent = d.toFixed(1);
+        
+        // Fire bone transformations only when active
+        updateModelLean(); 
+    };
 }
 
 if (leanXSlider) {
-  leanXSlider.oninput = e => {
-    const d = parseFloat(e.target.value);
-    sim.leanX = d;
-    if (leanXVal) leanXVal.textContent = d.toFixed(1);
-  };
+    leanXSlider.oninput = e => {
+        const d = parseFloat(e.target.value);
+        sim.leanX = d;
+        if (leanXVal) leanXVal.textContent = d.toFixed(1);
+        
+        // Fire bone transformations only when active
+        updateModelLean();
+    };
 }
 
-// 5. Weight Ball Toggle (POSE + STATE)
+function updateModelLean() {
+    if (!skeleton) return;
+
+    const radZ = THREE.MathUtils.degToRad(sim.leanZ);
+    const radX = THREE.MathUtils.degToRad(sim.leanX);
+    const spine = skeleton.bones.find(b => b.name.toLowerCase().includes('spine'));
+    const hips = skeleton.bones.find(b => b.name.toLowerCase().includes('hips'));
+
+    if (spine) {
+        spine.rotation.x = radZ;
+        spine.rotation.z = -radX;
+    }
+    if (hips) {
+        hips.rotation.x = radZ * 0.3; 
+        hips.rotation.z = -(radX * 0.3);
+    }
+
+    skeleton.bones.forEach(b => {
+        if (b.name.toLowerCase().includes('toe')) {
+            b.rotation.x = (radZ < 0) ? radZ * 0.3 : 0;
+            b.rotation.z = -radX * 0.3;
+        }
+    });
+}
 
 // ==============================
 // 5. Weight Ball Toggle (Hold / Release)
 // ==============================
 if (ballBtn) {
-  ballBtn.onclick = () => {
-    sim.ballLocked = !sim.ballLocked;
+    ballBtn.onclick = () => {
+        sim.ballLocked = !sim.ballLocked;
+        const ball = scene.getObjectByName("weightBall");
+        if (!ball) return;
 
-    const ball = scene.getObjectByName("weightBall");
-    if (!ball) return;
+        if (sim.ballLocked) {
+            applyFL002Pose("holdingBall");
+            
+            // Model-specific ball placement
+            if (window.ACTIVE_MODEL === "Roman") {
+                // Roman: Adjusted for larger reach and forward stance
+                ball.position.set(0.000, 1.420, 0.400); 
+            } else {
+                // Roma: Original forensic spot placement
+                ball.position.set(0.000, 1.350, 0.550);
+            }
 
-    if (sim.ballLocked) {
-      // Pick up ball — stability test position
-      applyFL002Pose("holdingBall");
-      ball.position.set(0.000, 1.350, 0.850);
-
-      // Optional camera snap for weighted condition
-      camera.position.set(-0.13, 2.31, 0.21);
-      controls.update();
-
-      ballBtn.textContent = "Release Weight Ball";
-      if ($msg) {
-        $msg.innerHTML = "<b>SYSTEM ACTIVE:</b> External load applied.";
-      }
-    } else {
-      // Release ball — return to floor
-      applyFL002Pose("idle");
-      ball.position.set(0.6, 0.20, 1.35);
-
-      ballBtn.textContent = "Pick Up Weight Ball";
-      if ($msg) {
-        $msg.innerHTML = "<b>SYSTEM UPDATED:</b> Load removed.";
-      }
-    }
-  };
+            ballBtn.textContent = "Release Weight Ball";
+            if ($msg) $msg.innerHTML = "<b>SYSTEM ACTIVE:</b> External load applied to " + window.ACTIVE_MODEL + ".";
+        } else {
+            applyFL002Pose("idle");
+            // Return ball to floor (universal spot)
+            ball.position.set(0.6, 0.20, 1.35);
+            ballBtn.textContent = "Pick Up Weight Ball";
+            if ($msg) $msg.innerHTML = "<b>SYSTEM UPDATED:</b> Load removed.";
+        }
+    };
 }
-
 // ==============================
 // 6. Base of Support Toggle
 // ==============================
@@ -815,12 +874,12 @@ const FL002_POSES_ROMAN = {
 holdingBall: {
   // LEFT ARM — Roman
   upperarm_L: { x: 1.55, y:  0.0, z: -6.6},   // shoulder flexion
-  lowerarm_L: { x: 0.63, y:  0.15, z:  0.00 },   // 
+  lowerarm_L: { x: 0.57, y:  0.0, z:  0.00 },   // 
   hand_L:     { x: 0.00, y:  -1.50, z:  0.00 },
 
   // RIGHT ARM — Roman
   upperarm_R: { x: 1.55, y: -0.0, z:  6.6 },
-  lowerarm_R: { x: 0.63, y: -0.15, z:  0.00 },  // 
+  lowerarm_R: { x: 0.57, y: -0.0, z:  0.00 },  // 
   hand_R:     { x: 0.00, y:  1.50, z:  0.00 }
 }
 };
@@ -918,10 +977,10 @@ if (avatarRoot) {
 
     if (modelId === "Roman") {
         // Roman: Moved forward slightly
-        avatarRoot.position.set(0, 0.08, -2.65);
+        avatarRoot.position.set(0, 0.08, -3.15);
     } else {
         // Roma: Original forensic spot
-        avatarRoot.position.set(0, 0.08, -2.83);
+        avatarRoot.position.set(0, 0.08, -3.15);
     }
 }
 
@@ -971,7 +1030,7 @@ document.getElementById('badge').style.display = "block";
 /* ===== LOOP ===== */
 let _lastTime = performance.now();
 
-function animate(){
+function animate() {
   requestAnimationFrame(animate);
 
   const now = performance.now();
@@ -1060,35 +1119,11 @@ if (sim.ballLocked && skeleton) {
     bone.updateMatrixWorld(true);
   });
 }
-// Inside the animate() function
-// Inside the animate() function
-if (skeleton) {
-    const isLeaning = sim.leanZ !== 0 || sim.leanX !== 0;
 
-    if (isLeaning) {
-        // ACTIVE: Apply lean values
-        const radZ = THREE.MathUtils.degToRad(sim.leanZ);
-        const radX = THREE.MathUtils.degToRad(sim.leanX);
-
-        const spine = skeleton.bones.find(b => b.name.toLowerCase().includes('spine'));
-        const hips = skeleton.bones.find(b => b.name.toLowerCase().includes('hips'));
-
-        if (spine) {
-            spine.rotation.x = radZ;
-            spine.rotation.z = -radX;
-        }
-        if (hips) {
-            hips.rotation.x = radZ * 0.3; 
-            hips.rotation.z = -(radX * 0.3);
-        }
-    } else {
-        // IDLE: Explicitly maintain the "without weight" preset pose
-        // This ensures she loads and stays in her natural stance
-        applyFL002Pose('idle');
-    }
-}
   renderer.render(scene, camera);
 }
+
+
 
 animate();
 
