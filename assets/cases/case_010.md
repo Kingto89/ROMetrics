@@ -32,8 +32,7 @@
 
 ---
 
-# Case 10: Fatigable Neuromuscular Weakness
-
+# Case 10: Proximal Upper Extremity Weakness
 ## Patient Profile
 - Name: Rachel P.
 - Age: 36
