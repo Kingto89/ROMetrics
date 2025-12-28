@@ -80,8 +80,6 @@ canvas{display:block}
 </head>
 
 <body>
-
-<!-- ===== ENTRY GATE ===== -->
 <div id="gate">
   <div id="gateCard">
     <div id="gateTitle">Forensics Labs</div>
@@ -100,9 +98,11 @@ canvas{display:block}
       <div class="field">
         <div class="lbl">MODULE</div>
         <select disabled>
-          <option selected>Studio Preview</option>
+          <option selected>Module 2 — Stability & Center of Mass</option>
         </select>
-        <div class="desc">Environment only</div>
+        <div class="desc">
+          Analysis Booth: postural control, base of support, and center-of-mass analysis
+        </div>
       </div>
     </div>
 
@@ -111,6 +111,38 @@ canvas{display:block}
     </div>
   </div>
 </div>
+
+<div id="badge" style="position:fixed; right:14px; top:14px; z-index:100; padding:16px; border-radius:20px; border:1px solid rgba(148,163,184,.25); background:rgba(15,23,42,.85); color:#cfe3ff; font-size:13px; width:280px; backdrop-filter:blur(10px); display:none;">
+    <div style="font-weight:900; color:#38bdf8; margin-bottom:10px; text-transform:uppercase; letter-spacing:1px;">Stability Analysis</div>
+    
+    <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+        <span>Forward/Back Lean</span>
+        <span style="font-weight:800; color:#fff;"><span id="leanVal">0.0</span>°</span>
+    </div>
+    <input id="leanSlider" type="range" min="-30" max="45" step="0.5" value="0" style="width:100%; accent-color:#38bdf8; margin-bottom:12px;">
+
+    <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+        <span>Left/Right Lean</span>
+        <span style="font-weight:800; color:#fff;"><span id="leanXVal">0.0</span>°</span>
+    </div>
+    <input id="leanXSlider" type="range" min="-30" max="30" step="0.5" value="0" style="width:100%; accent-color:#38bdf8; margin-bottom:12px;">
+
+    <div style="display:flex; gap:8px; margin-bottom:10px;">
+        <button id="btnSideView" style="flex:1; background:rgba(30,41,59,.8); color:#e5eefc; border:1px solid rgba(148,163,184,.3); padding:8px; border-radius:10px; cursor:pointer; font-size:11px;">Side View</button>
+        <button id="btnFrontView" style="flex:1; background:rgba(30,41,59,.8); color:#e5eefc; border:1px solid rgba(148,163,184,.3); padding:8px; border-radius:10px; cursor:pointer; font-size:11px;">Front View</button>
+    </div>
+
+    <div style="display:flex; gap:8px;">
+        <button id="lockBallBtn" style="flex:1; background:rgba(30,41,59,.8); color:#e5eefc; border:1px solid #38bdf8; padding:8px; border-radius:10px; cursor:pointer; font-size:11px;">Pick Up Weight Ball</button>
+        <button id="toggleBaseBtn" style="flex:1; background:rgba(30,41,59,.8); color:#e5eefc; border:1px solid rgba(148,163,184,.3); padding:8px; border-radius:10px; cursor:pointer; font-size:11px;">Base of Support</button>
+    </div>
+
+    <div style="margin-top:12px; padding-top:12px; border-top:1px solid rgba(148,163,184,.2); display:flex; justify-content:space-between;">
+        <span>Status</span>
+        <span id="statusVal" style="font-weight:900; color:#4ade80;">Stable</span>
+    </div>
+</div>
+
 
 <script type="module">
 import * as THREE from 'three';
@@ -622,11 +654,59 @@ function setZone(z){
   zoneCardio.visible=(z==="all"||z==="cardio");
   zoneForensics.visible=(z==="all"||z==="forensics");
 }
-setZone("all");
+setZone("forensics");
+
 
 /* ===== AVATAR ===== */
-let avatarRoot = null;
+// ==============================
+// MODULE 2 — STABILITY STATE
+// ==============================
+const sim = {
+  leanZ: 0,        // forward / back
+  leanX: 0,        // left / right
+  ballLocked: false
+};
+// ==============================
+// FL-002 POSES (UNCHANGED)
+// ==============================
+const FL002_POSES = {
+  idle: {
+    upperarm_L: { x: 0.0, y:  0.10, z:  -7.5 },
+    lowerarm_L: { x: -0.0, y:  0.00, z:  0.0 },
+    hand_L:     { x:  0.00, y:  0.00, z:  0.0 },
 
+    upperarm_R: { x: -0.0, y: -0.10, z: 7.5 },
+    lowerarm_R: { x: -0.0, y:  0.00, z: -0.00 },
+    hand_R:     { x:  0.00, y:  0.00, z:  0.00 }
+  },
+
+  holdingBall: {
+    upperarm_L: { x: -0.75, y:  0.20, z:  0.30 },
+    lowerarm_L: { x: -1.10, y:  0.00, z:  0.15 },
+    hand_L:     { x:  0.10, y:  0.00, z:  0.00 },
+
+    upperarm_R: { x: -0.75, y: -0.20, z: -0.30 },
+    lowerarm_R: { x: -1.10, y:  0.00, z: -0.15 },
+    hand_R:     { x:  0.10, y:  0.00, z:  0.00 }
+  }
+};
+function applyFL002Pose(poseName){
+  if (!skeleton) return;
+
+  const pose = FL002_POSES[poseName];
+  if (!pose) return;
+
+  for (const boneName in pose){
+    const bone = skeleton.bones.find(b => b.name.includes(boneName));
+    if (!bone) continue;
+
+    const r = pose[boneName];
+    bone.rotation.set(r.x, r.y, r.z);
+  }
+}
+
+let avatarRoot = null;
+let skeleton = null;
 
 function loadModel(id, onProgress){
   return new Promise((resolve, reject) => {
@@ -639,7 +719,20 @@ function loadModel(id, onProgress){
       // ✅ ON LOAD (100%)
       (gltf) => {
         scene.add(gltf.scene);
-        avatarRoot = gltf.scene;
+avatarRoot = gltf.scene;
+
+// extract skeleton ONCE
+skeleton = null;
+avatarRoot.traverse(o=>{
+  if (o.isSkinnedMesh && o.skeleton && !skeleton){
+    skeleton = o.skeleton;
+  }
+});
+
+// only apply pose AFTER skeleton exists
+if (skeleton) applyFL002Pose('idle');
+
+
         resolve(gltf);
       },
 
@@ -672,6 +765,22 @@ await loadModel(modelId, (pct) => {
   $enter.textContent = `Loading ${pct}%`;
 });
 
+// === FORCE SPAWN INTO FORENSICS BAY (Module 2) ===
+setZone('forensics');
+
+// position avatar inside forensic platform
+if (avatarRoot){
+avatarRoot.position.set(Z_FORENSIC.x, 0.205,  Z_FORENSIC.z + 0.18);
+}
+
+// snap camera to forensic bay (corrected forensic view)
+controls.target.copy(Z_FORENSIC).add(new THREE.Vector3(0, 1.35, 0));
+camera.position.set(-0.11, 2.79, 3.02);
+controls.update();
+
+
+// NOW ENTER MODULE → show Module 2 console
+document.getElementById('badge').style.display = "block";
 
     // Hide gate
     document.getElementById('gate').style.display = "none";
