@@ -655,10 +655,6 @@ function setZone(z){
   zoneForensics.visible=(z==="all"||z==="forensics");
 }
 setZone("forensics");
-
-
-/* ===== AVATAR ===== */
-// ==============================
 // MODULE 2 — STABILITY STATE
 // ==============================
 const sim = {
@@ -666,6 +662,119 @@ const sim = {
   leanX: 0,        // left / right
   ballLocked: false
 };
+// ==============================
+// MODULE 2 — CONSOLE WIRING (FL-002)
+// ==============================
+
+// 1. UI References
+const leanZSlider = document.getElementById('leanSlider');
+const leanXSlider = document.getElementById('leanXSlider');
+const leanZVal    = document.getElementById('leanVal');
+const leanXVal    = document.getElementById('leanXVal');
+const ballBtn     = document.getElementById('lockBallBtn');
+const baseBtn     = document.getElementById('toggleBaseBtn');
+// reuse existing forcePlate from scene
+const forcePlateMesh = scene.getObjectByName("forcePlate");
+const $msg        = document.getElementById('trialMsg');
+
+// 2. Reset UI
+if (leanZSlider) leanZSlider.value = 0;
+if (leanXSlider) leanXSlider.value = 0;
+if (leanZVal)    leanZVal.textContent = "0.0";
+if (leanXVal)    leanXVal.textContent = "0.0";
+sim.leanZ = 0;
+sim.leanX = 0;
+sim.ballLocked = false;
+
+// 3. Camera Presets
+document.getElementById('btnSideView').onclick = () => {
+  camera.position.set(Z_FORENSIC.x + 3.5, 1.4, Z_FORENSIC.z);
+  controls.target.set(Z_FORENSIC.x, 1.2, Z_FORENSIC.z);
+  controls.update();
+};
+
+document.getElementById('btnFrontView').onclick = () => {
+  camera.position.set(Z_FORENSIC.x, 1.4, Z_FORENSIC.z + 4.5);
+  controls.target.set(Z_FORENSIC.x, 1.2, Z_FORENSIC.z);
+  controls.update();
+};
+
+// 4. Lean Sliders
+if (leanZSlider) {
+  leanZSlider.oninput = e => {
+    const d = parseFloat(e.target.value);
+    sim.leanZ = d;
+    if (leanZVal) leanZVal.textContent = d.toFixed(1);
+  };
+}
+
+if (leanXSlider) {
+  leanXSlider.oninput = e => {
+    const d = parseFloat(e.target.value);
+    sim.leanX = d;
+    if (leanXVal) leanXVal.textContent = d.toFixed(1);
+  };
+}
+
+// 5. Weight Ball Toggle (POSE + STATE)
+
+// ==============================
+// 5. Weight Ball Toggle (Hold / Release)
+// ==============================
+if (ballBtn) {
+  ballBtn.onclick = () => {
+    sim.ballLocked = !sim.ballLocked;
+
+    const ball = scene.getObjectByName("weightBall");
+    if (!ball) return;
+
+    if (sim.ballLocked) {
+      // Pick up ball — stability test position
+      applyFL002Pose("holdingBall");
+      ball.position.set(0.000, 1.500, 0.800);
+
+      // Optional camera snap for weighted condition
+      camera.position.set(-0.13, 2.31, 0.21);
+      controls.update();
+
+      ballBtn.textContent = "Release Weight Ball";
+      if ($msg) {
+        $msg.innerHTML = "<b>SYSTEM ACTIVE:</b> External load applied.";
+      }
+    } else {
+      // Release ball — return to floor
+      applyFL002Pose("idle");
+      ball.position.set(0.6, 0.20, 1.35);
+
+      ballBtn.textContent = "Pick Up Weight Ball";
+      if ($msg) {
+        $msg.innerHTML = "<b>SYSTEM UPDATED:</b> Load removed.";
+      }
+    }
+  };
+}
+
+// ==============================
+// 6. Base of Support Toggle
+// ==============================
+if (baseBtn && forcePlateMesh) {
+  baseBtn.onclick = () => {
+    forcePlateMesh.visible = !forcePlateMesh.visible;
+    baseBtn.style.borderColor = forcePlateMesh.visible ? "#38bdf8" : "";
+  };
+}
+
+// ==============================
+// 7. Module Ready Message
+// ==============================
+if ($msg) {
+  $msg.innerHTML = "<b>Module 2 Loaded:</b> Adjust lean to test stability limits.";
+}
+
+
+
+// ==============================
+ //AVATAR  
 // ==============================
 // FL-002 POSES (UNCHANGED)
 // ==============================
@@ -681,14 +790,17 @@ const FL002_POSES = {
   },
 
   holdingBall: {
-    upperarm_L: { x: -0.75, y:  0.20, z:  0.30 },
-    lowerarm_L: { x: -1.10, y:  0.00, z:  0.15 },
-    hand_L:     { x:  0.10, y:  0.00, z:  0.00 },
+  // LEFT ARM
+  upperarm_L: { x: 1.3, y:  0.25, z:  -6.5 },   // shoulder flexion ~90°
+  lowerarm_L: { x: 0.25, y:  -0.5, z:   0.0 },   // elbow near extension
+  hand_L:     { x:  0.00, y:  0.45, z:   0.0 },
 
-    upperarm_R: { x: -0.75, y: -0.20, z: -0.30 },
-    lowerarm_R: { x: -1.10, y:  0.00, z: -0.15 },
-    hand_R:     { x:  0.10, y:  0.00, z:  0.00 }
-  }
+  // RIGHT ARM
+  upperarm_R: { x: 1.3, y: -0.25, z:   6.5 },   // shoulder flexion ~90°
+  lowerarm_R: { x: 0.27, y:  0.5, z:   0.0 },   // elbow near extension
+  hand_R:     { x:  0.00, y:  -0.45, z:   0.0 }
+}
+
 };
 function applyFL002Pose(poseName){
   if (!skeleton) return;
@@ -704,6 +816,8 @@ function applyFL002Pose(poseName){
     bone.rotation.set(r.x, r.y, r.z);
   }
 }
+
+
 
 let avatarRoot = null;
 let skeleton = null;
@@ -901,6 +1015,38 @@ addEventListener("resize",()=>{
   camera.updateProjectionMatrix();
   renderer.setSize(innerWidth,innerHeight);
 });
+
+
+// --- TRANSFORM DEBUG TOOL (Module 2 Weight Ball Placement) ---
+window.addEventListener('keydown', (e) => {
+    const ball = scene.getObjectByName("weightBall");
+    if (!ball) return;
+
+    const step = e.shiftKey ? 0.01 : 0.05; // Hold Shift for precision
+    const key = e.key.toLowerCase();
+
+    // 1. Move Ball Logic
+    if (key === 'w') ball.position.z -= step; // Forward
+    if (key === 's') ball.position.z += step; // Back
+    if (key === 'a') ball.position.x -= step; // Left
+    if (key === 'd') ball.position.x += step; // Right
+    if (key === 'r') ball.position.y += step; // Up
+    if (key === 'f') ball.position.y -= step; // Down
+
+    // 2. Log Data to Console (Press 'L' to get the coordinates for hardwiring)
+    if (key === 'l') {
+        const pos = ball.position;
+        console.log("%c--- BALL PLACEMENT DATA ---", "color: #4ade80; font-weight: bold;");
+        console.log(`Copy this into enterFL002 hardwire logic:`);
+        console.log(`ball.position.set(${pos.x.toFixed(3)}, ${pos.y.toFixed(3)}, ${pos.z.toFixed(3)});`);
+        
+        // Also log camera in case you want to save the angle too
+        const cPos = camera.position;
+        const cTar = controls.target;
+        console.log(`Cam: .set(${cPos.x.toFixed(2)}, ${cPos.y.toFixed(2)}, ${cPos.z.toFixed(2)})`);
+    }
+});
+
 </script>
 </body>
 </html>
