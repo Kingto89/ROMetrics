@@ -778,45 +778,73 @@ if ($msg) {
 // ==============================
 // FL-002 POSES (UNCHANGED)
 // ==============================
-const FL002_POSES = {
+const FL002_POSES_ROMA = {
   idle: {
     upperarm_L: { x: 0.0, y:  0.10, z:  -7.5 },
-    lowerarm_L: { x: -0.0, y:  0.00, z:  0.0 },
-    hand_L:     { x:  0.00, y:  0.00, z:  0.0 },
+    lowerarm_L: { x: 0.0, y:  0.00, z:   0.0 },
+    hand_L:     { x: 0.0, y:  0.00, z:   0.0 },
 
-    upperarm_R: { x: -0.0, y: -0.10, z: 7.5 },
-    lowerarm_R: { x: -0.0, y:  0.00, z: -0.00 },
-    hand_R:     { x:  0.00, y:  0.00, z:  0.00 }
+    upperarm_R: { x: 0.0, y: -0.10, z:   7.5 },
+    lowerarm_R: { x: 0.0, y:  0.00, z:   0.0 },
+    hand_R:     { x: 0.0, y:  0.00, z:   0.0 }
   },
 
   holdingBall: {
-  // LEFT ARM
-  upperarm_L: { x: 1.3, y:  0.25, z:  -6.5 },   // shoulder flexion ~90°
-  lowerarm_L: { x: 0.25, y:  -0.5, z:   0.0 },   // elbow near extension
-  hand_L:     { x:  0.00, y:  0.45, z:   0.0 },
+    // LEFT ARM
+    upperarm_L: { x: 1.3, y:  0.25, z:  -6.5 },
+    lowerarm_L: { x: 0.25, y: -0.5, z:   0.0 },
+    hand_L:     { x: 0.0, y:  0.4, z:   0.0 },
 
-  // RIGHT ARM
-  upperarm_R: { x: 1.3, y: -0.25, z:   6.5 },   // shoulder flexion ~90°
-  lowerarm_R: { x: 0.27, y:  0.5, z:   0.0 },   // elbow near extension
-  hand_R:     { x:  0.00, y:  -0.45, z:   0.0 }
-}
-
+    // RIGHT ARM
+    upperarm_R: { x: 1.3, y: -0.25, z:   6.5 },
+    lowerarm_R: { x: 0.27, y:  0.5, z:   0.0 },
+    hand_R:     { x: 0.0, y: -0.4, z:   0.0 }
+  }
 };
-function applyFL002Pose(poseName){
+const FL002_POSES_ROMAN = {
+  idle: {
+    upperarm_L: { x: 0.0, y:  0.05, z:  -1.005 },
+    lowerarm_L: { x: 0.0, y:  0.00, z:   0.0 },
+    hand_L:     { x: 0.0, y:  0.00, z:   0.0 },
+
+    upperarm_R: { x: 0.0, y: -0.05, z:   1.005 },
+    lowerarm_R: { x: 0.0, y:  0.00, z:   0.0 },
+    hand_R:     { x: 0.0, y:  0.00, z:   0.0 }
+  },
+
+holdingBall: {
+  // LEFT ARM — Roman
+  upperarm_L: { x: 1.55, y:  0.0, z: -6.6},   // shoulder flexion
+  lowerarm_L: { x: 0.65, y:  0.15, z:  0.00 },   // 
+  hand_L:     { x: 0.00, y:  -1.50, z:  0.00 },
+
+  // RIGHT ARM — Roman
+  upperarm_R: { x: 1.55, y: -0.0, z:  6.6 },
+  lowerarm_R: { x: 0.65, y: -0.15, z:  0.00 },  // 
+  hand_R:     { x: 0.00, y:  1.50, z:  0.00 }
+}
+};
+
+
+function applyFL002Pose(poseName) {
   if (!skeleton) return;
 
-  const pose = FL002_POSES[poseName];
+  const isRoman = window.ACTIVE_MODEL === "Roman";
+  const poseSet = isRoman ? FL002_POSES_ROMAN : FL002_POSES_ROMA;
+  const pose = poseSet[poseName];
   if (!pose) return;
 
-  for (const boneName in pose){
-    const bone = skeleton.bones.find(b => b.name.includes(boneName));
+  for (const boneName in pose) {
+    // Case-insensitive search
+    const bone = skeleton.bones.find(b => 
+      b.name.toLowerCase().includes(boneName.toLowerCase())
+    );
     if (!bone) continue;
 
     const r = pose[boneName];
     bone.rotation.set(r.x, r.y, r.z);
   }
 }
-
 
 
 let avatarRoot = null;
@@ -869,6 +897,7 @@ onProgress(pct);
 // 9) Enter Studio (gate -> studio)
 $enter.addEventListener('click', async () => {
   const modelId = document.getElementById('modelSelect')?.value;
+  window.ACTIVE_MODEL = modelId; // <---  THIS LINE finds model
   const bay = document.getElementById('moduleSelect')?.value; // now treated as BAY only
 
   $enter.disabled = true;
@@ -882,16 +911,25 @@ await loadModel(modelId, (pct) => {
 // === FORCE SPAWN INTO FORENSICS BAY (Module 2) ===
 setZone('forensics');
 
-// position avatar inside forensic platform
-if (avatarRoot){
-avatarRoot.position.set(Z_FORENSIC.x, 0.205,  Z_FORENSIC.z + 0.18);
+// Position avatar based on selected model
+if (avatarRoot) {
+    // Save the active model globally so the pose logic triggers
+    window.ACTIVE_MODEL = modelId; 
+
+    if (modelId === "Roman") {
+        // Roman: Moved forward slightly
+        avatarRoot.position.set(0, 0.205, -2.70);
+    } else {
+        // Roma: Original forensic spot
+        avatarRoot.position.set(0, 0.205, -2.75);
+    }
 }
 
-// snap camera to forensic bay (corrected forensic view)
-controls.target.copy(Z_FORENSIC).add(new THREE.Vector3(0, 1.35, 0));
+// Snap camera to forensic bay (Universal target for both)
+const camTarget = new THREE.Vector3(0, 1.35, -2.92);
+controls.target.copy(camTarget);
 camera.position.set(-0.11, 2.79, 3.02);
 controls.update();
-
 
 // NOW ENTER MODULE → show Module 2 console
 document.getElementById('badge').style.display = "block";
@@ -1005,6 +1043,24 @@ function animate(){
   // NORMAL RENDER FLOW
   // ==============================
   controls.update();
+
+// ==============================
+// FORCE BONE POSE ON LOCK
+// ==============================
+if (sim.ballLocked && skeleton) {
+  const isRoman = window.ACTIVE_MODEL === "Roman";
+  const poseSet = isRoman ? FL002_POSES_ROMAN.holdingBall : FL002_POSES_ROMA.holdingBall;
+
+  ["lowerarm_L","lowerarm_R","hand_L","hand_R"].forEach(name => {
+    const bone = skeleton.bones.find(b => b.name.toLowerCase().includes(name.toLowerCase()));
+    if (!bone || !poseSet[name]) return;
+
+    const r = poseSet[name];
+    bone.rotation.set(r.x, r.y, r.z);
+    bone.updateMatrixWorld(true);
+  });
+}
+
   renderer.render(scene, camera);
 }
 
