@@ -731,7 +731,7 @@ if (ballBtn) {
     if (sim.ballLocked) {
       // Pick up ball — stability test position
       applyFL002Pose("holdingBall");
-      ball.position.set(0.000, 1.500, 0.800);
+      ball.position.set(0.000, 1.350, 0.850);
 
       // Optional camera snap for weighted condition
       camera.position.set(-0.13, 2.31, 0.21);
@@ -803,11 +803,11 @@ const FL002_POSES_ROMA = {
 };
 const FL002_POSES_ROMAN = {
   idle: {
-    upperarm_L: { x: 0.0, y:  0.05, z:  -1.005 },
+    upperarm_L: { x: 0.6, y:  0.0, z:  -1.5 },
     lowerarm_L: { x: 0.0, y:  0.00, z:   0.0 },
     hand_L:     { x: 0.0, y:  0.00, z:   0.0 },
 
-    upperarm_R: { x: 0.0, y: -0.05, z:   1.005 },
+    upperarm_R: { x: 0.6, y: 0.0, z:   1.5 },
     lowerarm_R: { x: 0.0, y:  0.00, z:   0.0 },
     hand_R:     { x: 0.0, y:  0.00, z:   0.0 }
   },
@@ -815,12 +815,12 @@ const FL002_POSES_ROMAN = {
 holdingBall: {
   // LEFT ARM — Roman
   upperarm_L: { x: 1.55, y:  0.0, z: -6.6},   // shoulder flexion
-  lowerarm_L: { x: 0.57, y:  0.15, z:  0.00 },   // 
+  lowerarm_L: { x: 0.63, y:  0.15, z:  0.00 },   // 
   hand_L:     { x: 0.00, y:  -1.50, z:  0.00 },
 
   // RIGHT ARM — Roman
   upperarm_R: { x: 1.55, y: -0.0, z:  6.6 },
-  lowerarm_R: { x: 0.57, y: -0.15, z:  0.00 },  // 
+  lowerarm_R: { x: 0.63, y: -0.15, z:  0.00 },  // 
   hand_R:     { x: 0.00, y:  1.50, z:  0.00 }
 }
 };
@@ -918,10 +918,10 @@ if (avatarRoot) {
 
     if (modelId === "Roman") {
         // Roman: Moved forward slightly
-        avatarRoot.position.set(0, 0.205, -2.75);
+        avatarRoot.position.set(0, 0.08, -2.65);
     } else {
         // Roma: Original forensic spot
-        avatarRoot.position.set(0, 0.205, -2.87);
+        avatarRoot.position.set(0, 0.08, -2.83);
     }
 }
 
@@ -1060,6 +1060,7 @@ if (sim.ballLocked && skeleton) {
     bone.updateMatrixWorld(true);
   });
 }
+// Inside the animate() function
 
   renderer.render(scene, camera);
 }
@@ -1106,3 +1107,4 @@ window.addEventListener('keydown', (e) => {
 </script>
 </body>
 </html>
+
