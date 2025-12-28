@@ -35,7 +35,7 @@
 
 ---
 
-# Case 4: Shoulder Capsular Impairment
+# Case 4: Shoulder  Impairment
 
 ## Patient Profile
 - Name: Daniel M.
