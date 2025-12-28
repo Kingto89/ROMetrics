@@ -36,7 +36,7 @@
 
 ---
 
-# Case 9: Thoracic Spine Pain with Bone Integrity Concern
+# Case 9: Axial Thoracic Pain
 
 ## Patient Profile
 - Name: Margaret H.
