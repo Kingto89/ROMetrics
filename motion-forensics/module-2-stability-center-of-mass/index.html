@@ -1,564 +1,160 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>ROMetrics — Motion Forensics Labs</title>
-  <style>
-    html,body{height:100%;margin:0;overflow:hidden;background:#07101b;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;}
-    #ui{position:fixed;left:14px;top:14px;z-index:10;display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
-    .pill{border:1px solid rgba(148,163,184,.35);background:rgba(15,23,42,.78);color:#e5eefc;padding:10px 12px;border-radius:999px;font-size:13px;cursor:pointer;user-select:none;backdrop-filter: blur(8px);}
-    .pill.active{border-color:rgba(56,189,248,.8);box-shadow:0 0 0 2px rgba(56,189,248,.14) inset;}
-    #badge{position:fixed;right:14px;top:14px;z-index:100;padding:12px 12px;border-radius:16px;border:1px solid rgba(148,163,184,.25);background:rgba(15,23,42,.65);color:#cfe3ff;font-size:13px;max-width:420px;backdrop-filter: blur(8px);display:none;}
-    #badge .t{font-weight:900;letter-spacing:.2px;}
-    #badge .p{opacity:.92;margin-top:6px;line-height:1.25;}
-    #controls{margin-top:10px;padding-top:10px;border-top:1px solid rgba(148,163,184,.18);display:grid;gap:8px;}
-    .row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
-    .k{opacity:.88;}
-    .v{font-weight:900;letter-spacing:.2px;}
-    input[type=range]{width:100%;accent-color:#38bdf8;}
-    .btn{border:1px solid rgba(148,163,184,.35);background:rgba(15,23,42,.78);color:#e5eefc;padding:8px 10px;border-radius:12px;font-size:12px;cursor:pointer;}
-    #hint{position:fixed;left:14px;bottom:14px;z-index:10;padding:10px 12px;border-radius:14px;border:1px solid rgba(148,163,184,.20);background:rgba(15,23,42,.55);color:#a8c0da;font-size:12px;backdrop-filter: blur(8px);}
-      #analysisConsole { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); display: none; background: rgba(9, 20, 37, 0.95); border: 2px solid #38bdf8; border-radius: 20px; padding: 12px 20px; gap: 12px; z-index: 200; box-shadow: 0 0 25px rgba(56, 189, 248, 0.3); align-items: center; backdrop-filter: blur(10px); }
-  .console-btn { background: #1e293b; color: #e6eef7; border: 1px solid rgba(56, 189, 248, 0.5); padding: 8px 16px; border-radius: 12px; font-weight: 800; font-size: 11px; cursor: pointer; text-transform: uppercase; transition: all 0.2s ease; }
-  .console-btn:hover { background: rgba(56, 189, 248, 0.2); border-color: #38bdf8; }
-  .console-btn.active { background: #38bdf8; color: #07101b; }
-  .console-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-    #gate{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:radial-gradient(900px 600px at 50% 35%, rgba(56,189,248,0.10), rgba(7,16,27,0.96));backdrop-filter: blur(6px);}
-    #gateCard{width:min(740px, calc(100vw - 28px));border-radius:24px;border:1px solid rgba(148,163,184,.28);background:rgba(9,20,37,.72);box-shadow:0 20px 80px rgba(0,0,0,.40);padding:22px;}
-    #gateTop{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;}
-    #gateTitle{font-weight:950;font-size:22px;color:#e6eef7;letter-spacing:.2px;}
-    #gateSub{margin-top:6px;color:#a8c0da;line-height:1.25;font-size:13px;}
-    #gateGrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px;}
-    @media (max-width:640px){ #gateGrid{grid-template-columns:1fr;} }
-    .field{border:1px solid rgba(148,163,184,.22);border-radius:18px;background:rgba(15,23,42,.55);padding:14px;}
-    .field .lbl{color:#cfe3ff;font-weight:800;font-size:12px;letter-spacing:.25px;opacity:.95;}
-    .field select{width:100%;margin-top:10px;background:rgba(7,16,27,.35);border:1px solid rgba(148,163,184,.22);color:#e6eef7;border-radius:14px;padding:10px 12px;font-size:14px;outline:none;}
-    .field .desc{margin-top:10px;color:#a8c0da;font-size:12px;line-height:1.25;min-height:32px;}
-    #gateActions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px;flex-wrap:wrap;}
-    .primary{border:1px solid rgba(56,189,248,.55);background:rgba(56,189,248,.16);color:#e6eef7;padding:10px 14px;border-radius:16px;font-size:13px;cursor:pointer;font-weight:900;}
-    canvas{display:block;}
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>ROMetrics — Studio</title>
 
-  <script type="importmap">
-    {
-      "imports": {
-        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-      }
-    }
-  </script>
-</head>
-<body>
-  <div id="gate">
-    <div id="gateCard">
-      <div id="gateTop">
-        <div>
-          <div id="gateTitle">Forensics Labs</div>
-          <div id="gateSub">Select a model, then choose a lab module.</div>
-        </div>
-      </div>
+<style>
+html,body{height:100%;margin:0;overflow:hidden;background:#07101b;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;}
+canvas{display:block}
 
-      <div id="gateGrid">
-        <div class="field">
-          <div class="lbl">MODEL</div>
-          <select id="modelSelect"></select>
-          <div class="desc" id="modelDesc"></div>
-        </div>
-
-        <div class="field">
-          <div class="lbl">MODULE</div>
-          <select id="moduleSelect"></select>
-          <div class="desc" id="moduleDesc"></div>
-        </div>
-      </div>
-
-      <div id="gateActions">
-        <button id="enterBtn" class="primary">Enter Studio</button>
-      </div>
-    </div>
-  </div>
-
-<div id="badge" style="display:none;">
-    <div class="t">Forensics Labs — Studio</div>
-    <div class="p" id="moduleTitle">Module</div>
-
-<div id="console-FL-002" class="module-ui-box" style="display:none;">
-    <div class="row">
-        <div class="k">Forward/Back Lean</div>
-        <div class="v"><span id="leanVal">0.0</span>°</div>
-    </div>
-    <input id="leanSlider" type="range" min="-30" max="45" step="0.5" value="0"/>
-
-    <div class="row" style="margin-top:10px;">
-        <div class="k">Left/Right Lean</div>
-        <div class="v"><span id="leanXVal">0.0</span>°</div>
-    </div>
-    <input id="leanXSlider" type="range" min="-30" max="30" step="0.5" value="0"/>
-
-    <div class="row" style="margin-top: 15px; gap: 8px;">
-        <button id="btnSideView" class="btn" style="flex:1;">Side View</button>
-        <button id="btnFrontView" class="btn" style="flex:1;">Front View</button>
-    </div>
-
-    <div class="row" style="margin-top: 10px; gap: 8px;">
-        <button id="lockBallBtn" class="btn" style="flex:1; border-color:#38bdf8;">Pick Up Weight Ball</button>
-        <button id="toggleBaseBtn" class="btn" style="flex:1;">Base of Support</button>
-    </div>
-</div>
-
-
-    <div id="trialMsg" style="color:#a8c0da; font-size:12px; line-height:1.25; margin-top:10px; min-height:30px;">
-        Read instructions before beginning.
-    </div>
-
-   <button id="trialHelp" class="btn" style="width: 100%; margin-top: 10px; border-color: #38bdf8; color: #38bdf8;">
-        View Module Instructions & Lab Guide
-    </button>
-
-    <button id="assessmentBtn" class="primary" style="display:none; width:100%; margin-top:10px;">
-        Take Final MCQ Assessment
-    </button>
-
-    <div class="row" style="justify-content:space-between; margin-top:10px; padding-top:10px; border-top:1px solid rgba(148,163,184,.18);">
-        <div class="k">Status</div>
-        <div class="v" id="statusVal">Stable</div>
-    </div>
-</div>
-
-  <div id="trialHelpModal" style="display:none; position:fixed; inset:0; z-index:100; background:rgba(7,16,27,.85); align-items:center; justify-content:center;">
-    <div id="gateCard" style="max-width:600px; padding:0; overflow:hidden; display:flex; flex-direction:column;">
-      <div style="display:flex; background:rgba(15,23,42,.95); border-bottom:1px solid rgba(148,163,184,.25);">
-        <div id="tab-concept" class="pill active" style="border-radius:0; border:none; flex:1; text-align:center; cursor:pointer;" onclick="event.stopPropagation(); showTab('concept')">Concept</div>
-        <div id="tab-systems" class="pill" style="border-radius:0; border:none; flex:1; text-align:center; cursor:pointer;" onclick="event.stopPropagation(); showTab('systems')">Trial Guide</div>
-        <div id="tab-guide" class="pill" style="border-radius:0; border:none; flex:1; text-align:center; cursor:pointer;" onclick="event.stopPropagation(); showTab('guide')">Module Instructions</div>
-      </div>
-
-      <div id="tabContent" style="padding:24px; color:#a8c0da; font-size:13px; line-height:1.5; min-height:350px; max-height:500px; overflow-y:auto;"></div>
-      
-      <div style="padding:14px; border-top:1px solid rgba(148,163,184,.18); display:flex; justify-content:flex-end; background:rgba(9,20,37,.72);">
-        <button id="trialHelpClose" type="button" class="primary">Close Instructions</button>
-      </div>
-    </div>
-  </div>
-  <script type="module">
-// --- GLOBAL STATE & MD CACHE ---
-let cachedModuleMD = "";
-window.currentTrials = { mcqs: [] }; 
-
-// --- TAB NAVIGATION LOGIC (MODAL) ---
-window.showTab = function(tabName) {
-    const content = document.getElementById('tabContent');
-    
-    // Manage UI Tab States
-    document.querySelectorAll('#trialHelpModal .pill').forEach(p => p.classList.remove('active'));
-    const activeTab = document.getElementById('tab-' + tabName);
-    if (activeTab) activeTab.classList.add('active');
-
-    if (!cachedModuleMD) {
-        content.innerHTML = "Fetching forensic module data...";
-        return;
-    }
-
-    // A. Global Section: Module Instructions
-    if (tabName === 'guide') {
-        const guideRegex = /###\s*Module\s*Instructions/i;
-        const guideMatch = cachedModuleMD.match(guideRegex);
-        if (guideMatch) {
-            let guideBlock = cachedModuleMD.slice(guideMatch.index + guideMatch[0].length);
-            const qIdx = guideBlock.search(/Checkpoint\s*Questions/i);
-            if (qIdx !== -1) guideBlock = guideBlock.slice(0, qIdx);
-            content.innerHTML = formatMD(guideBlock);
-        }
-        return;
-    }
-
-    // B. Concept & Trial Guide (Generic for Module 2 Analysis)
-    let searchRegex;
-    if (tabName === 'concept') searchRegex = /###\s*Concept\s*\(read\s*first\):/i;
-    if (tabName === 'systems') searchRegex = /###\s*Trial\s*Guide:/i;
-
-    const headerMatch = cachedModuleMD.match(searchRegex);
-    if (headerMatch) {
-        const fromStart = cachedModuleMD.slice(headerMatch.index + headerMatch[0].length);
-        const endIdx = fromStart.indexOf('---');
-        content.innerHTML = formatMD(endIdx !== -1 ? fromStart.slice(0, endIdx) : fromStart);
-    } else {
-        content.innerHTML = `Heading for "${tabName}" not found.`;
-    }
-};
-
-// --- MARKDOWN FORMATTING HELPER ---
-function formatMD(text) {
-    return text.trim()
-        .replace(/\n/g, '<br>')
-        .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
-        .replace(/\_(.*?)\_/g, '<i>$1</i>')
-        .replace(/\#+/g, '') 
-        .replace(/\$\$(.*?)\$\$/g, '<div style="background:rgba(56,189,248,0.1); padding:12px; border-radius:10px; color:#38bdf8; font-family:monospace; margin:15px 0; text-align:center; border:1px solid rgba(56,189,248,0.2); font-size:1.1em;">$1</div>');
+/* ===== Gate (UNCHANGED LAYOUT) ===== */
+#gate{
+  position:fixed;inset:0;z-index:50;
+  display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(900px 600px at 50% 35%, rgba(56,189,248,.10), rgba(7,16,27,.96));
+  backdrop-filter:blur(6px);
+}
+#gateCard{
+  width:min(740px,calc(100vw - 28px));
+  border-radius:24px;
+  border:1px solid rgba(148,163,184,.28);
+  background:rgba(9,20,37,.72);
+  box-shadow:0 20px 80px rgba(0,0,0,.40);
+  padding:22px;
+}
+#gateTitle{font-weight:950;font-size:22px;color:#e6eef7}
+#gateSub{margin-top:6px;color:#a8c0da;font-size:13px}
+#gateGrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
+@media(max-width:640px){#gateGrid{grid-template-columns:1fr}}
+.field{border:1px solid rgba(148,163,184,.22);border-radius:18px;background:rgba(15,23,42,.55);padding:14px}
+.field .lbl{color:#cfe3ff;font-weight:800;font-size:12px}
+.field select{
+  width:100%;margin-top:10px;
+  background:rgba(7,16,27,.35);
+  border:1px solid rgba(148,163,184,.22);
+  color:#e6eef7;border-radius:14px;
+  padding:10px 12px;font-size:14px
+}
+.field .desc{margin-top:10px;color:#a8c0da;font-size:12px;min-height:32px}
+#gateActions{display:flex;justify-content:flex-end;margin-top:16px}
+.primary{
+  border:1px solid rgba(56,189,248,.55);
+  background:rgba(56,189,248,.16);
+  color:#e6eef7;
+  padding:10px 16px;
+  border-radius:16px;
+  font-weight:900;
+  cursor:pointer
 }
 
-// --- MODULE 2 COMPLETION & MCQ TRIGGER ---
-window.renderMCQ = function() {
-    const $trialMsg = document.getElementById('trialMsg');
-    sim.running = false;
-    if (window.controls) window.controls.enabled = true; 
-
-    $trialMsg.innerHTML = `<b style="color:#38bdf8;">Forensic Validation Successful.</b> Stability analysis complete.`;
-    
-    const aBtn = document.getElementById('assessmentBtn');
-    if (aBtn) {
-        aBtn.style.display = 'block';
-        const modId = document.getElementById('moduleSelect').value || "FL-002";
-        aBtn.onclick = () => { 
-            window.open(`https://kingto89.github.io/ROMetrics.com/motion-forensics/MCQ/?module=${modId}`, '_blank'); 
-        };
-    }
-};
-
-// --- GLOBAL HELP BUTTON WIRING ---
-document.getElementById('trialHelp').onclick = async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    document.getElementById('trialHelpModal').style.display = 'flex';
-    
-    const modId = document.getElementById('moduleSelect').value || "FL-001";
-    const fileName = modId.toLowerCase().replace('fl-', 'module_');
-    const path = `https://raw.githubusercontent.com/Kingto89/ROMetrics.com/main/assets/forensics_modules/${fileName}.md`;
-    
-    try {
-        const res = await fetch(path);
-        if (res.ok) {
-            cachedModuleMD = await res.text();
-            window.showTab('concept'); 
-        } else {
-            document.getElementById('tabContent').innerHTML = "Failed to load module instructions.";
-        }
-    } catch (err) { 
-        console.error("MD Load Error", err); 
-    }
-};
-
-// --- MODAL CLOSE WIRING ---
-document.getElementById('trialHelpClose').onclick = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    document.getElementById('trialHelpModal').style.display = 'none';
-};
-    
-    import * as THREE from 'three';
-    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-
-const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-
-// ==============================
-// SIMULATION STATE (GLOBAL)
-// ==============================
-const sim = {
-    isStabilityMode: true,
-    leanZ: 0,          // Forward/Back rotation
-    leanX: 0,          // Left/Right rotation
-    ballLocked: false, // Weight ball attachment state
-    running: false,
-    elapsed: 0
-};
-
-// Exposure for external access
-window.sim = sim;
-
-// --- MODULE UPDATE REGISTRY ---
-const MODULE_CONTROLLERS = {
-    'FL-002': updateStabilityModule // Keeping only the stability logic controller
-};
-
-let activeUpdateFunction = null; 
-
-let avatarRoot = null;
-let skeleton = null;
-let mixer = null;
-
-// ==============================
-// Skeleton capture (GLOBAL, one-time)
-// ==============================
-if (!animate._getSkeleton) {
-    animate._getSkeleton = (root) => {
-        let sk = null;
-        root.traverse(o => {
-            if (sk) return;
-            if (o.isSkinnedMesh && o.skeleton) sk = o.skeleton;
-        });
-        return sk;
-    };
+/* ===== Zone Pills ===== */
+#ui{
+  position:fixed;left:14px;top:14px;z-index:10;
+  display:none;gap:10px;flex-wrap:wrap
 }
+.pill{
+  border:1px solid rgba(148,163,184,.35);
+  background:rgba(15,23,42,.78);
+  color:#e5eefc;
+  padding:10px 12px;
+  border-radius:999px;
+  font-size:13px;
+  cursor:pointer
+}
+.pill.active{
+  border-color:rgba(56,189,248,.8);
+  box-shadow:0 0 0 2px rgba(56,189,248,.14) inset
+}
+</style>
 
-    
-// ==============================
-// ==============================
-    // 0) REGISTRY (Model + Modules)
-    // ==============================
-const MODEL_URLS = {
-  Roma:  "https://kingto89.github.io/ROMetrics.com/assets/Roma_ROMetrics.glb",
-  Roman: "https://kingto89.github.io/ROMetrics.com/assets/Roman_ROMetrics.glb"
-};
-
-const MODELS = [
-  { id:"Roma",  label:"Roma ",  desc:"Female ROMetrics model.",  url: MODEL_URLS.Roma },
-  { id:"Roman", label:"Roman",  desc:"Male ROMetrics model.", url: MODEL_URLS.Roman }
-];
-
-let ACTIVE_MODEL_ID = "Roma";
-
-const ANAT_PRESETS = {
-  Roma:  { shTuck: 35, shER: 10, hipAdd: 5, spine01Flex: 0, upperarmFlex: 0 },  // degrees
-  Roman: { shTuck: 43, shER: 7, hipAdd: 0, spine01Flex: 5, upperarmFlex: 25 }   // degrees
-};
-
-
-let ANAT = { ...ANAT_PRESETS[ACTIVE_MODEL_ID] };
-// ==============================
-// FL-002 — Module 2 Upper-Body Poses
-// ==============================
-const FL002_POSES = {
-  idle: { // default: NOT holding ball
-    upperarm_L: { x: 0.0, y:  0.10, z:  -7.5 },
-    lowerarm_L: { x: -0.0, y:  0.00, z:  0.0 },
-    hand_L:     { x:  0.00, y:  0.00, z:  0.0 },
-
-    upperarm_R: { x: -0.0, y: -0.10, z: 7.5 },
-    lowerarm_R: { x: -0.0, y:  0.00, z: -0.00 },
-    hand_R:     { x:  0.00, y:  0.00, z:  0.00 }
-  },
-
-  holdingBall: { // applied when ball is picked up
-    upperarm_L: { x: -0.75, y:  0.20, z:  0.30 },
-    lowerarm_L: { x: -1.10, y:  0.00, z:  0.15 },
-    hand_L:     { x:  0.10, y:  0.00, z:  0.00 },
-
-    upperarm_R: { x: -0.75, y: -0.20, z: -0.30 },
-    lowerarm_R: { x: -1.10, y:  0.00, z: -0.15 },
-    hand_R:     { x:  0.10, y:  0.00, z:  0.00 }
+<script type="importmap">
+{
+  "imports":{
+    "three":"https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"
   }
+}
+</script>
+</head>
+
+<body>
+
+<!-- ===== ENTRY GATE ===== -->
+<div id="gate">
+  <div id="gateCard">
+    <div id="gateTitle">Forensics Labs</div>
+    <div id="gateSub">Select a model to enter the studio.</div>
+
+    <div id="gateGrid">
+      <div class="field">
+        <div class="lbl">MODEL</div>
+        <select id="modelSelect">
+          <option value="Roma">Roma</option>
+          <option value="Roman">Roman</option>
+        </select>
+        <div class="desc" id="modelDesc">Default ROMetrics model.</div>
+      </div>
+
+      <div class="field">
+        <div class="lbl">MODULE</div>
+        <select disabled>
+          <option selected>Studio Preview</option>
+        </select>
+        <div class="desc">Environment only</div>
+      </div>
+    </div>
+
+    <div id="gateActions">
+      <button id="enterBtn" class="primary">Enter Studio</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+const $enter = document.getElementById('enterBtn');
+
+/* ===== MODELS ===== */
+const MODEL_URLS={
+  Roma:"https://kingto89.github.io/ROMetrics.com/assets/Roma_ROMetrics.glb",
+  Roman:"https://kingto89.github.io/ROMetrics.com/assets/Roman_ROMetrics.glb"
 };
 
-// ==============================
-// FL-002 Pose Applier (Upper Body Only)
-// ==============================
-function applyFL002Pose(poseName) {
-    if (!skeleton) {
-        console.warn("Pose failed: Global skeleton variable is null.");
-        return;
-    }
+/* ===== THREE SETUP ===== */
+const scene=new THREE.Scene();
+scene.fog=new THREE.Fog(0x07101b,10,45);
 
-    const pose = FL002_POSES[poseName];
-    if (!pose) return;
+const camera=new THREE.PerspectiveCamera(55,innerWidth/innerHeight,.1,120);
+camera.position.set(6.8,3.9,8.6);
 
-    console.log(`Applying ${poseName} pose...`);
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth,innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+document.body.appendChild(renderer.domElement);
 
-    for (const boneName in pose) {
-        // Use getBoneByName or find a partial match to handle prefixes
-        const bone = skeleton.bones.find(b => b.name.includes(boneName));
-        
-        if (bone) {
-            const r = pose[boneName];
-            bone.rotation.set(r.x, r.y, r.z);
-        }
-    }
-}
+const controls=new OrbitControls(camera,renderer.domElement);
+controls.target.set(0,1.35,0);
+controls.enableDamping=true;
 
-function setAnatForModel(id){
-  ACTIVE_MODEL_ID = (id === "Roman" || id === "Roma") ? id : "Roma";
-  ANAT = { ...ANAT_PRESETS[ACTIVE_MODEL_ID] };
-}
+/* ===== LIGHTS ===== */
+scene.add(new THREE.AmbientLight(0x6aa0d8,.8));
+const key=new THREE.DirectionalLight(0xffffff,1.05);
+key.position.set(7,10,5);
+scene.add(key);
 
-const FORENSICS_MODULES = [
+/* ===== MATERIALS ===== */
+const matFloor=new THREE.MeshStandardMaterial({color:0x0a1a2e,roughness:.95});
+const matWall=new THREE.MeshStandardMaterial({color:0x091425,roughness:.9});
+const matDark=new THREE.MeshStandardMaterial({color:0x0b1220,roughness:.85});
+const matSteel=new THREE.MeshStandardMaterial({color:0x7a8aa0,roughness:.35,metalness:.55});
+const matBelt = new THREE.MeshStandardMaterial({color: 0x0b1018, roughness: 0.98, metalness: 0.00});
+const wallScreen = {tex: new THREE.CanvasTexture(document.createElement('canvas'))};
+const c=document.createElement('canvas'),x=c.getContext('2d');c.width=256;c.height=48;x.fillStyle='#0b1220';x.fillRect(0,0,256,48);Object.assign(x,{fillStyle:'#e6eef7',font:'600 18px system-ui',textAlign:'center',textBaseline:'middle'});x.fillText('0 mph',128,24);const consoleScreen={tex:new THREE.CanvasTexture(c)};
 
-  { 
-  id:'FL-002', 
-    label:'Module 2 — Stability & Center of Mass', 
-    desc:'Analysis Booth: identify the tipping point.', 
-    zone:'forensics', // Moved to Analysis Area
-    onEnter: enterFL002  // New function defined below
-  },
-
-];
-
-
-// --- MODULE CONSOLE INDEX ---
-const MODULE_CONSOLES = {
-  'FL-002': document.getElementById('console-FL-002'),
-};    
-    let currentModule = null;
-
-    // ==============================
-    // 1) Gate UI wiring
-    // ==============================
-    const $gate = document.getElementById('gate');
-    const $modelSel = document.getElementById('modelSelect');
-    const $modSel = document.getElementById('moduleSelect');
-    const $modelDesc = document.getElementById('modelDesc');
-    const $modDesc = document.getElementById('moduleDesc');
-    const $enter = document.getElementById('enterBtn');
-
-    const $ui = document.getElementById('ui');
-    const $badge = document.getElementById('badge');
-    const $hint = document.getElementById('hint');
-    const $moduleTitle = document.getElementById('moduleTitle');
-
-    function fillSelect($sel, items){
-      $sel.innerHTML = '';
-      for (const it of items){
-        const opt = document.createElement('option');
-        opt.value = it.id;
-        opt.textContent = it.label;
-        $sel.appendChild(opt);
-      }
-    }
-    function getModel(id){ return MODELS.find(m=>m.id===id) || MODELS[0]; }
-    function getModule(id){ return FORENSICS_MODULES.find(m=>m.id===id) || FORENSICS_MODULES[0]; }
-
-    fillSelect($modelSel, MODELS);
-    fillSelect($modSel, FORENSICS_MODULES);
-
-    function refreshGate(){
-      const m = getModel($modelSel.value);
-      const mod = getModule($modSel.value);
-      $modelDesc.textContent = m.desc || '';
-      $modDesc.textContent = mod.desc || '';
-    }
-    $modelSel.addEventListener('change', refreshGate);
-    $modSel.addEventListener('change', refreshGate);
-    refreshGate();
-
-   
-
-// Reset Messages & Hide Assessment Button
-    document.getElementById('trialMsg').textContent = 'Read the instructions above. When ready, press Start.';
-    
-    // We check for the button directly by ID without re-declaring it as a 'const'
-    if (document.getElementById('assessmentBtn')) {
-        document.getElementById('assessmentBtn').style.display = 'none';
-    }
-// ==============================
-//  Studio: Three.js base
-// ==============================
-const scene = new THREE.Scene();
-scene.fog = new THREE.Fog(0x07101b, 10, 45);
-
-    const camera = new THREE.PerspectiveCamera(55, innerWidth/innerHeight, 0.1, 120);
-    camera.position.set(6.8, 3.9, 8.6);
-
-    const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:false });
-    renderer.setSize(innerWidth, innerHeight);
-    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-    renderer.shadowMap.enabled = false;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    document.body.appendChild(renderer.domElement);
-
-    window.controls = new OrbitControls(camera, renderer.domElement);
-    window.controls.target.set(0, 1.35, 0);    controls.enableDamping = true;
-    controls.dampingFactor = 0.07;
-    controls.maxPolarAngle = Math.PI * 0.49;
-    controls.minDistance = 0.5;
-    controls.maxDistance = 18.0;
-
-    // Lights
-    scene.add(new THREE.AmbientLight(0x6aa0d8, 1.77));
-
-    const key = new THREE.DirectionalLight(0xffffff, 1.05);
-    key.position.set(7, 10, 5);
-    key.castShadow = true;
-    key.shadow.mapSize.set(2048,2048);
-    key.shadow.camera.near = 0.5;
-    key.shadow.camera.far = 40;
-    key.shadow.camera.left = -10;
-    key.shadow.camera.right = 10;
-    key.shadow.camera.top = 10;
-    key.shadow.camera.bottom = -10;
-    scene.add(key);
-
-    const rim = new THREE.DirectionalLight(0x38bdf8, 0.28);
-    rim.position.set(-9, 6, -7);
-    scene.add(rim);
-
-    // Materials
-    const matFloor = new THREE.MeshStandardMaterial({ color:0x0a1a2e, roughness:0.95, metalness:0.05 });
-    const matWall  = new THREE.MeshStandardMaterial({ color:0x091425, roughness:0.9, metalness:0.05 });
-    const matDark  = new THREE.MeshStandardMaterial({ color:0x0b1220, roughness:0.85, metalness:0.08 });
-    const matSteel = new THREE.MeshStandardMaterial({ color:0x7a8aa0, roughness:0.35, metalness:0.55 });
-    const matGlow  = new THREE.MeshStandardMaterial({ color:0x38bdf8, roughness:0.35, metalness:0.25, emissive:0x103040, emissiveIntensity:0.8 });
-
-    // ==============================
-    // 3) Live screens + Belt texture
-    // ==============================
-    function makeScreenCanvas(w=512,h=256){
-      const c = document.createElement('canvas');
-      c.width = w; c.height = h;
-      const ctx = c.getContext('2d');
-      const tex = new THREE.CanvasTexture(c);
-      tex.anisotropy = 8;
-      return { c, ctx, tex };
-    }
-    const wallScreen = makeScreenCanvas(1024, 320);
-    const consoleScreen = makeScreenCanvas(512, 256);
-
-    const beltCanvas = document.createElement('canvas');
-    beltCanvas.width = 512;
-    beltCanvas.height = 512;
-    const bctx = beltCanvas.getContext('2d');
-
-    {
-      const g = bctx.createLinearGradient(0,0,512,0);
-      g.addColorStop(0.00,'#0a0f16');
-      g.addColorStop(0.35,'#0c1522');
-      g.addColorStop(0.65,'#0b1320');
-      g.addColorStop(1.00,'#09101a');
-      bctx.fillStyle = g;
-      bctx.fillRect(0,0,512,512);
-      bctx.fillStyle = 'rgba(0,0,0,0.18)';
-      bctx.fillRect(252, 0, 8, 512);
-
-      let y = 0;
-      while (y < 512){
-        const h = 1 + Math.floor(Math.random()*2);
-        const a = 0.020 + Math.random()*0.030;
-        bctx.fillStyle = `rgba(255,255,255,${a})`;
-        bctx.fillRect(0, y, 512, h);
-        y += 12 + Math.floor(Math.random()*16);
-      }
-      for (let i=0;i<900;i++){
-        const x = Math.random()*512;
-        const yy = Math.random()*512;
-        bctx.fillStyle = `rgba(255,255,255,${Math.random()*0.05})`;
-        bctx.fillRect(x,yy,1,1);
-      }
-    }
-
-    const beltTex = new THREE.CanvasTexture(beltCanvas);
-    beltTex.anisotropy = 8;
-    beltTex.wrapS = THREE.RepeatWrapping;
-    beltTex.wrapT = THREE.RepeatWrapping;
-    beltTex.repeat.set(1, 8.0);
-    beltTex.offset.set(0, 0);
-
-    const matBelt = new THREE.MeshStandardMaterial({
-      map: beltTex,
-      color: 0x0b1018,
-      roughness: 0.98,
-      metalness: 0.00
-    });
-
- function roundRect(ctx, x, y, w, h, r){
-  const min = Math.min(w,h);
-  if (r > min/2) r = min/2;
-  ctx.beginPath();
-  ctx.moveTo(x+r, y);
-  ctx.arcTo(x+w, y, x+w, y+h, r);
-  ctx.arcTo(x+w, y+h, x, y+h, r);
-  ctx.arcTo(x, y+h, x, y, r);
-  ctx.arcTo(x, y, x+w, y, r);
-  ctx.closePath();
-}
 
     // ==============================
     // 4) Room + zones (REAL SCALE)
@@ -598,6 +194,17 @@ scene.fog = new THREE.Fog(0x07101b, 10, 45);
     let labelsOn = false;
     const labelGroup = new THREE.Group();
     scene.add(labelGroup);
+function roundRect(ctx, x, y, w, h, r){
+  const min = Math.min(w, h);
+  if (r > min / 2) r = min / 2;
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y,     x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x,     y + h, r);
+  ctx.arcTo(x,     y + h, x,     y,     r);
+  ctx.arcTo(x,     y,     x + w, y,     r);
+  ctx.closePath();
+}
 
     function makeLabel(text){
       const canvas = document.createElement('canvas');
@@ -632,15 +239,19 @@ scene.fog = new THREE.Fog(0x07101b, 10, 45);
       return plate;
     }
 
-    // Zone centers
-    const Z_STRENGTH = new THREE.Vector3(-4.4, 0, 2.1);
-    const Z_CARDIO   = new THREE.Vector3( 4.4, 0, 2.1);
-    const Z_FORENSIC = new THREE.Vector3( 0.0, 0, -3.1);
+/* ===== ZONES ===== */
+const Z_STRENGTH=new THREE.Vector3(-4.4,0,2.1);
+const Z_CARDIO=new THREE.Vector3(4.4,0,2.1);
+const Z_FORENSIC=new THREE.Vector3(0,0,-3.1);
+
 
     // Strength zone (scaled realistic)
     const zoneStrength = new THREE.Group();
     zoneStrength.name = 'strength';
     zoneStrength.position.copy(Z_STRENGTH);
+    const bench = new THREE.Group();
+    zoneStrength.add(bench);
+
 
     const platS = zoneBasePlate(4.2, 3.2);
     platS.position.set(0, 0.03, 0);
@@ -650,15 +261,18 @@ scene.fog = new THREE.Fog(0x07101b, 10, 45);
     const benchTop = new THREE.Mesh(new THREE.BoxGeometry(1.35, 0.10, 0.34), matDark);
     benchTop.position.set(0, 0.48, 0.35);
     benchTop.castShadow = true;
-    zoneStrength.add(benchTop);
+    bench.add(benchTop);
 
     const benchLegGeo = new THREE.BoxGeometry(0.06, 0.45, 0.06);
     [[-0.55,0.22,0.23],[0.55,0.22,0.23],[-0.55,0.22,0.47],[0.55,0.22,0.47]].forEach(p=>{
       const l = new THREE.Mesh(benchLegGeo, matSteel);
       l.position.set(p[0], p[1], p[2]);
       l.castShadow = true;
-      zoneStrength.add(l);
+      bench.add(l);
     });
+
+   bench.position.z += 0.5;
+
 
     const upGeo = new THREE.BoxGeometry(0.08, 1.55, 0.08);
     const uprL = new THREE.Mesh(upGeo, matSteel); uprL.position.set(-0.55, 0.80, -0.55); uprL.castShadow = true;
@@ -764,7 +378,8 @@ scene.fog = new THREE.Fog(0x07101b, 10, 45);
 
     scene.add(zoneStrength);
 
-    // Cardio zone (realistic treadmill size)
+
+ //zone (realistic treadmill size)//
     const zoneCardio = new THREE.Group();
     zoneCardio.name = 'cardio';
     zoneCardio.position.copy(Z_CARDIO);
@@ -803,11 +418,11 @@ scene.fog = new THREE.Fog(0x07101b, 10, 45);
     tmDeck.receiveShadow = true;
     treadmill.add(tmDeck);
 
-    const tmBelt = new THREE.Mesh(new THREE.PlaneGeometry(BELT_W, BELT_L), matBelt);
-    tmBelt.rotation.x = -Math.PI/2;
-    tmBelt.position.set(0, 0.295, 0);
-    tmBelt.receiveShadow = true;
-    treadmill.add(tmBelt);
+  const tmBelt = new THREE.Mesh(new THREE.PlaneGeometry(BELT_W, BELT_L), matBelt);
+tmBelt.rotation.x = -Math.PI/2;
+tmBelt.position.set(0, 0.296, 0); // Slight lift to avoid Z-fighting
+tmBelt.receiveShadow = true;
+treadmill.add(tmBelt);
 
     const beltEdges = new THREE.LineSegments(
       new THREE.EdgesGeometry(new THREE.BoxGeometry(BELT_W + 0.10, 0.02, BELT_L + 0.10)),
@@ -893,45 +508,14 @@ tmScreen.rotation.set(-0.10, 0, 0);
 
 
 
-    // Wall board (live)
-    const board = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.88, 0.08), new THREE.MeshStandardMaterial({ color:0x111b2e, roughness:0.6, metalness:0.15 }));
-    board.position.set(0, 2.55, -1.55);
-    zoneCardio.add(board);
+   // Cardio zone label (kept)
+const lblC = makeLabel('Cardio Bay');
+lblC.position.copy(Z_CARDIO).add(new THREE.Vector3(0, 4.1, -1.6));
+labelGroup.add(lblC);
 
-    const boardFace = new THREE.Mesh(
-  new THREE.PlaneGeometry(2.46, 0.78),
-  new THREE.MeshBasicMaterial({
-    map: wallScreen.tex,
-    transparent: true,
-    depthTest: false,
-    depthWrite: false,
-    toneMapped: false
-  })
-);
-boardFace.position.set(0, 2.55, -1.495);   // <-- moved in front of the board
-boardFace.renderOrder = 1000;
-zoneCardio.add(boardFace);
+// Add cardio zone to scene
+scene.add(zoneCardio);
 
-const boardGlow = new THREE.Mesh(
-  new THREE.PlaneGeometry(2.6, 0.92),
-  new THREE.MeshBasicMaterial({
-    color:0x38bdf8,
-    transparent:true,
-    opacity:0.10,
-    depthWrite:false,
-    depthTest:false
-  })
-);
-boardGlow.position.set(0, 2.55, -1.505);   // <-- behind the text plane
-boardGlow.renderOrder = 900;
-zoneCardio.add(boardGlow);
-
-
-    const lblC = makeLabel('Cardio Bay');
-    lblC.position.copy(Z_CARDIO).add(new THREE.Vector3(0, 4.1, -1.6));
-    labelGroup.add(lblC);
-
-    scene.add(zoneCardio);
 
 // Forensics zone (realistic)
 const zoneForensics = new THREE.Group();
@@ -1031,644 +615,183 @@ labelGroup.add(lblF);
 
 scene.add(zoneForensics);
 
-    // ==============================
-    // 5) Avatar / model loader
-    // ==============================
- 
-    function buildPreviewMannequin(){
-      const avatar = new THREE.Group();
-      avatar.userData.__isMannequin = true;
-      const bodyMat = new THREE.MeshStandardMaterial({ color:0xdbe7f7, roughness:0.65, metalness:0.08 });
 
-      const pelvis = new THREE.Mesh(new THREE.CapsuleGeometry(0.20, 0.14, 6, 14), bodyMat);
-      pelvis.position.set(0, 0.95, 0); pelvis.castShadow = true;
+/* ===== ZONE CONTROL ===== */
+function setZone(z){
+  zoneStrength.visible=(z==="all"||z==="strength");
+  zoneCardio.visible=(z==="all"||z==="cardio");
+  zoneForensics.visible=(z==="all"||z==="forensics");
+}
+setZone("all");
 
-      const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.26, 0.55, 8, 18), bodyMat);
-      torso.position.set(0, 1.55, 0); torso.castShadow = true;
+/* ===== AVATAR ===== */
+let avatarRoot = null;
 
-      const head = new THREE.Mesh(new THREE.SphereGeometry(0.17, 18, 18), bodyMat);
-      head.position.set(0, 2.15, 0); head.castShadow = true;
 
-      const limb = (r,l)=>{ const m=new THREE.Mesh(new THREE.CapsuleGeometry(r,l,6,12), bodyMat); m.castShadow=true; return m; };
-      const armL = limb(0.06, 0.45); armL.position.set(-0.38, 1.65, 0); armL.rotation.z = 0.45;
-      const armR = limb(0.06, 0.45); armR.position.set( 0.38, 1.65, 0); armR.rotation.z = -0.45;
-      const legL = limb(0.07, 0.60); legL.position.set(-0.14, 0.55, 0);
-      const legR = limb(0.07, 0.60); legR.position.set( 0.14, 0.55, 0);
-
-      avatar.add(pelvis, torso, head, armL, armR, legL, legR);
-      return avatar;
-    }
-async function loadSelectedModel(modelId, onProgress) {
-  const m = getModel(modelId);
-
-  if (!m || !m.url) {
-    ACTIVE_MODEL_ID = m?.id || null;
-
-    if (avatarRoot) {
-      scene.remove(avatarRoot);
-      avatarRoot = null;
-    }
-
-    avatarRoot = buildPreviewMannequin();
-    scene.add(avatarRoot);
-    animate._getSkeleton(avatarRoot);
-    return avatarRoot;
-  }
-
-  ACTIVE_MODEL_ID = m.id;
-
-  if (avatarRoot) {
-    scene.remove(avatarRoot);
-    avatarRoot = null;
-  }
-
+function loadModel(id, onProgress){
   return new Promise((resolve, reject) => {
+    const url = MODEL_URLS[id];
     const loader = new GLTFLoader();
 
     loader.load(
-      m.url,
+      url,
+
+      // ✅ ON LOAD (100%)
       (gltf) => {
-        avatarRoot = gltf.scene || (gltf.scenes && gltf.scenes[0]) || null;
-
-        if (!avatarRoot) return reject(new Error("GLB loaded but scene is empty"));
-
-        // Normalize height to ~1.75m
-        avatarRoot.updateWorldMatrix(true, true);
-
-        const meshBoxes = [];
-        const mean = new THREE.Vector3();
-        let n = 0;
-
-        avatarRoot.traverse((o) => {
-          if (!(o.isMesh || o.isSkinnedMesh) || !o.geometry) return;
-          if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
-
-          const b = new THREE.Box3().copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld);
-          const center = new THREE.Vector3();
-          b.getCenter(center);
-          meshBoxes.push({ b, center });
-          mean.add(center);
-          n++;
-        });
-
-        if (n > 0) {
-          mean.multiplyScalar(1 / n);
-          const box = new THREE.Box3();
-          for (const it of meshBoxes) {
-            if (it.center.distanceTo(mean) < 5.0) box.union(it.b);
-          }
-
-          const size = new THREE.Vector3();
-          box.getSize(size);
-
-          if (size.y > 1e-6) {
-            const targetH = 1.75;
-            const s = targetH / size.y;
-            avatarRoot.scale.setScalar(s);
-            avatarRoot.updateWorldMatrix(true, true);
-          }
-        }
-
-        scene.add(avatarRoot);
-
-// Ensure these lines exist here to drive the model animation:
-if (gltf.animations && gltf.animations.length) {
-    mixer = new THREE.AnimationMixer(avatarRoot);
-    const clip = gltf.animations.find(c => /run|jog|walk/i.test(c.name)) || gltf.animations[0];
-    runAction = mixer.clipAction(clip);
-    runAction.play();
-    runAction.paused = true; // Stay paused until the user clicks "Start"
-}  
-        resolve(avatarRoot);
+        scene.add(gltf.scene);
+        avatarRoot = gltf.scene;
+        resolve(gltf);
       },
+
+      // ✅ REAL PROGRESS (0–100)
       (xhr) => {
-        if (!onProgress) return;
-        const loaded = xhr?.loaded || 0;
-        const totalRaw = xhr?.total || 0;
-        const total = totalRaw >= loaded ? totalRaw : loaded;
-        onProgress(total ? Math.round((loaded / total) * 100) : null);
+        if (xhr.total && onProgress) {
+          let pct = Math.round((xhr.loaded / xhr.total) * 100);
+pct = Math.min(100, Math.max(0, pct)); // clamp 0–100
+onProgress(pct);
+
+        }
       },
+
+      // ❌ ERROR
       (err) => reject(err)
     );
   });
 }
 
-
-    // ==============================
-    // 6) Zone + Module router (with snap)
-    // ==============================
-
-    const camGoalPos = new THREE.Vector3(6.8, 3.9, 8.6);
-    const camGoalTarget = new THREE.Vector3(0, 1.35, 0);
-
-    function snapCam(){
-      camera.position.copy(camGoalPos);
-      controls.target.copy(camGoalTarget);
-      controls.update();   
-    }
-
-function placeAvatarForZone(which) {
-  if (!avatarRoot) return;
-  
-  // Hard-lock to currentModule.zone if it exists to stop jumping between bays
-  const targetZone = (currentModule && currentModule.zone) ? currentModule.zone : which;
-  let rotY = 0;
-
-  if (targetZone === 'strength') {
-    avatarRoot.position.copy(Z_STRENGTH).add(new THREE.Vector3(0, 0.06, -0.10));
-    rotY = 0;
-  } else if (targetZone === 'cardio') {
-    // Lock to Cardio Bay treadmill
-    avatarRoot.position.copy(Z_CARDIO).add(new THREE.Vector3(0, 0.30, 0.05));
-    rotY = Math.PI; 
-  } else if (targetZone === 'forensics' || targetZone === 'analysis') {
-    avatarRoot.position.copy(Z_FORENSIC).add(new THREE.Vector3(0, 0.06, 0.00));
-    rotY = 0;
-  }
-  avatarRoot.rotation.set(0, rotY, 0);
-}
-
-function setZone(which) {
-  zoneStrength.visible = true;
-  zoneCardio.visible = true;
-  zoneForensics.visible = true;
-
-  if (which === 'strength') {
-    camGoalTarget.set(Z_STRENGTH.x, 1.25, Z_STRENGTH.z);
-    camGoalPos.set(Z_STRENGTH.x + 3.2, 2.6, Z_STRENGTH.z + 4.8);
-
-  } else if (which === 'cardio') {
-    // Applied Debug: Forensics Offset + 4.25, 2.71, + 10.43
-    // This gives you the wide, zoomed-out view of the Cardio Bay
-    camGoalTarget.set(Z_CARDIO.x, 1.10, Z_CARDIO.z);
-    camGoalPos.set(Z_FORENSIC.x + 4.48, 4.21, Z_FORENSIC.z + 11.23); 
-
-  } else if (which === 'forensics') {
-    // Applied Debug: Forensics Offset + 1.01, 2.66, + 6.07
-    // This provides the corrected Forensic Movement Analysis view
-    camGoalTarget.set(Z_FORENSIC.x, 1.25, Z_FORENSIC.z);
-    camGoalPos.set(Z_FORENSIC.x + -0.11, 2.79, Z_FORENSIC.z + 6.12); 
-
-  } else {
-    camGoalTarget.set(0, 1.35, 0);
-    camGoalPos.set(6.8, 3.9, 8.6);
-  }
-
-  placeAvatarForZone(which);
-}
-
-// UPDATE enterFL002 function to match new buttons and wire spine01
-async function enterFL002() {
-    currentModule = "FL-002";
-    console.log("FL-002 ENTERED — Stability & CoM Analysis");
-
-    // 1. SIMULATION STATE
-    sim.running = false;          
-    sim.isStabilityMode = true;   
-    sim.leanZ = 0;                
-    sim.leanX = 0;                
-    sim.ballLocked = false;
-
-    // 2. STOP ANIMATION OVERRIDES
-    // This is critical: if the mixer is running, it will overwrite manual bone rotations
-    if (mixer) {
-        mixer.stopAllAction(); 
-        // Optional: stop the mixer from updating entirely
-        mixer.update(0); 
-    }
-
-    // 3. REFRESH SKELETON REFERENCE
-    // Ensures we have the latest bone handles for the current model
-    if (avatarRoot) {
-        avatarRoot.traverse(o => {
-            if (o.isSkinnedMesh && o.skeleton) {
-                skeleton = o.skeleton;
-            }
-        });
-    }
-
-    setZone('forensics'); 
-
-    // 4. APPLY INITIAL POSE
-    // Use a small timeout to ensure the mixer has released the bones
-    setTimeout(() => {
-        console.log("Applying FL-002 static idle pose...");
-        applyFL002Pose("idle");
-    }, 50);
-
-
-    // 3. UI References
-    const leanZSlider = document.getElementById('leanSlider');
-    const leanXSlider = document.getElementById('leanXSlider');
-    const leanZVal = document.getElementById('leanVal');
-    const leanXVal = document.getElementById('leanXVal');
-    const ballBtn = document.getElementById('lockBallBtn');
-ballBtn.onclick = () => {
-
-  // Toggle ball state
-  sim.ballLocked = !sim.ballLocked;
-
-  if (sim.ballLocked) {
-    // Pick up ball → apply holding pose
-    applyFL002Pose("holdingBall");
-    ballBtn.textContent = "Release Weight Ball";
-  } else {
-    // Release ball → return to idle pose
-    applyFL002Pose("idle");
-    ballBtn.textContent = "Pick Up Weight Ball";
-  }
-};
-
-    const baseBtn = document.getElementById('toggleBaseBtn');
-    const forcePlate = scene.getObjectByName("forcePlate");
-    const $msg = document.getElementById('trialMsg');
-
-    // 4. Reset Slider UI positions
-    if (leanZSlider) leanZSlider.value = 0;
-    if (leanXSlider) leanXSlider.value = 0;
-    if (leanZVal) leanZVal.textContent = "0.0";
-    if (leanXVal) leanXVal.textContent = "0.0";
-
-    // 5. Camera Presets (Snap Views)
-    document.getElementById('btnSideView').onclick = () => {
-        camera.position.set(Z_FORENSIC.x + 3.5, 1.4, Z_FORENSIC.z);
-        controls.target.set(Z_FORENSIC.x, 1.2, Z_FORENSIC.z);
-        controls.update();
-    };
-
-    document.getElementById('btnFrontView').onclick = () => {
-        camera.position.set(Z_FORENSIC.x, 1.4, Z_FORENSIC.z + 4.5);
-        controls.target.set(Z_FORENSIC.x, 1.2, Z_FORENSIC.z);
-        controls.update();
-    };
-
-    // 6. Slider Logic (Forward/Back & Left/Right)
-    // Values are passed to the sim object and handled in the animate() loop
-    if (leanZSlider) {
-        leanZSlider.oninput = (e) => {
-            const degrees = parseFloat(e.target.value);
-            if (leanZVal) leanZVal.textContent = degrees.toFixed(1);
-            sim.leanZ = degrees; 
-        };
-    }
-
-    if (leanXSlider) {
-        leanXSlider.oninput = (e) => {
-            const degrees = parseFloat(e.target.value);
-            if (leanXVal) leanXVal.textContent = degrees.toFixed(1);
-            sim.leanX = degrees; 
-        };
-    }
-
-    // 7. Toggle Weight Ball (Hold/Drop)
-    if (ballBtn) {
-        ballBtn.onclick = () => {
-            sim.ballLocked = !sim.ballLocked;
-            ballBtn.classList.toggle('active', sim.ballLocked);
-            ballBtn.textContent = sim.ballLocked ? "Drop Weight Ball" : "Pick Up Weight Ball";
-            ballBtn.style.background = sim.ballLocked ? "rgba(56, 189, 248, 0.2)" : "";
-            
-            if ($msg) {
-                $msg.innerHTML = sim.ballLocked 
-                    ? "<b>SYSTEM ACTIVE:</b> Weight attached to Right Hand. Center of Mass shifted." 
-                    : "<b>SYSTEM UPDATED:</b> Weight released.";
-            }
-        };
-    }
-
-    // 8. Toggle Base of Support Visual
-    if (baseBtn) {
-        baseBtn.onclick = () => {
-            if (forcePlate) {
-                forcePlate.visible = !forcePlate.visible;
-                baseBtn.classList.toggle('active', forcePlate.visible);
-                baseBtn.style.borderColor = forcePlate.visible ? "#38bdf8" : "";
-            }
-        };
-    }
-
-    if ($msg) $msg.innerHTML = "<b>Module 2 Loaded:</b> Use sliders to test Center of Mass limits.";
-}
-    
-function enterModule(moduleId) {
-    const mod = getModule(moduleId);
-    currentModule = mod;
-    
-    // 1. Update Title
-    document.getElementById('moduleTitle').textContent = mod.label;
-
-    // 2. Clear Shared UI
-    document.getElementById('trialMsg').textContent = "Module Loaded.";
-    document.getElementById('assessmentBtn').style.display = 'none';
-
-    // 3. UI Switcher: Hide all console boxes, show only the active one
-    document.querySelectorAll('.module-ui-box').forEach(box => {
-        box.style.display = 'none';
-    });
-    
-    const activeBox = document.getElementById(`console-${moduleId}`);
-    if (activeBox) activeBox.style.display = 'block';
-
-    // 4. Scene Setup
-    setZone(mod.zone || 'all');
-  activeUpdateFunction = MODULE_CONTROLLERS[moduleId];  
-    // 5. Run specific initialization logic for that module
-    if (typeof mod.onEnter === 'function') {
-        mod.onEnter();
-    }
-}    
-    // 7) Studio UI wiring
-    // ==============================
-    const pills = [...document.querySelectorAll('.pill')];
-    function setActive(btn){ pills.forEach(p=>p.classList.toggle('active', p === btn && btn.dataset.zone !== 'labels')); }
-
-    pills.forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        const z = btn.dataset.zone;
-        if (z === 'labels'){
-          setLabels(!labelsOn);
-          btn.classList.toggle('active', labelsOn);
-          return;
-        }
-        setZone(z);
-        setActive(btn);
-      });
-    });
-
- 
-// --- GLOBAL RESTORE FUNCTION ---
-// This resets the avatar bones to their original positions.
-const restore = () => {
-    const R = animate._run;
-    if (R && R.rig) {
-        for (const [b, q] of R.rig.base) b.quaternion.copy(q);
-    }
-};
-
-// Global registry for module-specific update functions
-let moduleUpdateAction = null;
-
-function animate() {
-    requestAnimationFrame(animate);
-
-
-// --- UNIVERSAL BLINK LOGIC ---
-    if (!animate._blink) animate._blink = { targets: [], state: 0, t: 0, next: 0, lastModel: null };
-    const BL = animate._blink;
-
-    // 1. Auto-detect Morph Targets if model changed
-    if (avatarRoot && BL.lastModel !== avatarRoot) {
-        BL.targets = [];
-        BL.lastModel = avatarRoot;
-        BL.next = (performance.now() / 1000) + 2;
-        avatarRoot.traverse(o => {
-            if (o.isMesh && o.morphTargetDictionary) {
-                const keys = ["Eye_Blink", "Eye_Blink_L", "Eye_Blink_R", "Expressions_eyeClosedL_max", "Expressions_eyeClosedR_max"];
-                keys.forEach(k => {
-                    if (o.morphTargetDictionary[k] != null) BL.targets.push({ mesh: o, idx: o.morphTargetDictionary[k] });
-                });
-            }
-        });
-    }
-
-    // 2. Execution Loop
-    if (BL.targets.length) {
-        const now = performance.now() / 1000;
-        if (BL.state === 0 && now >= BL.next) {
-            BL.state = 1; BL.t = 0;
-            BL.next = now + 3 + Math.random() * 4; // Randomize next blink 3-7s
-        }
-        const setB = (v) => BL.targets.forEach(t => t.mesh.morphTargetInfluences[t.idx] = v);
-        const dur = { down: 0.07, hold: 0.03, up: 0.12 };
-        if (BL.state !== 0) {
-            BL.t += dt;
-            if (BL.state === 1) { // Closing
-                setB(Math.min(1, BL.t / dur.down));
-                if (BL.t >= dur.down) { BL.state = 2; BL.t = 0; }
-            } else if (BL.state === 2) { // Hold
-                setB(1);
-                if (BL.t >= dur.hold) { BL.state = 3; BL.t = 0; }
-            } else if (BL.state === 3) { // Opening
-                setB(1 - Math.min(1, BL.t / dur.up));
-                if (BL.t >= dur.up) { BL.state = 0; setB(0); }
-            }
-        }
-    }
-
-
-function updateProceduralRun(dt) {
-    if (!animate._run) {
-        animate._run = {
-            rig: null,
-            phase: 0,
-            wasRunning: false,
-            tmpQ: new THREE.Quaternion(),
-            tmpE: new THREE.Euler(),
-        };
-
-    animate._getSkeleton = (root) => {
-            let sk = null;
-            root.traverse(o => {
-                if (sk) return;
-                if (o.isSkinnedMesh && o.skeleton) sk = o.skeleton;
-            });
-            return sk;
-        };
-
-        animate._initRig = () => {
-            if (!avatarRoot) return null;
-            const sk = animate._getSkeleton(avatarRoot);
-            if (!sk) return null;
-
-            const find = (names) => {
-                for (const n of names) {
-                    const b = sk.getBoneByName(n);
-                    if (b) return b;
-                }
-                return null;
-            };
-
-
-            const bones = {
-                spine01: find(['spine01', 'Spine1', 'mixamorigSpine1', 'spine']),
-                spine02: find(['spine02', 'Spine2', 'mixamorigSpine2']),
-                neck: find(['neck', 'Neck', 'mixamorigNeck']),
-                head: find(['head', 'Head', 'mixamorigHead']),
-                thighL: find(['thigh_L', 'thigh.L', 'LeftUpLeg', 'mixamorigLeftUpLeg']),
-                thighR: find(['thigh_R', 'thigh.R', 'RightUpLeg', 'mixamorigRightUpLeg']),
-                calfL: find(['calf_L', 'shin_L', 'calf.L', 'LeftLeg', 'mixamorigLeftLeg']),
-                calfR: find(['calf_R', 'shin_R', 'calf.R', 'RightLeg', 'mixamorigRightLeg']),
-                upArmL: find(['upperarm_L', 'upper_arm_L', 'upperarm.L', 'LeftArm', 'mixamorigLeftArm']),
-                upArmR: find(['upperarm_R', 'upper_arm_R', 'upperarm.R', 'RightArm', 'mixamorigRightArm']),
-                loArmL: find(['lowerarm_L', 'forearm_L', 'lowerarm.L', 'LeftForeArm', 'mixamorigLeftForeArm']),
-                loArmR: find(['lowerarm_R', 'forearm_R', 'lowerarm.R', 'RightForeArm', 'mixamorigRightForeArm']),
-                footL: find(['foot_L', 'foot.L', 'LeftFoot', 'mixamorigLeftFoot']),
-                footR: find(['foot_R', 'foot.R', 'RightFoot', 'mixamorigRightFoot']),
-                toesL: find(['toes_L', 'toe_L', 'toes.L', 'LeftToeBase', 'mixamorigLeftToeBase']),
-                toesR: find(['toes_R', 'toe_R', 'toes.R', 'RightToeBase', 'mixamorigRightToeBase'])
-            };
-
-            const base = new Map();
-            Object.values(bones).forEach(b => { if (b) base.set(b, b.quaternion.clone()); });
-
-
-  // treadmill motion
-  if (sim.running){
-    const treadSpeed = 0.35 + (sim.speedMph / 12) * 2.0;
-    for (const s of treadStrips){
-      s.position.z += dt * treadSpeed;
-      if (s.position.z > TREAD_MAX_Z) s.position.z = TREAD_MIN_Z;
-    }
-    const beltSpeed = 0.10 + (sim.speedMph / 12) * 1.10;
-    beltTex.offset.y = (beltTex.offset.y + dt * beltSpeed) % 1;
-  }
-
-  // billboard labels
-  if (labelsOn){
-    for (const ch of labelGroup.children) ch.lookAt(camera.position);
-  }
-    // --- STOP SIMULATION ---
-    sim.running = false;
-    sim.hasStarted = false; // Unlocks trial switcher in showFL001Trial
-    if (runAction) runAction.paused = true;
-    restore(); 
-    document.getElementById('startBtn').textContent = "Start";
-}
-
-    updateHUD();
-    renderer.render(scene, camera);
-
 // 9) Enter Studio (gate -> studio)
 $enter.addEventListener('click', async () => {
-  const modelId = document.getElementById('modelSelect').value; 
-  const moduleId = document.getElementById('moduleSelect').value;
-  
-  let age = (modelId === "Roman") ? 43 : 34;
-  let hrMax = 220 - age;
-  sim.vo2Max = 15.3 * (hrMax / 72); 
+  const modelId = document.getElementById('modelSelect')?.value;
+  const bay = document.getElementById('moduleSelect')?.value; // now treated as BAY only
 
-  setAnatForModel(modelId);
   $enter.disabled = true;
   $enter.textContent = "Loading...";
 
   try {
-    await loadSelectedModel(modelId, (p) => { 
-      $enter.textContent = `Loading ${p}%`; 
-    });
+await loadModel(modelId, (pct) => {
+  $enter.textContent = `Loading ${pct}%`;
+});
 
+
+    // Hide gate
     document.getElementById('gate').style.display = "none";
-    
-    const uiMain = document.getElementById('ui');
-    const badgeMenu = document.getElementById('badge');
 
+    // Show environment only (if still present)
+    const uiMain = document.getElementById('ui');
     if (uiMain) uiMain.style.display = "flex";
-    if (badgeMenu) {
-        badgeMenu.style.display = "block";
-        badgeMenu.style.top = "14px";
+
+    // Route to bay (NO module logic)
+    switch (bay) {
+      case 'cardio':
+        setZone('cardio');
+        break;
+      case 'strength':
+        setZone('strength');
+        break;
+      case 'forensics':
+        setZone('forensics');
+        break;
+      default:
+        setZone('all');
     }
 
-    if (moduleId === 'FL-001') setZone('cardio'); 
+    // Optional camera snap (safe if function exists)
+    if (typeof snapCam === 'function') snapCam();
 
-    enterModule(moduleId);
-    snapCam();
-
- // --- PERSISTENCE & REVIEW LOGIC ---
-    const savedStatus = localStorage.getItem(`${moduleId}_Status`);
-    const reviewBtn = document.getElementById('reviewBtn');
-
-    if (savedStatus === 'completed') {
-        // 1. Keep the Checkmark in the HUD title
-        const titleEl = document.getElementById('moduleTitle');
-        if (!titleEl.innerHTML.includes('✓')) {
-            titleEl.innerHTML += " <span style='color:#4ade80; margin-left:8px;'>[✓ Completed]</span>";
-        }
-
-        // 2. Show Review Button and Open in New Tab
-        if (reviewBtn) {
-            reviewBtn.style.display = 'block';
-            reviewBtn.onclick = () => {
-                const targetURL = `https://kingto89.github.io/ROMetrics.com/motion-forensics/MCQ/?module=${moduleId}`;
-                // Opens in a new browser tab/window
-                window.open(targetURL, '_blank');
-            };
-        }
-    } else {
-        if (reviewBtn) reviewBtn.style.display = 'none';
-    }   
-    // -----------------------------------
-  } catch (e) {
-    console.error("Entry Error:", e);
-    $enter.textContent = "Error - Check Console";
-  } finally {
+  } catch (err) {
+    console.error(err);
     $enter.disabled = false;
+    $enter.textContent = "Enter Studio";
   }
 });
 
 
-function updateStabilityModule(dt) {
-    if (!avatarRoot) return;
 
-    // Apply rotation from sliders
-    avatarRoot.rotation.x = (sim.leanZ * Math.PI) / 180;
-    avatarRoot.rotation.z = -(sim.leanX * Math.PI) / 180;
+/* ===== LOOP ===== */
+let _lastTime = performance.now();
 
-    // Track Center of Mass
-    const chestPos = new THREE.Vector3();
-    avatarRoot.traverse(o => { 
-        if(o.name.toLowerCase().includes("spine02")) o.getWorldPosition(chestPos); 
-    });
+function animate(){
+  requestAnimationFrame(animate);
 
-    // Forensic Breach Logic
-    const statusVal = document.getElementById('statusVal');
-    if (Math.abs(chestPos.z - Z_FORENSIC.z) > 0.45) {
-        statusVal.textContent = "STABILITY BREACH";
-        statusVal.style.color = "#ff9aa0";
-    } else {
-        statusVal.textContent = "Stable";
-        statusVal.style.color = "#4ade80";
-    }
+  const now = performance.now();
+  const dt = (now - _lastTime) / 1000;
+  _lastTime = now;
+
+  // ==============================
+  // UNIVERSAL BLINK LOGIC (SAFE)
+  // ==============================
+  if (!animate._blink) animate._blink = { targets: [], state: 0, t: 0, next: 0, lastModel: null };
+  const BL = animate._blink;
+
+  // 1. Auto-detect Morph Targets if model changed
+  if (avatarRoot && BL.lastModel !== avatarRoot) {
+      BL.targets = [];
+      BL.lastModel = avatarRoot;
+      BL.next = (performance.now() / 1000) + 2;
+
+      avatarRoot.traverse(o => {
+          if (o.isMesh && o.morphTargetDictionary && o.morphTargetInfluences) {
+              const keys = [
+                "Eye_Blink",
+                "Eye_Blink_L",
+                "Eye_Blink_R",
+                "Expressions_eyeClosedL_max",
+                "Expressions_eyeClosedR_max"
+              ];
+              keys.forEach(k => {
+                  if (o.morphTargetDictionary[k] != null) {
+                      BL.targets.push({ mesh: o, idx: o.morphTargetDictionary[k] });
+                  }
+              });
+          }
+      });
+  }
+
+  // 2. Execution Loop
+  if (BL.targets.length) {
+      const tNow = performance.now() / 1000;
+
+      if (BL.state === 0 && tNow >= BL.next) {
+          BL.state = 1;
+          BL.t = 0;
+          BL.next = tNow + 3 + Math.random() * 4; // 3–7s cadence
+      }
+
+      const setB = v => BL.targets.forEach(t => t.mesh.morphTargetInfluences[t.idx] = v);
+      const dur = { down: 0.07, hold: 0.03, up: 0.12 };
+
+      if (BL.state !== 0) {
+          BL.t += dt;
+
+          if (BL.state === 1) { // Closing
+              setB(Math.min(1, BL.t / dur.down));
+              if (BL.t >= dur.down) { BL.state = 2; BL.t = 0; }
+
+          } else if (BL.state === 2) { // Hold
+              setB(1);
+              if (BL.t >= dur.hold) { BL.state = 3; BL.t = 0; }
+
+          } else if (BL.state === 3) { // Opening
+              setB(1 - Math.min(1, BL.t / dur.up));
+              if (BL.t >= dur.up) { BL.state = 0; setB(0); }
+          }
+      }
+  }
+
+  // ==============================
+  // NORMAL RENDER FLOW
+  // ==============================
+  controls.update();
+  renderer.render(scene, camera);
 }
 
-    
+animate();
 
-addEventListener('resize', () => {
-  camera.aspect = innerWidth / innerHeight;
+addEventListener("resize",()=>{
+  camera.aspect=innerWidth/innerHeight;
   camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth, innerHeight);
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setSize(innerWidth,innerHeight);
 });
-
-// --- TRANSFORM DEBUG TOOL (Module 2 Weight Ball Placement) ---
-window.addEventListener('keydown', (e) => {
-    const ball = scene.getObjectByName("weightBall");
-    if (!ball) return;
-
-    const step = e.shiftKey ? 0.01 : 0.05; // Hold Shift for precision
-    const key = e.key.toLowerCase();
-
-    // 1. Move Ball Logic
-    if (key === 'w') ball.position.z -= step; // Forward
-    if (key === 's') ball.position.z += step; // Back
-    if (key === 'a') ball.position.x -= step; // Left
-    if (key === 'd') ball.position.x += step; // Right
-    if (key === 'r') ball.position.y += step; // Up
-    if (key === 'f') ball.position.y -= step; // Down
-
-    // 2. Log Data to Console (Press 'L' to get the coordinates for hardwiring)
-    if (key === 'l') {
-        const pos = ball.position;
-        console.log("%c--- BALL PLACEMENT DATA ---", "color: #4ade80; font-weight: bold;");
-        console.log(`Copy this into enterFL002 hardwire logic:`);
-        console.log(`ball.position.set(${pos.x.toFixed(3)}, ${pos.y.toFixed(3)}, ${pos.z.toFixed(3)});`);
-        
-        // Also log camera in case you want to save the angle too
-        const cPos = camera.position;
-        const cTar = controls.target;
-        console.log(`Cam: .set(${cPos.x.toFixed(2)}, ${cPos.y.toFixed(2)}, ${cPos.z.toFixed(2)})`);
-    }
-});
-
-    
 </script>
 </body>
 </html>
