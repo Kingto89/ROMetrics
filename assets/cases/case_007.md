@@ -35,7 +35,7 @@
 
 ---
 
-# Case 7: Cervical Spine Disorder with Systemic Involvement
+# Case 7:Progressive Neck Pain with Upper Extremity Weakness
 
 ## Patient Profile
 - Name: Karen L.
