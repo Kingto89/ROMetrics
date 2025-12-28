@@ -36,7 +36,7 @@
 
 ---
 
-# Case 5: Axial Inflammatory Spine Disorder
+# Case 5: Chronic Low Back Stiffness with Pelvic Involvement
 
 ## Patient Profile
 - Name: Alex R.
