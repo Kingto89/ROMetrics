@@ -1,1085 +1,181 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>ROMetrics — Forensics Labs (Studio Preview)</title>
-  <style>
-    html,body{height:100%;margin:0;overflow:hidden;background:#07101b;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;}
-    #ui{position:fixed;left:14px;top:14px;z-index:10;display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
-    .pill{border:1px solid rgba(148,163,184,.35);background:rgba(15,23,42,.78);color:#e5eefc;padding:10px 12px;border-radius:999px;font-size:13px;cursor:pointer;user-select:none;backdrop-filter: blur(8px);}
-    .pill.active{border-color:rgba(56,189,248,.8);box-shadow:0 0 0 2px rgba(56,189,248,.14) inset;}
-    #badge{position:fixed;right:14px;top:14px;z-index:10;padding:12px 12px;border-radius:16px;border:1px solid rgba(148,163,184,.25);background:rgba(15,23,42,.65);color:#cfe3ff;font-size:13px;max-width:420px;backdrop-filter: blur(8px);}
-    #badge .t{font-weight:900;letter-spacing:.2px;}
-    #badge .p{opacity:.92;margin-top:6px;line-height:1.25;}
-    #controls{margin-top:10px;padding-top:10px;border-top:1px solid rgba(148,163,184,.18);display:grid;gap:8px;}
-    .row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
-    .k{opacity:.88;}
-    .v{font-weight:900;letter-spacing:.2px;}
-    input[type=range]{width:100%;accent-color:#38bdf8;}
-    .btn{border:1px solid rgba(148,163,184,.35);background:rgba(15,23,42,.78);color:#e5eefc;padding:8px 10px;border-radius:12px;font-size:12px;cursor:pointer;}
-    #hint{position:fixed;left:14px;bottom:14px;z-index:10;padding:10px 12px;border-radius:14px;border:1px solid rgba(148,163,184,.20);background:rgba(15,23,42,.55);color:#a8c0da;font-size:12px;backdrop-filter: blur(8px);}
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ROMetrics — Forensics Labs</title>
 
-    #gate{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:radial-gradient(900px 600px at 50% 35%, rgba(56,189,248,0.10), rgba(7,16,27,0.96));backdrop-filter: blur(6px);}
-    #gateCard{width:min(740px, calc(100vw - 28px));border-radius:24px;border:1px solid rgba(148,163,184,.28);background:rgba(9,20,37,.72);box-shadow:0 20px 80px rgba(0,0,0,.40);padding:22px;}
-    #gateTop{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;}
-    #gateTitle{font-weight:950;font-size:22px;color:#e6eef7;letter-spacing:.2px;}
-    #gateSub{margin-top:6px;color:#a8c0da;line-height:1.25;font-size:13px;}
-    #gateGrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px;}
-    @media (max-width:640px){ #gateGrid{grid-template-columns:1fr;} }
-    .field{border:1px solid rgba(148,163,184,.22);border-radius:18px;background:rgba(15,23,42,.55);padding:14px;}
-    .field .lbl{color:#cfe3ff;font-weight:800;font-size:12px;letter-spacing:.25px;opacity:.95;}
-    .field select{width:100%;margin-top:10px;background:rgba(7,16,27,.35);border:1px solid rgba(148,163,184,.22);color:#e6eef7;border-radius:14px;padding:10px 12px;font-size:14px;outline:none;}
-    .field .desc{margin-top:10px;color:#a8c0da;font-size:12px;line-height:1.25;min-height:32px;}
-    #gateActions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px;flex-wrap:wrap;}
-    .primary{border:1px solid rgba(56,189,248,.55);background:rgba(56,189,248,.16);color:#e6eef7;padding:10px 14px;border-radius:16px;font-size:13px;cursor:pointer;font-weight:900;}
-    canvas{display:block;}
-  </style>
+<style>
+:root{
+  --bg:#07101b;
+  --card:#0f172a;
+  --border:rgba(148,163,184,.25);
+  --accent:#38bdf8;
+  --text:#e6eef7;
+  --muted:#9fb3cc;
+}
 
-  <script type="importmap">
-    {
-      "imports": {
-        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-      }
-    }
-  </script>
+*{box-sizing:border-box}
+html,body{
+  margin:0;
+  height:100%;
+  background:radial-gradient(900px 600px at 50% 20%, rgba(56,189,248,.08), var(--bg));
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;
+  color:var(--text);
+}
+
+main{
+  min-height:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:28px;
+}
+
+.card{
+  width:min(980px,100%);
+  background:rgba(9,20,37,.78);
+  border:1px solid var(--border);
+  border-radius:28px;
+  box-shadow:0 30px 90px rgba(0,0,0,.45);
+  padding:26px;
+}
+
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  gap:16px;
+  flex-wrap:wrap;
+}
+
+.title{
+  font-size:26px;
+  font-weight:900;
+  letter-spacing:.3px;
+}
+
+.subtitle{
+  margin-top:6px;
+  color:var(--muted);
+  font-size:14px;
+}
+
+.model-select{
+  background:rgba(15,23,42,.7);
+  border:1px solid var(--border);
+  color:var(--text);
+  padding:10px 14px;
+  border-radius:14px;
+  font-size:14px;
+}
+
+.grid{
+  margin-top:22px;
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:16px;
+}
+
+.module{
+  position:relative;
+  background:linear-gradient(180deg, rgba(15,23,42,.9), rgba(8,16,28,.9));
+  border:1px solid var(--border);
+  border-radius:22px;
+  padding:22px;
+  cursor:pointer;
+  transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+
+.module:hover{
+  transform:translateY(-4px);
+  border-color:rgba(56,189,248,.55);
+  box-shadow:0 18px 40px rgba(0,0,0,.35);
+}
+
+.mod-num{
+  font-size:40px;
+  font-weight:900;
+  color:var(--accent);
+}
+
+.mod-title{
+  margin-top:6px;
+  font-size:15px;
+  font-weight:800;
+}
+
+.mod-desc{
+  margin-top:6px;
+  font-size:13px;
+  color:var(--muted);
+  line-height:1.25;
+}
+
+.footer{
+  margin-top:18px;
+  font-size:12px;
+  color:#8aa2bf;
+}
+</style>
 </head>
+
 <body>
+<main>
+  <div class="card">
 
-  <div id="gate">
-    <div id="gateCard">
-      <div id="gateTop">
-        <div>
-          <div id="gateTitle">Forensics Labs</div>
-          <div id="gateSub">Select a model, then choose a lab module.</div>
-        </div>
+    <div class="header">
+      <div>
+        <div class="title">Forensics Labs</div>
+        <div class="subtitle">Choose a model, then select a module</div>
       </div>
 
-      <div id="gateGrid">
-        <div class="field">
-          <div class="lbl">MODEL</div>
-          <select id="modelSelect"></select>
-          <div class="desc" id="modelDesc"></div>
-        </div>
+      <select id="modelSelect" class="model-select">
+        <option value="Roma">Roma (default)</option>
+        <option value="Roman">Roman</option>
+      </select>
+    </div>
 
-        <div class="field">
-          <div class="lbl">MODULE</div>
-          <select id="moduleSelect"></select>
-          <div class="desc" id="moduleDesc"></div>
-        </div>
+    <div class="grid">
+      <div class="module" data-module="FL-001" data-href="/forensics/fl001/">
+        <div class="mod-num">01</div>
+        <div class="mod-title">Metabolic Demand</div>
+        <div class="mod-desc">Cardio Bay — speed, energy, fatigue</div>
       </div>
 
-      <div id="gateActions">
-        <button id="enterBtn" class="primary">Enter Studio</button>
+      <div class="module" data-module="FL-002" data-href="/forensics/fl002/">
+        <div class="mod-num">02</div>
+        <div class="mod-title">Joint Load Lever</div>
+        <div class="mod-desc">Movement Analysis Booth</div>
+      </div>
+
+      <div class="module" data-module="FL-003" data-href="/forensics/fl003/">
+        <div class="mod-num">03</div>
+        <div class="mod-title">Motion Forensics</div>
+        <div class="mod-desc">Stability, balance, reaction</div>
       </div>
     </div>
-  </div>
 
-  <div id="ui" style="display:none;">
-    <div class="pill active" data-zone="all">All Zones</div>
-    <div class="pill" data-zone="strength">Strength / Load Station</div>
-    <div class="pill" data-zone="cardio">Cardio Bay</div>
-    <div class="pill" data-zone="forensics">Movement Analysis Booth</div>
-    <div class="pill" data-zone="labels">Toggle Labels</div>
-  </div>
-
-  <div id="badge" style="display:none;">
-    <div class="t">Forensics Labs — Studio</div>
-    <div class="p" id="moduleTitle">Module</div>
-    <div id="controls">
-      <div class="row"><div class="k">Cardio Speed</div><div class="v"><span id="spdVal">6.0</span> mph</div></div>
-      <input id="spd" type="range" min="0" max="12" step="0.1" value="6"/>
-      <div class="row"><div class="k">Energy</div><div class="v"><span id="engVal">100</span>%</div></div>
-      <div class="row" style="justify-content:flex-end;gap:10px;">
-        <button id="fuelBtn" class="btn">Fuel +10</button>
-        <button id="resetBtn" class="btn">Reset</button>
-      </div>
-      <div class="row" style="justify-content:space-between;">
-        <div class="k">Status</div><div class="v" id="statusVal">Stable</div>
-      </div>
+    <div class="footer">
+      ROMetrics • Forensics Training Platform
     </div>
+
   </div>
-
-  <div id="hint" style="display:none;">Mouse: orbit • Wheel: zoom • Right-drag: pan • Keys: 1/2/3 = zones • 0 = all • L = labels</div>
-
-  <script type="module">
-    import * as THREE from 'three';
-    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-
-    // ==============================
-    // 0) REGISTRY (Model + Modules)
-    // ==============================
-    const MODEL_URLS = {
-      Roma:  "https://kingto89.github.io/ROMetrics.com/assets/Roma_ROMetrics.glb",
-      Roman: "https://kingto89.github.io/ROMetrics.com/assets/Roman_ROMetrics.glb"
-    };
-
-    const MODELS = [
-      { id:"Roma",  label:"Roma ", desc:"Default ROMetrics model.", url: MODEL_URLS.Roma },
-      { id:"Roman", label:"Roman",            desc:"Alternate ROMetrics model.", url: MODEL_URLS.Roman }
-    ];
-
-    const FORENSICS_MODULES = [
-      { id:'FL-001', label:'Module 1 — Metabolic Demand: Energy Systems', desc:'Cardio Bay: speed, energy, fuel timing.', zone:'cardio', onEnter:null, onTick:null },
-      { id:'FL-002', label:'Module 2 — Joint Load Lever ', desc:'Strength Station: effort vs lever distance .', zone:'strength', onEnter:null, onTick:null },
-      { id:'FL-003', label:'Module 3 — Motion Forensics Lite', desc:'Reactive Balance:Pick the stance that gives the best Stability %', zone:'Analysis Booth', onEnter:null, onTick:null }
-      // === DROP-IN AREA ===
-    ];
-
-    // ==============================
-    // 1) Gate UI wiring
-    // ==============================
-    const $gate = document.getElementById('gate');
-    const $modelSel = document.getElementById('modelSelect');
-    const $modSel = document.getElementById('moduleSelect');
-    const $modelDesc = document.getElementById('modelDesc');
-    const $modDesc = document.getElementById('moduleDesc');
-    const $enter = document.getElementById('enterBtn');
-
-    const $ui = document.getElementById('ui');
-    const $badge = document.getElementById('badge');
-    const $hint = document.getElementById('hint');
-    const $moduleTitle = document.getElementById('moduleTitle');
-
-    function fillSelect($sel, items){
-      $sel.innerHTML = '';
-      for (const it of items){
-        const opt = document.createElement('option');
-        opt.value = it.id;
-        opt.textContent = it.label;
-        $sel.appendChild(opt);
-      }
-    }
-    function getModel(id){ return MODELS.find(m=>m.id===id) || MODELS[0]; }
-    function getModule(id){ return FORENSICS_MODULES.find(m=>m.id===id) || FORENSICS_MODULES[0]; }
-
-    fillSelect($modelSel, MODELS);
-    fillSelect($modSel, FORENSICS_MODULES);
-
-    function refreshGate(){
-      const m = getModel($modelSel.value);
-      const mod = getModule($modSel.value);
-      $modelDesc.textContent = m.desc || '';
-      $modDesc.textContent = mod.desc || '';
-    }
-    $modelSel.addEventListener('change', refreshGate);
-    $modSel.addEventListener('change', refreshGate);
-    refreshGate();
-
-    // ==============================
-    // 2) Studio: Three.js base
-    // ==============================
-    const $spd = document.getElementById('spd');
-    const $spdVal = document.getElementById('spdVal');
-    const $engVal = document.getElementById('engVal');
-    const $status = document.getElementById('statusVal');
-    const $fuel = document.getElementById('fuelBtn');
-    const $reset = document.getElementById('resetBtn');
-
-    const sim = { speedMph: 6.0, energy: 100, lastFuelT: -999 };
-    const clamp = (v,a,b)=> Math.max(a, Math.min(b, v));
-
-    $spd.addEventListener('input', ()=>{ sim.speedMph = parseFloat($spd.value); });
-    $fuel.addEventListener('click', ()=>{ sim.energy = clamp(sim.energy + 10, 0, 100); sim.lastFuelT = performance.now()/1000; });
-    $reset.addEventListener('click', ()=>{ sim.energy = 100; sim.lastFuelT = -999; });
-
-    const scene = new THREE.Scene();
-    scene.fog = new THREE.Fog(0x07101b, 10, 45);
-
-    const camera = new THREE.PerspectiveCamera(55, innerWidth/innerHeight, 0.1, 120);
-    camera.position.set(6.8, 3.9, 8.6);
-
-    const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:false });
-    renderer.setSize(innerWidth, innerHeight);
-    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-    renderer.shadowMap.enabled = false;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    document.body.appendChild(renderer.domElement);
-
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.target.set(0, 1.35, 0);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.07;
-    controls.maxPolarAngle = Math.PI * 0.49;
-    controls.minDistance = 2.0;
-    controls.maxDistance = 18.0;
-
-    // Lights
-    scene.add(new THREE.AmbientLight(0x6aa0d8, 0.77));
-
-    const key = new THREE.DirectionalLight(0xffffff, 1.05);
-    key.position.set(7, 10, 5);
-    key.castShadow = true;
-    key.shadow.mapSize.set(2048,2048);
-    key.shadow.camera.near = 0.5;
-    key.shadow.camera.far = 40;
-    key.shadow.camera.left = -10;
-    key.shadow.camera.right = 10;
-    key.shadow.camera.top = 10;
-    key.shadow.camera.bottom = -10;
-    scene.add(key);
-
-    const rim = new THREE.DirectionalLight(0x38bdf8, 0.28);
-    rim.position.set(-9, 6, -7);
-    scene.add(rim);
-
-    // Materials
-    const matFloor = new THREE.MeshStandardMaterial({ color:0x0a1a2e, roughness:0.95, metalness:0.05 });
-    const matWall  = new THREE.MeshStandardMaterial({ color:0x091425, roughness:0.9, metalness:0.05 });
-    const matDark  = new THREE.MeshStandardMaterial({ color:0x0b1220, roughness:0.85, metalness:0.08 });
-    const matSteel = new THREE.MeshStandardMaterial({ color:0x7a8aa0, roughness:0.35, metalness:0.55 });
-    const matGlow  = new THREE.MeshStandardMaterial({ color:0x38bdf8, roughness:0.35, metalness:0.25, emissive:0x103040, emissiveIntensity:0.8 });
-
-    // ==============================
-    // 3) Live screens + Belt texture
-    // ==============================
-    function makeScreenCanvas(w=512,h=256){
-      const c = document.createElement('canvas');
-      c.width = w; c.height = h;
-      const ctx = c.getContext('2d');
-      const tex = new THREE.CanvasTexture(c);
-      tex.anisotropy = 8;
-      return { c, ctx, tex };
-    }
-    const wallScreen = makeScreenCanvas(1024, 320);
-    const consoleScreen = makeScreenCanvas(512, 256);
-
-    const beltCanvas = document.createElement('canvas');
-    beltCanvas.width = 512;
-    beltCanvas.height = 512;
-    const bctx = beltCanvas.getContext('2d');
-
-    {
-      const g = bctx.createLinearGradient(0,0,512,0);
-      g.addColorStop(0.00,'#0a0f16');
-      g.addColorStop(0.35,'#0c1522');
-      g.addColorStop(0.65,'#0b1320');
-      g.addColorStop(1.00,'#09101a');
-      bctx.fillStyle = g;
-      bctx.fillRect(0,0,512,512);
-      bctx.fillStyle = 'rgba(0,0,0,0.18)';
-      bctx.fillRect(252, 0, 8, 512);
-
-      let y = 0;
-      while (y < 512){
-        const h = 1 + Math.floor(Math.random()*2);
-        const a = 0.020 + Math.random()*0.030;
-        bctx.fillStyle = `rgba(255,255,255,${a})`;
-        bctx.fillRect(0, y, 512, h);
-        y += 12 + Math.floor(Math.random()*16);
-      }
-      for (let i=0;i<900;i++){
-        const x = Math.random()*512;
-        const yy = Math.random()*512;
-        bctx.fillStyle = `rgba(255,255,255,${Math.random()*0.05})`;
-        bctx.fillRect(x,yy,1,1);
-      }
-    }
-
-    const beltTex = new THREE.CanvasTexture(beltCanvas);
-    beltTex.anisotropy = 8;
-    beltTex.wrapS = THREE.RepeatWrapping;
-    beltTex.wrapT = THREE.RepeatWrapping;
-    beltTex.repeat.set(1, 8.0);
-    beltTex.offset.set(0, 0);
-
-    const matBelt = new THREE.MeshStandardMaterial({
-      map: beltTex,
-      color: 0x0b1018,
-      roughness: 0.98,
-      metalness: 0.00
-    });
-
-    function roundRect(ctx, x, y, w, h, r){
-      const min = Math.min(w,h); if (r > min/2) r = min/2;
-      ctx.beginPath();
-      ctx.moveTo(x+r, y);
-      ctx.arcTo(x+w, y, x+w, y+h, r);
-      ctx.arcTo(x+w, y+h, x, y+h, r);
-      ctx.arcTo(x, y+h, x, y, r);
-      ctx.arcTo(x, y, x+w, y, r);
-      ctx.closePath();
-    }
-
-    function drawPanel(screen, title){
-      const {ctx,c} = screen;
-      ctx.clearRect(0,0,c.width,c.height);
-      ctx.fillStyle = 'rgba(6,18,34,1)';
-      ctx.fillRect(0,0,c.width,c.height);
-      ctx.strokeStyle = 'rgba(56,189,248,0.85)';
-      ctx.lineWidth = 10;
-      ctx.strokeRect(10,10,c.width-20,c.height-20);
-
-      ctx.fillStyle = 'rgba(15,23,42,0.85)';
-      ctx.fillRect(24, 24, c.width-48, 64);
-
-      ctx.fillStyle = '#e6eef7';
-      ctx.font = '900 40px system-ui, -apple-system, Segoe UI, Roboto, Inter';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(title, 42, 56);
-
-      const spd = sim.speedMph;
-      const eng = sim.energy;
-      const status = (eng <= 10) ? 'CRASH' : (eng <= 25 ? 'Warning' : 'Stable');
-
-      ctx.font = '800 44px system-ui, -apple-system, Segoe UI, Roboto, Inter';
-      ctx.fillStyle = '#cfe3ff';
-      ctx.fillText(`Speed: ${spd.toFixed(1)} mph`, 42, 132);
-      ctx.fillText(`Energy: ${Math.round(eng)}%`, 42, 192);
-
-      const chipX = 42, chipY = 222, chipW = 260, chipH = 64;
-      ctx.fillStyle = status === 'CRASH' ? 'rgba(255,80,80,0.25)' : (status === 'Warning' ? 'rgba(255,205,80,0.20)' : 'rgba(56,189,248,0.18)');
-      roundRect(ctx, chipX, chipY, chipW, chipH, 18);
-      ctx.fill();
-      ctx.strokeStyle = status === 'CRASH' ? 'rgba(255,80,80,0.75)' : (status === 'Warning' ? 'rgba(255,205,80,0.65)' : 'rgba(56,189,248,0.65)');
-      ctx.lineWidth = 5;
-      ctx.stroke();
-
-      ctx.fillStyle = '#e6eef7';
-      ctx.font = '900 34px system-ui, -apple-system, Segoe UI, Roboto, Inter';
-      ctx.fillText(`Status: ${status}`, chipX+18, chipY+chipH/2);
-
-      const t = performance.now()/1000;
-      const fuelPulse = Math.max(0, 1 - (t - sim.lastFuelT) / 0.8);
-      if (fuelPulse > 0){
-        ctx.globalAlpha = fuelPulse * 0.35;
-        ctx.fillStyle = 'rgba(56,189,248,1)';
-        ctx.beginPath();
-        ctx.arc(c.width-70, 56, 20 + (1-fuelPulse)*30, 0, Math.PI*2);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-      }
-      screen.tex.needsUpdate = true;
-    }
-
-    // ==============================
-    // 4) Room + zones (REAL SCALE)
-    // ==============================
-    // Room in meters
-    const ROOM_W = 14.0;
-    const ROOM_D = 11.0;
-    const WALL_H = 6.6;
-
-    const floor = new THREE.Mesh(new THREE.PlaneGeometry(ROOM_W, ROOM_D), matFloor);
-    floor.rotation.x = -Math.PI/2;
-    floor.receiveShadow = true;
-    scene.add(floor);
-
-    const room = new THREE.Group();
-
-    const wallBack = new THREE.Mesh(new THREE.BoxGeometry(ROOM_W, WALL_H, 0.30), matWall);
-    wallBack.position.set(0, WALL_H/2, -(ROOM_D/2) + 0.15);
-    wallBack.receiveShadow = true;
-    room.add(wallBack);
-
-    const wallLeft = new THREE.Mesh(new THREE.BoxGeometry(0.30, WALL_H, ROOM_D), matWall);
-    wallLeft.position.set(-(ROOM_W/2) + 0.15, WALL_H/2, 0);
-    room.add(wallLeft);
-
-    const wallRight = wallLeft.clone();
-    wallRight.position.x = (ROOM_W/2) - 0.15;
-    room.add(wallRight);
-
-    const grid = new THREE.GridHelper(ROOM_W, Math.round(ROOM_W), 0x1f3b5a, 0x10243a);
-    grid.position.y = 0.01;
-    room.add(grid);
-
-    scene.add(room);
-
-    // Labels
-    let labelsOn = false;
-    const labelGroup = new THREE.Group();
-    scene.add(labelGroup);
-
-    function makeLabel(text){
-      const canvas = document.createElement('canvas');
-      canvas.width = 512; canvas.height = 128;
-      const ctx = canvas.getContext('2d');
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-      ctx.fillStyle = 'rgba(15,23,42,0.72)';
-      ctx.strokeStyle = 'rgba(56,189,248,0.65)';
-      ctx.lineWidth = 6;
-      roundRect(ctx, 14, 16, 484, 96, 26);
-      ctx.fill(); ctx.stroke();
-      ctx.fillStyle = '#e6eef7';
-      ctx.font = '800 36px system-ui, -apple-system, Segoe UI, Roboto, Inter';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(text, 34, 64);
-      const tex = new THREE.CanvasTexture(canvas);
-      tex.anisotropy = 8;
-      const mat = new THREE.MeshBasicMaterial({ map: tex, transparent:true });
-      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 0.85), mat);
-      mesh.renderOrder = 10;
-      return mesh;
-    }
-    function setLabels(v){
-      labelsOn = v;
-      labelGroup.traverse(o=>{ if (o.isMesh) o.visible = labelsOn; });
-    }
-    setLabels(false);
-
-    function zoneBasePlate(w, d){
-      const plate = new THREE.Mesh(new THREE.BoxGeometry(w, 0.06, d), new THREE.MeshStandardMaterial({ color:0x0b1a2e, roughness:0.9, metalness:0.06 }));
-      plate.receiveShadow = true;
-      return plate;
-    }
-
-    // Zone centers
-    const Z_STRENGTH = new THREE.Vector3(-4.4, 0, 2.1);
-    const Z_CARDIO   = new THREE.Vector3( 4.4, 0, 2.1);
-    const Z_FORENSIC = new THREE.Vector3( 0.0, 0, -3.1);
-
-    // Strength zone (scaled realistic)
-    const zoneStrength = new THREE.Group();
-    zoneStrength.name = 'strength';
-    zoneStrength.position.copy(Z_STRENGTH);
-
-    const platS = zoneBasePlate(4.2, 3.2);
-    platS.position.set(0, 0.03, 0);
-    zoneStrength.add(platS);
-
-    // Simple bench press rack (realistic)
-    const benchTop = new THREE.Mesh(new THREE.BoxGeometry(1.35, 0.10, 0.34), matDark);
-    benchTop.position.set(0, 0.48, 0.35);
-    benchTop.castShadow = true;
-    zoneStrength.add(benchTop);
-
-    const benchLegGeo = new THREE.BoxGeometry(0.06, 0.45, 0.06);
-    [[-0.55,0.22,0.23],[0.55,0.22,0.23],[-0.55,0.22,0.47],[0.55,0.22,0.47]].forEach(p=>{
-      const l = new THREE.Mesh(benchLegGeo, matSteel);
-      l.position.set(p[0], p[1], p[2]);
-      l.castShadow = true;
-      zoneStrength.add(l);
-    });
-
-    const upGeo = new THREE.BoxGeometry(0.08, 1.55, 0.08);
-    const uprL = new THREE.Mesh(upGeo, matSteel); uprL.position.set(-0.55, 0.80, -0.55); uprL.castShadow = true;
-    const uprR = uprL.clone(); uprR.position.x = 0.55;
-    zoneStrength.add(uprL, uprR);
-
-    const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.025,1.25,18), matSteel);
-    bar.rotation.z = Math.PI/2;
-    bar.position.set(0, 1.45, -0.55);
-    bar.castShadow = true;
-    zoneStrength.add(bar);
-
-    // Dumbbell rack (near bench, offset left so it won’t collide)
-{
-  const rack = new THREE.Group();
-  const matRubber = new THREE.MeshStandardMaterial({ color:0x121923, roughness:0.98, metalness:0.03 });
-
-  const W = 1.85, D = 0.55, H = 0.95;
-  const legGeo   = new THREE.BoxGeometry(0.06, H, 0.06);
-  const shelfGeo = new THREE.BoxGeometry(W, 0.06, 0.36);
-
-  const legs = [
-    [-W/2+0.07, H/2, -D/2+0.07],
-    [ W/2-0.07, H/2, -D/2+0.07],
-    [-W/2+0.07, H/2,  D/2-0.07],
-    [ W/2-0.07, H/2,  D/2-0.07],
-  ];
-  for (const p of legs){
-    const leg = new THREE.Mesh(legGeo, matSteel);
-    leg.position.set(p[0], p[1], p[2]);
-    leg.castShadow = true;
-    rack.add(leg);
-  }
-
-  const shelf1 = new THREE.Mesh(shelfGeo, matDark);
-  shelf1.position.set(0, 0.68, 0);
-  shelf1.rotation.x = -0.14;
-  shelf1.castShadow = true;
-  shelf1.receiveShadow = true;
-  rack.add(shelf1);
-
-  const shelf2 = new THREE.Mesh(shelfGeo, matDark);
-  shelf2.position.set(0, 0.32, 0);
-  shelf2.rotation.x = -0.14;
-  shelf2.castShadow = true;
-  shelf2.receiveShadow = true;
-  rack.add(shelf2);
-
-  const base = new THREE.Mesh(new THREE.BoxGeometry(W+0.12, 0.05, D+0.18), matDark);
-  base.position.set(0, 0.03, 0);
-  base.receiveShadow = true;
-  rack.add(base);
-
-  const handleGeo = new THREE.CylinderGeometry(0.022, 0.022, 0.24, 16);
-  const hexGeo    = new THREE.CylinderGeometry(0.070, 0.070, 0.050, 6);
-
-  function dumbbell(scale=1){
-    const g = new THREE.Group();
-    const handle = new THREE.Mesh(handleGeo, matSteel);
-    handle.rotation.z = Math.PI/2;
-    handle.castShadow = true;
-    g.add(handle);
-
-    const wL = new THREE.Mesh(hexGeo, matRubber);
-    wL.position.x = -0.145;
-    wL.rotation.z = Math.PI/2;
-    wL.castShadow = true;
-    g.add(wL);
-
-    const wR = wL.clone();
-    wR.position.x = 0.145;
-    g.add(wR);
-
-    g.scale.setScalar(scale);
-    return g;
-  }
-
-  const xs = [-0.68, -0.34, 0.00, 0.34, 0.68];
-  xs.forEach((x,i)=>{
-    const db = dumbbell(0.92 + i*0.02);
-    db.position.set(x, 0.73, -0.06);
-    db.rotation.y = 0.08;
-    rack.add(db);
+</main>
+
+<script>
+const modelSelect = document.getElementById('modelSelect');
+
+document.querySelectorAll('.module').forEach(card=>{
+  card.addEventListener('click', ()=>{
+    const model = modelSelect.value;
+    const moduleId = card.dataset.module;
+    const href = card.dataset.href;
+
+    window.location.href =
+      `${href}?model=${encodeURIComponent(model)}&module=${encodeURIComponent(moduleId)}`;
   });
-  xs.forEach((x,i)=>{
-    const db = dumbbell(1.00 + i*0.03);
-    db.position.set(x, 0.37, -0.06);
-    db.rotation.y = 0.08;
-    rack.add(db);
-  });
-
-  // placement relative to YOUR bench (bench is around x=0, z≈0.35)
-  rack.position.set(-1.15, 0.0, 0.45);
-  rack.rotation.y = 1.60;
-
-  zoneStrength.add(rack);
-}
-
-
-    const lblS = makeLabel('Strength / Load Station');
-    lblS.position.copy(Z_STRENGTH).add(new THREE.Vector3(0, 2.7, -1.6));
-    labelGroup.add(lblS);
-
-    scene.add(zoneStrength);
-
-    // Cardio zone (realistic treadmill size)
-    const zoneCardio = new THREE.Group();
-    zoneCardio.name = 'cardio';
-    zoneCardio.position.copy(Z_CARDIO);
-
-    const platC = zoneBasePlate(4.2, 3.2);
-    platC.position.set(0, 0.03, 0);
-    zoneCardio.add(platC);
-
-    const treadmill = new THREE.Group();
-    treadmill.position.set(0, 0.03, 0);
-    zoneCardio.add(treadmill);
-
-    const treadStrips = [];
-    let TREAD_MIN_Z = -0.7;
-    let TREAD_MAX_Z =  0.7;
-
-    // Real treadmill dims (meters)
-    const BELT_W = 0.55;
-    const BELT_L = 1.55;
-    const FRAME_W = 0.82;
-    const FRAME_L = 2.05;
-
-    TREAD_MIN_Z = -(BELT_L/2) + 0.10;
-    TREAD_MAX_Z =  (BELT_L/2) - 0.10;
-
-    const tmFrame = new THREE.Mesh(new THREE.BoxGeometry(FRAME_W, 0.22, FRAME_L), matDark);
-    tmFrame.position.set(0, 0.16, 0);
-    tmFrame.castShadow = true;
-    treadmill.add(tmFrame);
-
-    const tmDeck = new THREE.Mesh(
-      new THREE.BoxGeometry(BELT_W + 0.14, 0.06, BELT_L + 0.18),
-      new THREE.MeshStandardMaterial({ color:0x0c1728, roughness:0.95, metalness:0.05 })
-    );
-    tmDeck.position.set(0, 0.26, 0);
-    tmDeck.receiveShadow = true;
-    treadmill.add(tmDeck);
-
-    const tmBelt = new THREE.Mesh(new THREE.PlaneGeometry(BELT_W, BELT_L), matBelt);
-    tmBelt.rotation.x = -Math.PI/2;
-    tmBelt.position.set(0, 0.295, 0);
-    tmBelt.receiveShadow = true;
-    treadmill.add(tmBelt);
-
-    const beltEdges = new THREE.LineSegments(
-      new THREE.EdgesGeometry(new THREE.BoxGeometry(BELT_W + 0.10, 0.02, BELT_L + 0.10)),
-      new THREE.LineBasicMaterial({ color:0x38bdf8, transparent:true, opacity:0.55 })
-    );
-    beltEdges.position.set(0, 0.305, 0);
-    beltEdges.renderOrder = 9;
-    treadmill.add(beltEdges);
-
-    const stripMat = new THREE.MeshStandardMaterial({ color: 0x1a2738, roughness: 0.95, metalness: 0.02, transparent:true, opacity:0.30 });
-    const stripCount = 12;
-    for (let i=0;i<stripCount;i++){
-      const s = new THREE.Mesh(new THREE.BoxGeometry(BELT_W - 0.04, 0.01, 0.06), stripMat);
-      s.position.set(0, 0.300, TREAD_MIN_Z + i * ((TREAD_MAX_Z - TREAD_MIN_Z) / stripCount));
-      s.renderOrder = 10;
-      treadmill.add(s);
-      treadStrips.push(s);
-    }
-
-    const rollerGeo = new THREE.CylinderGeometry(0.08, 0.08, BELT_W + 0.08, 18);
-    const rollerMat = new THREE.MeshStandardMaterial({ color:0x1a2a44, roughness:0.55, metalness:0.25 });
-    const rFront = new THREE.Mesh(rollerGeo, rollerMat);
-    rFront.rotation.z = Math.PI/2;
-    rFront.position.set(0, 0.33, -(BELT_L/2) - 0.04);
-    rFront.castShadow = true;
-    treadmill.add(rFront);
-
-    const rBack = rFront.clone();
-    rBack.position.z = (BELT_L/2) + 0.04;
-    treadmill.add(rBack);
-
-    // rails + console (front)
-    const upPole = new THREE.Mesh(new THREE.CylinderGeometry(0.035,0.035,1.05,16), matSteel);
-    const upX = (FRAME_W/2) - 0.10;
-    const frontZ = -(BELT_L/2) - 0.42;
-
-    const upL = upPole.clone(); upL.position.set(-upX, 0.62, frontZ); upL.castShadow = true;
-    const upR = upPole.clone(); upR.position.set( upX, 0.62, frontZ); upR.castShadow = true;
-    treadmill.add(upL, upR);
-
-    const topBar = new THREE.Mesh(new THREE.CylinderGeometry(0.032,0.032, FRAME_W - 0.10, 16), matSteel);
-    topBar.rotation.z = Math.PI/2;
-    topBar.position.set(0, 1.15, frontZ);
-    topBar.castShadow = true;
-    treadmill.add(topBar);
-
-    const sideRail = new THREE.Mesh(new THREE.CylinderGeometry(0.028,0.028, BELT_L + 0.35, 16), matSteel);
-    sideRail.rotation.x = Math.PI/2;
-    sideRail.position.set(-upX, 0.95, -0.02);
-    sideRail.castShadow = true;
-    treadmill.add(sideRail);
-
-    const sideRailR = sideRail.clone();
-    sideRailR.position.x = upX;
-    treadmill.add(sideRailR);
-
-    const tmConsole = new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.40, 0.22), new THREE.MeshStandardMaterial({ color:0x111b2e, roughness:0.55, metalness:0.12 }));
-    tmConsole.position.set(0, 1.02, frontZ + 0.14);
-    tmConsole.castShadow = true;
-    treadmill.add(tmConsole);
-    
-const tmScreen = new THREE.Mesh(
-  new THREE.PlaneGeometry(0.56, 0.30),
- new THREE.MeshBasicMaterial({
-  map: consoleScreen.tex,
-  side: THREE.DoubleSide,
-  transparent: true,
-  depthTest: true,      // <-- IMPORTANT: allow avatar to occlude it
-  depthWrite: false,
-  toneMapped: false,
-  polygonOffset: true,  // prevents z-fighting with the console face
-  polygonOffsetFactor: -1,
-  polygonOffsetUnits: -1
-})
-);
-
-// attach to console (NOT treadmill / NOT zone)
-tmConsole.add(tmScreen);
-
-// local coords on the console front face (console depth = 0.32 -> half = 0.16)
-tmScreen.position.set(0, 0.02, 0.162);
-tmScreen.rotation.set(-0.10, 0, 0);
-
-
-
-    // Wall board (live)
-    const board = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.88, 0.08), new THREE.MeshStandardMaterial({ color:0x111b2e, roughness:0.6, metalness:0.15 }));
-    board.position.set(0, 2.55, -1.55);
-    zoneCardio.add(board);
-
-    const boardFace = new THREE.Mesh(
-  new THREE.PlaneGeometry(2.46, 0.78),
-  new THREE.MeshBasicMaterial({
-    map: wallScreen.tex,
-    transparent: true,
-    depthTest: false,
-    depthWrite: false,
-    toneMapped: false
-  })
-);
-boardFace.position.set(0, 2.55, -1.495);   // <-- moved in front of the board
-boardFace.renderOrder = 1000;
-zoneCardio.add(boardFace);
-
-const boardGlow = new THREE.Mesh(
-  new THREE.PlaneGeometry(2.6, 0.92),
-  new THREE.MeshBasicMaterial({
-    color:0x38bdf8,
-    transparent:true,
-    opacity:0.10,
-    depthWrite:false,
-    depthTest:false
-  })
-);
-boardGlow.position.set(0, 2.55, -1.505);   // <-- behind the text plane
-boardGlow.renderOrder = 900;
-zoneCardio.add(boardGlow);
-
-
-    const lblC = makeLabel('Cardio Bay');
-    lblC.position.copy(Z_CARDIO).add(new THREE.Vector3(0, 4.1, -1.6));
-    labelGroup.add(lblC);
-
-    scene.add(zoneCardio);
-
-    // Forensics zone (realistic)
-    const zoneForensics = new THREE.Group();
-    zoneForensics.name = 'forensics';
-    zoneForensics.position.copy(Z_FORENSIC);
-
-    const platF = zoneBasePlate(4.8, 3.6);
-    platF.position.set(0, 0.03, 0);
-    zoneForensics.add(platF);
-
-    const lineMat = new THREE.LineBasicMaterial({ color:0x38bdf8, transparent:true, opacity:0.55 });
-    const squarePts = [
-      new THREE.Vector3(-1.2, 0.06, -1.0),
-      new THREE.Vector3( 1.2, 0.06, -1.0),
-      new THREE.Vector3( 1.2, 0.06,  1.0),
-      new THREE.Vector3(-1.2, 0.06,  1.0),
-      new THREE.Vector3(-1.2, 0.06, -1.0)
-    ];
-    zoneForensics.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(squarePts), lineMat));
-
-    function tripod(x,z){
-      const g = new THREE.Group();
-      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.05,1.05,10), matSteel);
-      pole.position.y = 0.52; pole.castShadow = true; g.add(pole);
-      const head = new THREE.Mesh(new THREE.BoxGeometry(0.20,0.12,0.20), matDark);
-      head.position.y = 1.05; head.castShadow = true; g.add(head);
-      const legGeo = new THREE.CylinderGeometry(0.02,0.02,0.80,8);
-      for (let i=0;i<3;i++){
-        const leg = new THREE.Mesh(legGeo, matSteel);
-        const ang = i * (Math.PI*2/3);
-        leg.position.set(Math.cos(ang)*0.18, 0.30, Math.sin(ang)*0.18);
-        leg.rotation.z = 0.55;
-        leg.rotation.y = ang;
-        g.add(leg);
-      }
-      g.position.set(x, 0, z);
-      return g;
-    }
-    zoneForensics.add(tripod(-1.55,-1.35), tripod(1.55,-1.35), tripod(0,1.55));
-
-    const mon = new THREE.Mesh(new THREE.BoxGeometry(1.55, 0.95, 0.08), new THREE.MeshStandardMaterial({ color:0x111b2e, roughness:0.6, metalness:0.15 }));
-    const mon1 = mon.clone(); mon1.position.set(-1.05, 2.35, -1.70); zoneForensics.add(mon1);
-    const mon2 = mon.clone(); mon2.position.set( 1.05, 2.35, -1.70); zoneForensics.add(mon2);
-
-    const lblF = makeLabel('Movement Analysis Booth');
-    lblF.position.copy(Z_FORENSIC).add(new THREE.Vector3(0, 2.7, -1.6));
-    labelGroup.add(lblF);
-
-    scene.add(zoneForensics);
-
-    // ==============================
-    // 5) Avatar / model loader
-    // ==============================
-    let avatarRoot = null;
-
-    function buildPreviewMannequin(){
-      const avatar = new THREE.Group();
-      avatar.userData.__isMannequin = true;
-      const bodyMat = new THREE.MeshStandardMaterial({ color:0xdbe7f7, roughness:0.65, metalness:0.08 });
-
-      const pelvis = new THREE.Mesh(new THREE.CapsuleGeometry(0.20, 0.14, 6, 14), bodyMat);
-      pelvis.position.set(0, 0.95, 0); pelvis.castShadow = true;
-
-      const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.26, 0.55, 8, 18), bodyMat);
-      torso.position.set(0, 1.55, 0); torso.castShadow = true;
-
-      const head = new THREE.Mesh(new THREE.SphereGeometry(0.17, 18, 18), bodyMat);
-      head.position.set(0, 2.15, 0); head.castShadow = true;
-
-      const limb = (r,l)=>{ const m=new THREE.Mesh(new THREE.CapsuleGeometry(r,l,6,12), bodyMat); m.castShadow=true; return m; };
-      const armL = limb(0.06, 0.45); armL.position.set(-0.38, 1.65, 0); armL.rotation.z = 0.45;
-      const armR = limb(0.06, 0.45); armR.position.set( 0.38, 1.65, 0); armR.rotation.z = -0.45;
-      const legL = limb(0.07, 0.60); legL.position.set(-0.14, 0.55, 0);
-      const legR = limb(0.07, 0.60); legR.position.set( 0.14, 0.55, 0);
-
-      avatar.add(pelvis, torso, head, armL, armR, legL, legR);
-      return avatar;
-    }
-
-    async function loadSelectedModel(modelId, onProgress){
-      const m = getModel(modelId);
-
-      if (avatarRoot){
-        scene.remove(avatarRoot);
-        avatarRoot = null;
-      }
-
-      if (!m || !m.url){
-        avatarRoot = buildPreviewMannequin();
-        scene.add(avatarRoot);
-        return avatarRoot;
-      }
-
-      return await new Promise((resolve, reject)=>{
-        const loader = new GLTFLoader();
-
-        loader.load(
-          m.url,
-          (gltf)=>{
-            avatarRoot = gltf.scene || (gltf.scenes && gltf.scenes[0]) || null;
-            if (!avatarRoot) return reject(new Error("GLB loaded but scene is empty"));
-
-            avatarRoot.traverse(o=>{ if (o.isMesh){ o.castShadow=true; o.receiveShadow=true; } });
-            scene.add(avatarRoot);
-
-            // normalize to ~1.75m tall (ignore far outliers)
-            avatarRoot.updateWorldMatrix(true, true);
-
-            const meshBoxes = [];
-            const mean = new THREE.Vector3();
-            let n = 0;
-
-            avatarRoot.traverse(o=>{
-              if (!(o.isMesh || o.isSkinnedMesh) || !o.geometry) return;
-              if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
-              const b = new THREE.Box3().copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld);
-              const center = new THREE.Vector3();
-              b.getCenter(center);
-              meshBoxes.push({ b, center });
-              mean.add(center);
-              n++;
-            });
-
-            if (n){
-              mean.multiplyScalar(1 / n);
-              const box = new THREE.Box3();
-              for (const it of meshBoxes){
-                if (it.center.distanceTo(mean) < 5.0) box.union(it.b);
-              }
-              const size = new THREE.Vector3();
-              box.getSize(size);
-
-              if (size.y > 1e-6){
-                const targetH = 1.75;
-                const s = targetH / size.y;
-                avatarRoot.scale.setScalar(s);
-                avatarRoot.updateWorldMatrix(true, true);
-              }
-            }
-            resolve(avatarRoot);
-          },
-          (xhr)=>{
-            if (!onProgress) return;
-            const loaded = (xhr && xhr.loaded) ? xhr.loaded : 0;
-            const totalRaw = (xhr && xhr.total) ? xhr.total : 0;
-            const total = (totalRaw >= loaded) ? totalRaw : loaded;
-            onProgress(total ? Math.round((loaded / total) * 100) : null);
-          },
-          (err)=>reject(err)
-        );
-      });
-    }
-
-    // ==============================
-    // 6) Zone + Module router (with snap)
-    // ==============================
-    let currentModule = null;
-
-    const camGoalPos = new THREE.Vector3(6.8, 3.9, 8.6);
-    const camGoalTarget = new THREE.Vector3(0, 1.35, 0);
-
-    function snapCam(){
-      camera.position.copy(camGoalPos);
-      controls.target.copy(camGoalTarget);
-      controls.update();
-    }
-
-    function placeAvatarForZone(which){
-      if (!avatarRoot) return;
-
-      if (which === 'strength'){
-        avatarRoot.position.copy(Z_STRENGTH).add(new THREE.Vector3(0, 0.06, -0.10));
-      } else if (which === 'cardio'){
-        // stand on belt (belt Y ~ 0.295 + zone offset)
-        avatarRoot.position.copy(Z_CARDIO).add(new THREE.Vector3(0, 0.30, 0.05));
-      } else if (which === 'forensics'){
-        avatarRoot.position.copy(Z_FORENSIC).add(new THREE.Vector3(0, 0.06, 0.00));
-      } else {
-        avatarRoot.position.copy(Z_FORENSIC).add(new THREE.Vector3(0, 0.06, 0.00));
-      }
-    }
-
-    function setZone(which){
-      const all = (which === 'all');
-      zoneStrength.visible  = all || which === 'strength';
-      zoneCardio.visible    = all || which === 'cardio';
-      zoneForensics.visible = all || which === 'forensics';
-
-      if (which === 'strength'){
-        camGoalTarget.set(Z_STRENGTH.x, 1.25, Z_STRENGTH.z);
-        camGoalPos.set(Z_STRENGTH.x + 3.2, 2.6, Z_STRENGTH.z + 4.8);
-      } else if (which === 'cardio'){
-        camGoalTarget.set(Z_CARDIO.x, 1.10, Z_CARDIO.z);
-        camGoalPos.set(Z_CARDIO.x, 2.1, Z_CARDIO.z + 2.9);
-      } else if (which === 'forensics'){
-        camGoalTarget.set(Z_FORENSIC.x, 1.25, Z_FORENSIC.z);
-        camGoalPos.set(Z_FORENSIC.x + 3.6, 2.6, Z_FORENSIC.z + 5.1);
-      } else {
-        camGoalTarget.set(0, 1.35, 0);
-        camGoalPos.set(6.8, 3.9, 8.6);
-      }
-
-      placeAvatarForZone(which);
-      snapCam();
-    }
-
-    function enterModule(moduleId){
-      const mod = getModule(moduleId);
-      currentModule = mod;
-      $moduleTitle.textContent = mod.label;
-      setZone(mod.zone || 'all');
-      if (typeof mod.onEnter === 'function'){
-        mod.onEnter({ THREE, scene, camera, controls, sim, setZone, avatar: avatarRoot });
-      }
-    }
-
-    // ==============================
-    // 7) Studio UI wiring
-    // ==============================
-    const pills = [...document.querySelectorAll('.pill')];
-    function setActive(btn){ pills.forEach(p=>p.classList.toggle('active', p === btn && btn.dataset.zone !== 'labels')); }
-
-    pills.forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        const z = btn.dataset.zone;
-        if (z === 'labels'){
-          setLabels(!labelsOn);
-          btn.classList.toggle('active', labelsOn);
-          return;
-        }
-        setZone(z);
-        setActive(btn);
-      });
-    });
-
-    addEventListener('keydown', (e)=>{
-      if ($gate.style.display !== 'none') return;
-      if (e.key === '0'){ setZone('all'); setActive(document.querySelector('[data-zone="all"]')); }
-      if (e.key === '1'){ setZone('strength'); setActive(document.querySelector('[data-zone="strength"]')); }
-      if (e.key === '2'){ setZone('cardio'); setActive(document.querySelector('[data-zone="cardio"]')); }
-      if (e.key === '3'){ setZone('forensics'); setActive(document.querySelector('[data-zone="forensics"]')); }
-      if (e.key.toLowerCase() === 'l'){ setLabels(!labelsOn); document.querySelector('[data-zone="labels"]').classList.toggle('active', labelsOn); }
-    });
-
-    // ==============================
-    // 8) Tick loop
-    // ==============================
-    function updateHUD(){
-      $spdVal.textContent = sim.speedMph.toFixed(1);
-      $engVal.textContent = Math.round(sim.energy);
-      const st = (sim.energy <= 10) ? 'CRASH' : (sim.energy <= 25 ? 'Warning' : 'Stable');
-      $status.textContent = st;
-      $status.style.color = (st==='CRASH') ? '#ff9aa0' : (st==='Warning' ? '#ffe4a3' : '#cfe3ff');
-    }
-
-    const clock = new THREE.Clock();
-
-    function animate(){
-      requestAnimationFrame(animate);
-      controls.update();
-
-      const dt = Math.min(0.05, clock.getDelta());
-      const t = clock.getElapsedTime();
-
-      sim.energy = clamp(sim.energy - (sim.speedMph * 0.55) * dt, 0, 100);
-
-      // treadmill motion
-      const treadSpeed = 0.35 + (sim.speedMph / 12) * 2.0;
-      for (const s of treadStrips){
-        s.position.z += dt * treadSpeed;
-        if (s.position.z > TREAD_MAX_Z) s.position.z = TREAD_MIN_Z;
-      }
-      const beltSpeed = 0.10 + (sim.speedMph / 12) * 1.10;
-      beltTex.offset.y = (beltTex.offset.y + dt * beltSpeed) % 1;
-
-      if (currentModule && typeof currentModule.onTick === 'function'){
-        currentModule.onTick({ THREE, scene, camera, controls, sim, setZone, avatar: avatarRoot }, dt, t);
-      }
-
-      // billboard labels
-      if (labelsOn){
-        for (const ch of labelGroup.children){
-          ch.lookAt(camera.position);
-        }
-      }
-
-    function drawTreadmillMph(screen){
-  const { ctx, c } = screen;
-
-  ctx.clearRect(0,0,c.width,c.height);
-  ctx.fillStyle = 'rgba(6,18,34,1)';
-  ctx.fillRect(0,0,c.width,c.height);
-
-  ctx.strokeStyle = 'rgba(56,189,248,0.85)';
-  ctx.lineWidth = 10;
-  ctx.strokeRect(10,10,c.width-20,c.height-20);
-
-  ctx.fillStyle = '#e6eef7';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.font = '900 64px system-ui, -apple-system, Segoe UI, Roboto, Inter';
-  ctx.fillText(`${sim.speedMph.toFixed(1)} mph`, c.width/2, c.height/2);
-
-  screen.tex.needsUpdate = true;
-}
-
-drawPanel(wallScreen, 'CARDIO BOARD');
-drawTreadmillMph(consoleScreen);
-
-updateHUD();
-renderer.render(scene, camera);
-}
-animate();
-
-    // ==============================
-    // 9) Enter Studio (gate -> studio)
-    // ==============================
-    $enter.addEventListener('click', async ()=>{
-      const modelId = $modelSel.value;
-      const moduleId = $modSel.value;
-
-      $enter.disabled = true;
-      const prevTxt = $enter.textContent;
-      $enter.textContent = "Loading 0%";
-
-      try {
-        await loadSelectedModel(modelId, (p)=>{
-          $enter.textContent = (p == null) ? "Loading…" : `Loading ${p}%`;
-        });
-      } catch (e) {
-        console.error(e);
-        $enter.textContent = "Load failed";
-        $enter.disabled = false;
-        setTimeout(()=>{ $enter.textContent = prevTxt; }, 1200);
-        return;
-      }
-
-      $gate.style.display = "none";
-      $ui.style.display = "";
-      $badge.style.display = "";
-      $hint.style.display = "";
-
-      enterModule(moduleId);
-
-      $enter.disabled = false;
-      $enter.textContent = prevTxt;
-    });
-
-    addEventListener('resize', ()=>{
-      camera.aspect = innerWidth/innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(innerWidth, innerHeight);
-      renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-    });
-  </script>
+});
+</script>
 </body>
 </html>
