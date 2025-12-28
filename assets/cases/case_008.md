@@ -37,7 +37,7 @@
 
 ---
 
-# Case 8: Disproportionate Pain and Autonomic Dysfunction
+# Case 8: Persistent Ankle Pain
 
 ## Patient Profile
 - Name: Emily T.
