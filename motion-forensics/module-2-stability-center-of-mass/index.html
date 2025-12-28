@@ -780,11 +780,11 @@ if ($msg) {
 // ==============================
 const FL002_POSES_ROMA = {
   idle: {
-    upperarm_L: { x: 0.0, y:  0.10, z:  -7.5 },
+    upperarm_L: { x: 0.0, y:  0.10, z:  -7.3 },
     lowerarm_L: { x: 0.0, y:  0.00, z:   0.0 },
     hand_L:     { x: 0.0, y:  0.00, z:   0.0 },
 
-    upperarm_R: { x: 0.0, y: -0.10, z:   7.5 },
+    upperarm_R: { x: 0.0, y: -0.10, z:   7.3 },
     lowerarm_R: { x: 0.0, y:  0.00, z:   0.0 },
     hand_R:     { x: 0.0, y:  0.00, z:   0.0 }
   },
@@ -1061,7 +1061,32 @@ if (sim.ballLocked && skeleton) {
   });
 }
 // Inside the animate() function
+// Inside the animate() function
+if (skeleton) {
+    const isLeaning = sim.leanZ !== 0 || sim.leanX !== 0;
 
+    if (isLeaning) {
+        // ACTIVE: Apply lean values
+        const radZ = THREE.MathUtils.degToRad(sim.leanZ);
+        const radX = THREE.MathUtils.degToRad(sim.leanX);
+
+        const spine = skeleton.bones.find(b => b.name.toLowerCase().includes('spine'));
+        const hips = skeleton.bones.find(b => b.name.toLowerCase().includes('hips'));
+
+        if (spine) {
+            spine.rotation.x = radZ;
+            spine.rotation.z = -radX;
+        }
+        if (hips) {
+            hips.rotation.x = radZ * 0.3; 
+            hips.rotation.z = -(radX * 0.3);
+        }
+    } else {
+        // IDLE: Explicitly maintain the "without weight" preset pose
+        // This ensures she loads and stays in her natural stance
+        applyFL002Pose('idle');
+    }
+}
   renderer.render(scene, camera);
 }
 
@@ -1107,4 +1132,3 @@ window.addEventListener('keydown', (e) => {
 </script>
 </body>
 </html>
-
