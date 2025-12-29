@@ -625,7 +625,7 @@ function setZone(z){
   zoneCardio.visible=(z==="all"||z==="cardio");
   zoneForensics.visible=(z==="all"||z==="forensics");
 }
-setZone("strength");
+setZone("all");
 
 /* ===== AVATAR ===== */
 let avatarRoot = null;
@@ -675,6 +675,31 @@ await loadModel(modelId, (pct) => {
   $enter.textContent = `Loading ${pct}%`;
 });
 
+// === FORCE SPAWN INTO FORENSICS BAY (Module 2) ===
+setZone('strength');
+
+// Position avatar based on selected model
+if (avatarRoot) {
+    // Save the active model globally so the pose logic triggers
+    window.ACTIVE_MODEL = modelId; 
+
+    if (modelId === "Roman") {
+        // Roman: Moved forward slightly
+        avatarRoot.position.set(0, 0.08, -3.15);
+    } else {
+        // Roma: Original forensic spot
+        avatarRoot.position.set(0, 0.08, -3.15);
+    }
+}
+
+// Snap camera to forensic bay (Universal target for both)
+const camTarget = new THREE.Vector3(0, 1.35, -2.92);
+controls.target.copy(camTarget);
+camera.position.set(-0.11, 2.79, 3.02);
+controls.update();
+
+// NOW ENTER MODULE → show Module 2 console
+document.getElementById('badge').style.display = "block";
 
     // Hide gate
     document.getElementById('gate').style.display = "none";
@@ -707,8 +732,6 @@ await loadModel(modelId, (pct) => {
     $enter.textContent = "Enter Studio";
   }
 });
-
-
 
 /* ===== LOOP ===== */
 let _lastTime = performance.now();
