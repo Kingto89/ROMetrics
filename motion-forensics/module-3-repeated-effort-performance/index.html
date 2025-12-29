@@ -671,18 +671,16 @@ $enter.addEventListener('click', async () => {
     });
 
     // === FORCE SPAWN INTO STRENGTH BAY (Module 3) ===
-    setZone('strength');
+    setZone('all');
 
-    // Position avatar based on the Strength Zone coordinates (Z_STRENGTH)
-    if (avatarRoot) {
+ if (avatarRoot) {
         window.ACTIVE_MODEL = modelId; 
 
-        // Z_STRENGTH is defined as (-4.4, 0, 2.1)
-        // Position avatar on the strength platform
+        // Position on the Strength Plate
         avatarRoot.position.set(-4.4, 0.08, 2.1);
         
-        // Rotate avatar to face the center of the bay
-        avatarRoot.rotation.y = Math.PI / 4; 
+        // FIXED: 0 is straight ahead, no slant
+        avatarRoot.rotation.y = 0; 
     }
 
     // Snap camera to Strength Bay
