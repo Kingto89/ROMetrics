@@ -658,6 +658,7 @@ function loadModel(id, onProgress){
 }
 
 // 9) Enter Studio (gate -> studio)
+// 9) Enter Studio (gate -> studio)
 $enter.addEventListener('click', async () => {
   const modelId = document.getElementById('modelSelect')?.value;
   const bay = document.getElementById('moduleSelect')?.value || 'strength'; 
@@ -670,49 +671,43 @@ $enter.addEventListener('click', async () => {
       $enter.textContent = `Loading ${pct}%`;
     });
 
-    // === FORCE SPAWN INTO STRENGTH BAY (Module 3) ===
+    // === VISIBILITY: Show everything in the room ===
     setZone('all');
 
- if (avatarRoot) {
+    if (avatarRoot) {
         window.ACTIVE_MODEL = modelId; 
 
-        // Position on the Strength Plate
+        // SPAWN: Position on the Strength Plate
         avatarRoot.position.set(-4.4, 0.08, 2.1);
         
-        // FIXED: 0 is straight ahead, no slant
+        // ROTATION: Face perfectly forward (toward back wall)
         avatarRoot.rotation.y = 0; 
     }
 
-    // Snap camera to Strength Bay
+    // === CAMERA: Focus on the Strength Station ===
     const camTarget = new THREE.Vector3(-4.4, 1.35, 2.1);
     controls.target.copy(camTarget);
     
-    // Position camera for a clear view of the bench and weights
+    // View from the side/front to see equipment and avatar clearly
     camera.position.set(-0.5, 2.8, 6.5); 
     controls.update();
 
-    // Show Module 3 badge
+    // === GATE CONTROL: Hide the entry menu ===
+    // This "opens the door" so the 3D scene is visible
+    document.getElementById('gate').style.display = "none";
+
+    // Show Module Badge & UI
     const badge = document.getElementById('badge');
     if (badge) badge.style.display = "block";
 
-    // Hide gate
-    document.getElementById('gate').style.display = "none";
-
-    // Show environment UI
     const uiMain = document.getElementById('ui');
     if (uiMain) uiMain.style.display = "flex";
 
-    // Route to selected bay (Ensures the correct zone remains active)
+    // === SAFETY: Force 'all' so no equipment is hidden by the switch ===
     switch (bay) {
       case 'cardio':
-        setZone('cardio');
-        break;
       case 'strength':
-        setZone('strength');
-        break;
       case 'forensics':
-        setZone('forensics');
-        break;
       default:
         setZone('all');
     }
@@ -720,7 +715,7 @@ $enter.addEventListener('click', async () => {
     if (typeof snapCam === 'function') snapCam();
 
   } catch (err) {
-    console.error(err);
+    console.error("Studio Entry Error:", err);
     $enter.disabled = false;
     $enter.textContent = "Enter Studio";
   }
