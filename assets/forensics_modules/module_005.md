@@ -1,5 +1,5 @@
 
-# **Module 5 — Leverage Determines Demand**
+# **Module 5 — Mechanical Leverage and Movement Demand**
 
 ---
 
