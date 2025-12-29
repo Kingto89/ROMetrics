@@ -80,13 +80,13 @@ canvas{display:block}
 </head>
 
 <body>
+
 <!-- ===== ENTRY GATE ===== -->
 <div id="gate">
   <div id="gateCard">
     <div id="gateTitle">Forensics Labs</div>
     <div id="gateSub">Select a model to enter the studio.</div>
 
-    <!-- TWO-COLUMN GRID -->
     <div id="gateGrid">
       <div class="field">
         <div class="lbl">MODEL</div>
@@ -100,22 +100,17 @@ canvas{display:block}
       <div class="field">
         <div class="lbl">MODULE</div>
         <select disabled>
-          <option selected>module-3-Repeated Effort & Performance</option>
+          <option selected>Module-3-Repeated Effort Performance</option>
         </select>
-        <div class="desc">
-          Strength/ Load Station: Performance consistency and fatigue resistance.
-        </div>
+        <div class="desc">Strength/ Load Station: Performance consistency and fatigue resistance</div>
       </div>
     </div>
 
-    <!-- ACTION ROW (RIGHT-ALIGNED) -->
     <div id="gateActions">
       <button id="enterBtn" class="primary">Enter Studio</button>
     </div>
-
   </div>
 </div>
-
 
 <script type="module">
 import * as THREE from 'three';
@@ -629,57 +624,9 @@ function setZone(z){
 }
 setZone("strength");
 
-
 /* ===== AVATAR ===== */
-// ==============================
-// MODULE 2 — STABILITY STATE
-// ==============================
-const sim = {
-  leanZ: 0,        // forward / back
-  leanX: 0,        // left / right
-  ballLocked: false
-};
-// ==============================
-// FL-002 POSES (UNCHANGED)
-// ==============================
-const FL002_POSES = {
-  idle: {
-    upperarm_L: { x: 0.0, y:  0.10, z:  -7.5 },
-    lowerarm_L: { x: -0.0, y:  0.00, z:  0.0 },
-    hand_L:     { x:  0.00, y:  0.00, z:  0.0 },
-
-    upperarm_R: { x: -0.0, y: -0.10, z: 7.5 },
-    lowerarm_R: { x: -0.0, y:  0.00, z: -0.00 },
-    hand_R:     { x:  0.00, y:  0.00, z:  0.00 }
-  },
-
-  holdingBall: {
-    upperarm_L: { x: -0.75, y:  0.20, z:  0.30 },
-    lowerarm_L: { x: -1.10, y:  0.00, z:  0.15 },
-    hand_L:     { x:  0.10, y:  0.00, z:  0.00 },
-
-    upperarm_R: { x: -0.75, y: -0.20, z: -0.30 },
-    lowerarm_R: { x: -1.10, y:  0.00, z: -0.15 },
-    hand_R:     { x:  0.10, y:  0.00, z:  0.00 }
-  }
-};
-function applyFL002Pose(poseName){
-  if (!skeleton) return;
-
-  const pose = FL002_POSES[poseName];
-  if (!pose) return;
-
-  for (const boneName in pose){
-    const bone = skeleton.bones.find(b => b.name.includes(boneName));
-    if (!bone) continue;
-
-    const r = pose[boneName];
-    bone.rotation.set(r.x, r.y, r.z);
-  }
-}
-
 let avatarRoot = null;
-let skeleton = null;
+
 
 function loadModel(id, onProgress){
   return new Promise((resolve, reject) => {
@@ -692,20 +639,7 @@ function loadModel(id, onProgress){
       // ✅ ON LOAD (100%)
       (gltf) => {
         scene.add(gltf.scene);
-avatarRoot = gltf.scene;
-
-// extract skeleton ONCE
-skeleton = null;
-avatarRoot.traverse(o=>{
-  if (o.isSkinnedMesh && o.skeleton && !skeleton){
-    skeleton = o.skeleton;
-  }
-});
-
-// only apply pose AFTER skeleton exists
-if (skeleton) applyFL002Pose('idle');
-
-
+        avatarRoot = gltf.scene;
         resolve(gltf);
       },
 
@@ -861,4 +795,3 @@ addEventListener("resize",()=>{
 </script>
 </body>
 </html>
-
