@@ -1,1 +1,122 @@
 
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ROMetrics — Module Not Available</title>
+
+<style>
+:root{
+  --bg:#07101b;
+  --card:#0f172a;
+  --border:rgba(148,163,184,.25);
+  --accent:#38bdf8;
+  --text:#e6eef7;
+  --muted:#9fb3cc;
+}
+
+*{box-sizing:border-box}
+html,body{
+  margin:0;
+  height:100%;
+  background:
+    radial-gradient(900px 600px at 50% 20%, rgba(56,189,248,.08), var(--bg));
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;
+  color:var(--text);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.card{
+  width:min(600px, 90%);
+  background:rgba(9,20,37,.78);
+  border:1px solid var(--border);
+  border-radius:28px;
+  box-shadow:0 30px 90px rgba(0,0,0,.45);
+  padding:40px;
+  text-align:center;
+}
+
+.icon{
+  font-size: 50px;
+  color: var(--accent);
+  margin-bottom: 20px;
+}
+
+h1{
+  font-size:28px;
+  font-weight:900;
+  margin-bottom:10px;
+}
+
+p{
+  color:var(--muted);
+  line-height:1.6;
+  margin-bottom:30px;
+}
+
+.release-date{
+  display:inline-block;
+  padding:12px 24px;
+  background:rgba(56,189,248,.1);
+  border:1px solid var(--accent);
+  border-radius:12px;
+  color:var(--accent);
+  font-weight:700;
+  font-size:18px;
+}
+
+.back-btn{
+  margin-top:30px;
+  display:block;
+  color:var(--muted);
+  text-decoration:none;
+  font-size:14px;
+  transition:color 0.2s;
+}
+
+.back-btn:hover{
+  color:var(--accent);
+}
+</style>
+</head>
+
+<body>
+  <div class="card">
+    <div class="icon">🚀</div>
+    <h1>Module Locked</h1>
+    <p>Thank you for your interest in the Forensics Labs. We are currently calibrating the 3D assets and biomechanical data for this session to ensure the highest quality training experience.</p>
+    
+    <div class="subtitle">THIS MODULE WILL BE AVAILABLE ON:</div>
+    <div class="release-date" id="date-display">Calculating...</div>
+
+    <a href="../" class="back-btn">← Return to Lab Index</a>
+  </div>
+
+  <script>
+    // Configuration: Set the date for Module 4 release here
+    // Format:  February 2nd, 2026
+    const firstReleaseDate = new Date(2025, 6, 7); // Example: July 7th, 2025
+    
+    // Get the module number from the current URL folder name (e.g., "module-4")
+    const pathParts = window.location.pathname.split('/');
+    const moduleFolder = pathParts[pathParts.length - 2] || "";
+    const moduleNum = parseInt(moduleFolder.split('-')[1]);
+
+    // Calculation: Add 1 week for every module after Module 4
+    if(!isNaN(moduleNum) && moduleNum >= 4) {
+        const weeksToAdd = moduleNum - 4;
+        const releaseDate = new Date(firstReleaseDate);
+        releaseDate.setDate(firstReleaseDate.getDate() + (weeksToAdd * 7));
+        
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('date-display').innerText = releaseDate.toLocaleDateString(undefined, options);
+    } else {
+        document.getElementById('date-display').innerText = "Coming Soon";
+    }
+  </script>
+</body>
+</html>
