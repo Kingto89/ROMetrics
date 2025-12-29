@@ -465,92 +465,64 @@ const CASE_FILES = {
   }
 
   // main route handler for module tiles
-function openRoute(key) {
-  if (!key) return;
+  function openRoute(key) {
+    if (!key) return;
+
+   if (key === "motion") {
   const caseKey = getCurrentCaseKey();
-  const caseData = CASE_FILES[caseKey];
 
-  // 1. DATE LOCK: Check if case is scheduled for 2026
-  if (caseData && caseData.unlockDate) {
-    const now = new Date();
-    const unlock = new Date(caseData.unlockDate);
-    if (now < unlock) {
-      alert(`Access Restricted: This case is scheduled to unlock on ${caseData.unlockDate}.`);
-      return;
-    }
-  }
+  const CASE_MOTION_URLS = {
+    "CASE_001": "https://kingto89.github.io/ROMetrics.com/lab-motion/index.html?caseToken=LAB-CERVICAL-001",
+    "CASE_002": "https://kingto89.github.io/ROMetrics.com/lab-motion/index.html?caseToken=LAB-HIP-002",
+    "CASE_003": "https://kingto89.github.io/ROMetrics.com/lab-motion/index.html?caseToken=LAB-CLUSTER-003"
+  };
 
-  // 2. MOTION LAB: Remove "|| CASE_001" to stop auto-assigning Case 1
-  if (key === "motion") {
-    const CASE_MOTION_URLS = {
-      "CASE_001": "https://kingto89.github.io/ROMetrics.com/lab-motion/index.html?caseToken=LAB-CERVICAL-001",
-      "CASE_002": "https://kingto89.github.io/ROMetrics.com/lab-motion/index.html?caseToken=LAB-HIP-002",
-      "CASE_003": "https://kingto89.github.io/ROMetrics.com/lab-motion/index.html?caseToken=LAB-CLUSTER-003"
-    };
+  const url = CASE_MOTION_URLS[caseKey] || CASE_MOTION_URLS["CASE_001"];
 
-    const url = CASE_MOTION_URLS[caseKey]; // No fallback here
-    if (!url) {
-      alert("Simulator Link: No hyperlink assigned for this case.");
-      return;
-    }
-
-    visitedMotion = true;
-    updateDocLockState();
-    window.open(url, "_blank");
-    return;
-  }
-
-  // 3. GONIOMETRY: Apply the same strict mapping
-  if (key === "gonio") {
-    if (!visitedMotion) {
-      const ok = showSequenceWarning("Goniometry");
-      if (!ok) return;
-    }
-
-    const CASE_GONIO_URLS = {
-      "CASE_001": "https://kingto89.github.io/ROMetrics.com/goniometry-trainer/?caseToken=GONIO-CERVICAL-001",
-      "CASE_002": "https://kingto89.github.io/ROMetrics.com/goniometry-trainer/?caseToken=GONIO-HIP-002",
-      "CASE_003": "https://kingto89.github.io/ROMetrics.com/goniometry-trainer/?caseToken=GONIO-CLUSTER-003"
-    };
-
-    const url = CASE_GONIO_URLS[caseKey];
-    if (!url) {
-      alert("Goniometry Link: No hyperlink assigned for this case.");
-      return;
-    }
-
-    visitedGonio = true;
-    updateDocLockState();
-    window.open(url, "_blank");
-    return;
-  }
-
-  // 4. MMT: Apply the same strict mapping
-  if (key === "mmt") {
-    if (!visitedMotion) {
-      const ok = showSequenceWarning("MMT");
-      if (!ok) return;
-    }
-
-    const CASE_MMT_URLS = {
-      "CASE_001": "https://kingto89.github.io/ROMetrics.com/mmt/?caseToken=MMT-CERVICAL-001",
-      "CASE_002": "https://kingto89.github.io/ROMetrics.com/mmt/?caseToken=MMT-HIP-002",
-      "CASE_003": "https://kingto89.github.io/ROMetrics.com/mmt/?caseToken=MMT-CLUSTER-003"
-    };
-
-    const url = CASE_MMT_URLS[caseKey];
-    if (!url) {
-      alert("MMT Link: No hyperlink assigned for this case.");
-      return;
-    }
-
-    visitedMMT = true;
-    updateDocLockState();
-    window.open(url, "_blank");
-    return;
-  }
+  visitedMotion = true;
+  updateDocLockState();
+  window.open(url, "_blank");
+  return;
 }
 
+
+       if (key === "gonio") {
+      if (!visitedMotion) {
+        const ok = showSequenceWarning("Goniometry");
+        if (!ok) return;
+      }
+
+      const sel = document.getElementById("caseSelect");
+      const caseKey = sel ? sel.value : "CASE_001";
+
+      const url = CASE_GONIO_URLS[caseKey] || CASE_GONIO_URLS["CASE_001"];
+
+      visitedGonio = true;
+      updateDocLockState();
+      window.open(url, "_blank");
+      return;
+    } 
+
+
+    if (key === "mmt") {
+      if (!visitedMotion) {
+        const ok = showSequenceWarning("MMT");
+        if (!ok) return;
+      }
+      visitedMMT = true;
+      updateDocLockState();
+const caseKey = getCurrentCaseKey();
+
+const CASE_MMT_URLS = {
+  "CASE_001": "https://kingto89.github.io/ROMetrics.com/mmt/?caseToken=MMT-CERVICAL-001",
+  "CASE_002": "https://kingto89.github.io/ROMetrics.com/mmt/?caseToken=MMT-HIP-002",
+  "CASE_003": "https://kingto89.github.io/ROMetrics.com/mmt/?caseToken=MMT-CLUSTER-003"
+};
+
+const url = CASE_MMT_URLS[caseKey] || CASE_MMT_URLS["CASE_001"];
+window.open(url, "_blank");
+      return;
+    }
     // SOAP / Notes tile → only unlock if all 3 visited
     if (key === "notes") {
       const allVisited = visitedMotion && visitedGonio && visitedMMT;
