@@ -115,17 +115,21 @@ canvas{display:block}
 <div id="badge" style="position:fixed; right:14px; top:14px; z-index:100; padding:16px; border-radius:20px; border:1px solid rgba(148,163,184,.25); background:rgba(15,23,42,.85); color:#cfe3ff; font-size:13px; width:280px; backdrop-filter:blur(10px); display:none;">
     <div style="font-weight:900; color:#38bdf8; margin-bottom:10px; text-transform:uppercase; letter-spacing:1px;">Stability Analysis</div>
     
-    <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-        <span>Forward/Back Lean</span>
-        <span style="font-weight:800; color:#fff;"><span id="leanVal">0.0</span>°</span>
-    </div>
-    <input id="leanSlider" type="range" min="-30" max="45" step="0.5" value="0" style="width:100%; accent-color:#38bdf8; margin-bottom:12px;">
+ <div class="field" style="margin-bottom:12px;">
+    <div class="lbl">STABILITY TEST DIRECTION</div>
+    <select id="dirSelect" style="width:100%; background:rgba(7,16,27,.35); border:1px solid rgba(148,163,184,.22); color:#e6eef7; border-radius:10px; padding:8px; font-size:12px;">
+        <option value="forward">Anterior Lean (Forward)</option>
+        <option value="back">Posterior Lean (Back)</option>
+        <option value="left">Lateral Lean (Left)</option>
+        <option value="right">Lateral Lean (Right)</option>
+    </select>
+</div>
 
-    <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-        <span>Left/Right Lean</span>
-        <span style="font-weight:800; color:#fff;"><span id="leanXVal">0.0</span>°</span>
-    </div>
-    <input id="leanXSlider" type="range" min="-30" max="30" step="0.5" value="0" style="width:100%; accent-color:#38bdf8; margin-bottom:12px;">
+<div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+    <span>Lean Intensity</span>
+    <span style="font-weight:800; color:#fff;"></span>
+</div>
+<input id="leanSlider" type="range" min="0" max="55" step="0.5" value="0" style="width:100%; accent-color:#38bdf8; margin-bottom:12px;">
 
     <div style="display:flex; gap:8px; margin-bottom:10px;">
         <button id="btnSideView" style="flex:1; background:rgba(30,41,59,.8); color:#e5eefc; border:1px solid rgba(148,163,184,.3); padding:8px; border-radius:10px; cursor:pointer; font-size:11px;">Side View</button>
@@ -711,63 +715,82 @@ if (resetBtn) {
 }
 
 
+// 1. UI References for New Console
+const leanSlider = document.getElementById('leanSlider');
+const leanVal = document.getElementById('leanVal');
+const dirSelect = document.getElementById('dirSelect');
+
 // 2. Reset UI
-if (leanZSlider) leanZSlider.value = 0;
-if (leanXSlider) leanXSlider.value = 0;
-if (leanZVal)    leanZVal.textContent = "0.0";
-if (leanXVal)    leanXVal.textContent = "0.0";
+if (leanSlider) leanSlider.value = 0;
+if (leanVal) leanVal.textContent = "0.0";
+if (dirSelect) dirSelect.selectedIndex = 0;
+
 sim.leanZ = 0;
 sim.leanX = 0;
 sim.ballLocked = false;
 
-// 3. Camera Presets
+// 3. Camera Presets (Unchanged)
 document.getElementById('btnSideView').onclick = () => {
-  camera.position.set(Z_FORENSIC.x + 3.5, 1.4, Z_FORENSIC.z);
-  controls.target.set(Z_FORENSIC.x, 1.2, Z_FORENSIC.z);
-  controls.update();
+    camera.position.set(Z_FORENSIC.x + 3.5, 1.4, Z_FORENSIC.z);
+    controls.target.set(Z_FORENSIC.x, 1.2, Z_FORENSIC.z);
+    controls.update();
 };
 
 document.getElementById('btnFrontView').onclick = () => {
-  camera.position.set(Z_FORENSIC.x, 1.4, Z_FORENSIC.z + 4.5);
-  controls.target.set(Z_FORENSIC.x, 1.2, Z_FORENSIC.z);
-  controls.update();
+    camera.position.set(Z_FORENSIC.x, 1.4, Z_FORENSIC.z + 4.5);
+    controls.target.set(Z_FORENSIC.x, 1.2, Z_FORENSIC.z);
+    controls.update();
 };
 
-// 4. Lean Sliders
-// 4. Lean Sliders (Updated Home)
-if (leanZSlider) {
-    leanZSlider.oninput = e => {
-        const d = parseFloat(e.target.value);
-        sim.leanZ = d;
-        if (leanZVal) leanZVal.textContent = d.toFixed(1);
-        
-        // Fire bone transformations only when active
-        updateModelLean(); 
-    };
-}
+// 4. Unified Slider Logic
 
-if (leanXSlider) {
-    leanXSlider.oninput = e => {
-        const d = parseFloat(e.target.value);
-        sim.leanX = d;
-        if (leanXVal) leanXVal.textContent = d.toFixed(1);
+if (leanSlider && dirSelect) {
+    leanSlider.oninput = e => {
+        const intensity = parseFloat(e.target.value);
         
-        // Fire bone transformations only when active
+        // Removed textContent update to hide numerical feedback from user
+
+        // Map intensity to specific lean variables based on direction
+        const dir = dirSelect.value;
+        
+        // Reset both first to ensure only one direction is active
+        sim.leanX = 0;
+        sim.leanZ = 0;
+
+        if (dir === "forward") sim.leanZ = intensity;
+        if (dir === "back")    sim.leanZ = -intensity;
+        if (dir === "left")    sim.leanX = -intensity;
+        if (dir === "right")   sim.leanX = intensity;
+
+        // Fire bone transformations
         updateModelLean();
-	updateThighAbduction();
+        updateThighAbductionL();
+        updateThighAbductionR();
+    };
+
+    // Reset slider when direction changes to prevent sudden snapping
+    dirSelect.onchange = () => {
+        leanSlider.value = 0;
+        if (leanVal) leanVal.textContent = "0.0";
+        sim.leanX = 0;
+        sim.leanZ = 0;
+        updateModelLean();
+        updateThighAbductionL();
+        updateThighAbductionR();
     };
 }
 
 function updateModelLean() {
     if (!skeleton) return;
 
+    // These variables are now updated by the unified slider + dropdown logic
     const radZ = THREE.MathUtils.degToRad(sim.leanZ);
     const radX = THREE.MathUtils.degToRad(sim.leanX);
     
     const spine = skeleton.bones.find(b => b.name.toLowerCase().includes('spine'));
     const hips = skeleton.bones.find(b => b.name.toLowerCase().includes('hips'));
 
-    // 1. Original Lean Logic
+    // 1. Lean Logic (Spine & Hips)
     if (spine) {
         spine.rotation.x = radZ;
         spine.rotation.z = -radX;
@@ -778,20 +801,23 @@ function updateModelLean() {
     }
 
     // 2. Tremble Trigger Logic
-    // Fires only when the X-slider reaches the far Left or far Right
-    const atMin = parseFloat(leanXSlider.value) <= parseFloat(leanXSlider.min) + 0.1;
-    const atMax = parseFloat(leanXSlider.value) >= parseFloat(leanXSlider.max) - 0.1;
+    // Now fires when the single intensity slider hits the absolute max (55)
+    const intensity = parseFloat(leanSlider.value);
+    const maxVal = parseFloat(leanSlider.max);
 
-    if (atMin || atMax) {
+    if (intensity >= maxVal - 0.1) {
         sim.isTrembling = true;
     } else {
         sim.isTrembling = false;
     }
 
     // 3. Toes Control
+    // Toes react based on the active rotation values
     skeleton.bones.forEach(b => {
         if (b.name.toLowerCase().includes('toe')) {
+            // Adjust toe extension/flexion based on forward/back lean
             b.rotation.x = (radZ < 0) ? radZ * 0.3 : 0;
+            // Adjust toe lateral tilt based on left/right lean
             b.rotation.z = -radX * 0.3;
         }
     });
@@ -898,11 +924,11 @@ if ($msg) {
 // ==============================
 const FL002_POSES_ROMA = {
   idle: {
-    upperarm_L: { x: 0.0, y:  0.10, z:  -6.8 },
+    upperarm_L: { x: 0.0, y:  0.10, z:  -7.2 },
     lowerarm_L: { x: 0.0, y:  0.00, z:   0.0 },
     hand_L:     { x: 0.0, y:  0.00, z:   0.0 },
 
-    upperarm_R: { x: 0.0, y: -0.10, z:   6.8 },
+    upperarm_R: { x: 0.0, y: -0.10, z:   7.2 },
     lowerarm_R: { x: 0.0, y:  0.00, z:   0.0 },
     hand_R:     { x: 0.0, y:  0.00, z:   0.0 }
   },
@@ -1191,8 +1217,8 @@ if (skeleton) {
 
         // 2. Only THEN apply the Tremor as a temporary offset
         if (sim.isTrembling) {
-            spine.rotation.x += (Math.random() - 0.5) * 0.015;
-            spine.rotation.z += (Math.random() - 0.5) * 0.015;
+            spine.rotation.x += (Math.random() - 0.5) * 0.0025;
+            spine.rotation.z += (Math.random() - 0.5) * 0.0025;
         }
     }
 }
