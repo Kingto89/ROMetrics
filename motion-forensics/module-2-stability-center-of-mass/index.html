@@ -807,114 +807,76 @@ if (skeleton) applyFL002Pose(sim.ballLocked ? "holdingBall" : "idle");
     };
 }
 
-function updateModelLean() {
-    if (!skeleton) return;
 
-    // These variables are now updated by the unified slider + dropdown logic
+function updateModelLean() {
+    if (!skeleton || !avatarRoot?.userData?.offset) return;
+
     const radZ = THREE.MathUtils.degToRad(sim.leanZ);
     const radX = THREE.MathUtils.degToRad(sim.leanX);
-    
- const spine = skeleton.bones.find(b => b.name.toLowerCase().includes('spine'));
-const hips  = skeleton.bones.find(b => b.name.toLowerCase().includes('hips'));
-const spine03 = skeleton.bones.find(b => b.name.toLowerCase().includes('spine03'));
 
-if (!spine03) return; // ← NOT "unknown"
-
-
-    // 1. Lean Logic (Spine & Hips)
+    // spine visual lean ONLY
+    const spine = skeleton.bones.find(b => b.name.toLowerCase().includes("spine"));
     if (spine) {
         spine.rotation.x = radZ;
         spine.rotation.z = -radX;
     }
-    if (hips) {
-        hips.rotation.x = radZ * 0.3; 
-        hips.rotation.z = -(radX * 0.3);
-    }
 
-    // 2. Tremble Trigger Logic
-    // Now fires when the single intensity slider hits the absolute max (55)
-    const intensity = parseFloat(leanSlider.value);
-    const maxVal = parseFloat(leanSlider.max);
+    // normalized fraction
+    const maxDeg = Number(leanSlider?.max || 60);
+    const fZ = THREE.MathUtils.clamp(sim.leanZ / maxDeg, -1, 1);
+    const fX = THREE.MathUtils.clamp(sim.leanX / maxDeg, -1, 1);
 
-    if (intensity >= maxVal - 0.1) {
-        sim.isTrembling = true;
-    } else {
-        sim.isTrembling = false;
-    }
+    // MOVE OFFSET NODE — NOT ROOT
+    const SHIFT = sim.ballLocked ? 0.02 : 0.015;
+    const offset = avatarRoot.userData.offset;
 
-    // 3. Toes Control
-    // Toes react based on the active rotation values
+    offset.position.x = fX * SHIFT;
+    offset.position.z = fZ * SHIFT;
+
+    // tremble flag
+    sim.isTrembling = Math.abs(fX) > 0.98 || Math.abs(fZ) > 0.98;
+
+    // toes
     skeleton.bones.forEach(b => {
-        if (b.name.toLowerCase().includes('toe')) {
-            // Adjust toe extension/flexion based on forward/back lean
-            b.rotation.x = (radZ < 0) ? radZ * 0.3 : 0;
-            // Adjust toe lateral tilt based on left/right lean
+        if (b.name.toLowerCase().includes("toe")) {
+            b.rotation.x = fZ < 0 ? radZ * 0.3 : 0;
             b.rotation.z = -radX * 0.3;
         }
     });
 }
 
-function updateThighAbductionLeftOnly() {
+
+
+function updateLeftThighAbduction() {
     if (!skeleton) return;
 
-    // ONLY respond to LEFT lateral lean from the console
-    if (sim.leanX <= 0) return;
+    // Maintain your specific lean condition
+    if (sim.leanX >= 0 && Number(leanSlider.value) > 0) return;
 
-    const thighR = skeleton.bones.find(b => b.name === 'thigh_R');
-    if (!thighR) return;
-
-    const abd5 = THREE.MathUtils.degToRad(5);
-
-    const val = Number(leanSlider.value);
-    const max = Number(leanSlider.max);
-
-    // Target angle: only at absolute max
-    let targetZ = 0;
-    if (val >= max) {
-        targetZ = -abd5; // right thigh abducts to unload
-    }
-
-    // Smooth return
-    thighR.rotation.z = THREE.MathUtils.lerp(
-        thighR.rotation.z,
-        targetZ,
-        0.0005
-    );
-
-    // HARD LOCK unused axes
-    thighR.rotation.x = 0;
-    thighR.rotation.y = 0;
-}
-
-function updateThighAbductionRightOnly() {
-    if (!skeleton) return;
-
-    // ONLY respond to RIGHT lateral lean from the console
-    if (sim.leanX >= 0) return;
-
+    // TARGET ONLY THE LEFT THIGH
     const thighL = skeleton.bones.find(b => b.name === 'thigh_L');
     if (!thighL) return;
 
-    const abd = THREE.MathUtils.degToRad(5);
-
+    const maxAbductionAngle = THREE.MathUtils.degToRad(5);
     const val = Number(leanSlider.value);
     const max = Number(leanSlider.max);
 
-    let targetZ = 0;
-    if (val >= max) {
-        targetZ = abd; // left thigh abducts to unload
-    }
+    // Calculate targetZ based on current slider position
+    // As slider 'val' decreases, 'targetZ' decreases
+    const targetZ = (val / max) * maxAbductionAngle;
 
+    // Update only the Z rotation for the left thigh
     thighL.rotation.z = THREE.MathUtils.lerp(
         thighL.rotation.z,
         targetZ,
-        0.002
+        0.1
     );
 
-    // HARD LOCK unused axes
+    // Hard lock other axes for this bone only
     thighL.rotation.x = 0;
     thighL.rotation.y = 0;
 }
+
 
 // ==============================
 // 5. Weight Ball Toggle (Hold / Release)
@@ -1087,6 +1049,19 @@ function loadModel(id, onProgress){
       (gltf) => {
         scene.add(gltf.scene);
 avatarRoot = gltf.scene;
+const offset = new THREE.Group();
+offset.name = "avatarOffset";
+offset.position.copy(avatarRoot.position);
+
+scene.add(offset);
+offset.add(avatarRoot);
+
+// lock avatar to offset origin
+avatarRoot.position.set(0, 0, 0);
+
+// store reference
+avatarRoot.userData.offset = offset;
+
 
 // extract skeleton ONCE
 skeleton = null;
@@ -1126,10 +1101,10 @@ function updatePlumbLineForModel() {
 
     if (window.ACTIVE_MODEL === "Roman") {
         // Roman-specific alignment
-        plumbLine.position.set(0.6, 1.5, -0.075);
+        plumbLine.position.set(0.65, 1.5, -0.075);
     } else {
         // Roma (default)
-        plumbLine.position.set(0.6, 1.5, -0.01);
+        plumbLine.position.set(0.65, 1.5, -0.01);
     }
 }
 
@@ -1208,53 +1183,84 @@ document.getElementById('badge').style.display = "block";
   }
 });
 
-
 function getBalanceState() {
-    if (!skeleton) return "unknown";
+    if (!skeleton || !avatarRoot) return "unknown";
 
-    const hips  = skeleton.bones.find(b => b.name.toLowerCase().includes("hips"));
     const footL = skeleton.bones.find(b => b.name.toLowerCase().includes("foot_l"));
     const footR = skeleton.bones.find(b => b.name.toLowerCase().includes("foot_r"));
+    const spine03 = skeleton.bones.find(b => b.name.toLowerCase().includes("spine03"));
 
-    if (!hips || !footL || !footR) return "unknown";
+    if (!footL || !footR || !spine03) return "unknown";
 
-    const vH = new THREE.Vector3();
     const vL = new THREE.Vector3();
     const vR = new THREE.Vector3();
-
-spine03.getWorldPosition(vH);
     footL.getWorldPosition(vL);
     footR.getWorldPosition(vR);
 
-    // BOS center (XZ plane)
-    const bosCenter = new THREE.Vector3(
-        (vL.x + vR.x) * 0.5,
-        0,
-        (vL.z + vR.z) * 0.5
-    );
+    const bosCenter = new THREE.Vector3((vL.x + vR.x) * 0.5, 0, (vL.z + vR.z) * 0.5);
 
-    // COM projection to floor
-    const comProj = new THREE.Vector3(vH.x, 0, vH.z);
- const comMarker = scene.getObjectByName("comMarker");
+    // 1. Get Base Body COM
+    const systemCOM = new THREE.Vector3();
+    spine03.getWorldPosition(systemCOM);
+
+    const offset = avatarRoot.userData?.offset;
+    if (offset) systemCOM.add(offset.position);
+
+    // 2. APPLY WEIGHTED EFFECT (Calculates the new System COM)
+    const ball = scene.getObjectByName("weightBall");
+    if (sim.ballLocked && ball) {
+        // IMPORTANT: Force update so we get the ACTUAL position in the hand
+        ball.updateMatrixWorld(true);
+        
+        const ballWorldPos = new THREE.Vector3();
+        ball.getWorldPosition(ballWorldPos);
+
+        const BODY_MASS = 1.0;
+        const BALL_MASS = 2.5; // Shift intensity
+
+        // Formula: ((BodyPos * BodyMass) + (BallPos * BallMass)) / TotalMass
+        systemCOM.multiplyScalar(BODY_MASS)
+                 .add(ballWorldPos.multiplyScalar(BALL_MASS))
+                 .divideScalar(BODY_MASS + BALL_MASS);
+    }
+
+    // 3. Update Visual Red Dot Position
+const comMarker = scene.getObjectByName("comMarker");
 if (comMarker) {
-    comMarker.position.set(vH.x, 0.12, vH.z);
+    const localCOM = zoneForensics.worldToLocal(systemCOM.clone());
+
+    const COM_VISUAL_GAIN = 1.7; // ← teaching amplification ONLY
+   const COM_FORWARD_NUDGE = 0.13; // meters forward on floor
+
+comMarker.position.set(
+  localCOM.x * COM_VISUAL_GAIN,
+  0.12,
+  (localCOM.z * COM_VISUAL_GAIN) + COM_FORWARD_NUDGE
+);
 }
 
-    // Distance COM → BOS
+
+    const comProj = new THREE.Vector3(systemCOM.x, 0, systemCOM.z);
     const dist = comProj.distanceTo(bosCenter);
 
-    // BOS radius (half foot separation)
-    const bosRadius = vL.distanceTo(vR) * 0.25;
+    // 4. Latch Logic
+    const sliderVal = Math.abs(Number(leanSlider?.value || 0));
+    const sliderMax = Number(leanSlider?.max || 55);
+    if (sim._latchedUnstable === undefined) sim._latchedUnstable = false;
+    if (sliderVal >= sliderMax * 0.90) sim._latchedUnstable = true;
+    if (sliderVal <= sliderMax * 0.60) sim._latchedUnstable = false;
 
-    // Weight tightens tolerance
-    const margin = sim.ballLocked ? 0.85 : 1.0;
+    // 5. Stability Boundary
+    const bosRadius = vL.distanceTo(vR) * 0.14;
+    const margin = sim.ballLocked ? 0.80 : 1.0; 
+    const isPhysicallyUnstable = dist > (bosRadius * margin);
 
-    return dist > bosRadius * margin
-        ? (sim.ballLocked ? "weighted_unstable" : "idle_unstable")
-        : (sim.ballLocked ? "weighted_stable" : "idle_stable");
+    if (sim._latchedUnstable || isPhysicallyUnstable) {
+        return sim.ballLocked ? "weighted_unstable" : "idle_unstable";
+    }
+    
+    return sim.ballLocked ? "weighted_stable" : "idle_stable";
 }
-
-
 
 /* ===== LOOP ===== */
 let _lastTime = performance.now();
@@ -1332,7 +1338,11 @@ function animate() {
   // ==============================
   controls.update();
   const balanceState = getBalanceState();   
-  document.getElementById("statusVal").textContent = balanceState.includes("unstable") ? "Unstable" : "Stable";
+const statusEl = document.getElementById("statusVal");
+const isUnstable = balanceState.includes("unstable");
+
+statusEl.textContent = isUnstable ? "Unstable" : "Stable";
+statusEl.style.color = isUnstable ? "#f87171" : "#4ade80"; // red / green
 
 // ==============================
 // FORCE BONE POSE ON LOCK
@@ -1358,10 +1368,7 @@ if (skeleton) {
         // 1. First, set the "Base" position from the sliders
         const radZ = THREE.MathUtils.degToRad(sim.leanZ);
         const radX = THREE.MathUtils.degToRad(sim.leanX);
-        const COM_SCALE = 0.25; // realistic teaching scale (meters at max lean)
-
-comMarker.position.x = radX * COM_SCALE;
-comMarker.position.z = radZ * COM_SCALE;
+     
 
 
         spine.rotation.x = radZ;
