@@ -759,13 +759,13 @@ if (leanSlider && dirSelect) {
 
         if (dir === "forward") sim.leanZ = intensity;
         if (dir === "back")    sim.leanZ = -intensity;
-        if (dir === "left")    sim.leanX = -intensity;
-        if (dir === "right")   sim.leanX = intensity;
+        if (dir === "left")    sim.leanX = intensity;
+        if (dir === "right")   sim.leanX = -intensity;
 
         // Fire bone transformations
         updateModelLean();
-        updateThighAbductionL();
-        updateThighAbductionR();
+       updateThighAbductionLeftOnly();
+       updateThighAbductionRightOnly();
     };
 
     // Reset slider when direction changes to prevent sudden snapping
@@ -774,9 +774,12 @@ if (leanSlider && dirSelect) {
         if (leanVal) leanVal.textContent = "0.0";
         sim.leanX = 0;
         sim.leanZ = 0;
+if (skeleton) skeleton.pose();
+
         updateModelLean();
         updateThighAbductionL();
         updateThighAbductionR();
+
     };
 }
 
@@ -823,6 +826,67 @@ function updateModelLean() {
     });
 }
 
+function updateThighAbductionLeftOnly() {
+    if (!skeleton) return;
+
+    // ONLY respond to LEFT lateral lean from the console
+    if (sim.leanX <= 0) return;
+
+    const thighR = skeleton.bones.find(b => b.name === 'thigh_R');
+    if (!thighR) return;
+
+    const abd5 = THREE.MathUtils.degToRad(5);
+
+    const val = Number(leanSlider.value);
+    const max = Number(leanSlider.max);
+
+    // Target angle: only at absolute max
+    let targetZ = 0;
+    if (val >= max) {
+        targetZ = -abd5; // right thigh abducts to unload
+    }
+
+    // Smooth return
+    thighR.rotation.z = THREE.MathUtils.lerp(
+        thighR.rotation.z,
+        targetZ,
+        0.002
+    );
+
+    // HARD LOCK unused axes
+    thighR.rotation.x = 0;
+    thighR.rotation.y = 0;
+}
+
+function updateThighAbductionRightOnly() {
+    if (!skeleton) return;
+
+    // ONLY respond to RIGHT lateral lean from the console
+    if (sim.leanX >= 0) return;
+
+    const thighL = skeleton.bones.find(b => b.name === 'thigh_L');
+    if (!thighL) return;
+
+    const abd = THREE.MathUtils.degToRad(5);
+
+    const val = Number(leanSlider.value);
+    const max = Number(leanSlider.max);
+
+    let targetZ = 0;
+    if (val >= max) {
+        targetZ = abd; // left thigh abducts to unload
+    }
+
+    thighL.rotation.z = THREE.MathUtils.lerp(
+        thighL.rotation.z,
+        targetZ,
+        0.002
+    );
+
+    // HARD LOCK unused axes
+    thighL.rotation.x = 0;
+    thighL.rotation.y = 0;
+}
 
 // ==============================
 // 5. Weight Ball Toggle (Hold / Release)
@@ -1191,12 +1255,11 @@ if (skeleton) {
 
         // 2. Only THEN apply the Tremor as a temporary offset
         if (sim.isTrembling) {
-            spine.rotation.x += (Math.random() - 0.5) * 0.003;
-            spine.rotation.z += (Math.random() - 0.5) * 0.003;
+            spine.rotation.x += (Math.random() - 0.5) * 0.015;
+            spine.rotation.z += (Math.random() - 0.5) * 0.015;
         }
     }
-} 
-   
+}
 renderer.render(scene, camera);
 }
 
