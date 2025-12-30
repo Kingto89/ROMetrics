@@ -590,7 +590,7 @@ zoneForensics.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(square
 // --- MODULE 2 ADDITIONS START ---
 // Force Plate (Base of Support Visualization)
 const forcePlate = new THREE.Mesh(
-    new THREE.PlaneGeometry(0.6, 1.0),
+    new THREE.PlaneGeometry(0.6, 0.70),
     new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.25, side: THREE.DoubleSide })
 );
 forcePlate.rotation.x = -Math.PI / 2;
@@ -615,6 +615,26 @@ plumbLine.position.set(0.6, 1.5, -0.01);
 plumbLine.visible = true;                
 plumbLine.name = "plumbLine";
 zoneForensics.add(plumbLine);
+
+
+// ==============================
+// VISUAL COM MARKER (TEACHING ONLY)
+// ==============================
+const comMarker = new THREE.Mesh(
+  new THREE.SphereGeometry(0.06, 16, 16),
+  new THREE.MeshStandardMaterial({
+    color: 0xff0000,
+    emissive: 0xff0000,
+    emissiveIntensity: 1,
+    depthTest: false
+  })
+);
+
+comMarker.name = "comMarker";
+zoneForensics.add(comMarker);
+comMarker.position.z += 0.05; // pull COM marker forward out of torso
+
+
 
 // Weight Ball (Plumb bob — reachable floor position)
 const weightBall = new THREE.Mesh(
@@ -682,6 +702,10 @@ const sim = {
   ballLocked: false,
   isTrembling: false
 };
+
+const PLUMB_THRESHOLD_IDLE   = 0.025;
+const PLUMB_THRESHOLD_WEIGHT = 0.04;
+
 // ==============================
 // MODULE 2 — CONSOLE WIRING (FL-002)
 // ==============================
@@ -790,8 +814,12 @@ function updateModelLean() {
     const radZ = THREE.MathUtils.degToRad(sim.leanZ);
     const radX = THREE.MathUtils.degToRad(sim.leanX);
     
-    const spine = skeleton.bones.find(b => b.name.toLowerCase().includes('spine'));
-    const hips = skeleton.bones.find(b => b.name.toLowerCase().includes('hips'));
+ const spine = skeleton.bones.find(b => b.name.toLowerCase().includes('spine'));
+const hips  = skeleton.bones.find(b => b.name.toLowerCase().includes('hips'));
+const spine03 = skeleton.bones.find(b => b.name.toLowerCase().includes('spine03'));
+
+if (!spine03) return; // ← NOT "unknown"
+
 
     // 1. Lean Logic (Spine & Hips)
     if (spine) {
@@ -1181,6 +1209,52 @@ document.getElementById('badge').style.display = "block";
 });
 
 
+function getBalanceState() {
+    if (!skeleton) return "unknown";
+
+    const hips  = skeleton.bones.find(b => b.name.toLowerCase().includes("hips"));
+    const footL = skeleton.bones.find(b => b.name.toLowerCase().includes("foot_l"));
+    const footR = skeleton.bones.find(b => b.name.toLowerCase().includes("foot_r"));
+
+    if (!hips || !footL || !footR) return "unknown";
+
+    const vH = new THREE.Vector3();
+    const vL = new THREE.Vector3();
+    const vR = new THREE.Vector3();
+
+spine03.getWorldPosition(vH);
+    footL.getWorldPosition(vL);
+    footR.getWorldPosition(vR);
+
+    // BOS center (XZ plane)
+    const bosCenter = new THREE.Vector3(
+        (vL.x + vR.x) * 0.5,
+        0,
+        (vL.z + vR.z) * 0.5
+    );
+
+    // COM projection to floor
+    const comProj = new THREE.Vector3(vH.x, 0, vH.z);
+ const comMarker = scene.getObjectByName("comMarker");
+if (comMarker) {
+    comMarker.position.set(vH.x, 0.12, vH.z);
+}
+
+    // Distance COM → BOS
+    const dist = comProj.distanceTo(bosCenter);
+
+    // BOS radius (half foot separation)
+    const bosRadius = vL.distanceTo(vR) * 0.25;
+
+    // Weight tightens tolerance
+    const margin = sim.ballLocked ? 0.85 : 1.0;
+
+    return dist > bosRadius * margin
+        ? (sim.ballLocked ? "weighted_unstable" : "idle_unstable")
+        : (sim.ballLocked ? "weighted_stable" : "idle_stable");
+}
+
+
 
 /* ===== LOOP ===== */
 let _lastTime = performance.now();
@@ -1257,6 +1331,8 @@ function animate() {
   // NORMAL RENDER FLOW
   // ==============================
   controls.update();
+  const balanceState = getBalanceState();   
+  document.getElementById("statusVal").textContent = balanceState.includes("unstable") ? "Unstable" : "Stable";
 
 // ==============================
 // FORCE BONE POSE ON LOCK
@@ -1282,7 +1358,12 @@ if (skeleton) {
         // 1. First, set the "Base" position from the sliders
         const radZ = THREE.MathUtils.degToRad(sim.leanZ);
         const radX = THREE.MathUtils.degToRad(sim.leanX);
-        
+        const COM_SCALE = 0.25; // realistic teaching scale (meters at max lean)
+
+comMarker.position.x = radX * COM_SCALE;
+comMarker.position.z = radZ * COM_SCALE;
+
+
         spine.rotation.x = radZ;
         spine.rotation.z = -radX;
 
