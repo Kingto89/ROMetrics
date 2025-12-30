@@ -784,35 +784,50 @@ function updateModelLean() {
 // ==============================
 // 5. Weight Ball Toggle (Hold / Release)
 // ==============================
+
 if (ballBtn) {
     ballBtn.onclick = () => {
         sim.ballLocked = !sim.ballLocked;
         const ball = scene.getObjectByName("weightBall");
-        if (!ball) return;
+        if (!ball || !skeleton) return;
+
+        // Target the right hand bone as the parent
+        const handBone = skeleton.bones.find(b => b.name.toLowerCase().includes('hand_r'));
 
         if (sim.ballLocked) {
             applyFL002Pose("holdingBall");
-            
-            // Model-specific ball placement
-            if (window.ACTIVE_MODEL === "Roman") {
-                // Roman: Adjusted for larger reach and forward stance
-                ball.position.set(0.000, 1.420, 0.400); 
-            } else {
-                // Roma: Original forensic spot placement
-                ball.position.set(0.000, 1.350, 0.550);
+
+            if (handBone) {
+                // ATTACH: Move ball from global scene to the hand bone hierarchy
+                handBone.add(ball);
+                
+                // LOCAL coordinates relative to the hand bone roman -- side --out/back--up/down
+                if (window.ACTIVE_MODEL === "Roman") {
+                    // Roman: Centered in large palms
+                    ball.position.set(-0.17, 0.10, -0.01); 
+                } else {
+                    // Roma: Centered in smaller palms
+                    ball.position.set(0.0, 0.10, 0.17);
+                }
             }
 
             ballBtn.textContent = "Release Weight Ball";
-            if ($msg) $msg.innerHTML = "<b>SYSTEM ACTIVE:</b> External load applied to " + window.ACTIVE_MODEL + ".";
+            if ($msg) $msg.innerHTML = "<b>LOAD ATTACHED:</b> Ball following " + window.ACTIVE_MODEL + "'s hand.";
         } else {
             applyFL002Pose("idle");
-            // Return ball to floor (universal spot)
+
+            // DETACH: Return ball to the global scene root
+            scene.add(ball); 
+            
+            // WORLD coordinates for the floor
             ball.position.set(0.6, 0.20, 1.35);
+
             ballBtn.textContent = "Pick Up Weight Ball";
-            if ($msg) $msg.innerHTML = "<b>SYSTEM UPDATED:</b> Load removed.";
+            if ($msg) $msg.innerHTML = "<b>SYSTEM UPDATED:</b> Load returned to floor.";
         }
     };
 }
+
 // ==============================
 // 6. Base of Support Toggle
 // ==============================
@@ -874,12 +889,12 @@ const FL002_POSES_ROMAN = {
 holdingBall: {
   // LEFT ARM — Roman
   upperarm_L: { x: 1.55, y:  0.0, z: -6.6},   // shoulder flexion
-  lowerarm_L: { x: 0.57, y:  0.0, z:  0.00 },   // 
+  lowerarm_L: { x: 0.59, y:  0.0, z:  0.00 },   // 
   hand_L:     { x: 0.00, y:  -1.50, z:  0.00 },
 
   // RIGHT ARM — Roman
   upperarm_R: { x: 1.55, y: -0.0, z:  6.6 },
-  lowerarm_R: { x: 0.57, y: -0.0, z:  0.00 },  // 
+  lowerarm_R: { x: 0.59, y: -0.0, z:  0.00 },  // 
   hand_R:     { x: 0.00, y:  1.50, z:  0.00 }
 }
 };
