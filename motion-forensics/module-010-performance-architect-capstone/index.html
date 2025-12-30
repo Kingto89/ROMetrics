@@ -1,122 +1,1444 @@
-
-
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>ROMetrics — Module Not Available</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>ROMetrics — Studio</title>
 
 <style>
-:root{
-  --bg:#07101b;
-  --card:#0f172a;
-  --border:rgba(148,163,184,.25);
-  --accent:#38bdf8;
-  --text:#e6eef7;
-  --muted:#9fb3cc;
-}
+html,body{height:100%;margin:0;overflow:hidden;background:#07101b;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;}
+canvas{display:block}
 
-*{box-sizing:border-box}
-html,body{
-  margin:0;
-  height:100%;
-  background:
-    radial-gradient(900px 600px at 50% 20%, rgba(56,189,248,.08), var(--bg));
-  font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;
-  color:var(--text);
-  display:flex;
-  align-items:center;
-  justify-content:center;
+/* ===== Gate (UNCHANGED LAYOUT) ===== */
+#gate{
+  position:fixed;inset:0;z-index:50;
+  display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(900px 600px at 50% 35%, rgba(56,189,248,.10), rgba(7,16,27,.96));
+  backdrop-filter:blur(6px);
 }
-
-.card{
-  width:min(600px, 90%);
-  background:rgba(9,20,37,.78);
-  border:1px solid var(--border);
-  border-radius:28px;
-  box-shadow:0 30px 90px rgba(0,0,0,.45);
-  padding:40px;
-  text-align:center;
+#gateCard{
+  width:min(740px,calc(100vw - 28px));
+  border-radius:24px;
+  border:1px solid rgba(148,163,184,.28);
+  background:rgba(9,20,37,.72);
+  box-shadow:0 20px 80px rgba(0,0,0,.40);
+  padding:22px;
 }
-
-.icon{
-  font-size: 50px;
-  color: var(--accent);
-  margin-bottom: 20px;
+#gateTitle{font-weight:950;font-size:22px;color:#e6eef7}
+#gateSub{margin-top:6px;color:#a8c0da;font-size:13px}
+#gateGrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
+@media(max-width:640px){#gateGrid{grid-template-columns:1fr}}
+.field{border:1px solid rgba(148,163,184,.22);border-radius:18px;background:rgba(15,23,42,.55);padding:14px}
+.field .lbl{color:#cfe3ff;font-weight:800;font-size:12px}
+.field select{
+  width:100%;margin-top:10px;
+  background:rgba(7,16,27,.35);
+  border:1px solid rgba(148,163,184,.22);
+  color:#e6eef7;border-radius:14px;
+  padding:10px 12px;font-size:14px
 }
-
-h1{
-  font-size:28px;
+.field .desc{margin-top:10px;color:#a8c0da;font-size:12px;min-height:32px}
+#gateActions{display:flex;justify-content:flex-end;margin-top:16px}
+.primary{
+  border:1px solid rgba(56,189,248,.55);
+  background:rgba(56,189,248,.16);
+  color:#e6eef7;
+  padding:10px 16px;
+  border-radius:16px;
   font-weight:900;
-  margin-bottom:10px;
+  cursor:pointer
 }
 
-p{
-  color:var(--muted);
-  line-height:1.6;
-  margin-bottom:30px;
+/* ===== Zone Pills ===== */
+#ui{
+  position:fixed;left:14px;top:14px;z-index:10;
+  display:none;gap:10px;flex-wrap:wrap
 }
-
-.release-date{
-  display:inline-block;
-  padding:12px 24px;
-  background:rgba(56,189,248,.1);
-  border:1px solid var(--accent);
-  border-radius:12px;
-  color:var(--accent);
-  font-weight:700;
-  font-size:18px;
+.pill{
+  border:1px solid rgba(148,163,184,.35);
+  background:rgba(15,23,42,.78);
+  color:#e5eefc;
+  padding:10px 12px;
+  border-radius:999px;
+  font-size:13px;
+  cursor:pointer
 }
-
-.back-btn{
-  margin-top:30px;
-  display:block;
-  color:var(--muted);
-  text-decoration:none;
-  font-size:14px;
-  transition:color 0.2s;
-}
-
-.back-btn:hover{
-  color:var(--accent);
+.pill.active{
+  border-color:rgba(56,189,248,.8);
+  box-shadow:0 0 0 2px rgba(56,189,248,.14) inset
 }
 </style>
+
+<script type="importmap">
+{
+  "imports":{
+    "three":"https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
 </head>
 
 <body>
-  <div class="card">
-    <div class="icon">🚀</div>
-    <h1>Module Locked</h1>
-    <p>Thank you for your interest in the Forensics Labs. We are currently calibrating the 3D assets and biomechanical data for this session to ensure the highest quality training experience.</p>
-    
-    <div class="subtitle">THIS MODULE WILL BE AVAILABLE ON:</div>
-    <div class="release-date" id="date-display">Calculating...</div>
+<div id="gate">
+  <div id="gateCard">
+    <div id="gateTitle">Forensics Labs</div>
+    <div id="gateSub">Select a model to enter the studio.</div>
 
-    <a href="../" class="back-btn">← Return to Lab Index</a>
+    <div id="gateGrid">
+      <div class="field">
+        <div class="lbl">MODEL</div>
+        <select id="modelSelect">
+          <option value="Roma">Roma</option>
+          <option value="Roman">Roman</option>
+        </select>
+        <div class="desc" id="modelDesc">Default ROMetrics model.</div>
+      </div>
+
+      <div class="field">
+        <div class="lbl">MODULE</div>
+        <select disabled>
+          <option selected>Module 2 — Stability & Center of Mass</option>
+        </select>
+        <div class="desc">
+          Analysis Booth: postural control, base of support, and center-of-mass analysis
+        </div>
+      </div>
+    </div>
+
+    <div id="gateActions">
+      <button id="enterBtn" class="primary">Enter Studio</button>
+    </div>
   </div>
+</div>
 
-  <script>
-    // Configuration: Set the date for Module 4 release here
-    // Format:  March 23rd, 2026
-    const firstReleaseDate = new Date(2026, 2, 23); // Example: July 7th, 2025
+<div id="badge" style="position:fixed; right:14px; top:14px; z-index:100; padding:16px; border-radius:20px; border:1px solid rgba(148,163,184,.25); background:rgba(15,23,42,.85); color:#cfe3ff; font-size:13px; width:280px; backdrop-filter:blur(10px); display:none;">
+    <div style="font-weight:900; color:#38bdf8; margin-bottom:10px; text-transform:uppercase; letter-spacing:1px;">Stability Analysis</div>
     
-    // Get the module number from the current URL folder name (e.g., "module-4")
-    const pathParts = window.location.pathname.split('/');
-    const moduleFolder = pathParts[pathParts.length - 2] || "";
-    const moduleNum = parseInt(moduleFolder.split('-')[1]);
+ <div class="field" style="margin-bottom:12px;">
+    <div class="lbl">STABILITY TEST DIRECTION</div>
+    <select id="dirSelect" style="width:100%; background:rgba(7,16,27,.35); border:1px solid rgba(148,163,184,.22); color:#e6eef7; border-radius:10px; padding:8px; font-size:12px;">
+        <option value="forward">Anterior Lean (Forward)</option>
+        <option value="back">Posterior Lean (Back)</option>
+        <option value="left">Lateral Lean (Left)</option>
+        <option value="right">Lateral Lean (Right)</option>
+    </select>
+</div>
 
-    // Calculation: Add 1 week for every module after Module 4
-    if(!isNaN(moduleNum) && moduleNum >= 4) {
-        const weeksToAdd = moduleNum - 4;
-        const releaseDate = new Date(firstReleaseDate);
-        releaseDate.setDate(firstReleaseDate.getDate() + (weeksToAdd * 7));
+<div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+    <span>Lean Intensity</span>
+    <span style="font-weight:800; color:#fff;"></span>
+</div>
+<input id="leanSlider" type="range" min="0" max="55" step="0.5" value="0" style="width:100%; accent-color:#38bdf8; margin-bottom:12px;">
+
+    <div style="display:flex; gap:8px; margin-bottom:10px;">
+        <button id="btnSideView" style="flex:1; background:rgba(30,41,59,.8); color:#e5eefc; border:1px solid rgba(148,163,184,.3); padding:8px; border-radius:10px; cursor:pointer; font-size:11px;">Side View</button>
+        <button id="btnFrontView" style="flex:1; background:rgba(30,41,59,.8); color:#e5eefc; border:1px solid rgba(148,163,184,.3); padding:8px; border-radius:10px; cursor:pointer; font-size:11px;">Front View</button>
+    </div>
+
+    <div style="display:flex; gap:8px; margin-bottom:10px;">
+        <button id="lockBallBtn" style="flex:1.2; background:rgba(30,41,59,.8); color:#e5eefc; border:1px solid #38bdf8; padding:8px; border-radius:10px; cursor:pointer; font-size:11px;">Pick Up Ball</button>
+        <button id="toggleBaseBtn" style="flex:1; background:rgba(30,41,59,.8); color:#e5eefc; border:1px solid rgba(148,163,184,.3); padding:8px; border-radius:10px; cursor:pointer; font-size:11px;">Base Map</button>
+        <button id="resetBtn" style="flex:1; background:rgba(30,41,59,.8); color:#ffedd5; border:1px solid rgba(251,146,60,.5); padding:8px; border-radius:10px; cursor:pointer; font-size:11px;">Reset</button>
+    </div>
+
+    <div style="border-top:1px solid rgba(148,163,184,.18); padding-top:10px; margin-top:10px;">
+        <button id="reviewBtn" style="display:none; width:100%; background:transparent; border:1px solid #4ade80; color:#4ade80; padding:8px; border-radius:10px; cursor:pointer; font-size:11px; margin-bottom:8px;">Review MCQ</button>
         
-        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-        document.getElementById('date-display').innerText = releaseDate.toLocaleDateString(undefined, options);
-    } else {
-        document.getElementById('date-display').innerText = "Coming Soon";
+        <button id="assessmentBtn" style="display:none; width:100%; background:#4ade80; color:#0f172a; border:none; padding:10px; border-radius:10px; cursor:pointer; font-weight:700; font-size:11px;">
+            Take Final MCQ Assessment
+        </button>
+    </div>
+
+    <div id="trialMsg" style="color:#a8c0da; font-size:11px; line-height:1.25; margin-top:12px; text-align:center;">
+        Read instructions before beginning.
+    </div>
+    <button id="trialHelp" style="width: 100%; margin-top: 8px; background:transparent; border: 1px solid #38bdf8; color: #38bdf8; padding:8px; border-radius:10px; cursor:pointer; font-size:11px;">
+        View Module Instructions & Lab Guide
+    </button>
+
+    <div style="display:flex; justify-content:space-between; margin-top:12px; padding-top:10px; border-top:1px solid rgba(148,163,184,.18);">
+        <div style="color:#a8c0da; font-weight:600;">Status</div>
+        <div id="statusVal" style="color:#4ade80; font-weight:800;">Stable</div>
+    </div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+const $enter = document.getElementById('enterBtn');
+
+/* ===== MODELS ===== */
+const MODEL_URLS={
+  Roma:"https://kingto89.github.io/ROMetrics.com/assets/Roma_ROMetrics.glb",
+  Roman:"https://kingto89.github.io/ROMetrics.com/assets/Roman_ROMetrics.glb"
+};
+
+/* ===== THREE SETUP ===== */
+const scene=new THREE.Scene();
+scene.fog=new THREE.Fog(0x07101b,10,45);
+
+const camera=new THREE.PerspectiveCamera(55,innerWidth/innerHeight,.1,120);
+camera.position.set(6.8,3.9,8.6);
+
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth,innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+document.body.appendChild(renderer.domElement);
+
+const controls=new OrbitControls(camera,renderer.domElement);
+controls.target.set(0,1.35,0);
+controls.enableDamping=true;
+
+/* ===== LIGHTS ===== */
+scene.add(new THREE.AmbientLight(0x6aa0d8,.8));
+const key=new THREE.DirectionalLight(0xffffff,1.05);
+key.position.set(7,10,5);
+scene.add(key);
+
+/* ===== MATERIALS ===== */
+const matFloor=new THREE.MeshStandardMaterial({color:0x0a1a2e,roughness:.95});
+const matWall=new THREE.MeshStandardMaterial({color:0x091425,roughness:.9});
+const matDark=new THREE.MeshStandardMaterial({color:0x0b1220,roughness:.85});
+const matSteel=new THREE.MeshStandardMaterial({color:0x7a8aa0,roughness:.35,metalness:.55});
+const matBelt = new THREE.MeshStandardMaterial({color: 0x0b1018, roughness: 0.98, metalness: 0.00});
+const wallScreen = {tex: new THREE.CanvasTexture(document.createElement('canvas'))};
+const c=document.createElement('canvas'),x=c.getContext('2d');c.width=256;c.height=48;x.fillStyle='#0b1220';x.fillRect(0,0,256,48);Object.assign(x,{fillStyle:'#e6eef7',font:'600 18px system-ui',textAlign:'center',textBaseline:'middle'});x.fillText('0 mph',128,24);const consoleScreen={tex:new THREE.CanvasTexture(c)};
+
+
+    // ==============================
+    // 4) Room + zones (REAL SCALE)
+    // ==============================
+    // Room in meters
+    const ROOM_W = 14.0;
+    const ROOM_D = 11.0;
+    const WALL_H = 6.6;
+
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(ROOM_W, ROOM_D), matFloor);
+    floor.rotation.x = -Math.PI/2;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    const room = new THREE.Group();
+
+    const wallBack = new THREE.Mesh(new THREE.BoxGeometry(ROOM_W, WALL_H, 0.30), matWall);
+    wallBack.position.set(0, WALL_H/2, -(ROOM_D/2) + 0.15);
+    wallBack.receiveShadow = true;
+    room.add(wallBack);
+
+    const wallLeft = new THREE.Mesh(new THREE.BoxGeometry(0.30, WALL_H, ROOM_D), matWall);
+    wallLeft.position.set(-(ROOM_W/2) + 0.15, WALL_H/2, 0);
+    room.add(wallLeft);
+
+    const wallRight = wallLeft.clone();
+    wallRight.position.x = (ROOM_W/2) - 0.15;
+    room.add(wallRight);
+
+    const grid = new THREE.GridHelper(ROOM_W, Math.round(ROOM_W), 0x1f3b5a, 0x10243a);
+    grid.position.y = 0.01;
+    room.add(grid);
+
+    scene.add(room);
+
+    // Labels
+    let labelsOn = false;
+    const labelGroup = new THREE.Group();
+    scene.add(labelGroup);
+function roundRect(ctx, x, y, w, h, r){
+  const min = Math.min(w, h);
+  if (r > min / 2) r = min / 2;
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y,     x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x,     y + h, r);
+  ctx.arcTo(x,     y + h, x,     y,     r);
+  ctx.arcTo(x,     y,     x + w, y,     r);
+  ctx.closePath();
+}
+
+    function makeLabel(text){
+      const canvas = document.createElement('canvas');
+      canvas.width = 512; canvas.height = 128;
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.fillStyle = 'rgba(15,23,42,0.72)';
+      ctx.strokeStyle = 'rgba(56,189,248,0.65)';
+      ctx.lineWidth = 6;
+      roundRect(ctx, 14, 16, 484, 96, 26);
+      ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#e6eef7';
+      ctx.font = '800 36px system-ui, -apple-system, Segoe UI, Roboto, Inter';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, 34, 64);
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.anisotropy = 8;
+      const mat = new THREE.MeshBasicMaterial({ map: tex, transparent:true });
+      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 0.85), mat);
+      mesh.renderOrder = 10;
+      return mesh;
     }
-  </script>
+    function setLabels(v){
+      labelsOn = v;
+      labelGroup.traverse(o=>{ if (o.isMesh) o.visible = labelsOn; });
+    }
+    setLabels(false);
+
+    function zoneBasePlate(w, d){
+      const plate = new THREE.Mesh(new THREE.BoxGeometry(w, 0.06, d), new THREE.MeshStandardMaterial({ color:0x0b1a2e, roughness:0.9, metalness:0.06 }));
+      plate.receiveShadow = true;
+      return plate;
+    }
+
+/* ===== ZONES ===== */
+const Z_STRENGTH=new THREE.Vector3(-4.4,0,2.1);
+const Z_CARDIO=new THREE.Vector3(4.4,0,2.1);
+const Z_FORENSIC=new THREE.Vector3(0,0,-3.1);
+
+
+    // Strength zone (scaled realistic)
+    const zoneStrength = new THREE.Group();
+    zoneStrength.name = 'strength';
+    zoneStrength.position.copy(Z_STRENGTH);
+    const bench = new THREE.Group();
+    zoneStrength.add(bench);
+
+
+    const platS = zoneBasePlate(4.2, 3.2);
+    platS.position.set(0, 0.03, 0);
+    zoneStrength.add(platS);
+
+    // Simple bench press rack (realistic)
+    const benchTop = new THREE.Mesh(new THREE.BoxGeometry(1.35, 0.10, 0.34), matDark);
+    benchTop.position.set(0, 0.48, 0.35);
+    benchTop.castShadow = true;
+    bench.add(benchTop);
+
+    const benchLegGeo = new THREE.BoxGeometry(0.06, 0.45, 0.06);
+    [[-0.55,0.22,0.23],[0.55,0.22,0.23],[-0.55,0.22,0.47],[0.55,0.22,0.47]].forEach(p=>{
+      const l = new THREE.Mesh(benchLegGeo, matSteel);
+      l.position.set(p[0], p[1], p[2]);
+      l.castShadow = true;
+      bench.add(l);
+    });
+
+   bench.position.z += 0.5;
+
+
+    const upGeo = new THREE.BoxGeometry(0.08, 1.55, 0.08);
+    const uprL = new THREE.Mesh(upGeo, matSteel); uprL.position.set(-0.55, 0.80, -0.55); uprL.castShadow = true;
+    const uprR = uprL.clone(); uprR.position.x = 0.55;
+    zoneStrength.add(uprL, uprR);
+
+    const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.025,1.25,18), matSteel);
+    bar.rotation.z = Math.PI/2;
+    bar.position.set(0, 1.45, -0.55);
+    bar.castShadow = true;
+    zoneStrength.add(bar);
+
+    // Dumbbell rack (near bench, offset left so it won’t collide)
+{
+  const rack = new THREE.Group();
+  const matRubber = new THREE.MeshStandardMaterial({ color:0x121923, roughness:0.98, metalness:0.03 });
+
+  const W = 1.85, D = 0.55, H = 0.95;
+  const legGeo   = new THREE.BoxGeometry(0.06, H, 0.06);
+  const shelfGeo = new THREE.BoxGeometry(W, 0.06, 0.36);
+
+  const legs = [
+    [-W/2+0.07, H/2, -D/2+0.07],
+    [ W/2-0.07, H/2, -D/2+0.07],
+    [-W/2+0.07, H/2,  D/2-0.07],
+    [ W/2-0.07, H/2,  D/2-0.07],
+  ];
+  for (const p of legs){
+    const leg = new THREE.Mesh(legGeo, matSteel);
+    leg.position.set(p[0], p[1], p[2]);
+    leg.castShadow = true;
+    rack.add(leg);
+  }
+
+  const shelf1 = new THREE.Mesh(shelfGeo, matDark);
+  shelf1.position.set(0, 0.68, 0);
+  shelf1.rotation.x = -0.14;
+  shelf1.castShadow = true;
+  shelf1.receiveShadow = true;
+  rack.add(shelf1);
+
+  const shelf2 = new THREE.Mesh(shelfGeo, matDark);
+  shelf2.position.set(0, 0.32, 0);
+  shelf2.rotation.x = -0.14;
+  shelf2.castShadow = true;
+  shelf2.receiveShadow = true;
+  rack.add(shelf2);
+
+  const base = new THREE.Mesh(new THREE.BoxGeometry(W+0.12, 0.05, D+0.18), matDark);
+  base.position.set(0, 0.03, 0);
+  base.receiveShadow = true;
+  rack.add(base);
+
+  const handleGeo = new THREE.CylinderGeometry(0.022, 0.022, 0.24, 16);
+  const hexGeo    = new THREE.CylinderGeometry(0.070, 0.070, 0.050, 6);
+
+  function dumbbell(scale=1){
+    const g = new THREE.Group();
+    const handle = new THREE.Mesh(handleGeo, matSteel);
+    handle.rotation.z = Math.PI/2;
+    handle.castShadow = true;
+    g.add(handle);
+
+    const wL = new THREE.Mesh(hexGeo, matRubber);
+    wL.position.x = -0.145;
+    wL.rotation.z = Math.PI/2;
+    wL.castShadow = true;
+    g.add(wL);
+
+    const wR = wL.clone();
+    wR.position.x = 0.145;
+    g.add(wR);
+
+    g.scale.setScalar(scale);
+    return g;
+  }
+
+  const xs = [-0.68, -0.34, 0.00, 0.34, 0.68];
+  xs.forEach((x,i)=>{
+    const db = dumbbell(0.92 + i*0.02);
+    db.position.set(x, 0.73, -0.06);
+    db.rotation.y = 0.08;
+    rack.add(db);
+  });
+  xs.forEach((x,i)=>{
+    const db = dumbbell(1.00 + i*0.03);
+    db.position.set(x, 0.37, -0.06);
+    db.rotation.y = 0.08;
+    rack.add(db);
+  });
+
+  // placement relative to YOUR bench (bench is around x=0, z≈0.35)
+  rack.position.set(-1.15, 0.0, 0.45);
+  rack.rotation.y = 1.60;
+
+  zoneStrength.add(rack);
+}
+
+
+    const lblS = makeLabel('Strength / Load Station');
+    lblS.position.copy(Z_STRENGTH).add(new THREE.Vector3(0, 2.7, -1.6));
+    labelGroup.add(lblS);
+
+    scene.add(zoneStrength);
+
+
+ //zone (realistic treadmill size)//
+    const zoneCardio = new THREE.Group();
+    zoneCardio.name = 'cardio';
+    zoneCardio.position.copy(Z_CARDIO);
+
+    const platC = zoneBasePlate(4.2, 3.2);
+    platC.position.set(0, 0.03, 0);
+    zoneCardio.add(platC);
+
+    const treadmill = new THREE.Group();
+    treadmill.position.set(0, 0.03, 0);
+    zoneCardio.add(treadmill);
+
+    const treadStrips = [];
+    let TREAD_MIN_Z = -0.7;
+    let TREAD_MAX_Z =  0.7;
+
+    // Real treadmill dims (meters)
+    const BELT_W = 0.55;
+    const BELT_L = 1.55;
+    const FRAME_W = 0.82;
+    const FRAME_L = 2.05;
+
+    TREAD_MIN_Z = -(BELT_L/2) + 0.10;
+    TREAD_MAX_Z =  (BELT_L/2) - 0.10;
+
+    const tmFrame = new THREE.Mesh(new THREE.BoxGeometry(FRAME_W, 0.22, FRAME_L), matDark);
+    tmFrame.position.set(0, 0.16, 0);
+    tmFrame.castShadow = true;
+    treadmill.add(tmFrame);
+
+    const tmDeck = new THREE.Mesh(
+      new THREE.BoxGeometry(BELT_W + 0.14, 0.06, BELT_L + 0.18),
+      new THREE.MeshStandardMaterial({ color:0x0c1728, roughness:0.95, metalness:0.05 })
+    );
+    tmDeck.position.set(0, 0.26, 0);
+    tmDeck.receiveShadow = true;
+    treadmill.add(tmDeck);
+
+  const tmBelt = new THREE.Mesh(new THREE.PlaneGeometry(BELT_W, BELT_L), matBelt);
+tmBelt.rotation.x = -Math.PI/2;
+tmBelt.position.set(0, 0.296, 0); // Slight lift to avoid Z-fighting
+tmBelt.receiveShadow = true;
+treadmill.add(tmBelt);
+
+    const beltEdges = new THREE.LineSegments(
+      new THREE.EdgesGeometry(new THREE.BoxGeometry(BELT_W + 0.10, 0.02, BELT_L + 0.10)),
+      new THREE.LineBasicMaterial({ color:0x38bdf8, transparent:true, opacity:0.55 })
+    );
+    beltEdges.position.set(0, 0.305, 0);
+    beltEdges.renderOrder = 9;
+    treadmill.add(beltEdges);
+
+    const stripMat = new THREE.MeshStandardMaterial({ color: 0x1a2738, roughness: 0.95, metalness: 0.02, transparent:true, opacity:0.30 });
+    const stripCount = 12;
+    for (let i=0;i<stripCount;i++){
+      const s = new THREE.Mesh(new THREE.BoxGeometry(BELT_W - 0.04, 0.01, 0.06), stripMat);
+      s.position.set(0, 0.300, TREAD_MIN_Z + i * ((TREAD_MAX_Z - TREAD_MIN_Z) / stripCount));
+      s.renderOrder = 10;
+      treadmill.add(s);
+      treadStrips.push(s);
+    }
+
+    const rollerGeo = new THREE.CylinderGeometry(0.08, 0.08, BELT_W + 0.08, 18);
+    const rollerMat = new THREE.MeshStandardMaterial({ color:0x1a2a44, roughness:0.55, metalness:0.25 });
+    const rFront = new THREE.Mesh(rollerGeo, rollerMat);
+    rFront.rotation.z = Math.PI/2;
+    rFront.position.set(0, 0.33, -(BELT_L/2) - 0.04);
+    rFront.castShadow = true;
+    treadmill.add(rFront);
+
+    const rBack = rFront.clone();
+    rBack.position.z = (BELT_L/2) + 0.04;
+    treadmill.add(rBack);
+
+    // rails + console (front)
+    const upPole = new THREE.Mesh(new THREE.CylinderGeometry(0.035,0.035,1.05,16), matSteel);
+    const upX = (FRAME_W/2) - 0.10;
+    const frontZ = -(BELT_L/2) - 0.42;
+
+    const upL = upPole.clone(); upL.position.set(-upX, 0.62, frontZ); upL.castShadow = true;
+    const upR = upPole.clone(); upR.position.set( upX, 0.62, frontZ); upR.castShadow = true;
+    treadmill.add(upL, upR);
+
+    const topBar = new THREE.Mesh(new THREE.CylinderGeometry(0.032,0.032, FRAME_W - 0.10, 16), matSteel);
+    topBar.rotation.z = Math.PI/2;
+    topBar.position.set(0, 1.15, frontZ);
+    topBar.castShadow = true;
+    treadmill.add(topBar);
+
+    const sideRail = new THREE.Mesh(new THREE.CylinderGeometry(0.028,0.028, BELT_L + 0.35, 16), matSteel);
+    sideRail.rotation.x = Math.PI/2;
+    sideRail.position.set(-upX, 0.95, -0.02);
+    sideRail.castShadow = true;
+    treadmill.add(sideRail);
+
+    const sideRailR = sideRail.clone();
+    sideRailR.position.x = upX;
+    treadmill.add(sideRailR);
+
+    const tmConsole = new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.40, 0.22), new THREE.MeshStandardMaterial({ color:0x111b2e, roughness:0.55, metalness:0.12 }));
+    tmConsole.position.set(0, 1.02, frontZ + 0.14);
+    tmConsole.castShadow = true;
+    treadmill.add(tmConsole);
+    
+const tmScreen = new THREE.Mesh(
+  new THREE.PlaneGeometry(0.56, 0.30),
+ new THREE.MeshBasicMaterial({
+  map: consoleScreen.tex,
+  side: THREE.DoubleSide,
+  transparent: true,
+  depthTest: true,      // <-- IMPORTANT: allow avatar to occlude it
+  depthWrite: false,
+  toneMapped: false,
+  polygonOffset: true,  // prevents z-fighting with the console face
+  polygonOffsetFactor: -1,
+  polygonOffsetUnits: -1
+})
+);
+
+// attach to console (NOT treadmill / NOT zone)
+tmConsole.add(tmScreen);
+
+// local coords on the console front face (console depth = 0.32 -> half = 0.16)
+tmScreen.position.set(0, 0.02, 0.162);
+tmScreen.rotation.set(-0.10, 0, 0);
+
+
+
+   // Cardio zone label (kept)
+const lblC = makeLabel('Cardio Bay');
+lblC.position.copy(Z_CARDIO).add(new THREE.Vector3(0, 4.1, -1.6));
+labelGroup.add(lblC);
+
+// Add cardio zone to scene
+scene.add(zoneCardio);
+
+
+// Forensics zone (realistic)
+const zoneForensics = new THREE.Group();
+zoneForensics.name = 'forensics';
+zoneForensics.position.copy(Z_FORENSIC);
+
+const platF = zoneBasePlate(4.8, 3.6);
+platF.position.set(0, 0.03, 0);
+zoneForensics.add(platF);
+
+const lineMat = new THREE.LineBasicMaterial({ color:0x38bdf8, transparent:true, opacity:0.55 });
+const squarePts = [
+  new THREE.Vector3(-1.2, 0.065, -1.0),
+  new THREE.Vector3( 1.2, 0.065, -1.0),
+  new THREE.Vector3( 1.2, 0.065,  1.0),
+  new THREE.Vector3(-1.2, 0.065,  1.0),
+  new THREE.Vector3(-1.2, 0.065, -1.0)
+];
+zoneForensics.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(squarePts), lineMat));
+
+// --- MODULE 2 ADDITIONS START ---
+// Force Plate (Base of Support Visualization)
+const forcePlate = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.6, 0.70),
+    new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.25, side: THREE.DoubleSide })
+);
+forcePlate.rotation.x = -Math.PI / 2;
+forcePlate.position.set(0, 0.07, 0); 
+forcePlate.visible = false;
+forcePlate.name = "forcePlate";
+zoneForensics.add(forcePlate);
+
+// Plumb Line (Realistic rope plumb line — NOT intersecting model)
+// Plumb Line (Realistic rope plumb line — visible & zone-relative)
+const plumbLine = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.01, 0.01, 3.0, 16),
+    new THREE.MeshStandardMaterial({
+        color: 0xb0b0b0,
+        roughness: 0.85,
+        metalness: 0.1
+    })
+);
+
+// Positioned just lateral to avatar, NOT intersecting
+plumbLine.position.set(0.6, 1.5, -0.01);
+plumbLine.visible = true;                
+plumbLine.name = "plumbLine";
+zoneForensics.add(plumbLine);
+
+
+// ==============================
+// VISUAL COM MARKER (TEACHING ONLY)
+// ==============================
+const comMarker = new THREE.Mesh(
+  new THREE.SphereGeometry(0.06, 16, 16),
+  new THREE.MeshStandardMaterial({
+    color: 0xff0000,
+    emissive: 0xff0000,
+    emissiveIntensity: 1,
+    depthTest: false
+  })
+);
+
+comMarker.name = "comMarker";
+zoneForensics.add(comMarker);
+comMarker.position.z += 0.05; // pull COM marker forward out of torso
+
+
+
+// Weight Ball (Plumb bob — reachable floor position)
+const weightBall = new THREE.Mesh(
+    new THREE.SphereGeometry(0.15, 32, 32),
+    new THREE.MeshStandardMaterial({
+        color: 0x7a8aa0,
+        metalness: 0.5,
+        roughness: 0.2
+    })
+);
+
+// Beside right foot area, on ground
+weightBall.position.set(0.6, 0.20, 1.35);
+weightBall.visible = true;
+weightBall.name = "weightBall";
+zoneForensics.add(weightBall);
+
+
+function tripod(x,z){
+  const g = new THREE.Group();
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.05,1.05,10), matSteel);
+  pole.position.y = 0.52; pole.castShadow = true; g.add(pole);
+  const head = new THREE.Mesh(new THREE.BoxGeometry(0.20,0.12,0.20), matDark);
+  head.position.y = 1.05; head.castShadow = true; g.add(head);
+  const legGeo = new THREE.CylinderGeometry(0.02,0.02,0.80,8);
+  for (let i=0;i<3;i++){
+    const leg = new THREE.Mesh(legGeo, matSteel);
+    const ang = i * (Math.PI*2/3);
+    leg.position.set(Math.cos(ang)*0.18, 0.30, Math.sin(ang)*0.18);
+    leg.rotation.z = 0.55;
+    leg.rotation.y = ang;
+    g.add(leg);
+  }
+  g.position.set(x, 0, z);
+  return g;
+}
+zoneForensics.add(tripod(-1.55,-1.35), tripod(1.55,-1.35), tripod(0,1.55));
+
+const mon = new THREE.Mesh(
+  new THREE.BoxGeometry(1.55, 0.95, 0.08),
+  new THREE.MeshStandardMaterial({ color:0x111b2e, roughness:0.6, metalness:0.15 })
+);
+const mon1 = mon.clone(); mon1.position.set(-1.05, 2.35, -1.70); zoneForensics.add(mon1);
+const mon2 = mon.clone(); mon2.position.set( 1.05, 2.35, -1.70); zoneForensics.add(mon2);
+
+const lblF = makeLabel('Movement Analysis Booth');
+lblF.position.copy(Z_FORENSIC).add(new THREE.Vector3(0, 2.7, -1.6));
+labelGroup.add(lblF);
+
+scene.add(zoneForensics);
+
+
+/* ===== ZONE CONTROL ===== */
+function setZone(z){
+  zoneStrength.visible=(z==="all"||z==="strength");
+  zoneCardio.visible=(z==="all"||z==="cardio");
+  zoneForensics.visible=(z==="all"||z==="forensics");
+}
+setZone("forensics");
+// MODULE 2 — STABILITY STATE
+// ==============================
+const sim = {
+  leanZ: 0,        // forward / back
+  leanX: 0,        // left / right
+  ballLocked: false,
+  isTrembling: false
+};
+
+const PLUMB_THRESHOLD_IDLE   = 0.025;
+const PLUMB_THRESHOLD_WEIGHT = 0.04;
+
+// ==============================
+// MODULE 2 — CONSOLE WIRING (FL-002)
+// ==============================
+
+// 1. UI References
+const leanZSlider = document.getElementById('leanSlider');
+const leanXSlider = document.getElementById('leanXSlider');
+const leanZVal    = document.getElementById('leanVal');
+const leanXVal    = document.getElementById('leanXVal');
+const ballBtn     = document.getElementById('lockBallBtn');
+const baseBtn     = document.getElementById('toggleBaseBtn');
+// reuse existing forcePlate from scene
+const forcePlateMesh = scene.getObjectByName("forcePlate");
+const $msg        = document.getElementById('trialMsg');
+const resetBtn = document.getElementById('resetBtn');
+
+if (resetBtn) {
+    resetBtn.onclick = () => {
+        sim.leanZ = 0; sim.leanX = 0; sim.ballLocked = false;
+        leanZSlider.value = 0; leanXSlider.value = 0;
+        leanZVal.textContent = "0.0"; leanXVal.textContent = "0.0";
+        ballBtn.textContent = "Pick Up Ball";
+        const ball = scene.getObjectByName("weightBall");
+        if (ball) ball.position.set(0.6, 0.20, 1.35);
+        applyFL002Pose("idle");
+        if (skeleton) {
+            const spine = skeleton.bones.find(b => b.name.toLowerCase().includes('spine'));
+            if (spine) spine.rotation.set(0, 0, 0);
+        }
+    };
+}
+
+
+// 1. UI References for New Console
+const leanSlider = document.getElementById('leanSlider');
+const leanVal = document.getElementById('leanVal');
+const dirSelect = document.getElementById('dirSelect');
+
+// 2. Reset UI
+if (leanSlider) leanSlider.value = 0;
+if (leanVal) leanVal.textContent = "0.0";
+if (dirSelect) dirSelect.selectedIndex = 0;
+
+sim.leanZ = 0;
+sim.leanX = 0;
+sim.ballLocked = false;
+
+// 3. Camera Presets (Unchanged)
+document.getElementById('btnSideView').onclick = () => {
+    camera.position.set(Z_FORENSIC.x + 3.5, 1.4, Z_FORENSIC.z);
+    controls.target.set(Z_FORENSIC.x, 1.2, Z_FORENSIC.z);
+    controls.update();
+};
+
+document.getElementById('btnFrontView').onclick = () => {
+    camera.position.set(Z_FORENSIC.x, 1.4, Z_FORENSIC.z + 4.5);
+    controls.target.set(Z_FORENSIC.x, 1.2, Z_FORENSIC.z);
+    controls.update();
+};
+
+// 4. Unified Slider Logic
+
+if (leanSlider && dirSelect) {
+    leanSlider.oninput = e => {
+        const intensity = parseFloat(e.target.value);
+        
+        // Removed textContent update to hide numerical feedback from user
+
+        // Map intensity to specific lean variables based on direction
+        const dir = dirSelect.value;
+        
+        // Reset both first to ensure only one direction is active
+        sim.leanX = 0;
+        sim.leanZ = 0;
+
+        if (dir === "forward") sim.leanZ = intensity;
+        if (dir === "back")    sim.leanZ = -intensity;
+        if (dir === "left")    sim.leanX = intensity;
+        if (dir === "right")   sim.leanX = -intensity;
+
+        // Fire bone transformations
+        updateModelLean();
+       updateThighAbductionLeftOnly();
+       updateThighAbductionRightOnly();
+    };
+
+    // Reset slider when direction changes to prevent sudden snapping
+    dirSelect.onchange = () => {
+        leanSlider.value = 0;
+        if (leanVal) leanVal.textContent = "0.0";
+        sim.leanX = 0;
+        sim.leanZ = 0;
+if (skeleton) applyFL002Pose(sim.ballLocked ? "holdingBall" : "idle");
+
+        updateModelLean();
+        updateThighAbductionL();
+        updateThighAbductionR();
+
+    };
+}
+
+
+function updateModelLean() {
+    if (!skeleton || !avatarRoot?.userData?.offset) return;
+
+    const radZ = THREE.MathUtils.degToRad(sim.leanZ);
+    const radX = THREE.MathUtils.degToRad(sim.leanX);
+
+    // spine visual lean ONLY
+    const spine = skeleton.bones.find(b => b.name.toLowerCase().includes("spine"));
+    if (spine) {
+        spine.rotation.x = radZ;
+        spine.rotation.z = -radX;
+    }
+
+    // normalized fraction
+    const maxDeg = Number(leanSlider?.max || 60);
+    const fZ = THREE.MathUtils.clamp(sim.leanZ / maxDeg, -1, 1);
+    const fX = THREE.MathUtils.clamp(sim.leanX / maxDeg, -1, 1);
+
+    // MOVE OFFSET NODE — NOT ROOT
+    const SHIFT = sim.ballLocked ? 0.02 : 0.012;
+    const offset = avatarRoot.userData.offset;
+
+    offset.position.x = fX * SHIFT;
+    offset.position.z = fZ * SHIFT;
+
+    // tremble flag
+    sim.isTrembling = Math.abs(fX) > 0.98 || Math.abs(fZ) > 0.98;
+
+    // toes
+    skeleton.bones.forEach(b => {
+        if (b.name.toLowerCase().includes("toe")) {
+            b.rotation.x = fZ < 0 ? radZ * 0.3 : 0;
+            b.rotation.z = -radX * 0.3;
+        }
+    });
+}
+
+
+
+function updateLeftThighAbduction() {
+    if (!skeleton) return;
+
+    // Maintain your specific lean condition
+    if (sim.leanX >= 0 && Number(leanSlider.value) > 0) return;
+
+    // TARGET ONLY THE LEFT THIGH
+    const thighL = skeleton.bones.find(b => b.name === 'thigh_L');
+    if (!thighL) return;
+
+    const maxAbductionAngle = THREE.MathUtils.degToRad(5);
+    const val = Number(leanSlider.value);
+    const max = Number(leanSlider.max);
+
+    // Calculate targetZ based on current slider position
+    // As slider 'val' decreases, 'targetZ' decreases
+    const targetZ = (val / max) * maxAbductionAngle;
+
+    // Update only the Z rotation for the left thigh
+    thighL.rotation.z = THREE.MathUtils.lerp(
+        thighL.rotation.z,
+        targetZ,
+        0.1
+    );
+
+    // Hard lock other axes for this bone only
+    thighL.rotation.x = 0;
+    thighL.rotation.y = 0;
+}
+
+
+// ==============================
+// 5. Weight Ball Toggle (Hold / Release)
+// ==============================
+
+if (ballBtn) {
+    ballBtn.onclick = () => {
+        sim.ballLocked = !sim.ballLocked;
+        const ball = scene.getObjectByName("weightBall");
+        if (!ball || !skeleton) return;
+
+        // Target the right hand bone as the parent
+        const handBone = skeleton.bones.find(b => b.name.toLowerCase().includes('hand_r'));
+
+        if (sim.ballLocked) {
+            applyFL002Pose("holdingBall");
+
+            if (handBone) {
+                // ATTACH: Move ball from global scene to the hand bone hierarchy
+                handBone.add(ball);
+                
+                // LOCAL coordinates relative to the hand bone roman -- side --out/back--up/down
+                if (window.ACTIVE_MODEL === "Roman") {
+                    // Roman: Centered in large palms
+                    ball.position.set(-0.17, 0.10, -0.01); 
+                } else {
+                    // Roma: Centered in smaller palms
+                    ball.position.set(0.0, 0.10, 0.17);
+                }
+            }
+
+            ballBtn.textContent = "Release Weight Ball";
+            if ($msg) $msg.innerHTML = "<b>LOAD ATTACHED:</b> Ball following " + window.ACTIVE_MODEL + "'s hand.";
+        } else {
+            applyFL002Pose("idle");
+
+            // DETACH: Return ball to the global scene root
+            scene.add(ball); 
+            
+            // WORLD coordinates for the floor
+            ball.position.set(0.6, 0.20, 1.35);
+
+            ballBtn.textContent = "Pick Up Weight Ball";
+            if ($msg) $msg.innerHTML = "<b>SYSTEM UPDATED:</b> Load returned to floor.";
+        }
+    };
+}
+
+// ==============================
+// 6. Base of Support Toggle
+// ==============================
+if (baseBtn && forcePlateMesh) {
+  baseBtn.onclick = () => {
+    forcePlateMesh.visible = !forcePlateMesh.visible;
+    baseBtn.style.borderColor = forcePlateMesh.visible ? "#38bdf8" : "";
+  };
+}
+
+// ==============================
+// 7. Module Ready Message
+// ==============================
+if ($msg) {
+  $msg.innerHTML = "<b>Module 2 Loaded:</b> Adjust lean to test stability limits.";
+}
+
+
+
+// ==============================
+ //AVATAR  
+// ==============================
+// FL-002 POSES (UNCHANGED)
+// ==============================
+const FL002_POSES_ROMA = {
+  idle: {
+    upperarm_L: { x: 0.5, y:  0.12, z:  -7.2 },
+    lowerarm_L: { x: 0.0, y:  0.00, z:   0.0 },
+    hand_L:     { x: 0.0, y:  0.00, z:   0.0 },
+    thigh_L:    { x: 0.0684, y: -0.0022, z: -3.0616 },
+spine01: { x: 0, y: 0, z: 0 },
+  spine02: { x: 0, y: 0, z: 0 },
+  spine03: { x: 0, y: 0, z: 0 },
+
+    upperarm_R: { x: 0.5, y: -0.12, z:   7.2 },
+    lowerarm_R: { x: 0.0, y:  0.00, z:   0.0 },
+    hand_R:     { x: 0.0, y:  0.00, z:   0.0 },
+    thigh_R:    { x: 0.0684, y:  0.0022, z:  3.0616 }
+
+  },
+
+  holdingBall: {
+    // LEFT ARM
+    upperarm_L: { x: 1.3, y:  0.25, z:  -6.5 },
+    lowerarm_L: { x: 0.25, y: -0.5, z:   0.0 },
+    hand_L:     { x: 0.0, y:  0.4, z:   0.0 },
+    thigh_L:    { x: 0.0684, y: -0.0022, z: -3.0616 },
+ 
+    // RIGHT ARM
+    upperarm_R: { x: 1.3, y: -0.25, z:   6.5 },
+    lowerarm_R: { x: 0.27, y:  0.5, z:   0.0 },
+    hand_R:     { x: 0.0, y: -0.4, z:   0.0 },
+    thigh_R:    { x: 0.0684, y:  0.0022, z:  3.0616 }
+  }
+};
+
+const FL002_POSES_ROMAN = {
+  idle: {
+    upperarm_L: { x: 0.6, y:  0.0, z:  -1.5 },
+    lowerarm_L: { x: 0.0, y:  0.00, z:   0.0 },
+    hand_L:     { x: 0.0, y:  0.00, z:   0.0 },
+    thigh_L:    { x: -0.2001, y:  0.001,  z:  3.1408 },
+  spine01: { x: 0, y: 0, z: 0 },
+  spine02: { x: 0, y: 0, z: 0 },
+  spine03: { x: 0, y: 0, z: 0 },
+
+    upperarm_R: { x: 0.6, y:  0.0, z:   1.5 },
+    lowerarm_R: { x: 0.0, y:  0.00, z:   0.0 },
+    hand_R:     { x: 0.0, y:  0.00, z:   0.0 },
+    thigh_R:    { x: -0.201,  y: -0.0011, z: -3.1407 }
+  },
+
+  holdingBall: {
+    // LEFT ARM — Roman
+    upperarm_L: { x: 1.55, y:  0.0, z: -6.6 },
+    lowerarm_L: { x: 0.59, y:  0.0, z:  0.00 },
+    hand_L:     { x: 0.00, y: -1.50, z:  0.00 },
+    thigh_L:    { x: -0.2001, y:  0.001,  z:  3.1408 },
+
+    // RIGHT ARM — Roman
+    upperarm_R: { x: 1.55, y: -0.0, z:  6.6 },
+    lowerarm_R: { x: 0.59, y: -0.0, z:  0.00 },
+    hand_R:     { x: 0.00, y:  1.50, z:  0.00 },
+    thigh_R:    { x: -0.201,  y: -0.0011, z: -3.1407 }
+  }
+};
+
+
+function applyFL002Pose(poseName) {
+  if (!skeleton) return;
+
+  const isRoman = window.ACTIVE_MODEL === "Roman";
+  const poseSet = isRoman ? FL002_POSES_ROMAN : FL002_POSES_ROMA;
+  const pose = poseSet[poseName];
+  if (!pose) return;
+
+  for (const boneName in pose) {
+    // Case-insensitive search
+    const bone = skeleton.bones.find(b => 
+      b.name.toLowerCase().includes(boneName.toLowerCase())
+    );
+    if (!bone) continue;
+
+    const r = pose[boneName];
+    bone.rotation.set(r.x, r.y, r.z);
+  }
+}
+
+
+let avatarRoot = null;
+let skeleton = null;
+
+function loadModel(id, onProgress){
+  return new Promise((resolve, reject) => {
+    const url = MODEL_URLS[id];
+    const loader = new GLTFLoader();
+
+    loader.load(
+      url,
+
+      // ✅ ON LOAD (100%)
+      (gltf) => {
+        scene.add(gltf.scene);
+avatarRoot = gltf.scene;
+const offset = new THREE.Group();
+offset.name = "avatarOffset";
+offset.position.copy(avatarRoot.position);
+
+scene.add(offset);
+offset.add(avatarRoot);
+
+// lock avatar to offset origin
+avatarRoot.position.set(0, 0, 0);
+
+// store reference
+avatarRoot.userData.offset = offset;
+
+
+// extract skeleton ONCE
+skeleton = null;
+avatarRoot.traverse(o=>{
+  if (o.isSkinnedMesh && o.skeleton && !skeleton){
+    skeleton = o.skeleton;
+  }
+});
+
+// only apply pose AFTER skeleton exists
+if (skeleton) applyFL002Pose('idle');
+
+
+        resolve(gltf);
+      },
+
+      // ✅ REAL PROGRESS (0–100)
+      (xhr) => {
+        if (xhr.total && onProgress) {
+          let pct = Math.round((xhr.loaded / xhr.total) * 100);
+pct = Math.min(100, Math.max(0, pct)); // clamp 0–100
+onProgress(pct);
+
+        }
+      },
+
+      // ❌ ERROR
+      (err) => reject(err)
+    );
+  });
+}
+
+
+function updatePlumbLineForModel() {
+    const plumbLine = scene.getObjectByName("plumbLine");
+    if (!plumbLine) return;
+
+    if (window.ACTIVE_MODEL === "Roman") {
+        // Roman-specific alignment
+        plumbLine.position.set(0.65, 1.5, -0.075);
+    } else {
+        // Roma (default)
+        plumbLine.position.set(0.65, 1.5, -0.01);
+    }
+}
+
+
+
+// 9) Enter Studio (gate -> studio)
+$enter.addEventListener('click', async () => {
+  const modelId = document.getElementById('modelSelect')?.value;
+  window.ACTIVE_MODEL = modelId; // <---  THIS LINE finds model
+  updatePlumbLineForModel();
+  const bay = document.getElementById('moduleSelect')?.value; // now treated as BAY only
+
+  $enter.disabled = true;
+  $enter.textContent = "Loading...";
+
+  try {
+await loadModel(modelId, (pct) => {
+  $enter.textContent = `Loading ${pct}%`;
+});
+
+// === FORCE SPAWN INTO FORENSICS BAY (Module 2) ===
+setZone('forensics');
+
+// Position avatar based on selected model
+if (avatarRoot) {
+    // Save the active model globally so the pose logic triggers
+    window.ACTIVE_MODEL = modelId; 
+
+    if (modelId === "Roman") {
+        // Roman: Moved forward slightly
+        avatarRoot.position.set(0, 0.08, -3.15);
+    } else {
+        // Roma: Original forensic spot
+        avatarRoot.position.set(0, 0.08, -3.15);
+    }
+}
+
+// Snap camera to forensic bay (Universal target for both)
+const camTarget = new THREE.Vector3(0, 1.35, -2.92);
+controls.target.copy(camTarget);
+camera.position.set(-0.11, 2.79, 3.02);
+controls.update();
+
+// NOW ENTER MODULE → show Module 2 console
+document.getElementById('badge').style.display = "block";
+
+    // Hide gate
+    document.getElementById('gate').style.display = "none";
+
+    // Show environment only (if still present)
+    const uiMain = document.getElementById('ui');
+    if (uiMain) uiMain.style.display = "flex";
+
+    // Route to bay (NO module logic)
+    switch (bay) {
+      case 'cardio':
+        setZone('cardio');
+        break;
+      case 'strength':
+        setZone('strength');
+        break;
+      case 'forensics':
+        setZone('forensics');
+        break;
+      default:
+        setZone('all');
+    }
+
+    // Optional camera snap (safe if function exists)
+    if (typeof snapCam === 'function') snapCam();
+
+  } catch (err) {
+    console.error(err);
+    $enter.disabled = false;
+    $enter.textContent = "Enter Studio";
+  }
+});
+
+function getBalanceState() {
+    if (!skeleton || !avatarRoot) return "unknown";
+
+    const footL = skeleton.bones.find(b => b.name.toLowerCase().includes("foot_l"));
+    const footR = skeleton.bones.find(b => b.name.toLowerCase().includes("foot_r"));
+    const spine03 = skeleton.bones.find(b => b.name.toLowerCase().includes("spine03"));
+
+    if (!footL || !footR || !spine03) return "unknown";
+
+    const vL = new THREE.Vector3();
+    const vR = new THREE.Vector3();
+    footL.getWorldPosition(vL);
+    footR.getWorldPosition(vR);
+
+    // BOS center (XZ)
+    const bosCenter = new THREE.Vector3(
+        (vL.x + vR.x) * 0.5,
+        0,
+        (vL.z + vR.z) * 0.5
+    );
+
+    // ----------------------------
+    // TRUE COM (BODY + OFFSET + WEIGHT)
+    // ----------------------------
+    const bodyCOM = new THREE.Vector3();
+    spine03.getWorldPosition(bodyCOM);
+
+    // include lean offset
+    const offset = avatarRoot.userData?.offset;
+    if (offset) bodyCOM.add(offset.position);
+
+    // include held weight
+    const ball = scene.getObjectByName("weightBall");
+    if (sim.ballLocked && ball) {
+        const ballPos = new THREE.Vector3();
+        ball.getWorldPosition(ballPos);
+
+        const BODY_MASS = 1.0;
+        const BALL_MASS = 0.35;
+
+        bodyCOM.multiplyScalar(BODY_MASS)
+               .add(ballPos.multiplyScalar(BALL_MASS))
+               .divideScalar(BODY_MASS + BALL_MASS);
+    }
+
+    // project COM to floor
+    const comProj = new THREE.Vector3(bodyCOM.x, 0, bodyCOM.z);
+
+    // update red dot to MATCH logic
+    const comMarker = scene.getObjectByName("comMarker");
+    if (comMarker) {
+        comMarker.position.set(bodyCOM.x, 0.12, bodyCOM.z);
+    }
+
+    // distance COM → BOS
+    const dist = comProj.distanceTo(bosCenter);
+
+    // ----------------------------
+    // HARD FAIL: END-RANGE LEAN
+    // ----------------------------
+
+const sliderVal = Math.abs(Number(leanSlider?.value || 0));
+const sliderMax = Number(leanSlider?.max || 55);
+
+const ENTER_SLIDER = sliderMax * 0.90;
+const EXIT_SLIDER  = sliderMax * 0.60;
+
+if (sim._latchedUnstable === undefined) sim._latchedUnstable = false;
+
+if (sliderVal >= ENTER_SLIDER) {
+    sim._latchedUnstable = true;
+}
+
+if (sliderVal <= EXIT_SLIDER) {
+    sim._latchedUnstable = false;
+}
+
+if (sim._latchedUnstable) {
+    return sim.ballLocked ? "weighted_unstable" : "idle_unstable";
+}
+
+
+    // ----------------------------
+    // BOS LIMIT (REALISTIC)
+    // ----------------------------
+    const bosRadius = vL.distanceTo(vR) * 0.14;
+    const margin = sim.ballLocked ? 0.85 : 1.0;
+
+    return dist > bosRadius * margin
+        ? (sim.ballLocked ? "weighted_unstable" : "idle_unstable")
+        : (sim.ballLocked ? "weighted_stable" : "idle_stable");
+}
+
+
+/* ===== LOOP ===== */
+let _lastTime = performance.now();
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  const now = performance.now();
+  const dt = (now - _lastTime) / 1000;
+  _lastTime = now;
+
+  // ==============================
+  // UNIVERSAL BLINK LOGIC (SAFE)
+  // ==============================
+  if (!animate._blink) animate._blink = { targets: [], state: 0, t: 0, next: 0, lastModel: null };
+  const BL = animate._blink;
+
+  // 1. Auto-detect Morph Targets if model changed
+  if (avatarRoot && BL.lastModel !== avatarRoot) {
+      BL.targets = [];
+      BL.lastModel = avatarRoot;
+      BL.next = (performance.now() / 1000) + 2;
+
+      avatarRoot.traverse(o => {
+          if (o.isMesh && o.morphTargetDictionary && o.morphTargetInfluences) {
+              const keys = [
+                "Eye_Blink",
+                "Eye_Blink_L",
+                "Eye_Blink_R",
+                "Expressions_eyeClosedL_max",
+                "Expressions_eyeClosedR_max"
+              ];
+              keys.forEach(k => {
+                  if (o.morphTargetDictionary[k] != null) {
+                      BL.targets.push({ mesh: o, idx: o.morphTargetDictionary[k] });
+                  }
+              });
+          }
+      });
+  }
+
+  // 2. Execution Loop
+  if (BL.targets.length) {
+      const tNow = performance.now() / 1000;
+
+      if (BL.state === 0 && tNow >= BL.next) {
+          BL.state = 1;
+          BL.t = 0;
+          BL.next = tNow + 3 + Math.random() * 4; // 3–7s cadence
+      }
+
+      const setB = v => BL.targets.forEach(t => t.mesh.morphTargetInfluences[t.idx] = v);
+      const dur = { down: 0.07, hold: 0.03, up: 0.12 };
+
+      if (BL.state !== 0) {
+          BL.t += dt;
+
+          if (BL.state === 1) { // Closing
+              setB(Math.min(1, BL.t / dur.down));
+              if (BL.t >= dur.down) { BL.state = 2; BL.t = 0; }
+
+          } else if (BL.state === 2) { // Hold
+              setB(1);
+              if (BL.t >= dur.hold) { BL.state = 3; BL.t = 0; }
+
+          } else if (BL.state === 3) { // Opening
+              setB(1 - Math.min(1, BL.t / dur.up));
+              if (BL.t >= dur.up) { BL.state = 0; setB(0); }
+          }
+      }
+  }
+
+  // ==============================
+  // NORMAL RENDER FLOW
+  // ==============================
+  controls.update();
+  const balanceState = getBalanceState();   
+const statusEl = document.getElementById("statusVal");
+const isUnstable = balanceState.includes("unstable");
+
+statusEl.textContent = isUnstable ? "Unstable" : "Stable";
+statusEl.style.color = isUnstable ? "#f87171" : "#4ade80"; // red / green
+
+// ==============================
+// FORCE BONE POSE ON LOCK
+// ==============================
+if (sim.ballLocked && skeleton) {
+  const isRoman = window.ACTIVE_MODEL === "Roman";
+  const poseSet = isRoman ? FL002_POSES_ROMAN.holdingBall : FL002_POSES_ROMA.holdingBall;
+
+  ["lowerarm_L","lowerarm_R","hand_L","hand_R"].forEach(name => {
+    const bone = skeleton.bones.find(b => b.name.toLowerCase().includes(name.toLowerCase()));
+    if (!bone || !poseSet[name]) return;
+
+    const r = poseSet[name];
+    bone.rotation.set(r.x, r.y, r.z);
+    bone.updateMatrixWorld(true);
+  });
+}
+
+if (skeleton) {
+    const spine = skeleton.bones.find(b => b.name.toLowerCase().includes('spine'));
+    
+    if (spine) {
+        // 1. First, set the "Base" position from the sliders
+        const radZ = THREE.MathUtils.degToRad(sim.leanZ);
+        const radX = THREE.MathUtils.degToRad(sim.leanX);
+        const COM_SCALE = 0.35; // realistic teaching scale (meters at max lean)
+
+comMarker.position.x = radX * COM_SCALE;
+comMarker.position.z = radZ * COM_SCALE;
+
+
+        spine.rotation.x = radZ;
+        spine.rotation.z = -radX;
+
+        // 2. Only THEN apply the Tremor as a temporary offset
+        if (sim.isTrembling) {
+            spine.rotation.x += (Math.random() - 0.5) * 0.015;
+            spine.rotation.z += (Math.random() - 0.5) * 0.015;
+        }
+    }
+}
+renderer.render(scene, camera);
+}
+
+
+
+animate();
+
+addEventListener("resize",()=>{
+  camera.aspect=innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+});
+
+
+// ==============================
+// DEBUG: SPINE ANATOMIC CAPTURE
+// ==============================
+// Press "T" to log spine segment rotations
+window.addEventListener("keydown", (e) => {
+    if (!skeleton) return;
+    if (e.key.toLowerCase() !== "t") return;
+
+    const get = (name) => {
+        const b = skeleton.bones.find(x => x.name === name);
+        if (!b) return null;
+        return {
+            x: Number(b.rotation.x.toFixed(4)),
+            y: Number(b.rotation.y.toFixed(4)),
+            z: Number(b.rotation.z.toFixed(4))
+        };
+    };
+
+    console.log("%c--- SPINE ROTATION DEBUG ---", "color:#38bdf8;font-weight:bold;");
+    console.log("spine01:", get("spine01"));
+    console.log("spine02:", get("spine02"));
+    console.log("spine03:", get("spine03"));
+});
+
+
+
+</script>
 </body>
 </html>
