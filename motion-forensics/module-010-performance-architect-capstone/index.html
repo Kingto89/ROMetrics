@@ -827,7 +827,7 @@ function updateModelLean() {
     const fX = THREE.MathUtils.clamp(sim.leanX / maxDeg, -1, 1);
 
     // MOVE OFFSET NODE — NOT ROOT
-    const SHIFT = sim.ballLocked ? 0.02 : 0.012;
+    const SHIFT = sim.ballLocked ? 0.02 : 0.015;
     const offset = avatarRoot.userData.offset;
 
     offset.position.x = fX * SHIFT;
@@ -1197,85 +1197,70 @@ function getBalanceState() {
     footL.getWorldPosition(vL);
     footR.getWorldPosition(vR);
 
-    // BOS center (XZ)
-    const bosCenter = new THREE.Vector3(
-        (vL.x + vR.x) * 0.5,
-        0,
-        (vL.z + vR.z) * 0.5
-    );
+    const bosCenter = new THREE.Vector3((vL.x + vR.x) * 0.5, 0, (vL.z + vR.z) * 0.5);
 
-    // ----------------------------
-    // TRUE COM (BODY + OFFSET + WEIGHT)
-    // ----------------------------
-    const bodyCOM = new THREE.Vector3();
-    spine03.getWorldPosition(bodyCOM);
+    // 1. Get Base Body COM
+    const systemCOM = new THREE.Vector3();
+    spine03.getWorldPosition(systemCOM);
 
-    // include lean offset
     const offset = avatarRoot.userData?.offset;
-    if (offset) bodyCOM.add(offset.position);
+    if (offset) systemCOM.add(offset.position);
 
-    // include held weight
+    // 2. APPLY WEIGHTED EFFECT (Calculates the new System COM)
     const ball = scene.getObjectByName("weightBall");
     if (sim.ballLocked && ball) {
-        const ballPos = new THREE.Vector3();
-        ball.getWorldPosition(ballPos);
+        // IMPORTANT: Force update so we get the ACTUAL position in the hand
+        ball.updateMatrixWorld(true);
+        
+        const ballWorldPos = new THREE.Vector3();
+        ball.getWorldPosition(ballWorldPos);
 
         const BODY_MASS = 1.0;
-        const BALL_MASS = 0.35;
+        const BALL_MASS = 2.5; // Shift intensity
 
-        bodyCOM.multiplyScalar(BODY_MASS)
-               .add(ballPos.multiplyScalar(BALL_MASS))
-               .divideScalar(BODY_MASS + BALL_MASS);
+        // Formula: ((BodyPos * BodyMass) + (BallPos * BallMass)) / TotalMass
+        systemCOM.multiplyScalar(BODY_MASS)
+                 .add(ballWorldPos.multiplyScalar(BALL_MASS))
+                 .divideScalar(BODY_MASS + BALL_MASS);
     }
 
-    // project COM to floor
-    const comProj = new THREE.Vector3(bodyCOM.x, 0, bodyCOM.z);
+    // 3. Update Visual Red Dot Position
+const comMarker = scene.getObjectByName("comMarker");
+if (comMarker) {
+    const localCOM = zoneForensics.worldToLocal(systemCOM.clone());
 
-    // update red dot to MATCH logic
-    const comMarker = scene.getObjectByName("comMarker");
-    if (comMarker) {
-        comMarker.position.set(bodyCOM.x, 0.12, bodyCOM.z);
-    }
+    const COM_VISUAL_GAIN = 1.7; // ← teaching amplification ONLY
+   const COM_FORWARD_NUDGE = 0.13; // meters forward on floor
 
-    // distance COM → BOS
+comMarker.position.set(
+  localCOM.x * COM_VISUAL_GAIN,
+  0.12,
+  (localCOM.z * COM_VISUAL_GAIN) + COM_FORWARD_NUDGE
+);
+}
+
+
+    const comProj = new THREE.Vector3(systemCOM.x, 0, systemCOM.z);
     const dist = comProj.distanceTo(bosCenter);
 
-    // ----------------------------
-    // HARD FAIL: END-RANGE LEAN
-    // ----------------------------
+    // 4. Latch Logic
+    const sliderVal = Math.abs(Number(leanSlider?.value || 0));
+    const sliderMax = Number(leanSlider?.max || 55);
+    if (sim._latchedUnstable === undefined) sim._latchedUnstable = false;
+    if (sliderVal >= sliderMax * 0.90) sim._latchedUnstable = true;
+    if (sliderVal <= sliderMax * 0.60) sim._latchedUnstable = false;
 
-const sliderVal = Math.abs(Number(leanSlider?.value || 0));
-const sliderMax = Number(leanSlider?.max || 55);
-
-const ENTER_SLIDER = sliderMax * 0.90;
-const EXIT_SLIDER  = sliderMax * 0.60;
-
-if (sim._latchedUnstable === undefined) sim._latchedUnstable = false;
-
-if (sliderVal >= ENTER_SLIDER) {
-    sim._latchedUnstable = true;
-}
-
-if (sliderVal <= EXIT_SLIDER) {
-    sim._latchedUnstable = false;
-}
-
-if (sim._latchedUnstable) {
-    return sim.ballLocked ? "weighted_unstable" : "idle_unstable";
-}
-
-
-    // ----------------------------
-    // BOS LIMIT (REALISTIC)
-    // ----------------------------
+    // 5. Stability Boundary
     const bosRadius = vL.distanceTo(vR) * 0.14;
-    const margin = sim.ballLocked ? 0.85 : 1.0;
+    const margin = sim.ballLocked ? 0.80 : 1.0; 
+    const isPhysicallyUnstable = dist > (bosRadius * margin);
 
-    return dist > bosRadius * margin
-        ? (sim.ballLocked ? "weighted_unstable" : "idle_unstable")
-        : (sim.ballLocked ? "weighted_stable" : "idle_stable");
+    if (sim._latchedUnstable || isPhysicallyUnstable) {
+        return sim.ballLocked ? "weighted_unstable" : "idle_unstable";
+    }
+    
+    return sim.ballLocked ? "weighted_stable" : "idle_stable";
 }
-
 
 /* ===== LOOP ===== */
 let _lastTime = performance.now();
@@ -1383,10 +1368,7 @@ if (skeleton) {
         // 1. First, set the "Base" position from the sliders
         const radZ = THREE.MathUtils.degToRad(sim.leanZ);
         const radX = THREE.MathUtils.degToRad(sim.leanX);
-        const COM_SCALE = 0.35; // realistic teaching scale (meters at max lean)
-
-comMarker.position.x = radX * COM_SCALE;
-comMarker.position.z = radZ * COM_SCALE;
+     
 
 
         spine.rotation.x = radZ;
