@@ -675,7 +675,8 @@ setZone("forensics");
 const sim = {
   leanZ: 0,        // forward / back
   leanX: 0,        // left / right
-  ballLocked: false
+  ballLocked: false,
+  isTrembling: false
 };
 // ==============================
 // MODULE 2 — CONSOLE WIRING (FL-002)
@@ -753,6 +754,7 @@ if (leanXSlider) {
         
         // Fire bone transformations only when active
         updateModelLean();
+	updateThighAbduction();
     };
 }
 
@@ -761,9 +763,11 @@ function updateModelLean() {
 
     const radZ = THREE.MathUtils.degToRad(sim.leanZ);
     const radX = THREE.MathUtils.degToRad(sim.leanX);
+    
     const spine = skeleton.bones.find(b => b.name.toLowerCase().includes('spine'));
     const hips = skeleton.bones.find(b => b.name.toLowerCase().includes('hips'));
 
+    // 1. Original Lean Logic
     if (spine) {
         spine.rotation.x = radZ;
         spine.rotation.z = -radX;
@@ -773,12 +777,52 @@ function updateModelLean() {
         hips.rotation.z = -(radX * 0.3);
     }
 
+    // 2. Tremble Trigger Logic
+    // Fires only when the X-slider reaches the far Left or far Right
+    const atMin = parseFloat(leanXSlider.value) <= parseFloat(leanXSlider.min) + 0.1;
+    const atMax = parseFloat(leanXSlider.value) >= parseFloat(leanXSlider.max) - 0.1;
+
+    if (atMin || atMax) {
+        sim.isTrembling = true;
+    } else {
+        sim.isTrembling = false;
+    }
+
+    // 3. Toes Control
     skeleton.bones.forEach(b => {
         if (b.name.toLowerCase().includes('toe')) {
             b.rotation.x = (radZ < 0) ? radZ * 0.3 : 0;
             b.rotation.z = -radX * 0.3;
         }
     });
+}
+
+/// Thighs ///
+
+function updateThighAbduction() {
+    if (!skeleton) return;
+
+    const tR = skeleton.bones.find(b => b.name === 'thigh_R');
+    if (!tR) return;
+
+    // 5 degrees is a realistic human limit for this specific move
+    const abd5 = THREE.MathUtils.degToRad(5);
+    const val = parseFloat(leanXSlider.value);
+    const max = parseFloat(leanXSlider.max);
+
+    // 1. Force target to 0 unless at the absolute pixel-perfect max
+    let targetR = 0;
+    if (val >= max) { 
+        targetR = -abd5; 
+    } 
+
+    // 2. Use LERP for smoothness, but only on the Z axis
+    // This prevents the "massive" movement caused by inherited X/Y rotations
+    const currentZ = tR.rotation.z;
+    const nextZ = THREE.MathUtils.lerp(currentZ, targetR, 0.001);
+
+    // 3. Apply ONLY to Z while locking X and Y to 0
+    tR.rotation.set(0, 0, nextZ);
 }
 
 // ==============================
@@ -854,11 +898,11 @@ if ($msg) {
 // ==============================
 const FL002_POSES_ROMA = {
   idle: {
-    upperarm_L: { x: 0.0, y:  0.10, z:  -7.3 },
+    upperarm_L: { x: 0.0, y:  0.10, z:  -6.8 },
     lowerarm_L: { x: 0.0, y:  0.00, z:   0.0 },
     hand_L:     { x: 0.0, y:  0.00, z:   0.0 },
 
-    upperarm_R: { x: 0.0, y: -0.10, z:   7.3 },
+    upperarm_R: { x: 0.0, y: -0.10, z:   6.8 },
     lowerarm_R: { x: 0.0, y:  0.00, z:   0.0 },
     hand_R:     { x: 0.0, y:  0.00, z:   0.0 }
   },
@@ -1134,8 +1178,26 @@ if (sim.ballLocked && skeleton) {
     bone.updateMatrixWorld(true);
   });
 }
+if (skeleton) {
+    const spine = skeleton.bones.find(b => b.name.toLowerCase().includes('spine'));
+    
+    if (spine) {
+        // 1. First, set the "Base" position from the sliders
+        const radZ = THREE.MathUtils.degToRad(sim.leanZ);
+        const radX = THREE.MathUtils.degToRad(sim.leanX);
+        
+        spine.rotation.x = radZ;
+        spine.rotation.z = -radX;
 
-  renderer.render(scene, camera);
+        // 2. Only THEN apply the Tremor as a temporary offset
+        if (sim.isTrembling) {
+            spine.rotation.x += (Math.random() - 0.5) * 0.015;
+            spine.rotation.z += (Math.random() - 0.5) * 0.015;
+        }
+    }
+}
+
+renderer.render(scene, camera);
 }
 
 
