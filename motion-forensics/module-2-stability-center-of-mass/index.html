@@ -961,15 +961,19 @@ if ($msg) {
 // ==============================
 const FL002_POSES_ROMA = {
   idle: {
-    upperarm_L: { x: 0.0, y:  0.12, z:  -7.2 },
+    upperarm_L: { x: 0.5, y:  0.12, z:  -7.2 },
     lowerarm_L: { x: 0.0, y:  0.00, z:   0.0 },
     hand_L:     { x: 0.0, y:  0.00, z:   0.0 },
     thigh_L:    { x: 0.0684, y: -0.0022, z: -3.0616 },
+spine01: { x: 0, y: 0, z: 0 },
+  spine02: { x: 0, y: 0, z: 0 },
+  spine03: { x: 0, y: 0, z: 0 },
 
-    upperarm_R: { x: 0.0, y: -0.12, z:   7.2 },
+    upperarm_R: { x: 0.5, y: -0.12, z:   7.2 },
     lowerarm_R: { x: 0.0, y:  0.00, z:   0.0 },
     hand_R:     { x: 0.0, y:  0.00, z:   0.0 },
     thigh_R:    { x: 0.0684, y:  0.0022, z:  3.0616 }
+
   },
 
   holdingBall: {
@@ -978,7 +982,7 @@ const FL002_POSES_ROMA = {
     lowerarm_L: { x: 0.25, y: -0.5, z:   0.0 },
     hand_L:     { x: 0.0, y:  0.4, z:   0.0 },
     thigh_L:    { x: 0.0684, y: -0.0022, z: -3.0616 },
-
+ 
     // RIGHT ARM
     upperarm_R: { x: 1.3, y: -0.25, z:   6.5 },
     lowerarm_R: { x: 0.27, y:  0.5, z:   0.0 },
@@ -993,6 +997,9 @@ const FL002_POSES_ROMAN = {
     lowerarm_L: { x: 0.0, y:  0.00, z:   0.0 },
     hand_L:     { x: 0.0, y:  0.00, z:   0.0 },
     thigh_L:    { x: -0.2001, y:  0.001,  z:  3.1408 },
+  spine01: { x: 0, y: 0, z: 0 },
+  spine02: { x: 0, y: 0, z: 0 },
+  spine03: { x: 0, y: 0, z: 0 },
 
     upperarm_R: { x: 0.6, y:  0.0, z:   1.5 },
     lowerarm_R: { x: 0.0, y:  0.00, z:   0.0 },
@@ -1284,9 +1291,9 @@ addEventListener("resize",()=>{
 
 
 // ==============================
-// DEBUG: THIGH ANATOMIC CAPTURE
+// DEBUG: SPINE ANATOMIC CAPTURE
 // ==============================
-// Press "T" when body looks anatomically correct
+// Press "T" to log spine segment rotations
 window.addEventListener("keydown", (e) => {
     if (!skeleton) return;
     if (e.key.toLowerCase() !== "t") return;
@@ -1301,9 +1308,10 @@ window.addEventListener("keydown", (e) => {
         };
     };
 
-    console.log("%c--- THIGH ANATOMIC BASELINE ---", "color:#4ade80;font-weight:bold;");
-    console.log("thigh_L:", get("thigh_L"));
-    console.log("thigh_R:", get("thigh_R"));
+    console.log("%c--- SPINE ROTATION DEBUG ---", "color:#38bdf8;font-weight:bold;");
+    console.log("spine01:", get("spine01"));
+    console.log("spine02:", get("spine02"));
+    console.log("spine03:", get("spine03"));
 });
 
 
