@@ -1004,7 +1004,9 @@ sim.reachPose = true;
 
         if (sim.ballLocked) {
             applyFL002Pose("holdingBall");
-
+	 if (trialB.active && trialB.pose) {
+        applyTrialBPose(trialB.pose); // re-assert legs immediately
+    }
             if (handBone) {
                 // ATTACH: Move ball from global scene to the hand bone hierarchy
                 handBone.add(ball);
@@ -1022,7 +1024,7 @@ sim.reachPose = true;
             ballBtn.textContent = "Release Weight Ball";
             if ($msg) $msg.innerHTML = "<b>LOAD ATTACHED:</b> Ball following " + window.ACTIVE_MODEL + "'s hand.";
         } else {
-            applyFL002Pose("idle");
+trialB.active && trialB.pose ? applyTrialBPose(trialB.pose) : applyFL002Pose("idle");
 
             // DETACH: Return ball to the global scene root
             scene.add(ball); 
@@ -1356,6 +1358,7 @@ const plate = scene.getObjectByName("forcePlate");
 if (plate && trialB.active) plate.scale.set(1.6, 1, 1);
 
     } else if (key === "lower") {
+   scene.getObjectByName("forcePlate")?.scale.set(1,1,1);
       trialB.pose = "bend";
       applyTrialBPose("bend");
     } else if (key === "harder") {
@@ -1505,7 +1508,7 @@ function getBalanceState() {
         ball.getWorldPosition(ballWorldPos);
 
         const BODY_MASS = 1.0;
-        const BALL_MASS = 0.45; // Shift intensity
+        const BALL_MASS = 0.4; // Shift intensity
 
         // Formula: ((BodyPos * BodyMass) + (BallPos * BallMass)) / TotalMass
         systemCOM.multiplyScalar(BODY_MASS)
@@ -1519,7 +1522,7 @@ const comMarker = scene.getObjectByName("comMarker");
 if (comMarker) {
     const localCOM = zoneForensics.worldToLocal(systemCOM.clone());
 
-    const COM_VISUAL_GAIN = 1.7;      // lateral exaggeration (unchanged)
+    const COM_VISUAL_GAIN = 0.9;      // lateral exaggeration (unchanged)
     const COM_FORWARD_NUDGE = 0.13;   // small anterior offset
 const COM_BASE_Y =
   (window.ACTIVE_MODEL === "Roman" ? 1.1 : 0.89) -
