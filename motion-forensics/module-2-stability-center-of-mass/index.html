@@ -1352,6 +1352,9 @@ if(rBtn) rBtn.style.display = "block";
     if (key === "widen") {
       trialB.pose = "wide";
       applyTrialBPose("wide");
+const plate = scene.getObjectByName("forcePlate");
+if (plate && trialB.active) plate.scale.set(1.6, 1, 1);
+
     } else if (key === "lower") {
       trialB.pose = "bend";
       applyTrialBPose("bend");
@@ -1422,6 +1425,9 @@ if (t) t.visible = true;
 
   // reset any strategy effects
   trialB.bosMultiplier = 1;
+const plate = scene.getObjectByName("forcePlate");
+if (plate) plate.scale.set(1, 1, 1);
+
   trialB.comYOffset = 0;
   trialB.comGain = 1;
 
@@ -1508,20 +1514,24 @@ function getBalanceState() {
     }
 
     // 3. Update Visual Red Dot Position
+// 3. Update Visual COM Position (Anatomical — near S2)
 const comMarker = scene.getObjectByName("comMarker");
 if (comMarker) {
     const localCOM = zoneForensics.worldToLocal(systemCOM.clone());
 
-    const COM_VISUAL_GAIN = 1.7; // ← teaching amplification ONLY
-   const COM_FORWARD_NUDGE = 0.13; // meters forward on floor
+    const COM_VISUAL_GAIN = 1.7;      // lateral exaggeration (unchanged)
+    const COM_FORWARD_NUDGE = 0.13;   // small anterior offset
+const COM_BASE_Y =
+  (window.ACTIVE_MODEL === "Roman" ? 1.1 : 0.89) -
+  (trialB.active && trialB.pose === "bend" ? 0.12 : 0);
 
-comMarker.position.set(
-  localCOM.x * COM_VISUAL_GAIN,
-  0.12,
-  (localCOM.z * COM_VISUAL_GAIN) + COM_FORWARD_NUDGE
-);
+
+    comMarker.position.set(
+      localCOM.x * COM_VISUAL_GAIN,
+      COM_BASE_Y,
+      (localCOM.z * COM_VISUAL_GAIN) + COM_FORWARD_NUDGE
+    );
 }
-
 
     const comProj = new THREE.Vector3(systemCOM.x, 0, systemCOM.z);
     const dist = comProj.distanceTo(bosCenter);
@@ -1644,6 +1654,7 @@ function animate() {
   // ==============================
   controls.update();
   const balanceState = getBalanceState();  
+  if (!trialB.active) console.assert(scene.getObjectByName("forcePlate")?.scale.x === 1, "BOS modified outside Trial B");
   checkTrialBReach();
   const trialBLiftResult = evaluateTrialBLift();
  
