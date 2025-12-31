@@ -719,7 +719,9 @@ const sim = {
   leanZ: 0,        // forward / back
   leanX: 0,        // left / right
   ballLocked: false,
-  isTrembling: false
+  isTrembling: false,
+  reachActive: false,
+     reachAlpha: 0     
 };
 
 // ==============================
@@ -1392,9 +1394,9 @@ reachBtn.textContent = "Perform Reach";
 reachBtn.style.cssText =   "width:100%; margin-top:6px; background:#38bdf8; color:#07101b; border:none; padding:6px; border-radius:10px; cursor:pointer; font-weight:800; font-size:10px; display:none;";
 
 reachBtn.onclick = () => {
-    sim.reachPose = true;
-    applyTrialBPose("reach");
-    if ($msg) $msg.innerHTML = "<b>Trial B:</b> Reaching... checking stability.";
+    trialB.lifting = true;
+    sim.reachActive = true; // Start the transition
+    if ($msg) $msg.innerHTML = "<b>Trial B:</b> Performing reach...";
 };
 stratWrap.appendChild(reachBtn);
 document.getElementById("badge")?.appendChild(stratWrap);
@@ -1693,6 +1695,45 @@ if (sim.ballLocked && skeleton) {
     bone.updateMatrixWorld(true);
   });
 }
+
+
+
+
+if (sim.reachActive && skeleton) {
+    const armR = skeleton.bones.find(b => b.name.toLowerCase().includes("upperarm_r"));
+    const foreArmR = skeleton.bones.find(b => b.name.toLowerCase().includes("lowerarm_r"));
+
+    // 1. Capture the 'Home' rotation only once at the very start
+    if (sim.reachAlpha === 0 && !sim.hasSnapshot) {
+        sim.startRot = {
+            armZ: armR.rotation.z,
+            armX: armR.rotation.x,
+            foreX: foreArmR.rotation.x
+        };
+        sim.hasSnapshot = true;
+    }
+
+    sim.reachAlpha += 0.005; 
+    if (sim.reachAlpha > 1.0) sim.reachAlpha = 1.0;
+
+    if (armR && foreArmR) {
+        // 2. Add the reach movement to the starting 'Home' position
+        // This moves the arm FROM its current location TO the target
+        armR.rotation.z = sim.startRot.armZ + (-0.9 * sim.reachAlpha); 
+        armR.rotation.x = sim.startRot.armX + (0.9 * sim.reachAlpha);
+        armR.rotation.y = 0.001; // Keep locked
+
+        foreArmR.rotation.x = sim.startRot.foreX + (0.5 * sim.reachAlpha);
+    }
+
+    if (sim.reachAlpha === 1.0) {
+        checkTrialBReach();
+        // Reset the snapshot flag for the next time we reach
+        sim.hasSnapshot = false; 
+    }
+}
+
+
 
 if (skeleton) {
     const spine = skeleton.bones.find(b => b.name.toLowerCase().includes('spine'));
