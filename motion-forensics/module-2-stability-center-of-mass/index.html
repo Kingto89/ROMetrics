@@ -630,6 +630,9 @@ const comMarker = new THREE.Mesh(
   })
 );
 
+comMarker.renderOrder = 999;
+
+
 comMarker.name = "comMarker";
 zoneForensics.add(comMarker);
 comMarker.position.z += 0.05; // pull COM marker forward out of torso
@@ -686,6 +689,22 @@ labelGroup.add(lblF);
 
 scene.add(zoneForensics);
 
+// ==============================
+// TRIAL B — Reach Target
+// ==============================
+const trialBTarget = new THREE.Mesh(
+  new THREE.SphereGeometry(0.12, 16, 16),
+  new THREE.MeshStandardMaterial({
+    color: 0x22c55e,
+    emissive: 0x22c55e,
+    emissiveIntensity: 0.6
+  })
+);
+
+trialBTarget.name = "trialBTarget";
+trialBTarget.position.set(0, 1.15, -2.15); // in front of torso
+trialBTarget.visible = false;
+scene.add(trialBTarget);
 
 /* ===== ZONE CONTROL ===== */
 function setZone(z){
@@ -703,8 +722,26 @@ const sim = {
   isTrembling: false
 };
 
+// ==============================
+// TRIAL B — Reach With Strategy (state only)
+// ==============================
+const trialB = {
+lifting: false, // true while student is attempting lift
+canReach: false, // unlocks reach after strategy choice
+  active: false,     // trial is running
+  attempt: 0,        // 0 = baseline fail, 1 = retry after strategy
+  strategy: null,    // "widen" | "lower" | "harder"
+  resolved: false,   // locks outcome
+  bosMultiplier: 1,  // expands BOS when widened
+  comYOffset: 0,     // lowers COM when knees bend
+  comGain: 1,         // exaggerates COM when trying harder
+pose: null,        // "reach" | "bend" | "wide" | null
+tremble: false
+};
+
 const PLUMB_THRESHOLD_IDLE   = 0.025;
 const PLUMB_THRESHOLD_WEIGHT = 0.04;
+
 
 // ==============================
 // MODULE 2 — CONSOLE WIRING (FL-002)
@@ -752,6 +789,35 @@ if (dirSelect) dirSelect.selectedIndex = 0;
 sim.leanZ = 0;
 sim.leanX = 0;
 sim.ballLocked = false;
+trialB.lifting = false;
+
+// ==============================
+// TRIAL B — Direction usage tracking
+// ==============================
+const trialBDirUsed = {
+  forward: false,
+  back: false,
+  left: false,
+  right: false
+};
+
+// Trial B button (initially locked)
+const trialBBtn = document.createElement("button");
+trialBBtn.id = "trialBBtn";
+trialBBtn.textContent = "Begin Trial B";
+trialBBtn.disabled = true;
+trialBBtn.style.width = "100%";
+trialBBtn.style.marginTop = "8px";
+trialBBtn.style.background = "transparent";
+trialBBtn.style.border = "1px solid #38bdf8";
+trialBBtn.style.color = "#38bdf8";
+trialBBtn.style.padding = "8px";
+trialBBtn.style.borderRadius = "10px";
+trialBBtn.style.cursor = "not-allowed";
+
+// append to existing console badge
+document.getElementById("badge")?.appendChild(trialBBtn);
+
 
 // 3. Camera Presets (Unchanged)
 document.getElementById('btnSideView').onclick = () => {
@@ -776,7 +842,19 @@ if (leanSlider && dirSelect) {
 
         // Map intensity to specific lean variables based on direction
         const dir = dirSelect.value;
-        
+       // mark direction as observed for Trial B unlock
+if (dir in trialBDirUsed) {
+  trialBDirUsed[dir] = true;
+}
+
+// unlock Trial B once all directions used
+const allDirsUsed = Object.values(trialBDirUsed).every(v => v === true);
+if (allDirsUsed && trialBBtn.disabled) {
+  trialBBtn.disabled = false;
+  trialBBtn.style.cursor = "pointer";
+  trialBBtn.style.background = "rgba(56,189,248,.16)";
+}
+ 
         // Reset both first to ensure only one direction is active
         sim.leanX = 0;
         sim.leanZ = 0;
@@ -788,6 +866,29 @@ if (leanSlider && dirSelect) {
 
         // Fire bone transformations
         updateModelLean();
+// ==============================
+// TRIAL B — Apply poses
+// ==============================
+if (trialB.active) {
+
+  // Reach pose
+  if (sim.reachPose) {
+applyFL002Pose("reach");
+  }
+
+  // Strategy poses
+  if (trialB.pose) {
+applyFL002Pose(trialB.pose);
+  }
+
+  // Tremble (Try Harder)
+  if (trialB.tremble) {
+    sim.isTrembling = true;
+  } else {
+    sim.isTrembling = false;
+  }
+}
+
        updateThighAbductionLeftOnly();
        updateThighAbductionRightOnly();
     };
@@ -885,6 +986,13 @@ function updateLeftThighAbduction() {
 if (ballBtn) {
     ballBtn.onclick = () => {
         sim.ballLocked = !sim.ballLocked;
+if (trialB.active && sim.ballLocked) {
+  trialB.lifting = true;
+// TRIAL B — Reach pose trigger
+sim.reachPose = true;
+
+}
+
         const ball = scene.getObjectByName("weightBall");
         if (!ball || !skeleton) return;
 
@@ -979,6 +1087,7 @@ spine01: { x: 0, y: 0, z: 0 },
     hand_R:     { x: 0.0, y: -0.4, z:   0.0 },
     thigh_R:    { x: 0.0684, y:  0.0022, z:  3.0616 }
   }
+
 };
 
 const FL002_POSES_ROMAN = {
@@ -1010,6 +1119,7 @@ const FL002_POSES_ROMAN = {
     hand_R:     { x: 0.00, y:  1.50, z:  0.00 },
     thigh_R:    { x: -0.201,  y: -0.0011, z: -3.1407 }
   }
+
 };
 
 
@@ -1151,6 +1261,98 @@ controls.update();
 // NOW ENTER MODULE → show Module 2 console
 document.getElementById('badge').style.display = "block";
 
+// ==============================
+// TRIAL B — Strategy Buttons
+// ==============================
+const stratWrap = document.createElement("div");
+stratWrap.id = "trialBStrategies";
+stratWrap.style.display = "none";
+stratWrap.style.marginTop = "8px";
+stratWrap.style.borderTop = "1px solid rgba(148,163,184,.18)";
+stratWrap.style.paddingTop = "8px";
+
+function mkStratBtn(label, key){
+  const b = document.createElement("button");
+  b.textContent = label;
+  b.style.width = "100%";
+  b.style.marginBottom = "6px";
+  b.style.background = "rgba(30,41,59,.8)";
+  b.style.color = "#e5eefc";
+  b.style.border = "1px solid rgba(148,163,184,.3)";
+  b.style.padding = "8px";
+  b.style.borderRadius = "10px";
+  b.style.cursor = "pointer";
+b.onclick = () => {
+  trialB.strategy = key;
+// TRIAL B — strategy pose mapping
+trialB.pose =
+  key === "lower"  ? "bend" :
+  key === "widen"  ? "wide" :
+  key === "harder" ? null   : null;
+
+trialB.tremble = (key === "harder");
+
+  trialB.canReach = true;
+// TRIAL B — reach cue (visual nudge only)
+const t = scene.getObjectByName("trialBTarget");
+if (t) {
+  t.material.emissiveIntensity = 1.2; // pulse cue
+}
+
+  if (typeof $msg !== "undefined" && $msg) {
+    $msg.innerHTML = "<b>Trial B:</b> Reach for the target.";
+  }
+};
+  return b;
+}
+
+stratWrap.appendChild(mkStratBtn("Widen Stance", "widen"));
+stratWrap.appendChild(mkStratBtn("Bend Knees", "lower"));
+stratWrap.appendChild(mkStratBtn("Try Harder", "harder"));
+
+document.getElementById("badge")?.appendChild(stratWrap);
+
+// ==============================
+// TRIAL B — Activate baseline trial on button press
+// ==============================
+trialBBtn.onclick = () => {
+// SHOW strategy choices
+const stratUI = document.getElementById("trialBStrategies");
+if (stratUI) {
+  stratUI.style.display = "block";
+}
+
+// lock reach until strategy chosen
+trialB.canReach = false;
+
+// update instruction
+if ($msg) {
+  $msg.innerHTML =
+    "<b>Trial B:</b> Choose a strategy, then reach for the target.";
+}
+
+  trialB.active = true;
+const t = scene.getObjectByName("trialBTarget");
+if (t) t.visible = true;
+
+  trialB.attempt = 0;       // baseline attempt (forced fail)
+  trialB.strategy = null;
+  trialB.resolved = false;
+
+  // reset any strategy effects
+  trialB.bosMultiplier = 1;
+  trialB.comYOffset = 0;
+  trialB.comGain = 1;
+
+  // lock UI feedback
+  trialBBtn.disabled = true;
+  trialBBtn.textContent = "Trial B Active";
+
+  // optional console message
+  if (typeof $msg !== "undefined" && $msg) {
+    $msg.innerHTML = "<b>Trial B:</b> Reach the target. Expect instability.";
+  }
+};
     // Hide gate
     document.getElementById('gate').style.display = "none";
 
@@ -1216,7 +1418,7 @@ function getBalanceState() {
         ball.getWorldPosition(ballWorldPos);
 
         const BODY_MASS = 1.0;
-        const BALL_MASS = 2.5; // Shift intensity
+        const BALL_MASS = 0.45; // Shift intensity
 
         // Formula: ((BodyPos * BodyMass) + (BallPos * BallMass)) / TotalMass
         systemCOM.multiplyScalar(BODY_MASS)
@@ -1261,6 +1463,29 @@ comMarker.position.set(
     
     return sim.ballLocked ? "weighted_stable" : "idle_stable";
 }
+
+
+// ==============================
+// TRIAL B — Reach Detection
+// ==============================
+function checkTrialBReach() {
+  if (!trialB.active || trialB.resolved || !trialB.canReach) return;
+
+  const target = scene.getObjectByName("trialBTarget");
+  const ball   = scene.getObjectByName("weightBall");
+  if (!target || !ball) return;
+
+  const a = new THREE.Vector3();
+  const b = new THREE.Vector3();
+  target.getWorldPosition(a);
+  ball.getWorldPosition(b);
+
+  // reach threshold (meters)
+  if (a.distanceTo(b) < 0.22) {
+    trialB.lifting = true;
+  }
+}
+
 
 /* ===== LOOP ===== */
 let _lastTime = performance.now();
@@ -1337,11 +1562,33 @@ function animate() {
   // NORMAL RENDER FLOW
   // ==============================
   controls.update();
-  const balanceState = getBalanceState();   
+  const balanceState = getBalanceState();  
+  checkTrialBReach();
+  const trialBLiftResult = evaluateTrialBLift();
+ 
 const statusEl = document.getElementById("statusVal");
 const isUnstable = balanceState.includes("unstable");
 
+// ==============================
+// GLOBAL — Fall to knees on instability
+// ==============================
+if (isUnstable) {
+applyFL002Pose("knees");
+}
+
+
+
 statusEl.textContent = isUnstable ? "Unstable" : "Stable";
+if (trialBLiftResult === "pass") {
+  statusEl.textContent = "Lift Successful";
+  statusEl.style.color = "#4ade80";
+}
+
+if (trialBLiftResult === "fail") {
+  statusEl.textContent = "Lift Failed";
+  statusEl.style.color = "#f87171";
+}
+
 statusEl.style.color = isUnstable ? "#f87171" : "#4ade80"; // red / green
 
 // ==============================
@@ -1394,6 +1641,33 @@ addEventListener("resize",()=>{
   renderer.setSize(innerWidth,innerHeight);
 });
 
+// ==============================
+// TRIAL B — Evaluate Lift Outcome
+// ==============================
+function evaluateTrialBLift() {
+  if (!trialB.active || trialB.resolved || !trialB.lifting) return null;
+
+  // must have selected a strategy
+  if (!trialB.strategy) return null;
+
+  // PASS
+  if (trialB.strategy === "widen" || trialB.strategy === "lower") {
+    trialB.resolved = true;
+sim.reachPose = false;
+
+// stop reach cue
+const t = scene.getObjectByName("trialBTarget");
+if (t) {
+  t.material.emissiveIntensity = 0.6;
+}
+
+    return "pass";
+  }
+
+  // FAIL
+  trialB.resolved = true;
+  return "fail";
+}
 
 // ==============================
 // DEBUG: SPINE ANATOMIC CAPTURE
