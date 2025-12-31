@@ -1539,19 +1539,13 @@ const COM_BASE_Y =
     const comProj = new THREE.Vector3(systemCOM.x, 0, systemCOM.z);
     const dist = comProj.distanceTo(bosCenter);
 
-    // 4. Latch Logic
-    const sliderVal = Math.abs(Number(leanSlider?.value || 0));
-    const sliderMax = Number(leanSlider?.max || 55);
-    if (sim._latchedUnstable === undefined) sim._latchedUnstable = false;
-    if (sliderVal >= sliderMax * 0.90) sim._latchedUnstable = true;
-    if (sliderVal <= sliderMax * 0.60) sim._latchedUnstable = false;
-
-    // 5. Stability Boundary
-    const bosRadius = vL.distanceTo(vR) * 0.14;
-    const margin = sim.ballLocked ? 0.80 : 1.0; 
+   // 4. Stability Boundary (LATCH REMOVED)
+    const bosRadius = vL.distanceTo(vR) * 0.25;
+    const margin = sim.ballLocked ? 1.2 : 1.0; 
     const isPhysicallyUnstable = dist > (bosRadius * margin);
 
-    if (sim._latchedUnstable || isPhysicallyUnstable) {
+    // 5. Final State Determination
+    if (isPhysicallyUnstable) {
         return sim.ballLocked ? "weighted_unstable" : "idle_unstable";
     }
     
@@ -1663,15 +1657,11 @@ function animate() {
  
 const statusEl = document.getElementById("statusVal");
 const isUnstable = balanceState.includes("unstable");
+sim.isTrembling = isUnstable && document.getElementById("gate")?.style.display === "none";
 
 // ==============================
 // GLOBAL — Fall to knees on instability
 // ==============================
-// Only fall if we aren't in a stable trial pose
-if (isUnstable && !trialB.active) {
-    applyFL002Pose("knees");
-}
-
 
 
 statusEl.textContent = isUnstable ? "Unstable" : "Stable";
@@ -1719,8 +1709,8 @@ if (skeleton) {
 
         // 2. Only THEN apply the Tremor as a temporary offset
         if (sim.isTrembling) {
-            spine.rotation.x += (Math.random() - 0.5) * 0.015;
-            spine.rotation.z += (Math.random() - 0.5) * 0.015;
+            spine.rotation.x += (Math.random() - 0.01) * 0.005;
+            spine.rotation.z += (Math.random() - 0.01) * 0.005;
         }
     }
 }
