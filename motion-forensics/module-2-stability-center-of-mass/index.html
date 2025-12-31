@@ -702,7 +702,7 @@ const trialBTarget = new THREE.Mesh(
 );
 
 trialBTarget.name = "trialBTarget";
-trialBTarget.position.set(0, 1.15, -2.15); // in front of torso
+trialBTarget.position.set(0, 0.5, -2.5); // in front of torso
 trialBTarget.visible = false;
 scene.add(trialBTarget);
 
@@ -1060,22 +1060,24 @@ if ($msg) {
 
 const STRATEGY_POSES_ROMA = {
   bend:{
-    thigh_L:{ x:-1.23, y:-0.0022, z:-3.0616 },
-    thigh_R:{ x:-1.23, y: 0.0022, z: 3.0616 },
-    spine01:{ x:0.0, y:0.0, z:0.0 },
+    thigh_L:{ x:-0.55, y:-0.0022, z:-3.0616 },
+    thigh_R:{ x:-0.55, y: 0.0022, z: 3.0616 },
+    spine01:{ x:0.75, y:0.0, z:0.0 },
     spine02:{ x:0.0, y:0.0, z:0.0 },
     spine03:{ x:0.0, y:0.0, z:0.0 },
-    calf_L: { x:-14.4, y:0, z:0 },
-    calf_R: { x:-14.4, y:0, z:0 }
+    calf_L: { x:-13.5, y:0, z:0 },
+    calf_R: { x:-13.5, y:0, z:0 },
+    foot_L: { x: 1.35, y: 0.0, z: 0.0 },
+          foot_R: { x: 1.35, y: 0.0, z: 0.0 }
   },
   wide:{
-    thigh_L:{ x:-1.23, y:-0.0, z:-2.85 },
-    thigh_R:{ x:-1.23, y: 0.0, z: 2.85 },
+    thigh_L:{ x:-0.55, y:-0.0, z:-2.85 },
+    thigh_R:{ x:-0.55, y: 0.0, z: 2.85 },
     spine01:{ x:0.0, y:0.0, z:0.0 },
     spine02:{ x:0.0, y:0.0, z:0.0 },
     spine03:{ x:0.0, y:0.0, z:0.0 },
-    calf_L: { x:-14.0, y:0, z:0 },
-    calf_R: { x:-14.0, y:0, z:0 }
+    calf_L: { x:-13.5, y:0, z:0 },
+    calf_R: { x:-13.5, y:0, z:0 }
   }
 };
 
@@ -1083,22 +1085,25 @@ const STRATEGY_POSES_ROMA = {
 
 const STRATEGY_POSES_ROMAN = {
   bend:{
-    thigh_L:{ x:-1.5, y:-0.0022, z:-3.0616 },
-    thigh_R:{ x:-1.5, y: 0.0022, z: 3.0616 },
+    thigh_L:{ x:-0.55, y:-0.0022, z:-3.0616 },
+    thigh_R:{ x:-0.55, y: 0.0022, z: 3.0616 },
     spine01:{ x:0.0, y:0.0, z:0.0 },
     spine02:{ x:0.0, y:0.0, z:0.0 },
     spine03:{ x:0.0, y:0.0, z:0.0 },
-    calf_L: { x:-14.4, y:0, z:0 },
-    calf_R: { x:-14.4, y:0, z:0 }
+    calf_L: { x:-7.0, y:0, z:0 },
+    calf_R: { x:-7.0, y:0, z:0 },
+              foot_L: { x: 1.8, y: 0.0, z: 0.0 },
+                             foot_R: { x: 1.8, y: 0.0, z: 0.0 }
+
   },
   wide:{
-    thigh_L:{ x:-1.5, y:-0.0, z:-2.85 },
-    thigh_R:{ x:-1.5, y: 0.0, z: 2.85 },
+    thigh_L:{ x:-0.55, y:-0.0, z:-2.85 },
+    thigh_R:{ x:-0.55, y: 0.0, z: 2.85 },
     spine01:{ x:0.0, y:0.0, z:0.0 },
     spine02:{ x:0.0, y:0.0, z:0.0 },
     spine03:{ x:0.0, y:0.0, z:0.0 },
-    calf_L: { x:-14.0, y:0, z:0 },
-    calf_R: { x:-14.0, y:0, z:0 }
+    calf_L: { x:-7.0, y:0, z:0 },
+    calf_R: { x:-7.0, y:0, z:0 }
   }
 };
 
@@ -1164,11 +1169,13 @@ const FL002_POSES_ROMAN = {
     hand_L:     { x: 0.00, y: -1.50, z:  0.00 },
     thigh_L:    { x: -0.2001, y:  0.001,  z:  3.1408 },
 
+
     // RIGHT ARM — Roman
     upperarm_R: { x: 1.55, y: -0.0, z:  6.6 },
     lowerarm_R: { x: 0.59, y: -0.0, z:  0.00 },
     hand_R:     { x: 0.00, y:  1.50, z:  0.00 },
     thigh_R:    { x: -0.201,  y: -0.0011, z: -3.1407 }
+
   }
 
 };
@@ -1186,7 +1193,8 @@ function applyTrialBPose(strategyKey) {
         if (bone) bone.rotation.set(rot.x, rot.y, rot.z);
 
     }
-avatarRoot.userData.offset.position.y = -0.34;
+avatarRoot.userData.offset.position.y =
+  (window.ACTIVE_MODEL === "Roman") ? -0.115 : -0.135;
 
 }
 
@@ -1416,7 +1424,7 @@ if (stratUI) {
 }
 
 // lock reach until strategy chosen
-trialB.canReach = false;
+trialB.canReach = true;
 
 // update instruction
 if ($msg) {
@@ -1425,6 +1433,9 @@ if ($msg) {
 }
 
   trialB.active = true;
+const rBtn = document.getElementById("reachActionBtn");
+if (rBtn) rBtn.style.display = "block";
+
 const t = scene.getObjectByName("trialBTarget");
 if (t) t.visible = true;
 
@@ -1725,8 +1736,8 @@ if (sim.reachActive && skeleton) {
     if (armR && foreArmR) {
         // 2. Add the reach movement to the starting 'Home' position
         // This moves the arm FROM its current location TO the target
-        armR.rotation.z = sim.startRot.armZ + (-0.9 * sim.reachAlpha); 
-        armR.rotation.x = sim.startRot.armX + (0.9 * sim.reachAlpha);
+        armR.rotation.z = sim.startRot.armZ + (-0.7 * sim.reachAlpha); 
+        armR.rotation.x = sim.startRot.armX + (0.7 * sim.reachAlpha);
         armR.rotation.y = 0.001; // Keep locked
 
         foreArmR.rotation.x = sim.startRot.foreX + (0.5 * sim.reachAlpha);
