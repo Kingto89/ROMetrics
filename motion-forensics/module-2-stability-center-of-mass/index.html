@@ -1180,10 +1180,14 @@ function applyTrialBPose(strategyKey) {
     const set = (window.ACTIVE_MODEL === "Roman") ? STRATEGY_POSES_ROMAN : STRATEGY_POSES_ROMA;
     const poseData = set[strategyKey];
     if (!poseData) return;
+
     for (const [boneName, rot] of Object.entries(poseData)) {
         const bone = skeleton.bones.find(b => b.name.toLowerCase().includes(boneName.toLowerCase()));
         if (bone) bone.rotation.set(rot.x, rot.y, rot.z);
+
     }
+avatarRoot.userData.offset.position.y = -0.34;
+
 }
 
 function applyFL002Pose(poseName) {
@@ -1527,8 +1531,10 @@ if (comMarker) {
     const COM_VISUAL_GAIN = 0.9;      // lateral exaggeration (unchanged)
     const COM_FORWARD_NUDGE = 0.13;   // small anterior offset
 const COM_BASE_Y =
-  (window.ACTIVE_MODEL === "Roman" ? 1.1 : 0.89) -
-  (trialB.active && trialB.pose === "bend" ? 0.12 : 0);
+  window.ACTIVE_MODEL === "Roman"
+    ? (trialB.active && trialB.pose === "bend" ? 0.64 : 0.76)   // ← Roman
+    : (trialB.active && trialB.pose === "bend" ? 0.43 : 0.55); // ← Roma
+
 
 
     comMarker.position.set(
