@@ -1540,8 +1540,8 @@ const COM_BASE_Y =
     const dist = comProj.distanceTo(bosCenter);
 
    // 4. Stability Boundary (LATCH REMOVED)
-    const bosRadius = vL.distanceTo(vR) * 0.25;
-    const margin = sim.ballLocked ? 1.2 : 1.0; 
+    const bosRadius = vL.distanceTo(vR) * 0.27;
+    const margin = sim.ballLocked ? 1.35 : 1.0; 
     const isPhysicallyUnstable = dist > (bosRadius * margin);
 
     // 5. Final State Determination
