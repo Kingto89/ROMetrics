@@ -112,7 +112,7 @@ canvas{display:block}
   </div>
 </div>
 
-<div id="badge" style="position:fixed; right:14px; top:14px; z-index:100; padding:16px; border-radius:20px; border:1px solid rgba(148,163,184,.25); background:rgba(15,23,42,.85); color:#cfe3ff; font-size:13px; width:280px; backdrop-filter:blur(10px); display:none;">
+<div id="badge" style="position:fixed; right:14px; top:6px; z-index:100; padding:16px; border-radius:20px; border:1px solid rgba(148,163,184,.25); background:rgba(15,23,42,.85); color:#cfe3ff; font-size:13px; width:280px; backdrop-filter:blur(10px); display:none;">
     <div style="font-weight:900; color:#38bdf8; margin-bottom:10px; text-transform:uppercase; letter-spacing:1px;">Stability Analysis</div>
     
  <div class="field" style="margin-bottom:12px;">
@@ -817,6 +817,8 @@ trialBBtn.style.cursor = "not-allowed";
 
 // append to existing console badge
 document.getElementById("badge")?.appendChild(trialBBtn);
+//temp added below  for debug//
+trialBBtn.disabled = false;
 
 
 // 3. Camera Presets (Unchanged)
@@ -848,7 +850,8 @@ if (dir in trialBDirUsed) {
 }
 
 // unlock Trial B once all directions used
-const allDirsUsed = Object.values(trialBDirUsed).every(v => v === true);
+const allDirsUsed = true;
+//const allDirsUsed = Object.values(trialBDirUsed).every(v => v === true);// temp debug deactiv
 if (allDirsUsed && trialBBtn.disabled) {
   trialBBtn.disabled = false;
   trialBBtn.style.cursor = "pointer";
@@ -1051,6 +1054,50 @@ if ($msg) {
 }
 
 
+const STRATEGY_POSES_ROMA = {
+  bend:{
+    thigh_L:{ x:-1.23, y:-0.0022, z:-3.0616 },
+    thigh_R:{ x:-1.23, y: 0.0022, z: 3.0616 },
+    spine01:{ x:0.0, y:0.0, z:0.0 },
+    spine02:{ x:0.0, y:0.0, z:0.0 },
+    spine03:{ x:0.0, y:0.0, z:0.0 },
+    calf_L: { x:-14.4, y:0, z:0 },
+    calf_R: { x:-14.4, y:0, z:0 }
+  },
+  wide:{
+    thigh_L:{ x:-1.23, y:-0.0, z:-2.85 },
+    thigh_R:{ x:-1.23, y: 0.0, z: 2.85 },
+    spine01:{ x:0.0, y:0.0, z:0.0 },
+    spine02:{ x:0.0, y:0.0, z:0.0 },
+    spine03:{ x:0.0, y:0.0, z:0.0 },
+    calf_L: { x:-14.0, y:0, z:0 },
+    calf_R: { x:-14.0, y:0, z:0 }
+  }
+};
+
+
+
+const STRATEGY_POSES_ROMAN = {
+  bend:{
+    thigh_L:{ x:-1.5, y:-0.0022, z:-3.0616 },
+    thigh_R:{ x:-1.5, y: 0.0022, z: 3.0616 },
+    spine01:{ x:0.0, y:0.0, z:0.0 },
+    spine02:{ x:0.0, y:0.0, z:0.0 },
+    spine03:{ x:0.0, y:0.0, z:0.0 },
+    calf_L: { x:-14.4, y:0, z:0 },
+    calf_R: { x:-14.4, y:0, z:0 }
+  },
+  wide:{
+    thigh_L:{ x:-1.5, y:-0.0, z:-2.85 },
+    thigh_R:{ x:-1.5, y: 0.0, z: 2.85 },
+    spine01:{ x:0.0, y:0.0, z:0.0 },
+    spine02:{ x:0.0, y:0.0, z:0.0 },
+    spine03:{ x:0.0, y:0.0, z:0.0 },
+    calf_L: { x:-14.0, y:0, z:0 },
+    calf_R: { x:-14.0, y:0, z:0 }
+  }
+};
+
 
 // ==============================
  //AVATAR  
@@ -1122,6 +1169,18 @@ const FL002_POSES_ROMAN = {
 
 };
 
+
+
+function applyTrialBPose(strategyKey) {
+    if (!skeleton || !window.ACTIVE_MODEL) return;
+    const set = (window.ACTIVE_MODEL === "Roman") ? STRATEGY_POSES_ROMAN : STRATEGY_POSES_ROMA;
+    const poseData = set[strategyKey];
+    if (!poseData) return;
+    for (const [boneName, rot] of Object.entries(poseData)) {
+        const bone = skeleton.bones.find(b => b.name.toLowerCase().includes(boneName.toLowerCase()));
+        if (bone) bone.rotation.set(rot.x, rot.y, rot.z);
+    }
+}
 
 function applyFL002Pose(poseName) {
   if (!skeleton) return;
@@ -1279,37 +1338,59 @@ function mkStratBtn(label, key){
   b.style.background = "rgba(30,41,59,.8)";
   b.style.color = "#e5eefc";
   b.style.border = "1px solid rgba(148,163,184,.3)";
-  b.style.padding = "8px";
+ b.style.padding = "6px"; b.style.fontSize = "10px";
   b.style.borderRadius = "10px";
   b.style.cursor = "pointer";
-b.onclick = () => {
-  trialB.strategy = key;
-// TRIAL B — strategy pose mapping
-trialB.pose =
-  key === "lower"  ? "bend" :
-  key === "widen"  ? "wide" :
-  key === "harder" ? null   : null;
 
-trialB.tremble = (key === "harder");
+  b.onclick = () => {
+    trialB.strategy = key;
+    trialB.canReach = true;
+const rBtn = document.getElementById("reachActionBtn");
+if(rBtn) rBtn.style.display = "block";
 
-  trialB.canReach = true;
-// TRIAL B — reach cue (visual nudge only)
-const t = scene.getObjectByName("trialBTarget");
-if (t) {
-  t.material.emissiveIntensity = 1.2; // pulse cue
-}
+    // 1. Map strategy to model-dependent pose keys
+    if (key === "widen") {
+      trialB.pose = "wide";
+      applyTrialBPose("wide");
+    } else if (key === "lower") {
+      trialB.pose = "bend";
+      applyTrialBPose("bend");
+    } else if (key === "harder") {
+      trialB.pose = null;
+      trialB.tremble = true;
+    }
 
-  if (typeof $msg !== "undefined" && $msg) {
-    $msg.innerHTML = "<b>Trial B:</b> Reach for the target.";
-  }
-};
+    // 2. Trigger the reach arm extension
+    sim.reachPose = true;
+    applyTrialBPose("reach");
+
+    // 3. Visual feedback for target
+    const t = scene.getObjectByName("trialBTarget");
+    if (t) {
+      t.material.emissiveIntensity = 1.2;
+    }
+
+    if (typeof $msg !== "undefined" && $msg) {
+      $msg.innerHTML = "<b>Trial B Strategy:</b> " + label + " applied. Now reach the target.";
+    }
+  };
   return b;
 }
 
 stratWrap.appendChild(mkStratBtn("Widen Stance", "widen"));
 stratWrap.appendChild(mkStratBtn("Bend Knees", "lower"));
 stratWrap.appendChild(mkStratBtn("Try Harder", "harder"));
+const reachBtn = document.createElement("button");
+reachBtn.id = "reachActionBtn";
+reachBtn.textContent = "Perform Reach";
+reachBtn.style.cssText =   "width:100%; margin-top:6px; background:#38bdf8; color:#07101b; border:none; padding:6px; border-radius:10px; cursor:pointer; font-weight:800; font-size:10px; display:none;";
 
+reachBtn.onclick = () => {
+    sim.reachPose = true;
+    applyTrialBPose("reach");
+    if ($msg) $msg.innerHTML = "<b>Trial B:</b> Reaching... checking stability.";
+};
+stratWrap.appendChild(reachBtn);
 document.getElementById("badge")?.appendChild(stratWrap);
 
 // ==============================
@@ -1572,8 +1653,9 @@ const isUnstable = balanceState.includes("unstable");
 // ==============================
 // GLOBAL — Fall to knees on instability
 // ==============================
-if (isUnstable) {
-applyFL002Pose("knees");
+// Only fall if we aren't in a stable trial pose
+if (isUnstable && !trialB.active) {
+    applyFL002Pose("knees");
 }
 
 
@@ -1669,28 +1751,44 @@ if (t) {
   return "fail";
 }
 
-// ==============================
-// DEBUG: SPINE ANATOMIC CAPTURE
-// ==============================
-// Press "T" to log spine segment rotations
-window.addEventListener("keydown", (e) => {
-    if (!skeleton) return;
-    if (e.key.toLowerCase() !== "t") return;
 
-    const get = (name) => {
-        const b = skeleton.bones.find(x => x.name === name);
-        if (!b) return null;
-        return {
-            x: Number(b.rotation.x.toFixed(4)),
-            y: Number(b.rotation.y.toFixed(4)),
-            z: Number(b.rotation.z.toFixed(4))
-        };
-    };
 
-    console.log("%c--- SPINE ROTATION DEBUG ---", "color:#38bdf8;font-weight:bold;");
-    console.log("spine01:", get("spine01"));
-    console.log("spine02:", get("spine02"));
-    console.log("spine03:", get("spine03"));
+// ==============================
+// BONE DEBUGGER — ROTATE + LOG (DEGREES)
+// ==============================
+const BONE_DEBUG = {
+  bone: "calf_R",
+  step: 1.0 // degrees per tap
+};
+
+window.addEventListener("keydown", e => {
+  if (!skeleton) return;
+
+  const b = skeleton.bones.find(x => x.name === BONE_DEBUG.bone);
+  if (!b) return;
+
+  const d = THREE.MathUtils.degToRad(BONE_DEBUG.step);
+
+  // axis nudges
+  if (e.key === "x") b.rotation.x += d;
+  if (e.key === "X") b.rotation.x -= d;
+  if (e.key === "y") b.rotation.y += d;
+  if (e.key === "Y") b.rotation.y -= d;
+  if (e.key === "z") b.rotation.z += d;
+  if (e.key === "Z") b.rotation.z -= d;
+
+  // log pose
+  if (e.key === "l" || e.key === "L") {
+    console.log(
+      `%c${BONE_DEBUG.bone}`,
+      "color:#38bdf8;font-weight:bold;",
+      {
+        x: +(THREE.MathUtils.radToDeg(b.rotation.x)).toFixed(1),
+        y: +(THREE.MathUtils.radToDeg(b.rotation.y)).toFixed(1),
+        z: +(THREE.MathUtils.radToDeg(b.rotation.z)).toFixed(1)
+      }
+    );
+  }
 });
 
 
