@@ -1085,11 +1085,12 @@ const STRATEGY_POSES_ROMA = {
 
 const STRATEGY_POSES_ROMAN = {
   bend:{
+    lowerarm_R:{ x: 0.0, y: 0.0, z: 0.0 },
     thigh_L:{ x:-0.55, y:-0.0022, z:-3.0616 },
     thigh_R:{ x:-0.55, y: 0.0022, z: 3.0616 },
-    spine01:{ x:0.0, y:0.0, z:0.0 },
+    spine01:{ x:0.39, y:0.0, z:0.0 },
     spine02:{ x:0.0, y:0.0, z:0.0 },
-    spine03:{ x:0.0, y:0.0, z:0.0 },
+    spine03:{ x:0.5, y:0.0, z:0.0 },
     calf_L: { x:-7.0, y:0, z:0 },
     calf_R: { x:-7.0, y:0, z:0 },
               foot_L: { x: 1.8, y: 0.0, z: 0.0 },
@@ -1715,7 +1716,6 @@ if (sim.ballLocked && skeleton) {
 
 
 
-
 if (sim.reachActive && skeleton) {
     const armR = skeleton.bones.find(b => b.name.toLowerCase().includes("upperarm_r"));
     const foreArmR = skeleton.bones.find(b => b.name.toLowerCase().includes("lowerarm_r"));
@@ -1730,23 +1730,27 @@ if (sim.reachActive && skeleton) {
         sim.hasSnapshot = true;
     }
 
-    sim.reachAlpha += 0.005; 
+    sim.reachAlpha += 0.005;
     if (sim.reachAlpha > 1.0) sim.reachAlpha = 1.0;
 
-    if (armR && foreArmR) {
-        // 2. Add the reach movement to the starting 'Home' position
-        // This moves the arm FROM its current location TO the target
-        armR.rotation.z = sim.startRot.armZ + (-0.7 * sim.reachAlpha); 
-        armR.rotation.x = sim.startRot.armX + (0.7 * sim.reachAlpha);
-        armR.rotation.y = 0.001; // Keep locked
+    // === MODEL-SPECIFIC REACH VALUES ===
+    const ARM_Z_GAIN   = (window.ACTIVE_MODEL === "Roman") ? -1.83 : -0.7;
+    const ARM_X_GAIN   = (window.ACTIVE_MODEL === "Roman") ?  0.9 :  0.7;
+    const FOREARM_GAIN = (window.ACTIVE_MODEL === "Roman") ?  0.75 :  0.5;
 
-        foreArmR.rotation.x = sim.startRot.foreX + (0.5 * sim.reachAlpha);
+    if (armR && foreArmR) {
+        // 2. Apply reach from stored 'Home' pose
+        armR.rotation.z = sim.startRot.armZ + (ARM_Z_GAIN * sim.reachAlpha);
+        armR.rotation.x = sim.startRot.armX + (ARM_X_GAIN * sim.reachAlpha);
+        armR.rotation.y = 0.001; // keep locked
+
+        foreArmR.rotation.x =
+            sim.startRot.foreX + (FOREARM_GAIN * sim.reachAlpha);
     }
 
     if (sim.reachAlpha === 1.0) {
         checkTrialBReach();
-        // Reset the snapshot flag for the next time we reach
-        sim.hasSnapshot = false; 
+        sim.hasSnapshot = false;
     }
 }
 
