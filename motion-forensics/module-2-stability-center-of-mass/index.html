@@ -1544,8 +1544,8 @@ if (comMarker) {
     const COM_FORWARD_NUDGE = 0.13;   // small anterior offset
 const COM_BASE_Y =
   window.ACTIVE_MODEL === "Roman"
-    ? (trialB.active && trialB.pose === "bend" ? 0.64 : 0.76)   // ← Roman
-    : (trialB.active && trialB.pose === "bend" ? 0.43 : 0.55); // ← Roma
+    ? (trialB.active && trialB.pose === "bend" ? 0.86 : 1.08)   // ← Roman end red dot stand
+    : (trialB.active && trialB.pose === "bend" ? 0.75 : 0.92); // ← Roma
 
 
 
@@ -1665,6 +1665,36 @@ function animate() {
           }
       }
   }
+// === STATUS UPDATE (STABILITY) ===
+const state = getBalanceState();
+const el = document.getElementById("statusVal");
+
+const sliderVal = Number(leanSlider?.value || 0);
+const sliderMax = Number(leanSlider?.max || 55);
+const atMax = sliderVal >= sliderMax * 0.98;
+
+if (el) {
+  // FALL RISK = unstable AND slider max
+  if (
+    atMax &&
+    (state === "idle_unstable" || state === "weighted_unstable")
+  ) {
+    el.textContent = "Fall Risk";
+    el.style.color = "#ef4444";
+  }
+  // UNSTABLE
+  else if (
+    state === "idle_unstable" || state === "weighted_unstable"
+  ) {
+    el.textContent = "Unstable";
+    el.style.color = "#f59e0b";
+  }
+  // STABLE
+  else {
+    el.textContent = "Stable";
+    el.style.color = "#4ade80";
+  }
+}
 
   // ==============================
   // NORMAL RENDER FLOW
@@ -1675,27 +1705,9 @@ function animate() {
   checkTrialBReach();
   const trialBLiftResult = evaluateTrialBLift();
  
-const statusEl = document.getElementById("statusVal");
 const isUnstable = balanceState.includes("unstable");
 sim.isTrembling = isUnstable && document.getElementById("gate")?.style.display === "none";
 
-// ==============================
-// GLOBAL — Fall to knees on instability
-// ==============================
-
-
-statusEl.textContent = isUnstable ? "Unstable" : "Stable";
-if (trialBLiftResult === "pass") {
-  statusEl.textContent = "Lift Successful";
-  statusEl.style.color = "#4ade80";
-}
-
-if (trialBLiftResult === "fail") {
-  statusEl.textContent = "Lift Failed";
-  statusEl.style.color = "#f87171";
-}
-
-statusEl.style.color = isUnstable ? "#f87171" : "#4ade80"; // red / green
 
 // ==============================
 // FORCE BONE POSE ON LOCK
