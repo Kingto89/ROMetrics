@@ -1090,8 +1090,8 @@ const STRATEGY_POSES_ROMA = {
 const STRATEGY_POSES_ROMAN = {
   bend:{
     lowerarm_R:{ x: 0.0, y: 0.0, z: 0.0 },
-    thigh_L:{ x:-0.55, y:-0.0022, z:-3.0616 },
-    thigh_R:{ x:-0.55, y: 0.0022, z: 3.0616 },
+    thigh_L:{ x:-0.55, y:-0.0022, z:-3.0 },
+    thigh_R:{ x:-0.55, y: 0.0022, z: 3.0 },
     spine01:{ x:0.39, y:0.0, z:0.0 },
     spine02:{ x:0.0, y:0.0, z:0.0 },
     spine03:{ x:0.5, y:0.0, z:0.0 },
@@ -1448,11 +1448,20 @@ const reachBtnHTML = `<button style="width:100%; margin-top:10px; background:#4a
 trialABtn.onclick = () => {
     initTrial();
     stratUI.innerHTML = `
-        <button style="${btnStyle} width:100%; mb:5px;" onclick="window.sim.isTrembling=true; window.sim.isBending=false;">Stiff Legs</button>
+        <button style="${btnStyle} width:100%; margin-bottom:5px;" 
+            onclick="window.sim.isTrembling=true; window.sim.isBending=false; alert('INCORRECT: Keeping legs stiff prevents the body from lowering the Center of Mass, making the reach highly unstable.')">
+            Stiff Legs
+        </button>
         
-        <button style="${btnStyle} width:100%; mb:5px;" onclick="window.applyTrialBPose('bend'); window.sim.isBending=true; window.sim.isTrembling=false;">Bend Knees</button>
+        <button style="${btnStyle} width:100%; margin-bottom:5px;" 
+            onclick="window.applyTrialBPose('bend'); window.sim.isBending=true; window.sim.isTrembling=false;">
+            Bend Knees
+        </button>
         
-        <button style="${btnStyle} width:100%;" onclick="window.sim.isTrembling=true; window.sim.isBending=false;">Stand on Toes</button>
+        <button style="${btnStyle} width:100%;" 
+            onclick="window.sim.isTrembling=true; window.sim.isBending=false; alert('INCORRECT: Standing on toes significantly reduces your Base of Support area, causing an immediate loss of balance.')">
+            Stand on Toes
+        </button>
         ${reachBtnHTML}
     `;
 };
@@ -1503,80 +1512,54 @@ trialBBtn.onclick = () => {
 function getBalanceState() {
     if (!skeleton || !avatarRoot) return "unknown";
 
-    const footL = skeleton.bones.find(b => b.name.toLowerCase().includes("foot_l"));
-    const footR = skeleton.bones.find(b => b.name.toLowerCase().includes("foot_r"));
-    const spine03 = skeleton.bones.find(b => b.name.toLowerCase().includes("spine03"));
+    // 1. Force absolute matrix update
+    avatarRoot.updateMatrixWorld(true);
 
-    if (!footL || !footR || !spine03) return "unknown";
+    const leanZ = sim.leanZ; 
+    const leanX = sim.leanX; 
 
-    const vL = new THREE.Vector3();
-    const vR = new THREE.Vector3();
-    footL.getWorldPosition(vL);
-    footR.getWorldPosition(vR);
+    // 2. DOT POSITION (Sensitivity preserved as requested)
+    const SENSITIVITY = (window.ACTIVE_MODEL === "Roman") ? 0.004 : 0.004; 
+    const dotX = -leanX * SENSITIVITY; 
+    const dotZ = leanZ * SENSITIVITY;
 
-    const bosCenter = new THREE.Vector3((vL.x + vR.x) * 0.5, 0, (vL.z + vR.z) * 0.5);
-
-    // 1. Get Base Body COM
-    const systemCOM = new THREE.Vector3();
-    spine03.getWorldPosition(systemCOM);
-
-    const offset = avatarRoot.userData?.offset;
-    if (offset) systemCOM.add(offset.position);
-
-    // 2. APPLY WEIGHTED EFFECT (Calculates the new System COM)
-    const ball = scene.getObjectByName("weightBall");
-    if (sim.ballLocked && ball) {
-        // IMPORTANT: Force update so we get the ACTUAL position in the hand
-        ball.updateMatrixWorld(true);
+    // 3. Update Visual Marker
+    const comMarker = scene.getObjectByName("comMarker");
+    if (comMarker) {
+        let h = (window.ACTIVE_MODEL === "Roman") ? 1.08 : 0.92;
         
-        const ballWorldPos = new THREE.Vector3();
-        ball.getWorldPosition(ballWorldPos);
-
-        const BODY_MASS = 1.0;
-        const BALL_MASS = 0.4; // Shift intensity
-
-        // Formula: ((BodyPos * BodyMass) + (BallPos * BallMass)) / TotalMass
-        systemCOM.multiplyScalar(BODY_MASS)
-                 .add(ballWorldPos.multiplyScalar(BALL_MASS))
-                 .divideScalar(BODY_MASS + BALL_MASS);
+        // FIX: LOWER COM WHEN BENDING
+        // This physically lowers the red dot when the strategy is active
+        if (sim.isBending) {
+            h -= 0.17; 
+        }
+        
+        // Position preserved as requested (+0.09)
+        comMarker.position.set(dotX, h, dotZ + 0.09);
     }
 
-    // 3. Update Visual Red Dot Position
-// 3. Update Visual COM Position (Anatomical — near S2)
-const comMarker = scene.getObjectByName("comMarker");
-if (comMarker) {
-    const localCOM = zoneForensics.worldToLocal(systemCOM.clone());
-    const COM_VISUAL_GAIN = 0.9;
-    const COM_FORWARD_NUDGE = 0.13;
-
-    // DROPS height if Trial A/B "bend" pose is active
-    let COM_BASE_Y;
-    if (window.ACTIVE_MODEL === "Roman") {
-        COM_BASE_Y = (window.sim.isBending) ? 0.82 : 1.08; 
-    } else {
-        COM_BASE_Y = (window.sim.isBending) ? 0.75 : 0.92;
-    }
-
-    comMarker.position.set(
-        localCOM.x * COM_VISUAL_GAIN,
-        COM_BASE_Y,
-        (localCOM.z * COM_VISUAL_GAIN) + COM_FORWARD_NUDGE
-    );
-}
-
-    const comProj = new THREE.Vector3(systemCOM.x, 0, systemCOM.z);
-    const dist = comProj.distanceTo(bosCenter);
-
-   // 4. Stability Boundary (LATCH REMOVED)
-    const bosRadius = vL.distanceTo(vR) * 0.27;
-    const margin = sim.ballLocked ? 1.35 : 1.0; 
-    const isPhysicallyUnstable = dist > (bosRadius * margin);
-
-    // 5. Final State Determination
-    if (isPhysicallyUnstable) {
-        return sim.ballLocked ? "weighted_unstable" : "idle_unstable";
-    }
+    // 4. LOGICAL STABILITY BOUNDARIES
+    const distFromCenter = Math.sqrt(dotX * dotX + dotZ * dotZ);
     
+    // FIX: LIMITS TUNED TO YOUR SENSITIVITY
+    // Since max travel is ~0.16m - 0.22m, we lower these to see the status change
+    const STABLE_LIMIT = 0.1;  // Status flips to Fall Risk at ~26 degrees
+    const FALL_LIMIT = 0.17;    // Status flips to Unstable at ~50 degrees
+
+    // Strategy Bonus: Lowering COM (bending) makes you harder to tip
+    let strategyBonus = sim.isBending ? 1.4 : 1.0; 
+    const penalty = sim.ballLocked ? 0.75 : 1.0;
+    
+    const finalStable = STABLE_LIMIT * penalty * strategyBonus;
+    const finalFall = FALL_LIMIT * penalty * strategyBonus;
+
+    // 5. Return State
+    if (distFromCenter > finalFall) {
+        return sim.ballLocked ? "weighted_unstable" : "idle_unstable";
+    } else if (distFromCenter > finalStable) {
+        return "fall_risk";
+    }
+
     return sim.ballLocked ? "weighted_stable" : "idle_stable";
 }
 
