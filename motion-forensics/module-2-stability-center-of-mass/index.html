@@ -1071,10 +1071,14 @@ const STRATEGY_POSES_ROMA = {
     spine03:{ x:0.0, y:0.0, z:0.0 },
     calf_L: { x:-13.5, y:0, z:0 },
     calf_R: { x:-13.5, y:0, z:0 },
-foot_L: { x: 1.33, y: 0.0, z: 0.0 },
-    foot_R: { x: 1.33, y: 0.0, z: 0.0 }
+foot_L: { x: 1.36, y: 0.0, z: 0.0 },
+    foot_R: { x: 1.36, y: 0.0, z: 0.0 }
   },
   wide:{
+    upperarm_L: { x: 1.3, y:  0.25, z:  -6.5 },
+    lowerarm_L: { x: 0.25, y: -0.5, z:   0.0 },
+    upperarm_R: { x: 1.3, y: -0.25, z:   6.5 },
+    lowerarm_R: { x: 0.27, y:  0.5, z:   0.0 },
     thigh_L:{ x:-0.55, y:-0.0, z:-2.85 },
     thigh_R:{ x:-0.55, y: 0.0, z: 2.85 },
     spine01:{ x:0.55, y:0.0, z:0.0 },
@@ -1110,7 +1114,9 @@ const STRATEGY_POSES_ROMAN = {
     spine02:{ x:0.0, y:0.0, z:0.0 },
     spine03:{ x:0.0, y:0.0, z:0.0 },
     calf_L: { x:-7.0, y:0, z:0 },
-    calf_R: { x:-7.0, y:0, z:0 }
+    calf_R: { x:-7.0, y:0, z:0 },
+    foot_L: { x: 1.75, y: 0.0, z: 0.0 },
+    foot_R: { x: 1.75, y: 0.0, z: 0.0 }
   }
 };
 
@@ -1557,9 +1563,20 @@ function getBalanceState() {
     // Strategy Bonus: Lowering COM (bending) makes you harder to tip
     let strategyBonus = sim.isBending ? 1.4 : 1.0; 
     const penalty = sim.ballLocked ? 0.75 : 1.0;
+  
+// --- IMPROVED BOS LOGIC ---
+    // Increase multiplier to 2.2 to prevent Fall Risk at the end of the slider
+    let bosBonus = 1.0;
+    if (trialB.active && trialB.pose === "wide") {
+        // Apply a larger bonus specifically for Left/Right leans
+        const isLateral = (dirSelect.value === 'left' || dirSelect.value === 'right');
+        bosBonus = isLateral ? 2.2 : 1.6; 
+    }
     
-    const finalStable = STABLE_LIMIT * penalty * strategyBonus;
-    const finalFall = FALL_LIMIT * penalty * strategyBonus;
+    const finalStable = STABLE_LIMIT * penalty * strategyBonus * bosBonus;
+    const finalFall = FALL_LIMIT * penalty * strategyBonus * bosBonus;
+ 
+
 
     // 5. Return State
     if (distFromCenter > finalFall) {
@@ -1827,45 +1844,6 @@ if (t) {
   return "fail";
 }
 
-
-
-// ==============================
-// BONE DEBUGGER — ROTATE + LOG (DEGREES)
-// ==============================
-const BONE_DEBUG = {
-  bone: "calf_R",
-  step: 1.0 // degrees per tap
-};
-
-window.addEventListener("keydown", e => {
-  if (!skeleton) return;
-
-  const b = skeleton.bones.find(x => x.name === BONE_DEBUG.bone);
-  if (!b) return;
-
-  const d = THREE.MathUtils.degToRad(BONE_DEBUG.step);
-
-  // axis nudges
-  if (e.key === "x") b.rotation.x += d;
-  if (e.key === "X") b.rotation.x -= d;
-  if (e.key === "y") b.rotation.y += d;
-  if (e.key === "Y") b.rotation.y -= d;
-  if (e.key === "z") b.rotation.z += d;
-  if (e.key === "Z") b.rotation.z -= d;
-
-  // log pose
-  if (e.key === "l" || e.key === "L") {
-    console.log(
-      `%c${BONE_DEBUG.bone}`,
-      "color:#38bdf8;font-weight:bold;",
-      {
-        x: +(THREE.MathUtils.radToDeg(b.rotation.x)).toFixed(1),
-        y: +(THREE.MathUtils.radToDeg(b.rotation.y)).toFixed(1),
-        z: +(THREE.MathUtils.radToDeg(b.rotation.z)).toFixed(1)
-      }
-    );
-  }
-});
 
 
 
