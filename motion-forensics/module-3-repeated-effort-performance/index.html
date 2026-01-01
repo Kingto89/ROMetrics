@@ -107,7 +107,7 @@ p{
 
     // Calculation: Add 1 week for every module after Module 4
     if(!isNaN(moduleNum) && moduleNum >= 3) {
-        const weeksToAdd = moduleNum - 4;
+        const weeksToAdd = moduleNum - 3;
         const releaseDate = new Date(firstReleaseDate);
         releaseDate.setDate(firstReleaseDate.getDate() + (weeksToAdd * 7));
         
