@@ -169,6 +169,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 const $enter = document.getElementById('enterBtn');
 
+
 /* ===== MODELS ===== */
 const MODEL_URLS={
   Roma:"https://kingto89.github.io/ROMetrics.com/assets/Roma_ROMetrics.glb",
@@ -804,21 +805,23 @@ const trialBDirUsed = {
 };
 
 // Trial B button (initially locked)
-const trialBBtn = document.createElement("button");
-trialBBtn.id = "trialBBtn";
-trialBBtn.textContent = "Begin Trial B";
-trialBBtn.disabled = true;
-trialBBtn.style.width = "100%";
-trialBBtn.style.marginTop = "8px";
-trialBBtn.style.background = "transparent";
-trialBBtn.style.border = "1px solid #38bdf8";
-trialBBtn.style.color = "#38bdf8";
-trialBBtn.style.padding = "8px";
-trialBBtn.style.borderRadius = "10px";
-trialBBtn.style.cursor = "not-allowed";
+// Replacement Button Row
+const trialBtnRow = document.createElement("div");
+trialBtnRow.style.cssText = "display:flex; gap:8px; margin-top:8px;";
 
-// append to existing console badge
-document.getElementById("badge")?.appendChild(trialBBtn);
+const btnStyle = "flex:1; background:transparent; border:1px solid #38bdf8; color:#38bdf8; padding:8px; border-radius:10px; cursor:pointer; font-size:11px;";
+
+const trialABtn = document.createElement("button");
+trialABtn.textContent = "Begin Trial A";
+trialABtn.style.cssText = btnStyle;
+
+const trialBBtn = document.createElement("button");
+trialBBtn.textContent = "Begin Trial B";
+trialBBtn.style.cssText = btnStyle;
+
+trialBtnRow.append(trialABtn, trialBBtn);
+document.getElementById("badge").appendChild(trialBtnRow);
+
 //temp added below  for debug//
 trialBBtn.disabled = false;
 
@@ -1062,7 +1065,7 @@ const STRATEGY_POSES_ROMA = {
   bend:{
     thigh_L:{ x:-0.55, y:-0.0022, z:-3.0616 },
     thigh_R:{ x:-0.55, y: 0.0022, z: 3.0616 },
-    spine01:{ x:0.75, y:0.0, z:0.0 },
+    spine01:{ x:1.2, y:0.0, z:0.0 },
     spine02:{ x:0.0, y:0.0, z:0.0 },
     spine03:{ x:0.0, y:0.0, z:0.0 },
     calf_L: { x:-13.5, y:0, z:0 },
@@ -1073,7 +1076,7 @@ const STRATEGY_POSES_ROMA = {
   wide:{
     thigh_L:{ x:-0.55, y:-0.0, z:-2.85 },
     thigh_R:{ x:-0.55, y: 0.0, z: 2.85 },
-    spine01:{ x:0.0, y:0.0, z:0.0 },
+    spine01:{ x:0.55, y:0.0, z:0.0 },
     spine02:{ x:0.0, y:0.0, z:0.0 },
     spine03:{ x:0.0, y:0.0, z:0.0 },
     calf_L: { x:-13.5, y:0, z:0 },
@@ -1219,6 +1222,11 @@ function applyFL002Pose(poseName) {
   }
 }
 
+
+// --- PASTE THIS HERE (Approx Line 520) ---
+window.sim = sim;
+window.applyTrialBPose = applyTrialBPose;
+// -----------------------------------------
 
 let avatarRoot = null;
 let skeleton = null;
@@ -1417,50 +1425,46 @@ document.getElementById("badge")?.appendChild(stratWrap);
 // ==============================
 // TRIAL B — Activate baseline trial on button press
 // ==============================
-trialBBtn.onclick = () => {
-// SHOW strategy choices
+
 const stratUI = document.getElementById("trialBStrategies");
-if (stratUI) {
-  stratUI.style.display = "block";
+
+function initTrial() {
+    stratUI.style.display = "block";
+    const target = scene.getObjectByName("trialBTarget");
+    const com = scene.getObjectByName("comMarker");
+    if (target) target.visible = true;
+    if (com) com.visible = true;
+    
+    // ENSURE HAND IS DOWN UNTIL BUTTON CLICK
+    sim.reachActive = false; 
+    sim.reachAlpha = 0;
 }
 
-// lock reach until strategy chosen
-trialB.canReach = true;
+// Helper to create the Reach button
+const reachBtnHTML = `<button style="width:100%; margin-top:10px; background:#4ade80; color:#0f172a; border:none; padding:10px; border-radius:10px; cursor:pointer; font-weight:800; font-size:11px;" onclick="sim.reachActive=true">PERFORM REACH</button>`;
 
-// update instruction
-if ($msg) {
-  $msg.innerHTML =
-    "<b>Trial B:</b> Choose a strategy, then reach for the target.";
-}
 
-  trialB.active = true;
-const rBtn = document.getElementById("reachActionBtn");
-if (rBtn) rBtn.style.display = "block";
-
-const t = scene.getObjectByName("trialBTarget");
-if (t) t.visible = true;
-
-  trialB.attempt = 0;       // baseline attempt (forced fail)
-  trialB.strategy = null;
-  trialB.resolved = false;
-
-  // reset any strategy effects
-  trialB.bosMultiplier = 1;
-const plate = scene.getObjectByName("forcePlate");
-if (plate) plate.scale.set(1, 1, 1);
-
-  trialB.comYOffset = 0;
-  trialB.comGain = 1;
-
-  // lock UI feedback
-  trialBBtn.disabled = true;
-  trialBBtn.textContent = "Trial B Active";
-
-  // optional console message
-  if (typeof $msg !== "undefined" && $msg) {
-    $msg.innerHTML = "<b>Trial B:</b> Reach the target. Expect instability.";
-  }
+trialABtn.onclick = () => {
+    initTrial();
+    stratUI.innerHTML = `
+        <button style="${btnStyle} width:100%; margin-bottom:5px;" onclick="window.sim.isTrembling=true; alert('INCORRECT: Stiff legs prevent you from lowering your Center of Mass, keeping you top-heavy and unstable.')">Stiff Legs</button>
+        <button style="${btnStyle} width:100%; margin-bottom:5px;" onclick="window.applyTrialBPose('bend'); window.sim.isTrembling=false;">Bend Knees</button>
+        <button style="${btnStyle} width:100%;" onclick="window.sim.isTrembling=true; alert('INCORRECT: Standing on toes reduces your Base of Support to a narrow point, causing a balance failure.')">Stand on Toes</button>
+        ${reachBtnHTML}
+    `;
 };
+
+trialBBtn.onclick = () => {
+    initTrial();
+    stratUI.innerHTML = `
+        <button style="${btnStyle} width:100%; margin-bottom:5px;" onclick="window.applyTrialBPose('wide'); window.sim.isTrembling=false;">Widen Stance</button>
+        <button style="${btnStyle} width:100%; margin-bottom:5px;" onclick="window.sim.isTrembling=true; alert('INCORRECT: Removing one foot collapses your Base of Support while your weight is shifting, leading to a fall.')">One Foot</button>
+        <button style="${btnStyle} width:100%;" onclick="window.sim.isTrembling=true; alert('INCORRECT: Leaning forward at the waist shifts your Center of Mass beyond the front edge of your feet.')">Lean Forward</button>
+        ${reachBtnHTML}
+    `;
+};
+
+
     // Hide gate
     document.getElementById('gate').style.display = "none";
 
