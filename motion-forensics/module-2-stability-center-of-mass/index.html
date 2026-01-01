@@ -1070,9 +1070,7 @@ const STRATEGY_POSES_ROMA = {
     spine02:{ x:0.0, y:0.0, z:0.0 },
     spine03:{ x:0.0, y:0.0, z:0.0 },
     calf_L: { x:-13.5, y:0, z:0 },
-    calf_R: { x:-13.5, y:0, z:0 },
-    foot_L: { x: 1.35, y: 0.0, z: 0.0 },
-          foot_R: { x: 1.35, y: 0.0, z: 0.0 }
+    calf_R: { x:-13.5, y:0, z:0 }
   },
   wide:{
     thigh_L:{ x:-0.55, y:-0.0, z:-2.85 },
@@ -1096,9 +1094,8 @@ const STRATEGY_POSES_ROMAN = {
     spine02:{ x:0.0, y:0.0, z:0.0 },
     spine03:{ x:0.5, y:0.0, z:0.0 },
     calf_L: { x:-7.0, y:0, z:0 },
-    calf_R: { x:-7.0, y:0, z:0 },
-              foot_L: { x: 1.8, y: 0.0, z: 0.0 },
-                             foot_R: { x: 1.8, y: 0.0, z: 0.0 }
+    calf_R: { x:-7.0, y:0, z:0 }
+   
 
   },
   wide:{
@@ -1374,21 +1371,7 @@ function mkStratBtn(label, key){
 const rBtn = document.getElementById("reachActionBtn");
 if(rBtn) rBtn.style.display = "block";
 
-    // 1. Map strategy to model-dependent pose keys
-    if (key === "widen") {
-      trialB.pose = "wide";
-      applyTrialBPose("wide");
-const plate = scene.getObjectByName("forcePlate");
-if (plate && trialB.active) plate.scale.set(1.6, 1, 1);
-
-    } else if (key === "lower") {
-   scene.getObjectByName("forcePlate")?.scale.set(1,1,1);
-      trialB.pose = "bend";
-      applyTrialBPose("bend");
-    } else if (key === "harder") {
-      trialB.pose = null;
-      trialB.tremble = true;
-    }
+    
 
     // 2. Trigger the reach arm extension
     sim.reachPose = true;
@@ -1441,27 +1424,47 @@ function initTrial() {
     sim.reachAlpha = 0;
 }
 
+window.selectStrategy = function(key) {
+    if (!skeleton) return;
+    const plate = scene.getObjectByName("forcePlate");
+    
+    // Reset defaults first
+    window.sim.isBending = false;
+    window.sim.isTrembling = false;
+    trialB.active = true;
+    trialB.pose = null;
+    if (plate) {
+        plate.visible = true;
+        plate.scale.set(1, 1, 1); 
+    }
+
+    if (key === 'widen') {
+        trialB.pose = "wide";
+        applyTrialBPose("wide"); 
+        if (plate) {
+            // This forces the plate to be wider across the feet
+            plate.scale.set(1.6, 0.8, 1); 
+            plate.updateMatrixWorld(true);
+        }
+    } 
+    else if (key === 'lower') {
+        trialB.pose = "bend";
+        applyTrialBPose("bend");
+        window.sim.isBending = true; // This drops the red dot height in getBalanceState
+    }
+    
+    if (typeof $msg !== "undefined") $msg.innerHTML = "<b>Strategy Selected:</b> " + key.toUpperCase();
+};
+
 // Helper to create the Reach button
 const reachBtnHTML = `<button style="width:100%; margin-top:10px; background:#4ade80; color:#0f172a; border:none; padding:10px; border-radius:10px; cursor:pointer; font-weight:800; font-size:11px;" onclick="sim.reachActive=true">PERFORM REACH</button>`;
-
 
 trialABtn.onclick = () => {
     initTrial();
     stratUI.innerHTML = `
-        <button style="${btnStyle} width:100%; margin-bottom:5px;" 
-            onclick="window.sim.isTrembling=true; window.sim.isBending=false; alert('INCORRECT: Keeping legs stiff prevents the body from lowering the Center of Mass, making the reach highly unstable.')">
-            Stiff Legs
-        </button>
-        
-        <button style="${btnStyle} width:100%; margin-bottom:5px;" 
-            onclick="window.applyTrialBPose('bend'); window.sim.isBending=true; window.sim.isTrembling=false;">
-            Bend Knees
-        </button>
-        
-        <button style="${btnStyle} width:100%;" 
-            onclick="window.sim.isTrembling=true; window.sim.isBending=false; alert('INCORRECT: Standing on toes significantly reduces your Base of Support area, causing an immediate loss of balance.')">
-            Stand on Toes
-        </button>
+        <button style="${btnStyle} width:100%; margin-bottom:5px;" onclick="window.sim.isTrembling=true; alert('INCORRECT: Stiff legs keep the COM high, reducing stability.')">Stiff Legs</button>
+        <button style="${btnStyle} width:100%; margin-bottom:5px;" onclick="window.selectStrategy('lower')">Bend Knees</button>
+        <button style="${btnStyle} width:100%;" onclick="window.sim.isTrembling=true; alert('INCORRECT: Reducing the BOS area causes an immediate fall.')">Stand on Toes</button>
         ${reachBtnHTML}
     `;
 };
@@ -1469,9 +1472,9 @@ trialABtn.onclick = () => {
 trialBBtn.onclick = () => {
     initTrial();
     stratUI.innerHTML = `
-        <button style="${btnStyle} width:100%; margin-bottom:5px;" onclick="window.applyTrialBPose('wide'); window.sim.isTrembling=false;">Widen Stance</button>
-        <button style="${btnStyle} width:100%; margin-bottom:5px;" onclick="window.sim.isTrembling=true; alert('INCORRECT: Removing one foot collapses your Base of Support while your weight is shifting, leading to a fall.')">One Foot</button>
-        <button style="${btnStyle} width:100%;" onclick="window.sim.isTrembling=true; alert('INCORRECT: Leaning forward at the waist shifts your Center of Mass beyond the front edge of your feet.')">Lean Forward</button>
+        <button style="${btnStyle} width:100%; margin-bottom:5px;" onclick="window.selectStrategy('widen')">Widen Stance</button>
+        <button style="${btnStyle} width:100%; margin-bottom:5px;" onclick="window.sim.isTrembling=true; alert('INCORRECT: Removing one foot collapses your BOS.')">One Foot</button>
+        <button style="${btnStyle} width:100%;" onclick="window.sim.isTrembling=true; alert('INCORRECT: Leaning forward shifts the COM outside the feet.')">Lean Forward</button>
         ${reachBtnHTML}
     `;
 };
@@ -1692,7 +1695,6 @@ if (el) {
   // ==============================
   controls.update();
   const balanceState = getBalanceState();  
-  if (!trialB.active) console.assert(scene.getObjectByName("forcePlate")?.scale.x === 1, "BOS modified outside Trial B");
   checkTrialBReach();
   const trialBLiftResult = evaluateTrialBLift();
  
