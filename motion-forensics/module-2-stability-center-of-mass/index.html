@@ -722,7 +722,8 @@ const sim = {
   ballLocked: false,
   isTrembling: false,
   reachActive: false,
-     reachAlpha: 0     
+     reachAlpha: 0,
+  isBending: false     
 };
 
 // ==============================
@@ -1447,9 +1448,11 @@ const reachBtnHTML = `<button style="width:100%; margin-top:10px; background:#4a
 trialABtn.onclick = () => {
     initTrial();
     stratUI.innerHTML = `
-        <button style="${btnStyle} width:100%; margin-bottom:5px;" onclick="window.sim.isTrembling=true; alert('INCORRECT: Stiff legs prevent you from lowering your Center of Mass, keeping you top-heavy and unstable.')">Stiff Legs</button>
-        <button style="${btnStyle} width:100%; margin-bottom:5px;" onclick="window.applyTrialBPose('bend'); window.sim.isTrembling=false;">Bend Knees</button>
-        <button style="${btnStyle} width:100%;" onclick="window.sim.isTrembling=true; alert('INCORRECT: Standing on toes reduces your Base of Support to a narrow point, causing a balance failure.')">Stand on Toes</button>
+        <button style="${btnStyle} width:100%; mb:5px;" onclick="window.sim.isTrembling=true; window.sim.isBending=false;">Stiff Legs</button>
+        
+        <button style="${btnStyle} width:100%; mb:5px;" onclick="window.applyTrialBPose('bend'); window.sim.isBending=true; window.sim.isTrembling=false;">Bend Knees</button>
+        
+        <button style="${btnStyle} width:100%;" onclick="window.sim.isTrembling=true; window.sim.isBending=false;">Stand on Toes</button>
         ${reachBtnHTML}
     `;
 };
@@ -1543,20 +1546,21 @@ function getBalanceState() {
 const comMarker = scene.getObjectByName("comMarker");
 if (comMarker) {
     const localCOM = zoneForensics.worldToLocal(systemCOM.clone());
+    const COM_VISUAL_GAIN = 0.9;
+    const COM_FORWARD_NUDGE = 0.13;
 
-    const COM_VISUAL_GAIN = 0.9;      // lateral exaggeration (unchanged)
-    const COM_FORWARD_NUDGE = 0.13;   // small anterior offset
-const COM_BASE_Y =
-  window.ACTIVE_MODEL === "Roman"
-    ? (trialB.active && trialB.pose === "bend" ? 0.86 : 1.08)   // ← Roman end red dot stand
-    : (trialB.active && trialB.pose === "bend" ? 0.75 : 0.92); // ← Roma
-
-
+    // DROPS height if Trial A/B "bend" pose is active
+    let COM_BASE_Y;
+    if (window.ACTIVE_MODEL === "Roman") {
+        COM_BASE_Y = (window.sim.isBending) ? 0.82 : 1.08; 
+    } else {
+        COM_BASE_Y = (window.sim.isBending) ? 0.75 : 0.92;
+    }
 
     comMarker.position.set(
-      localCOM.x * COM_VISUAL_GAIN,
-      COM_BASE_Y,
-      (localCOM.z * COM_VISUAL_GAIN) + COM_FORWARD_NUDGE
+        localCOM.x * COM_VISUAL_GAIN,
+        COM_BASE_Y,
+        (localCOM.z * COM_VISUAL_GAIN) + COM_FORWARD_NUDGE
     );
 }
 
