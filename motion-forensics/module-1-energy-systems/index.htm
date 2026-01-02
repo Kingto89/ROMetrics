@@ -127,20 +127,6 @@
     </div>
 </div>
 
-  <div id="trialHelpModal" style="display:none; position:fixed; inset:0; z-index:100; background:rgba(7,16,27,.85); align-items:center; justify-content:center;">
-    <div id="gateCard" style="max-width:600px; padding:0; overflow:hidden; display:flex; flex-direction:column;">
-      <div style="display:flex; background:rgba(15,23,42,.95); border-bottom:1px solid rgba(148,163,184,.25);">
-        <div id="tab-concept" class="pill active" style="border-radius:0; border:none; flex:1; text-align:center; cursor:pointer;" onclick="event.stopPropagation(); showTab('concept')">Concept (read first):</div>
-<div id="tab-systems" class="pill" style="border-radius:0; border:none; flex:1; text-align:center; cursor:pointer;" onclick="event.stopPropagation(); showTab('systems')">Trial Guide:</div>
-<div id="tab-guide" class="pill" style="border-radius:0; border:none; flex:1; text-align:center; cursor:pointer;" onclick="event.stopPropagation(); showTab('guide')">Module Instructions</div>
-            </div>
-
-      <div id="tabContent" style="padding:24px; color:#a8c0da; font-size:13px; line-height:1.5; min-height:350px; max-height:500px; overflow-y:auto;"></div>
-      <div style="padding:14px; border-top:1px solid rgba(148,163,184,.18); display:flex; justify-content:flex-end; background:rgba(9,20,37,.72);">
-<button id="trialHelpClose" type="button" class="primary">Close Instructions</button>
-      </div>
-    </div>
-  </div>
   <script type="module">
 let speedViolation = false;
 let initialSpeed = 0;    
@@ -148,20 +134,6 @@ let fuelUsedCount = 0;
 // Internal MCQ counters removed - assessment is now external
 window.currentTrials = { mcqs: [] }; 
 let cachedModuleMD = "";
-
-window.showTab = function(tabName) {
-  const content = document.getElementById('tabContent');
-  const currentTrial = document.getElementById('trialTag').textContent.trim();
-  
-  // 1. Manage UI Tab States
-  document.querySelectorAll('#trialHelpModal .pill').forEach(p => p.classList.remove('active'));
-  const activeTab = document.getElementById('tab-' + tabName);
-  if (activeTab) activeTab.classList.add('active');
-
-  if (!cachedModuleMD) {
-    content.innerHTML = "Fetching forensic module data...";
-    return;
-  }
 
 
   // 3. Trial-Specific Sections
