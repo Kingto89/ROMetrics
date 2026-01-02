@@ -845,44 +845,55 @@ const resetBtn = document.getElementById('resetBtn');
 
 if (resetBtn) {
     resetBtn.onclick = () => {
-        // 1. Reset logic, stop tremble, and clear Trial states
+        // 1. Wipe all simulation flags and states
         sim.leanZ = 0; 
         sim.leanX = 0; 
         sim.ballLocked = false;
         sim.isTrembling = false;
-        sim.isBending = false;
+        sim.isBending = false;      // Wipes "Bend Knees" strategy
+        sim.isWide = false;         // Wipes "Widen Stance" strategy
         sim.reachActive = false;
         sim.reachAlpha = 0;
-        
-        // CRITICAL: Reset Trial B pose so BOS stability returns to normal
+        sim.hasSnapshot = false;    // Clears reach memory
+
+        // 2. Reset Trial B specific strategy states
         trialB.pose = null; 
         trialB.active = false;
         trialB.lifting = false;
+        trialB.tremble = false;
 
-        // 2. Reset UI
+        // 3. Reset UI Elements
         if (leanSlider) leanSlider.value = 0;
         if (dirSelect) dirSelect.selectedIndex = 0;
         if (ballBtn) ballBtn.textContent = "Pick Up Ball";
+        const leanValDisplay = document.getElementById('leanVal');
+        if (leanValDisplay) leanValDisplay.textContent = "0.0";
 
-        // 3. Force Idle Pose
-        applyFL002Pose("idle");
+        // 4. Force Reset of Avatar Posture and Height
+        if (skeleton) {
+            applyFL002Pose("idle"); // Returns to standard clinical neutral
+        }
         
-        // 4. Reset height and put ball back
         if (avatarRoot?.userData?.offset) {
+            // Returns COM height to standard (undoes knee-bend drop)
             avatarRoot.userData.offset.position.set(0,0,0);
         }
         
+        // 5. Return Ball to Floor
         const ball = scene.getObjectByName("weightBall");
         if (ball) { 
             scene.add(ball); 
             ball.position.set(0.6, 0.20, 1.35); 
         }
 
-        // 5. Reset Force Plate visual
+        // 6. Reset Force Plate (BOS) Visualization to normal size
         const plate = scene.getObjectByName("forcePlate");
-        if (plate) plate.scale.set(1, 1, 1);
+        if (plate) {
+            plate.scale.set(1, 1, 1);
+            plate.position.set(0, 0.07, 0);
+        }
 
-        if ($msg) $msg.innerHTML = "<b>System Reset:</b> Returned to Idle.";
+        if ($msg) $msg.innerHTML = "<b>System Reset:</b> All strategies cleared. Returned to Clinical Idle.";
     };
 }
 // ==============================
@@ -1986,7 +1997,7 @@ if (sim.reachActive && skeleton) {
         sim.hasSnapshot = true;
     }
 
-    sim.reachAlpha += 0.006;
+    sim.reachAlpha += 0.015;
     if (sim.reachAlpha > 1.0) sim.reachAlpha = 1.0;
 
     // === MODEL-SPECIFIC REACH VALUES ===
