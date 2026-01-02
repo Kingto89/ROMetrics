@@ -126,25 +126,12 @@
         </div>
     </div>
 </div>
-
-  <script type="module">
+<script type="module">
 let speedViolation = false;
 let initialSpeed = 0;    
 let fuelUsedCount = 0;   
 // Internal MCQ counters removed - assessment is now external
 window.currentTrials = { mcqs: [] }; 
-let cachedModuleMD = "";
-
-
-  // 3. Trial-Specific Sections
-const trialMarker = new RegExp(`###\\s*Trial\\s*${currentTrial}\\b`, 'i');
-  const trialMatch = cachedModuleMD.match(trialMarker);
-
-  if (!trialMatch) {
-    content.innerHTML = `Data for Trial ${currentTrial} not found.`;
-    return;
-  }
-
 
 // Global storage for the correct answer index per trial MCQ CHECK
 let currentCorrectIndex = -1;
@@ -183,8 +170,6 @@ window.renderMCQ = function(letter) {
         }
     }
 };
-
-  
     
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
