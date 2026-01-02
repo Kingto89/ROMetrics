@@ -717,6 +717,29 @@ function setZone(z){
 setZone("forensics");
 // MODULE 2 — STABILITY STATE
 // ==============================
+// Direction-specific fall risk check (Module 2)
+function checkFallRisk(){
+  if (!avatarRoot?.userData?.offset) return false;
+
+  const axis = getLeanAxis();
+
+  const comX = Math.abs(avatarRoot.userData.offset.position.x);
+  const comZ = Math.abs(avatarRoot.userData.offset.position.z);
+
+  // LATERAL (Left / Right)
+  if (axis === "lateral") {
+    const limit = sim.isWide
+      ? BOS.lateral.wide
+      : BOS.lateral.normal;
+
+    return comX > limit;
+  }
+
+  // SAGITTAL (Forward / Back)
+  return comZ > BOS.sagittal.normal;
+}
+
+
 const sim = {
   leanZ: 0,        // forward / back
   leanX: 0,        // left / right
@@ -792,6 +815,16 @@ tremble: false
 
 const PLUMB_THRESHOLD_IDLE   = 0.025;
 const PLUMB_THRESHOLD_WEIGHT = 0.04;
+// Direction-specific Base of Support thresholds (Module 2)
+const BOS = {
+  lateral: {
+    normal: PLUMB_THRESHOLD_IDLE,
+    wide:   0.060   // widened stance increases lateral BOS only
+  },
+  sagittal: {
+    normal: PLUMB_THRESHOLD_IDLE
+  }
+};
 
 
 // ==============================
@@ -1000,7 +1033,7 @@ function updateModelLean() {
     offset.position.z = fZ * SHIFT;
 
     // tremble flag
-    sim.isTrembling = Math.abs(fX) > 0.98 || Math.abs(fZ) > 0.98;
+sim.isTrembling = checkFallRisk();
 
     // toes
     skeleton.bones.forEach(b => {
@@ -1011,6 +1044,11 @@ function updateModelLean() {
     });
 }
 
+// Determine dominant lean axis for BOS logic
+function getLeanAxis(){
+  if (Math.abs(sim.leanX) > Math.abs(sim.leanZ)) return "lateral";
+  return "sagittal";
+}
 
 
 function updateLeftThighAbduction() {
@@ -1569,7 +1607,9 @@ window.handleStrategy = function(key) {
             progression.trialB.completed = true;
             progression.activeTrial = null;
             applyTrialBPose("wide");
-            if (plate) plate.scale.set(1.6, 0.7, 1);
+            if (plate) plate.scale.set(1.6, 0.75, 0.05);
+plate.position.z = 0.15;
+
             unlockMCQ();
         } else {
             window.sim.isTrembling = true;
