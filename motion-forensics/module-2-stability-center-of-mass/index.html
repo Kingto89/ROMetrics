@@ -811,36 +811,30 @@ const resetBtn = document.getElementById('resetBtn');
 
 if (resetBtn) {
     resetBtn.onclick = () => {
-        sim.leanZ = 0; sim.leanX = 0; sim.ballLocked = false;
-        leanZSlider.value = 0; leanXSlider.value = 0;
-        leanZVal.textContent = "0.0"; leanXVal.textContent = "0.0";
+        // 1. Reset logic and stop tremble
+        sim.leanZ = 0; 
+        sim.leanX = 0; 
+        sim.ballLocked = false;
+        sim.isTrembling = false;
+        sim.reachActive = false;
+
+        // 2. Reset UI
+        leanSlider.value = 0;
+        dirSelect.selectedIndex = 0;
         ballBtn.textContent = "Pick Up Ball";
-        const ball = scene.getObjectByName("weightBall");
-        if (ball) ball.position.set(0.6, 0.20, 1.35);
+
+        // 3. Force Idle Pose
         applyFL002Pose("idle");
-        if (skeleton) {
-            const spine = skeleton.bones.find(b => b.name.toLowerCase().includes('spine'));
-            if (spine) spine.rotation.set(0, 0, 0);
-        }
+        
+        // 4. Reset height and put ball back
+        if (avatarRoot?.userData?.offset) avatarRoot.userData.offset.position.set(0,0,0);
+        
+        const ball = scene.getObjectByName("weightBall");
+        if (ball) { scene.add(ball); ball.position.set(0.6, 0.20, 1.35); }
+
+        if ($msg) $msg.innerHTML = "Reset to Idle.";
     };
 }
-
-
-// 1. UI References for New Console
-const leanSlider = document.getElementById('leanSlider');
-const leanVal = document.getElementById('leanVal');
-const dirSelect = document.getElementById('dirSelect');
-
-// 2. Reset UI
-if (leanSlider) leanSlider.value = 0;
-if (leanVal) leanVal.textContent = "0.0";
-if (dirSelect) dirSelect.selectedIndex = 0;
-
-sim.leanZ = 0;
-sim.leanX = 0;
-sim.ballLocked = false;
-trialB.lifting = false;
-
 // ==============================
 // TRIAL B — Direction usage tracking
 // ==============================
@@ -1181,11 +1175,17 @@ const FL002_POSES_ROMA = {
 spine01: { x: 0, y: 0, z: 0 },
   spine02: { x: 0, y: 0, z: 0 },
   spine03: { x: 0, y: 0, z: 0 },
+    calf_L: { x:0.0, y:0, z:0 },
+    foot_L: { x: 1.03, y: 0.0, z: 0.0 },
+
+
 
     upperarm_R: { x: 0.5, y: -0.12, z:   7.2 },
     lowerarm_R: { x: 0.0, y:  0.00, z:   0.0 },
     hand_R:     { x: 0.0, y:  0.00, z:   0.0 },
-    thigh_R:    { x: 0.0684, y:  0.0022, z:  3.0616 }
+    thigh_R:    { x: 0.0684, y:  0.0022, z:  3.0616 },
+    calf_R: { x:0.0, y:0, z:0 },
+    foot_R: { x: 1.03, y: 0.0, z: 0.0 }
 
   },
 
