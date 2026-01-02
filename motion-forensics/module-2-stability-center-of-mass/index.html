@@ -745,10 +745,10 @@ const sim = {
   leanX: 0,        // left / right
   ballLocked: false,
   isTrembling: false,
-isWide: false, // Add this line
   reachActive: false,
      reachAlpha: 0,
-  isBending: false     
+  isBending: false,
+ isWide: false     
 };
 
 const progression = {
@@ -1299,19 +1299,28 @@ const FL002_POSES_ROMAN = {
 
 function applyTrialBPose(strategyKey) {
     if (!skeleton || !window.ACTIVE_MODEL) return;
-    const set = (window.ACTIVE_MODEL === "Roman") ? STRATEGY_POSES_ROMAN : STRATEGY_POSES_ROMA;
+
+    // --- ADD: reset + set wide flag ---
+    sim.isWide = (strategyKey === "wide");
+
+    const set = (window.ACTIVE_MODEL === "Roman")
+        ? STRATEGY_POSES_ROMAN
+        : STRATEGY_POSES_ROMA;
+
     const poseData = set[strategyKey];
     if (!poseData) return;
 
     for (const [boneName, rot] of Object.entries(poseData)) {
-        const bone = skeleton.bones.find(b => b.name.toLowerCase().includes(boneName.toLowerCase()));
+        const bone = skeleton.bones.find(
+            b => b.name.toLowerCase().includes(boneName.toLowerCase())
+        );
         if (bone) bone.rotation.set(rot.x, rot.y, rot.z);
-
     }
-avatarRoot.userData.offset.position.y =
-  (window.ACTIVE_MODEL === "Roman") ? -0.115 : -0.135;
 
+    avatarRoot.userData.offset.position.y =
+        (window.ACTIVE_MODEL === "Roman") ? -0.115 : -0.135;
 }
+
 
 function applyFL002Pose(poseName) {
   if (!skeleton) return;
@@ -1677,6 +1686,13 @@ trialBBtn.onclick = () => {
 });
 
 function getBalanceState() {
+
+// === HARD TEACHING OVERRIDE ===
+// Wide stance + lateral lean is ALWAYS stable
+if (sim.isWide && (dirSelect.value === "left" || dirSelect.value === "right")) {
+    return sim.ballLocked ? "weighted_stable" : "idle_stable";
+}
+
     if (!avatarRoot) return "unknown";
 
     const leanX = sim.leanX;
@@ -1697,32 +1713,34 @@ function getBalanceState() {
     }
 
     // --- BASE BOS LIMITS (NORMAL STANCE) ---
-    let limitX  = 0.17;
-    let limitZ  = 0.17;
-    let stableX = 0.10;
-    let stableZ = 0.10;
+let limitX  = 0.17;
+let limitZ  = 0.17;
+let stableX = 0.10;
+let stableZ = 0.10;
 
-    // --- STRATEGY EFFECTS ---
-    if (sim.isWide) {
-        limitX  *= 3.5;   // big lateral BOS gain
-        stableX *= 3.5;
-        limitZ  *= 1.4;   // small anterior gain
-        stableZ *= 1.4;
-    }
+ 
+// --- LATERAL (X) — ONLY WIDE AFFECTS THIS ---
+if (sim.isWide) {
+    limitX  *= 3.5;
+    stableX *= 3.5;
+}
 
-    if (sim.isBending) {
-        limitX  *= 1.4;
-        limitZ  *= 1.4;
-        stableX *= 1.4;
-        stableZ *= 1.4;
-    }
+// --- SAGITTAL (Z) — STRATEGIES + TASK LOAD ---
+if (sim.isWide) {
+    limitZ  *= 1.4;
+    stableZ *= 1.4;
+}
 
-    if (sim.ballLocked) {
-        limitX  *= 0.9;
-        limitZ  *= 0.9;
-        stableX *= 0.9;
-        stableZ *= 0.9;
-    }
+if (sim.isBending) {
+    limitZ  *= 1.4;
+    stableZ *= 1.4;
+}
+
+if (sim.ballLocked) {
+    limitZ  *= 0.85;
+    stableZ *= 0.85;
+}
+
 
     // --- ELLIPTICAL BOS CHECK ---
     const unstable =
