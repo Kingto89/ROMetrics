@@ -8,9 +8,9 @@
 
 <style>
 :root{
-  --ink:#eaf2ff;
-  --ink-soft:#c9d6ea;
-  --ring:rgba(255,255,255,.22);
+  --ink:#ffffff;
+  --ink-soft:#e5efff;
+  --ring:rgba(255,255,255,.25);
 }
 
 *{ box-sizing:border-box }
@@ -27,7 +27,7 @@ html,body{
 .frame{
   position:relative;
   min-height:100svh;
-  overflow:hidden;
+  overflow-x:visible; /* ✅ allow horizontal scroll */
 }
 
 /* ===== HERO IMAGE ===== */
@@ -52,8 +52,10 @@ html,body{
   display:grid;
   grid-template-rows:auto 1fr auto;
   pointer-events:none;
+  overflow-x:visible; /* ✅ CRITICAL */
 }
 
+/* Dark contrast only */
 .overlay::before{
   content:"";
   position:absolute;
@@ -61,10 +63,10 @@ html,body{
   background:
     linear-gradient(
       to bottom,
-      rgba(0,0,0,.25) 0%,
-      rgba(0,0,0,.15) 35%,
-      rgba(0,0,0,.05) 60%,
-      rgba(0,0,0,.35) 100%
+      rgba(0,0,0,.35) 0%,
+      rgba(0,0,0,.20) 35%,
+      rgba(0,0,0,.10) 60%,
+      rgba(0,0,0,.45) 100%
     );
   z-index:0;
 }
@@ -81,7 +83,7 @@ html,body{
   font-weight:800;
   letter-spacing:.4px;
   border-radius:10px;
-  background:rgba(0,0,0,.55);
+  background:rgba(0,0,0,.6);
   border:1px solid var(--ring);
   color:#fff;
   text-decoration:none;
@@ -111,20 +113,19 @@ html,body{
   font-size:11px;
   letter-spacing:.14em;
   text-transform:uppercase;
-  color:#cfe3ff;
-  background:rgba(0,0,0,.55);
+  color:#dbeafe;
+  background:rgba(0,0,0,.6);
   border:1px solid var(--ring);
   padding:6px 10px;
   border-radius:999px;
 }
 
-/* ===== HERO HEADLINE (UPGRADED) ===== */
+/* ===== HERO HEADLINE ===== */
 h1{
   margin:18px 0 12px;
   font-size:clamp(30px,5.4vw,48px);
   line-height:1.05;
   font-weight:900;
-  letter-spacing:-.02em;
 }
 
 h1 span{
@@ -134,21 +135,27 @@ h1 span{
   color:transparent;
 }
 
+/* ✅ FIXED READABILITY */
 .sub{
-  font-size:clamp(15px,2.8vw,18px);
-  color:var(--ink-soft);
-  max-width:62ch;
+  font-size:clamp(15px,2.9vw,18px);
+  color:#ffffff; /* FORCE readable */
+  background:rgba(0,0,0,.45); /* local shield */
+  padding:10px 14px;
+  border-radius:12px;
+  max-width:64ch;
 }
 
 /* ===== NAV STRIP ===== */
 .strip{
   display:flex;
-  justify-content:center;
+  justify-content:flex-start;
+  width:100vw;               /* ✅ force full width */
   padding:
     24px
-    16px
-    calc(48px + env(safe-area-inset-bottom));
+    0
+    calc(56px + env(safe-area-inset-bottom));
   pointer-events:auto;
+  overflow-x:visible;
 }
 
 /* ===== CAROUSEL ===== */
@@ -156,22 +163,15 @@ h1 span{
   display:flex;
   gap:16px;
   width:100%;
-  max-width:1200px;
+  padding-left:16px;
+  padding-right:calc(16px + 82vw); /* ✅ allows last card to scroll fully */
+  overflow-x:auto;
+  scroll-snap-type:x mandatory;
+  -webkit-overflow-scrolling:touch;
 }
 
-/* Mobile swipe behavior */
-@media (max-width:900px){
-  .bubbles{
-    overflow-x:auto;
-    scroll-snap-type:x mandatory;
-    -webkit-overflow-scrolling:touch;
-    padding-left:16px;
-    padding-right:16px; /* ✅ CRITICAL: allows last card to scroll fully */
-  }
-
-  .bubbles::-webkit-scrollbar{
-    display:none;
-  }
+.bubbles::-webkit-scrollbar{
+  display:none;
 }
 
 /* ===== MODULE CARDS ===== */
@@ -183,7 +183,8 @@ h1 span{
   display:flex;
   flex-direction:column;
   gap:8px;
-  min-width:240px;
+  min-width:82vw;
+  max-width:82vw;
   scroll-snap-align:center;
   transition:
     transform .25s cubic-bezier(.25,.7,.35,1.2),
@@ -196,7 +197,7 @@ h1 span{
 }
 
 .b-title{ font-weight:800; font-size:16px }
-.b-sub{ font-size:13px; opacity:.92 }
+.b-sub{ font-size:13px; opacity:.95 }
 
 /* COLORS */
 .bubble:nth-child(1){ background:linear-gradient(135deg,#f59e0b,#f97316); }
@@ -204,14 +205,6 @@ h1 span{
 .bubble:nth-child(3){ background:linear-gradient(135deg,#0ea5e9,#0284c7); }
 .bubble:nth-child(4){ background:linear-gradient(135deg,#10b981,#059669); }
 .bubble:nth-child(5){ background:linear-gradient(135deg,#ec4899,#db2777); }
-
-/* Phone sizing */
-@media (max-width:520px){
-  .bubble{
-    min-width:82vw;
-    max-width:82vw;
-  }
-}
 </style>
 </head>
 
@@ -229,7 +222,7 @@ h1 span{
       </div>
 
       <h1>
-        <span>Assess</span>, <span>Measure</span>, and <span>Train</span>
+        <span>Assess</span>, <span>Measure</span>, <span>Train</span>
       </h1>
 
       <p class="sub">
