@@ -112,7 +112,8 @@ canvas{display:block}
   </div>
 </div>
 
-<div id="badge" style="position:fixed; right:14px; top:6px; z-index:100; padding:16px; border-radius:20px; border:1px solid rgba(148,163,184,.25); background:rgba(15,23,42,.85); color:#cfe3ff; font-size:13px; width:280px; backdrop-filter:blur(10px); display:none;">
+<div id="badge" style="position:fixed; right:14px; top:6px; z-index:100; padding:16px; border-radius:20px; border:1px solid rgba(148,163,184,.25); background:rgba(15,23,42,.85); color:#cfe3ff; font-size:13px; width:280px; backdrop-filter:blur(10px); display:none; 
+    max-height: 90vh; overflow-y: auto; scrollbar-width: thin;">
     <div style="font-weight:900; color:#38bdf8; margin-bottom:10px; text-transform:uppercase; letter-spacing:1px;">Stability Analysis</div>
     
  <div class="field" style="margin-bottom:12px;">
@@ -726,6 +727,51 @@ const sim = {
   isBending: false     
 };
 
+const progression = {
+    observedDirs: { forward: false, back: false, left: false, right: false },
+    trialA: { completed: false },
+    trialB: { completed: false },
+    moduleCompleted: false
+};
+
+function unlockMCQ() {
+// Save every stage of progress
+    localStorage.setItem('ROMetrics_Module2_Observed', 'true');
+    localStorage.setItem('ROMetrics_Module2_TrialA', 'true');
+    localStorage.setItem('ROMetrics_Module2_TrialB', 'true');
+    localStorage.setItem('ROMetrics_Module2_Complete', 'true');
+
+    const badge = document.getElementById('badge');
+    const assessmentBtn = document.getElementById('assessmentBtn');
+    const statusVal = document.getElementById('statusVal');
+
+    // 1. Save persistent completion state
+    localStorage.setItem('ROMetrics_Module2_Complete', 'true');
+
+    // 2. Target the 'Stability Analysis' header specifically
+    // It looks for the first div that contains the title text
+    const title = Array.from(badge.querySelectorAll('div')).find(el => el.textContent.includes('STABILITY ANALYSIS'));
+    if (title && !title.innerHTML.includes('✓')) {
+        title.innerHTML = '✓ ' + title.innerHTML;
+        title.style.color = "#4ade80"; // Turn title green to match completion
+    }
+
+    // 3. Update the button to Take/Review
+    if (assessmentBtn) {
+        assessmentBtn.style.display = "block";
+        assessmentBtn.textContent = "Take / Review MCQ Assessment";
+        assessmentBtn.onclick = () => window.open("https://kingto89.github.io/ROMetrics.com/motion-forensics/MCQ/", "_blank");
+    }
+
+    // 4. Update the bottom status
+    if (statusVal) {
+        statusVal.innerHTML = "✓ COMPLETED";
+        statusVal.style.color = "#4ade80";
+    }
+    
+    // 5. Provide final success message
+    if ($msg) $msg.innerHTML = "<b style='color:#4ade80;'>TRIAL B PASSED:</b> Base of Support widened. <b>Module Complete!</b> Take the Assessment below.";
+}
 // ==============================
 // TRIAL B — Reach With Strategy (state only)
 // ==============================
@@ -846,25 +892,25 @@ if (leanSlider && dirSelect) {
     leanSlider.oninput = e => {
         const intensity = parseFloat(e.target.value);
         
-        // Removed textContent update to hide numerical feedback from user
-
-        // Map intensity to specific lean variables based on direction
+     // 1. Map intensity to specific lean variables based on direction
         const dir = dirSelect.value;
-       // mark direction as observed for Trial B unlock
-if (dir in trialBDirUsed) {
-  trialBDirUsed[dir] = true;
-}
+        
+        // 2. Mark direction as observed for Trial progression
+        if (typeof progression !== 'undefined') {
+            progression.observedDirs[dir] = true;
 
-// unlock Trial B once all directions used
-const allDirsUsed = true;
-//const allDirsUsed = Object.values(trialBDirUsed).every(v => v === true);// temp debug deactiv
-if (allDirsUsed && trialBBtn.disabled) {
-  trialBBtn.disabled = false;
-  trialBBtn.style.cursor = "pointer";
-  trialBBtn.style.background = "rgba(56,189,248,.16)";
-}
- 
-        // Reset both first to ensure only one direction is active
+            // Check if all 4 directions have been tested to unlock Trial A
+            const allObserved = Object.values(progression.observedDirs).every(v => v === true);
+            
+            if (allObserved && trialABtn.disabled) {
+                trialABtn.disabled = false;
+                trialABtn.style.cursor = "pointer";
+                trialABtn.style.background = "rgba(56,189,248,.16)";
+                if ($msg) $msg.innerHTML = "<b>Observation Complete:</b> Select <b>Begin Trial A</b> to continue.";
+            }
+        }
+
+
         sim.leanX = 0;
         sim.leanZ = 0;
 
@@ -1435,37 +1481,8 @@ function initTrial() {
     sim.reachAlpha = 0;
 }
 
-window.selectStrategy = function(key) {
-    if (!skeleton) return;
-    const plate = scene.getObjectByName("forcePlate");
-    
-    // Reset defaults first
-    window.sim.isBending = false;
-    window.sim.isTrembling = false;
-    trialB.active = true;
-    trialB.pose = null;
-    if (plate) {
-        plate.visible = true;
-        plate.scale.set(1, 1, 1); 
-    }
 
-    if (key === 'widen') {
-        trialB.pose = "wide";
-        applyTrialBPose("wide"); 
-        if (plate) {
-            // This forces the plate to be wider across the feet
-            plate.scale.set(1.6, 0.8, 1); 
-            plate.updateMatrixWorld(true);
-        }
-    } 
-    else if (key === 'lower') {
-        trialB.pose = "bend";
-        applyTrialBPose("bend");
-        window.sim.isBending = true; // This drops the red dot height in getBalanceState
-    }
-    
-    if (typeof $msg !== "undefined") $msg.innerHTML = "<b>Strategy Selected:</b> " + key.toUpperCase();
-};
+
 
 // Helper to create the Reach button
 const reachBtnHTML = `<button style="width:100%; margin-top:10px; background:#4ade80; color:#0f172a; border:none; padding:10px; border-radius:10px; cursor:pointer; font-weight:800; font-size:11px;" onclick="sim.reachActive=true">PERFORM REACH</button>`;
@@ -1490,7 +1507,85 @@ trialBBtn.onclick = () => {
     `;
 };
 
+// Global Logic Handler
+window.handleStrategy = function(key) {
+    if (!skeleton) return;
+    const plate = scene.getObjectByName("forcePlate");
+    
+    // 1. Reset visual feedback
+    window.sim.isTrembling = false;
+    window.sim.isBending = false;
 
+    // 2. TRIAL A GATING
+    if (progression.activeTrial === 'A') {
+        const isAnterior = dirSelect.value === "forward";
+        const isMaxLean = Math.abs(sim.leanZ) >= 45;
+
+        if (!isAnterior || !isMaxLean) {
+            alert("Requirement: Set direction to Anterior and Lean Slider to Max.");
+            return;
+        }
+
+        if (key === 'lower') {
+            progression.trialA.completed = true;
+            progression.activeTrial = null; // Close gate
+            applyTrialBPose("bend");
+            window.sim.isBending = true;
+            $msg.innerHTML = "<b style='color:#4ade80;'>TRIAL A PASSED:</b> Knees bent, COM lowered. Trial B Unlocked.";
+            trialBBtn.disabled = false;
+            trialBBtn.style.background = "rgba(56,189,248,.16)";
+        } else {
+            window.sim.isTrembling = true;
+            $msg.innerHTML = "<b style='color:#ef4444;'>FAILED:</b> Incorrect strategy for Anterior Lean.";
+        }
+    } 
+    
+    // 3. TRIAL B GATING
+    else if (progression.activeTrial === 'B') {
+        const isLateral = (dirSelect.value === "left" || dirSelect.value === "right");
+        
+        if (!sim.ballLocked || !isLateral) {
+            alert("Requirement: Pick up Ball and set direction to Lateral (Left/Right).");
+            return;
+        }
+
+        if (key === 'widen') {
+            progression.trialB.completed = true;
+            progression.activeTrial = null;
+            applyTrialBPose("wide");
+            if (plate) plate.scale.set(1.6, 0.7, 1);
+            unlockMCQ();
+        } else {
+            window.sim.isTrembling = true;
+            $msg.innerHTML = "<b style='color:#ef4444;'>FAILED:</b> Incorrect strategy for Lateral Weight.";
+        }
+    }
+};
+
+// Update Button Click Handlers
+trialABtn.onclick = () => {
+    progression.activeTrial = 'A';
+    initTrial();
+    stratUI.innerHTML = `
+        <div style="color:#38bdf8; font-size:10px; margin-bottom:5px; font-weight:bold;">TRIAL A: ANTERIOR STABILITY</div>
+        <button style="${btnStyle} width:100%; margin-bottom:5px;" onclick="handleStrategy('stiff')">Stiff Legs</button>
+        <button style="${btnStyle} width:100%; margin-bottom:5px;" onclick="handleStrategy('lower')">Bend Knees (Lower COM)</button>
+        <button style="${btnStyle} width:100%;" onclick="handleStrategy('toes')">Stand on Toes</button>
+        ${reachBtnHTML}
+    `;
+};
+
+trialBBtn.onclick = () => {
+    progression.activeTrial = 'B';
+    initTrial();
+    stratUI.innerHTML = `
+        <div style="color:#38bdf8; font-size:10px; margin-bottom:5px; font-weight:bold;">TRIAL B: LATERAL LOAD</div>
+        <button style="${btnStyle} width:100%; margin-bottom:5px;" onclick="handleStrategy('widen')">Widen Stance (Increase BOS)</button>
+        <button style="${btnStyle} width:100%; margin-bottom:5px;" onclick="handleStrategy('onefoot')">One Foot</button>
+        <button style="${btnStyle} width:100%;" onclick="handleStrategy('forward')">Lean Forward</button>
+        ${reachBtnHTML}
+    `;
+};
     // Hide gate
     document.getElementById('gate').style.display = "none";
 
@@ -1844,7 +1939,24 @@ if (t) {
   return "fail";
 }
 
+// Check for previous completion on page load
+window.addEventListener('load', () => {
+    if (localStorage.getItem('ROMetrics_Module2_Complete') === 'true') {
+        const assessmentBtn = document.getElementById('assessmentBtn');
+        const statusVal = document.getElementById('statusVal');
 
+        if (assessmentBtn) {
+            assessmentBtn.style.display = "block";
+            assessmentBtn.textContent = "Take / Review MCQ Assessment";
+            assessmentBtn.onclick = () => window.open("https://kingto89.github.io/ROMetrics.com/motion-forensics/MCQ/", "_blank");
+        }
+
+        if (statusVal) {
+            statusVal.innerHTML = "✓ COMPLETED";
+            statusVal.style.color = "#4ade80";
+        }
+    }
+});
 
 
 </script>
