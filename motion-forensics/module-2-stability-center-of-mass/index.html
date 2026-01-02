@@ -722,6 +722,7 @@ const sim = {
   leanX: 0,        // left / right
   ballLocked: false,
   isTrembling: false,
+isWide: false, // Add this line
   reachActive: false,
      reachAlpha: 0,
   isBending: false     
@@ -811,28 +812,44 @@ const resetBtn = document.getElementById('resetBtn');
 
 if (resetBtn) {
     resetBtn.onclick = () => {
-        // 1. Reset logic and stop tremble
+        // 1. Reset logic, stop tremble, and clear Trial states
         sim.leanZ = 0; 
         sim.leanX = 0; 
         sim.ballLocked = false;
         sim.isTrembling = false;
+        sim.isBending = false;
         sim.reachActive = false;
+        sim.reachAlpha = 0;
+        
+        // CRITICAL: Reset Trial B pose so BOS stability returns to normal
+        trialB.pose = null; 
+        trialB.active = false;
+        trialB.lifting = false;
 
         // 2. Reset UI
-        leanSlider.value = 0;
-        dirSelect.selectedIndex = 0;
-        ballBtn.textContent = "Pick Up Ball";
+        if (leanSlider) leanSlider.value = 0;
+        if (dirSelect) dirSelect.selectedIndex = 0;
+        if (ballBtn) ballBtn.textContent = "Pick Up Ball";
 
         // 3. Force Idle Pose
         applyFL002Pose("idle");
         
         // 4. Reset height and put ball back
-        if (avatarRoot?.userData?.offset) avatarRoot.userData.offset.position.set(0,0,0);
+        if (avatarRoot?.userData?.offset) {
+            avatarRoot.userData.offset.position.set(0,0,0);
+        }
         
         const ball = scene.getObjectByName("weightBall");
-        if (ball) { scene.add(ball); ball.position.set(0.6, 0.20, 1.35); }
+        if (ball) { 
+            scene.add(ball); 
+            ball.position.set(0.6, 0.20, 1.35); 
+        }
 
-        if ($msg) $msg.innerHTML = "Reset to Idle.";
+        // 5. Reset Force Plate visual
+        const plate = scene.getObjectByName("forcePlate");
+        if (plate) plate.scale.set(1, 1, 1);
+
+        if ($msg) $msg.innerHTML = "<b>System Reset:</b> Returned to Idle.";
     };
 }
 // ==============================
@@ -880,20 +897,19 @@ document.getElementById('btnFrontView').onclick = () => {
     controls.update();
 };
 
-// 4. Unified Slider Logic
-
+// --- 4. Unified Slider Logic (CLEANED) ---
 if (leanSlider && dirSelect) {
     leanSlider.oninput = e => {
         const intensity = parseFloat(e.target.value);
-        
-     // 1. Map intensity to specific lean variables based on direction
         const dir = dirSelect.value;
         
-        // 2. Mark direction as observed for Trial progression
+        // 1. Safe Display Update
+        const display = document.getElementById('leanVal');
+        if (display) display.textContent = intensity.toFixed(1);
+
+        // 2. Progression Tracking
         if (typeof progression !== 'undefined') {
             progression.observedDirs[dir] = true;
-
-            // Check if all 4 directions have been tested to unlock Trial A
             const allObserved = Object.values(progression.observedDirs).every(v => v === true);
             
             if (allObserved && trialABtn.disabled) {
@@ -904,59 +920,59 @@ if (leanSlider && dirSelect) {
             }
         }
 
-
+        // 3. Map Intensity
         sim.leanX = 0;
         sim.leanZ = 0;
-
         if (dir === "forward") sim.leanZ = intensity;
         if (dir === "back")    sim.leanZ = -intensity;
         if (dir === "left")    sim.leanX = intensity;
         if (dir === "right")   sim.leanX = -intensity;
 
-        // Fire bone transformations
+        // 4. Update Visual Lean
         updateModelLean();
-// ==============================
-// TRIAL B — Apply poses
-// ==============================
-if (trialB.active) {
 
-  // Reach pose
-  if (sim.reachPose) {
-applyFL002Pose("reach");
-  }
+        // 5. Strategy State Enforcement (The Fix)
+        if (trialB.active) {
+            if (sim.reachPose) applyFL002Pose("reach");
 
-  // Strategy poses
-  if (trialB.pose) {
-applyFL002Pose(trialB.pose);
-  }
+            if (trialB.pose) {
+                applyTrialBPose(trialB.pose);
+                
+                // Sync the sim flags so getBalanceState "listens"
+                if (trialB.pose === "wide") {
+                    sim.isWide = true;
+                    sim.isBending = false;
+                } else if (trialB.pose === "bend") {
+                    sim.isBending = true;
+                    sim.isWide = false;
+                }
+            }
 
-  // Tremble (Try Harder)
-  if (trialB.tremble) {
-    sim.isTrembling = true;
-  } else {
-    sim.isTrembling = false;
-  }
-}
-
-       updateThighAbductionLeftOnly();
-       updateThighAbductionRightOnly();
+            // Sync Tremble State
+            sim.isTrembling = !!trialB.tremble;
+        }
     };
 
-    // Reset slider when direction changes to prevent sudden snapping
+    // 6. Reset slider when direction changes
     dirSelect.onchange = () => {
         leanSlider.value = 0;
-        if (leanVal) leanVal.textContent = "0.0";
+        const display = document.getElementById('leanVal');
+        if (display) display.textContent = "0.0";
+        
         sim.leanX = 0;
         sim.leanZ = 0;
-if (skeleton) applyFL002Pose(sim.ballLocked ? "holdingBall" : "idle");
 
+        if (skeleton) {
+            // Re-apply strategy pose if active, else go to idle/holding
+            if (trialB.active && trialB.pose) {
+                applyTrialBPose(trialB.pose);
+            } else {
+                applyFL002Pose(sim.ballLocked ? "holdingBall" : "idle");
+            }
+        }
         updateModelLean();
-        updateThighAbductionL();
-        updateThighAbductionR();
-
     };
 }
-
 
 function updateModelLean() {
     if (!skeleton || !avatarRoot?.userData?.offset) return;
@@ -1620,69 +1636,55 @@ trialBBtn.onclick = () => {
 
 function getBalanceState() {
     if (!skeleton || !avatarRoot) return "unknown";
-
-    // 1. Force absolute matrix update
     avatarRoot.updateMatrixWorld(true);
 
     const leanZ = sim.leanZ; 
     const leanX = sim.leanX; 
 
-    // 2. DOT POSITION (Sensitivity preserved as requested)
-    const SENSITIVITY = (window.ACTIVE_MODEL === "Roman") ? 0.004 : 0.004; 
+    // 1. OVERRIDE: Force Stable if Wide and moving Lateral (Left/Right)
+    const isLateral = (dirSelect.value === 'left' || dirSelect.value === 'right');
+    if (sim.isWide && isLateral) {
+        return sim.ballLocked ? "weighted_stable" : "idle_stable";
+    }
+
+    // 2. Position Math
+    const SENSITIVITY = 0.004; 
     const dotX = -leanX * SENSITIVITY; 
     const dotZ = leanZ * SENSITIVITY;
 
-    // 3. Update Visual Marker
-    const comMarker = scene.getObjectByName("comMarker");
-    if (comMarker) {
-        let h = (window.ACTIVE_MODEL === "Roman") ? 1.08 : 0.92;
-        
-        // FIX: LOWER COM WHEN BENDING
-        // This physically lowers the red dot when the strategy is active
-        if (sim.isBending) {
-            h -= 0.17; 
-        }
-        
-        // Position preserved as requested (+0.09)
-        comMarker.position.set(dotX, h, dotZ + 0.09);
+    // 3. Base Limits
+    let limitX = 0.17; 
+    let limitZ = 0.17;
+    let stableX = 0.1;
+    let stableZ = 0.1;
+
+    // 4. Multipliers
+    const strategyBonus = sim.isBending ? 1.4 : 1.0; 
+    const penalty = sim.ballLocked ? 0.9 : 1.0;
+
+    // Expand logic for Wide Stance (if not already handled by override)
+    if (sim.isWide) {
+        limitX *= 3.5;
+        stableX *= 3.5;
+        limitZ *= 2.0;
+        stableZ *= 2.0;
     }
 
-    // 4. LOGICAL STABILITY BOUNDARIES
-    const distFromCenter = Math.sqrt(dotX * dotX + dotZ * dotZ);
-    
-    // FIX: LIMITS TUNED TO YOUR SENSITIVITY
-    // Since max travel is ~0.16m - 0.22m, we lower these to see the status change
-    const STABLE_LIMIT = 0.1;  // Status flips to Fall Risk at ~26 degrees
-    const FALL_LIMIT = 0.17;    // Status flips to Unstable at ~50 degrees
+    // Apply global bonuses
+    limitX *= (penalty * strategyBonus);
+    limitZ *= (penalty * strategyBonus);
+    stableX *= (penalty * strategyBonus);
+    stableZ *= (penalty * strategyBonus);
 
-    // Strategy Bonus: Lowering COM (bending) makes you harder to tip
-    let strategyBonus = sim.isBending ? 1.4 : 1.0; 
-    const penalty = sim.ballLocked ? 0.75 : 1.0;
-  
-// --- IMPROVED BOS LOGIC ---
-    // Increase multiplier to 2.2 to prevent Fall Risk at the end of the slider
-    let bosBonus = 1.0;
-    if (trialB.active && trialB.pose === "wide") {
-        // Apply a larger bonus specifically for Left/Right leans
-        const isLateral = (dirSelect.value === 'left' || dirSelect.value === 'right');
-        bosBonus = isLateral ? 2.2 : 1.6; 
-    }
-    
-    const finalStable = STABLE_LIMIT * penalty * strategyBonus * bosBonus;
-    const finalFall = FALL_LIMIT * penalty * strategyBonus * bosBonus;
- 
+    // 5. Detection
+    const isUnstable = (Math.pow(dotX/limitX, 2) + Math.pow(dotZ/limitZ, 2)) > 1;
+    const isFallRisk = (Math.pow(dotX/stableX, 2) + Math.pow(dotZ/stableZ, 2)) > 1;
 
-
-    // 5. Return State
-    if (distFromCenter > finalFall) {
-        return sim.ballLocked ? "weighted_unstable" : "idle_unstable";
-    } else if (distFromCenter > finalStable) {
-        return "fall_risk";
-    }
+    if (isUnstable) return sim.ballLocked ? "weighted_unstable" : "idle_unstable";
+    if (isFallRisk) return "fall_risk";
 
     return sim.ballLocked ? "weighted_stable" : "idle_stable";
 }
-
 
 // ==============================
 // TRIAL B — Reach Detection
