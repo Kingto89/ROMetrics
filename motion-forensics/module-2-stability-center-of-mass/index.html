@@ -819,7 +819,7 @@ const PLUMB_THRESHOLD_WEIGHT = 0.04;
 const BOS = {
   lateral: {
     normal: PLUMB_THRESHOLD_IDLE,
-    wide:   0.060   // widened stance increases lateral BOS only
+    wide:   0.090   // widened stance increases lateral BOS only
   },
   sagittal: {
     normal: PLUMB_THRESHOLD_IDLE
@@ -1031,6 +1031,8 @@ function updateModelLean() {
 
     offset.position.x = fX * SHIFT;
     offset.position.z = fZ * SHIFT;
+
+
 
     // tremble flag
 sim.isTrembling = checkFallRisk();
@@ -1585,7 +1587,7 @@ window.handleStrategy = function(key) {
             progression.activeTrial = null; // Close gate
             applyTrialBPose("bend");
             window.sim.isBending = true;
-            $msg.innerHTML = "<b style='color:#4ade80;'>TRIAL A PASSED:</b> Knees bent, COM lowered. Trial B Unlocked.";
+            $msg.innerHTML = "<b style='color:#4ade80;'>TRIAL A PASSED:</b> Knees bent, COM lowered.";
             trialBBtn.disabled = false;
             trialBBtn.style.background = "rgba(56,189,248,.16)";
         } else {
@@ -1675,53 +1677,64 @@ trialBBtn.onclick = () => {
 });
 
 function getBalanceState() {
-    if (!skeleton || !avatarRoot) return "unknown";
-    avatarRoot.updateMatrixWorld(true);
+    if (!avatarRoot) return "unknown";
 
-    const leanZ = sim.leanZ; 
-    const leanX = sim.leanX; 
+    const leanX = sim.leanX;
+    const leanZ = sim.leanZ;
 
-    // 1. OVERRIDE: Force Stable if Wide and moving Lateral (Left/Right)
-    const isLateral = (dirSelect.value === 'left' || dirSelect.value === 'right');
-    if (sim.isWide && isLateral) {
-        return sim.ballLocked ? "weighted_stable" : "idle_stable";
+    // --- ANALYTIC COM (OLD INDEX BEHAVIOR) ---
+    const SENSITIVITY = 0.004;
+    const dotX = -leanX * SENSITIVITY;
+    const dotZ =  leanZ * SENSITIVITY;
+
+    // --- VISUAL COM MARKER (RED DOT) ---
+    const com = scene.getObjectByName("comMarker");
+    if (com) {
+        let h = (window.ACTIVE_MODEL === "Roman") ? 1.08 : 0.92;
+        if (sim.isBending) h -= 0.17; // bend lowers COM
+
+        com.position.set(dotX, h, dotZ + 0.09);
     }
 
-    // 2. Position Math
-    const SENSITIVITY = 0.004; 
-    const dotX = -leanX * SENSITIVITY; 
-    const dotZ = leanZ * SENSITIVITY;
+    // --- BASE BOS LIMITS (NORMAL STANCE) ---
+    let limitX  = 0.17;
+    let limitZ  = 0.17;
+    let stableX = 0.10;
+    let stableZ = 0.10;
 
-    // 3. Base Limits
-    let limitX = 0.17; 
-    let limitZ = 0.17;
-    let stableX = 0.1;
-    let stableZ = 0.1;
-
-    // 4. Multipliers
-    const strategyBonus = sim.isBending ? 1.4 : 1.0; 
-    const penalty = sim.ballLocked ? 0.9 : 1.0;
-
-    // Expand logic for Wide Stance (if not already handled by override)
+    // --- STRATEGY EFFECTS ---
     if (sim.isWide) {
-        limitX *= 3.5;
+        limitX  *= 3.5;   // big lateral BOS gain
         stableX *= 3.5;
-        limitZ *= 2.0;
-        stableZ *= 2.0;
+        limitZ  *= 1.4;   // small anterior gain
+        stableZ *= 1.4;
     }
 
-    // Apply global bonuses
-    limitX *= (penalty * strategyBonus);
-    limitZ *= (penalty * strategyBonus);
-    stableX *= (penalty * strategyBonus);
-    stableZ *= (penalty * strategyBonus);
+    if (sim.isBending) {
+        limitX  *= 1.4;
+        limitZ  *= 1.4;
+        stableX *= 1.4;
+        stableZ *= 1.4;
+    }
 
-    // 5. Detection
-    const isUnstable = (Math.pow(dotX/limitX, 2) + Math.pow(dotZ/limitZ, 2)) > 1;
-    const isFallRisk = (Math.pow(dotX/stableX, 2) + Math.pow(dotZ/stableZ, 2)) > 1;
+    if (sim.ballLocked) {
+        limitX  *= 0.9;
+        limitZ  *= 0.9;
+        stableX *= 0.9;
+        stableZ *= 0.9;
+    }
 
-    if (isUnstable) return sim.ballLocked ? "weighted_unstable" : "idle_unstable";
-    if (isFallRisk) return "fall_risk";
+    // --- ELLIPTICAL BOS CHECK ---
+    const unstable =
+        (dotX * dotX) / (limitX * limitX) +
+        (dotZ * dotZ) / (limitZ * limitZ) > 1;
+
+    const fallRisk =
+        (dotX * dotX) / (stableX * stableX) +
+        (dotZ * dotZ) / (stableZ * stableZ) > 1;
+
+    if (unstable) return sim.ballLocked ? "weighted_unstable" : "idle_unstable";
+    if (fallRisk) return "fall_risk";
 
     return sim.ballLocked ? "weighted_stable" : "idle_stable";
 }
