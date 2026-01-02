@@ -38,7 +38,6 @@ html,body{
   display:block;
 }
 
-/* Mobile: zoom OUT */
 @media (max-width:768px){
   .hero{
     object-fit:contain;
@@ -55,7 +54,6 @@ html,body{
   pointer-events:none;
 }
 
-/* Dark contrast — NO white haze */
 .overlay::before{
   content:"";
   position:absolute;
@@ -92,8 +90,8 @@ html,body{
 
 /* ===== COPY ===== */
 .copy{
-  padding:clamp(16px,4vw,36px);
-  max-width:700px;
+  padding:clamp(18px,4vw,40px);
+  max-width:720px;
   pointer-events:auto;
 }
 
@@ -101,14 +99,14 @@ html,body{
   display:flex;
   align-items:center;
   gap:10px;
-  margin-top:-8px;
+  margin-top:-6px;
 }
 
 .brand-row img{
   height:56px;
-  width:auto;
 }
 
+/* kicker */
 .kicker{
   font-size:11px;
   letter-spacing:.14em;
@@ -118,20 +116,28 @@ html,body{
   border:1px solid var(--ring);
   padding:6px 10px;
   border-radius:999px;
-  white-space:nowrap;
 }
 
+/* ===== HERO HEADLINE (UPGRADED) ===== */
 h1{
-  margin:14px 0 10px;
-  font-size:clamp(28px,5vw,44px);
-  line-height:1.1;
-  color:#fff;
+  margin:18px 0 12px;
+  font-size:clamp(30px,5.4vw,48px);
+  line-height:1.05;
+  font-weight:900;
+  letter-spacing:-.02em;
+}
+
+h1 span{
+  background:linear-gradient(135deg,#60a5fa,#22d3ee);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
 }
 
 .sub{
-  font-size:clamp(15px,2.8vw,17px);
+  font-size:clamp(15px,2.8vw,18px);
   color:var(--ink-soft);
-  max-width:60ch;
+  max-width:62ch;
 }
 
 /* ===== NAV STRIP ===== */
@@ -139,31 +145,28 @@ h1{
   display:flex;
   justify-content:center;
   padding:
-    22px
+    24px
     16px
-    calc(36px + env(safe-area-inset-bottom));
+    calc(48px + env(safe-area-inset-bottom));
   pointer-events:auto;
 }
 
-/* ===== DESKTOP ROW ===== */
+/* ===== CAROUSEL ===== */
 .bubbles{
   display:flex;
-  gap:14px;
-  justify-content:space-between;
-  align-items:stretch;
+  gap:16px;
   width:100%;
   max-width:1200px;
-  flex-wrap:nowrap;
 }
 
-/* ===== MOBILE SWIPE CAROUSEL ===== */
+/* Mobile swipe behavior */
 @media (max-width:900px){
   .bubbles{
-    justify-content:flex-start;
     overflow-x:auto;
     scroll-snap-type:x mandatory;
     -webkit-overflow-scrolling:touch;
-    padding-bottom:6px;
+    padding-left:16px;
+    padding-right:16px; /* ✅ CRITICAL: allows last card to scroll fully */
   }
 
   .bubbles::-webkit-scrollbar{
@@ -173,40 +176,40 @@ h1{
 
 /* ===== MODULE CARDS ===== */
 .bubble{
-  border-radius:18px;
-  padding:16px 18px;
-  text-decoration:none;
+  border-radius:20px;
+  padding:18px 20px;
   color:#fff;
+  text-decoration:none;
   display:flex;
   flex-direction:column;
-  gap:6px;
-  min-width:220px;
-  scroll-snap-align:start;
+  gap:8px;
+  min-width:240px;
+  scroll-snap-align:center;
   transition:
-    transform .22s cubic-bezier(.25,.7,.35,1.2),
-    box-shadow .22s ease;
+    transform .25s cubic-bezier(.25,.7,.35,1.2),
+    box-shadow .25s ease;
 }
 
 .bubble:hover{
-  transform:translateY(-6px) scale(1.03);
-  box-shadow:0 18px 38px rgba(0,0,0,.45);
+  transform:translateY(-6px) scale(1.04);
+  box-shadow:0 22px 44px rgba(0,0,0,.45);
 }
 
-.b-title{ font-weight:800; font-size:15px }
-.b-sub{ font-size:12px; opacity:.9 }
+.b-title{ font-weight:800; font-size:16px }
+.b-sub{ font-size:13px; opacity:.92 }
 
-/* COLOR IDENTITIES */
+/* COLORS */
 .bubble:nth-child(1){ background:linear-gradient(135deg,#f59e0b,#f97316); }
 .bubble:nth-child(2){ background:linear-gradient(135deg,#6366f1,#4f46e5); }
 .bubble:nth-child(3){ background:linear-gradient(135deg,#0ea5e9,#0284c7); }
 .bubble:nth-child(4){ background:linear-gradient(135deg,#10b981,#059669); }
 .bubble:nth-child(5){ background:linear-gradient(135deg,#ec4899,#db2777); }
 
-/* Phone sizing for swipe feel */
+/* Phone sizing */
 @media (max-width:520px){
   .bubble{
-    min-width:80vw;
-    max-width:80vw;
+    min-width:82vw;
+    max-width:82vw;
   }
 }
 </style>
@@ -225,7 +228,10 @@ h1{
         <span class="kicker">Clinical Skills Workspace</span>
       </div>
 
-      <h1>Assess, Measure, and Train</h1>
+      <h1>
+        <span>Assess</span>, <span>Measure</span>, and <span>Train</span>
+      </h1>
+
       <p class="sub">
         ROMetrics is your all-in-one clinical toolkit —
         goniometry, MMT, motion labs, and case simulations.
