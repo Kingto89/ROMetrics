@@ -59,18 +59,6 @@ Determine how lowering the COM affects stability during an anterior task.
 3. Move the **Forward Reach / Lean slider to maximum**
 4. Activate **Hand Reach**
 
-**Strategy Selection:**
-
-* Stiff Legs
-* Bend Knees ✅ *(correct)*
-* Stand on Toes
-
-**Forensic Outcome:**
-
-* Bending the knees lowers the COM
-* The Plumb Line remains within the BOS
-* The system transitions to **Stable**
-* Trial A completes automatically
 
 Incorrect strategies result in a **stability breach** with an explanation.
 
@@ -86,19 +74,6 @@ Determine how BOS width affects stability during lateral loading.
 1. Subject **picks up the weighted ball**
 2. Set **Direction** to **Left or Right**
 3. Move the **Forward Reach / Lean slider to maximum**
-
-**Strategy Selection:**
-
-* Widen Stance ✅ *(correct)*
-* One Foot
-* Lean Forward
-
-**Forensic Outcome:**
-
-* Widening the stance increases BOS width
-* The Plumb Line remains inside the BOS despite the load
-* The system transitions to **Stable**
-* Trial B completes automatically
 
 Incorrect strategies explain why lateral stability fails.
 
