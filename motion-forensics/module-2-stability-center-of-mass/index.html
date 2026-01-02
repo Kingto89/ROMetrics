@@ -1555,9 +1555,21 @@ const reachBtnHTML = `<button style="width:100%; margin-top:10px; background:#4a
 trialABtn.onclick = () => {
     initTrial();
     stratUI.innerHTML = `
-        <button style="${btnStyle} width:100%; margin-bottom:5px;" onclick="window.sim.isTrembling=true; alert('INCORRECT: Stiff legs keep the COM high, reducing stability.')">Stiff Legs</button>
-        <button style="${btnStyle} width:100%; margin-bottom:5px;" onclick="window.selectStrategy('lower')">Bend Knees</button>
-        <button style="${btnStyle} width:100%;" onclick="window.sim.isTrembling=true; alert('INCORRECT: Reducing the BOS area causes an immediate fall.')">Stand on Toes</button>
+        <button style="${btnStyle} width:100%; margin-bottom:5px;"
+            onclick="window.selectStrategy('stiff')">
+            Stiff Legs
+        </button>
+
+        <button style="${btnStyle} width:100%; margin-bottom:5px;"
+            onclick="window.selectStrategy('lower')">
+            Bend Knees
+        </button>
+
+        <button style="${btnStyle} width:100%;"
+            onclick="window.selectStrategy('toes')">
+            Stand on Toes
+        </button>
+
         ${reachBtnHTML}
     `;
 };
@@ -1565,12 +1577,26 @@ trialABtn.onclick = () => {
 trialBBtn.onclick = () => {
     initTrial();
     stratUI.innerHTML = `
-        <button style="${btnStyle} width:100%; margin-bottom:5px;" onclick="window.selectStrategy('widen')">Widen Stance</button>
-        <button style="${btnStyle} width:100%; margin-bottom:5px;" onclick="window.sim.isTrembling=true; alert('INCORRECT: Removing one foot collapses your BOS.')">One Foot</button>
-        <button style="${btnStyle} width:100%;" onclick="window.sim.isTrembling=true; alert('INCORRECT: Leaning forward shifts the COM outside the feet.')">Lean Forward</button>
+        <button style="${btnStyle} width:100%; margin-bottom:5px;"
+            onclick="window.selectStrategy('widen')">
+            Widen Stance
+        </button>
+
+        <button style="${btnStyle} width:100%; margin-bottom:5px;"
+            onclick="window.selectStrategy('onefoot')">
+            One Foot
+        </button>
+
+        <button style="${btnStyle} width:100%;"
+            onclick="window.selectStrategy('leanforward')">
+            Lean Forward
+        </button>
+
         ${reachBtnHTML}
     `;
 };
+
+
 
 // Global Logic Handler
 window.handleStrategy = function(key) {
@@ -1584,17 +1610,22 @@ window.handleStrategy = function(key) {
 // 2. TRIAL A GATING
 if (progression.activeTrial === 'A') {
     const isAnterior = dirSelect.value === "forward";
-    const isMaxLean = true; // lean was never the issue
-    const hasReach = sim.reachActive === true; // ✅ CORRECT FLAG
+    const hasReach = sim.reachActive === true;
+    const isMaxLean = Math.abs(sim.leanZ) >= leanSlider.max;
 
-    if (!isAnterior || !isMaxLean || !hasReach) {
-        alert("Requirement: Set direction to Anterior and Activate Hand Reach.");
+    if (!isAnterior || !hasReach || !isMaxLean) {
+        alert(
+            "Trial A Requirement:\n" +
+            "• Direction must be Anterior\n" +
+            "• Hand Reach must be active\n" +
+            "• Lean Slider must be at Max"
+        );
         return;
     }
 
     if (key === 'lower') {
         progression.trialA.completed = true;
-        progression.activeTrial = null; // Close gate
+        progression.activeTrial = null;
         applyTrialBPose("bend");
         sim.isBending = true;
 
@@ -1603,33 +1634,60 @@ if (progression.activeTrial === 'A') {
 
         trialBBtn.disabled = false;
         trialBBtn.style.background = "rgba(56,189,248,.16)";
+        return;
+    }
+
+    // WRONG ANSWERS
+    if (key === 'stiff') {
+        alert("Incorrect: Stiff legs keep the COM high, reducing stability.");
+    } else if (key === 'toes') {
+        alert("Incorrect: Standing on toes reduces the BOS and causes instability.");
+    }
+
+    sim.isTrembling = true;
+    return;
+}
+
+// 3. TRIAL B GATING
+else if (progression.activeTrial === 'B') {
+    const isLateral = (dirSelect.value === "left" || dirSelect.value === "right");
+        
+    if (!sim.ballLocked || !isLateral) {
+        alert("Requirement: Pick up Ball and set direction to Lateral (Left/Right).");
+        return;
+    }
+
+    if (key === 'widen') {
+        progression.trialB.completed = true;
+        progression.activeTrial = null;
+
+        applyTrialBPose("wide");
+
+        if (plate) {
+            plate.scale.set(1.6, 0.75, 0.05);
+            plate.position.z = 0.15;
+        }
+
+        unlockMCQ();
+    } 
+    else {
+        // --- INCORRECT STRATEGY EXPLANATIONS (ADDED ONLY) ---
+        if (key === 'onefoot') {
+            alert("Incorrect: Removing one foot collapses the base of support during lateral loading.");
+        } 
+        else if (key === 'lean' || key === 'forward' || key === 'leanforward') {
+    alert("Incorrect: Leaning forward shifts the COM anteriorly instead of improving lateral stability.");
+}
+
+
+        // existing failure behavior (unchanged)
+        window.sim.isTrembling = true;
+        $msg.innerHTML =
+            "<b style='color:#ef4444;'>FAILED:</b> Incorrect strategy for Lateral Weight.";
     }
 }
 
 
-    
-    // 3. TRIAL B GATING
-    else if (progression.activeTrial === 'B') {
-        const isLateral = (dirSelect.value === "left" || dirSelect.value === "right");
-        
-        if (!sim.ballLocked || !isLateral) {
-            alert("Requirement: Pick up Ball and set direction to Lateral (Left/Right).");
-            return;
-        }
-
-        if (key === 'widen') {
-            progression.trialB.completed = true;
-            progression.activeTrial = null;
-            applyTrialBPose("wide");
-            if (plate) plate.scale.set(1.6, 0.75, 0.05);
-plate.position.z = 0.15;
-
-            unlockMCQ();
-        } else {
-            window.sim.isTrembling = true;
-            $msg.innerHTML = "<b style='color:#ef4444;'>FAILED:</b> Incorrect strategy for Lateral Weight.";
-        }
-    }
 };
 
 // Update Button Click Handlers
