@@ -163,21 +163,6 @@ window.showTab = function(tabName) {
     return;
   }
 
-// 2. Global Section: Module Instructions
-  if (tabName === 'guide') {
-    const guideRegex = /###\s*Module\s*Instructions/i;
-    const guideMatch = cachedModuleMD.match(guideRegex);
-    if (guideMatch) {
-      let guideBlock = cachedModuleMD.slice(guideMatch.index + guideMatch[0].length);
-      
-      // FIX: Stop reading if we hit the Questions section
-      const qIdx = guideBlock.search(/Checkpoint\s*Questions/i);
-      if (qIdx !== -1) guideBlock = guideBlock.slice(0, qIdx);
-      
-      content.innerHTML = formatMD(guideBlock);
-    }
-    return;
-  }
 
   // 3. Trial-Specific Sections
 const trialMarker = new RegExp(`###\\s*Trial\\s*${currentTrial}\\b`, 'i');
@@ -188,38 +173,7 @@ const trialMarker = new RegExp(`###\\s*Trial\\s*${currentTrial}\\b`, 'i');
     return;
   }
 
-  // Isolate the current Trial's text block
-const restOfFile = cachedModuleMD.slice(trialMatch.index + trialMatch[0].length);
-const nextHeader = restOfFile.search(/###\s*(Trial\s+[A-Z]\b|Module\s*Instructions)/i);
-const trialBlock = nextHeader !== -1 ? restOfFile.slice(0, nextHeader) : restOfFile;
 
-// -------------------------
-  // 4. Robust Regex Search for Sub-Headings
-  let searchRegex;
-  if (tabName === 'concept') searchRegex = /###\s*Concept\s*\(read\s*first\):/i;
-  if (tabName === 'systems') searchRegex = /###\s*Trial\s*Guide:/i;
-
-  const headerMatch = trialBlock.match(searchRegex);
-
-  if (headerMatch) {
-    // Rejoin from the found line onwards
-    const fromStart = trialBlock.slice(headerMatch.index + headerMatch[0].length);
-    const endIdx = fromStart.indexOf('---');
-    content.innerHTML = formatMD(endIdx !== -1 ? fromStart.slice(0, endIdx) : fromStart);
-  } else {
-    content.innerHTML = `Heading for "${tabName}" not found in Trial ${currentTrial}. Check MD syntax.`;
-  }
-};
-
-// Formatting Helper
-function formatMD(text) {
-  return text.trim()
-    .replace(/\n/g, '<br>')
-    .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
-    .replace(/\_(.*?)\_/g, '<i>$1</i>')
-    .replace(/\#+/g, '') 
-    .replace(/\$\$(.*?)\$\$/g, '<div style="background:rgba(56,189,248,0.1); padding:12px; border-radius:10px; color:#38bdf8; font-family:monospace; margin:15px 0; text-align:center; border:1px solid rgba(56,189,248,0.2); font-size:1.1em;">$1</div>');
-}
 // Global storage for the correct answer index per trial MCQ CHECK
 let currentCorrectIndex = -1;
 
@@ -258,31 +212,7 @@ window.renderMCQ = function(letter) {
     }
 };
 
-    
-// Global Fetch Trigger
-document.getElementById('trialHelp').onclick = async (e) => {
-  e.preventDefault();
-  e.stopPropagation(); // Stops the click from reaching the 3D scene
-  document.getElementById('trialHelpModal').style.display = 'flex';
   
-  const modId = document.getElementById('moduleSelect').value || "FL-001";
-  const fileName = modId.toLowerCase().replace('fl-', 'module_');
-  const path = `https://raw.githubusercontent.com/Kingto89/ROMetrics.com/main/assets/forensics_modules/${fileName}.md`;
-  
-  try {
-    const res = await fetch(path);
-    if (res.ok) {
-      cachedModuleMD = await res.text();
-      window.showTab('concept'); 
-    }
-  } catch (err) { console.error("MD Load Error", err); }
-};
-
-document.getElementById('trialHelpClose').onclick = (e) => {
-  e.preventDefault();
-  e.stopPropagation();
-  document.getElementById('trialHelpModal').style.display = 'none';
-};
     
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
