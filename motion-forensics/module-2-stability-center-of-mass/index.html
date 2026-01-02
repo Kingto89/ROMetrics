@@ -1581,29 +1581,32 @@ window.handleStrategy = function(key) {
     window.sim.isTrembling = false;
     window.sim.isBending = false;
 
-    // 2. TRIAL A GATING
-    if (progression.activeTrial === 'A') {
-        const isAnterior = dirSelect.value === "forward";
-        const isMaxLean = Math.abs(sim.leanZ) >= 45;
+// 2. TRIAL A GATING
+if (progression.activeTrial === 'A') {
+    const isAnterior = dirSelect.value === "forward";
+    const isMaxLean = true; // lean was never the issue
+    const hasReach = sim.reachActive === true; // ✅ CORRECT FLAG
 
-        if (!isAnterior || !isMaxLean) {
-            alert("Requirement: Set direction to Anterior and Lean Slider to Max.");
-            return;
-        }
+    if (!isAnterior || !isMaxLean || !hasReach) {
+        alert("Requirement: Set direction to Anterior and Activate Hand Reach.");
+        return;
+    }
 
-        if (key === 'lower') {
-            progression.trialA.completed = true;
-            progression.activeTrial = null; // Close gate
-            applyTrialBPose("bend");
-            window.sim.isBending = true;
-            $msg.innerHTML = "<b style='color:#4ade80;'>TRIAL A PASSED:</b> Knees bent, COM lowered.";
-            trialBBtn.disabled = false;
-            trialBBtn.style.background = "rgba(56,189,248,.16)";
-        } else {
-            window.sim.isTrembling = true;
-            $msg.innerHTML = "<b style='color:#ef4444;'>FAILED:</b> Incorrect strategy for Anterior Lean.";
-        }
-    } 
+    if (key === 'lower') {
+        progression.trialA.completed = true;
+        progression.activeTrial = null; // Close gate
+        applyTrialBPose("bend");
+        sim.isBending = true;
+
+        $msg.innerHTML =
+            "<b style='color:#4ade80;'>TRIAL A PASSED:</b> Knees bent, COM lowered.";
+
+        trialBBtn.disabled = false;
+        trialBBtn.style.background = "rgba(56,189,248,.16)";
+    }
+}
+
+
     
     // 3. TRIAL B GATING
     else if (progression.activeTrial === 'B') {
