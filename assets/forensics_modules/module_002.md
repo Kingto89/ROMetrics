@@ -1,105 +1,130 @@
 
 
-## FL-002 — Stability Forensics Lab
+# ✅ **FL-002 — Stability Forensics Lab (UPDATED, LOGIC-ALIGNED)**
 
-**Objective:** Investigate how **Center of Mass (COM)** and **Base of Support (BOS)** affect stability, and identify the exact point at which a subject loses balance.
+## Objective
+
+Investigate how **Center of Mass (COM)** and **Base of Support (BOS)** determine stability, and identify how specific **movement strategies** prevent or cause loss of balance.
+
 **Audience:** 1st-year Kinesiology / Exercise Science
 **Time-on-task:** 4–8 minutes
 **Environment:** Movement Analysis Booth
 
 ---
 
-### Concept (read first):
+## 🧠 Concept (read first)
 
-In this lab, **stability** is determined by the position of the subject’s **Center of Mass (COM)** relative to the **Base of Support (BOS)**, represented by the blue **Force Plate**.
+In this lab, **stability is not controlled directly**.
+It is an **emergent outcome** determined by the position of the subject’s **Center of Mass (COM)** relative to the **Base of Support (BOS)**, represented by the blue **Force Plate**.
 
-* Center of Mass (COM): The point in the body where all weight is evenly **balanced.** Imagine placing the body on a seesaw — the COM is the exact spot where the seesaw would stay perfectly level. For a typical standing person, this point is usually around the lower belly or hips, near the **body’s midpoint** between feet and shoulders. The Plumb Line drops straight down from the COM, showing where the body’s weight presses **toward the ground.**
-* Base of Support (BOS): The area under the feet — like the platform the seesaw rests on. The body remains stable as long as the COM projection (Plumb Line) stays within this area. **If the COM moves outside, the body tips and balance is lost.**
-* Stability is maintained **only while the Plumb Line remains within the BOS**. Once it crosses the toes, the subject experiences a **Stability Breach**.
-* The lab separates **body-only balance** (Trial A) from **load-influenced balance** (Trial B) for clarity.
+### Core Definitions
 
-**Key Concepts:**
+* **Center of Mass (COM):**
+  The point where body mass is evenly balanced. For a standing human, this is typically near the **lower abdomen / pelvis**. The **Plumb Line** drops vertically from the COM, showing where body weight is projected toward the ground.
 
-* **Line of Gravity (Plumb Line):** Visual representation of vertical COM projection
-* **Base of Support:** The area under the feet represented by the Force Plate
-* **Critical Tipping Point:** The maximum forward lean or reach before the COM exceeds the BOS
+* **Base of Support (BOS):**
+  The area beneath the feet. As long as the Plumb Line remains **inside** this area, the subject is stable.
 
----
+* **Stability Breach:**
+  Occurs when the Plumb Line moves **outside the BOS**, most commonly beyond the toes during forward tasks.
 
-### Trial Guide:
+### Key Teaching Principle
 
-**Trial A — Finding the Point of Failure (Body Only)**
+> Stability is created by **changing mechanics**, not by “trying to balance.”
 
-1. **Observe:** Your subject is standing on the Force Plate **without holding the ball**.
-2. **Interact:** Slowly increase the **Forward Reach / Lean** slider.
-3. **Camera Strategy:** Rotate to a **Profile (Side) View** to clearly see the relationship between the Plumb Line and the toes.
-4. **Forensic Goal:** Identify the **exact slider value** where the Status changes from **“Stable”** to **“Stability Breach”**.
+In this module:
 
-**Trial B — Load Placement and Stability (Ball Added)**
+* Students do **not** toggle stability on or off
+* Stability appears **automatically** when the correct biomechanical strategy is applied
+* Incorrect strategies explain *why* stability fails
 
-1. **Observe:** Your subject now holds the weighted ball in their hand.
-2. **Interact:** Move the ball closer or farther from the body while adjusting the **Forward Reach / Lean** slider.
-3. **Camera Strategy:** Rotate to a **Profile (Side) View** to track the Plumb Line relative to the BOS.
-4. **Forensic Goal:** Determine the **load position** that maximizes stability without exceeding the tipping point.
+### Trial Separation
+
+* **Trial A** isolates **body-only stability**
+* **Trial B** introduces **external load**, altering COM and BOS demands
 
 ---
 
-### Module Instructions:
+## 🧪 Trial Guide
 
-* Enter the Movement Analysis Booth and orient the camera to a side view.
-* Keep the feet fully on the Force Plate.
-* Use slow, incremental movements with the slider.
-* Always check the Plumb Line’s position relative to the toes.
-* The Plumb Line is the rope-like/long pole; use it to judge COM visually.
+### 🔹 Trial A — Anterior Stability (Body Only)
 
----
+**Goal:**
+Determine how lowering the COM affects stability during an anterior task.
 
-### Checkpoint Questions:
+**Setup (must be completed before strategy selection):**
 
-**Checkpoint — Trial A (Q1)**
-Why does the subject tip over even if no load is held?
+1. Subject stands on the Force Plate **without the ball**
+2. Set **Direction** to **Anterior**
+3. Move the **Forward Reach / Lean slider to maximum**
+4. Activate **Hand Reach**
 
-A) Because the lever arm distance increased, shifting the Center of Mass
-B) Because the ball became heavier
-C) Because the subject ran out of energy
-D) Stability is random
+**Strategy Selection:**
 
-**Answer:** A
+* Stiff Legs
+* Bend Knees ✅ *(correct)*
+* Stand on Toes
 
----
+**Forensic Outcome:**
 
-**Checkpoint — Trial A (Q2)**
-To reduce joint stress and increase stability, a subject should:
+* Bending the knees lowers the COM
+* The Plumb Line remains within the BOS
+* The system transitions to **Stable**
+* Trial A completes automatically
 
-A) Lean less forward
-B) Lean further forward
-C) Stand on tiptoes
-D) Close their eyes
-
-**Answer:** A
+Incorrect strategies result in a **stability breach** with an explanation.
 
 ---
 
-**Checkpoint — Trial B (Q3)**
-Which adjustment maximizes stability while holding a forward load?
+### 🔹 Trial B — Lateral Stability (Load Added)
 
-A) Extend arms fully and lean forward
-B) Keep the load close and maintain upright posture
-C) Stand on tiptoes
-D) Shift weight onto one foot
+**Goal:**
+Determine how BOS width affects stability during lateral loading.
 
-**Answer:** B
+**Setup (must be completed before strategy selection):**
+
+1. Subject **picks up the weighted ball**
+2. Set **Direction** to **Left or Right**
+3. Move the **Forward Reach / Lean slider to maximum**
+
+**Strategy Selection:**
+
+* Widen Stance ✅ *(correct)*
+* One Foot
+* Lean Forward
+
+**Forensic Outcome:**
+
+* Widening the stance increases BOS width
+* The Plumb Line remains inside the BOS despite the load
+* The system transitions to **Stable**
+* Trial B completes automatically
+
+Incorrect strategies explain why lateral stability fails.
 
 ---
 
-**Checkpoint — Trial B (Q4)**
-When a subject holds a weighted ball away from their body, what happens?
+## 📋 Module Instructions
 
-A) Stability increases
-B) Nothing changes
-C) COM shifts forward, tipping risk rises
-D) Plumb Line moves independently
+* Orient the camera as needed to clearly view the **Plumb Line and Force Plate**
+* Use deliberate, controlled movements
+* Do not rush slider adjustments
+* Observe **when and why** the system changes state
 
-Answer: C
+### How Trials Are Passed
+
+A trial is considered complete when:
+
+* All required setup conditions are met
+* The correct strategy is selected
+* The system **automatically enters a Stable state**
+
+> Stability is used as **confirmation**, not as a selectable condition.
+
+### Important Notes
+
+* Reset returns the subject to a neutral posture
+* Stability does not carry over between trials
+* If strategies are locked, recheck setup conditions in the Trial Guide
 
 ---
