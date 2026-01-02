@@ -5,33 +5,46 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>ROMetrics — Landing</title>
   <meta name="description" content="ROMetrics landing page with hero backdrop and quick links." />
+
   <style>
     :root{
-      --bg1:#06355c;
-      --bg2:#0a2d4a;
-      --bg3:#081b2d;
-      --bg4:#051423;
-      --ink:#e6eef7;
-      --muted:#a8c0da;
-      --ring:rgba(255,255,255,.18);
+      --ink:#0b1a2a;
+      --ink-soft:#1f2f44;
+      --muted:#3b516d;
+      --ring:rgba(0,0,0,.15);
     }
 
     html, body{
-      margin:0; padding:0;
-      background: radial-gradient(circle at 58% 40%, var(--bg1) 0%, var(--bg2) 45%, var(--bg3) 85%, var(--bg4) 100%);
-      color:var(--ink);
+      margin:0;
+      padding:0;
       font-family:system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      color:var(--ink);
+      background:#f4f6f8;
     }
 
-    .frame{ position:relative; min-height:100vh; }
+    .frame{
+      position:relative;
+      min-height:100vh;
+      overflow:hidden;
+    }
+
+    /* HERO IMAGE */
     .frame img.hero{
+      width:100%;
+      height:100vh;
+      object-fit:cover;
       display:block;
-      width:100vw;
-      height:auto;
-      user-select:none;
-      -webkit-user-drag:none;
     }
 
+    /* MOBILE: zoom OUT */
+    @media (max-width:768px){
+      .frame img.hero{
+        object-fit:contain;
+        background:#f4f6f8;
+      }
+    }
+
+    /* OVERLAY */
     .overlay{
       position:absolute;
       inset:0;
@@ -40,192 +53,157 @@
       pointer-events:none;
     }
 
-    .brand{
+    /* CONTRAST GRADIENT */
+    .overlay::before{
+      content:"";
       position:absolute;
-      top:10px; left:50%;
-      transform:translateX(-50%);
-      z-index:60;
-      pointer-events:auto;
-      padding:6px 12px;
-      border-radius:10px;
-      color:var(--ink);
-      text-decoration:none;
-      font-weight:800;
-      letter-spacing:.5px;
-      font-size: clamp(16px, 2.2vw, 24px);
-      background:rgba(3,14,28,.45);
-      border:1px solid var(--ring);
-      backdrop-filter: blur(6px);
+      inset:0;
+      background:
+        linear-gradient(
+          to bottom,
+          rgba(255,255,255,.85) 0%,
+          rgba(255,255,255,.55) 35%,
+          rgba(255,255,255,.25) 60%,
+          rgba(0,0,0,.15) 100%
+        );
+      z-index:0;
     }
 
-    @media (max-width:480px){
-      .brand{ top:8px; font-size: clamp(15px, 4.5vw, 20px); padding:5px 10px; }
+    .overlay > *{
+      position:relative;
+      z-index:1;
+    }
+
+    .brand{
+      margin:10px auto 0;
+      padding:6px 14px;
+      font-weight:800;
+      letter-spacing:.4px;
+      border-radius:10px;
+      background:rgba(255,255,255,.85);
+      border:1px solid var(--ring);
+      text-decoration:none;
+      color:var(--ink);
+      pointer-events:auto;
     }
 
     .copy{
-      align-self:start;
+      padding:clamp(16px, 4vw, 36px);
+      max-width:680px;
       pointer-events:auto;
-      padding: clamp(14px, 3vw, 28px);
-      max-width: min(700px, 46vw);
     }
 
     .kicker{
-      display:inline-block; font-size:11px; letter-spacing:.16em; text-transform:uppercase;
+      display:inline-block;
+      font-size:11px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
       color:var(--muted);
-      background:rgba(3,14,28,.55);
+      background:rgba(255,255,255,.9);
       border:1px solid var(--ring);
-      padding:6px 10px; border-radius:999px;
-      backdrop-filter: blur(6px);
+      padding:6px 10px;
+      border-radius:999px;
     }
 
-    h1{ margin:12px 0 10px 0; font-size:clamp(26px, 4.2vw, 44px); line-height:1.08 }
-    .sub{ max-width:60ch; color:var(--muted); font-size:clamp(14px, 1.3vw, 17px) }
-
-    @media (min-width:1200px){
-      .copy{ max-width:42vw; }
+    h1{
+      margin:14px 0 10px;
+      font-size:clamp(28px, 5vw, 44px);
+      line-height:1.1;
+      color:var(--ink);
     }
 
-    @media (max-height:750px){
-      h1{ font-size:clamp(24px, 3.6vw, 38px); }
-      .sub{ font-size:clamp(13px, 1.2vw, 16px); }
+    .sub{
+      font-size:clamp(15px, 2.8vw, 17px);
+      color:var(--ink-soft);
+      max-width:60ch;
     }
 
+    /* NAV STRIP */
     .strip{
-      display:grid; place-items:center;
-      padding: 10px clamp(10px, 3vw, 24px) clamp(16px, 3.5vw, 28px);
+      display:flex;
+      justify-content:center;
+      padding:18px;
       pointer-events:auto;
     }
 
-    /* Row of bubbles */
     .bubbles{
       display:flex;
-      justify-content:center;
-      align-items:center;
       gap:12px;
-      width:min(1100px,95vw);
       flex-wrap:wrap;
+      justify-content:center;
+      width:100%;
+      max-width:1100px;
     }
 
-.bubble{
-  text-decoration:none; 
-  color:var(--ink);
-  background:rgba(4,18,32,.75);
-  border:1px solid rgba(255,255,255,.28);
-  border-radius:16px;
-  padding:14px 12px;
-  display:flex; 
-  flex-direction:column; 
-  gap:8px;
-  backdrop-filter: blur(8px);
-  cursor:pointer;
-
-  transition:
-    transform .22s cubic-bezier(.25,.7,.35,1.25),
-    box-shadow .22s ease,
-    border-color .22s ease,
-    background .22s ease;
-}
-
-/* HOVER — bright halo + lift */
-.bubble:hover{
-  transform: translateY(-14px);
-  border-color: rgba(255,255,255,.85);
-  background: rgba(40,140,255,.35); /* soft blue glow tint */
-  box-shadow:
-    0 0 22px rgba(105,176,255,.85),
-    0 14px 34px rgba(0,0,0,.35);
-}
-
-/* CLICK — extreme glow + higher float */
-.bubble:active{
-  transform: translateY(-26px) scale(1.04);
-  border-color: rgba(255,255,255,1);
-  background: rgba(80,170,255,.55);
-  box-shadow:
-    0 0 36px rgba(125,200,255,1),
-    0 26px 48px rgba(0,0,0,.45);
-}
-
-
-    .b-ico{
-      width:36px;height:36px;border-radius:12px;
-      display:grid;place-items:center;
+    .bubble{
+      background:rgba(255,255,255,.92);
       border:1px solid var(--ring);
+      border-radius:16px;
+      padding:14px 14px;
+      text-decoration:none;
+      color:var(--ink);
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      transition:transform .2s ease, box-shadow .2s ease;
     }
 
-    .b-title{ font-weight:700; font-size:15px; letter-spacing:.2px }
+    .bubble:hover{
+      transform:translateY(-6px);
+      box-shadow:0 10px 24px rgba(0,0,0,.18);
+    }
+
+    .b-title{ font-weight:700; font-size:15px }
     .b-sub{ font-size:12px; color:var(--muted) }
-
-    .b1 .b-ico{background:linear-gradient(180deg, rgba(245,158,11,.22), rgba(245,158,11,.06))}
-    .b2 .b-ico{background:linear-gradient(180deg, rgba(99,102,241,.22), rgba(99,102,241,.06))}
-    .b3 .b-ico{background:linear-gradient(180deg, rgba(14,165,233,.22), rgba(14,165,233,.06))}
-    .b4 .b-ico{background:linear-gradient(180deg, rgba(16,185,129,.22), rgba(16,185,129,.06))}
-
-    .bubble:focus-visible{
-      outline:3px solid rgba(46,255,186,.6);
-      outline-offset:2px;
-    }
   </style>
 </head>
 
 <body>
   <div class="frame">
-    <img class="hero" src="./assets/backdrop2.png" alt="ROMetrics backdrop"/>
+    <img class="hero" src="./assets/backdrop2.png" alt="ROMetrics backdrop" />
 
     <div class="overlay">
       <a class="brand" href="./">ROMetrics</a>
 
       <section class="copy">
-<span style="display:inline-flex;align-items:center;gap:0;">
-  <img src="./assets/rometrics-logo.png" alt=""
-       style="height:88px;width:auto;display:block;margin:0;">
-  <span class="kicker" style="margin-left:0;">Clinical Skills Workspace</span>
-</span>
+        <span style="display:flex;align-items:center;gap:6px;">
+          <img src="./assets/rometrics-logo.png" alt="" style="height:72px">
+          <span class="kicker">Clinical Skills Workspace</span>
+        </span>
 
         <h1>Assess, Measure, and Train</h1>
-       <p class="sub" style="color:#fff;">
-  ROMetrics is your all-in-one clinical toolkit —<br>
-  goniometry, MMT, motion labs, and case simulations.
-</p>
-
+        <p class="sub">
+          ROMetrics is your all-in-one clinical toolkit —
+          goniometry, MMT, motion labs, and case simulations.
+        </p>
       </section>
-
-      <div></div>
 
       <nav class="strip">
         <div class="bubbles">
-
-          <!-- GONIOMETRY -->
-          <a class="bubble b1" href="./goniometry-trainer/">
+          <a class="bubble" href="./goniometry-trainer/">
             <div class="b-title">Goniometry Trainer</div>
             <div class="b-sub">Interactive ROM trainer</div>
           </a>
 
-          <!-- MOTION LAB -->
-          <a class="bubble b2" href="./lab-motion/">
+          <a class="bubble" href="./lab-motion/">
             <div class="b-title">Motions Lab</div>
             <div class="b-sub">Kinematics sandbox</div>
           </a>
 
-          <!-- MMT -->
-          <a class="bubble b3" href="./mmt/">
+          <a class="bubble" href="./mmt/">
             <div class="b-title">Manual Muscle Test</div>
             <div class="b-sub">MMT positions & cues</div>
           </a>
 
-         <a class="bubble b3" href="./motion-forensics/">
-  <div class="b-title">Motion Forensics</div>
-  <div class="b-sub" style="white-space: normal; line-height: 1.2;">
-    Measure kinematics, infer causes, prescribe corrections.
-  </div>
-</a>
-          
-          <!-- SIMULATED EVALS -->
-          <a class="bubble b4" href="./simulated-evaluations/">
-            <div class="b-title">Simulated Evaluations</div>
-            <div class="b-sub">Comprehensive digital assessment</div>
+          <a class="bubble" href="./motion-forensics/">
+            <div class="b-title">Motion Forensics</div>
+            <div class="b-sub">Measure, infer, correct</div>
           </a>
 
+          <a class="bubble" href="./simulated-evaluations/">
+            <div class="b-title">Simulated Evaluations</div>
+            <div class="b-sub">Digital assessment</div>
+          </a>
         </div>
       </nav>
     </div>
