@@ -1720,18 +1720,18 @@ const TEST_POSITION = {
   Serratus_Anterior:   { high: "seated",     low: "seated"      },
   Upper_Trapezius:     { high: "seated",     low: "prone"       },
   Middle_Trapezius:    { high: "prone",      low: "prone"       },
-  Scap_Depression_Adduction: { high: "prone", low: "seated" },
-  Rhomboids:           { high: "prone",      low: "prone"       },
+  Scap_Depression_Adduction: { high: "prone", low: "prone" },
+  Rhomboids:           { high: "prone",      low: "seated"       },
   Latissimus_Dorsi:    { high: "prone",      low: "prone"  },
 
   // Shoulder
   Anterior_Deltoid:    { high: "seated",     low: "side_lying"  },
-  Posterior_Deltoid:   { high: "prone",      low: "side_lying"  },
+  Posterior_Deltoid:   { high: "prone",      low: "prone"  },
   Middle_Deltoid:      { high: "seated",     low: "supine"      },
-  Shoulder_Horiz_Abd: { high: "prone",  low: "seatednogravity" }, 
-  Shoulder_Horiz_Add: { high: "supine", low: "seatednogravity" }, 
-  Infraspinatus:       { high: "seated",     low: "seatednogravity"      }, // table-supported NG
-  Subscapularis:       { high: "seated",     low: "seatednogravity"      },
+  Shoulder_Horiz_Abd: { high: "prone",  low: "seated" }, 
+  Shoulder_Horiz_Add: { high: "supine", low: "seated" }, 
+  Infraspinatus:       { high: "seated",     low: "seated"      }, // table-supported NG
+  Subscapularis:       { high: "seated",     low: "seated"      },
 
   // Trunk & Pelvis (grading exceptions)
   Trunk_Ext_Lumbar:    { high: "prone",      low: "prone"       },
@@ -1741,7 +1741,7 @@ const TEST_POSITION = {
   Pelvic_Elevation:    { high: "supine",     low: "supine"      },
 
   // Elbow
-  Biceps_Brachii:      { high: "seated",     low: "seated"  },
+  Biceps_Brachii:      { high: "seated",     low: "seated"  },  // seatednogravity
   Brachialis:          { high: "seated",     low: "seated"  },
   Brachioradialis:     { high: "seated",     low: "seated"  },
   Triceps_Brachii:     { high: "prone",     low: "seated"      },
@@ -1795,19 +1795,19 @@ POSE_OVERRIDES["Upper_Trapezius:low"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, 
 POSE_OVERRIDES["Middle_Trapezius:high"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920 };
 POSE_OVERRIDES["Middle_Trapezius:low"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920 };
 POSE_OVERRIDES["Scap_Depression_Adduction:high"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920 };  //prone
-POSE_OVERRIDES["Scap_Depression_Adduction:low"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000 };  //seated
+POSE_OVERRIDES["Scap_Depression_Adduction:low"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920 };  //prone
 POSE_OVERRIDES["Rhomboids:high"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920 };  
-POSE_OVERRIDES["Rhomboids:low"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920 };
+POSE_OVERRIDES["Rhomboids:low"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000,  };  // seated on bed
 POSE_OVERRIDES["Latissimus_Dorsi:high"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920 };  
 POSE_OVERRIDES["Latissimus_Dorsi:low"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920 };  
 POSE_OVERRIDES["Anterior_Deltoid:high"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000  }; //seated
 POSE_OVERRIDES["Anterior_Deltoid:low"] = { x:-1.280, y:0.800, z:0.490, rx:2.705, ry:-3.491, rz:1.745 }; //side lying  
 POSE_OVERRIDES["Posterior_Deltoid:high"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920  };
-POSE_OVERRIDES["Posterior_Deltoid:low"] = { x:-1.280, y:0.820, z:0.490, rx:2.705, ry:-3.491, rz:1.745 };
+POSE_OVERRIDES["Posterior_Deltoid:low"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920 }; //normal prone
 POSE_OVERRIDES["Middle_Deltoid:high"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000,  };  // seated on bed
 POSE_OVERRIDES["Middle_Deltoid:low"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222 };  //supine
 POSE_OVERRIDES["Shoulder_Horiz_Abd:high"] = { x:-1.200, y:0.820, z:0.470, rx:1.571, ry:0.000, rz:-1.920 };  //prone
-POSE_OVERRIDES["Shoulder_Horiz_Abd:low"] = { x:0.500, y:-0.480, z:-1.860, rx:-0.087, ry:0.349, rz:0.000 }; ///non gravity table
+POSE_OVERRIDES["Shoulder_Horiz_Abd:low"] = { x:0.350, y:-0.480, z:-1.860, rx:-0.087, ry:0.349, rz:0.000 }; ///non gravity table
 POSE_OVERRIDES["Shoulder_Horiz_Add:high"]  = { x:-1.220, y:0.740, z:0.470, rx:-1.571, ry:-0.000, rz:-1.222 };  //supine
 POSE_OVERRIDES["Shoulder_Horiz_Add:low"] = { x:0.340, y:-0.480, z:-1.860, rx:-0.087, ry:0.349, rz:0.000 }; ///non gravity table
 POSE_OVERRIDES["Infraspinatus:high"] = { x:-0.620, y:-0.280, z:0.260, rx:0.000, ry:0.349, rz:0.000 };  // seated on bed
@@ -1877,8 +1877,11 @@ POSE_OVERRIDES["Gastrocnemius:low"] = { x:-1.520, y:0.800, z:0.550, rx:1.571, ry
 /* ==== NEW: Starting Pose Bone Overrides (Applied when resistance is NOT active) ==== */
 const BONE_OVERRIDES_START = {};
 BONE_OVERRIDES_START["TFL:high"] = { calf_L:{ x:-48.4, y:-3.8, z:-3.8 }, hand_R:{ x:65.0, y:-50.4, z:44.7 }, lowerarm_L:{ x:100.0, y:6.5, z:7.2 }, lowerarm_R:{ x:97.4, y:-10.4, z:47.0 }, neck:{ x:45.4, y:6.0, z:-29.8 }, thigh_L:{ x:4.1, y:19.9, z:179.6 }, thigh_R:{ x:-1.9, y:8.1, z:-160.7 }, upperarm_L:{ x:-14.1, y:-24.9, z:-77.4 }, upperarm_R:{ x:-1.5, y:8.3, z:78.3 } };
+
+////Bone Overrides Normal///
+
   
-const BONE_OVERRIDES = {}; // e.g. BONE_OVERRIDES["Anterior_Deltoid:high"] = { boneName:{x:5,y:0,z:-10} };
+const BONE_OVERRIDES = {};
 BONE_OVERRIDES["Capital_Extension:high"] = { foot_L:{ x:15.5, y:-4.4, z:-7.2 }, foot_R:{ x:15.5, y:4.4, z:7.2 } };
 BONE_OVERRIDES["Cervical_Extension:high"] = { foot_L:{ x:15.5, y:-4.4, z:-7.2 }, foot_R:{ x:15.5, y:4.4, z:7.2 } };  
 BONE_OVERRIDES["Single_SCM:high"] = { head:{ x:-8.9, y:59.8, z:9.0 } };  
@@ -1889,6 +1892,7 @@ BONE_OVERRIDES["Middle_Trapezius:high"] = { clavicle_R:{ x:-0.9, y:5.1, z:87.9 }
 BONE_OVERRIDES["Scap_Depression_Adduction:high"] = { hand_R:{ x:-6.5, y:15.6, z:6.1 }, foot_L:{ x:14.1, y:-11.4, z:-14.5 }, foot_R:{ x:15.5, y:4.4, z:7.2 }, lowerarm_R:{ x:16.4, y:37.0, z:-3.3 }, upperarm_R:{ x:10.6, y:6.7, z:-66.4 } };
 BONE_OVERRIDES["Rhomboids:high"] = { clavicle_R:{ x:-0.9, y:5.1, z:82.9 }, foot_L:{ x:14.1, y:-11.4, z:-14.5 }, foot_R:{ x:15.5, y:4.4, z:7.2 }, lowerarm_R:{ x:118.7, y:-66.0, z:22.7 }, upperarm_R:{ x:105.4, y:-25.9, z:100.9 } };
 BONE_OVERRIDES["Latissimus_Dorsi:high"] = { clavicle_R:{ x:-0.9, y:5.1, z:97.9 }, foot_L:{ x:14.1, y:-11.4, z:-14.5 }, foot_R:{ x:15.5, y:4.4, z:7.2 }, upperarm_R:{ x:65.8, y:-32.8, z:90.9 } };  
+
 BONE_OVERRIDES["Anterior_Deltoid:high"] = { spine01:{ x:6.0, y:-0.0, z:0.0 }, upperarm_L:{ x:-1.6, y:-8.8, z:-58.2 }, upperarm_R:{ x:54.8, y:62.1, z:27.5 } };
 BONE_OVERRIDES["Posterior_Deltoid:high"] = { clavicle_R:{ x:1.8, y:16.0, z:92.0 }, foot_L:{ x:14.1, y:-11.4, z:-14.5 }, foot_R:{ x:15.5, y:4.4, z:7.2 }, lowerarm_R:{ x:12.0, y:-42.9, z:-3.6 }, upperarm_R:{ x:72.7, y:-23.0, z:104.9 } };
 BONE_OVERRIDES["Middle_Deltoid:high"] = { clavicle_L:{ x:-0.4, y:4.8, z:-97.9 }, hand_L:{ x:-104.3, y:22.4, z:143.2 }, lowerarm_L:{ x:17.1, y:14.6, z:-10.6 }, upperarm_L:{ x:30.7, y:5.8, z:-68.9 }, upperarm_R:{ x:-12.0, y:-8.8, z:-6.8 } };
@@ -1929,27 +1933,49 @@ BONE_OVERRIDES["Tibialis_Anterior:high"] = { foot_R:{ x:60.6, y:8.2, z:2.0 } };
 BONE_OVERRIDES["Foot_Eversion_PF:high"] = { foot_R:{ x:35.4, y:7.5, z:-14.7 }, hand_L:{ x:-94.8, y:5.9, z:14.6 }, hand_R:{ x:-101.0, y:-9.5, z:-14.9 } };
 BONE_OVERRIDES["Gastrocnemius:high"] = { calf_L:{ x:-3.4, y:-1.8, z:3.5 }, calf_R:{ x:-99.0, y:2.5, z:-2.2 }, foot_L:{ x:30.4, y:-6.1, z:-5.8 }, hand_L:{ x:175.8, y:30.7, z:-173.0 }, index03_L:{ x:27.1, y:0.1, z:1.3 }, index03_R:{ x:-18.0, y:5.3, z:0.5 }, lowerarm_L:{ x:13.5, y:10.7, z:9.0 }, lowerarm_R:{ x:18.7, y:-23.1, z:-0.7 }, middle03_L:{ x:39.1, y:-0.2, z:-0.5 }, ring03_L:{ x:12.8, y:-1.5, z:-2.5 }, thigh_L:{ x:3.9, y:-0.1, z:179.6 }, thigh_R:{ x:3.9, y:0.1, z:-179.6 }, toes_L:{ x:60.7, y:6.1, z:-4.8 }, toes_R:{ x:35.3, y:-1.8, z:-0.9 }, upperarm_L:{ x:9.4, y:-3.1, z:-66.5 }, upperarm_R:{ x:20.6, y:-25.1, z:68.0 } };
 
+//LOW//
+
+BONE_OVERRIDES["Capital_Extension:low"] = { neck:{ x:47.6, y:-0.0, z:0.0 } };
+BONE_OVERRIDES["Serratus_Anterior:low"] = { lowerarm_L:{ x:54.4, y:4.0, z:-0.1 }, upperarm_R:{ x:64.2, y:57.2, z:16.3 } };
+BONE_OVERRIDES["Cervical_Rotation:low"] = { foot_L:{ x:65.7, y:-8.4, z:-1.2 }, foot_R:{ x:65.7, y:8.4, z:1.2 }, upperarm_R:{ x:7.5, y:20.7, z:67.4 } };
+BONE_OVERRIDES["Middle_Trapezius:low"] = { lowerarm_R:{ x:89.4, y:-3.3, z:2.2 }, upperarm_R:{ x:-9.3, y:-4.5, z:18.5 } };
+BONE_OVERRIDES["Scap_Depression_Adduction:low"] = { hand_R:{ x:-6.5, y:15.6, z:6.1 }, foot_L:{ x:14.1, y:-11.4, z:-14.5 }, foot_R:{ x:15.5, y:4.4, z:7.2 }, lowerarm_R:{ x:16.4, y:37.0, z:-3.3 }, upperarm_R:{ x:10.6, y:6.7, z:-66.4 } };
+BONE_OVERRIDES["Rhomboids:low"] = { clavicle_R:{ x:-0.9, y:5.1, z:82.9 }, foot_L:{ x:14.1, y:-11.4, z:-14.5 }, foot_R:{ x:15.5, y:4.4, z:7.2 }, lowerarm_R:{ x:118.7, y:-66.0, z:22.7 }, upperarm_R:{ x:105.4, y:-25.9, z:100.9 },upperarm_L:{ x:-5.4, y:-16.3, z:-63.4 } };
+BONE_OVERRIDES["Latissimus_Dorsi:low"] = { clavicle_R:{ x:-0.9, y:5.1, z:97.9 }, foot_L:{ x:14.1, y:-11.4, z:-14.5 }, foot_R:{ x:15.5, y:4.4, z:7.2 }, upperarm_R:{ x:65.8, y:-32.8, z:90.9 } };  
+
+BONE_OVERRIDES["Anterior_Deltoid:low"] = { calf_L:{ x:-73.5, y:-3.9, z:-15.5 }, hand_L:{ x:-8.5, y:15.0, z:-4.7 }, lowerarm_L:{ x:2.6, y:22.3, z:6.9 }, lowerarm_R:{ x:13.0, y:-27.9, z:-3.0 }, neck:{ x:37.6, y:-0.0, z:-25.0 }, spine01:{ x:6.0, y:-0.0, z:10.0 }, spine03:{ x:-4.9, y:0.0, z:-10.0 }, thigh_L:{ x:-21.0, y:-2.0, z:179.1 }, thigh_R:{ x:-1.1, y:0.5, z:-169.6 }, upperarm_L:{ x:15.2, y:-12.0, z:-68.5 }, upperarm_R:{ x:55.1, y:21.0, z:57.8 } };
+BONE_OVERRIDES["Posterior_Deltoid:low"] = { foot_L:{ x:15.5, y:-4.4, z:-7.2 }, foot_R:{ x:20.4, y:5.0, z:6.8 }, lowerarm_L:{ x:12.2, y:-25.8, z:-14.2 }, lowerarm_R:{ x:24.3, y:-3.4, z:2.9 }, upperarm_R:{ x:-12.0, y:-8.8, z:58.2 } };
+BONE_OVERRIDES["Middle_Deltoid:low"] = { calf_L:{ x:-8.4, y:-2.1, z:3.4 }, calf_R:{ x:-8.4, y:2.1, z:-3.4 }, lowerarm_L:{ x:4.3, y:2.7, z:3.0 }, lowerarm_R:{ x:9.3, y:-2.7, z:-2.9 }, thigh_L:{ x:3.9, y:-0.1, z:174.6 }, thigh_R:{ x:3.9, y:0.1, z:-174.6 }, upperarm_L:{ x:-33.3, y:4.4, z:-70.0 }, upperarm_R:{ x:-14.7, y:-13.0, z:57.7 } };
+BONE_OVERRIDES["Shoulder_Horiz_Abd:low"] = { lowerarm_R:{ x:14.8, y:7.8, z:6.4 }, spine03:{ x:-4.9, y:0.0, z:5.0 }, upperarm_R:{ x:11.5, y:65.3, z:46.6 }, spine01:{ x:16.0, y:-0.0, z:0.0 } };
+BONE_OVERRIDES["Shoulder_Horiz_Add:low"] = { clavicle_R:{ x:4.0, y:6.2, z:102.4 }, hand_R:{ x:6.9, y:-12.9, z:8.5 }, lowerarm_L:{ x:14.3, y:3.2, z:12.5 }, lowerarm_R:{ x:22.0, y:17.2, z:12.2 }, spine01:{ x:16.0, y:-0.0, z:0.0 }, spine03:{ x:-4.9, y:10.0, z:-0.0 }, upperarm_R:{ x:-1.7, y:57.1, z:25.6 } };
+BONE_OVERRIDES["Infraspinatus:low"] = { clavicle_R:{ x:8.9, y:7.3, z:101.8 }, lowerarm_R:{ x:49.2, y:3.4, z:8.2 }, upperarm_L:{ x:-9.5, y:4.0, z:-58.5 }, upperarm_R:{ x:12.8, y:24.1, z:10.4 } };
+BONE_OVERRIDES["Subscapularis:low"] = { clavicle_R:{ x:-0.9, y:5.1, z:102.9 }, hand_R:{ x:-8.4, y:-14.7, z:-0.2 }, lowerarm_R:{ x:79.1, y:-5.6, z:14.2 }, spine01:{ x:16.0, y:5.0, z:0.0 }, spine03:{ x:5.1, y:0.0, z:-0.0 }, upperarm_L:{ x:-12.1, y:8.3, z:-53.2 }, upperarm_R:{ x:1.3, y:23.6, z:7.4 } };
+
+
+BONE_OVERRIDES["Biceps_Brachii:low"] = { clavicle_R:{ x:1.3, y:-4.6, z:107.9 }, hand_R:{ x:37.8, y:21.1, z:1.9 }, lowerarm_L:{ x:49.3, y:4.0, z:0.2 }, lowerarm_R:{ x:44.3, y:-3.9, z:-0.8 }, upperarm_L:{ x:38.6, y:-35.2, z:-27.7 }, upperarm_R:{ x:-12.0, y:-8.8, z:58.2 } };
+BONE_OVERRIDES["Brachialis:low"] = { clavicle_R:{ x:1.3, y:-4.6, z:107.9 }, hand_R:{ x:37.8, y:21.1, z:1.9 }, lowerarm_L:{ x:49.3, y:4.0, z:0.2 }, lowerarm_R:{ x:44.3, y:-3.9, z:-0.8 }, upperarm_L:{ x:38.6, y:-35.2, z:-27.7 }, upperarm_R:{ x:-12.0, y:-8.8, z:58.2 } };
+BONE_OVERRIDES["Brachioradialis:low"] = { clavicle_R:{ x:1.3, y:-4.6, z:107.9 }, hand_R:{ x:37.8, y:21.1, z:1.9 }, lowerarm_L:{ x:49.3, y:4.0, z:0.2 }, lowerarm_R:{ x:44.3, y:-3.9, z:-0.8 }, upperarm_L:{ x:38.6, y:-35.2, z:-27.7 }, upperarm_R:{ x:-12.0, y:-8.8, z:58.2 } };
+BONE_OVERRIDES["Triceps_Brachii:low"] = { clavicle_L:{ x:-5.7, y:-3.6, z:-108.3 }, lowerarm_L:{ x:49.3, y:4.0, z:0.2 }, lowerarm_R:{ x:114.3, y:3.3, z:34.1 }, upperarm_R:{ x:21.8, y:28.5, z:45.4 } };
+
+
+
 
   
 /* ==== HAND OVERRIDES (new, separate from pose) ==== */
 const HAND_OVERRIDES = {};
-HAND_OVERRIDES["Capital_Extension:high"] = {"handRX":3.7084705208004003,"handRY":-5.1987606148409595,"handRZ":-4.6035542788667625,"handRRX":3.1683205406154173,"handRRY":-3.344445299653452,"handRRZ":-0.9229091699147043,"handLX":3.733414292335506,"handLY":-4.564649659395211,"handLZ":-4.626662611961357,"handLRX":-0.23128912206036426,"handLRY":0.3726189086851196,"handLRZ":0.8238038715507627};
-HAND_OVERRIDES["Capital_Extension:low"] = {"handRX":3.299999999999998,"handRY":-4.849999999999992,"handRZ":-3.7499999999999947,"handRRX":4.65,"handRRY":-1.4999999999999998,"handRRZ":0.7500000000000002,"handLX":3.399999999999996,"handLY":-4.749999999999992,"handLZ":-2.9499999999999975,"handLRX":5.551115123125783e-17,"handLRY":-1.2,"handLRZ":3.449999999999999};
+HAND_OVERRIDES["Capital_Extension:high"] = {"handRX":3.7084705208004003,"handRY":-5.1987606148409595,"handRZ":-4.6035542788667625,"handRRX":3.1683205406154173,"handRRY":-3.344445299653452,"handRRZ":-0.9229091699147043,"handLX":3.733414292335506,"handLY":-4.3146496593952115,"handLZ":-4.526662611961357,"handLRX":-0.23128912206036426,"handLRY":0.2226189086851196,"handLRZ":0.5238038715507627};
 HAND_OVERRIDES["Cervical_Extension:high"] = {"handRX":3.7084705208004003,"handRY":-5.1987606148409595,"handRZ":-4.6035542788667625,"handRRX":3.1683205406154173,"handRRY":-3.344445299653452,"handRRZ":-0.9229091699147043,"handLX":4.333414292335504,"handLY":-3.7646496593952135,"handLZ":-4.576662611961357,"handLRX":0.21871087793963573,"handLRY":0.2226189086851196,"handLRZ":-0.37619612844923733};
-HAND_OVERRIDES["Cervical_Extension:low"] = {"handRX":3.299999999999998,"handRY":-4.8999999999999915,"handRZ":-3.7999999999999945,"handRRX":4.65,"handRRY":-1.4999999999999998,"handRRZ":0.30000000000000016,"handLX":3.399999999999996,"handLY":-4.749999999999992,"handLZ":-2.7499999999999982,"handLRX":5.551115123125783e-17,"handLRY":-1.2,"handLRZ":3.449999999999999};
 HAND_OVERRIDES["Cervical_Flexion:high"] = {"handRX":1.542455826563102,"handRY":-4.060853327271754,"handRZ":-3.828326641731136,"handRRX":-0.15,"handRRY":0.3,"handRRZ":0,"handLX":0.37205048748288905,"handLY":-3.8157838904081656,"handLZ":-3.747229123439061,"handLRX":0.15,"handLRY":0.15,"handLRZ":-0.29999999999999993};
-HAND_OVERRIDES["Capital_Flexion:low"] = {"handRX":2.4366607096519464,"handRY":-5.134163299337729,"handRZ":-2.378371050121847,"handRRX":-2.0000166592430553,"handRRY":-0.7510895572089885,"handRRZ":-2.5574762811691976,"handLX":1.0596022397803093,"handLY":-4.8822640230731045,"handLZ":-4.135524403146678,"handLRX":-0.3,"handLRY":0.15,"handLRZ":0.15};
 HAND_OVERRIDES["Capital_Flexion:high"] = {"handRX":2.3000000000000003,"handRY":-4.149999999999994,"handRZ":-2.1000000000000005,"handRRX":-5.551115123125783e-17,"handRRY":-2.5499999999999994,"handRRZ":-1.2,"handLX":1.3000000000000005,"handLY":-4.549999999999993,"handLZ":-4.099999999999993,"handLRX":0,"handLRY":0.3,"handLRZ":1.2};
 HAND_OVERRIDES["Cervical_Flexion:high"] = {"handRX":1.5644328107860903,"handRY":-4.056607836412491,"handRZ":-3.8144924081652487,"handRRX":-0.15,"handRRY":0.3,"handRRZ":0,"handLX":0.37205048748288905,"handLY":-3.8157838904081656,"handLZ":-3.747229123439061,"handLRX":0.15,"handLRY":0.15,"handLRZ":-0.29999999999999993};
-HAND_OVERRIDES["Cervical_Flexion:low"] = {"handRX":2.3984328107860895,"handRY":-4.506607836412489,"handRZ":-1.814492408165255,"handRRX":3.149999999999999,"handRRY":-0.6,"handRRZ":2.6999999999999993,"handLX":1.1220504874828894,"handLY":-4.865783890408162,"handLZ":-4.19722912343906,"handLRX":-0.15,"handLRY":0.15000000000000005,"handLRZ":0.45000000000000007};
 HAND_OVERRIDES["Single_SCM:high"] = {"handRX":3.2835587966634714,"handRY":-4.825346688143314,"handRZ":-3.6887990472163033,"handRRX":-0.15000000000000005,"handRRY":-0.75,"handRRZ":-2.5499999999999994,"handLX":1.9792747331228238,"handLY":-4.228476485371765,"handLZ":-3.8499999999999943,"handLRX":-0.15000000000000005,"handLRY":6.450000000000005,"handLRZ":7.050000000000006};
-HAND_OVERRIDES["Single_SCM:low"] = {"handRX":2.29843281078609,"handRY":-4.506607836412489,"handRZ":-1.7644924081652549,"handRRX":3.149999999999999,"handRRY":-0.6,"handRRZ":2.6999999999999993,"handLX":1.1220504874828894,"handLY":-4.865783890408162,"handLZ":-4.19722912343906,"handLRX":-0.15,"handLRY":0.15000000000000005,"handLRZ":0.45000000000000007};
 HAND_OVERRIDES["Cervical_Rotation:high"] = {"handRX":3.3950177016911813,"handRY":-4.228815656717408,"handRZ":-3.154092946149615,"handRRX":0,"handRRY":-1.2,"handRRZ":-1.4999999999999998,"handLX":2.7287945899747084,"handLY":-4.821804376030871,"handLZ":-3.8761825812379165,"handLRX":-0.9,"handLRY":-0.9,"handLRZ":0.6};
-HAND_OVERRIDES["Cervical_Rotation:low"] = {"handRX":2.002046370115527,"handRY":-2.8738991654704167,"handRZ":-11.248623580618029,"handRRX":0.3,"handRRY":3.149999999999999,"handRRZ":-1.6499999999999997,"handLX":2.8066499482026206,"handLY":-3.1803327115407654,"handLZ":-11.747197366311715,"handLRX":0.3,"handLRY":-2.6999999999999993,"handLRZ":1.9499999999999997};  
+
 
 HAND_OVERRIDES["Serratus_Anterior:high"] = {"handRX":-4.442741543517701,"handRY":-2.742981837727001,"handRZ":-1.2588276110193035,"handRRX":5.551115123125783e-17,"handRRY":1.7999999999999998,"handRRZ":-1.9499999999999997,"handLX":-3.058416811942804,"handLY":-1.7946303374835402,"handLZ":0.5915965675603173,"handLRX":-0.15,"handLRY":-2.849999999999999,"handLRZ":-5.551115123125783e-17};
 HAND_OVERRIDES["Upper_Trapezius:high"] = {"handRX":-2.5763380952032966,"handRY":-1.480551759906813,"handRZ":-1.9847937403107905,"handRRX":0,"handRRY":0.44999999999999996,"handRRZ":-0.15,"handLX":-4.337293361994533,"handLY":-1.625356637488423,"handLZ":-1.5373439425562927,"handLRX":0,"handLRY":0.29999999999999993,"handLRZ":0.14999999999999994};
 HAND_OVERRIDES["Middle_Trapezius:high"] = {"handRX":0.5569781232474104,"handRY":-3.8660588669042086,"handRZ":-2.1216394227611883,"handRRX":0.06934454188661507,"handRRY":1.8693696440051888,"handRRZ":0.09579317124981133,"handLX":1.5195068194254806,"handLY":-4.422605334381742,"handLZ":-0.3058618515609669,"handLRX":0,"handLRY":1.9499999999999995,"handLRZ":0.44999999999999996};
+
 HAND_OVERRIDES["Scap_Depression_Adduction:high"] = {"handRX":0.35000000000000003,"handRY":-4.0675115277035765,"handRZ":-1.7366544106717154,"handRRX":0.15,"handRRY":2.0999999999999996,"handRRZ":0,"handLX":4.465554477266186,"handLY":-4.50586857847631,"handLZ":-0.30159938606613457,"handLRX":0.0035720322085804335,"handLRY":-3.3031450874162585,"handLRZ":0.4486656021362936};
 HAND_OVERRIDES["Rhomboids:high"] = {"handRX":0.5190131130197497,"handRY":-3.9340075365206717,"handRZ":-1.9922118873148675,"handRRX":0,"handRRY":2.0999999999999996,"handRRZ":-0.15,"handLX":1.4850027706553315,"handLY":-3.7100347664462756,"handLZ":-1.09475356699199,"handLRX":-0.75,"handLRY":-2.8499999999999996,"handLRZ":-0.6};
 HAND_OVERRIDES["Latissimus_Dorsi:high"] = {"handRX":-1.7591083525165192,"handRY":-4.86954673124393,"handRZ":-0.266738805716018,"handRRX":0,"handRRY":2.0999999999999996,"handRRZ":-0.15,"handLX":0.15,"handLY":-3.976074862089879,"handLZ":-0.8282353374471345,"handLRX":-1.7999999999999996,"handLRY":3.7499999999999987,"handLRZ":-0.6000000000000002};
@@ -1962,7 +1988,7 @@ HAND_OVERRIDES["Shoulder_Horiz_Add:high"] = {"handRX":1.9144683161404066,"handRY
 HAND_OVERRIDES["Infraspinatus:high"] = {"handRX":-4.470454474920205,"handRY":-3.7466506449009866,"handRZ":0.04621958045922736,"handRRX":0,"handRRY":-2.999999999999999,"handRRZ":-2.0999999999999996,"handLX":-4.021498294246471,"handLY":-3.9106200538376115,"handLZ":0.15000000000000005,"handLRX":0,"handLRY":0.75,"handLRZ":1.6499999999999997};  
 HAND_OVERRIDES["Subscapularis:high"] = {"handRX":-4.5106049024023775,"handRY":-3.9325141234075627,"handRZ":-0.18394014458030156,"handRRX":0.3,"handRRY":-3.149999999999999,"handRRZ":-2.5499999999999994,"handLX":-4.3143112102062355,"handLY":-4.021768724531525,"handLZ":0.3505413137087234,"handLRX":2.2499999999999996,"handLRY":-3.1499999999999995,"handLRZ":1.3499999999999999};
 
-HAND_OVERRIDES["Biceps_Brachii:high"] = {"handRX":-2.0886883203461557,"handRY":-1.775037703228273,"handRZ":-0.7229639441469008,"handRRX":0,"handRRY":3.449999999999999,"handRRZ":0,"handLX":-0.4211251666750595,"handLY":-2.4587728179382786,"handLZ":0.13910154951156128,"handLRX":2.991592653589793,"handLRY":-1.7925831658915896,"handLRZ":3.441592653589793};
+HAND_OVERRIDES["Biceps_Brachii:high"] = {"handRX":-0.08868832034615463,"handRY":-2.1750377032282726,"handRZ":0.32703605585309936,"handRRX":0,"handRRY":5.250000000000002,"handRRZ":-0.15,"handLX":-1.7711251666750605,"handLY":-2.1587728179382797,"handLZ":-2.06089845048844,"handLRX":2.5415926535897935,"handLRY":-2.2425831658915896,"handLRZ":2.6915926535897934};
 HAND_OVERRIDES["Brachialis:high"] = {"handRX":-2.0886883203461557,"handRY":-1.6750377032282728,"handRZ":-0.8229639441469009,"handRRX":0,"handRRY":3.449999999999999,"handRRZ":0,"handLX":-0.6211251666750596,"handLY":-3.158772817938276,"handLZ":-0.6608984504884389,"handLRX":2.991592653589793,"handLRY":-1.7925831658915896,"handLRZ":3.291592653589793};
 HAND_OVERRIDES["Brachioradialis:high"] = {"handRX":-2.038688320346156,"handRY":-2.075037703228273,"handRZ":-0.7729639441469008,"handRRX":0.6,"handRRY":3.449999999999999,"handRRZ":0,"handLX":-0.4211251666750595,"handLY":-3.0087728179382767,"handLZ":0.03910154951156128,"handLRX":2.991592653589793,"handLRY":-1.7925831658915896,"handLRZ":3.441592653589793};
 HAND_OVERRIDES["Triceps_Brachii:high"] = {"handRX":0.8251259870240402,"handRY":-4.9988265907475755,"handRZ":-1.4921180269685714,"handRRX":0.15000000000000005,"handRRY":1.9499999999999997,"handRRZ":2.6999999999999997,"handLX":0.5081854201466252,"handLY":-4.487076828945899,"handLZ":1.2324362448777697,"handLRX":-0.6,"handLRY":1.9499999999999995,"handLRZ":0.75};
@@ -1987,6 +2013,44 @@ HAND_OVERRIDES["Quadriceps:high"] = {"handRX":-3.640244206896882,"handRY":-5.820
 
 HAND_OVERRIDES["Tibialis_Anterior:high"] = {"handRX":-5.80748270112216,"handRY":-4.9185035044051375,"handRZ":-2.314467880863499,"handRRX":0,"handRRY":0,"handRRZ":2.849999999999999,"handLX":-7.106383225558583,"handLY":-4.362209276108732,"handLZ":-1.1489726589619134,"handLRX":1.9499999999999997,"handLRY":1.65,"handLRZ":5.551115123125783e-17};
 HAND_OVERRIDES["Foot_Eversion_PF:high"] = {"handRX":-3.8931711219329053,"handRY":-6.995069099600694,"handRZ":0.9866197339591727,"handRRX":0,"handRRY":-4.5,"handRRZ":-1.7999999999999996,"handLX":-3.453896107733282,"handLY":-7.393379859383754,"handLZ":2.129612311046955,"handLRX":0.15,"handLRY":-3.299999999999999,"handLRZ":-1.2};
+
+
+
+
+/* ==== HAND OVERRIDES (LOW) ==== */
+
+HAND_OVERRIDES["Capital_Extension:low"] = {"handRX":3.299999999999998,"handRY":-4.849999999999992,"handRZ":-3.7499999999999947,"handRRX":4.65,"handRRY":-1.4999999999999998,"handRRZ":0.7500000000000002,"handLX":3.399999999999996,"handLY":-4.749999999999992,"handLZ":-2.9499999999999975,"handLRX":5.551115123125783e-17,"handLRY":-1.2,"handLRZ":3.449999999999999};
+HAND_OVERRIDES["Cervical_Extension:low"] = {"handRX":3.299999999999998,"handRY":-4.8999999999999915,"handRZ":-3.7999999999999945,"handRRX":4.65,"handRRY":-1.4999999999999998,"handRRZ":0.30000000000000016,"handLX":3.399999999999996,"handLY":-4.749999999999992,"handLZ":-2.7499999999999982,"handLRX":5.551115123125783e-17,"handLRY":-1.2,"handLRZ":3.449999999999999};
+HAND_OVERRIDES["Capital_Flexion:low"] = {"handRX":2.4366607096519464,"handRY":-5.134163299337729,"handRZ":-2.378371050121847,"handRRX":-2.0000166592430553,"handRRY":-0.7510895572089885,"handRRZ":-2.5574762811691976,"handLX":1.0596022397803093,"handLY":-4.8822640230731045,"handLZ":-4.135524403146678,"handLRX":-0.3,"handLRY":0.15,"handLRZ":0.15};
+HAND_OVERRIDES["Cervical_Flexion:low"] = {"handRX":2.3984328107860895,"handRY":-4.506607836412489,"handRZ":-1.814492408165255,"handRRX":3.149999999999999,"handRRY":-0.6,"handRRZ":2.6999999999999993,"handLX":1.1220504874828894,"handLY":-4.865783890408162,"handLZ":-4.19722912343906,"handLRX":-0.15,"handLRY":0.15000000000000005,"handLRZ":0.45000000000000007};
+HAND_OVERRIDES["Single_SCM:low"] = {"handRX":2.29843281078609,"handRY":-4.506607836412489,"handRZ":-1.7644924081652549,"handRRX":3.149999999999999,"handRRY":-0.6,"handRRZ":2.6999999999999993,"handLX":1.1220504874828894,"handLY":-4.865783890408162,"handLZ":-4.19722912343906,"handLRX":-0.15,"handLRY":0.15000000000000005,"handLRZ":0.45000000000000007};
+HAND_OVERRIDES["Cervical_Rotation:low"] = {"handRX":2.002046370115527,"handRY":-2.8738991654704167,"handRZ":-11.248623580618029,"handRRX":0.3,"handRRY":3.149999999999999,"handRRZ":-1.6499999999999997,"handLX":2.8066499482026206,"handLY":-3.1803327115407654,"handLZ":-11.747197366311715,"handLRX":0.3,"handLRY":-2.6999999999999993,"handLRZ":1.9499999999999997};  
+
+
+
+HAND_OVERRIDES["Serratus_Anterior:low"] = {"handRX":-4.442741543517701,"handRY":-2.742981837727001,"handRZ":-1.2588276110193035,"handRRX":5.551115123125783e-17,"handRRY":1.7999999999999998,"handRRZ":-1.9499999999999997,"handLX":-3.308416811942803,"handLY":-2.494630337483539,"handLZ":-0.5084034324396827,"handLRX":2.999999999999999,"handLRY":-3.299999999999999,"handLRZ":-5.551115123125783e-17};
+HAND_OVERRIDES["Upper_Trapezius:low"] = {"handRX":1.9708211164829013,"handRY":-4.876815300539837,"handRZ":-1.3837057659236518,"handRRX":-0.04295139535482312,"handRRY":-2.7579193214451228,"handRRZ":2.7906739231324473,"handLX":0.8240210794554774,"handLY":-4.269945800178527,"handLZ":-1.6170846832367625,"handLRX":-2.3683220783617727,"handLRY":1.4973266743677451,"handLRZ":2.7799277106967977};
+HAND_OVERRIDES["Middle_Trapezius:low"] = {"handRX":0.6569781232474105,"handRY":-3.716058866904209,"handRZ":-2.171639422761188,"handRRX":-0.8306554581133849,"handRRY":1.869369644005189,"handRRZ":0.8457931712498113,"handLX":0.7195068194254799,"handLY":-4.722605334381741,"handLZ":-1.0058618515609672,"handLRX":0,"handLRY":2.5499999999999994,"handLRZ":3.449999999999999};
+HAND_OVERRIDES["Scap_Depression_Adduction:low"] = {"handRX":0.06454052664986801,"handRY":-3.381579844085022,"handRZ":-2.3069913790059347,"handRRX":-1.2,"handRRY":2.0999999999999996,"handRRZ":1.05,"handLX":2.4333099522981714,"handLY":-4.436815923742565,"handLZ":-1.0134266287729252,"handLRX":2.8469480519674075,"handLRY":0.22105824305211855,"handLRZ":0.21102025993511156};
+HAND_OVERRIDES["Rhomboids:low"] = {"handRX":-3.6023770852164954,"handRY":-3.2386684815652185,"handRZ":-1.9587260081535944,"handRRX":-1.2,"handRRY":0.14999999999999994,"handRRZ":0,"handLX":-4.84567700334918,"handLY":-4.381078640751628,"handLZ":-1.2021177931198224,"handLRX":-0.3,"handLRY":1.7999999999999996,"handLRZ":2.3999999999999995};
+HAND_OVERRIDES["Latissimus_Dorsi:low"] = {"handRX":-1.7591083525165192,"handRY":-4.86954673124393,"handRZ":-0.266738805716018,"handRRX":0,"handRRY":2.0999999999999996,"handRRZ":-0.15,"handLX":0.15,"handLY":-3.976074862089879,"handLZ":-0.8282353374471345,"handLRX":-1.7999999999999996,"handLRY":3.7499999999999987,"handLRZ":-0.6000000000000002};
+
+
+HAND_OVERRIDES["Anterior_Deltoid:low"] = {"handRX":0.5650361344439265,"handRY":-3.080047551962139,"handRZ":-4.452592661783596,"handRRX":0.019930295736958842,"handRRY":0.1768981698877853,"handRRZ":-0.4301825711311744,"handLX":-0.45,"handLY":-3.445953618084854,"handLZ":-1.8525973585573878,"handLRX":-0.14999999999999994,"handLRY":0.9,"handLRZ":2.999999999999999};
+HAND_OVERRIDES["Posterior_Deltoid:low"] = {"handRX":-0.9016173379269942,"handRY":-4.806913504250971,"handRZ":-0.8192096230234354,"handRRX":0,"handRRY":2.0999999999999996,"handRRZ":0,"handLX":0.31444638178201334,"handLY":-3.4612943930868694,"handLZ":-1.73843170702607,"handLRX":1.6499999999999997,"handLRY":0.30000000000000004,"handLRZ":-0.15};
+HAND_OVERRIDES["Middle_Deltoid:low"] = {"handRX":1.7063356898073319,"handRY":-4.3758650240038515,"handRZ":-2.7882746787425146,"handRRX":0.44999999999999996,"handRRY":0.14999999999999994,"handRRZ":-1.7999999999999996,"handLX":0.11633676165882888,"handLY":-4.943397087868817,"handLZ":-4.411515368683856,"handLRX":0,"handLRY":0.75,"handLRZ":0.15};
+HAND_OVERRIDES["Shoulder_Horiz_Abd:low"] = {"handRX":0.1716757590716973,"handRY":-3.1364488103785177,"handRZ":-12.232425150871983,"handRRX":0,"handRRY":1.7999999999999996,"handRRZ":-1.2,"handLX":0.2161610648843359,"handLY":-3.2156307658298497,"handLZ":-11.458850833389315,"handLRX":0,"handLRY":1.4999999999999998,"handLRZ":0.75};
+HAND_OVERRIDES["Shoulder_Horiz_Add:low"] = {"handRX":0.7759806479105071,"handRY":-2.1477353033497986,"handRZ":-12.255154854118016,"handRRX":1.05,"handRRY":0.9,"handRRZ":-0.7500000000000001,"handLX":-0.4567760511375165,"handLY":-3.699138188554135,"handLZ":-12.378916419551507,"handLRX":0,"handLRY":0,"handLRZ":0};
+HAND_OVERRIDES["Infraspinatus:low"] = {"handRX":-0.01812734836181096,"handRY":-3.731643870234003,"handRZ":-9.948589511522322,"handRRX":0.028233992825408213,"handRRY":1.1957458645768284,"handRRZ":3.112888537145199,"handLX":1.4146650920195978,"handLY":-2.6340093078630287,"handLZ":-12.217605388207359,"handLRX":-0.15,"handLRY":1.9499999999999997,"handLRZ":-1.05};
+HAND_OVERRIDES["Subscapularis:low"] = {"handRX":-0.4396874676044647,"handRY":-3.854840181407612,"handRZ":-9.416347791694879,"handRRX":0.15000000000000005,"handRRY":1.7999999999999996,"handRRZ":2.6999999999999993,"handLX":0.5038858353394162,"handLY":-2.821339993415119,"handLZ":-11.348203292508586,"handLRX":1.6499999999999997,"handLRY":0.75,"handLRZ":-0.15000000000000005};
+HAND_OVERRIDES["Trunk_Ext_Lumbar:high"] = {"handRX":-5.362418451627426,"handRY":-4.110060467356634,"handRZ":-0.9492513020507023,"handRRX":0.15,"handRRY":1.9499999999999995,"handRRZ":-0.3,"handLX":-4.9455104894906645,"handLY":-4.391506861301159,"handLZ":0.3808244536019736,"handLRX":0.75,"handLRY":1.7999999999999998,"handLRZ":-0.44999999999999996};
+
+HAND_OVERRIDES["Biceps_Brachii:low"] = {"handRX":-0.29681889578849613,"handRY":-2.575690888410152,"handRZ":0.7960566646815974,"handRRX":-0.47237161106042536,"handRRY":-1.6815108001573373,"handRRZ":-3.291592653589793,"handLX":-0.9669968569504992,"handLY":-2.367480151667746,"handLZ":-1.1134438941818656,"handLRX":0.3,"handLRY":-0.75,"handLRZ":0.6};
+HAND_OVERRIDES["Brachialis:low"] = {"handRX":-0.29681889578849613,"handRY":-2.575690888410152,"handRZ":0.7960566646815974,"handRRX":-0.47237161106042536,"handRRY":-1.6815108001573373,"handRRZ":-3.291592653589793,"handLX":-0.9669968569504992,"handLY":-2.367480151667746,"handLZ":-1.1134438941818656,"handLRX":0.3,"handLRY":-0.75,"handLRZ":0.6};
+HAND_OVERRIDES["Brachioradialis:low"] = {"handRX":-0.29681889578849613,"handRY":-2.575690888410152,"handRZ":0.7960566646815974,"handRRX":-0.47237161106042536,"handRRY":-1.6815108001573373,"handRRZ":-3.291592653589793,"handLX":-0.9669968569504992,"handLY":-2.367480151667746,"handLZ":-1.1134438941818656,"handLRX":0.3,"handLRY":-0.75,"handLRZ":0.6};
+HAND_OVERRIDES["Triceps_Brachii:low"] = {"handRX":-4.603352626304395,"handRY":-3.2803356480409347,"handRZ":0.8504981738185555,"handRRX":0,"handRRY":1.9499999999999995,"handRRZ":2.5499999999999994,"handLX":-2.80041863658089,"handLY":-3.2536092259953198,"handLZ":1.2487596402697552,"handLRX":-2.9711837855575562,"handLRY":-0.5981100545064092,"handLRZ":-0.7913700045679833};
+
+
 
   
 /* ==== NEUTRAL HAND POSITION (New Default) ==== */
@@ -3607,7 +3671,7 @@ function onPointerDownTransformControls(event) {
 <div id="handTuner" style="
   position:fixed; right:12px; top:80px; width:240px;
   background:#ffffffdd; padding:12px; border-radius:10px;
-  font-family:system-ui; display:none; z-index:9999; box-shadow:0 0 10px #0003;
+  font-family:system-ui; display:block; z-index:9999; box-shadow:0 0 10px #0003;
 ">
   <div style="font-weight:600; margin-bottom:8px;">Therapist Hand Tuner</div>
 
