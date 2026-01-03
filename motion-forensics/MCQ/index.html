@@ -15,9 +15,16 @@
     .module-header { padding:20px 24px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; user-select:none; }
     .module-header:hover { background:rgba(56,189,248,.05); }
     .module-title { font-weight:800; font-size:18px; }
+    
+    /* Locking Styles */
+    .module-row.locked { opacity: 0.5; cursor: not-allowed; border-style: dashed; }
+    .module-row.locked .module-header { cursor: not-allowed; }
+    .lock-icon { font-size: 14px; margin-right: 8px; }
+
     .status-badge { font-size:12px; font-weight:900; padding:4px 10px; border-radius:99px; }
     .status-pending { background:rgba(148,163,184,0.1); color:#a8c0da; }
     .status-done { background:rgba(74,222,128,0.1); color:#4ade80; border:1px solid rgba(74,222,128,0.2); }
+    .status-locked { background:rgba(248,113,113,0.1); color:#f87171; }
 
     .module-content { display:none; padding:0 32px 32px 32px; border-top:1px solid rgba(148,163,184,.1); }
     .module-row.active { border-color:#38bdf8; box-shadow:0 10px 30px rgba(0,0,0,0.4); }
@@ -42,117 +49,109 @@
   
   <div class="header">
     <h1>Forensic Assessment Hub</h1>
-    <p style="color:#a8c0da">Select a module to validate your forensic findings.</p>
+    <p style="color:#a8c0da">All modules must be validated sequentially.</p>
   </div>
 
   <div id="accordionContainer"></div>
 </div>
 
 <script type="module">
+  // HARDCODED QUIZ DATA
+  const MODULE_DATA = {
+    "FL-001": {
+      title: "Metabolic Forensics: Trial A & B",
+      questions: [
+        { q: "What determines whether aerobic metabolism can sustain the selected speed?", opts: ["A. Fuel timing relative to effort", "B. Duration of the trial", "C. Size of anaerobic reserve", "D. VO₂ Max relative to cost"], correct: "D" },
+        { q: "Why can anaerobic systems still contribute during an aerobic-dominant trial?", opts: ["A. All movement begins anaerobically", "B. The body uses mixed systems", "C. Fuel changes energy pathways", "D. PCr activates at low speed"], correct: "B" },
+        { q: "Which value represents the subject’s modeled VO₂ Max used as the oxygen budget for the trial?", opts: ["A. 15.3 × (HRmax ÷ HRrest)", "B. (Speed × 26.8 × 0.20) + 3.5", "C. 0.20 × running speed", "D. Resting metabolic rate"], correct: "A" },
+        { q: "Which of the following best explains the effect of EARLY carbohydrate fuel on the subject during Trial B?", opts: ["A. Fuel adds energy while slightly raising lactate, due to glycolysis.", "B. Fuel adds energy without changing lactate, under anaerobic conditions.", "C. Fuel reduces lactate while also restoring energy to muscles.", "D. Fuel has no effect on energy or lactate during exercise."], correct: "A" },
+        { q: "What strategy allowed the subject to complete Trial B without crashing?", opts: ["A. Fuel twice at any point, regardless of energy or lactate.", "B. Wait to fuel; early carbohydrate energy isn’t available yet.", "C. Fuel continuously from the start to keep energy high.", "D. Fuel only once at the very end of the trial."], correct: "B" }
+      ]
+    },
+    "FL-002": {
+      title: "Stability Forensics: Center of Mass",
+      questions: [
+        { q: "In Trial A, bending the knees allowed the subject to remain stable at maximum forward reach. Why did this strategy work?", opts: ["A. Increased lower-extremity muscle activation", "B. Reduced the forward task requirement", "C. Slowed the movement enough for correction", "D. Lowered center of mass so its vertical projection remained inside the base of support"], correct: "D" },
+        { q: "In Trial A, bending the knees prevented a stability breach primarily because it altered which relationship?", opts: ["A. Joint torque and muscle force production", "B. Movement speed and response to imbalance", "C. Reach distance and muscular endurance", "D. Center of mass position and boundaries of the base of support"], correct: "D" },
+        { q: "In Trial B, widening the stance was the successful strategy during lateral loading. Why did widening the stance work?", opts: ["A. Reduced effective weight of the load", "B. Limited trunk motion", "C. Increased muscular contribution from hip abductors", "D. Expanded the base of support, allowing the shifted COM to remain contained"], correct: "D" },
+        { q: "When the weighted ball was added in Trial B, bending the knees alone was no longer sufficient. Why?", opts: ["A. Knee flexion doesn't contribute to lateral balance", "B. Task exceeded strength capacity", "C. Movement speed increased", "D. External load displaced COM laterally beyond the existing base of support"], correct: "D" },
+        { q: "Across both trials, the successful strategies worked because they ensured which condition was met?", opts: ["A. Muscular effort counteracted gravity", "B. Postural adjustments occurred early", "C. Movement patterns appeared controlled", "D. Vertical projection of the COM remained within the base of support"], correct: "D" }
+      ]
+    }
+  };
+
   const TOTAL_MODULES = 10;
-  const params = new URLSearchParams(window.location.search);
-  const autoOpen = params.get('module'); // e.g., FL-001
-  
+
   function initHub() {
     const container = document.getElementById('accordionContainer');
+    container.innerHTML = '';
     
     for (let i = 1; i <= TOTAL_MODULES; i++) {
       const id = `FL-${String(i).padStart(3, '0')}`;
       const isDone = localStorage.getItem(`${id}_Status`) === 'completed';
       
+      // Locking logic: Module 1 is always unlocked. Others unlock if (i-1) is done.
+      const isLocked = i > 1 && localStorage.getItem(`FL-${String(i-1).padStart(3, '0')}_Status`) !== 'completed';
+      
       const row = document.createElement('div');
-      row.className = `module-row ${autoOpen === id ? 'active' : ''}`;
+      row.className = `module-row ${isLocked ? 'locked' : ''}`;
       row.id = `row-${id}`;
       
+      const title = MODULE_DATA[id] ? MODULE_DATA[id].title : `Module ${i}: Locked / No Data`;
+      const badgeClass = isDone ? 'status-done' : (isLocked ? 'status-locked' : 'status-pending');
+      const badgeText = isDone ? '✓ COMPLETED' : (isLocked ? 'LOCKED' : 'READY');
+
       row.innerHTML = `
-        <div class="module-header" onclick="toggleModule('${id}')">
-          <div class="module-title">Module ${i}: Forensic Data Validation</div>
-          <div class="status-badge ${isDone ? 'status-done' : 'status-pending'}">
-            ${isDone ? '✓ COMPLETED' : 'PENDING'}
-          </div>
+        <div class="module-header" onclick="toggleModule('${id}', ${isLocked})">
+          <div class="module-title">${isLocked ? '<span class="lock-icon">🔒</span>' : ''}${id} — ${title}</div>
+          <div class="status-badge ${badgeClass}">${badgeText}</div>
         </div>
-        <div class="module-content" id="content-${id}">
-          <div class="quiz-loading">Fetching forensic data...</div>
-        </div>
+        <div class="module-content" id="content-${id}"></div>
       `;
       
       container.appendChild(row);
-      
-      // If it's the one we need to open, load it immediately
-      if (autoOpen === id) {
-        loadModuleData(id);
-      }
+      if (!isLocked && MODULE_DATA[id]) renderQuiz(id);
     }
   }
 
-  window.toggleModule = function(id) {
+  window.toggleModule = function(id, isLocked) {
+    if (isLocked) {
+      alert("This module is locked. You must complete the previous Forensic Lab section first.");
+      return;
+    }
     const rows = document.querySelectorAll('.module-row');
     const target = document.getElementById(`row-${id}`);
     const isActive = target.classList.contains('active');
     
     rows.forEach(r => r.classList.remove('active'));
-    
-    if (!isActive) {
-      target.classList.add('active');
-      loadModuleData(id);
-    }
+    if (!isActive) target.classList.add('active');
   };
 
-  async function loadModuleData(modId) {
+  function renderQuiz(modId) {
     const contentDiv = document.getElementById(`content-${modId}`);
-    const fileName = modId.toLowerCase().replace('fl-', 'module_');
-    const path = `https://raw.githubusercontent.com/Kingto89/ROMetrics.com/main/assets/forensics_modules/${fileName}.md`;
-
-    try {
-      const res = await fetch(path);
-      if (!res.ok) throw new Error("Module file not found");
-      const md = await res.text();
-      const quizData = parseQuiz(md);
-      renderQuiz(modId, quizData);
-    } catch (err) {
-      contentDiv.innerHTML = `<div style="padding:20px; color:#f87171;">Module file ${fileName}.md not found on GitHub.</div>`;
+    const data = MODULE_DATA[modId];
+    if (!data) {
+        contentDiv.innerHTML = `<p style="color:#a8c0da">Forensic data for ${modId} is currently offline.</p>`;
+        return;
     }
-  }
 
-  function parseQuiz(md) {
-    const questions = [];
-    const blocks = md.split('**Checkpoint');
-    blocks.shift();
-    blocks.forEach((block, idx) => {
-      const lines = block.split('\n').map(l => l.trim()).filter(l => l);
-      const options = lines.filter(l => /^[A-D]\./.test(l));
-      const ansMatch = block.match(/Answer.*?([A-D])/i);
-      if (options.length && ansMatch) {
-        questions.push({
-          q: lines[1] || "Question text error",
-          opts: options,
-          correct: ansMatch[1].toUpperCase()
-        });
-      }
-    });
-    return questions;
-  }
-
-  function renderQuiz(modId, questions) {
-    const contentDiv = document.getElementById(`content-${modId}`);
     const isDone = localStorage.getItem(`${modId}_Status`) === 'completed';
     contentDiv.innerHTML = '';
 
-    questions.forEach((item, qIdx) => {
+    data.questions.forEach((item, qIdx) => {
       const qBlock = document.createElement('div');
       qBlock.className = 'q-block';
       qBlock.innerHTML = `<div class="q-text">${qIdx + 1}. ${item.q}</div>`;
 
       item.opts.forEach(opt => {
-        const letter = opt.charAt(0);
+        const letter = opt.trim().charAt(0);
         const div = document.createElement('div');
         div.className = 'opt';
         div.textContent = opt;
         
-        // Review mode logic
         if (isDone && letter === item.correct) {
           div.classList.add('correct-review');
-          div.innerHTML += " <b>(Correct Finding)</b>";
+          div.innerHTML += " <b>(Validated)</b>";
         }
 
         if (!isDone) {
@@ -170,34 +169,28 @@
     if (!isDone) {
       const subBtn = document.createElement('button');
       subBtn.className = 'btn';
-      subBtn.textContent = 'Submit Assessment';
-      subBtn.onclick = () => submitQuiz(modId, questions, subBtn);
+      subBtn.textContent = 'Validate Findings';
+      subBtn.onclick = () => submitQuiz(modId, data.questions);
       contentDiv.appendChild(subBtn);
-    } else {
-      const msg = document.createElement('div');
-      msg.style.cssText = "margin-top:20px; padding:15px; background:rgba(74,222,128,0.1); color:#4ade80; border-radius:12px; text-align:center; font-weight:800;";
-      msg.textContent = "VALIDATION COMPLETE: This module has been verified.";
-      contentDiv.appendChild(msg);
     }
   }
 
-  function submitQuiz(modId, questions, btn) {
-    let score = 0;
+  function submitQuiz(modId, questions) {
     const allAnswered = questions.every(q => q.userAnswer);
-
     if (!allAnswered) {
       alert("Please record all forensic answers before submitting.");
       return;
     }
 
+    let score = 0;
     questions.forEach(q => { if (q.userAnswer === q.correct) score++; });
 
     if (score === questions.length) {
       localStorage.setItem(`${modId}_Status`, 'completed');
-      alert("PERFECT SCORE. Module data validated.");
-      location.reload(); // Refresh to update checkmarks
+      alert("VALIDATION SUCCESS: Findings match lab data. Next section unlocked.");
+      initHub(); // Re-render to unlock next row
     } else {
-      alert(`Score: ${score}/${questions.length}. Inaccurate findings. Review the simulation data and try again.`);
+      alert(`VALIDATION FAILED: ${score}/${questions.length} correct. Inaccurate findings detected. Re-examine the lab data.`);
     }
   }
 
