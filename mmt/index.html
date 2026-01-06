@@ -3005,8 +3005,10 @@ actionSel.addEventListener("change", () => {
     }
     // Always ensure the button is explicitly off/disabled regardless of prior state.
     vectorOverlayBtn.classList.remove('lockOn');
-    vectorOverlayBtn.disabled = !isTestSelected; // Must be set here if not done elsewhere.
-    // --- END VECTOR CLEARING FIX ---
+// Disable Vector Overlay if: no test selected, it's an exception test, or it's a low grade (0-2)
+const isLowBucket = getGradeBucketForTest(actionSel.value) === "low";
+const isException = EXCEPTION_TESTS.has(actionSel.value);
+vectorOverlayBtn.disabled = !isTestSelected || isException || isLowBucket;    // --- END VECTOR CLEARING FIX ---
 
     // 1. Hands Toggle Button control
     toggleHandsBtn.disabled = !isTestSelected;
@@ -3053,6 +3055,11 @@ gradeMain.addEventListener("change", () => {
         window.currentMMTtest = actionSel.value;
         window.currentMMTgradeBucket = getGradeBucketForTest(actionSel.value);
         applyBodyPositionFromSelection();
+// Update vector button state when grade changes
+const isLowBucket = getGradeBucketForTest(actionSel.value) === "low";
+vectorOverlayBtn.disabled = isLowBucket || EXCEPTION_TESTS.has(actionSel.value);
+if (isLowBucket && areVectorsVisible) hideVectors();
+
         if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
     }
 });
