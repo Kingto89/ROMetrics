@@ -13,8 +13,8 @@ html,body{
   margin:0;
   padding:0;
   font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-  background:#000;
-  color:#fff;
+  background:#f1f5f9; /* Bright Slate Background */
+  color:#1e293b;      /* Dark Slate Text */
 }
 
 /* ================= FRAME ================= */
@@ -29,12 +29,13 @@ html,body{
   height:100svh;
   object-fit:cover;
   display:block;
+  opacity: 0.85; /* Soften the backdrop image */
 }
 
 @media (max-width:768px){
   .hero{
     object-fit:contain;
-    background:#000;
+    background:#f1f5f9;
   }
 }
 
@@ -47,9 +48,9 @@ html,body{
   background:
     linear-gradient(
       to bottom,
-      rgba(0,0,0,.45),
-      rgba(0,0,0,.15) 40%,
-      rgba(0,0,0,.45)
+      rgba(255,255,255, 0.4),
+      rgba(255,255,255, 0.1) 40%,
+      rgba(255,255,255, 0.3)
     );
 }
 
@@ -59,9 +60,11 @@ html,body{
   padding:6px 14px;
   border-radius:10px;
   font-weight:800;
-  background:rgba(0,0,0,.65);
-  border:1px solid rgba(255,255,255,.25);
+  background:rgba(255,255,255, 0.85); /* Brightened container */
+  border:1px solid rgba(0,0,0, 0.1);
+  color:#0f172a;
   width:max-content;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
 }
 
 /* ================= HERO COPY (TOP-LOCKED) ================= */
@@ -85,9 +88,12 @@ html,body{
   font-size:11px;
   letter-spacing:.14em;
   text-transform:uppercase;
-  background:rgba(0,0,0,.6);
+  background:rgba(255,255,255, 0.9);
+  color:#475569;
   padding:6px 10px;
   border-radius:999px;
+  border:1px solid rgba(0,0,0,0.05);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
 /* ================= HEADLINE ================= */
@@ -95,21 +101,27 @@ h1{
   margin:0 0 12px 0;
   font-size:clamp(30px,5vw,48px);
   font-weight:900;
+  color: #0f172a;
 }
 
 h1 span{
-  background:linear-gradient(135deg,#60a5fa,#22d3ee);
+  background:linear-gradient(135deg,#2563eb,#0891b2); /* Darker Blue/Cyan for light bg */
   -webkit-background-clip:text;
   color:transparent;
 }
 
 /* ================= SUBTEXT ================= */
 .sub{
-  background:rgba(0,0,0,.55);
+  background:rgba(255,255,255, 0.7); /* Glass effect */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   padding:12px 14px;
   border-radius:12px;
   max-width:64ch;
   font-size:clamp(15px,2.6vw,18px);
+  color:#334155;
+  border: 1px solid rgba(255,255,255, 0.5);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
 }
 
 /* ================= MODULE STRIP ================= */
@@ -141,10 +153,14 @@ h1 span{
   display:flex;
   flex-direction:column;
   gap:6px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  transition: transform 0.2s;
 }
 
-.b-title{ font-weight:800 }
-.b-sub{ opacity:.9 }
+.bubble:active { transform: scale(0.98); }
+
+.b-title{ font-weight:800; font-size: 16px; }
+.b-sub{ opacity:.9; font-size: 13px; }
 
 /* ================= COLORS ================= */
 .bubble:nth-child(1){ background:linear-gradient(135deg,#f59e0b,#f97316); }
@@ -170,13 +186,11 @@ h1 span{
 
 <body>
 <div class="frame">
-  <img class="hero" src="./assets/backdrop5.png" alt="ROMetrics backdrop">
+  <img class="hero" src="./assets/backdrop2.png" alt="ROMetrics backdrop">
 
   <div class="overlay">
-    <!-- TOP -->
     <div class="brand">ROMetrics</div>
 
-    <!-- HERO COPY (TOP-ANCHORED) -->
     <section class="copy">
       <div class="brand-row">
         <img src="./assets/rometrics-logo.png" alt="">
@@ -193,7 +207,6 @@ h1 span{
       </p>
     </section>
 
-    <!-- BOTTOM -->
     <nav class="strip">
       <div class="bubbles">
         <a class="bubble" href="./goniometry-trainer/">
