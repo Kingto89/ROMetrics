@@ -1770,7 +1770,7 @@ Pelvic_Elevation:   { high: "supine", low: "supine" },
   // Ankle & Foot
   Tibialis_Anterior:   { high: "supine",     low: "supine"      }, // dorsiflex+inv
   Foot_Eversion_PF:    { high: "seated",     low: "seated"      }, //platar+ev
-  Gastrocnemius:       { high: "gastroc",    low: "prone"  }  //table stand
+  Gastrocnemius:       { high: "gastroc",    low: "gastroc"  }  //table stand
 };
 
 // Decide if we're in the high (3–5) or low (0–2) family for a given test
@@ -1929,49 +1929,27 @@ BONE_OVERRIDES["Trunk_Ext_Lumbar:high"] = { clavicle_L:{ x:-0.6, y:-15.1, z:-77.
 // TRUNK EXTENSION - THORACIC (Grades 5 & 4 share High Family)
 BONE_OVERRIDES["Trunk_Ext_Thoracic:high"] = { clavicle_L:{ x:-0.6, y:-15.1, z:-77.8 }, clavicle_R:{ x:24.0, y:11.9, z:86.3 }, foot_L:{ x:20.4, y:-5.0, z:-6.8 }, foot_R:{ x:10.5, y:3.8, z:7.6 }, hand_L:{ x:12.2, y:40.0, z:-0.0 }, hand_R:{ x:10.8, y:-32.7, z:-16.5 }, lowerarm_L:{ x:53.5, y:27.2, z:119.1 }, lowerarm_R:{ x:51.1, y:-20.0, z:-116.6 }, spine01:{ x:-29.0, y:-0.0, z:0.0 }, spine03:{ x:-4.9, y:0.0, z:-0.0 }, thigh_L:{ x:3.9, y:-0.1, z:174.6 }, thigh_R:{ x:3.9, y:0.1, z:-174.6 }, upperarm_L:{ x:-4.8, y:4.5, z:36.3 }, upperarm_R:{ x:-17.5, y:27.5, z:-38.9 } };  
 
+// TRUNK FLEXION (Independent Grade 4)
+BONE_OVERRIDES["Trunk_Flexion:4"] = {  hand_L: { x: 6.9, y: 13.3, z: -8.5 },  lowerarm_L: { x: 130.1, y: -19.9, z: -45.1 }, lowerarm_R: { x: 126.4, y: 16.1, z: 51.1 }, spine01: { x: 41.0, y: -0.0, z: 0.0 }, thigh_L: { x: 3.9, y: -0.1, z: 179.6 }, thigh_R: { x: 3.9, y: 0.1, z: -179.6 }, upperarm_L: { x: -5.7, y: -5.5, z: -53.7 }, upperarm_R: { x: 7.3, y: 20.7, z: 51.0 } };
+
+
 // TRUNK EXTENSION - LUMBAR (Independent Grade 3)
-BONE_OVERRIDES["Trunk_Ext_Lumbar:3"] = { 
-    foot_L:{ x:15.5, y:-4.4, z:-7.2 }, 
-    foot_R:{ x:15.5, y:4.4, z:7.2 }, 
-    hand_L:{ x:14.4, y:-5.7, z:-14.8 }, 
-    hand_R:{ x:1.2, y:-8.7, z:7.2 }, 
-    lowerarm_L:{ x:16.8, y:-21.6, z:127.9 }, 
-    lowerarm_R:{ x:30.3, y:4.6, z:-127.1 }, 
-    spine01:{ x:-14.0, y:0.0, z:0.0 }, 
-    upperarm_L:{ x:-12.1, y:8.3, z:56.8 }, 
-    upperarm_R:{ x:-12.0, y:-8.8, z:-66.8 } };
+BONE_OVERRIDES["Trunk_Ext_Lumbar:3"] = {  foot_L:{ x:15.5, y:-4.4, z:-7.2 }, foot_R:{ x:15.5, y:4.4, z:7.2 }, hand_L:{ x:14.4, y:-5.7, z:-14.8 }, hand_R:{ x:1.2, y:-8.7, z:7.2 }, lowerarm_L:{ x:16.8, y:-21.6, z:127.9 },  lowerarm_R:{ x:30.3, y:4.6, z:-127.1 }, spine01:{ x:-14.0, y:0.0, z:0.0 }, upperarm_L:{ x:-12.1, y:8.3, z:56.8 }, upperarm_R:{ x:-12.0, y:-8.8, z:-66.8 } };
 
 // TRUNK EXTENSION - THORACIC (Independent Grade 3)
-BONE_OVERRIDES["Trunk_Ext_Thoracic:3"] = { 
-    foot_L:{ x:15.5, y:-4.4, z:-7.2 }, 
-    foot_R:{ x:15.5, y:4.4, z:7.2 }, 
-    hand_L:{ x:14.4, y:-5.7, z:-14.8 }, 
-    hand_R:{ x:1.2, y:-8.7, z:7.2 }, 
-    lowerarm_L:{ x:16.8, y:-21.6, z:127.9 }, 
-    lowerarm_R:{ x:30.3, y:4.6, z:-127.1 }, 
-    spine01:{ x:-14.0, y:0.0, z:0.0 }, 
-    upperarm_L:{ x:-12.1, y:8.3, z:56.8 }, 
-    upperarm_R:{ x:-12.0, y:-8.8, z:-66.8 } };
+BONE_OVERRIDES["Trunk_Ext_Thoracic:3"] = { foot_L:{ x:15.5, y:-4.4, z:-7.2 }, foot_R:{ x:15.5, y:4.4, z:7.2 }, hand_L:{ x:14.4, y:-5.7, z:-14.8 }, hand_R:{ x:1.2, y:-8.7, z:7.2 }, lowerarm_L:{ x:16.8, y:-21.6, z:127.9 }, lowerarm_R:{ x:30.3, y:4.6, z:-127.1 }, spine01:{ x:-14.0, y:0.0, z:0.0 }, 
+ upperarm_L:{ x:-12.1, y:8.3, z:56.8 }, upperarm_R:{ x:-12.0, y:-8.8, z:-66.8 } };
 
 // TRUNK ROTATION (Independent Grade 5)
-BONE_OVERRIDES["Trunk_Rotation:5"] = { 
-  clavicle_L: { x: -0.9, y: -5.1, z: -72.9 }, 
-  clavicle_R: { x: -0.9, y: 5.1, z: 82.9 }, 
-  hand_L: { x: 4.1, y: -12.1, z: -14.0 }, 
-  hand_R: { x: -18.8, y: 18.5, z: 15.1 }, 
-  lowerarm_L: { x: 12.5, y: 10.7, z: 133.0 }, 
-  lowerarm_R: { x: 3.0, y: -19.7, z: -134.9 }, 
-  spine01: { x: 11.9, y: 48.8, z: 9.4 }, 
-  spine02: { x: 10.6, y: 24.2, z: -0.2 }, 
-  spine03: { x: 2.6, y: -33.9, z: -2.0 }, 
-  thigh_L: { x: 3.9, y: -0.1, z: 174.6 }, 
-  thigh_R: { x: 3.9, y: 0.1, z: -174.6 }, 
-  upperarm_L: { x: -12.4, y: -10.4, z: 35.5 }, 
-  upperarm_R: { x: 60.6, y: -0.5, z: -8.6 } 
-};
+BONE_OVERRIDES["Trunk_Rotation:5"] = { clavicle_L: { x: -0.9, y: -5.1, z: -72.9 }, clavicle_R: { x: -0.9, y: 5.1, z: 82.9 }, hand_L: { x: 4.1, y: -12.1,z: -14.0 }, hand_R: { x: -18.8, y: 18.5, z: 15.1 }, lowerarm_L: { x: 12.5, y: 10.7, z: 133.0 },lowerarm_R: { x: 3.0, y: -19.7, z: -134.9 }, 
+  spine01: { x: 11.9, y: 48.8, z: 9.4 }, spine02: { x: 10.6, y: 24.2, z: -0.2 }, spine03: { x: 2.6, y: -33.9, z: -2.0 }, thigh_L: { x: 3.9, y: -0.1, z: 174.6 }, thigh_R: { x: 3.9, y: 0.1, z: -174.6 }, upperarm_L: { x: -12.4, y: -10.4, z: 35.5 }, upperarm_R: { x: 60.6, y: -0.5, z: -8.6 } };
+BONE_OVERRIDES["Trunk_Rotation:4"] = { hand_L:{ x:17.1, y:37.1, z:-11.8 }, hand_R:{ x:-6.1, y:-34.5, z:7.5 }, lowerarm_L:{ x:131.0, y:-9.2, z:-50.3 }, lowerarm_R:{ x:117.1, y:33.6, z:49.0 }, upperarm_L:{ x:6.8, y:-21.4, z:-55.9 }, upperarm_R:{ x:4.6, y:10.0, z:48.1 }, spine01:{ x:33.1, y:34.5, z:-6.0 } };
+BONE_OVERRIDES["Trunk_Rotation:3"] = { spine01:{ x:28.9, y:44.8, z:5.0 }, upperarm_L:{ x:35.2, y:0.0, z:-70.5 }, upperarm_R:{ x:29.0, y:4.4, z:70.0 } };
+
 
 BONE_OVERRIDES["Trunk_Flexion:5"] = { clavicle_L:{ x:-0.9, y:-5.1, z:-77.9 }, clavicle_R:{ x:-0.9, y:5.1, z:67.9 }, hand_L:{ x:-5.9, y:-10.3, z:-6.0 }, lowerarm_L:{ x:13.8, y:9.7, z:132.4 }, lowerarm_R:{ x:17.6, y:-6.2, z:-138.1 }, spine01:{ x:41.0, y:-0.0, z:0.0 }, spine03:{ x:20.1, y:0.0, z:-0.0 }, thigh_L:{ x:3.9, y:-0.1, z:174.6 }, thigh_R:{ x:3.9, y:0.1, z:-174.6 }, upperarm_L:{ x:6.8, y:5.1, z:20.0 }, upperarm_R:{ x:-12.0, y:-8.8, z:-11.8 } };
 
+BONE_OVERRIDES["Trunk_Flexion:3"] = { spine01:{ x:31.0, y:-0.0, z:0.0 }, upperarm_L:{ x:43.4, y:3.2, z:-62.9 }, upperarm_R:{ x:45.2, y:-10.4, z:54.2 } };
 
 
 // PELVIC ELEVATION (Grades 5 & 4 share High Family)
@@ -2057,9 +2035,12 @@ BONE_OVERRIDES["Trunk_Ext_Thoracic:low"] = {
     foot_L: { x: 20.4, y: -5.0, z: -6.8 }, 
     foot_R: { x: 20.4, y: 5.0, z: 6.8 } 
 };
-
-
+BONE_OVERRIDES["Trunk_Flexion:low"] = { calf_L:{ x:-103.5, y:-3.2, z:2.6 }, calf_R:{ x:-98.5, y:3.4, z:2.1 }, foot_L:{ x:25.4, y:-5.6, z:-6.3 }, foot_R:{ x:30.4, y:6.1, z:5.8 }, thigh_L:{ x:-45.9, y:4.1, z:176.4 }, thigh_R:{ x:-41.1, y:-0.2, z:-179.6 }, upperarm_L:{ x:-17.2, y:16.9, z:-62.1 }, upperarm_R:{ x:-15.9, y:-18.0, z:62.3 } };
+BONE_OVERRIDES["Trunk_Rotation:low"] = { calf_L:{ x:-103.5, y:-3.2, z:2.6 }, calf_R:{ x:-98.5, y:3.4, z:2.1 }, foot_L:{ x:25.4, y:-5.6, z:-6.3 }, foot_R:{ x:30.4, y:6.1, z:5.8 }, thigh_L:{ x:-45.9, y:4.1, z:176.4 }, thigh_R:{ x:-41.1, y:-0.2, z:-179.6 }, upperarm_L:{ x:-17.2, y:16.9, z:-62.1 }, upperarm_R:{ x:-15.9, y:-18.0, z:62.3 } };
+BONE_OVERRIDES["Gastrocnemius:low"] = { foot_L:{ x:30.4, y:-6.1, z:-5.8 } };
   
+
+
 /* ==== HAND OVERRIDES (new, separate from pose) ==== */
 const HAND_OVERRIDES = {};
 HAND_OVERRIDES["Capital_Extension:high"] = {"handRX":3.7084705208004003,"handRY":-5.1987606148409595,"handRZ":-4.6035542788667625,"handRRX":3.1683205406154173,"handRRY":-3.344445299653452,"handRRZ":-0.9229091699147043,"handLX":3.733414292335506,"handLY":-4.3146496593952115,"handLZ":-4.526662611961357,"handLRX":-0.23128912206036426,"handLRY":0.2226189086851196,"handLRZ":0.5238038715507627};
@@ -2097,6 +2078,13 @@ HAND_OVERRIDES["ECRB:high"] = {"handRX":0.79477037979376,"handRY":-3.52898175859
 HAND_OVERRIDES["ECU:high"] = {"handRX":0.5321217929483433,"handRY":-3.455030783598274,"handRZ":-9.873827616950102,"handRRX":-0.15,"handRRY":-3.299999999999999,"handRRZ":2.3999999999999995,"handLX":-0.6102419067828225,"handLY":-2.778748113372595,"handLZ":-10.250010469265842,"handLRX":0.29999999999999993,"handLRY":-4.5,"handLRZ":-1.7999999999999998};
 HAND_OVERRIDES["FCR:high"] = {"handRX":0.55,"handRY":-3.259541602190672,"handRZ":-9.89638627408414,"handRRX":-0.3,"handRRY":-2.849999999999999,"handRRZ":2.3999999999999995,"handLX":-0.9000000000000004,"handLY":-2.3124502200164567,"handLZ":-10.27369333347275,"handLRX":-0.44999999999999996,"handLRY":1.7999999999999996,"handLRZ":-1.05};  
 HAND_OVERRIDES["FCU:high"] = {"handRX":0.44291869119899585,"handRY":-3.290188954308885,"handRZ":-9.638541131892374,"handRRX":-0.3,"handRRY":-2.999999999999999,"handRRZ":-3.299999999999999,"handLX":1.2370525369535177,"handLY":-3.4701284811140414,"handLZ":-10.10791498024637,"handLRX":-0.15,"handLRY":-1.9499999999999995,"handLRZ":1.7999999999999996};  
+
+HAND_OVERRIDES["Trunk_Flexion:5"] = {"handRX":-5.605231142036321,"handRY":-4.39951378007929,"handRZ":-0.7850697341357136,"handRRX":0.3,"handRRY":1.9499999999999995,"handRRZ":-0.3,"handLX":-5.174812637640705,"handLY":-4.667196098895683,"handLZ":0.3519477070174101,"handLRX":0.7125619212408653,"handLRY":1.7999999999999998,"handLRZ":-0.15};
+HAND_OVERRIDES["Trunk_Flexion:4"] = {"handRX":-5.605231142036321,"handRY":-4.34951378007929,"handRZ":-1.185069734135714,"handRRX":0.3,"handRRY":1.9499999999999995,"handRRZ":-0.15,"handLX":-5.174812637640705,"handLY":-4.517196098895684,"handLZ":0.8019477070174104,"handLRX":0.7125619212408653,"handLRY":1.7999999999999998,"handLRZ":-0.44999999999999996};
+HAND_OVERRIDES["Trunk_Flexion:3"] = {"handRX":-5.605231142036321,"handRY":-4.39951378007929,"handRZ":-1.4850697341357142,"handRRX":0.3,"handRRY":1.9499999999999995,"handRRZ":-0.15,"handLX":-4.974812637640706,"handLY":-4.567196098895684,"handLZ":1.0019477070174105,"handLRX":0.7125619212408653,"handLRY":1.7999999999999998,"handLRZ":-0.44999999999999996};
+HAND_OVERRIDES["Pelvic_Elevation:high"] = {"handRX":-7.4378397521532085,"handRY":-4.926473470143576,"handRZ":0.13170358546132574,"handRRX":0,"handRRY":1.9499999999999995,"handRRZ":-0.29999999999999993,"handLX":-5.373692924476749,"handLY":-4.094147101915407,"handLZ":1.5688246046307086,"handLRX":-5.551115123125783e-17,"handLRY":2.999999999999999,"handLRZ":1.65};
+
+
 
 HAND_OVERRIDES["Iliopsoas:high"] = {"handRX":-3.9326457881186947,"handRY":-4.1120690945840135,"handRZ":-0.319781569667101,"handRRX":-0.15,"handRRY":3.299999999999999,"handRRZ":-1.4999999999999998,"handLX":-3.7146681421870085,"handLY":-3.99917002310452,"handLZ":1.2852027502783014,"handLRX":0,"handLRY":1.3499999999999999,"handLRZ":0.44999999999999996};
 HAND_OVERRIDES["Glute_Max:high"] = {"handRX":-1.0492222906032285,"handRY":-3.9317900987551058,"handRZ":-3.225569559919459,"handRRX":0,"handRRY":-6.0000000000000036,"handRRZ":-0.75,"handLX":-6.089944693036415,"handLY":-3.7373442625414395,"handLZ":-2.0646569233162997,"handLRX":0,"handLRY":0.3,"handLRZ":0.44999999999999996};  
@@ -2179,6 +2167,12 @@ HAND_OVERRIDES["Trunk_Ext_Thoracic:3"] = {"handRX":-1.9535937808442878,"handRY":
 HAND_OVERRIDES["Trunk_Ext_Lumbar:low"] = {"handRX":0.08902575550777321,"handRY":-4.126431649435403,"handRZ":-3.7265573964911587,"handRRX":5.551115123125783e-17,"handRRY":-0.15,"handRRZ":0,"handLX":-5.8388852213570015,"handLY":-4.586415477600457,"handLZ":-2.220092412206168,"handLRX":0,"handLRY":0,"handLRZ":0.75};
 HAND_OVERRIDES["Trunk_Ext_Thoracic:low"] = {"handRX":0.08902575550777321,"handRY":-4.126431649435403,"handRZ":-3.7265573964911587,"handRRX":5.551115123125783e-17,"handRRY":-0.15,"handRRZ":0,"handLX":-5.8388852213570015,"handLY":-4.586415477600457,"handLZ":-2.220092412206168,"handLRX":0,"handLRY":0,"handLRZ":0.75};
 
+HAND_OVERRIDES["Trunk_Flexion:low"] = {"handRX":-0.2143785102517738,"handRY":-4.055789024306608,"handRZ":-3.5988138218117696,"handRRX":-0.15,"handRRY":0,"handRRZ":0.15,"handLX":-1.3921394061553993,"handLY":-4.030925433479073,"handLZ":-3.2216262925762704,"handLRX":0,"handLRY":0.3,"handLRZ":0};
+HAND_OVERRIDES["Trunk_Rotation:low"] = {"handRX":-0.2143785102517738,"handRY":-4.205789024306608,"handRZ":-3.8488138218117687,"handRRX":-0.15,"handRRY":0,"handRRZ":0.15,"handLX":-1.4421394061553994,"handLY":-4.180925433479072,"handLZ":-3.571626292576269,"handLRX":0,"handLRY":0.3,"handLRZ":0};
+
+HAND_OVERRIDES["Gastrocnemius:low"] = {"handRX":-7.383531337446211,"handRY":-4.9571504628478875,"handRZ":-1.914358515475385,"handRRX":0,"handRRY":0,"handRRZ":-3.149999999999999,"handLX":-7.696797628914324,"handLY":-4.40347524441583,"handLZ":-0.5236859195819348,"handLRX":0,"handLRY":-2.5499999999999994,"handLRZ":-0.9};
+HAND_OVERRIDES["Pelvic_Elevation:low"] = {"handRX":-5.754853619553073,"handRY":-4.869965010398946,"handRZ":0.19121767004347306,"handRRX":0.16036124900513804,"handRRY":0.6486223722730297,"handRRZ":2.722603345284929,"handLX":-3.8466801029216757,"handLY":-4.378620145682152,"handLZ":0.05058341200305572,"handLRX":0.7725490400070075,"handLRY":1.2814460881553456,"handLRZ":-0.03667068234389319};
+
 
 
 /* ==== NEUTRAL HAND POSITION (New Default) ==== */
@@ -2197,15 +2191,17 @@ let CURRENT_BODY_BUCKET = "high"; // "high" or "low"
 function getGradeBucketForTest(testKey) {
   if (EXCEPTION_TESTS.has(testKey)) {
     if (!gradeExceptions) return "high";
-    const g = gradeExceptions.value; // Returns "5", "4", "3", "2", "1"
+    const g = gradeExceptions.value; // "5", "4", "3", "2", "1"
 
-    // --- Trunk Flexion & Rotation: Grades are totally independent ---
-    // This ensures it returns "5" instead of "high"
+    // --- Trunk Flexion & Rotation ---
     if (testKey === "Trunk_Flexion" || testKey === "Trunk_Rotation") {
+      // If Grade is 2 or 1, return "low" so it reads BONE_OVERRIDES["Trunk_Flexion:low"]
+      if (g === "2" || g === "1") return "low";
+      // Grades 5, 4, and 3 remain independent numbers
       return g; 
     }
 
-    // --- Trunk Extension: 5 & 4 are grouped as "high" ---
+    // --- Trunk Extension: 5 & 4 grouped as "high", 3 Independent, 1-2 Low ---
     if (testKey === "Trunk_Ext_Lumbar" || testKey === "Trunk_Ext_Thoracic") {
       if (g === "5" || g === "4") return "high";
       if (g === "3") return "3";
