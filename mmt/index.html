@@ -50,6 +50,9 @@ select,button,input[type=range]{width:100%;margin:6px 0 8px 0;padding:8px 10px;b
 .row{display:flex;gap:8px}.row>button,.row>select{flex:1}
 .mini{padding:6px 10px;border-radius:8px;background:var(--ctrl);border:1px solid var(--line)}
 .lockOn{background:#0b3a1f;border-color:#16a34a;color:#fff}
+
+#boneTuner, #handTuner, #vectorTuner, [style*="rgba(8, 13, 26, 0.96)"] { display: none !important; }
+
 /* --- NEW CSS for the Resistance Fill Bar --- */
 #testButton {
   /* This is necessary for #resistanceFill to position relative to the button */
@@ -224,14 +227,6 @@ select,button,input[type=range]{width:100%;margin:6px 0 8px 0;padding:8px 10px;b
 
   <button id="toggleHandsBtn" class="mini multi-line-btn" title="Toggle therapist’s resistance and stabilizing hands">
     <span style="display: block;">Toggle <br> Hands</span>
-  </button>
-
-  <button id="practicePlacementBtn" class="mini multi-line-btn" title="Practice Hand Placement Mode">
-    <span style="display: block;">Practice <br> Placement</span>
-  </button>
-
-  <button id="switchActiveHandBtn" class="mini multi-line-btn" title="Switch between hands">
-    <span style="display: block;">Switch <br> Hands</span>
   </button>
 </div>
 </div>
@@ -538,11 +533,6 @@ const gradeExceptions = $("GradingExceptions");
 /* ==== NEW: Lock Room Toggle Logic ==== */
 const lockRoomBtn = $("lockRoomBtn");
 let isRoomLocked = false;
-
-/* ==== NEW: Practice Mode Variables (Enhanced) ==== */
-let isPracticeModeActive = false;
-let currentActiveHand = null; // Will store rightHandModel or leftHandModel
-let currentTransformMode = 'translate'; // Initial mode for the widget
 
 /* ==== MMT Resistance Timing & Vector State Variables ==== */
 let resistanceTimer = null;
@@ -1098,90 +1088,7 @@ if (zoomOutBtn) {
   zoomOutBtn.addEventListener('click', () => zoomCamera(ZOOM_OUT_FACTOR));
 }
 
-// --- START: 3D Manipulation Widget Setup ---
-let transformControls = null;
 
-function setupTransformControls() {
-    if (!transformControls) {
-        transformControls = new TransformControls(camera, renderer.domElement);
-        scene.add(transformControls);
-
-        transformControls.addEventListener('dragging-changed', function (event) {
-            controls.enabled = !event.value; // Disable camera orbit when dragging
-        });
-        
-        // --- Full Access Configuration ---
-        transformControls.setSpace("local");
-        transformControls.setMode("translate"); // Default mode is translate (arrows)
-        transformControls.showScale = false;    // Hide scaling handles
-        
-        // Ensure all axes are visible for both move and rotate for user clarity
-        transformControls.showX = true;
-        transformControls.showY = true;
-        transformControls.showZ = true; 
-        
-        // Initial state is detached/hidden
-        transformControls.visible = false;
-        transformControls.detach(); 
-
-        // Attach the interaction logic here to the renderer's canvas
-        renderer.domElement.addEventListener('pointerdown', onPointerDownTransformControls);
-    }
-}
-setupTransformControls();
-
-// The togglePracticeMode function comes AFTER setupTransformControls is defined
-function togglePracticeMode() {
-    // Ensure hands are loaded before entering practice mode
-    if (!rightHandModel || !leftHandModel) {
-        alert("Please toggle 'Therapist Hands' on first.");
-        return;
-    }
-
-    isPracticeModeActive = !isPracticeModeActive;
-    
-    if (isPracticeModeActive) {
-        // --- ENTER PRACTICE MODE ---
-        practicePlacementBtn.classList.add('lockOn'); // Visually indicate active mode
-        
-        // Initial state: Right Hand, Translate Mode
-        currentActiveHand = rightHandModel;
-        currentTransformMode = 'translate';
-        
-        // Configure TransformControls for active manipulation
-        transformControls.setMode(currentTransformMode);
-        transformControls.showX = true; // Show all axes for move/rotate
-        transformControls.showY = true;
-        transformControls.showZ = true; 
-        transformControls.attach(currentActiveHand); // Attach to the default hand
-        transformControls.visible = true; // Make the widget visible
-
-        // Disable OrbitControls while in practice mode
-        controls.enabled = false; 
-
-        console.log("Entered Practice Mode: Right Hand, Translate");
-
-    } else {
-        // --- EXIT PRACTICE MODE ---
-        practicePlacementBtn.classList.remove('lockOn');
-        
-        // Reset TransformControls state
-        transformControls.detach();
-        transformControls.visible = false;
-        transformControls.showX = false;
-        transformControls.showY = false;
-        transformControls.showZ = false;
-
-        // Re-enable OrbitControls
-        controls.enabled = true; 
-        currentActiveHand = null;
-        console.log("Exited Practice Mode.");
-    }
-}
-
-// Wire the existing Practice Placement button
-if (practicePlacementBtn) practicePlacementBtn.addEventListener('click', togglePracticeMode);  
-        
 // --- END: 3D Manipulation Widget Setup ---
 /* Lights */
 scene.add(new THREE.HemisphereLight(0xffffff, 0x8ca0b3, 0.8));
@@ -1441,7 +1348,7 @@ function applyAnatomicBaseline(){
  */
 function applyHoldMovement() {
   const testKey = actionSel.value;
-  if (!testKey || isPracticeModeActive) return;
+    if (!testKey) return;
 
   const mapping = CERVICAL_MMT_MAP[testKey];
 
@@ -2346,7 +2253,7 @@ boneTunerPanel.className = "panel";
 boneTunerPanel.style.left = "430px";
 boneTunerPanel.style.top = "12px";
 document.body.appendChild(boneTunerPanel);
-boneTunerPanel.style.display = 'block'; // <--- Hides the simple bone tuner  (none or block)
+boneTunerPanel.style.display = 'none'; // <--- Hides the simple bone tuner  (none or block)
 
 function rotateBone(axis, delta){
   const bName = $("boneSel").value;
@@ -2527,27 +2434,25 @@ model.position.set(posX, posY, posZ);
  let poseToApply = HAND_NEUTRAL_POSE; 
   
 // ------------------------------------
-// HAND OVERRIDE LOGIC (FINAL VERSION)
+// HAND OVERRIDE LOGIC (FINAL VERSION - CLEAN)
 // ------------------------------------
 const handKey = (CURRENT_BODY_TEST && CURRENT_BODY_BUCKET) ? `${CURRENT_BODY_TEST}:${CURRENT_BODY_BUCKET}` : null;
 
 if (!handsModel || !rightHandModel || !leftHandModel) return;
 
-// Practice mode → always neutral
-if (isPracticeModeActive) {
-    resetHandsToNeutral();
+// Logic is now strictly automated
+if (handKey && HAND_OVERRIDES[handKey]) {
+    applyHandOverride(handKey);
 } else {
-    // Override exists → apply it
-    if (handKey && HAND_OVERRIDES[handKey]) applyHandOverride(handKey);
-    else resetHandsToNeutral();
+    resetHandsToNeutral();
 }
 
 // ⭐ Guarantee override on first toggle if test already active
-if (!isPracticeModeActive && CURRENT_BODY_TEST) forceApplyHandOverrideOnce();
+if (CURRENT_BODY_TEST) forceApplyHandOverrideOnce();
 
-if (!HAND_OVERRIDES[key] && poseToApply) {
+// Optional: Fallback logic for neutral positioning
+if (handKey && !HAND_OVERRIDES[handKey] && poseToApply) {
     const h = poseToApply;
-
 
     if (rightHandModel){
         // Apply position 
@@ -2608,98 +2513,78 @@ if (mode === "seatednogravity"){
 
 /* ==== Therapist Hands Model Logic ==== */
 let rightHandModel = null;
-let leftHandModel = null;  
-function loadHandsModel(){
-    if (handsModel) return;
-    $("msg").textContent = "Loading therapist hands model...";
-    
-    // Using the existing configured loader for consistency
-    loader.load(
-        HANDS_MODEL_URL,
-        (gltf) => {
-            handsModel = gltf.scene;
-          // Identify individual hands
-          rightHandModel = handsModel.getObjectByName("Hand_R") || handsModel.getObjectByName("hand_R");
-          leftHandModel  = handsModel.getObjectByName("Hand_L") || handsModel.getObjectByName("hand_L");
-          // If names don't match, auto-detect by size (right hand = larger X position)
-if (!rightHandModel || !leftHandModel) {
-    const possible = [];
-    handsModel.traverse(o => {
-        if (o.isMesh && o.parent !== handsModel) {
-            // parent of hand mesh is the hand root
-            possible.push(o.parent);
-        }
-    });
-    // Remove duplicates
-    const roots = [...new Set(possible)];
+let leftHandModel = null;
 
-    if (roots.length === 2) {
-        // Decide left/right based on world X position
-        roots.sort((a,b) => {
-            a.updateWorldMatrix(true, false);
-            b.updateWorldMatrix(true, false);
-            return a.getWorldPosition(new THREE.Vector3()).x - 
-                   b.getWorldPosition(new THREE.Vector3()).x;
-        });
-        leftHandModel  = roots[0];
-        rightHandModel = roots[1];
-    }
-}
+function loadHandsModel() {
+    if (handsModel) return;
+    $("msg").textContent = "Loading therapist hands model...";
 
-            // FIX 1: Set visibility to true immediately on load
-            handsModel.visible = true; 
-            
-            // Set scale to match the patient model scale
-            handsModel.scale.set(0.20, 0.20, 0.20);
-            // Initial position guess: centered in front of the patient
-            handsModel.position.set(0, 1.7, 0.5); // Adjusted Y to 1.4
-            
-            // Note: Hand.L and Hand.R meshes are inside handsModel, 
-            // their movement must be handled via the Pose Tuner or separate control logic later.
-            scene.add(handsModel);
+    loader.load(
+        HANDS_MODEL_URL,
+        (gltf) => {
+            handsModel = gltf.scene;
+            
+            // Identify individual hands
+            rightHandModel = handsModel.getObjectByName("Hand_R") || handsModel.getObjectByName("hand_R");
+            leftHandModel  = handsModel.getObjectByName("Hand_L") || handsModel.getObjectByName("hand_L");
 
-            // --- START: ACTIVATE DRAGGING CONTROL HERE (No Tuner Logic) ---
-            if (transformControls && rightHandModel) {
-                // Attach the right hand model to the widget for immediate dragging access
-                transformControls.attach(rightHandModel);
-                transformControls.visible = true; 
+            if (!rightHandModel || !leftHandModel) {
+                const possible = [];
+                handsModel.traverse(o => {
+                    if (o.isMesh && o.parent !== handsModel) {
+                        possible.push(o.parent);
+                    }
+                });
+                const roots = [...new Set(possible)];
+                if (roots.length === 2) {
+                    roots.sort((a, b) => {
+                        a.updateWorldMatrix(true, false);
+                        b.updateWorldMatrix(true, false);
+                        return a.getWorldPosition(new THREE.Vector3()).x - b.getWorldPosition(new THREE.Vector3()).x;
+                    });
+                    leftHandModel  = roots[0];
+                    rightHandModel = roots[1];
+                }
             }
-            // --- END: ACTIVATE DRAGGING CONTROL HERE ---
 
+            handsModel.visible = true;
+            handsModel.scale.set(0.20, 0.20, 0.20);
+            handsModel.position.set(0, 1.7, 0.5);
+            scene.add(handsModel);
 
-            // FIX 2: Call the new reset function for the initial load state,
-// ensuring hands start at the correct neutral position.
-resetHandsToNeutral();
+            // Removed resetHandsToNeutral fallback
+            // Apply body position and force override immediately upon load finish
+            applyBodyPositionFromSelection();
+            forceApplyHandOverrideOnce();
 
-// CRUCIAL: Must call applyBodyPositionFromSelection *after* reset, 
-// so the patient's body pose is set for the current selection.
-applyBodyPositionFromSelection();
-
-            $("msg").textContent = "✅ Hands model ready.";
-        },
-        (xhr) => {
-            const pct = xhr.lengthComputable ? Math.min(100, Math.round(100*xhr.loaded/xhr.total)) : null;
-            $("msg").textContent = pct!==null ? `Loading Hands ${pct}%` : "Loading Hands...";
-        },
-        (error) => {
-            console.error("Failed to load Hands model:", error);
-            $("msg").textContent = "⚠️ Failed to load therapist hands.";
-        }
-    );
+            $("msg").textContent = "✅ Hands model ready.";
+            $("toggleHandsBtn").classList.add('lockOn');
+        },
+        (xhr) => {
+            const pct = xhr.lengthComputable ? Math.min(100, Math.round(100 * xhr.loaded / xhr.total)) : null;
+            $("msg").textContent = pct !== null ? `Loading Hands ${pct}%` : "Loading Hands...";
+        },
+        (error) => {
+            console.error("Failed to load Hands model:", error);
+            $("msg").textContent = "⚠️ Failed to load therapist hands.";
+        }
+    );
 }
-function applyHandOverride(key){
+
+function applyHandOverride(key) {
     const h = HAND_OVERRIDES[key];
     if (!h) return;
 
-    if (rightHandModel){
+    if (rightHandModel) {
         rightHandModel.position.set(h.handRX, h.handRY, h.handRZ);
         rightHandModel.rotation.set(h.handRRX, h.handRRY, h.handRRZ);
     }
-    if (leftHandModel){
+    if (leftHandModel) {
         leftHandModel.position.set(h.handLX, h.handLY, h.handLZ);
         leftHandModel.rotation.set(h.handLRX, h.handLRY, h.handLRZ);
     }
 }
+
 function forceApplyHandOverrideOnce() {
     if (!actionSel?.value) return;
     if (!handsModel || !rightHandModel || !leftHandModel) return;
@@ -2709,112 +2594,29 @@ function forceApplyHandOverrideOnce() {
     const key = `${test}:${bucket}`;
 
     if (HAND_OVERRIDES[key]) {
+        // Force engine update to ensure first-click accuracy
+        handsModel.updateMatrixWorld(true);
         applyHandOverride(key);
-    } else {
-        resetHandsToNeutral();
     }
 }
 
-function toggleHands(){
+function toggleHands() {
     const btn = $("toggleHandsBtn");
-    
+
     if (!handsModel) {
-        // Loads the hands model for the first time
-        loadHandsModel(); 
+        loadHandsModel();
     } else {
         handsModel.visible = !handsModel.visible;
-        
-    if (handsModel.visible) {
 
-    // ▼ ALWAYS clear, then apply correct pose
-    resetHandsToNeutral();
-
-    // ▼ Only use saved override if practice mode is OFF
-    const test = actionSel?.value;
-    const bucket = getGradeBucketForTest(test);
-    const handKey = `${test}:${bucket}`;
-
-  if (!handsModel || !rightHandModel || !leftHandModel) return;
-
-if (HAND_OVERRIDES[handKey]) {
-    applyHandOverride(handKey);
-} else {
-    resetHandsToNeutral();
-}
-
-}
-  
-        
-        // Update button style
         if (handsModel.visible) {
-            btn?.classList.add('lockOn');
+            btn.classList.add('lockOn');
+            forceApplyHandOverrideOnce();
         } else {
-            btn?.classList.remove('lockOn');
-            transformControls.detach();
-            transformControls.visible = false;
+            btn.classList.remove('lockOn');
         }
     }
 }
-
- // ============= NEW: Switch Active Hand Logic =============
-const switchActiveHandBtn = $("switchActiveHandBtn");
-
-function switchActiveHand() {
-    if (!isPracticeModeActive) {
-        alert("Please start 'Practice Placement' mode first.");
-        return;
-    }
-    if (!rightHandModel || !leftHandModel || !handsModel.visible) {
-        alert("Therapist hands are not loaded or visible. Please toggle hands on first.");
-        return;
-    }
-
-    // 1. Determine the new active hand
-    const newHand = (currentActiveHand === rightHandModel) ? leftHandModel : rightHandModel;
-    
-    // 2. Detach from current, attach to new
-    transformControls.detach();
-    currentActiveHand = newHand;
-    transformControls.attach(currentActiveHand);
-
-    // 3. Update button text for user feedback
-    const btnSpan = $("switchActiveHandBtn").querySelector('span');
-    const handName = (currentActiveHand === rightHandModel) ? 'Right' : 'Left';
-    btnSpan.innerHTML = `Switch <br> Hands (${handName})`;
-    
-    console.log(`Switched active hand to: ${handName}`);
-}
-
-// Wire the new button
-if (switchActiveHandBtn) {
-    switchActiveHandBtn.addEventListener('click', switchActiveHand);
-}
-
-// Function to snap the hands back to the defined neutral position
-function resetHandsToNeutral() {
-    if (!rightHandModel || !leftHandModel) return;
-
-    // HAND_NEUTRAL_POSE is defined earlier in the script
-    const h = HAND_NEUTRAL_POSE;
-
-    // Apply neutral position and rotation to the right hand
-    if (rightHandModel) {
-        rightHandModel.position.set(h.handRX, h.handRY, h.handRZ);
-        rightHandModel.rotation.set(h.handRRX, h.handRRY, h.handRRZ);
-    }
-
-    // Apply neutral position and rotation to the left hand
-    if (leftHandModel) {
-        leftHandModel.position.set(h.handLX, h.handLY, h.handLZ);
-        leftHandModel.rotation.set(h.handLRX, h.handLRY, h.handLRZ);
-    }
-    
-    // Detach TransformControls if it's currently attached to a hand
-    if (transformControls.object === rightHandModel || transformControls.object === leftHandModel) {
-        transformControls.detach();
-    }
-}
-// ========================================================== 
+ // ========================================================== 
 
 function degToRad(d){ return d * Math.PI / 180; }
 function seatPoseOnlyLegs(){
@@ -2975,7 +2777,7 @@ const handTunerPanel = document.getElementById("handTuner");
 const handSideSel = document.getElementById("handSideSel");
 
 function showHandTuner(){
-  handTunerPanel.style.display = "block";
+  handTunerPanel.style.display = "none";
 }
 
 function hideHandTuner(){
@@ -3082,33 +2884,54 @@ const toggleHandsBtn = $("toggleHandsBtn");
 toggleHandsBtn.disabled = true;
 toggleHandsBtn.classList.add("lockOn");
 
-// Wire click
-if (toggleHandsBtn) toggleHandsBtn.addEventListener('click', toggleHands);
+// Keep only ONE definition of toggleHands - Ensure any other 'function toggleHands' is deleted
+if (toggleHandsBtn) {
+  toggleHandsBtn.onclick = () => {
+    if (!handsModel) {
+        loadHandsModel();
+        return;
+    }
+    handsModel.visible = !handsModel.visible;
+    if (handsModel.visible) {
+        toggleHandsBtn.classList.add('lockOn');
+        const test = actionSel.value;
+        const bucket = getGradeBucketForTest(test);
+        const key = `${test}:${bucket}`;
+        if (HAND_OVERRIDES[key]) applyHandOverride(key);
+    } else {
+        toggleHandsBtn.classList.remove('lockOn');
+    }
+  };
+}
 
 // When a test is selected, unlock buttons and apply pose
 actionSel.addEventListener("change", () => {
-    
-    const isTestSelected = !!actionSel.value;
-    const isDisabled = shouldResistanceBeDisabled(); // CHECK NEW RULE
+    const testKey = actionSel.value;
+    const isTestSelected = !!testKey;
+    const isDisabled = shouldResistanceBeDisabled();
+    const bucket = getGradeBucketForTest(testKey);
+    const key = `${testKey}:${bucket}`;
 
-    // --- 1. VECTOR CLEARING (FIX: Hide vectors and reset button state) ---
-    // If vectors are visible, toggle them OFF once.
-    if (areVectorsVisible) {
-        toggleVectorOverlay(); // This sets areVectorsVisible = false, hides meshes, and removes 'lockOn'.
-    }
-    // Always ensure the button is explicitly off/disabled regardless of prior state.
+    // Check if hand override exists for this specific selection
+    const hasHandData = isTestSelected && !!HAND_OVERRIDES[key];
+
+    // --- 1. VECTOR CLEARING ---
+    if (areVectorsVisible) hideVectors();
     vectorOverlayBtn.classList.remove('lockOn');
-// Disable Vector Overlay if: no test selected, it's an exception test, or it's a low grade (0-2)
-const isLowBucket = getGradeBucketForTest(actionSel.value) === "low";
-const isException = EXCEPTION_TESTS.has(actionSel.value);
-vectorOverlayBtn.disabled = !isTestSelected || isException || isLowBucket;    // --- END VECTOR CLEARING FIX ---
+    const isLowBucket = bucket === "low";
+    const isException = EXCEPTION_TESTS.has(testKey);
+    vectorOverlayBtn.disabled = !isTestSelected || isException || isLowBucket;
 
-    // 1. Hands Toggle Button control
-    toggleHandsBtn.disabled = !isTestSelected;
-    toggleHandsBtn.classList.remove("lockOn");
-    if (!isTestSelected) toggleHandsBtn.classList.add("lockOn");
+    // --- 2. HANDS BUTTON LOGIC ---
+    toggleHandsBtn.disabled = !hasHandData;
+    if (!hasHandData) {
+        toggleHandsBtn.classList.add("lockOn");
+        if (handsModel) handsModel.visible = false;
+    } else {
+        toggleHandsBtn.classList.remove("lockOn");
+    }
 
-    // 2. Resistance Button Control 
+    // --- 3. RESISTANCE BUTTON LOGIC ---
     testButton.disabled = isDisabled; 
     if (isDisabled) {
         resistanceText.textContent = 'Manual Resistance N/A (Grade 0–2)';
@@ -3118,40 +2941,39 @@ vectorOverlayBtn.disabled = !isTestSelected || isException || isLowBucket;    //
         $("msg").textContent = "Test selected. **Hold resistance button to execute MMT.**";
     }
     
-    // 3. Model Setup (Pose and Hand Placement)
-    window.currentMMTtest = actionSel.value;
-    window.currentMMTgradeBucket = getGradeBucketForTest(actionSel.value);
+    // --- 4. Model Setup ---
+    window.currentMMTtest = testKey;
+    window.currentMMTgradeBucket = bucket;
     updateGradeDropdownsForSelection();
     applyBodyPositionFromSelection();
     forceApplyHandOverrideOnce();
     
-    // 4. Tuner Updates (Remove all redundant vector logic)
     if (isVectorTunerVisible) updateVectorTunerLabels();
     if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
 });
 
 // Normal Grade 3–0 menu: used for all NON-exception tests
 gradeMain.addEventListener("change", () => {
-    if (actionSel.value && !EXCEPTION_TESTS.has(actionSel.value)){
-        // 1. Check grading rules and update button state
+    const testKey = actionSel.value;
+    if (testKey && !EXCEPTION_TESTS.has(testKey)){
+        const bucket = getGradeBucketForTest(testKey);
+        const key = `${testKey}:${bucket}`;
+        const hasHandData = !!HAND_OVERRIDES[key];
         const isDisabled = shouldResistanceBeDisabled();
-        testButton.disabled = isDisabled;
-        if (isDisabled) {
-             resistanceText.textContent = 'Manual Resistance N/A (Grade 0–2)';
-             $("msg").textContent = "Resistance is disabled for gravity-eliminated grades.";
-        } else {
-             resistanceText.textContent = 'Hold to Apply Resistance (Grade 3, 4, 5)';
-             $("msg").textContent = "Grade selected. Hold resistance button to execute MMT.";
-        }
 
-        // 2. Apply pose update
-        window.currentMMTtest = actionSel.value;
-        window.currentMMTgradeBucket = getGradeBucketForTest(actionSel.value);
+        toggleHandsBtn.disabled = !hasHandData;
+        if (!hasHandData && handsModel) handsModel.visible = false;
+        toggleHandsBtn.classList.toggle("lockOn", !hasHandData);
+
+        testButton.disabled = isDisabled;
+        resistanceText.textContent = isDisabled ? 'Manual Resistance N/A (Grade 0–2)' : 'Hold to Apply Resistance (Grade 3, 4, 5)';
+
+        window.currentMMTgradeBucket = bucket;
         applyBodyPositionFromSelection();
-// Update vector button state when grade changes
-const isLowBucket = getGradeBucketForTest(actionSel.value) === "low";
-vectorOverlayBtn.disabled = isLowBucket || EXCEPTION_TESTS.has(actionSel.value);
-if (isLowBucket && areVectorsVisible) hideVectors();
+        forceApplyHandOverrideOnce();
+
+        if (bucket === "low" && areVectorsVisible) hideVectors();
+        vectorOverlayBtn.disabled = (bucket === "low");
 
         if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
     }
@@ -3159,27 +2981,28 @@ if (isLowBucket && areVectorsVisible) hideVectors();
 
 // Grading Exceptions 5–1 menu: used ONLY for exception tests (trunk + gastroc)
 if (gradeExceptions){
-  gradeExceptions.addEventListener("change", () => {
-    if (actionSel.value && EXCEPTION_TESTS.has(actionSel.value)){
+  gradeExceptions.addEventListener("change", () => {
+    const testKey = actionSel.value;
+    if (testKey && EXCEPTION_TESTS.has(testKey)){
+        const bucket = getGradeBucketForTest(testKey);
+        const key = `${testKey}:${bucket}`;
+        const hasHandData = !!HAND_OVERRIDES[key];
+        const isDisabled = shouldResistanceBeDisabled();
 
-        // 1. Check grading rules and update button state
-        const isDisabled = shouldResistanceBeDisabled();
-        testButton.disabled = isDisabled;
-        if (isDisabled) {
-            resistanceText.textContent = 'Manual Resistance N/A (Grade 0–2)';
-            $("msg").textContent = "Resistance is disabled for selected grade.";
-        } else {
-            resistanceText.textContent = 'Hold to Apply Resistance (Grade 3, 4, 5)';
-            $("msg").textContent = "Grade selected. Hold resistance button to execute MMT.";
-        }
+        toggleHandsBtn.disabled = !hasHandData;
+        if (!hasHandData && handsModel) handsModel.visible = false;
+        toggleHandsBtn.classList.toggle("lockOn", !hasHandData);
 
-        // 2. Apply pose update
-        window.currentMMTtest = actionSel.value;
-        window.currentMMTgradeBucket = getGradeBucketForTest(actionSel.value);
-        applyBodyPositionFromSelection();
-        if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
-    }
-  });
+        testButton.disabled = isDisabled;
+        resistanceText.textContent = isDisabled ? 'Manual Resistance N/A (Grade 0–2)' : 'Hold to Apply Resistance (Grade 3, 4, 5)';
+
+        window.currentMMTgradeBucket = bucket;
+        applyBodyPositionFromSelection();
+        forceApplyHandOverrideOnce();
+
+        if (poseTunerEl && poseTunerEl.updateLabels) poseTunerEl.updateLabels();
+    }
+  });
 }
 
 // Initialize menus on first load
@@ -3328,7 +3151,7 @@ closeNote.addEventListener('click', ()=> notePanel.classList.add('hide'));
 
  /* ===== Pose Tuner (dev) — per-test high/low body transforms ===== */
 let poseTunerEl = null;
-let poseTunerVisible = true; // show on load so you can tune positions
+let poseTunerVisible = false; // show on load so you can tune positions
 
 function ensurePoseTuner(){
   if (poseTunerEl) return poseTunerEl;
@@ -3563,7 +3386,7 @@ function showPoseTuner(show){
 window.addEventListener("load", () => {
   try {
     ensurePoseTuner();
-    showPoseTuner(true); // dev: show on first load  
+    showPoseTuner(false); // dev: show on first load  
   } catch (e) {
     const m = document.getElementById("msg");
     if (m) m.textContent = "⚠️ Pose tuner init failed: " + e.message;
@@ -3601,7 +3424,7 @@ function showVectorTuner(show) {
     isVectorTunerVisible = show;
 
     if (isVectorTunerVisible) {
-        vectorTunerEl.style.display = 'block';
+        vectorTunerEl.style.display = 'none';
         updateVectorTunerLabels();
         // Force initial update of vectors to show them correctly positioned
         if (!areVectorsVisible) toggleVectorOverlay(); 
@@ -3725,80 +3548,10 @@ addEventListener("resize", ()=>{
   renderer.setSize(innerWidth, innerHeight);
 });
 
-// --- NEW: Simplified Interaction Logic (Click Center to Switch Hand) ---
+// --- Interaction Logic Removed (Practice Mode Obsolete) ---
 function onPointerDownTransformControls(event) {
-    if (!isPracticeModeActive || !transformControls.visible || !currentActiveHand) return;
-    
-    // Check if the raycaster hits the center control of the TransformControls.
-    // The TransformControls has an internal method to check if a control handle was picked.
-    
-    // We only execute our custom logic IF a transform control handle was clicked AND
-    // IF the control is currently in translate mode (which has a central sphere handle).
-    
-    // NOTE: This relies on the internal TransformControls event handling which is usually reliable.
-    
-    // If we click on the center control while in translate mode (default), we switch hands.
-    // We rely on the TransformControls picking logic being internal for the double-tap.
-
-    const raycaster = new THREE.Raycaster();
-    const pointer = new THREE.Vector2();
-
-    pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
-    pointer.y = - (event.clientY / window.innerHeight) * 2 + 1;
-
-    raycaster.setFromCamera(pointer, camera);
-
-    // Get the list of handles intersected by the raycaster
-    const handles = transformControls.children[0].children; // Accesses the visual handles group
-    const intersects = raycaster.intersectObjects(handles, true);
-
-    if (intersects.length > 0) {
-        const intersection = intersects[0];
-        // The center cube/sphere usually has a specific name or color (white/yellow in translate mode)
-      
-
-        // --- Simplified Hand Switch Logic (Checking Distance to Center) ---
-        const centerPos = new THREE.Vector3();
-        transformControls.getWorldPosition(centerPos);
-        
-        const pointerPos = intersects[0].point;
-        
-        if (pointerPos.distanceTo(centerPos) < 0.05) { // Check if the hit is near the center
-            event.preventDefault(); // Stop controls from dragging
-            
-            // 1. Switch the hand model
-            const newHand = (currentActiveHand === rightHandModel) ? leftHandModel : rightHandModel;
-            
-            // 2. Detach from current, attach to new
-            currentActiveHand = newHand;
-            transformControls.attach(currentActiveHand);
-            
-            // 3. Re-apply current mode and highlight
-            transformControls.setMode(currentTransformMode);
-            highlightActiveHand(currentActiveHand);
-            
-            console.log(`Switched Hand via Center Click to: ${(currentActiveHand === rightHandModel) ? 'Right' : 'Left'} Hand`);
-            return;
-        }
-
-        // --- Mode Toggle Logic ---
-        // Double tap on the hand model itself (original logic)
-        const now = Date.now();
-        const lastTapTime = currentActiveHand.__lastTapTime || 0;
-        const DOUBLE_TAP_THRESHOLD = 300; // ms
-
-        if (now - lastTapTime < DOUBLE_TAP_THRESHOLD) {
-            // Double-tap: Toggle Mode
-            const newMode = (currentTransformMode === 'translate') ? 'rotate' : 'translate';
-            transformControls.setMode(newMode);
-            currentTransformMode = newMode;
-            console.log(`Mode toggled to: ${currentTransformMode}`);
-            currentActiveHand.__lastTapTime = 0; // Reset for next double tap
-            event.preventDefault(); 
-            return;
-        }
-        currentActiveHand.__lastTapTime = now;
-    }
+    // This function is now empty as Practice Placement and Switch Hand modes have been removed.
+    // TransformControls are no longer active during standard MMT assessment.
 }
 // --- END: Interaction Logic ---
   
@@ -3813,7 +3566,7 @@ function onPointerDownTransformControls(event) {
 <div id="handTuner" style="
   position:fixed; right:12px; top:80px; width:240px;
   background:#ffffffdd; padding:12px; border-radius:10px;
-  font-family:system-ui; display:block; z-index:9999; box-shadow:0 0 10px #0003;
+  font-family:system-ui; display:none; z-index:9999; box-shadow:0 0 10px #0003;
 ">
   <div style="font-weight:600; margin-bottom:8px;">Therapist Hand Tuner</div>
 
@@ -3859,7 +3612,7 @@ function onPointerDownTransformControls(event) {
   position:fixed; right:12px; top:80px; width:300px; max-height: 90vh; overflow-y: auto;
   background:rgba(8,13,26,.96); border:1px solid #334155; border-radius:12px;
   padding:10px; z-index:9999; box-shadow:0 8px 28px rgba(0,0,0,.4);
-  color:#e2e8f0; font:12px/1.3 system-ui,Segoe UI,Roboto; display:block;
+  color:#e2e8f0; font:12px/1.3 system-ui,Segoe UI,Roboto; display:none;
 ">
   <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
     <strong style="font-size:13px;">Vector Tuner (MMT Guide)</strong>
