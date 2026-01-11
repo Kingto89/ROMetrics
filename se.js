@@ -1,4 +1,4 @@
-﻿document.getElementById('app').innerHTML = 
+document.getElementById('app').innerHTML = `
 
 <header>
   <div class="brand">
@@ -1462,8 +1462,7 @@ async function renderExerciseModal(){
     </div>
 
     <div style="display:flex;gap:10px;margin-top:12px;justify-content:flex-end;">
-      <button id="refSubmitBtn" class="module-btn" type="button">Submit</button>
-      <button id="refCancel" type="button" style="border:1px solid var(--border);background:#020617;color:var(--ink);border-radius:999px;padding:6px 12px;cursor:pointer;">Cancel</button
-  
+<button id="refSubmitBtn" class="module-btn" type="button">Submit</button>
+<button id="refCancel" type="button" style="border:1px solid var(--border);background:#020617;color:var(--ink);border-radius:999px;padding:6px 12px;cursor:pointer;">Cancel</button>
+`;
 
-;
