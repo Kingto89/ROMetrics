@@ -2,9 +2,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Goniometry Trainer </title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png">
+  <link rel="apple-touch-icon" sizes="192x192" href="/favicon-192.png">
 
 <script type="importmap">
 {
@@ -16,6 +21,12 @@
 </script>
 
 <style>
+  @media print {
+  html, body, * {
+    visibility: hidden !important;
+  }
+}
+
 :root{--bg:#0b1220;--panel:#0f172a;--line:#1f2937;--ctrl:#1e293b;--text:#e2e8f0;--muted:#cbd5e1}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--text);overflow:hidden;font-family:system-ui,Segoe UI,Roboto}
   .lockOn{background:#0b3a1f;border-color:#16a34a}
@@ -42,7 +53,7 @@ select,button,input[type=range]{width:100%;margin:6px 0 8px 0;padding:8px 10px;b
 .row{display:flex;gap:8px}.row>button{flex:1}
 .mini{padding:6px 10px;border-radius:8px;background:var(--ctrl);border:1px solid #334155}
 details{border:1px solid #162235;border-radius:10px;padding:8px;background:#0b1426;margin-top:8px}
-summary{cursor:pointer;font-weight:600;color:#dbe7ff}
+summary{cursor:pointer;font-weight:600;color:#dbe7ff} 
 #log{background:#0b1220;border:1px solid #1f2937;min-height:90px;max-height:130px;overflow:auto;border-radius:8px;padding:8px;font-size:12px;white-space:pre-wrap}
 #msg{position:fixed;bottom:10px;left:12px;background:rgba(15,23,42,.75);border:1px solid #334155;border-radius:8px;padding:6px 10px;font-size:12px;z-index:25}
 optgroup{color:#9fb0c9;font-style:normal}
@@ -109,13 +120,18 @@ input[type=range]::-moz-range-thumb { width: 24px; height: 24px; background: #e2
   <!-- Panel -->
 <div class="panel" id="panel">
   <div class="dragbar" id="dragbar">
-    <img src="../assets/rometrics-logo.png" style="height:28px; width:auto; vertical-align:middle; margin-right:8px;" alt="">Goniometry Trainer <span class="hint">drag me</span>
+    <a href="/" aria-label="Return to home">
+      <img src="/rometrics-logo.png" style="height:28px; width:auto; vertical-align:middle; margin-right:8px;" alt="ROMetrics">
+    </a>Goniometry Trainer <span class="hint">drag me</span>
   </div>
+
   <div class="content">
     <div class="row" style="align-items:center">
       <label style="display:flex;gap:6px;align-items:center;margin:0;">
       </label>
     </div>
+
+
 
 <div class="row" style="gap:15px">
   <div style="flex:1;">
@@ -248,80 +264,8 @@ input[type=range]::-moz-range-thumb { width: 24px; height: 24px; background: #e2
     </g>
   </svg>
 </div>
-<!-- ====== NUMBER TUNER DEV TOOL ====== -->
-<style>
-  #numTunerPanel{
-    position:fixed;right:20px;bottom:20px;
-    background:#0f172a;border:1px solid #334155;
-    padding:10px;border-radius:10px;z-index:9999;
-    display:none;color:#e2e8f0;font-size:12px;
-  }
-  #numTunerPanel input{width:60px;}
-</style>
-
-<div id="numTunerPanel">
-  <div style="margin-bottom:5px;font-weight:700">Text Tuner</div>
-  X:<input id="ntX" type="number" step="1"><br>
-  Y:<input id="ntY" type="number" step="1"><br>
-  R:<input id="ntR" type="number" step="1"><br>
-  <button id="ntLog">Log</button>
-</div>
 
 <script>
-let NT_active=null;
-
-document.addEventListener("pointerdown",e=>{
-  if(!(e.target.tagName==="text" || e.target.tagName==="TEXT")) return;
-
-  NT_active = e.target;
-
-  const tr = NT_active.getAttribute("transform") || "";
-  const m = tr.match(/rotate\((-?\d+)\s+(-?\d+)\s+(-?\d+)\)/);
-
-  document.getElementById("numTunerPanel").style.display="block";
-
-  document.getElementById("ntX").value = NT_active.getAttribute("x");
-  document.getElementById("ntY").value = NT_active.getAttribute("y");
-  document.getElementById("ntR").value = m ? m[1] : 0;
-});
-
-["ntX","ntY","ntR"].forEach(id=>{
-  document.getElementById(id).addEventListener("input",()=>{
-    if(!NT_active) return;
-    const x = document.getElementById("ntX").value;
-    const y = document.getElementById("ntY").value;
-    const r = document.getElementById("ntR").value;
-    NT_active.setAttribute("x",x);
-    NT_active.setAttribute("y",y);
-    NT_active.setAttribute("transform",`rotate(${r} ${x} ${y})`);
-  });
-});
-
-document.getElementById("ntLog").onclick = () => {
-  if (!NT_active) return;
-
-  const rawX = NT_active.getAttribute("x") || "0";
-  const rawY = NT_active.getAttribute("y") || "0";
-  const x = Number(rawX).toFixed(1);
-  const y = Number(rawY).toFixed(1);
-
-  const tr = NT_active.getAttribute("transform") || "";
-  let rot = 0;
-  const m = tr.match(/rotate\((-?\d+\.?\d*)\s+(-?\d+\.?\d*)\s+(-?\d+\.?\d*)\)/);
-  if (m) rot = parseFloat(m[1]) || 0;
-
-  const parent   = NT_active.parentNode;
-  const parentId = (parent && parent.id) ? parent.id : "root";
-  const txt      = (NT_active.textContent || "").trim();
-
-  const siblings = parent ? Array.from(parent.querySelectorAll("text")) : [];
-  const same     = siblings.filter(n => (n.textContent || "").trim() === txt);
-  const idx      = same.indexOf(NT_active);
-
-  const key = `${parentId}:${txt}:${idx}`;
-  const snippet = `NUM_TWEAKS["${key}"] = { x:${x}, y:${y}, rot:${rot} };`;
-  console.log("FINAL NUMBER FIX →", snippet);
-};
 const NUM_TWEAKS = {
   "numsOut:80:1": { x:19.4,  y:110.3, rot:180 },
   "numsOut:80:2": { x:-19.4, y:110.3, rot:180 },
@@ -454,7 +398,25 @@ window.addEventListener("load", applyNumTweaks);
   <div id="msg">Loading…</div>
   <canvas id="c"></canvas>
 
-  <script type="module">
+<script type="module">
+  document.title = ' ';
+
+  document.addEventListener('contextmenu', e => e.preventDefault());
+  document.addEventListener('copy', e => e.preventDefault());
+  document.addEventListener('cut', e => e.preventDefault());
+  document.addEventListener('selectstart', e => e.preventDefault());
+
+  document.documentElement.style.userSelect = 'none';
+  document.documentElement.style.webkitUserSelect = 'none';
+
+  document.addEventListener('keydown', e => {
+    if (
+      (e.ctrlKey || e.metaKey) &&
+      ['c','u','s','a','p'].includes(e.key.toLowerCase())
+    ) {
+      e.preventDefault();
+    }
+  });  
   import * as THREE from "three";
   import { OrbitControls } from "three/addons/controls/OrbitControls.js";
   import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
@@ -463,9 +425,10 @@ window.addEventListener("load", applyNumTweaks);
   import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 
 const MODEL_URLS = {
-  Roman: "https://kingto89.github.io/ROMetrics.com/assets/Roman_ROMetrics.glb",
-  Roma:  "https://kingto89.github.io/ROMetrics.com/assets/Roma_ROMetrics.glb"
+  Roman: "/assets/Roman_ROMetrics.glb",
+  Roma:  "/assets/Roma_ROMetrics.glb"
 };
+
 
 function pickModelUrl(){
   const u = new URL(location.href);
@@ -887,7 +850,7 @@ async function loadNoteFile() {
     return;
   }
   // FIX: Corrected directory order and mixed-up names based on your GitHub link.
-  const filePath = `https://kingto89.github.io/ROMetrics.com/goniometry-trainer/goniometer-placement-guide/${NOTE_MAP[region]}`;
+const filePath = `./goniometer-placement-guide/${NOTE_MAP[region]}`;
 
   try {
     const res = await fetch(filePath);
@@ -2608,291 +2571,7 @@ if(gonioYEl){
     Gonio.setPan(x, parseFloat(gonioYEl.value)); 
   };
 }
-/* ===== Hidden Anatomic Tuner (dev-only, non-mirrored) ===== */
-let tunerEl = null, tunerVisible = false;
-function ensureAnatomicTuner() {
-  if (tunerEl) return tunerEl;
-  tunerEl = document.createElement('div');
-  Object.assign(tunerEl.style, {
-    position: 'fixed',
-    right: '16px',
-    top: '16px',
-    zIndex: 40,
-    background: 'rgba(8,13,26,.96)',
-    border: '1px solid #334155',
-    borderRadius: '12px',
-    padding: '10px',
-    width: '280px',
-    color: '#e2e8f0',
-    font: '12px/1.3 system-ui,Segoe UI,Roboto',
-    boxShadow: '0 8px 28px rgba(0,0,0,.4)',
-    display: 'none'
-  });
-  tunerEl.innerHTML = `
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-      <strong style="font-size:13px;">Anatomic Position Tuner (dev)</strong>
-      <button id="anatX" title="Close" style="margin-left:auto;background:transparent;border:0;color:#9fb0c9;font-size:16px;cursor:pointer;">✕</button>
-    </div>
-    <label style="display:block;margin-top:6px;opacity:.8">Shoulder ADD (°)</label>
-    <div style="display:grid;grid-template-columns:1fr 50px;gap:6px;">
-      <input id="addL" type="number" step="1">
-      <input id="addR" type="number" step="1" disabled>
-    </div>
-    <label style="display:block;opacity:.8">Forearm PS (°) — sup(+), pro(−)</label>
-    <div style="display:grid;grid-template-columns:1fr 50px;gap:6px;">
-      <input id="psL" type="number" step="1">
-      <input id="psR" type="number" step="1" disabled>
-    </div>
-    <label style="display:block;opacity:.8; margin-top:8px;">Wrist PS (°)</label>
-    <div style="display:grid;grid-template-columns:1fr 50px;gap:6px;">
-      <input id="wpsL" type="number" step="1">
-      <input id="wpsR" type="number" step="1" disabled>
-    </div>
-    <div style="display:flex;gap:8px;margin-top:10px;">
-      <button id="anatApply" class="mini" style="flex:1">Apply</button>
-      <button id="anatZero" class="mini">Zero</button>
-    </div>
-  `;
-  document.body.appendChild(tunerEl);
-
-  // Element references
-  const addL = tunerEl.querySelector('#addL'), addR = tunerEl.querySelector('#addR');
-  const psL  = tunerEl.querySelector('#psL'),  psR  = tunerEl.querySelector('#psR');
-  const wpsL = tunerEl.querySelector('#wpsL'), wpsR = tunerEl.querySelector('#wpsR');
-
-  // Preload current baseline (no mirroring)
-  function preload() {
-    addL.value = String(ANAT.addL);
-    psL.value  = String(ANAT.psL);
-    wpsL.value = String(ANAT.wpsL);
-    addR.value = String(ANAT.addL);
-    psR.value  = String(ANAT.psL);
-    wpsR.value = String(ANAT.wpsL);
-  }
-
-  // Keep right side identical to left (no inversion)
-  function syncRight() {
-    addR.value = String(+addL.value || 0);
-    psR.value  = String(+psL.value  || 0);
-    wpsR.value = String(+wpsL.value || 0);
-  }
-
-  preload();
-  addL.addEventListener('input', syncRight);
-  psL.addEventListener('input', syncRight);
-  wpsL.addEventListener('input', syncRight);
-
-  // Apply & Zero
-  tunerEl.querySelector('#anatApply').onclick = () => {
-    ANAT.addL = +addL.value || 0;
-    ANAT.psL  = +psL.value  || 0;
-    ANAT.wpsL = +wpsL.value || 0;
-    applyAnatomicBaseline();
-  };
-  tunerEl.querySelector('#anatZero').onclick = () => {
-    addL.value = psL.value = wpsL.value = '0';
-    syncRight();
-    ANAT.addL = ANAT.psL = ANAT.wpsL = 0;
-    applyAnatomicBaseline();
-  };
-  tunerEl.querySelector('#anatX').onclick = () => {
-    tunerEl.style.display = 'none';
-    tunerVisible = false;
-  };
-
-  return tunerEl;
-}
-
-function toggleTuner(show) {
-  ensureAnatomicTuner();
-  tunerVisible = (show === undefined) ? !tunerVisible : !!show;
-  tunerEl.style.display = tunerVisible ? 'block' : 'none';
-}
-
-// === Helper: immediately enforce a limit on Apply ===
-function enforceLimit(key, sign, cap) {
-  if (!CURRENT_ACTION || !actionDeg) return;
-  let currentVal = parseFloat(actionDeg.value) || 0;
-  const max = Math.abs(cap);
-  if (sign > 0 && currentVal > max) currentVal = max;
-  if (sign < 0 && currentVal > max) currentVal = max;
-  actionDeg.value = String(max);
-  actionDeg.dispatchEvent(new Event("input"));
-}
-/* ===== Collision Tuner (dev-only) ===== */
-let colTunerEl = null, colTunerVisible = false;
-
-function ensureCollisionTuner() {
-  if (colTunerEl) return colTunerEl;
-  colTunerEl = document.createElement("div");
-  Object.assign(colTunerEl.style, {
-    position: "fixed",
-    right: "16px",
-    top: "120px",
-    zIndex: 41,
-    background: "rgba(8,13,26,.96)",
-    border: "1px solid #334155",
-    borderRadius: "12px",
-    padding: "10px",
-    width: "360px",
-    maxHeight: "80vh",
-    overflowY: "auto",
-    color: "#e2e8f0",
-    font: "12px/1.3 system-ui,Segoe UI,Roboto",
-    boxShadow: "0 8px 28px rgba(0,0,0,.4)",
-    display: "none",
-  });
-
-  colTunerEl.innerHTML = `
-  <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-    <strong style="font-size:13px;">Collision Tuner (dev)</strong>
-    <span class="badge">Safe ROM Line</span>
-    <button id="colX" title="Close"
-      style="margin-left:auto;background:transparent;border:0;color:#9fb0c9;
-             font-size:16px;cursor:pointer;">✕</button>
-  </div>
-
-  <!-- Upper body -->
-  <div class="rom-row"><div class="rom-head">Trunk Lat — Left max (°)</div>
-    <div style="flex:1"><input id="colTrunkLatL" type="number" step="1" min="0" max="90"></div></div>
-  <div class="rom-row"><div class="rom-head">Trunk Lat — Right max (°)</div>
-    <div style="flex:1"><input id="colTrunkLatR" type="number" step="1" min="0" max="90"></div></div>
-  <hr style="border-color:#1c2941;opacity:.3;">
-  <div class="rom-row"><div class="rom-head">Cervical Rot — Left max (°)</div>
-    <div style="flex:1"><input id="cervL" type="number" step="1" min="0" max="90"></div></div>
-  <div class="rom-row"><div class="rom-head">Cervical Rot — Right max (°)</div>
-    <div style="flex:1"><input id="cervR" type="number" step="1" min="0" max="90"></div></div>
-
-  <hr style="border-color:#1c2941;opacity:.3;margin:8px 0;">
-
-  <!-- === Fixed Shoulder Section === -->
-  <div class="rom-row"><div class="rom-head">Shoulder Ext — Left max (°)</div>
-    <div style="flex:1"><input id="shExtL" type="number"></div></div>
-  <div class="rom-row"><div class="rom-head">Shoulder Ext — Right max (°)</div>
-    <div style="flex:1"><input id="shExtR" type="number"></div></div>
-
-  <div class="rom-row"><div class="rom-head">Shoulder Add — Left max (°)</div>
-    <div style="flex:1"><input id="shAddL" type="number"></div></div>
-  <div class="rom-row"><div class="rom-head">Shoulder Add — Right max (°)</div>
-    <div style="flex:1"><input id="shAddR" type="number"></div></div>
-
-  <div class="rom-row"><div class="rom-head">Shoulder Abd — Left max (°)</div>
-    <div style="flex:1"><input id="shAbdL" type="number"></div></div>
-  <div class="rom-row"><div class="rom-head">Shoulder Abd — Right max (°)</div>
-    <div style="flex:1"><input id="shAbdR" type="number"></div></div>
-
-  <div class="rom-row"><div class="rom-head">Shoulder Flex — Left max (°)</div>
-    <div style="flex:1"><input id="shFlexL" type="number"></div></div>
-  <div class="rom-row"><div class="rom-head">Shoulder Flex — Right max (°)</div>
-    <div style="flex:1"><input id="shFlexR" type="number"></div></div>
-
-  <div class="rom-row"><div class="rom-head">Shoulder IR — Left max (°)</div>
-    <div style="flex:1"><input id="shIRL" type="number"></div></div>
-  <div class="rom-row"><div class="rom-head">Shoulder IR — Right max (°)</div>
-    <div style="flex:1"><input id="shIRR" type="number"></div></div>
-
-  <div class="rom-row"><div class="rom-head">Shoulder ER — Left max (°)</div>
-    <div style="flex:1"><input id="shERL" type="number"></div></div>
-  <div class="rom-row"><div class="rom-head">Shoulder ER — Right max (°)</div>
-    <div style="flex:1"><input id="shERR" type="number"></div></div>
-
-  <hr style="border-color:#1c2941;opacity:.3;margin:8px 0;">
-
-  <div class="rom-row"><div class="rom-head">Elbow Ext — Left max (°)</div>
-    <div style="flex:1"><input id="elExtL" type="number"></div></div>
-  <div class="rom-row"><div class="rom-head">Elbow Ext — Right max (°)</div>
-    <div style="flex:1"><input id="elExtR" type="number"></div></div>
-
-    <div class="rom-row"><div class="rom-head">Elbow Flex — Left max (°)</div>
-  <div style="flex:1"><input id="elFlexL" type="number"></div></div>
-<div class="rom-row"><div class="rom-head">Elbow Flex — Right max (°)</div>
-  <div style="flex:1"><input id="elFlexR" type="number"></div></div>
-
-  <div class="rom-row"><div class="rom-head">Wrist Sup — Left max (°)</div>
-    <div style="flex:1"><input id="wrSupL" type="number"></div></div>
-  <div class="rom-row"><div class="rom-head">Wrist Sup — Right max (°)</div>
-    <div style="flex:1"><input id="wrSupR" type="number"></div></div>
-
-  <hr style="border-color:#1c2941;opacity:.3;margin:8px 0;">
-  <div class="rom-row"><div class="rom-head">Hip Flex — Left max (°)</div>
-    <div style="flex:1"><input id="hipFlexL" type="number"></div></div>
-  <div class="rom-row"><div class="rom-head">Hip Flex — Right max (°)</div>
-    <div style="flex:1"><input id="hipFlexR" type="number"></div></div>
-
-  <div class="rom-row"><div class="rom-head">Knee Flex — Left max (°)</div>
-    <div style="flex:1"><input id="kneeFlexL" type="number"></div></div>
-  <div class="rom-row"><div class="rom-head">Knee Flex — Right max (°)</div>
-    <div style="flex:1"><input id="kneeFlexR" type="number"></div></div>
-
-  <div style="display:flex;gap:8px;margin-top:10px;">
-    <button id="colApply" class="mini" style="flex:1">Apply</button>
-    <button id="colSave" class="mini">Save</button>
-    <button id="colReset" class="mini">Reset</button>
-  </div>
-  <div style="opacity:.7;margin-top:6px;">
-    Tip: with <em>Anticollision</em> ON, these caps are enforced.
-    Shift+Click the checkbox to reopen this tuner.
-  </div>`;
-
-  document.body.appendChild(colTunerEl);
-  const $ = (id) => colTunerEl.querySelector(id);
-
-  // === Apply Button ===
-  colTunerEl.querySelector("#colApply").onclick = () => {
-    const assign = (prop, id) => { COLLIM[prop] = +$(id).value || COLLIM[prop]; };
-    assign("trunkLatLMax", "#colTrunkLatL");
-    assign("trunkLatRMax", "#colTrunkLatR");
-    assign("cervRotLMax", "#cervL");
-    assign("cervRotRMax", "#cervR");
-    assign("shAddLMax", "#shAddL");
-    assign("shAddRMax", "#shAddR");
-    assign("shAbdLMax", "#shAbdL");
-    assign("shAbdRMax", "#shAbdR");
-    assign("shFlexLMax", "#shFlexL");
-    assign("shFlexRMax", "#shFlexR");
-    assign("shExtLMax", "#shExtL");
-    assign("shExtRMax", "#shExtR");
-    assign("elFlexLMax", "#elFlexL");
-    assign("elFlexRMax", "#elFlexR");
-    assign("wrSupLMax", "#wrSupL");
-    assign("wrSupRMax", "#wrSupR");
-    assign("hipFlexLMax", "#hipFlexL");
-    assign("hipFlexRMax", "#hipFlexR");
-    COLLIM.save(); COLLIM.enabled = true;
-    log("✅ limits  applied.");
-  };
-
-  // === Preload Existing Values ===
-  const preload = () => {
-    $("#colTrunkLatL").value = COLLIM.trunkLatLMax;
-    $("#colTrunkLatR").value = COLLIM.trunkLatRMax;
-    $("#cervL").value = COLLIM.cervRotLMax;
-    $("#cervR").value = COLLIM.cervRotRMax;
-    $("#shAddL").value = COLLIM.shAddLMax;
-    $("#shAddR").value = COLLIM.shAddRMax;
-    $("#shAbdL").value = COLLIM.shAbdLMax;
-    $("#shAbdR").value = COLLIM.shAbdRMax;
-    $("#shFlexL").value = COLLIM.shFlexLMax;
-    $("#shFlexR").value = COLLIM.shFlexRMax;
-    $("#elFlexL").value = COLLIM.elFlexLMax;
-    $("#elFlexR").value = COLLIM.elFlexRMax;
-    $("#wrSupL").value = COLLIM.wrSupLMax;
-    $("#wrSupR").value = COLLIM.wrSupRMax;
-    $("#hipFlexL").value = COLLIM.hipFlexLMax;
-    $("#hipFlexR").value = COLLIM.hipFlexRMax;
-  };
-  preload();
-
-  colTunerEl.querySelector("#colX").onclick = () => toggleCollisionTuner(false);
-  return colTunerEl;
-}
-
-function toggleCollisionTuner(show) {
-  ensureCollisionTuner();
-  COLLIM.load();
-  colTunerVisible = show === undefined ? !colTunerVisible : !!show;
-  colTunerEl.style.display = colTunerVisible ? "block" : "none";
-}
+////Tuners removed///
 
 function pickOnScreen(e){
   if(!target) return;
@@ -3261,3 +2940,4 @@ if (!regionSel || !regionSel.options || !regionSel.options.length){
   </script>
 </body>
 </html>
+
