@@ -2284,29 +2284,31 @@ if (CURRENT_ACTION.key==='hip_irer_l' || CURRENT_ACTION.key==='hip_irer_r'){
           if (o.isSkinnedMesh && !skeleton) skeleton = o.skeleton;
         });
         scene.add(model);
-        /* ================== 3D ANATOMICAL REFERENCE DOT ================== */
+    /* ================== SINGLE 3D ANATOMICAL PIN ================== */
 /*
-Creates the Green Dot as a REAL 3D object.
-It is parented to the MODEL so it moves whenever the model moves.
-Later, it can be re-parented to a bone if desired.
+Creates ONE pin that:
+- Lives on the model
+- Moves ONLY because the model moves
+- Can be repositioned later if needed
 */
 
-if (!window.GreenDot3D) {
+if (!window.AnatomyPin) {
 
-  const geo = new THREE.SphereGeometry(0.03, 16, 16);
-  const mat = new THREE.MeshBasicMaterial({
+  const pinGeo = new THREE.SphereGeometry(0.035, 16, 16);
+  const pinMat = new THREE.MeshBasicMaterial({
     color: 0x22c55e,
-    depthTest: false // always visible (hair-safe)
+    depthTest: false
   });
 
-  window.GreenDot3D = new THREE.Mesh(geo, mat);
+  window.AnatomyPin = new THREE.Mesh(pinGeo, pinMat);
 
-  // 🔑 ATTACH TO THE MODEL (guaranteed to exist here)
-  model.add(GreenDot3D);
+  // 🔑 PARENT TO MODEL — THIS IS THE WHOLE POINT
+  model.add(AnatomyPin);
 
-  // Small local offset so it is visible
-  GreenDot3D.position.set(0.02, 0.02, 0.02);
+  // Initial local position (can be adjusted later)
+  AnatomyPin.position.set(0, 0, 0);
 }
+
 
         groundSnap();
         msg.textContent = "✅ Model loaded";
