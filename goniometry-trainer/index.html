@@ -2284,6 +2284,30 @@ if (CURRENT_ACTION.key==='hip_irer_l' || CURRENT_ACTION.key==='hip_irer_r'){
           if (o.isSkinnedMesh && !skeleton) skeleton = o.skeleton;
         });
         scene.add(model);
+        /* ================== 3D ANATOMICAL REFERENCE DOT ================== */
+/*
+Creates the Green Dot as a REAL 3D object.
+It is parented to the MODEL so it moves whenever the model moves.
+Later, it can be re-parented to a bone if desired.
+*/
+
+if (!window.GreenDot3D) {
+
+  const geo = new THREE.SphereGeometry(0.03, 16, 16);
+  const mat = new THREE.MeshBasicMaterial({
+    color: 0x22c55e,
+    depthTest: false // always visible (hair-safe)
+  });
+
+  window.GreenDot3D = new THREE.Mesh(geo, mat);
+
+  // 🔑 ATTACH TO THE MODEL (guaranteed to exist here)
+  model.add(GreenDot3D);
+
+  // Small local offset so it is visible
+  GreenDot3D.position.set(0.02, 0.02, 0.02);
+}
+
         groundSnap();
         msg.textContent = "✅ Model loaded";
         populateBones();
