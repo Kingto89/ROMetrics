@@ -425,10 +425,9 @@ window.addEventListener("load", applyNumTweaks);
   import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 
 const MODEL_URLS = {
-  Roman: "/assets/Roman_ROMetrics.glb",
-  Roma:  "/assets/Roma_ROMetrics.glb"
+  Roman: "https://kingto89.github.io/ROMetrics.com/assets/Roman_ROMetrics.glb",
+  Roma:  "https://kingto89.github.io/ROMetrics.com/assets/Roma_ROMetrics.glb"
 };
-
 
 function pickModelUrl(){
   const u = new URL(location.href);
@@ -2400,6 +2399,43 @@ log("Anatomic baseline applied on load.");
   }
 
 /* --- HUD & Helpers --- */ 
+/* ================== ANATOMICAL DOT SNAPSHOT SYSTEM ================== */
+/*
+Assumes:
+- window.GreenDot3D exists and is ATTACHED to the model/bone
+- GreenDot3D.position is LOCAL to its parent
+*/
+
+let romStartSnap = null;
+let romEndSnap   = null;
+
+function snapshotGreenDot(color = 0x38bdf8) {
+  if (!window.GreenDot3D || !scene) return null;
+
+  const geo = new THREE.SphereGeometry(0.035, 16, 16);
+  const mat = new THREE.MeshBasicMaterial({
+    color,
+    transparent: true,
+    opacity: 0.7,
+    depthTest: false // keep visible through hair / body
+  });
+
+  const snap = new THREE.Mesh(geo, mat);
+
+  // Freeze WORLD position of the anatomical dot
+  snap.position.copy(
+    GreenDot3D.getWorldPosition(new THREE.Vector3())
+  );
+
+  scene.add(snap);
+  return snap;
+}
+
+function clearRomSnapshots() {
+  if (romStartSnap) scene.remove(romStartSnap);
+  if (romEndSnap)   scene.remove(romEndSnap);
+  romStartSnap = romEndSnap = null;
+}
 
 function setAngleHUD(angle, romStr=""){
   const hud = document.getElementById("hud");
