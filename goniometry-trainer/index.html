@@ -2284,6 +2284,40 @@ if (CURRENT_ACTION.key==='hip_irer_l' || CURRENT_ACTION.key==='hip_irer_r'){
           if (o.isSkinnedMesh && !skeleton) skeleton = o.skeleton;
         });
         scene.add(model);
+
+        /* ================== SINGLE ANATOMICAL PIN (FINAL) ================== */
+/*
+ONE block.
+ONE pin.
+Moves ONLY because the skeleton moves.
+No goniometer. No SVG. No listeners.
+*/
+
+(() => {
+
+  // Create pin once
+  if (window.AnatomyPin) return;
+
+  const geo = new THREE.SphereGeometry(0.035, 16, 16);
+  const mat = new THREE.MeshBasicMaterial({
+    color: 0x22c55e,
+    depthTest: false
+  });
+
+  const pin = new THREE.Mesh(geo, mat);
+  window.AnatomyPin = pin;
+
+  // 🔑 ATTACH TO FIRST AVAILABLE MOVING BONE
+  // (guaranteed to move in a skinned model)
+  model.traverse(obj => {
+    if (obj.isBone && !pin.parent) {
+      obj.add(pin);
+      pin.position.set(0, 0, 0);
+    }
+  });
+
+})();
+
     /* ================== SINGLE 3D ANATOMICAL PIN ================== */
 /*
 Creates ONE pin that:
