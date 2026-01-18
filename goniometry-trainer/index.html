@@ -2397,13 +2397,13 @@ log("Anatomic baseline applied on load.");
     wrist.quaternion.copy(qBind).multiply(new THREE.Quaternion().setFromEuler(e));
     log(`Wrist ${side.toUpperCase()} (hand_${side}) PS = ${deg}°`);
   }
-
 /* --- HUD & Helpers --- */ 
+
 /* ================== ANATOMICAL DOT SNAPSHOT SYSTEM ================== */
 /*
-Assumes:
-- window.GreenDot3D exists and is ATTACHED to the model/bone
-- GreenDot3D.position is LOCAL to its parent
+REQUIREMENTS (must already be true elsewhere):
+- window.GreenDot3D exists
+- GreenDot3D is ADDED TO the MODEL or BONE (not the goniometer, not scene root)
 */
 
 let romStartSnap = null;
@@ -2411,6 +2411,9 @@ let romEndSnap   = null;
 
 function snapshotGreenDot(color = 0x38bdf8) {
   if (!window.GreenDot3D || !scene) return null;
+
+  // 🔒 Ensure transforms are fully up to date
+  GreenDot3D.updateMatrixWorld(true);
 
   const geo = new THREE.SphereGeometry(0.035, 16, 16);
   const mat = new THREE.MeshBasicMaterial({
@@ -2422,7 +2425,7 @@ function snapshotGreenDot(color = 0x38bdf8) {
 
   const snap = new THREE.Mesh(geo, mat);
 
-  // Freeze WORLD position of the anatomical dot
+  // ✅ Freeze WORLD position of the anatomical dot
   snap.position.copy(
     GreenDot3D.getWorldPosition(new THREE.Vector3())
   );
@@ -2437,16 +2440,23 @@ function clearRomSnapshots() {
   romStartSnap = romEndSnap = null;
 }
 
+/* ---------------- HUD ---------------- */
+
 function setAngleHUD(angle, romStr=""){
   const hud = document.getElementById("hud");
-  // Fix: Ensure we display the ROM string if it exists
-  if(hud) hud.textContent = romStr ? `Angle: ${angle.toFixed(0)}° | ROM: ${romStr}` : `Angle: ${angle.toFixed(0)}°`;
+  if (hud) {
+    hud.textContent = romStr
+      ? `Angle: ${angle.toFixed(0)}° | ROM: ${romStr}`
+      : `Angle: ${angle.toFixed(0)}°`;
+  }
 }
 
 function romString(){ 
-  // Fix: Calculate ROM based on the romActive flag
-  return typeof romActive !== 'undefined' && romActive ? `${Gonio.angle.toFixed(0)}° (start 0°)` : ""; 
+  return (typeof romActive !== 'undefined' && romActive)
+    ? `${Gonio.angle.toFixed(0)}° (start 0°)`
+    : ""; 
 }
+
 
 function setGonioLock(v){
   lockGonio = v;
