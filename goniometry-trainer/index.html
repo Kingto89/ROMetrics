@@ -2440,6 +2440,7 @@ if(startB) startB.onclick=()=>{
     setAngleHUD(0,""); 
     log("ROM start @ 0°"); 
 };
+clearRomSnapshots(); romStartSnap = snapshotGreenDot(0x38bdf8);
 
 if(resetB) resetB.onclick=()=>{ 
     romActive=false;         // Turn OFF Text
@@ -2451,7 +2452,10 @@ if(resetB) resetB.onclick=()=>{
     setAngleHUD(0,""); 
     log("ROM reset → 0°"); 
 };
+clearRomSnapshots();
 
+
+  
 // Re-bind UI logic for Locks
 document.getElementById("lock3D").onclick=()=>set3DLock(!lock3D);
 document.getElementById("lockGonio").onclick=()=>setGonioLock(!lockGonio);
